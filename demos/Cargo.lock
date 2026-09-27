@@ -2434,6 +2434,7 @@ dependencies = [
  "lyon_extra",
  "lyon_geom",
  "lyon_path",
+ "material-color-utils",
  "num-traits",
  "objc2 0.6.4",
  "objc2-app-kit 0.3.2",
@@ -3261,6 +3262,13 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "62bb907fe88d54d8d9ce32a3cceab4218ed2f6b7d35617cafe9adf84e43919cb"
 dependencies = [
  "libc",
+]
+
+[[package]]
+name = "material-color-utils"
+version = "0.1.0"
+dependencies = [
+ "libm",
 ]
 
 [[package]]

@@ -3,9 +3,10 @@
 
 import { Palette } from "std-widgets.slint";
 import { MaterialSchemes, MaterialScheme } from "material_schemes.slint";
-import { ColorLightTokens, ColorDarkTokens } from "generated/material_color_tokens.slint";
+import { ExpressiveLightColorTokens, ColorDarkTokens } from "generated/material_color_tokens.slint";
 import { StateTokens } from "generated/material_state_tokens.slint";
 import { ScrimTokens } from "generated/material_leaf_tokens.slint";
+import { MaterialTheme } from "material_theme.slint";
 
 export global MaterialPalette {
     out property <color> primary: root.scheme.primary;
@@ -67,58 +68,62 @@ export global MaterialPalette {
     out property <float> disable_opacity: 38%;
     out property <color> background_modal: root.scrim.with_alpha(ScrimTokens.container_opacity);
 
+    // The schemes the palette resolves to. Light defaults to
+    // `expressiveLightColorScheme()` (ColorScheme.kt) — what
+    // `MaterialExpressiveTheme` uses upstream; dark to `darkColorScheme()`
+    // (there is no expressive dark scheme upstream).
     in property <MaterialSchemes> schemes: {
         light: {
             // Shadow is Color.Black in ColorScheme.kt — not a token.
-            primary: ColorLightTokens.primary,
-            surfaceTint: ColorLightTokens.surface_tint,
-            onPrimary: ColorLightTokens.on_primary,
-            primaryContainer: ColorLightTokens.primary_container,
-            onPrimaryContainer: ColorLightTokens.on_primary_container,
-            secondary: ColorLightTokens.secondary,
-            onSecondary: ColorLightTokens.on_secondary,
-            secondaryContainer: ColorLightTokens.secondary_container,
-            onSecondaryContainer: ColorLightTokens.on_secondary_container,
-            tertiary: ColorLightTokens.tertiary,
-            onTertiary: ColorLightTokens.on_tertiary,
-            tertiaryContainer: ColorLightTokens.tertiary_container,
-            onTertiaryContainer: ColorLightTokens.on_tertiary_container,
-            error: ColorLightTokens.error,
-            onError: ColorLightTokens.on_error,
-            errorContainer: ColorLightTokens.error_container,
-            onErrorContainer: ColorLightTokens.on_error_container,
-            background: ColorLightTokens.background,
-            onBackground: ColorLightTokens.on_background,
-            surface: ColorLightTokens.surface,
-            onSurface: ColorLightTokens.on_surface,
-            surfaceVariant: ColorLightTokens.surface_variant,
-            onSurfaceVariant: ColorLightTokens.on_surface_variant,
-            outline: ColorLightTokens.outline,
-            outlineVariant: ColorLightTokens.outline_variant,
+            primary: ExpressiveLightColorTokens.primary,
+            surfaceTint: ExpressiveLightColorTokens.surface_tint,
+            onPrimary: ExpressiveLightColorTokens.on_primary,
+            primaryContainer: ExpressiveLightColorTokens.primary_container,
+            onPrimaryContainer: ExpressiveLightColorTokens.on_primary_container,
+            secondary: ExpressiveLightColorTokens.secondary,
+            onSecondary: ExpressiveLightColorTokens.on_secondary,
+            secondaryContainer: ExpressiveLightColorTokens.secondary_container,
+            onSecondaryContainer: ExpressiveLightColorTokens.on_secondary_container,
+            tertiary: ExpressiveLightColorTokens.tertiary,
+            onTertiary: ExpressiveLightColorTokens.on_tertiary,
+            tertiaryContainer: ExpressiveLightColorTokens.tertiary_container,
+            onTertiaryContainer: ExpressiveLightColorTokens.on_tertiary_container,
+            error: ExpressiveLightColorTokens.error,
+            onError: ExpressiveLightColorTokens.on_error,
+            errorContainer: ExpressiveLightColorTokens.error_container,
+            onErrorContainer: ExpressiveLightColorTokens.on_error_container,
+            background: ExpressiveLightColorTokens.background,
+            onBackground: ExpressiveLightColorTokens.on_background,
+            surface: ExpressiveLightColorTokens.surface,
+            onSurface: ExpressiveLightColorTokens.on_surface,
+            surfaceVariant: ExpressiveLightColorTokens.surface_variant,
+            onSurfaceVariant: ExpressiveLightColorTokens.on_surface_variant,
+            outline: ExpressiveLightColorTokens.outline,
+            outlineVariant: ExpressiveLightColorTokens.outline_variant,
             shadow: #000000,
-            scrim: ColorLightTokens.scrim,
-            inverseSurface: ColorLightTokens.inverse_surface,
-            inverseOnSurface: ColorLightTokens.inverse_on_surface,
-            inversePrimary: ColorLightTokens.inverse_primary,
-            primaryFixed: ColorLightTokens.primary_fixed,
-            onPrimaryFixed: ColorLightTokens.on_primary_fixed,
-            primaryFixedDim: ColorLightTokens.primary_fixed_dim,
-            onPrimaryFixedVariant: ColorLightTokens.on_primary_fixed_variant,
-            secondaryFixed: ColorLightTokens.secondary_fixed,
-            onSecondaryFixed: ColorLightTokens.on_secondary_fixed,
-            secondaryFixedDim: ColorLightTokens.secondary_fixed_dim,
-            onSecondaryFixedVariant: ColorLightTokens.on_secondary_fixed_variant,
-            tertiaryFixed: ColorLightTokens.tertiary_fixed,
-            onTertiaryFixed: ColorLightTokens.on_tertiary_fixed,
-            tertiaryFixedDim: ColorLightTokens.tertiary_fixed_dim,
-            onTertiaryFixedVariant: ColorLightTokens.on_tertiary_fixed_variant,
-            surfaceDim: ColorLightTokens.surface_dim,
-            surfaceBright: ColorLightTokens.surface_bright,
-            surfaceContainerLowest: ColorLightTokens.surface_container_lowest,
-            surfaceContainerLow: ColorLightTokens.surface_container_low,
-            surfaceContainer: ColorLightTokens.surface_container,
-            surfaceContainerHigh: ColorLightTokens.surface_container_high,
-            surfaceContainerHighest: ColorLightTokens.surface_container_highest,
+            scrim: ExpressiveLightColorTokens.scrim,
+            inverseSurface: ExpressiveLightColorTokens.inverse_surface,
+            inverseOnSurface: ExpressiveLightColorTokens.inverse_on_surface,
+            inversePrimary: ExpressiveLightColorTokens.inverse_primary,
+            primaryFixed: ExpressiveLightColorTokens.primary_fixed,
+            onPrimaryFixed: ExpressiveLightColorTokens.on_primary_fixed,
+            primaryFixedDim: ExpressiveLightColorTokens.primary_fixed_dim,
+            onPrimaryFixedVariant: ExpressiveLightColorTokens.on_primary_fixed_variant,
+            secondaryFixed: ExpressiveLightColorTokens.secondary_fixed,
+            onSecondaryFixed: ExpressiveLightColorTokens.on_secondary_fixed,
+            secondaryFixedDim: ExpressiveLightColorTokens.secondary_fixed_dim,
+            onSecondaryFixedVariant: ExpressiveLightColorTokens.on_secondary_fixed_variant,
+            tertiaryFixed: ExpressiveLightColorTokens.tertiary_fixed,
+            onTertiaryFixed: ExpressiveLightColorTokens.on_tertiary_fixed,
+            tertiaryFixedDim: ExpressiveLightColorTokens.tertiary_fixed_dim,
+            onTertiaryFixedVariant: ExpressiveLightColorTokens.on_tertiary_fixed_variant,
+            surfaceDim: ExpressiveLightColorTokens.surface_dim,
+            surfaceBright: ExpressiveLightColorTokens.surface_bright,
+            surfaceContainerLowest: ExpressiveLightColorTokens.surface_container_lowest,
+            surfaceContainerLow: ExpressiveLightColorTokens.surface_container_low,
+            surfaceContainer: ExpressiveLightColorTokens.surface_container,
+            surfaceContainerHigh: ExpressiveLightColorTokens.surface_container_high,
+            surfaceContainerHighest: ExpressiveLightColorTokens.surface_container_highest,
         },
         dark: {
             // Shadow is Color.Black in ColorScheme.kt — not a token.
@@ -174,5 +179,10 @@ export global MaterialPalette {
         },
     };
 
-    property <MaterialScheme> scheme: Palette.color_scheme == ColorScheme.dark ? root.schemes.dark : root.schemes.light;
+    // Opt in to runtime-generated schemes: when `dynamic` is true, every
+    // color role comes from `MaterialTheme` instead of `schemes`.
+    in property <bool> dynamic: false;
+
+    property <MaterialScheme> scheme: root.dynamic ? MaterialTheme.material-scheme
+        : Palette.color_scheme == ColorScheme.dark ? root.schemes.dark : root.schemes.light;
 }

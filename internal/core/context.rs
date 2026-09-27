@@ -53,6 +53,19 @@ pub(crate) struct SlintContextInner {
     /// transparent color when the platform doesn't expose one.
     #[pin]
     pub(crate) accent_color: Property<Color>,
+    /// Process-wide contrast preference, continuous in `-1.0` (low) to `1.0` (high),
+    /// `0.0` meaning no preference — the scale Material Design's `contrastLevel`
+    /// parameter uses. Backends' system-theme observers write here; bindings read
+    /// from it through [`SlintContext::contrast_preference`].
+    #[pin]
+    pub(crate) contrast_preference: Property<f32>,
+    /// The exact `(light, dark)` Material color scheme the platform provides
+    /// (Android 12+ dynamic color), or `None` on platforms that only report an
+    /// accent color. Backends write here; `MaterialColors.platform-color-scheme`
+    /// reads it through [`SlintContext::platform_schemes`].
+    #[pin]
+    pub(crate) platform_schemes:
+        Property<Option<(crate::items::MaterialColorScheme, crate::items::MaterialColorScheme)>>,
     /// Process-wide default font size as reported by the platform (e.g. iOS Dynamic
     /// Type). Backends write here; `WindowItem::resolved_default_font_size` consults it
     /// before falling back to `textlayout::DEFAULT_FONT_SIZE`. `None` when the backend
@@ -109,6 +122,8 @@ impl SlintContext {
 
             color_scheme: Property::new_named(ColorScheme::Unknown, "SlintContext::color_scheme"),
             accent_color: Property::new_named(Color::default(), "SlintContext::accent_color"),
+            contrast_preference: Property::new_named(0.0, "SlintContext::contrast_preference"),
+            platform_schemes: Property::new_named(None, "SlintContext::platform_schemes"),
             platform_default_font_size: Property::new_named(
                 None,
                 "SlintContext::platform_default_font_size",
@@ -279,6 +294,40 @@ impl SlintContext {
     /// platform's system-theme observer; `Property::set` short-circuits no-op writes.
     pub fn set_accent_color(&self, color: Color) {
         self.0.as_ref().project_ref().accent_color.set(color);
+    }
+
+    /// Returns the process-wide platform contrast preference, continuous in `-1.0`
+    /// (low) to `1.0` (high), `0.0` meaning no preference. Reads register a property
+    /// dependency, so bindings re-evaluate when the platform reports a change.
+    pub fn contrast_preference(&self) -> f32 {
+        self.0.as_ref().project_ref().contrast_preference.get()
+    }
+
+    /// Backend-side write path for the process-wide contrast preference. Called by
+    /// each platform's system-theme observer; `Property::set` short-circuits no-op
+    /// writes.
+    pub fn set_contrast_preference(&self, preference: f32) {
+        self.0.as_ref().project_ref().contrast_preference.set(preference.clamp(-1.0, 1.0));
+    }
+
+    /// Returns the exact `(light, dark)` Material color schemes the platform
+    /// provides, or `None` when it only reports an accent color. Reads register
+    /// a property dependency, so bindings re-evaluate when the platform's
+    /// dynamic palette changes (e.g. a wallpaper change on Android).
+    pub fn platform_schemes(
+        &self,
+    ) -> Option<(crate::items::MaterialColorScheme, crate::items::MaterialColorScheme)> {
+        self.0.as_ref().project_ref().platform_schemes.get()
+    }
+
+    /// Backend-side write path for the platform Material color schemes. Called by
+    /// each platform's system-theme observer; `Property::set` short-circuits
+    /// no-op writes.
+    pub fn set_platform_schemes(
+        &self,
+        schemes: Option<(crate::items::MaterialColorScheme, crate::items::MaterialColorScheme)>,
+    ) {
+        self.0.as_ref().project_ref().platform_schemes.set(schemes);
     }
 
     /// Returns the platform-reported default font size, or `None` if the backend doesn't

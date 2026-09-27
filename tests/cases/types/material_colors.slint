@@ -1,0 +1,157 @@
+// Copyright © SixtyFPS GmbH <info@slint.dev>
+// SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0
+
+export component TestCase inherits Window {
+    in-out property<color> seed: #6750a4;
+    in-out property<bool> dark: false;
+    in-out property<MaterialSchemeVariant> variant: MaterialSchemeVariant.tonal-spot;
+    in-out property<MaterialSpecVersion> spec-version: MaterialSpecVersion.spec2025;
+    in-out property<float> contrast: 0;
+
+    in-out property<MaterialColorScheme> scheme: MaterialColors.color-scheme(
+        seed,
+        variant,
+        spec-version,
+        MaterialSchemePlatform.phone,
+        dark,
+        contrast,
+    );
+
+    out property<color> primary: scheme.primary;
+
+    // The system scheme read on Android 12+; a fallback elsewhere.
+    in-out property<MaterialColorScheme> platform-scheme: MaterialColors.platform-color-scheme(
+        variant,
+        spec-version,
+        MaterialSchemePlatform.phone,
+        dark,
+        contrast,
+    );
+
+    // Values produced by the material-color-utils crate, verified bit-exact
+    // against the Java reference implementation by the crate's vector tests.
+    out property<bool> test_light: !dark &&
+        scheme.primary == #655789 &&
+        scheme.on-primary == #fdf7ff &&
+        scheme.primary-container == #d4c3fd &&
+        scheme.on-primary-container == #493c6c &&
+        scheme.surface == #fdf7fe &&
+        scheme.on-surface == #34313a &&
+        scheme.error == #a8364b;
+
+    out property<bool> test_dark: dark &&
+        scheme.primary == #cdc0ec &&
+        scheme.on-primary == #443a5f &&
+        scheme.primary-container == #574d72 &&
+        scheme.on-primary-container == #e9deff &&
+        scheme.surface == #0f0d12 &&
+        scheme.on-surface == #eae3ef &&
+        scheme.error == #f97386;
+
+    out property<bool> test_blue_seed:
+        MaterialColors.color-scheme(
+            #0057d0,
+            MaterialSchemeVariant.tonal-spot,
+            MaterialSpecVersion.spec2025,
+            MaterialSchemePlatform.phone,
+            false,
+            0,
+        ).primary == #4c5e8b;
+
+    out property<bool> test_contrast_level:
+        MaterialColors.platform-contrast-level() >= -1 && MaterialColors.platform-contrast-level() <= 1;
+
+    // Seeding from a fully red 1x1 image yields the red seed.
+    out property<bool> test_seed_from_image:
+        MaterialColors.seed-from-image(@image-url("red.png")) == #ff0000;
+
+    // The platform accent accessor evaluates to some color (compared with
+    // the testing backend's accent in the driver).
+    out property<color> accent: MaterialColors.platform-accent-color();
+    out property<bool> test_accent: accent == accent;
+}
+
+/*
+```rust
+let t = TestCase::new().unwrap();
+assert!(t.get_test_light());
+assert!(!t.get_test_dark());
+assert!(t.get_test_blue_seed());
+assert!(t.get_test_contrast_level());
+assert!(t.get_test_seed_from_image());
+assert!(t.get_test_accent());
+
+// The platform accent accessor follows the system accent color.
+slint_testing::set_system_accent_color(slint::Color::from_rgb_u8(0x12, 0x34, 0x56));
+assert_eq!(t.get_accent(), slint::Color::from_argb_encoded(0xff123456));
+
+// Changing the seed updates every role live.
+t.set_seed(slint::Color::from_rgb_u8(0x00, 0x57, 0xd0));
+assert_eq!(t.get_scheme().primary, slint::Color::from_argb_encoded(0xff4c5e8b));
+t.set_seed(slint::Color::from_rgb_u8(0x67, 0x50, 0xa4));
+t.set_dark(true);
+assert!(t.get_test_dark());
+assert!(!t.get_test_light());
+```
+
+```cpp
+auto handle = TestCase::create();
+const TestCase &t = *handle;
+assert(t.get_test_light());
+assert(!t.get_test_dark());
+assert(t.get_test_blue_seed());
+assert(t.get_test_contrast_level());
+assert(t.get_test_seed_from_image());
+assert(t.get_test_accent());
+
+// The platform accent accessor follows the system accent color.
+slint_testing::set_system_accent_color(slint::Color::from_rgb_uint8(0x12, 0x34, 0x56));
+assert(t.get_accent() == slint::Color::from_rgb_uint8(0x12, 0x34, 0x56));
+
+// Changing the seed updates every role live.
+t.set_seed(slint::Color::from_rgb_uint8(0x00, 0x57, 0xd0));
+assert(t.get_scheme().primary == slint::Color::from_rgb_uint8(0x4c, 0x5e, 0x8b));
+```
+
+```js
+var t = new slint.TestCase();
+assert(t.test_light);
+assert(!t.test_dark);
+assert(t.test_blue_seed);
+assert(t.test_contrast_level);
+assert(t.test_seed_from_image);
+assert(t.test_accent);
+assert.equal(t.primary.toString(), "#655789");
+
+// Native code drives the scheme inputs and reads role colors back.
+t.seed = "#0057d0";
+assert.equal(t.primary.toString(), "#4c5e8b");
+t.variant = "vibrant";
+t.contrast = 0.5;
+t.dark = true;
+assert.equal(t.primary.toString(), "#9cb7ff");
+```
+
+```python
+import slint
+
+instance = TestCase()
+assert instance.test_light
+assert not instance.test_dark
+assert instance.test_blue_seed
+assert instance.test_contrast_level
+assert instance.test_seed_from_image
+assert instance.test_accent
+
+# Native code drives the scheme inputs and reads role colors back.
+assert instance.primary == slint.Brush(slint.Color("#655789"))
+instance.seed = slint.Color("#0057d0")
+assert instance.primary == slint.Brush(slint.Color("#4c5e8b"))
+# Builtin enums annotate as None in the generated interface, so setattr avoids
+# assigning to a None-typed attribute.
+setattr(instance, "variant", slint.language.MaterialSchemeVariant.vibrant)
+instance.contrast = 0.5
+instance.dark = True
+assert instance.primary == slint.Brush(slint.Color("#9cb7ff"))
+```
+*/

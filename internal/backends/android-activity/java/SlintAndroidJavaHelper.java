@@ -33,6 +33,7 @@ import android.text.SpannableStringBuilder;
 import android.util.TypedValue;
 import android.view.inputmethod.InputMethodManager;
 import android.app.Activity;
+import android.app.UiModeManager;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.PopupWindow;
@@ -643,9 +644,132 @@ public class SlintAndroidJavaHelper {
     }
 
     public int accent_color() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            // Android 12+ dynamic color: the Material seed is the system's
+            // tonal palette accent (system_accent1_600).
+            return mActivity.getColor(android.R.color.system_accent1_600);
+        }
         TypedValue typedValue = new TypedValue();
         if (mActivity.getTheme().resolveAttribute(android.R.attr.colorAccent, typedValue, true)) {
             return mActivity.getColor(typedValue.resourceId);
+        }
+        return 0;
+    }
+
+    // Role resource names of mc3_light_scheme/mc3_dark_scheme in
+    // res/values-v34/styles.xml at the token pin
+    // (ui-libraries/material/TOKENS_SOURCE), in the argument order of
+    // dynamicLightColorScheme34()/dynamicDarkColorScheme34() in
+    // DynamicTonalPalette.android.kt.
+    private static final String[] LIGHT_SCHEME_RESOURCES = {
+        "system_primary_light", "system_on_primary_light",
+        "system_primary_container_light", "system_on_primary_container_light",
+        "system_primary_dark", // inverse_primary
+        "system_secondary_light", "system_on_secondary_light",
+        "system_secondary_container_light", "system_on_secondary_container_light",
+        "system_tertiary_light", "system_on_tertiary_light",
+        "system_tertiary_container_light", "system_on_tertiary_container_light",
+        "system_background_light", "system_on_background_light",
+        "system_surface_light", "system_on_surface_light",
+        "system_surface_variant_light", "system_on_surface_variant_light",
+        "system_surface_dark", // inverse_surface
+        "system_on_surface_dark", // inverse_on_surface
+        "system_outline_light", "system_outline_variant_light",
+        "system_surface_bright_light", "system_surface_dim_light",
+        "system_surface_container_light", "system_surface_container_high_light",
+        "system_surface_container_highest_light", "system_surface_container_low_light",
+        "system_surface_container_lowest_light",
+        "system_primary_light", // surface_tint
+        "system_primary_fixed", "system_primary_fixed_dim",
+        "system_on_primary_fixed", "system_on_primary_fixed_variant",
+        "system_secondary_fixed", "system_secondary_fixed_dim",
+        "system_on_secondary_fixed", "system_on_secondary_fixed_variant",
+        "system_tertiary_fixed", "system_tertiary_fixed_dim",
+        "system_on_tertiary_fixed", "system_on_tertiary_fixed_variant",
+    };
+
+    private static final String[] DARK_SCHEME_RESOURCES = {
+        "system_primary_dark", "system_on_primary_dark",
+        "system_primary_container_dark", "system_on_primary_container_dark",
+        "system_primary_light", // inverse_primary
+        "system_secondary_dark", "system_on_secondary_dark",
+        "system_secondary_container_dark", "system_on_secondary_container_dark",
+        "system_tertiary_dark", "system_on_tertiary_dark",
+        "system_tertiary_container_dark", "system_on_tertiary_container_dark",
+        "system_background_dark", "system_on_background_dark",
+        "system_surface_dark", "system_on_surface_dark",
+        "system_surface_variant_dark", "system_on_surface_variant_dark",
+        "system_surface_light", // inverse_surface
+        "system_on_surface_light", // inverse_on_surface
+        "system_outline_dark", "system_outline_variant_dark",
+        "system_surface_bright_dark", "system_surface_dim_dark",
+        "system_surface_container_dark", "system_surface_container_high_dark",
+        "system_surface_container_highest_dark", "system_surface_container_low_dark",
+        "system_surface_container_lowest_dark",
+        "system_primary_dark", // surface_tint
+        "system_primary_fixed", "system_primary_fixed_dim",
+        "system_on_primary_fixed", "system_on_primary_fixed_variant",
+        "system_secondary_fixed", "system_secondary_fixed_dim",
+        "system_on_secondary_fixed", "system_on_secondary_fixed_variant",
+        "system_tertiary_fixed", "system_tertiary_fixed_dim",
+        "system_on_tertiary_fixed", "system_on_tertiary_fixed_variant",
+    };
+
+    // Resource suffixes of a tonal palette in the mc3_palette styleable order
+    // (res/values-v31/styles.xml): tones 100, 99, 95, 90, 80, 70, 60, 50, 40,
+    // 30, 20, 10, 0.
+    private static final int[] TONE_SUFFIXES = {
+        0, 10, 50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000
+    };
+
+    private int systemColor(String name) {
+        int id = mActivity.getResources().getIdentifier(name, "color", "android");
+        return id != 0 ? mActivity.getColor(id) : 0;
+    }
+
+    private void appendPalette(int[] out, int offset, String prefix) {
+        for (int i = 0; i < TONE_SUFFIXES.length; i++) {
+            out[offset + i] = systemColor(prefix + "_" + TONE_SUFFIXES[i]);
+        }
+    }
+
+    private void appendScheme(int[] out, int offset, String[] resources) {
+        for (int i = 0; i < resources.length; i++) {
+            out[offset + i] = systemColor(resources[i]);
+        }
+    }
+
+    // The Material dynamic colors the system derives from the user's
+    // wallpaper, packed for `i_slint_core::material::android_system_schemes`:
+    // on API 34+ the 43 light role colors then the 43 dark role colors; on API
+    // 31-33 the five tonal palettes (system_accent1/2/3, system_neutral1/2),
+    // 13 tones each. null below API 31 where dynamic color doesn't exist.
+    public int[] system_color_schemes() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
+            return null;
+        }
+        if (Build.VERSION.SDK_INT >= 34) { // Build.VERSION_CODES.UPSIDE_DOWN_CAKE
+            int[] out = new int[86];
+            appendScheme(out, 0, LIGHT_SCHEME_RESOURCES);
+            appendScheme(out, 43, DARK_SCHEME_RESOURCES);
+            return out;
+        }
+        int[] out = new int[65];
+        appendPalette(out, 0, "system_accent1");
+        appendPalette(out, 13, "system_accent2");
+        appendPalette(out, 26, "system_accent3");
+        appendPalette(out, 39, "system_neutral1");
+        appendPalette(out, 52, "system_neutral2");
+        return out;
+    }
+
+    public float contrast() {
+        if (Build.VERSION.SDK_INT >= 34) { // Build.VERSION_CODES.UPSIDE_DOWN_CAKE
+            UiModeManager uiModeManager =
+                (UiModeManager) mActivity.getSystemService(Context.UI_MODE_SERVICE);
+            if (uiModeManager != null) {
+                return uiModeManager.getContrast();
+            }
         }
         return 0;
     }

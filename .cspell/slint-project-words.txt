@@ -278,6 +278,7 @@ fwasm
 Fwww
 genhtml
 getattr
+gethighcontrast
 getifs
 getpid
 getrandom
@@ -299,6 +300,8 @@ hcts
 hdmipi
 heapless
 hidpi
+highcontraston
+highcontrastw
 highp
 HINSTANCE
 Hira
@@ -347,6 +350,7 @@ itertools
 ivars
 javac
 Jemalloc
+Jetpack
 jemallocator
 jstar
 kateversion
@@ -673,6 +677,7 @@ struc
 structprop
 structval
 strvalue
+styleable
 styledprop
 styledtext
 styledtextprop

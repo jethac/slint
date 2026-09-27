@@ -420,6 +420,43 @@ pub fn update_all_translations() {
     i_slint_core::translations::mark_all_translations_dirty();
 }
 
+/// Generates Material color schemes at runtime.
+///
+/// This module implements the same functions as the `MaterialColors`
+/// namespace in `.slint` code: [`color_scheme()`] builds a complete
+/// [`language::MaterialColorScheme`] from a seed color, variant, spec
+/// version, target platform, dark mode and a continuous contrast level, and
+/// [`seed_from_image()`] extracts a seed color from an image.
+pub mod material {
+    pub use i_slint_core::items::{
+        MaterialColorScheme, MaterialSchemePlatform, MaterialSchemeVariant, MaterialSpecVersion,
+    };
+    pub use i_slint_core::material::{color_scheme, seed_from_image};
+
+    /// The Material Design dynamic color scheme the platform provides, for the
+    /// window: on Android 12+ the exact system scheme the OS derives from the
+    /// user's wallpaper, on other platforms a scheme generated from the
+    /// platform accent color (or the Material baseline seed `#6750a4` when the
+    /// platform reports no accent).
+    pub fn platform_color_scheme(
+        window: &crate::Window,
+        variant: MaterialSchemeVariant,
+        spec_version: MaterialSpecVersion,
+        platform: MaterialSchemePlatform,
+        is_dark: bool,
+        contrast_level: f32,
+    ) -> MaterialColorScheme {
+        i_slint_core::material::platform_color_scheme_for_context(
+            Some(i_slint_core::window::WindowInner::from_pub(window).context()),
+            variant,
+            spec_version,
+            platform,
+            is_dark,
+            contrast_level,
+        )
+    }
+}
+
 /// This module contains items that you need to use or implement if you want use Slint in an environment without
 /// one of the supplied platform backends such as qt or winit.
 ///

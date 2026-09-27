@@ -466,7 +466,9 @@ jobs:
               run: cross check --target=armv7-unknown-linux-gnueabihf -p slint-cpp --no-default-features --features=testing,interpreter,std
 
     docs:
-        if: ${{ !inputs.full && (contains(fromJSON(inputs.changes), 'docs_build') || contains(fromJSON(inputs.changes), 'slint_sc')) }}
+        # Needs READ_WRITE_PRIVATE_KEY and vars.READ_WRITE_APP_ID, which only
+        # the upstream repository has.
+        if: ${{ !inputs.full && github.repository == 'slint-ui/slint' && (contains(fromJSON(inputs.changes), 'docs_build') || contains(fromJSON(inputs.changes), 'slint_sc')) }}
         uses: ./.github/workflows/build_docs.yaml
         secrets:
           READ_WRITE_PRIVATE_KEY: ${{ secrets.READ_WRITE_PRIVATE_KEY }}
@@ -719,7 +721,10 @@ jobs:
                   path: tools/figma-inspector/zip/figma-plugin.zip
 
     material-components:
-      if: ${{ inputs.full || contains(fromJSON(inputs.changes), 'material_components') }}
+      # Needs the Cloudflare and Android keystore secrets, which only the
+      # upstream repository has. Forks get the same coverage from
+      # material.yaml's own pull_request trigger.
+      if: ${{ github.repository == 'slint-ui/slint' && (inputs.full || contains(fromJSON(inputs.changes), 'material_components')) }}
       permissions:
         contents: read
         deployments: write

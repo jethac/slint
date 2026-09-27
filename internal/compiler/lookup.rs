@@ -193,6 +193,7 @@ pub enum BuiltinNamespace {
     Key,
     FontWeight,
     MouseCursor,
+    MaterialColors,
     SlintInternal,
 }
 
@@ -280,6 +281,9 @@ impl LookupObject for LookupResult {
             LookupResult::Namespace(BuiltinNamespace::MouseCursor) => {
                 MouseCursorSpecific.for_each_entry(ctx, f)
             }
+            LookupResult::Namespace(BuiltinNamespace::MaterialColors) => {
+                MaterialColorsFunctions.for_each_entry(ctx, f)
+            }
             LookupResult::Namespace(BuiltinNamespace::SlintInternal) => {
                 SlintInternal.for_each_entry(ctx, f)
             }
@@ -302,6 +306,9 @@ impl LookupObject for LookupResult {
             }
             LookupResult::Namespace(BuiltinNamespace::MouseCursor) => {
                 MouseCursorSpecific.lookup(ctx, name)
+            }
+            LookupResult::Namespace(BuiltinNamespace::MaterialColors) => {
+                MaterialColorsFunctions.lookup(ctx, name)
             }
             LookupResult::Namespace(BuiltinNamespace::SlintInternal) => {
                 SlintInternal.lookup(ctx, name)
@@ -1049,6 +1056,22 @@ impl LookupObject for SlintInternal {
     }
 }
 
+struct MaterialColorsFunctions;
+impl LookupObject for MaterialColorsFunctions {
+    fn for_each_entry<R>(
+        &self,
+        _ctx: &LookupCtx,
+        f: &mut impl FnMut(&SmolStr, LookupResult) -> Option<R>,
+    ) -> Option<R> {
+        let mut f = |n, e| f(&SmolStr::new_static(n), LookupResult::from(e));
+        None.or_else(|| f("color-scheme", BuiltinFunction::MaterialColorScheme))
+            .or_else(|| f("platform-color-scheme", BuiltinFunction::MaterialPlatformColorScheme))
+            .or_else(|| f("seed-from-image", BuiltinFunction::MaterialSeedFromImage))
+            .or_else(|| f("platform-accent-color", BuiltinFunction::AccentColor))
+            .or_else(|| f("platform-contrast-level", BuiltinFunction::PlatformContrastLevel))
+    }
+}
+
 struct ColorFunctions;
 impl LookupObject for ColorFunctions {
     fn for_each_entry<R>(
@@ -1107,6 +1130,9 @@ impl LookupObject for BuiltinNamespaceLookup {
                 }
             })
             .or_else(|| f("MouseCursor", LookupResult::Namespace(BuiltinNamespace::MouseCursor)))
+            .or_else(|| {
+                f("MaterialColors", LookupResult::Namespace(BuiltinNamespace::MaterialColors))
+            })
     }
 }
 

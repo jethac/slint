@@ -10,6 +10,7 @@ import {
     MaterialTypography,
     IconButton,
     MaterialPalette,
+    MaterialTheme,
     MaterialAnimations,
     NavigationRail,
     NavigationItem,
@@ -28,9 +29,18 @@ export global MainViewAdapter {
     in_out property <[MenuItem]> palettes: [
         { text: "Slint", enabled: true },
         { text: "Purple", enabled: true },
-        { text: "Green", enabled: true },
         { text: "Red", enabled: true },
+        { text: "Green", enabled: true },
+        { text: "Dynamic accent", enabled: true },
+        { text: "Dynamic slint", enabled: true },
+        { text: "Dynamic purple", enabled: true },
+        { text: "Dynamic red", enabled: true },
+        { text: "Dynamic green", enabled: true },
     ];
+
+    // Index of the first entry in `palettes` that selects a runtime-generated
+    // scheme instead of a static Theme Builder one.
+    out property <int> first_dynamic_palette: 4;
 
     callback load_palette(index: int);
 }
@@ -77,7 +87,31 @@ export component MainView {
             items: MainViewAdapter.palettes;
 
             activated(index) => {
-                MainViewAdapter.load_palette(index);
+                if index < MainViewAdapter.first_dynamic_palette {
+                    MaterialPalette.dynamic = false;
+                    MaterialTheme.use-platform-color = false;
+                    MainViewAdapter.load_palette(index);
+                } else {
+                    MaterialPalette.dynamic = true;
+                    // The seeds match the seed fields of the Theme Builder
+                    // JSON files, so a dynamic scheme can be compared with
+                    // its static counterpart.
+                    if index == MainViewAdapter.first_dynamic_palette {
+                        MaterialTheme.use-platform-color = true;
+                    } else if index == MainViewAdapter.first_dynamic_palette + 1 {
+                        MaterialTheme.use-platform-color = false;
+                        MaterialTheme.seed-color = #2379f4;
+                    } else if index == MainViewAdapter.first_dynamic_palette + 2 {
+                        MaterialTheme.use-platform-color = false;
+                        MaterialTheme.seed-color = #6750a4;
+                    } else if index == MainViewAdapter.first_dynamic_palette + 3 {
+                        MaterialTheme.use-platform-color = false;
+                        MaterialTheme.seed-color = #b33b15;
+                    } else {
+                        MaterialTheme.use-platform-color = false;
+                        MaterialTheme.seed-color = #63a002;
+                    }
+                }
                 color_menu.close();
             }
         }

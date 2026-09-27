@@ -3602,6 +3602,7 @@ dependencies = [
  "lyon_extra",
  "lyon_geom",
  "lyon_path",
+ "material-color-utils",
  "num-traits",
  "objc2 0.6.4",
  "objc2-app-kit 0.3.2",
