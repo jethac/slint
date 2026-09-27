@@ -1,93 +1,45 @@
 // Copyright © SixtyFPS GmbH <info@slint.dev>
 // SPDX-License-Identifier: MIT
 
-export struct TextStyle {
-    font_size: length,
-    font_weight: int
-}
+import { MaterialTypeStyle, TypefaceTokens, TypographyTokens } from "generated/material_typography_tokens.slint";
+
+export { MaterialTypeStyle }
 
 export global MaterialTypography {
-    out property <int> regular: 300;
-    out property <int> medium: 600;
-    out property <int> semibold: 900;
+    // Font weights (TypefaceTokens.kt).
+    out property <int> regular: TypefaceTokens.weight_regular;
+    out property <int> medium: TypefaceTokens.weight_medium;
+    out property <int> bold: TypefaceTokens.weight_bold;
 
-    out property <TextStyle> display_large: {
-        font_size: 57px,
-        font_weight: root.regular
-    };
-
-    out property <TextStyle> display_medium: {
-        font_size: 45px,
-        font_weight: root.regular
-    };
-
-    out property <TextStyle> display_small: {
-        font_size: 36px,
-        font_weight: root.regular
-    };
-
-    out property <TextStyle> headline_large: {
-        font_size: 32px,
-        font_weight: root.regular
-    };
-
-    out property <TextStyle> headline_medium: {
-        font_size: 28px,
-        font_weight: root.regular
-    };
-
-    out property <TextStyle> headline_small: {
-        font_size: 24px,
-        font_weight: root.regular
-    };
-
-    out property <TextStyle> title_large: {
-        font_size: 22px,
-        font_weight: root.regular
-    };
-
-    out property <TextStyle> title_medium: {
-        font_size: 16px,
-        font_weight: root.medium
-    };
-
-    out property <TextStyle> title_small: {
-        font_size: 14px,
-        font_weight: root.medium
-    };
-
-    out property <TextStyle> label_large: {
-        font_size: 14px,
-        font_weight: root.medium
-    };
-
-    out property <TextStyle> label_medium: {
-        font_size: 12px,
-        font_weight: root.medium
-    };
-
-    out property <TextStyle> label_medium_prominent: {
-        font_size: 12px,
-        font_weight: root.semibold
-    };
-
-    out property <TextStyle> label_small: {
-        font_size: 11px,
-        font_weight: root.medium
-    };
-
-    out property <TextStyle> body_large: {
-        font_size: 16px,
-        font_weight: root.regular
-    };
-
-    out property <TextStyle> body_medium: {
-        font_size: 14px,
-        font_weight: root.regular
-    };
-
-    out property <TextStyle> body_small: {
-        font_size: 12px,
-        font_weight: root.regular
-    };
+    // Type scale (TypographyTokens.kt) — every role including *Emphasized.
+    out property <MaterialTypeStyle> display_large: TypographyTokens.display_large;
+    out property <MaterialTypeStyle> display_medium: TypographyTokens.display_medium;
+    out property <MaterialTypeStyle> display_small: TypographyTokens.display_small;
+    out property <MaterialTypeStyle> headline_large: TypographyTokens.headline_large;
+    out property <MaterialTypeStyle> headline_medium: TypographyTokens.headline_medium;
+    out property <MaterialTypeStyle> headline_small: TypographyTokens.headline_small;
+    out property <MaterialTypeStyle> title_large: TypographyTokens.title_large;
+    out property <MaterialTypeStyle> title_medium: TypographyTokens.title_medium;
+    out property <MaterialTypeStyle> title_small: TypographyTokens.title_small;
+    out property <MaterialTypeStyle> label_large: TypographyTokens.label_large;
+    out property <MaterialTypeStyle> label_medium: TypographyTokens.label_medium;
+    out property <MaterialTypeStyle> label_small: TypographyTokens.label_small;
+    out property <MaterialTypeStyle> body_large: TypographyTokens.body_large;
+    out property <MaterialTypeStyle> body_medium: TypographyTokens.body_medium;
+    out property <MaterialTypeStyle> body_small: TypographyTokens.body_small;
+    out property <MaterialTypeStyle> display_large_emphasized: TypographyTokens.display_large_emphasized;
+    out property <MaterialTypeStyle> display_medium_emphasized: TypographyTokens.display_medium_emphasized;
+    out property <MaterialTypeStyle> display_small_emphasized: TypographyTokens.display_small_emphasized;
+    out property <MaterialTypeStyle> headline_large_emphasized: TypographyTokens.headline_large_emphasized;
+    out property <MaterialTypeStyle> headline_medium_emphasized: TypographyTokens.headline_medium_emphasized;
+    out property <MaterialTypeStyle> headline_small_emphasized: TypographyTokens.headline_small_emphasized;
+    out property <MaterialTypeStyle> title_large_emphasized: TypographyTokens.title_large_emphasized;
+    out property <MaterialTypeStyle> title_medium_emphasized: TypographyTokens.title_medium_emphasized;
+    out property <MaterialTypeStyle> title_small_emphasized: TypographyTokens.title_small_emphasized;
+    out property <MaterialTypeStyle> label_large_emphasized: TypographyTokens.label_large_emphasized;
+    out property <MaterialTypeStyle> label_medium_emphasized: TypographyTokens.label_medium_emphasized;
+    out property <MaterialTypeStyle> label_small_emphasized: TypographyTokens.label_small_emphasized;
+    out property <MaterialTypeStyle> body_large_emphasized: TypographyTokens.body_large_emphasized;
+    out property <MaterialTypeStyle> body_medium_emphasized: TypographyTokens.body_medium_emphasized;
+    out property <MaterialTypeStyle> body_small_emphasized: TypographyTokens.body_small_emphasized;
 }

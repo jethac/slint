@@ -73,6 +73,9 @@ jobs:
 
     ci:
         needs: [format_fix, lint_typecheck]
+        # ci.yaml requires secrets that only exist in the upstream repository.
+        # Forks run their material checks via material.yaml's own triggers.
+        if: ${{ github.repository == 'slint-ui/slint' }}
         permissions:
             contents: read
             deployments: write
