@@ -28,3 +28,18 @@ Clone one of our Material Components for Slint templates and follow the instruct
  - C++: https://github.com/slint-ui/material-cpp-template
  - Node.js/Deno: https://github.com/slint-ui/material-nodejs-template
  - Python: https://github.com/slint-ui/material-python-template
+
+## Token pipeline
+
+The Material Design tokens under `src/ui/styling/generated/` are generated from
+the androidx Material 3 sources pinned in `TOKENS_SOURCE`.
+To regenerate them or to bump the pin, run from this directory:
+
+```sh
+cargo run -p material-token-generator
+```
+
+`cargo run -p material-token-generator -- check` verifies that the committed
+files match what the generator produces at the pinned commit; CI runs it.
+`PARITY.md` is the generated component/token parity inventory; its statuses
+live in `PARITY_STATUS.json`.

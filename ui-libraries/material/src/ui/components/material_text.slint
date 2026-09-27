@@ -1,14 +1,18 @@
 // Copyright © SixtyFPS GmbH <info@slint.dev>
 // SPDX-License-Identifier: MIT
 
-import { MaterialTypography, TextStyle } from "../styling/material_typography.slint";
+import { MaterialTypography, MaterialTypeStyle } from "../styling/material_typography.slint";
 import { MaterialPalette } from "../styling/material_palette.slint";
 
 export component MaterialText inherits Text {
-    in property <TextStyle> style: MaterialTypography.body_medium;
+    in property <MaterialTypeStyle> style: MaterialTypography.body_medium;
 
+    font_family: root.style.font_family;
     font_size: root.style.font_size;
     font_weight: root.style.font_weight;
+    letter_spacing: root.style.tracking;
+    // `line_height` stays unused: Text only has `line-height-factor`,
+    // relative to the natural line height, not the absolute sp value.
     color: MaterialPalette.on_background;
     overflow: elide;
 }

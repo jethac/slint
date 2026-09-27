@@ -1,0 +1,1215 @@
+{
+  "AlertDialog": {
+    "issues": [
+      11
+    ],
+    "needs": "none",
+    "notes": "slint component: Dialog",
+    "status": "partial"
+  },
+  "AppBarColumn": {
+    "issues": [
+      11
+    ],
+    "needs": "springs (#5), shapes (#6)",
+    "notes": "",
+    "status": "missing"
+  },
+  "AppBarOverflowIndicator": {
+    "issues": [
+      11
+    ],
+    "needs": "springs (#5), shapes (#6)",
+    "notes": "",
+    "status": "missing"
+  },
+  "AppBarRow": {
+    "issues": [
+      11
+    ],
+    "needs": "springs (#5), shapes (#6)",
+    "notes": "",
+    "status": "missing"
+  },
+  "AppBarWithSearch": {
+    "issues": [
+      11
+    ],
+    "needs": "search app bar",
+    "notes": "",
+    "status": "missing"
+  },
+  "AssistChip": {
+    "issues": [
+      11
+    ],
+    "needs": "shapes (#6)",
+    "notes": "slint component: Chip",
+    "status": "partial"
+  },
+  "Badge": {
+    "issues": [
+      11
+    ],
+    "needs": "none",
+    "notes": "slint component: Badge",
+    "status": "partial"
+  },
+  "BadgedBox": {
+    "issues": [
+      11
+    ],
+    "needs": "none",
+    "notes": "slint component: Badge",
+    "status": "partial"
+  },
+  "BasicAlertDialog": {
+    "issues": [
+      11
+    ],
+    "needs": "none",
+    "notes": "",
+    "status": "missing"
+  },
+  "BottomAppBar": {
+    "issues": [
+      11
+    ],
+    "needs": "springs (#5), shapes (#6)",
+    "notes": "slint component: BottomAppBar",
+    "status": "partial"
+  },
+  "BottomSheet": {
+    "issues": [
+      11
+    ],
+    "needs": "springs (#5)",
+    "notes": "",
+    "status": "missing"
+  },
+  "BottomSheetScaffold": {
+    "issues": [
+      11
+    ],
+    "needs": "springs (#5)",
+    "notes": "",
+    "status": "missing"
+  },
+  "Button": {
+    "issues": [
+      9
+    ],
+    "needs": "springs (#5), shapes (#6)",
+    "notes": "slint component: FilledButton",
+    "status": "partial"
+  },
+  "ButtonGroup": {
+    "issues": [
+      5,
+      9,
+      10
+    ],
+    "needs": "button group layout + springs",
+    "notes": "",
+    "status": "missing"
+  },
+  "Card": {
+    "issues": [
+      11
+    ],
+    "needs": "none",
+    "notes": "slint component: ElevatedCard/FilledCard/OutlinedCard",
+    "status": "partial"
+  },
+  "CenterAlignedTopAppBar": {
+    "issues": [
+      11
+    ],
+    "needs": "springs (#5), shapes (#6)",
+    "notes": "slint component: AppBar",
+    "status": "partial"
+  },
+  "CheckableDropdownMenuItem": {
+    "issues": [
+      11
+    ],
+    "needs": "springs (#5), shapes (#6)",
+    "notes": "",
+    "status": "missing"
+  },
+  "Checkbox": {
+    "issues": [
+      11
+    ],
+    "needs": "shapes (#6)",
+    "notes": "slint component: CheckBox",
+    "status": "partial"
+  },
+  "CircularProgressIndicator": {
+    "issues": [
+      11
+    ],
+    "needs": "wavy shapes (#6), springs (#5)",
+    "notes": "slint component: CircularProgressIndicator",
+    "status": "partial"
+  },
+  "CircularWavyProgressIndicator": {
+    "issues": [
+      6,
+      11
+    ],
+    "needs": "wavy/morph shapes",
+    "notes": "",
+    "status": "missing"
+  },
+  "ContainedLoadingIndicator": {
+    "issues": [
+      5,
+      6,
+      10
+    ],
+    "needs": "shape morph + wavy strokes",
+    "notes": "",
+    "status": "missing"
+  },
+  "DatePicker": {
+    "issues": [
+      11
+    ],
+    "needs": "none",
+    "notes": "slint component: DatePickerPopup",
+    "status": "partial"
+  },
+  "DatePickerDialog": {
+    "issues": [
+      11
+    ],
+    "needs": "none",
+    "notes": "slint component: DatePickerPopup",
+    "status": "partial"
+  },
+  "DateRangePicker": {
+    "issues": [
+      11
+    ],
+    "needs": "none",
+    "notes": "",
+    "status": "missing"
+  },
+  "DismissibleDrawerSheet": {
+    "issues": [
+      11,
+      12
+    ],
+    "needs": "adaptive (#12)",
+    "notes": "",
+    "status": "missing"
+  },
+  "DismissibleNavigationDrawer": {
+    "issues": [
+      12
+    ],
+    "needs": "adaptive (#12)",
+    "notes": "slint component: ModalDrawer",
+    "status": "partial"
+  },
+  "Divider": {
+    "issues": [
+      11
+    ],
+    "needs": "none",
+    "notes": "",
+    "status": "missing"
+  },
+  "DockedSearchBar": {
+    "issues": [
+      11
+    ],
+    "needs": "springs (#5)",
+    "notes": "slint component: SearchBar",
+    "status": "partial"
+  },
+  "DropdownMenu": {
+    "issues": [
+      11
+    ],
+    "needs": "springs (#5), shapes (#6)",
+    "notes": "slint component: DropDownMenu/PopupMenu",
+    "status": "partial"
+  },
+  "DropdownMenuGroup": {
+    "issues": [
+      11
+    ],
+    "needs": "springs (#5), shapes (#6)",
+    "notes": "",
+    "status": "missing"
+  },
+  "DropdownMenuItem": {
+    "issues": [
+      11
+    ],
+    "needs": "springs (#5), shapes (#6)",
+    "notes": "slint component: MenuItem in DropDownMenu",
+    "status": "partial"
+  },
+  "DropdownMenuItemLegacy": {
+    "issues": [
+      11
+    ],
+    "needs": "springs (#5), shapes (#6)",
+    "notes": "",
+    "status": "missing"
+  },
+  "DropdownMenuPopup": {
+    "issues": [
+      11
+    ],
+    "needs": "springs (#5), shapes (#6)",
+    "notes": "",
+    "status": "missing"
+  },
+  "ElevatedAssistChip": {
+    "issues": [
+      9
+    ],
+    "needs": "shapes (#6)",
+    "notes": "",
+    "status": "missing"
+  },
+  "ElevatedButton": {
+    "issues": [
+      9
+    ],
+    "needs": "springs (#5), shapes (#6)",
+    "notes": "slint component: ElevatedButton",
+    "status": "partial"
+  },
+  "ElevatedCard": {
+    "issues": [
+      11
+    ],
+    "needs": "none",
+    "notes": "slint component: ElevatedCard",
+    "status": "partial"
+  },
+  "ElevatedFilterChip": {
+    "issues": [
+      9
+    ],
+    "needs": "shapes (#6)",
+    "notes": "",
+    "status": "missing"
+  },
+  "ElevatedSuggestionChip": {
+    "issues": [
+      9
+    ],
+    "needs": "shapes (#6)",
+    "notes": "",
+    "status": "missing"
+  },
+  "ElevatedToggleButton": {
+    "issues": [
+      9
+    ],
+    "needs": "toggle buttons",
+    "notes": "",
+    "status": "missing"
+  },
+  "ExpandedDockedSearchBar": {
+    "issues": [
+      11
+    ],
+    "needs": "springs (#5)",
+    "notes": "",
+    "status": "missing"
+  },
+  "ExpandedDockedSearchBarWithGap": {
+    "issues": [
+      11
+    ],
+    "needs": "springs (#5)",
+    "notes": "",
+    "status": "missing"
+  },
+  "ExpandedFullScreenContainedSearchBar": {
+    "issues": [
+      11
+    ],
+    "needs": "springs (#5)",
+    "notes": "",
+    "status": "missing"
+  },
+  "ExpandedFullScreenSearchBar": {
+    "issues": [
+      11
+    ],
+    "needs": "springs (#5)",
+    "notes": "",
+    "status": "missing"
+  },
+  "ExposedDropdownMenuBox": {
+    "issues": [
+      11
+    ],
+    "needs": "springs (#5), shapes (#6)",
+    "notes": "",
+    "status": "missing"
+  },
+  "ExposedDropdownMenuBoxScope": {
+    "issues": [
+      11
+    ],
+    "needs": "springs (#5), shapes (#6)",
+    "notes": "",
+    "status": "missing"
+  },
+  "ExtendedFloatingActionButton": {
+    "issues": [
+      9
+    ],
+    "needs": "springs (#5), shapes (#6)",
+    "notes": "slint component: FloatingActionButton",
+    "status": "partial"
+  },
+  "FilledIconButton": {
+    "issues": [
+      9
+    ],
+    "needs": "springs (#5), shapes (#6)",
+    "notes": "slint component: FilledIconButton",
+    "status": "partial"
+  },
+  "FilledIconToggleButton": {
+    "issues": [
+      9
+    ],
+    "needs": "toggle icon buttons",
+    "notes": "",
+    "status": "missing"
+  },
+  "FilledTonalButton": {
+    "issues": [
+      9
+    ],
+    "needs": "springs (#5), shapes (#6)",
+    "notes": "slint component: TonalButton",
+    "status": "partial"
+  },
+  "FilledTonalIconButton": {
+    "issues": [
+      9
+    ],
+    "needs": "springs (#5), shapes (#6)",
+    "notes": "slint component: TonalIconButton",
+    "status": "partial"
+  },
+  "FilledTonalIconToggleButton": {
+    "issues": [
+      9
+    ],
+    "needs": "toggle icon buttons",
+    "notes": "",
+    "status": "missing"
+  },
+  "FilledTonalToggleButton": {
+    "issues": [
+      9
+    ],
+    "needs": "springs (#5), shapes (#6)",
+    "notes": "",
+    "status": "missing"
+  },
+  "FilterChip": {
+    "issues": [
+      11
+    ],
+    "needs": "shapes (#6)",
+    "notes": "slint component: Chip",
+    "status": "partial"
+  },
+  "FlexibleBottomAppBar": {
+    "issues": [
+      11
+    ],
+    "needs": "springs (#5), shapes (#6)",
+    "notes": "",
+    "status": "missing"
+  },
+  "FloatingActionButton": {
+    "issues": [
+      9
+    ],
+    "needs": "springs (#5), shapes (#6)",
+    "notes": "slint component: FloatingActionButton",
+    "status": "partial"
+  },
+  "FloatingActionButtonMenu": {
+    "issues": [
+      5,
+      10
+    ],
+    "needs": "FAB menu + springs",
+    "notes": "",
+    "status": "missing"
+  },
+  "FloatingActionButtonMenuScope": {
+    "issues": [
+      10
+    ],
+    "needs": "springs (#5), shapes (#6)",
+    "notes": "",
+    "status": "missing"
+  },
+  "HorizontalCenteredHeroCarousel": {
+    "issues": [
+      11
+    ],
+    "needs": "springs (#5), shapes (#6)",
+    "notes": "",
+    "status": "missing"
+  },
+  "HorizontalDivider": {
+    "issues": [
+      11
+    ],
+    "needs": "none",
+    "notes": "slint component: HorizontalDivider",
+    "status": "partial"
+  },
+  "HorizontalFloatingToolbar": {
+    "issues": [
+      10
+    ],
+    "needs": "floating toolbars",
+    "notes": "",
+    "status": "missing"
+  },
+  "HorizontalMultiBrowseCarousel": {
+    "issues": [
+      11
+    ],
+    "needs": "springs (#5), shapes (#6)",
+    "notes": "",
+    "status": "missing"
+  },
+  "HorizontalUncontainedCarousel": {
+    "issues": [
+      11
+    ],
+    "needs": "springs (#5), shapes (#6)",
+    "notes": "",
+    "status": "missing"
+  },
+  "Icon": {
+    "issues": [
+      11
+    ],
+    "needs": "none",
+    "notes": "slint component: Icon",
+    "status": "partial"
+  },
+  "IconButton": {
+    "issues": [
+      9
+    ],
+    "needs": "springs (#5), shapes (#6)",
+    "notes": "slint component: IconButton",
+    "status": "partial"
+  },
+  "IconToggleButton": {
+    "issues": [
+      9
+    ],
+    "needs": "toggle icon buttons",
+    "notes": "",
+    "status": "missing"
+  },
+  "InputChip": {
+    "issues": [
+      11
+    ],
+    "needs": "shapes (#6)",
+    "notes": "slint component: Chip",
+    "status": "partial"
+  },
+  "LargeExtendedFloatingActionButton": {
+    "issues": [
+      9
+    ],
+    "needs": "springs (#5), shapes (#6)",
+    "notes": "",
+    "status": "missing"
+  },
+  "LargeFlexibleTopAppBar": {
+    "issues": [
+      11
+    ],
+    "needs": "springs (#5), shapes (#6)",
+    "notes": "",
+    "status": "missing"
+  },
+  "LargeFloatingActionButton": {
+    "issues": [
+      9
+    ],
+    "needs": "springs (#5), shapes (#6)",
+    "notes": "",
+    "status": "missing"
+  },
+  "LargeTopAppBar": {
+    "issues": [
+      11
+    ],
+    "needs": "springs (#5), shapes (#6)",
+    "notes": "",
+    "status": "missing"
+  },
+  "LeadingIconTab": {
+    "issues": [
+      11
+    ],
+    "needs": "none",
+    "notes": "",
+    "status": "missing"
+  },
+  "LinearProgressIndicator": {
+    "issues": [
+      11
+    ],
+    "needs": "wavy shapes (#6), springs (#5)",
+    "notes": "slint component: LinearProgressIndicator",
+    "status": "partial"
+  },
+  "LinearWavyProgressIndicator": {
+    "issues": [
+      6,
+      11
+    ],
+    "needs": "wavy/morph shapes",
+    "notes": "",
+    "status": "missing"
+  },
+  "ListItem": {
+    "issues": [
+      11
+    ],
+    "needs": "shapes (#6)",
+    "notes": "slint component: ListTile",
+    "status": "partial"
+  },
+  "LoadingIndicator": {
+    "issues": [
+      5,
+      6,
+      10
+    ],
+    "needs": "shape morph + wavy strokes",
+    "notes": "",
+    "status": "missing"
+  },
+  "MediumExtendedFloatingActionButton": {
+    "issues": [
+      9
+    ],
+    "needs": "springs (#5), shapes (#6)",
+    "notes": "",
+    "status": "missing"
+  },
+  "MediumFlexibleTopAppBar": {
+    "issues": [
+      11
+    ],
+    "needs": "springs (#5), shapes (#6)",
+    "notes": "",
+    "status": "missing"
+  },
+  "MediumFloatingActionButton": {
+    "issues": [
+      9
+    ],
+    "needs": "springs (#5), shapes (#6)",
+    "notes": "",
+    "status": "missing"
+  },
+  "MediumTopAppBar": {
+    "issues": [
+      11
+    ],
+    "needs": "springs (#5), shapes (#6)",
+    "notes": "slint component: MediumAppBar",
+    "status": "partial"
+  },
+  "ModalBottomSheet": {
+    "issues": [
+      11
+    ],
+    "needs": "springs (#5)",
+    "notes": "slint component: ModalBottomSheet",
+    "status": "partial"
+  },
+  "ModalDrawerSheet": {
+    "issues": [
+      12
+    ],
+    "needs": "adaptive (#12)",
+    "notes": "slint component: ModalDrawer",
+    "status": "partial"
+  },
+  "ModalNavigationDrawer": {
+    "issues": [
+      12
+    ],
+    "needs": "adaptive (#12)",
+    "notes": "slint component: ModalNavigationDrawer",
+    "status": "partial"
+  },
+  "ModalWideNavigationRail": {
+    "issues": [
+      12
+    ],
+    "needs": "adaptive layout",
+    "notes": "",
+    "status": "missing"
+  },
+  "Modifier": {
+    "issues": [
+      11
+    ],
+    "needs": "springs (#5), shapes (#6)",
+    "notes": "",
+    "status": "missing"
+  },
+  "MultiChoiceSegmentedButtonRow": {
+    "issues": [
+      10
+    ],
+    "needs": "springs (#5), shapes (#6)",
+    "notes": "",
+    "status": "missing"
+  },
+  "MultiChoiceSegmentedButtonRowScope": {
+    "issues": [
+      10
+    ],
+    "needs": "springs (#5), shapes (#6)",
+    "notes": "",
+    "status": "missing"
+  },
+  "NavigationBar": {
+    "issues": [
+      12
+    ],
+    "needs": "adaptive (#12), springs (#5), shapes (#6)",
+    "notes": "slint component: NavigationBar",
+    "status": "partial"
+  },
+  "NavigationDrawerItem": {
+    "issues": [
+      12
+    ],
+    "needs": "adaptive (#12)",
+    "notes": "slint component: NavigationItemTemplate",
+    "status": "partial"
+  },
+  "NavigationRail": {
+    "issues": [
+      12
+    ],
+    "needs": "adaptive (#12), springs (#5)",
+    "notes": "slint component: NavigationRail",
+    "status": "partial"
+  },
+  "NavigationRailItem": {
+    "issues": [
+      12
+    ],
+    "needs": "adaptive (#12), springs (#5)",
+    "notes": "slint component: NavigationItemTemplate",
+    "status": "partial"
+  },
+  "OutlinedButton": {
+    "issues": [
+      9
+    ],
+    "needs": "springs (#5), shapes (#6)",
+    "notes": "slint component: OutlineButton",
+    "status": "partial"
+  },
+  "OutlinedCard": {
+    "issues": [
+      11
+    ],
+    "needs": "none",
+    "notes": "slint component: OutlinedCard",
+    "status": "partial"
+  },
+  "OutlinedIconButton": {
+    "issues": [
+      9
+    ],
+    "needs": "springs (#5), shapes (#6)",
+    "notes": "slint component: OutlineIconButton",
+    "status": "partial"
+  },
+  "OutlinedIconToggleButton": {
+    "issues": [
+      9
+    ],
+    "needs": "toggle icon buttons",
+    "notes": "",
+    "status": "missing"
+  },
+  "OutlinedSecureTextField": {
+    "issues": [
+      11
+    ],
+    "needs": "variable fonts (#7), shapes (#6)",
+    "notes": "",
+    "status": "missing"
+  },
+  "OutlinedTextField": {
+    "issues": [
+      11
+    ],
+    "needs": "variable fonts (#7), shapes (#6)",
+    "notes": "slint component: TextField",
+    "status": "partial"
+  },
+  "OutlinedToggleButton": {
+    "issues": [
+      9
+    ],
+    "needs": "springs (#5), shapes (#6)",
+    "notes": "",
+    "status": "missing"
+  },
+  "PermanentDrawerSheet": {
+    "issues": [
+      11,
+      12
+    ],
+    "needs": "adaptive (#12)",
+    "notes": "",
+    "status": "missing"
+  },
+  "PermanentNavigationDrawer": {
+    "issues": [
+      12
+    ],
+    "needs": "adaptive (#12)",
+    "notes": "slint component: Drawer",
+    "status": "partial"
+  },
+  "PrimaryScrollableTabRow": {
+    "issues": [
+      11
+    ],
+    "needs": "none",
+    "notes": "",
+    "status": "missing"
+  },
+  "PrimaryTabRow": {
+    "issues": [
+      11
+    ],
+    "needs": "none",
+    "notes": "slint component: TabBar",
+    "status": "partial"
+  },
+  "ProvideTextStyle": {
+    "issues": [
+      7
+    ],
+    "needs": "variable fonts (#7), text scale (#12)",
+    "notes": "",
+    "status": "missing"
+  },
+  "PullToRefreshBox": {
+    "issues": [
+      5
+    ],
+    "needs": "springs",
+    "notes": "",
+    "status": "missing"
+  },
+  "RadioButton": {
+    "issues": [
+      11
+    ],
+    "needs": "shapes (#6)",
+    "notes": "slint component: RadioButton",
+    "status": "partial"
+  },
+  "RangeSlider": {
+    "issues": [
+      11
+    ],
+    "needs": "shapes (#6)",
+    "notes": "",
+    "status": "missing"
+  },
+  "RowScope": {
+    "issues": [
+      11,
+      12
+    ],
+    "needs": "adaptive (#12), springs (#5), shapes (#6)",
+    "notes": "",
+    "status": "missing"
+  },
+  "Scaffold": {
+    "issues": [
+      12
+    ],
+    "needs": "adaptive scaffold",
+    "notes": "",
+    "status": "missing"
+  },
+  "SearchBar": {
+    "issues": [
+      11
+    ],
+    "needs": "springs (#5)",
+    "notes": "slint component: SearchBar",
+    "status": "partial"
+  },
+  "SecondaryScrollableTabRow": {
+    "issues": [
+      11
+    ],
+    "needs": "none",
+    "notes": "",
+    "status": "missing"
+  },
+  "SecondaryTabRow": {
+    "issues": [
+      11
+    ],
+    "needs": "none",
+    "notes": "slint component: SecondaryTabBar",
+    "status": "partial"
+  },
+  "SecureTextField": {
+    "issues": [
+      11
+    ],
+    "needs": "variable fonts (#7), shapes (#6)",
+    "notes": "",
+    "status": "missing"
+  },
+  "SegmentedListItem": {
+    "issues": [
+      11
+    ],
+    "needs": "shapes (#6)",
+    "notes": "",
+    "status": "missing"
+  },
+  "SelectableDropdownMenuItem": {
+    "issues": [
+      11
+    ],
+    "needs": "springs (#5), shapes (#6)",
+    "notes": "",
+    "status": "missing"
+  },
+  "ShortNavigationBar": {
+    "issues": [
+      12
+    ],
+    "needs": "adaptive layout",
+    "notes": "",
+    "status": "missing"
+  },
+  "ShortNavigationBarItem": {
+    "issues": [
+      12
+    ],
+    "needs": "adaptive layout",
+    "notes": "",
+    "status": "missing"
+  },
+  "SingleChoiceSegmentedButtonRow": {
+    "issues": [
+      10
+    ],
+    "needs": "springs (#5), shapes (#6)",
+    "notes": "",
+    "status": "missing"
+  },
+  "SingleChoiceSegmentedButtonRowScope": {
+    "issues": [
+      10
+    ],
+    "needs": "springs (#5), shapes (#6)",
+    "notes": "",
+    "status": "missing"
+  },
+  "Slider": {
+    "issues": [
+      11
+    ],
+    "needs": "shapes (#6)",
+    "notes": "slint component: Slider",
+    "status": "partial"
+  },
+  "SmallExtendedFloatingActionButton": {
+    "issues": [
+      9
+    ],
+    "needs": "springs (#5), shapes (#6)",
+    "notes": "",
+    "status": "missing"
+  },
+  "SmallFloatingActionButton": {
+    "issues": [
+      9
+    ],
+    "needs": "springs (#5), shapes (#6)",
+    "notes": "",
+    "status": "missing"
+  },
+  "Snackbar": {
+    "issues": [
+      11
+    ],
+    "needs": "none",
+    "notes": "slint component: SnackBar",
+    "status": "partial"
+  },
+  "SnackbarHost": {
+    "issues": [
+      11
+    ],
+    "needs": "none",
+    "notes": "",
+    "status": "missing"
+  },
+  "SplitButtonLayout": {
+    "issues": [
+      9,
+      10
+    ],
+    "needs": "split buttons",
+    "notes": "",
+    "status": "missing"
+  },
+  "SuggestionChip": {
+    "issues": [
+      11
+    ],
+    "needs": "shapes (#6)",
+    "notes": "slint component: Chip",
+    "status": "partial"
+  },
+  "Surface": {
+    "issues": [
+      11
+    ],
+    "needs": "dynamic color (#8)",
+    "notes": "",
+    "status": "missing"
+  },
+  "SwipeToDismissBox": {
+    "issues": [
+      11
+    ],
+    "needs": "springs (#5)",
+    "notes": "",
+    "status": "missing"
+  },
+  "Switch": {
+    "issues": [
+      11
+    ],
+    "needs": "springs (#5), shapes (#6)",
+    "notes": "slint component: Switch",
+    "status": "partial"
+  },
+  "Tab": {
+    "issues": [
+      11
+    ],
+    "needs": "none",
+    "notes": "slint component: TabBar",
+    "status": "partial"
+  },
+  "Text": {
+    "issues": [
+      11
+    ],
+    "needs": "variable fonts (#7), text scale (#12)",
+    "notes": "slint component: MaterialText",
+    "status": "partial"
+  },
+  "TextButton": {
+    "issues": [
+      9
+    ],
+    "needs": "springs (#5), shapes (#6)",
+    "notes": "slint component: TextButton",
+    "status": "partial"
+  },
+  "TextField": {
+    "issues": [
+      11
+    ],
+    "needs": "variable fonts (#7), shapes (#6)",
+    "notes": "slint component: TextField",
+    "status": "partial"
+  },
+  "TimeInput": {
+    "issues": [
+      11
+    ],
+    "needs": "none",
+    "notes": "",
+    "status": "missing"
+  },
+  "TimePicker": {
+    "issues": [
+      11
+    ],
+    "needs": "none",
+    "notes": "slint component: TimePickerPopup",
+    "status": "partial"
+  },
+  "TimePickerDialog": {
+    "issues": [
+      11
+    ],
+    "needs": "none",
+    "notes": "",
+    "status": "missing"
+  },
+  "TimeScroll": {
+    "issues": [
+      11
+    ],
+    "needs": "none",
+    "notes": "",
+    "status": "missing"
+  },
+  "ToggleButton": {
+    "issues": [
+      9
+    ],
+    "needs": "toggle buttons",
+    "notes": "",
+    "status": "missing"
+  },
+  "ToggleFloatingActionButton": {
+    "issues": [
+      10
+    ],
+    "needs": "springs (#5), shapes (#6)",
+    "notes": "",
+    "status": "missing"
+  },
+  "TooltipBox": {
+    "issues": [
+      11
+    ],
+    "needs": "none",
+    "notes": "slint component: ToolTip",
+    "status": "partial"
+  },
+  "TooltipScope": {
+    "issues": [
+      11
+    ],
+    "needs": "none",
+    "notes": "",
+    "status": "missing"
+  },
+  "TopAppBar": {
+    "issues": [
+      11
+    ],
+    "needs": "springs (#5), shapes (#6)",
+    "notes": "slint component: AppBar/SmallAppBar",
+    "status": "partial"
+  },
+  "TopSearchBar": {
+    "issues": [
+      11
+    ],
+    "needs": "springs (#5)",
+    "notes": "",
+    "status": "missing"
+  },
+  "TriStateCheckbox": {
+    "issues": [
+      11
+    ],
+    "needs": "shapes (#6)",
+    "notes": "",
+    "status": "missing"
+  },
+  "TwoRowsTopAppBar": {
+    "issues": [
+      11
+    ],
+    "needs": "springs (#5), shapes (#6)",
+    "notes": "",
+    "status": "missing"
+  },
+  "VerticalDivider": {
+    "issues": [
+      11
+    ],
+    "needs": "none",
+    "notes": "slint component: VerticalDivider",
+    "status": "partial"
+  },
+  "VerticalDragHandle": {
+    "issues": [
+      11
+    ],
+    "needs": "springs (#5)",
+    "notes": "",
+    "status": "missing"
+  },
+  "VerticalFloatingToolbar": {
+    "issues": [
+      10
+    ],
+    "needs": "floating toolbars",
+    "notes": "",
+    "status": "missing"
+  },
+  "VerticalSlider": {
+    "issues": [
+      11
+    ],
+    "needs": "shapes (#6)",
+    "notes": "",
+    "status": "missing"
+  },
+  "VibrantTimePickerDialog": {
+    "issues": [
+      11
+    ],
+    "needs": "none",
+    "notes": "",
+    "status": "missing"
+  },
+  "WideNavigationRail": {
+    "issues": [
+      12
+    ],
+    "needs": "adaptive layout",
+    "notes": "",
+    "status": "missing"
+  },
+  "WideNavigationRailItem": {
+    "issues": [
+      12
+    ],
+    "needs": "adaptive layout",
+    "notes": "",
+    "status": "missing"
+  }
+}
