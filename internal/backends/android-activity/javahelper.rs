@@ -20,7 +20,8 @@ use i_slint_core::item_rendering::HasFont;
 use i_slint_core::items::{CapitalizationMode, ColorScheme, InputType};
 use i_slint_core::lengths::{LogicalLength, PhysicalEdges};
 use i_slint_core::platform::{Key, WindowAdapter, WindowEvent, WindowEventDispatchResult};
-use jni::objects::{JClass, JClassLoader, JString, LoaderContext};
+use jni::objects::{JClass, JClassLoader, JString, LoaderContext, ReleaseMode};
+use jni::refs::Reference;
 use jni::sys::{jfloat, jint};
 use jni::{Env, JavaVM, bind_java_type};
 use std::sync::OnceLock;
@@ -52,9 +53,17 @@ bind_java_type! {
             name = "color_scheme",
             sig = () -> jint,
         },
+        fn contrast {
+            name = "contrast",
+            sig = () -> jfloat,
+        },
         fn font_scale {
             name = "font_scale",
             sig = () -> jfloat,
+        },
+        fn system_color_schemes {
+            name = "system_color_schemes",
+            sig = () -> jint[],
         },
         fn get_clipboard {
             name = "get_clipboard",
@@ -560,6 +569,24 @@ impl JavaHelper {
         })
     }
 
+    pub fn contrast(&self) -> Result<f32, jni::errors::Error> {
+        self.with_jni_env(|env, helper| helper.contrast(env))
+    }
+
+    /// The platform's Material dynamic colors, packed as
+    /// `i_slint_core::material::android_system_schemes` expects; `Ok(None)`
+    /// below API 31, where Android doesn't do dynamic color.
+    pub fn system_color_schemes(&self) -> Result<Option<Vec<i32>>, jni::errors::Error> {
+        self.with_jni_env(|env, helper| {
+            let array = helper.system_color_schemes(env)?;
+            if array.is_null() {
+                return Ok(None);
+            }
+            let elements = unsafe { array.get_elements(env, ReleaseMode::NoCopyBack) }?;
+            Ok(Some(elements.to_vec()))
+        })
+    }
+
     /// `night_mode` is a `Configuration.UI_MODE_NIGHT_*` value.
     pub fn set_system_colors(&self, ctx: &i_slint_core::SlintContext, night_mode: i32) {
         ctx.set_color_scheme(match night_mode {
@@ -701,6 +728,16 @@ fn callback_set_night_mode<'local>(
         if let Some(w) = CURRENT_WINDOW.with_borrow(|x| x.upgrade()) {
             let ctx = i_slint_core::window::WindowInner::from_pub(&w.window).context();
             w.java_helper.set_system_colors(ctx, night_mode);
+            if let Ok(contrast) = w.java_helper.contrast() {
+                ctx.set_contrast_preference(contrast);
+            }
+            // A UI-mode change can move the system dynamic colors (the
+            // API 34+ role resources resolve per uiMode/contrast); re-read.
+            if let Ok(Some(data)) = w.java_helper.system_color_schemes()
+                && let Some(schemes) = i_slint_core::material::android_system_schemes(&data)
+            {
+                ctx.set_platform_schemes(Some(schemes));
+            }
         }
     })
     .unwrap();

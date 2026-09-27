@@ -254,3 +254,58 @@ export global ColorSchemeKeyTokens {
     out property <int> tertiary_fixed_dim: 47;
 }
 
+/// `expressiveLightColorScheme()` from ColorScheme.kt: the default light
+/// scheme of `MaterialExpressiveTheme` — `lightColorScheme()` with the
+/// `on*Container` roles set to palette tone 30. There is no expressive
+/// dark scheme upstream; dark falls back to `ColorDarkTokens`.
+export global ExpressiveLightColorTokens {
+    out property <color> background: ColorLightTokens.background;
+    out property <color> error: ColorLightTokens.error;
+    out property <color> error_container: ColorLightTokens.error_container;
+    out property <color> inverse_on_surface: ColorLightTokens.inverse_on_surface;
+    out property <color> inverse_primary: ColorLightTokens.inverse_primary;
+    out property <color> inverse_surface: ColorLightTokens.inverse_surface;
+    out property <color> on_background: ColorLightTokens.on_background;
+    out property <color> on_error: ColorLightTokens.on_error;
+    out property <color> on_error_container: PaletteTokens.error30;
+    out property <color> on_primary: ColorLightTokens.on_primary;
+    out property <color> on_primary_container: PaletteTokens.primary30;
+    out property <color> on_primary_fixed: ColorLightTokens.on_primary_fixed;
+    out property <color> on_primary_fixed_variant: ColorLightTokens.on_primary_fixed_variant;
+    out property <color> on_secondary: ColorLightTokens.on_secondary;
+    out property <color> on_secondary_container: PaletteTokens.secondary30;
+    out property <color> on_secondary_fixed: ColorLightTokens.on_secondary_fixed;
+    out property <color> on_secondary_fixed_variant: ColorLightTokens.on_secondary_fixed_variant;
+    out property <color> on_surface: ColorLightTokens.on_surface;
+    out property <color> on_surface_variant: ColorLightTokens.on_surface_variant;
+    out property <color> on_tertiary: ColorLightTokens.on_tertiary;
+    out property <color> on_tertiary_container: PaletteTokens.tertiary30;
+    out property <color> on_tertiary_fixed: ColorLightTokens.on_tertiary_fixed;
+    out property <color> on_tertiary_fixed_variant: ColorLightTokens.on_tertiary_fixed_variant;
+    out property <color> outline: ColorLightTokens.outline;
+    out property <color> outline_variant: ColorLightTokens.outline_variant;
+    out property <color> primary: ColorLightTokens.primary;
+    out property <color> primary_container: ColorLightTokens.primary_container;
+    out property <color> primary_fixed: ColorLightTokens.primary_fixed;
+    out property <color> primary_fixed_dim: ColorLightTokens.primary_fixed_dim;
+    out property <color> scrim: ColorLightTokens.scrim;
+    out property <color> secondary: ColorLightTokens.secondary;
+    out property <color> secondary_container: ColorLightTokens.secondary_container;
+    out property <color> secondary_fixed: ColorLightTokens.secondary_fixed;
+    out property <color> secondary_fixed_dim: ColorLightTokens.secondary_fixed_dim;
+    out property <color> surface: ColorLightTokens.surface;
+    out property <color> surface_bright: ColorLightTokens.surface_bright;
+    out property <color> surface_container: ColorLightTokens.surface_container;
+    out property <color> surface_container_high: ColorLightTokens.surface_container_high;
+    out property <color> surface_container_highest: ColorLightTokens.surface_container_highest;
+    out property <color> surface_container_low: ColorLightTokens.surface_container_low;
+    out property <color> surface_container_lowest: ColorLightTokens.surface_container_lowest;
+    out property <color> surface_dim: ColorLightTokens.surface_dim;
+    out property <color> surface_tint: ColorLightTokens.surface_tint;
+    out property <color> surface_variant: ColorLightTokens.surface_variant;
+    out property <color> tertiary: ColorLightTokens.tertiary;
+    out property <color> tertiary_container: ColorLightTokens.tertiary_container;
+    out property <color> tertiary_fixed: ColorLightTokens.tertiary_fixed;
+    out property <color> tertiary_fixed_dim: ColorLightTokens.tertiary_fixed_dim;
+}
+

@@ -211,6 +211,109 @@ macro_rules! for_each_builtin_structs {
                 /// The bottom edge value
                 bottom: Coord,
             }
+
+            /// The color roles of a Material Design color scheme, generated at run time by
+            /// `MaterialColors.color-scheme()`. The fields are the Material Design 3 color roles.
+            pub struct MaterialColorScheme {
+                /// The primary color
+                primary: Color,
+                /// The color used to tint elevated surfaces
+                surface_tint: Color,
+                /// Content color on `primary`
+                on_primary: Color,
+                /// A container color tinted by the primary color
+                primary_container: Color,
+                /// Content color on `primary-container`
+                on_primary_container: Color,
+                /// The secondary color
+                secondary: Color,
+                /// Content color on `secondary`
+                on_secondary: Color,
+                /// A container color tinted by the secondary color
+                secondary_container: Color,
+                /// Content color on `secondary-container`
+                on_secondary_container: Color,
+                /// The tertiary color
+                tertiary: Color,
+                /// Content color on `tertiary`
+                on_tertiary: Color,
+                /// A container color tinted by the tertiary color
+                tertiary_container: Color,
+                /// Content color on `tertiary-container`
+                on_tertiary_container: Color,
+                /// The error color
+                error: Color,
+                /// Content color on `error`
+                on_error: Color,
+                /// The error container color
+                error_container: Color,
+                /// Content color on `error-container`
+                on_error_container: Color,
+                /// The background color
+                background: Color,
+                /// Content color on `background`
+                on_background: Color,
+                /// The surface color
+                surface: Color,
+                /// Content color on `surface`
+                on_surface: Color,
+                /// A surface variant color
+                surface_variant: Color,
+                /// Content color on `surface-variant`
+                on_surface_variant: Color,
+                /// The outline color
+                outline: Color,
+                /// A subtler outline color
+                outline_variant: Color,
+                /// The shadow color
+                shadow: Color,
+                /// The scrim color
+                scrim: Color,
+                /// The inverse surface color
+                inverse_surface: Color,
+                /// Content color on `inverse-surface`
+                inverse_on_surface: Color,
+                /// The inverse primary color
+                inverse_primary: Color,
+                /// The fixed primary color, constant across light and dark schemes
+                primary_fixed: Color,
+                /// Content color on `primary-fixed`
+                on_primary_fixed: Color,
+                /// A dimmer fixed primary color
+                primary_fixed_dim: Color,
+                /// Content color on `primary-fixed` and `primary-fixed-dim`
+                on_primary_fixed_variant: Color,
+                /// The fixed secondary color
+                secondary_fixed: Color,
+                /// Content color on `secondary-fixed`
+                on_secondary_fixed: Color,
+                /// A dimmer fixed secondary color
+                secondary_fixed_dim: Color,
+                /// Content color on `secondary-fixed` and `secondary-fixed-dim`
+                on_secondary_fixed_variant: Color,
+                /// The fixed tertiary color
+                tertiary_fixed: Color,
+                /// Content color on `tertiary-fixed`
+                on_tertiary_fixed: Color,
+                /// A dimmer fixed tertiary color
+                tertiary_fixed_dim: Color,
+                /// Content color on `tertiary-fixed` and `tertiary-fixed-dim`
+                on_tertiary_fixed_variant: Color,
+                /// A dimmed surface color
+                surface_dim: Color,
+                /// A brightened surface color
+                surface_bright: Color,
+                /// The lowest surface container color
+                surface_container_lowest: Color,
+                /// A low surface container color
+                surface_container_low: Color,
+                /// The default surface container color
+                surface_container: Color,
+                /// A high surface container color
+                surface_container_high: Color,
+                /// The highest surface container color
+                surface_container_highest: Color,
+            }
         }
     };
 }

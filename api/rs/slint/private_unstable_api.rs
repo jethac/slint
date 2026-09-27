@@ -180,6 +180,11 @@ pub mod re_exports {
         LogicalLength, LogicalPoint, LogicalRect, logical_position_to_api,
     };
     pub use i_slint_core::macos_bring_all_windows_to_front;
+    pub use i_slint_core::material::{
+        color_scheme as material_color_scheme,
+        platform_color_scheme as material_platform_color_scheme,
+        seed_from_image as material_seed_from_image,
+    };
     pub use i_slint_core::menus::{Menu, MenuFromItemTree, MenuVTable};
     pub use i_slint_core::model::*;
     pub use i_slint_core::properties::{
@@ -192,6 +197,7 @@ pub mod re_exports {
     pub use i_slint_core::translations::TranslationsBundled;
     pub use i_slint_core::window::{
         InputMethodRequest, WindowAdapter, WindowAdapterRc, WindowInner, WindowKind,
+        contrast_preference,
     };
     pub use i_slint_core::{Color, Coord, SharedString, SharedVector, format};
     pub use i_slint_core::{ItemTreeVTable_static, MenuVTable_static};

@@ -122,6 +122,7 @@ macro_rules! builtin_type {
     (HsvaColor) => { $crate::typeregister::builtin_structs::get(&$crate::langtype::BuiltinStruct::ColorHsva).into() };
     (OklchColor) => { $crate::typeregister::builtin_structs::get(&$crate::langtype::BuiltinStruct::ColorOklch).into() };
     (Size) => { $crate::typeregister::builtin_structs::get(&$crate::langtype::BuiltinStruct::Size).into() };
+    (MaterialColorScheme) => { $crate::typeregister::builtin_structs::get(&$crate::langtype::BuiltinStruct::MaterialColorScheme).into() };
     (NoArgCallback) => { $crate::typeregister::noarg_callback_type() };
     (ScaleFactor) => {
         $crate::langtype::Type::UnitProduct(vec![

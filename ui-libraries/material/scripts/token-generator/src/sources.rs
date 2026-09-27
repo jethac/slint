@@ -114,7 +114,8 @@ pub fn ensure_checkout(src: &SourceInfo, cache_dir: &Path) -> Result<PathBuf, St
 }
 
 /// The `(relative_name, contents)` pairs the generator consumes: every
-/// `tokens/*.kt` file plus `Ripple.kt` (focus indicator defaults).
+/// `tokens/*.kt` file plus `Ripple.kt` (focus indicator defaults) and
+/// `ColorScheme.kt` (the `expressiveLightColorScheme` overrides).
 pub fn collect_sources(material3_dir: &Path) -> Result<Vec<(String, String)>, String> {
     let tokens_dir = material3_dir.join("tokens");
     let mut files = Vec::new();
@@ -133,11 +134,13 @@ pub fn collect_sources(material3_dir: &Path) -> Result<Vec<(String, String)>, St
     if files.is_empty() {
         return Err(format!("{}: no token files found", tokens_dir.display()));
     }
-    let ripple = material3_dir.join("Ripple.kt");
-    files.push((
-        "Ripple.kt".to_string(),
-        std::fs::read_to_string(&ripple)
-            .map_err(|e| format!("cannot read {}: {e}", ripple.display()))?,
-    ));
+    for extra in ["Ripple.kt", "ColorScheme.kt"] {
+        let path = material3_dir.join(extra);
+        files.push((
+            extra.to_string(),
+            std::fs::read_to_string(&path)
+                .map_err(|e| format!("cannot read {}: {e}", path.display()))?,
+        ));
+    }
     Ok(files)
 }

@@ -184,6 +184,16 @@ impl i_slint_core::platform::Platform for AndroidPlatform {
             .color_scheme()
             .unwrap_or_else(|e| javahelper::print_jni_error(&self.app, e));
         self.window.java_helper.set_system_colors(&ctx, night_mode);
+        if let Ok(contrast) = self.window.java_helper.contrast() {
+            ctx.set_contrast_preference(contrast);
+        }
+        // The exact dynamic schemes Android derives from the wallpaper
+        // (API 31+); `MaterialColors.platform-color-scheme` uses them.
+        if let Ok(schemes) = self.window.java_helper.system_color_schemes() {
+            ctx.set_platform_schemes(
+                schemes.and_then(|data| i_slint_core::material::android_system_schemes(&data)),
+            );
+        }
         if let Ok(scale) = self.window.java_helper.font_scale()
             && let Some(size) = javahelper::font_scale_to_logical_length(scale)
         {

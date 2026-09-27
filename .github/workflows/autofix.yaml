@@ -73,9 +73,8 @@ jobs:
 
     ci:
         needs: [format_fix, lint_typecheck]
-        # ci.yaml requires secrets that only exist in the upstream repository.
-        # Forks run their material checks via material.yaml's own triggers.
-        if: ${{ github.repository == 'slint-ui/slint' }}
+        # The jobs in ci.yaml that need upstream-only secrets gate themselves
+        # on github.repository, so the rest of the matrix can run on forks.
         permissions:
             contents: read
             deployments: write

@@ -75,6 +75,7 @@ static SETTINGS: &[SettingDescriptor] = &[
         apply: apply_color_scheme_value,
     },
     SettingDescriptor { namespace: APPEARANCE, key: "accent-color", apply: apply_accent_value },
+    SettingDescriptor { namespace: APPEARANCE, key: "contrast", apply: apply_contrast_value },
     SettingDescriptor { namespace: GNOME_INTERFACE, key: "font-name", apply: apply_font_value },
     SettingDescriptor {
         namespace: GNOME_INTERFACE,
@@ -137,6 +138,16 @@ fn apply_accent_value(value: zbus::zvariant::OwnedValue, cx: &SettingsContext) {
         && let Some(ctx) = cx.ctx.upgrade()
     {
         ctx.set_accent_color(color);
+    }
+}
+
+/// The contrast setting is a u32: 0 means no preference, 1 means high
+/// contrast. It maps to Slint's continuous contrast level in -1..1.
+fn apply_contrast_value(value: zbus::zvariant::OwnedValue, cx: &SettingsContext) {
+    if let Ok(contrast) = value.downcast_ref::<u32>()
+        && let Some(ctx) = cx.ctx.upgrade()
+    {
+        ctx.set_contrast_preference(if contrast == 1 { 1.0 } else { 0.0 });
     }
 }
 

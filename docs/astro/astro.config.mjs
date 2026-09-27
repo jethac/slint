@@ -619,6 +619,10 @@ export default defineConfig({
                                         label: "FontWeight",
                                         slug: "reference/global-namespaces/font-weight",
                                     },
+                                    {
+                                        label: "MaterialColors",
+                                        slug: "reference/global-functions/material-colors",
+                                    },
                                 ],
                             },
                             {

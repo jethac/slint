@@ -261,6 +261,89 @@ pub fn parse_focus_ring(text: &str) -> Result<FocusRing, String> {
     })
 }
 
+/// The role overrides of `expressiveLightColorScheme()` in ColorScheme.kt:
+/// `lightColorScheme()` with a few `role = PaletteTokens.X` arguments.
+/// Returns `(role, palette member)` pairs, e.g. `("OnPrimaryContainer", "Primary30")`.
+/// Anything the parser doesn't recognize is a hard error.
+pub fn parse_expressive_light_overrides(text: &str) -> Result<Vec<(String, String)>, String> {
+    let start = text
+        .find("fun expressiveLightColorScheme")
+        .ok_or_else(|| "ColorScheme.kt: cannot find expressiveLightColorScheme".to_string())?;
+    let rest = &text[start..];
+    let call = rest
+        .find("lightColorScheme(")
+        .ok_or_else(|| "ColorScheme.kt: expressiveLightColorScheme does not call lightColorScheme")?;
+    let rest = &rest[call + "lightColorScheme(".len()..];
+    let end = rest.find(')').ok_or_else(|| "ColorScheme.kt: unbalanced lightColorScheme( call")?;
+    let mut overrides = Vec::new();
+    for part in rest[..end].split(',') {
+        // Strip `//` comments inside the argument list (per line, so a comment
+        // above an argument doesn't eat it).
+        let part =
+            part.lines().map(|line| line.split("//").next().unwrap_or("")).collect::<String>();
+        let part = part.trim();
+        if part.is_empty() {
+            continue;
+        }
+        let (role, value) = part.split_once('=').ok_or_else(|| {
+            format!("ColorScheme.kt: bad expressiveLightColorScheme arg `{part}`")
+        })?;
+        let member = value
+            .trim()
+            .strip_prefix("PaletteTokens.")
+            .ok_or_else(|| format!("ColorScheme.kt: {part} is not a PaletteTokens reference"))?;
+        overrides.push((role.trim().to_string(), member.trim().to_string()));
+    }
+    Ok(overrides)
+}
+
+/// Emit `ExpressiveLightColorTokens`: `expressiveLightColorScheme()` from
+/// ColorScheme.kt — the default light scheme of `MaterialExpressiveTheme`,
+/// i.e. `lightColorScheme()` (ColorLightTokens) with a few roles overridden
+/// to `PaletteTokens` members. References keep the provenance visible.
+fn emit_expressive_light(
+    out: &mut String,
+    lib: &Library,
+    color_scheme_kt: &str,
+) -> Result<(), String> {
+    let light = get(lib, "ColorLightTokens")?;
+    let palette = get(lib, "PaletteTokens")?;
+    let overrides = parse_expressive_light_overrides(color_scheme_kt)?;
+    for (role, member) in &overrides {
+        if !light.members.iter().any(|m| snake_case(&m.name) == snake_case(role)) {
+            return Err(format!(
+                "ColorScheme.kt: expressiveLightColorScheme overrides `{role}`, \
+                 which is not a ColorLightTokens role"
+            ));
+        }
+        if !palette.members.iter().any(|m| m.name == *member) {
+            return Err(format!(
+                "ColorScheme.kt: expressiveLightColorScheme references PaletteTokens.{member}, \
+                 which does not exist"
+            ));
+        }
+    }
+    let _ = writeln!(
+        out,
+        "/// `expressiveLightColorScheme()` from ColorScheme.kt: the default light\n\
+         /// scheme of `MaterialExpressiveTheme` — `lightColorScheme()` with the\n\
+         /// `on*Container` roles set to palette tone 30. There is no expressive\n\
+         /// dark scheme upstream; dark falls back to `ColorDarkTokens`.\n\
+         export global ExpressiveLightColorTokens {{"
+    );
+    for m in &light.members {
+        let role = snake_case(&m.name);
+        let expr = overrides
+            .iter()
+            .find(|(r, _)| snake_case(r) == role)
+            .map(|(_, member)| format!("PaletteTokens.{}", snake_case(member)))
+            .unwrap_or_else(|| format!("ColorLightTokens.{role}"));
+        let _ = writeln!(out, "    out property <color> {role}: {expr};");
+    }
+    let _ = writeln!(out, "}}\n");
+    Ok(())
+}
+
 /// Emit every generated `.slint` file.
 pub fn emit(
     lib: &Library,
@@ -268,6 +351,7 @@ pub fn emit(
     commit: &str,
     path: &str,
     focus: &FocusRing,
+    color_scheme_kt: &str,
 ) -> Result<Vec<Output>, String> {
     let mut outputs = Vec::new();
     let head = header(commit, repo, path);
@@ -286,6 +370,7 @@ pub fn emit(
             ],
             false,
         )?;
+        emit_expressive_light(&mut s, lib, color_scheme_kt)?;
         outputs.push(Output {
             rel_path: "src/ui/styling/generated/material_color_tokens.slint".into(),
             content: s,
@@ -327,6 +412,10 @@ pub fn emit(
              /// `MaterialTextScale.factor` (the platform text scale).\n\
              /// `font_family` binds to `MaterialTheme`'s configurable\n\
              /// brand/plain families.\n\
+             ///\n\
+             /// `MaterialTheme` itself is hand-written in\n\
+             /// `ui/styling/material_theme.slint` (it also holds the dynamic\n\
+             /// color-scheme inputs), so this file only imports it.\n\
              export struct MaterialTypeStyle {{\n\
              \x20   font_family: string,\n\
              \x20   font_weight: int,\n\
@@ -337,18 +426,14 @@ pub fn emit(
         );
         let _ = writeln!(
             s,
+            "import {{ MaterialTheme }} from \"../material_theme.slint\";\n"
+        );
+        let _ = writeln!(
+            s,
             "/// Multiplies every `sp` token to follow the platform text\n\
              /// scale. The adaptive layer (#12) writes it.\n\
              export global MaterialTextScale {{\n\
              \x20   in-out property <float> factor: 1.0;\n\
-             }}\n\
-             \n\
-             /// Theme-configurable brand and plain typeface families;\n\
-             /// the font work (#7) replaces the defaults with the bundled\n\
-             /// Google Sans Flex.\n\
-             export global MaterialTheme {{\n\
-             \x20   in-out property <string> brand_family: \"sans-serif\";\n\
-             \x20   in-out property <string> plain_family: \"sans-serif\";\n\
              }}\n"
         );
         emit_globals(&mut s, &[get(lib, "TypefaceTokens")?, get(lib, "TypeScaleTokens")?], false)?;
@@ -622,13 +707,14 @@ pub fn emit(
                 "import {{ MaterialCornerShape, ShapeTokens }} from \"./material_shape_tokens.slint\";"
             );
         }
+        if needs_theme {
+            let _ =
+                writeln!(s, "import {{ MaterialTheme }} from \"../material_theme.slint\";");
+        }
         {
             let mut names: Vec<&str> = Vec::new();
             if needs_scale {
                 names.push("MaterialTextScale");
-            }
-            if needs_theme {
-                names.push("MaterialTheme");
             }
             if needs_type_style {
                 names.push("MaterialTypeStyle");
