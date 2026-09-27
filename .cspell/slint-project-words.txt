@@ -8,6 +8,7 @@ adipiscing
 Adressliste
 Adwaita
 aiohttp
+Albers
 alignas
 alignof
 aliqua
@@ -18,8 +19,10 @@ amet
 Amoled
 analogclock
 androideabi
+androidx
 anyrender
 apng
+APCA
 Appbar
 appicon
 appiconset
@@ -35,6 +38,7 @@ arrayvec
 artboard
 ashpd
 assetcatalog
+astar
 astrolib
 astrowind
 asyncio
@@ -43,6 +47,7 @@ Aurindam
 autorelease
 autoremove
 AUTOSAR
+availables
 ayoxxx
 Backtab
 BAPI
@@ -69,6 +74,7 @@ BRDA
 briefcasex
 brushprop
 brushval
+bstar
 bugtracker
 buildcode
 builtinfunctions
@@ -77,7 +83,10 @@ bytemuck
 calloop
 caplog
 casesensitive
+cbrt
 CDPATH
+celebi
+Celebi
 cfgs
 CFLAGS
 chacha
@@ -104,6 +113,7 @@ codepoint
 codepoints
 codesign
 codingame
+coeff
 coeffs
 coldict
 colorspace
@@ -123,6 +133,7 @@ Conv
 corelib
 coro
 cortexa
+coterminal
 CPACK
 Cpolygon
 cpos
@@ -154,6 +165,8 @@ defmt
 defதோசை
 deinit
 delenv
+delinearized
+Delinearizes
 depfile
 deque
 devcode
@@ -187,6 +200,7 @@ dsymutil
 dustygold
 Dxgi
 DYLD
+dynamiccolor
 eabi
 eabihf
 Eeprom
@@ -196,15 +210,17 @@ elems
 elevatedbutton
 elit
 emcmake
+Emre
 emscripten
 endforeach
 endfunction
 endrst
 enim
-epoll
 entrancy
 enummember
+epoll
 eprintln
+errorprone
 esope
 espidf
 esplash
@@ -216,13 +232,17 @@ EVENTLOOP
 eventresult
 EVKB
 excinfo
+expm
+expm1
 Exti
 EXTRAVERSION
 extversion
 fabstyle
 Farbfeld
+fbits
 Fcntl
 fdiagnostics
+fdlibm
 fdroid
 fdroiddata
 FEFF
@@ -236,6 +256,7 @@ filterchip
 Fira
 FLASHMODE
 FLASHSIZE
+flate
 flathub
 Flexbox
 flexboxes
@@ -282,6 +303,7 @@ Grotesk
 gstreamer
 GWLP
 Hani
+hcts
 hdmipi
 heapless
 hidpi
@@ -289,8 +311,8 @@ highp
 HINSTANCE
 Hira
 hkdf
-hmac
 hlayout
+hmac
 hmenu
 horizontalbox
 horizontallayout
@@ -301,6 +323,7 @@ HSYNC
 htmlparser
 httparse
 hvac
+hypot
 iconbuttonitem
 iconfont
 IDXGI
@@ -319,6 +342,7 @@ indexmap
 inputchip
 intprop
 intval
+invf
 iocp
 iphoneos
 iphonesimulator
@@ -331,8 +355,10 @@ itemDatas
 itemrenderer
 itertools
 ivars
+javac
 Jemalloc
 jemallocator
+jstar
 kateversion
 Kconfig
 KDAB
@@ -381,9 +407,9 @@ librsvg
 libseat
 libslint
 libstdc
+libtest
 libudev
 libuv
-libtest
 libx
 libxcb
 libxcursor
@@ -392,9 +418,12 @@ libxkbcommon
 libxrandr
 lightimg
 limax
+Linearizes
 linearprogressindicator
 linebender
 linebreaker
+LINRGB
+linrgb
 linuxkms
 lipo
 Literata
@@ -406,6 +435,7 @@ LOADADDR
 LOWORD
 lpfn
 lpsz
+lstar
 Ltdc
 ltdcsel
 lumino
@@ -426,6 +456,7 @@ memsize
 menuconfig
 menuitemrole
 Meteo
+midgray
 millihertz
 mimxrt
 minmax
@@ -440,6 +471,7 @@ msgctx
 msgctxt
 msgfmt
 msgmerge
+mstar
 mult
 multisample
 multiview
@@ -455,6 +487,7 @@ navigationdrawer
 navigationrail
 navitem
 ncpu
+Neglible
 newlink
 nexp
 nixos
@@ -487,6 +520,7 @@ objfile
 Octa
 oklch
 oldsyspath
+Olguin's
 optipng
 ospi
 othercomp
@@ -503,6 +537,7 @@ pbjson
 PCLK
 pdoc
 peniko
+PENUM
 picotool
 pixabay
 pixelcolor
@@ -546,6 +581,9 @@ qtbase
 qtsvg
 qttypes
 qtwayland
+quantizer
+Quantizer
+quantizers
 Quis
 qwidget
 QXGA
@@ -589,8 +627,8 @@ rustls
 rustup
 Rustybuzz
 safeui
-Schukat
 scanout
+Schukat
 sclk
 scopeguard
 sdkconfig
@@ -613,18 +651,20 @@ shiki
 shikijs
 Shmelt
 signalsafe
+signum
 SIGUSR
 simctl
 singlefile
 singleshot
 skrifa
 slintcov
-slnt
 slintlib
+slnt
 Smartwin
 smol
 Snackbars
 Softbuffer
+Somers
 Sorkin
 sourcestruct
 spake
@@ -709,6 +749,7 @@ TOPLEVEL
 Torizon
 toucharea
 toupper
+transcendentals
 trunc
 tungstenite
 Twemoji
@@ -785,6 +826,8 @@ writeback
 wrappable
 WRONLY
 Wtautological
+Wsmeans
+wsmeans
 xbuild
 xcarchive
 xcassets
@@ -793,6 +836,7 @@ xchg
 xcrun
 xfer
 xfixes
+Xiaolin
 xlib
 xmark
 Xrgb
