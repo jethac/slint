@@ -21,6 +21,7 @@ members = [
   'api/wasm-interpreter',
   'editors/zed',
   'helper_crates/const-field-offset',
+  'helper_crates/material-color-utils',
   'helper_crates/vtable',
   'helper_crates/vtable/macro',
   'internal/backends/winit',
