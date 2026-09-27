@@ -278,6 +278,7 @@ fwasm
 Fwww
 genhtml
 getattr
+gethighcontrast
 getifs
 getpid
 getrandom
@@ -299,6 +300,8 @@ hcts
 hdmipi
 heapless
 hidpi
+highcontraston
+highcontrastw
 highp
 HINSTANCE
 Hira
