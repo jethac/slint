@@ -101,7 +101,7 @@ fn generate_language_module() {
     // DataTransfer is referenced by DropEvent's `data` field; the type lives at the
     // package top level rather than under `language`. Import it through the loader
     // (binding.cjs) so it resolves whichever native binary variant was built.
-    ts.push_str("import { DataTransfer } from \"../../binding.cjs\";\n\n");
+    ts.push_str("import { DataTransfer, RgbaColor } from \"../../binding.cjs\";\n\n");
 
     ts.push_str("const _data = {\n");
     for entry in &enums {
@@ -205,6 +205,7 @@ fn map_field_type(rust_ty: &str, in_language: &HashSet<&'static str>) -> String 
         "i32" | "f32" | "f64" | "Coord" => "number".to_string(),
         "SharedString" => "string".to_string(),
         // Types exposed by the binding outside the `language` namespace.
+        "Color" => "RgbaColor".to_string(),
         "DataTransfer" => "DataTransfer".to_string(),
         "LogicalPosition" => "{ x: number; y: number }".to_string(),
         ident if in_language.contains(ident) => ident.to_string(),
@@ -242,6 +243,7 @@ fn field_default(
         "bool" => "false".to_string(),
         "i32" | "f32" | "f64" | "Coord" => "0".to_string(),
         "SharedString" => "\"\"".to_string(),
+        "Color" => "{ red: 0, green: 0, blue: 0, alpha: 0 }".to_string(),
         "DataTransfer" => "new DataTransfer()".to_string(),
         "LogicalPosition" => "{ x: 0, y: 0 }".to_string(),
         ident if enum_defaults.contains_key(ident) => format!("\"{}\"", enum_defaults[ident]),

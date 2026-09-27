@@ -338,6 +338,11 @@ mod theme {
             MenuItem { text: "Purple".into(), enabled: true, ..Default::default() },
             MenuItem { text: "Red".into(), enabled: true, ..Default::default() },
             MenuItem { text: "Green".into(), enabled: true, ..Default::default() },
+            MenuItem { text: "Dynamic accent".into(), enabled: true, ..Default::default() },
+            MenuItem { text: "Dynamic slint".into(), enabled: true, ..Default::default() },
+            MenuItem { text: "Dynamic purple".into(), enabled: true, ..Default::default() },
+            MenuItem { text: "Dynamic red".into(), enabled: true, ..Default::default() },
+            MenuItem { text: "Dynamic green".into(), enabled: true, ..Default::default() },
         ]));
 
         adapter.on_load_palette({

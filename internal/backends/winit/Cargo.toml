@@ -149,7 +149,7 @@ smithay-clipboard = { version = "0.7", optional = true }
 # To disable macOS automatic shortcut translation
 objc2 = { workspace = true }
 # For GL rendering
-objc2-app-kit = { version = "0.3.2", default-features = false, features = ["std", "NSColor", "NSEvent", "NSView", "NSWindow", "NSResponder", "objc2-core-foundation", "objc2-quartz-core"] }
+objc2-app-kit = { version = "0.3.2", default-features = false, features = ["std", "NSColor", "NSEvent", "NSView", "NSWindow", "NSResponder", "objc2-core-foundation", "objc2-quartz-core", "NSAccessibility", "NSWorkspace"] }
 objc2-foundation = { version = "0.3.2", default-features = false, features = ["std", "block2", "NSString", "NSNotification", "NSOperation", "NSRunLoop", "NSObjCRuntime", "NSUserDefaults"] }
 objc2-quartz-core = { version = "0.3.2", default-features = false, features = ["CADisplayLink"] }
 block2 = "0.6.2"
@@ -168,7 +168,7 @@ objc2-quartz-core = { version = "0.3.2", default-features = false, features = ["
 block2 = "0.6.2"
 
 [target.'cfg(target_os = "windows")'.dependencies]
-windows = { workspace = true, features = ["Win32_UI_Input_KeyboardAndMouse", "Win32_UI_WindowsAndMessaging", "Win32_UI_Shell", "Win32_Graphics_Gdi", "Win32_Graphics_Dwm", "Win32_System_Threading"] }
+windows = { workspace = true, features = ["Win32_UI_Input_KeyboardAndMouse", "Win32_UI_WindowsAndMessaging", "Win32_UI_Shell", "Win32_Graphics_Gdi", "Win32_Graphics_Dwm", "Win32_System_Threading", "Win32_UI_HiDpi", "Win32_UI_Accessibility"] }
 arboard = { version = "3.6", default-features = false }
 
 [build-dependencies]

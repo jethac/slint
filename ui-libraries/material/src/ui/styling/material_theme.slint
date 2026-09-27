@@ -1,0 +1,120 @@
+// Copyright © SixtyFPS GmbH <info@slint.dev>
+// SPDX-License-Identifier: MIT
+
+import { Palette } from "std-widgets.slint";
+import { MaterialScheme } from "material_schemes.slint";
+
+// Generates a Material color scheme at runtime. Every input is a property:
+// changing the seed color, variant, spec version, platform, dark mode or
+// contrast level re-evaluates `scheme` and every color role updates.
+export global MaterialTheme {
+    // The seed color the scheme is generated from, used when
+    // `use-platform-color` is false. Defaults to the Material baseline seed
+    // #6750A4. Use `MaterialColors.seed-from-image(image)` to seed from an
+    // image instead.
+    in property <color> seed-color: #6750a4;
+
+    // When true, the scheme follows the platform's dynamic color: the exact
+    // system scheme on Android 12+, and a scheme generated from the platform
+    // accent color elsewhere, using `variant`, `spec-version`, `platform` and
+    // `contrast-level`. `seed-color` is then unused.
+    in property <bool> use-platform-color: false;
+
+    // The scheme variant. Tonal Spot is the variant `MaterialTheme` and
+    // `MaterialExpressiveTheme` build their baseline schemes with upstream.
+    in property <MaterialSchemeVariant> variant: MaterialSchemeVariant.tonal-spot;
+
+    // The version of the Material color specification to use; spec 2025 is
+    // the current one upstream.
+    in property <MaterialSpecVersion> spec-version: MaterialSpecVersion.spec2025;
+
+    // The device class the scheme is generated for.
+    in property <MaterialSchemePlatform> platform: MaterialSchemePlatform.phone;
+
+    // The contrast level in the continuous range -1 (lowest) to 1 (highest);
+    // 0 is standard contrast. Defaults to the platform contrast preference
+    // (Android 14+ "Contrast" setting, macOS "Increase contrast", ...);
+    // assigning a value overrides it. Values outside the range are clamped.
+    in property <float> contrast-level: MaterialColors.platform-contrast-level();
+
+    // Whether to generate the dark scheme. Defaults to the platform's
+    // light/dark setting.
+    in property <bool> dark: Palette.color-scheme == ColorScheme.dark;
+
+    // The generated scheme, with every color role.
+    out property <MaterialColorScheme> scheme: root.use-platform-color
+        ? MaterialColors.platform-color-scheme(
+            root.variant,
+            root.spec-version,
+            root.platform,
+            root.dark,
+            root.contrast-level
+        )
+        : MaterialColors.color-scheme(
+            root.seed-color,
+            root.variant,
+            root.spec-version,
+            root.platform,
+            root.dark,
+            root.contrast-level
+        );
+
+    // Theme-configurable brand and plain typeface families; the font work
+    // (#7) replaces the defaults with the bundled Google Sans Flex.
+    in-out property <string> brand-family: "sans-serif";
+    in-out property <string> plain-family: "sans-serif";
+
+    // `scheme` in the `MaterialScheme` struct shape used by `MaterialPalette`
+    // and the Material Theme Builder JSON format.
+    out property <MaterialScheme> material-scheme: {
+        primary: root.scheme.primary,
+        surfaceTint: root.scheme.surface-tint,
+        onPrimary: root.scheme.on-primary,
+        primaryContainer: root.scheme.primary-container,
+        onPrimaryContainer: root.scheme.on-primary-container,
+        secondary: root.scheme.secondary,
+        onSecondary: root.scheme.on-secondary,
+        secondaryContainer: root.scheme.secondary-container,
+        onSecondaryContainer: root.scheme.on-secondary-container,
+        tertiary: root.scheme.tertiary,
+        onTertiary: root.scheme.on-tertiary,
+        tertiaryContainer: root.scheme.tertiary-container,
+        onTertiaryContainer: root.scheme.on-tertiary-container,
+        error: root.scheme.error,
+        onError: root.scheme.on-error,
+        errorContainer: root.scheme.error-container,
+        onErrorContainer: root.scheme.on-error-container,
+        background: root.scheme.background,
+        onBackground: root.scheme.on-background,
+        surface: root.scheme.surface,
+        onSurface: root.scheme.on-surface,
+        surfaceVariant: root.scheme.surface-variant,
+        onSurfaceVariant: root.scheme.on-surface-variant,
+        outline: root.scheme.outline,
+        outlineVariant: root.scheme.outline-variant,
+        shadow: root.scheme.shadow,
+        scrim: root.scheme.scrim,
+        inverseSurface: root.scheme.inverse-surface,
+        inverseOnSurface: root.scheme.inverse-on-surface,
+        inversePrimary: root.scheme.inverse-primary,
+        primaryFixed: root.scheme.primary-fixed,
+        onPrimaryFixed: root.scheme.on-primary-fixed,
+        primaryFixedDim: root.scheme.primary-fixed-dim,
+        onPrimaryFixedVariant: root.scheme.on-primary-fixed-variant,
+        secondaryFixed: root.scheme.secondary-fixed,
+        onSecondaryFixed: root.scheme.on-secondary-fixed,
+        secondaryFixedDim: root.scheme.secondary-fixed-dim,
+        onSecondaryFixedVariant: root.scheme.on-secondary-fixed-variant,
+        tertiaryFixed: root.scheme.tertiary-fixed,
+        onTertiaryFixed: root.scheme.on-tertiary-fixed,
+        tertiaryFixedDim: root.scheme.tertiary-fixed-dim,
+        onTertiaryFixedVariant: root.scheme.on-tertiary-fixed-variant,
+        surfaceDim: root.scheme.surface-dim,
+        surfaceBright: root.scheme.surface-bright,
+        surfaceContainerLowest: root.scheme.surface-container-lowest,
+        surfaceContainerLow: root.scheme.surface-container-low,
+        surfaceContainer: root.scheme.surface-container,
+        surfaceContainerHigh: root.scheme.surface-container-high,
+        surfaceContainerHighest: root.scheme.surface-container-highest,
+    };
+}

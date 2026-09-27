@@ -2853,6 +2853,24 @@ pub fn context_for_root(root: &ItemTreeRc) -> crate::SlintContext {
         .expect("an item tree exists, so there is a current context")
 }
 
+/// Returns the platform contrast preference for `root`'s context, continuous in
+/// `-1.0` (low) to `1.0` (high), `0.0` meaning no preference — the same scale as
+/// Material Design's `contrastLevel` parameter. Defaults to `0.0` when the
+/// platform doesn't expose one.
+pub fn contrast_preference(root: &crate::item_tree::ItemTreeRc) -> f32 {
+    context_for_root(root).contrast_preference()
+}
+
+/// Runtime entry point for `BuiltinFunction::MaterialPlatformColorScheme`.
+/// Returns the `(light, dark)` Material color schemes the platform provides
+/// for `root`'s context (Android 12+ dynamic color), or `None` when the
+/// platform only reports an accent color or none is associated.
+pub fn platform_schemes(
+    root: &crate::item_tree::ItemTreeRc,
+) -> Option<(crate::items::MaterialColorScheme, crate::items::MaterialColorScheme)> {
+    context_for_root(root).platform_schemes()
+}
+
 /// This module contains the functions needed to interface with the event loop and window traits
 /// from outside the Rust language.
 #[cfg(feature = "ffi")]

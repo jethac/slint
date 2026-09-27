@@ -1,0 +1,87 @@
+---
+title: MaterialColors
+description: MaterialColors Namespace
+---
+
+import Link from '@slint/common-files/src/components/Link.astro';
+
+The **MaterialColors** namespace provides functions to generate
+[Material Design](https://m3.material.io/) color schemes at runtime, following the
+`material-color-utilities` reference implementation.
+
+The generated scheme is returned as a `MaterialColorScheme` struct with one
+field per color role (`primary`, `on-primary`, `primary-container`, `surface`,
+`surface-container-highest`, and so on).
+
+```slint no-test
+export component Example {
+    // Generate a light scheme from a seed color
+    out property <MaterialColorScheme> scheme:
+        MaterialColors.color-scheme(#6750a4, MaterialSchemeVariant.tonal-spot,
+            MaterialSpecVersion.spec2025, MaterialSchemePlatform.phone, false, 0);
+
+    background: scheme.surface;
+}
+```
+
+## color-scheme
+### color-scheme(color, MaterialSchemeVariant, MaterialSpecVersion, MaterialSchemePlatform, bool, float) -> MaterialColorScheme
+
+Generates a color scheme from a seed color.
+
+- **color**: the seed color.
+- **variant**: one of `MaterialSchemeVariant`: `monochrome`, `neutral`,
+  `tonal-spot`, `vibrant`, `expressive`, `fidelity`, `content`, `rainbow`,
+  `fruit-salad`, or `cmf`. Material defaults to `tonal-spot`.
+- **spec version**: one of `MaterialSpecVersion`: `spec2021`, `spec2025`, or
+  `spec2026`. Material defaults to `spec2025`.
+- **platform**: `MaterialSchemePlatform.phone` or `.watch`.
+- **is dark**: `true` generates the dark scheme.
+- **contrast level**: a continuous value from -1 (lowest contrast) through 0
+  (standard) to 1 (highest). Values outside the range are clamped.
+
+## seed-from-image
+### seed-from-image(image) -> color
+
+Quantizes `image` and scores the resulting colors to pick a seed color, like
+Material You's wallpaper-based color extraction. Returns black (`#00000000`)
+if the image has no pixels.
+
+## platform-color-scheme
+### platform-color-scheme(MaterialSchemeVariant, MaterialSpecVersion, MaterialSchemePlatform, bool, float) -> MaterialColorScheme
+
+Generates a color scheme from the platform's dynamic colors. On Android 12
+(API 31) and later this returns the exact system scheme the platform derives
+from the wallpaper — the same values as
+[`dynamicLightColorScheme`/`dynamicDarkColorScheme`](https://developer.android.com/develop/ui/compose/designsystems/material3#dynamic_color)
+in Jetpack Compose. On other platforms, or when the platform reports no
+dynamic colors, it falls back to generating a scheme from the platform accent
+color (or the baseline `#6750a4` seed when the platform reports no accent).
+
+The parameters have the same meaning as for `color-scheme`; they apply to the
+fallback scheme, while the platform scheme always uses the system's choices.
+
+## platform-accent-color
+### platform-accent-color() -> color
+
+The platform's accent color: Android 12+ dynamic color, the Windows/macOS
+accent color, or the accent color the compositor reports via the XDG
+`org.freedesktop.appearance` portal. Fully transparent when the platform
+doesn't report one.
+
+## platform-contrast-level
+### platform-contrast-level() -> float
+
+The platform's contrast preference as a continuous level from -1 to 1, or 0
+where the platform doesn't report one.
+
+## MaterialTheme
+
+The Material widget library's `MaterialTheme` global uses these functions to
+generate a scheme reactively: assign its `seed-color`, `variant`,
+`spec-version`, `platform`, `dark`, or `contrast-level` properties and every
+color role updates. `contrast-level` defaults to the platform's contrast
+preference. Set `use-platform-color` to `true` to seed from the platform's
+system scheme (the wallpaper-based scheme on Android 12+) instead of
+`seed-color`. Set `MaterialPalette.dynamic` to `true` to have all
+Material widgets use the generated scheme.

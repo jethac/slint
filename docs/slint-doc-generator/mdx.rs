@@ -326,6 +326,9 @@ pub fn extract_builtin_structs(
         (SharedString) => {
             stringify!(string)
         };
+        (Color) => {
+            "color"
+        };
         (Coord) => {
             "length"
         };

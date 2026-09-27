@@ -187,6 +187,10 @@ macro_rules! for_each_builtin_function {
             ReducedMotion: pure fn reduced_motion(&context) -> bool {
                 cfg!(feature = "std") && context.motion_preference() == crate::MotionPreference::Reduced
             }
+            MaterialColorScheme: pure fn(seed_color: Color, variant: MaterialSchemeVariant, spec_version: MaterialSpecVersion, platform: MaterialSchemePlatform, is_dark: bool, contrast_level: f32) -> MaterialColorScheme
+            MaterialPlatformColorScheme: pure fn(variant: MaterialSchemeVariant, spec_version: MaterialSpecVersion, platform: MaterialSchemePlatform, is_dark: bool, contrast_level: f32) -> MaterialColorScheme
+            MaterialSeedFromImage: pure fn(image: Image) -> Color
+            PlatformContrastLevel: pure fn() -> f32
             SupportsNativeMenuBar: pure fn() -> bool
             /// Setup the menu bar
             ///

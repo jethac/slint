@@ -37,6 +37,7 @@ fn map_type(
         "i32" => "int",
         "f32" | "Coord" => "float",
         // Types exposed by the binding outside the `language` submodule.
+        "Color" => "Color | None",
         "DataTransfer" => "DataTransfer | None",
         "LogicalPosition" => "LogicalPosition | None",
         _ => "typing.Any",
@@ -90,7 +91,7 @@ macro_rules! generate_builtin_structs_pyi {
             writeln!(writer, "").unwrap();
             writeln!(writer, "from __future__ import annotations").unwrap();
             writeln!(writer, "import typing").unwrap();
-            writeln!(writer, "from slint import DataTransfer, LogicalPosition").unwrap();
+            writeln!(writer, "from slint import Color, DataTransfer, LogicalPosition").unwrap();
 
             let public_enums = public_enum_names();
             $(
