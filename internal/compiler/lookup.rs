@@ -1065,6 +1065,7 @@ impl LookupObject for MaterialColorsFunctions {
     ) -> Option<R> {
         let mut f = |n, e| f(&SmolStr::new_static(n), LookupResult::from(e));
         None.or_else(|| f("color-scheme", BuiltinFunction::MaterialColorScheme))
+            .or_else(|| f("platform-color-scheme", BuiltinFunction::MaterialPlatformColorScheme))
             .or_else(|| f("seed-from-image", BuiltinFunction::MaterialSeedFromImage))
             .or_else(|| f("platform-accent-color", BuiltinFunction::AccentColor))
             .or_else(|| f("platform-contrast-level", BuiltinFunction::PlatformContrastLevel))

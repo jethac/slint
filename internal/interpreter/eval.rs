@@ -2360,6 +2360,29 @@ fn call_builtin_function(
             )
             .into()
         }
+        BuiltinFunction::MaterialPlatformColorScheme => {
+            let variant: i_slint_core::items::MaterialSchemeVariant =
+                eval_expression(ctx, &arguments[0]).try_into().unwrap_or_default();
+            let spec_version: i_slint_core::items::MaterialSpecVersion =
+                eval_expression(ctx, &arguments[1]).try_into().unwrap_or_default();
+            let platform: i_slint_core::items::MaterialSchemePlatform =
+                eval_expression(ctx, &arguments[2]).try_into().unwrap_or_default();
+            let is_dark: bool = eval_expression(ctx, &arguments[3]).try_into().unwrap_or(false);
+            let contrast_level: f32 = eval_expression(ctx, &arguments[4]).try_into().unwrap_or(0.0);
+            let root = match root_instance(ctx).map(vtable::VRc::into_dyn) {
+                Some(root) => root,
+                None => return i_slint_core::items::MaterialColorScheme::default().into(),
+            };
+            i_slint_core::material::platform_color_scheme(
+                &root,
+                variant,
+                spec_version,
+                platform,
+                is_dark,
+                contrast_level,
+            )
+            .into()
+        }
         BuiltinFunction::MaterialSeedFromImage => {
             let color = match eval_expression(ctx, &arguments[0]) {
                 Value::Image(image) => {

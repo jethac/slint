@@ -166,7 +166,9 @@ fn builtin_function_cost(function: &BuiltinFunction) -> isize {
         BuiltinFunction::AccentColor => PROPERTY_ACCESS_COST,
         // Generating a scheme resolves all 48 dynamic colors; seed-from-image runs the
         // quantizer over the image's pixels. Both are far too heavy to inline.
-        BuiltinFunction::MaterialColorScheme | BuiltinFunction::MaterialSeedFromImage => isize::MAX,
+        BuiltinFunction::MaterialColorScheme
+        | BuiltinFunction::MaterialPlatformColorScheme
+        | BuiltinFunction::MaterialSeedFromImage => isize::MAX,
         BuiltinFunction::PlatformContrastLevel => PROPERTY_ACCESS_COST,
         BuiltinFunction::SupportsNativeMenuBar => 10,
         BuiltinFunction::SetupMenuBar => isize::MAX,

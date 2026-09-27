@@ -105,6 +105,8 @@ pub enum BuiltinFunction {
     AccentColor,
     /// `MaterialColors.color-scheme(seed-color, variant, spec-version, platform, is-dark, contrast-level)`
     MaterialColorScheme,
+    /// `MaterialColors.platform-color-scheme(variant, spec-version, platform, is-dark, contrast-level)`
+    MaterialPlatformColorScheme,
     /// `MaterialColors.seed-from-image(image)`
     MaterialSeedFromImage,
     /// `MaterialColors.platform-contrast-level()`
@@ -322,6 +324,14 @@ declare_builtin_function_types!(
         Type::Bool,
         Type::Float32
     ) -> Type::Struct(typeregister::builtin_structs::MaterialColorScheme()),
+    // (variant, spec version, platform, is dark, contrast level in -1..1)
+    MaterialPlatformColorScheme: (
+        Type::Enumeration(typeregister::BUILTIN.enums.MaterialSchemeVariant.clone()),
+        Type::Enumeration(typeregister::BUILTIN.enums.MaterialSpecVersion.clone()),
+        Type::Enumeration(typeregister::BUILTIN.enums.MaterialSchemePlatform.clone()),
+        Type::Bool,
+        Type::Float32
+    ) -> Type::Struct(typeregister::builtin_structs::MaterialColorScheme()),
     MaterialSeedFromImage: (Type::Image) -> Type::Color,
     PlatformContrastLevel: () -> Type::Float32,
     SupportsNativeMenuBar: () -> Type::Bool,
@@ -386,6 +396,7 @@ impl BuiltinFunction {
             BuiltinFunction::ColorScheme => false,
             BuiltinFunction::AccentColor => false,
             BuiltinFunction::MaterialColorScheme => false,
+            BuiltinFunction::MaterialPlatformColorScheme => false,
             BuiltinFunction::MaterialSeedFromImage => false,
             BuiltinFunction::PlatformContrastLevel => false,
             BuiltinFunction::SupportsNativeMenuBar => false,
@@ -496,6 +507,7 @@ impl BuiltinFunction {
             BuiltinFunction::ColorScheme => true,
             BuiltinFunction::AccentColor => true,
             BuiltinFunction::MaterialColorScheme => true,
+            BuiltinFunction::MaterialPlatformColorScheme => true,
             BuiltinFunction::MaterialSeedFromImage => true,
             BuiltinFunction::PlatformContrastLevel => true,
             BuiltinFunction::SupportsNativeMenuBar => true,

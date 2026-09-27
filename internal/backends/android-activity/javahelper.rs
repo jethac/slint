@@ -14,7 +14,8 @@ use i_slint_core::item_rendering::HasFont;
 use i_slint_core::items::{CapitalizationMode, ColorScheme, InputType};
 use i_slint_core::lengths::{LogicalLength, PhysicalEdges};
 use i_slint_core::platform::{Key, WindowAdapter, WindowEvent, WindowEventDispatchResult};
-use jni::objects::{JClass, JClassLoader, JString, LoaderContext};
+use jni::objects::{JClass, JClassLoader, JString, LoaderContext, ReleaseMode};
+use jni::refs::Reference;
 use jni::sys::{jfloat, jint};
 use jni::{Env, JavaVM, bind_java_type};
 use std::sync::OnceLock;
@@ -53,6 +54,10 @@ bind_java_type! {
         fn font_scale {
             name = "font_scale",
             sig = () -> jfloat,
+        },
+        fn system_color_schemes {
+            name = "system_color_schemes",
+            sig = () -> jint[],
         },
         fn get_clipboard {
             name = "get_clipboard",
@@ -535,6 +540,20 @@ impl JavaHelper {
         self.with_jni_env(|env, helper| helper.contrast(env))
     }
 
+    /// The platform's Material dynamic colors, packed as
+    /// `i_slint_core::material::android_system_schemes` expects; `Ok(None)`
+    /// below API 31, where Android doesn't do dynamic color.
+    pub fn system_color_schemes(&self) -> Result<Option<Vec<i32>>, jni::errors::Error> {
+        self.with_jni_env(|env, helper| {
+            let array = helper.system_color_schemes(env)?;
+            if array.is_null() {
+                return Ok(None);
+            }
+            let elements = unsafe { array.get_elements(env, ReleaseMode::NoCopyBack) }?;
+            Ok(Some(elements.to_vec()))
+        })
+    }
+
     pub fn get_safe_area(&self) -> Result<PhysicalEdges, jni::errors::Error> {
         self.with_jni_env(|env, helper| {
             let rect = helper.get_safe_area(env)?;
@@ -668,6 +687,13 @@ fn callback_set_night_mode<'local>(
             }
             if let Ok(contrast) = w.java_helper.contrast() {
                 ctx.set_contrast_preference(contrast);
+            }
+            // A UI-mode change can move the system dynamic colors (the
+            // API 34+ role resources resolve per uiMode/contrast); re-read.
+            if let Ok(Some(data)) = w.java_helper.system_color_schemes()
+                && let Some(schemes) = i_slint_core::material::android_system_schemes(&data)
+            {
+                ctx.set_platform_schemes(Some(schemes));
             }
         }
     })

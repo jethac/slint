@@ -5178,6 +5178,24 @@ fn compile_builtin_function_call(
                 #contrast_level as f32,
             ))
         }
+        BuiltinFunction::MaterialPlatformColorScheme => {
+            let (variant, spec_version, platform, is_dark, contrast_level) = (
+                a.next().unwrap(),
+                a.next().unwrap(),
+                a.next().unwrap(),
+                a.next().unwrap(),
+                a.next().unwrap(),
+            );
+            let global_access = &ctx.generator_state.global_access;
+            quote!(sp::material_platform_color_scheme(
+                &#global_access.root_item_tree_weak.upgrade().unwrap(),
+                #variant,
+                #spec_version,
+                #platform,
+                #is_dark,
+                #contrast_level as f32,
+            ))
+        }
         BuiltinFunction::MaterialSeedFromImage => {
             let image = a.next().unwrap();
             quote!(sp::material_seed_from_image(&#image).unwrap_or_default())

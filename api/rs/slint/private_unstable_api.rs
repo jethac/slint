@@ -194,7 +194,9 @@ pub mod re_exports {
     };
     pub use i_slint_core::macos_bring_all_windows_to_front;
     pub use i_slint_core::material::{
-        color_scheme as material_color_scheme, seed_from_image as material_seed_from_image,
+        color_scheme as material_color_scheme,
+        platform_color_scheme as material_platform_color_scheme,
+        seed_from_image as material_seed_from_image,
     };
     pub use i_slint_core::menus::{Menu, MenuFromItemTree, MenuVTable};
     pub use i_slint_core::model::*;

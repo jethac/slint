@@ -2554,6 +2554,19 @@ pub fn contrast_preference(root: &crate::item_tree::ItemTreeRc) -> f32 {
     adapter.map_or(0.0, |a| WindowInner::from_pub(a.window()).context().contrast_preference())
 }
 
+/// Runtime entry point for `BuiltinFunction::MaterialPlatformColorScheme`.
+/// Returns the `(light, dark)` Material color schemes the platform provides
+/// for `root`'s context (Android 12+ dynamic color), or `None` when the
+/// platform only reports an accent color or none is associated.
+pub fn platform_schemes(
+    root: &crate::item_tree::ItemTreeRc,
+) -> Option<(crate::items::MaterialColorScheme, crate::items::MaterialColorScheme)> {
+    let comp_ref_pin = vtable::VRc::borrow_pin(root);
+    let mut adapter = None;
+    comp_ref_pin.as_ref().window_adapter(true, &mut adapter);
+    adapter.and_then(|a| WindowInner::from_pub(a.window()).context().platform_schemes())
+}
+
 /// This module contains the functions needed to interface with the event loop and window traits
 /// from outside the Rust language.
 #[cfg(feature = "ffi")]

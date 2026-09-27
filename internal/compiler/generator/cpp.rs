@@ -5230,6 +5230,19 @@ fn compile_builtin_function_call(
                 "[&]{{ slint::Color _seed = {seed}; slint::language::MaterialColorScheme _scheme; slint::cbindgen_private::slint_material_color_scheme(&_seed, {variant}, {spec_version}, {platform}, {is_dark}, {contrast_level}, &_scheme); return _scheme; }}()"
             )
         }
+        BuiltinFunction::MaterialPlatformColorScheme => {
+            let (variant, spec_version, platform, is_dark, contrast_level) = (
+                a.next().unwrap(),
+                a.next().unwrap(),
+                a.next().unwrap(),
+                a.next().unwrap(),
+                a.next().unwrap(),
+            );
+            format!(
+                "[&]{{ auto _root = (*{0}->root_weak.lock()).into_dyn(); slint::language::MaterialColorScheme _scheme; slint::cbindgen_private::slint_material_platform_color_scheme(&_root, {variant}, {spec_version}, {platform}, {is_dark}, {contrast_level}, &_scheme); return _scheme; }}()",
+                ctx.generator_state.global_access
+            )
+        }
         BuiltinFunction::MaterialSeedFromImage => {
             let image = a.next().unwrap();
             format!(

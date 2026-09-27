@@ -124,6 +124,27 @@ pub extern "C" fn slint_material_color_scheme(
     );
 }
 
+/// Runtime entry point for `BuiltinFunction::MaterialPlatformColorScheme`.
+#[unsafe(no_mangle)]
+pub extern "C" fn slint_material_platform_color_scheme(
+    root: &i_slint_core::item_tree::ItemTreeRc,
+    variant: i_slint_core::items::MaterialSchemeVariant,
+    spec_version: i_slint_core::items::MaterialSpecVersion,
+    platform: i_slint_core::items::MaterialSchemePlatform,
+    is_dark: bool,
+    contrast_level: f32,
+    out: &mut i_slint_core::items::MaterialColorScheme,
+) {
+    *out = i_slint_core::material::platform_color_scheme(
+        root,
+        variant,
+        spec_version,
+        platform,
+        is_dark,
+        contrast_level,
+    );
+}
+
 /// Runtime entry point for `BuiltinFunction::MaterialSeedFromImage`. Writes the
 /// scored seed color, or transparent when the image has no readable pixels.
 #[unsafe(no_mangle)]
