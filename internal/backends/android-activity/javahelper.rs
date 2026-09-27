@@ -46,6 +46,10 @@ bind_java_type! {
             name = "color_scheme",
             sig = () -> jint,
         },
+        fn contrast {
+            name = "contrast",
+            sig = () -> jfloat,
+        },
         fn font_scale {
             name = "font_scale",
             sig = () -> jfloat,
@@ -657,6 +661,9 @@ fn callback_set_night_mode<'local>(
             ctx.set_color_scheme(scheme);
             if let Ok(accent) = w.java_helper.accent_color() {
                 ctx.set_accent_color(accent);
+            }
+            if let Ok(contrast) = w.java_helper.contrast() {
+                ctx.set_contrast_preference(contrast);
             }
         }
     })

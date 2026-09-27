@@ -2543,6 +2543,17 @@ pub fn accent_color(root: &crate::item_tree::ItemTreeRc) -> crate::graphics::Col
     })
 }
 
+/// Returns the platform contrast preference for `root`'s context, continuous in
+/// `-1.0` (low) to `1.0` (high), `0.0` meaning no preference — the same scale as
+/// Material Design's `contrastLevel` parameter. Defaults to `0.0` when the
+/// platform doesn't expose one.
+pub fn contrast_preference(root: &crate::item_tree::ItemTreeRc) -> f32 {
+    let comp_ref_pin = vtable::VRc::borrow_pin(root);
+    let mut adapter = None;
+    comp_ref_pin.as_ref().window_adapter(true, &mut adapter);
+    adapter.map_or(0.0, |a| WindowInner::from_pub(a.window()).context().contrast_preference())
+}
+
 /// This module contains the functions needed to interface with the event loop and window traits
 /// from outside the Rust language.
 #[cfg(feature = "ffi")]

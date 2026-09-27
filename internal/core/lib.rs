@@ -48,6 +48,7 @@ pub mod item_tree;
 pub mod items;
 pub mod layout;
 pub mod lengths;
+pub mod material;
 pub mod menus;
 pub mod model;
 pub mod partial_renderer;

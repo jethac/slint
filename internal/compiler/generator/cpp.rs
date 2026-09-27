@@ -5217,6 +5217,31 @@ fn compile_builtin_function_call(
                 ctx.generator_state.global_access
             )
         }
+        BuiltinFunction::MaterialColorScheme => {
+            let (seed, variant, spec_version, platform, is_dark, contrast_level) = (
+                a.next().unwrap(),
+                a.next().unwrap(),
+                a.next().unwrap(),
+                a.next().unwrap(),
+                a.next().unwrap(),
+                a.next().unwrap(),
+            );
+            format!(
+                "[&]{{ slint::Color _seed = {seed}; slint::language::MaterialColorScheme _scheme; slint::cbindgen_private::slint_material_color_scheme(&_seed, {variant}, {spec_version}, {platform}, {is_dark}, {contrast_level}, &_scheme); return _scheme; }}()"
+            )
+        }
+        BuiltinFunction::MaterialSeedFromImage => {
+            let image = a.next().unwrap();
+            format!(
+                "[&]{{ slint::Image _img = {image}; slint::Color _col; slint::cbindgen_private::slint_material_seed_from_image(&_img, &_col); return _col; }}()"
+            )
+        }
+        BuiltinFunction::PlatformContrastLevel => {
+            format!(
+                "[&]{{ auto _root = (*{0}->root_weak.lock()).into_dyn(); return slint::cbindgen_private::slint_context_contrast_preference(&_root); }}()",
+                ctx.generator_state.global_access
+            )
+        }
         BuiltinFunction::SupportsNativeMenuBar => {
             format!("{}.supports_native_menu_bar()", access_window_field(ctx))
         }

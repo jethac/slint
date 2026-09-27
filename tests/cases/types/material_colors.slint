@@ -1,0 +1,111 @@
+// Copyright © SixtyFPS GmbH <info@slint.dev>
+// SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0
+
+export component TestCase inherits Window {
+    in-out property<color> seed: #6750a4;
+    in-out property<bool> dark: false;
+
+    in-out property<MaterialColorScheme> scheme: MaterialColors.color-scheme(
+        seed,
+        MaterialSchemeVariant.tonal-spot,
+        MaterialSpecVersion.spec2025,
+        MaterialSchemePlatform.phone,
+        dark,
+        0,
+    );
+
+    // Values produced by the material-color-utils crate, verified bit-exact
+    // against the Java reference implementation by the crate's vector tests.
+    out property<bool> test_light: !dark &&
+        scheme.primary == #655789 &&
+        scheme.on-primary == #fdf7ff &&
+        scheme.primary-container == #d4c3fd &&
+        scheme.on-primary-container == #493c6c &&
+        scheme.surface == #fdf7fe &&
+        scheme.on-surface == #34313a &&
+        scheme.error == #a8364b;
+
+    out property<bool> test_dark: dark &&
+        scheme.primary == #cdc0ec &&
+        scheme.on-primary == #443a5f &&
+        scheme.primary-container == #574d72 &&
+        scheme.on-primary-container == #e9deff &&
+        scheme.surface == #0f0d12 &&
+        scheme.on-surface == #eae3ef &&
+        scheme.error == #f97386;
+
+    out property<bool> test_blue_seed:
+        MaterialColors.color-scheme(
+            #0057d0,
+            MaterialSchemeVariant.tonal-spot,
+            MaterialSpecVersion.spec2025,
+            MaterialSchemePlatform.phone,
+            false,
+            0,
+        ).primary == #4c5e8b;
+
+    out property<bool> test_contrast_level:
+        MaterialColors.platform-contrast-level() >= -1 && MaterialColors.platform-contrast-level() <= 1;
+
+    // Seeding from a fully red 1x1 image yields the red seed.
+    out property<bool> test_seed_from_image:
+        MaterialColors.seed-from-image(@image-url("red.png")) == #ff0000;
+
+    // The platform accent accessor evaluates to some color (compared with
+    // the testing backend's accent in the driver).
+    out property<color> accent: MaterialColors.platform-accent-color();
+    out property<bool> test_accent: accent.alpha >= 0;
+}
+
+/*
+```rust
+let t = TestCase::new().unwrap();
+assert!(t.get_test_light());
+assert!(!t.get_test_dark());
+assert!(t.get_test_blue_seed());
+assert!(t.get_test_contrast_level());
+assert!(t.get_test_seed_from_image());
+assert!(t.get_test_accent());
+
+// The platform accent accessor follows the system accent color.
+slint_testing::set_system_accent_color(slint::Color::from_rgb_u8(0x12, 0x34, 0x56));
+assert_eq!(t.get_accent(), slint::Color::from_argb_encoded(0xff123456));
+
+// Changing the seed updates every role live.
+t.set_seed(slint::Color::from_rgb_u8(0x00, 0x57, 0xd0));
+assert_eq!(t.get_scheme().primary, slint::Color::from_argb_encoded(0xff4c5e8b));
+t.set_seed(slint::Color::from_rgb_u8(0x67, 0x50, 0xa4));
+t.set_dark(true);
+assert!(t.get_test_dark());
+assert!(!t.get_test_light());
+```
+
+```cpp
+auto handle = TestCase::create();
+const TestCase &t = *handle;
+assert(t.get_test_light());
+assert(!t.get_test_dark());
+assert(t.get_test_blue_seed());
+assert(t.get_test_contrast_level());
+assert(t.get_test_seed_from_image());
+assert(t.get_test_accent());
+
+// The platform accent accessor follows the system accent color.
+slint_testing::set_system_accent_color(slint::Color(0x12, 0x34, 0x56));
+assert(t.get_accent() == slint::Color(0x12, 0x34, 0x56));
+
+// Changing the seed updates every role live.
+t.set_seed(slint::Color(0x00, 0x57, 0xd0));
+assert(t.get_scheme().primary == slint::Color(0x4c, 0x5e, 0x8b));
+```
+
+```js
+var t = new slint.TestCase();
+assert(t.test_light);
+assert(!t.test_dark);
+assert(t.test_blue_seed);
+assert(t.test_contrast_level);
+assert(t.test_seed_from_image);
+assert(t.test_accent);
+```
+*/

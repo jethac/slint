@@ -6,6 +6,7 @@ import { MaterialSchemes, MaterialScheme } from "material_schemes.slint";
 import { ColorLightTokens, ColorDarkTokens } from "generated/material_color_tokens.slint";
 import { StateTokens } from "generated/material_state_tokens.slint";
 import { ScrimTokens } from "generated/material_leaf_tokens.slint";
+import { MaterialTheme } from "material_theme.slint";
 
 export global MaterialPalette {
     out property <color> primary: root.scheme.primary;
@@ -174,5 +175,10 @@ export global MaterialPalette {
         },
     };
 
-    property <MaterialScheme> scheme: Palette.color_scheme == ColorScheme.dark ? root.schemes.dark : root.schemes.light;
+    // Opt in to runtime-generated schemes: when `dynamic` is true, every
+    // color role comes from `MaterialTheme` instead of `schemes`.
+    in property <bool> dynamic: false;
+
+    property <MaterialScheme> scheme: root.dynamic ? MaterialTheme.material-scheme
+        : Palette.color_scheme == ColorScheme.dark ? root.schemes.dark : root.schemes.light;
 }

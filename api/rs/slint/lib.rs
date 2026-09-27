@@ -420,6 +420,17 @@ pub fn update_all_translations() {
     i_slint_core::translations::mark_all_translations_dirty();
 }
 
+/// Generates Material color schemes at runtime.
+///
+/// This module implements the same functions as the `MaterialColors`
+/// namespace in `.slint` code: [`color_scheme()`] builds a complete
+/// [`language::MaterialColorScheme`] from a seed color, variant, spec
+/// version, target platform, dark mode and a continuous contrast level, and
+/// [`seed_from_image()`] extracts a seed color from an image.
+pub mod material {
+    pub use i_slint_core::material::{color_scheme, seed_from_image};
+}
+
 /// This module contains items that you need to use or implement if you want use Slint in an environment without
 /// one of the supplied platform backends such as qt or winit.
 ///

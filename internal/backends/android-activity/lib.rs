@@ -194,6 +194,9 @@ impl i_slint_core::platform::Platform for AndroidPlatform {
         if let Ok(accent) = self.window.java_helper.accent_color() {
             ctx.set_accent_color(accent);
         }
+        if let Ok(contrast) = self.window.java_helper.contrast() {
+            ctx.set_contrast_preference(contrast);
+        }
         if let Ok(scale) = self.window.java_helper.font_scale()
             && let Some(size) = javahelper::font_scale_to_logical_length(scale)
         {

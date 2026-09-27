@@ -5160,6 +5160,32 @@ fn compile_builtin_function_call(
             let global_access = &ctx.generator_state.global_access;
             quote!(sp::accent_color(&#global_access.root_item_tree_weak.upgrade().unwrap()))
         }
+        BuiltinFunction::MaterialColorScheme => {
+            let (seed_color, variant, spec_version, platform, is_dark, contrast_level) = (
+                a.next().unwrap(),
+                a.next().unwrap(),
+                a.next().unwrap(),
+                a.next().unwrap(),
+                a.next().unwrap(),
+                a.next().unwrap(),
+            );
+            quote!(sp::material_color_scheme(
+                #seed_color,
+                #variant,
+                #spec_version,
+                #platform,
+                #is_dark,
+                #contrast_level as f32,
+            ))
+        }
+        BuiltinFunction::MaterialSeedFromImage => {
+            let image = a.next().unwrap();
+            quote!(sp::material_seed_from_image(&#image).unwrap_or_default())
+        }
+        BuiltinFunction::PlatformContrastLevel => {
+            let global_access = &ctx.generator_state.global_access;
+            quote!(sp::contrast_preference(&#global_access.root_item_tree_weak.upgrade().unwrap()))
+        }
         BuiltinFunction::SupportsNativeMenuBar => {
             let window_adapter_tokens = access_window_adapter_field(ctx);
             quote!(sp::WindowInner::from_pub(#window_adapter_tokens.window()).supports_native_menu_bar())

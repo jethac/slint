@@ -871,4 +871,35 @@ inline void set_xdg_app_id(std::string_view xdg_app_id)
     cbindgen_private::slint_set_xdg_app_id(&s);
 }
 
+/// Generates Material color schemes at runtime. These are the C++
+/// counterparts of the `MaterialColors` functions available in .slint code.
+namespace material {
+
+/// Generates a Material color scheme from a seed color, a scheme variant, a
+/// spec version, the target device class, dark mode and a continuous
+/// contrast level in the range -1 to 1.
+inline language::MaterialColorScheme
+color_scheme(Color seed_color,
+             language::MaterialSchemeVariant variant = language::MaterialSchemeVariant::TonalSpot,
+             language::MaterialSpecVersion spec_version = language::MaterialSpecVersion::Spec2025,
+             language::MaterialSchemePlatform platform = language::MaterialSchemePlatform::Phone,
+             bool is_dark = false, float contrast_level = 0.0f)
+{
+    language::MaterialColorScheme scheme;
+    cbindgen_private::slint_material_color_scheme(&seed_color, variant, spec_version, platform,
+                                                  is_dark, contrast_level, &scheme);
+    return scheme;
+}
+
+/// Extracts a seed color from `image` with the Material quantizer and
+/// scorer. Returns a transparent color when the image has no readable pixels.
+inline Color seed_from_image(const Image &image)
+{
+    Color color;
+    cbindgen_private::slint_material_seed_from_image(&image, &color);
+    return color;
+}
+
+} // namespace material
+
 } // namespace slint

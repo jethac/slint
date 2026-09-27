@@ -109,6 +109,7 @@ slint-interpreter = { version = "=1.19.0", path = "internal/interpreter", defaul
 slint-macros = { version = "=1.19.0", path = "api/rs/macros", default-features = false }
 
 vtable = { version = "0.5", path = "helper_crates/vtable" }
+material-color-utils = { version = "=0.1.0", path = "helper_crates/material-color-utils", default-features = false }
 
 by_address = { version = "1.0.4" }
 bytemuck = { version = "1.13.1" }

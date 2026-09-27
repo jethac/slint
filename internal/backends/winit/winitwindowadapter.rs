@@ -468,6 +468,10 @@ pub struct WinitWindowAdapter {
     macos_color_observer: OnceCell<
         objc2::rc::Retained<objc2::runtime::ProtocolObject<dyn objc2::runtime::NSObjectProtocol>>,
     >,
+    #[cfg(target_os = "macos")]
+    macos_contrast_observer: OnceCell<
+        objc2::rc::Retained<objc2::runtime::ProtocolObject<dyn objc2::runtime::NSObjectProtocol>>,
+    >,
 
     // The component owns the menu item tree, which reaches this adapter through the globals. Holding
     // it weakly here keeps the adapter out of that ownership cycle.
@@ -536,6 +540,8 @@ impl WinitWindowAdapter {
             window_event_filter: Cell::new(None),
             #[cfg(target_os = "macos")]
             macos_color_observer: OnceCell::new(),
+            #[cfg(target_os = "macos")]
+            macos_contrast_observer: OnceCell::new(),
             #[cfg(muda)]
             menubar_weak: Default::default(),
             #[cfg(muda)]
@@ -693,6 +699,7 @@ impl WinitWindowAdapter {
                 #[cfg(target_os = "macos")]
                 self.setup_macos_color_observer();
                 self.set_accent_color(Self::query_system_accent_color());
+                self.set_contrast_preference(Self::query_system_contrast_preference());
             }
         }
 
@@ -1129,6 +1136,57 @@ impl WinitWindowAdapter {
         }
     }
 
+    pub fn set_contrast_preference(&self, preference: f32) {
+        WindowInner::from_pub(self.window()).context().set_contrast_preference(preference);
+    }
+
+    /// Queries the operating system's contrast preference and maps it to
+    /// Slint's continuous contrast level in the range -1 to 1. The binary
+    /// high-contrast accessibility settings report 1, everything else 0.
+    /// On Linux the XDG settings watcher pushes `org.freedesktop.appearance
+    /// contrast` instead.
+    fn query_system_contrast_preference() -> f32 {
+        core::cfg_select! {
+            target_os = "windows" => {
+                use windows::Win32::UI::{
+                    Accessibility::{HCF_HIGHCONTRASTON, HIGHCONTRASTW},
+                    WindowsAndMessaging::{SPI_GETHIGHCONTRAST, SystemParametersInfoW},
+                };
+
+                let mut hc = HIGHCONTRASTW::default();
+                let ok = unsafe {
+                    SystemParametersInfoW(
+                        SPI_GETHIGHCONTRAST,
+                        core::mem::size_of::<HIGHCONTRASTW>() as u32,
+                        Some(&mut hc as *mut HIGHCONTRASTW as *mut core::ffi::c_void),
+                        Default::default(),
+                    )
+                };
+                if ok.is_ok() && (hc.dwFlags & HCF_HIGHCONTRASTON).0 != 0 {
+                    return 1.0;
+                }
+                0.0
+            }
+            target_os = "macos" => {
+                if objc2_app_kit::NSWorkspace::sharedWorkspace()
+                    .accessibilityDisplayShouldIncreaseContrast()
+                {
+                    1.0
+                } else {
+                    0.0
+                }
+            }
+            _ => {
+                0.0
+            }
+        }
+    }
+
+    /// Re-query the system contrast preference. Called on theme changes.
+    pub fn update_contrast_preference(&self) {
+        self.set_contrast_preference(Self::query_system_contrast_preference());
+    }
+
     pub fn set_color_scheme(&self, scheme: ColorScheme) {
         WindowInner::from_pub(self.window()).context().set_color_scheme(scheme);
 
@@ -1242,6 +1300,28 @@ impl WinitWindowAdapter {
                 )
         };
         let _ = self.macos_color_observer.set(observer);
+
+        // The increase-contrast accessibility toggle is a workspace
+        // notification, not a system-colors one. The
+        // NSWorkspaceAccessibilityDisplayShouldIncreaseContrastDidChangeNotification
+        // constant is not exposed by objc2-app-kit, but notification names
+        // are NSString values.
+        let self_weak = self.self_weak.clone();
+        let block =
+            block2::RcBlock::new(move |_: core::ptr::NonNull<objc2_foundation::NSNotification>| {
+                if let Some(adapter) = self_weak.upgrade() {
+                    adapter.update_contrast_preference();
+                }
+            });
+        let name = objc2_foundation::NSString::from_str(
+            "NSWorkspaceAccessibilityDisplayShouldIncreaseContrastDidChangeNotification",
+        );
+        let observer = unsafe {
+            objc2_app_kit::NSWorkspace::sharedWorkspace()
+                .notificationCenter()
+                .addObserverForName_object_queue_usingBlock(Some(&name), None, None, &block)
+        };
+        let _ = self.macos_contrast_observer.set(observer);
     }
 
     pub fn activation_changed(&self, is_active: bool) -> Result<(), PlatformError> {
@@ -1595,6 +1675,7 @@ impl WinitWindowAdapter {
                     winit::window::Theme::Light => ColorScheme::Light,
                 });
                 self.update_accent_color();
+                self.update_contrast_preference();
             }
             WinitWindowEvent::Occluded(occluded) => {
                 self.renderer.occluded(*occluded);
@@ -2348,6 +2429,14 @@ impl Drop for WinitWindowAdapter {
         if let Some(observer) = self.macos_color_observer.get() {
             unsafe {
                 objc2_foundation::NSNotificationCenter::defaultCenter()
+                    .removeObserver((*observer).as_ref());
+            }
+        }
+        #[cfg(target_os = "macos")]
+        if let Some(observer) = self.macos_contrast_observer.get() {
+            unsafe {
+                objc2_app_kit::NSWorkspace::sharedWorkspace()
+                    .notificationCenter()
                     .removeObserver((*observer).as_ref());
             }
         }

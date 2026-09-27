@@ -662,6 +662,55 @@ macro_rules! for_each_enums {
                 Link,
             }
 
+            /// The variants of a Material Design dynamic color scheme, as defined by the
+            /// `Variant` enum of material-color-utilities. Each variant chooses the palettes'
+            /// hues and chromas differently from the seed color.
+            // (on purpose not #[non_exhaustive]): the list is closed by the Java reference
+            pub enum MaterialSchemeVariant {
+                /// All colors are grayscale, no chroma.
+                Monochrome,
+                /// Close to grayscale, a hint of chroma.
+                Neutral,
+                /// Pastel colors, high chroma palettes. The default on Android.
+                TonalSpot,
+                /// Pastel colors, high chroma palettes, more colorful than TonalSpot.
+                Vibrant,
+                /// A rotation of the seed hue with high chroma.
+                Expressive,
+                /// Almost identical to the seed color.
+                Fidelity,
+                /// Like `Fidelity`, but the seed's chroma is allowed to win over the variant's.
+                Content,
+                /// A linear sampling of hues across the spectrum.
+                Rainbow,
+                /// A second hue 72 degrees from the seed.
+                FruitSalad,
+                /// The Content Management Framework scheme.
+                Cmf,
+            }
+
+            /// The version of the Material Design color specification a dynamic scheme follows,
+            /// as defined by `ColorSpec.SpecVersion` of material-color-utilities.
+            // (on purpose not #[non_exhaustive]): the list is closed by the Java reference
+            pub enum MaterialSpecVersion {
+                /// The 2021 Material You specification.
+                Spec2021,
+                /// The 2025 Expressive specification.
+                Spec2025,
+                /// The 2026 specification.
+                Spec2026,
+            }
+
+            /// The platform a Material Design dynamic scheme is intended for, as defined by
+            /// `DynamicScheme.Platform` of material-color-utilities.
+            // (on purpose not #[non_exhaustive]): the list is closed by the Java reference
+            pub enum MaterialSchemePlatform {
+                /// Phones and other touchscreen devices.
+                Phone,
+                /// Watches, which dim and simplify some roles.
+                Watch,
+            }
+
             /// This enum describes the detected operating system types.
             #[non_exhaustive]
             enum OperatingSystemType {

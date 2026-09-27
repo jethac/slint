@@ -103,6 +103,12 @@ pub enum BuiltinFunction {
     Oklch,
     ColorScheme,
     AccentColor,
+    /// `MaterialColors.color-scheme(seed-color, variant, spec-version, platform, is-dark, contrast-level)`
+    MaterialColorScheme,
+    /// `MaterialColors.seed-from-image(image)`
+    MaterialSeedFromImage,
+    /// `MaterialColors.platform-contrast-level()`
+    PlatformContrastLevel,
     SupportsNativeMenuBar,
     /// Setup the menu bar
     ///
@@ -307,6 +313,17 @@ declare_builtin_function_types!(
         typeregister::BUILTIN.enums.ColorScheme.clone(),
     ),
     AccentColor: () -> Type::Color,
+    // (seed color, variant, spec version, platform, is dark, contrast level in -1..1)
+    MaterialColorScheme: (
+        Type::Color,
+        Type::Enumeration(typeregister::BUILTIN.enums.MaterialSchemeVariant.clone()),
+        Type::Enumeration(typeregister::BUILTIN.enums.MaterialSpecVersion.clone()),
+        Type::Enumeration(typeregister::BUILTIN.enums.MaterialSchemePlatform.clone()),
+        Type::Bool,
+        Type::Float32
+    ) -> Type::Struct(typeregister::builtin_structs::MaterialColorScheme()),
+    MaterialSeedFromImage: (Type::Image) -> Type::Color,
+    PlatformContrastLevel: () -> Type::Float32,
     SupportsNativeMenuBar: () -> Type::Bool,
     // entries, sub-menu, activate. But the types here are not accurate.
     SetupMenuBar: (Type::Model, typeregister::noarg_callback_type(), typeregister::noarg_callback_type()) -> Type::Void,
@@ -368,6 +385,9 @@ impl BuiltinFunction {
             BuiltinFunction::AnimationTick => false,
             BuiltinFunction::ColorScheme => false,
             BuiltinFunction::AccentColor => false,
+            BuiltinFunction::MaterialColorScheme => false,
+            BuiltinFunction::MaterialSeedFromImage => false,
+            BuiltinFunction::PlatformContrastLevel => false,
             BuiltinFunction::SupportsNativeMenuBar => false,
             BuiltinFunction::SetupMenuBar => false,
             BuiltinFunction::SetupSystemTrayIcon => false,
@@ -475,6 +495,9 @@ impl BuiltinFunction {
             BuiltinFunction::AnimationTick => true,
             BuiltinFunction::ColorScheme => true,
             BuiltinFunction::AccentColor => true,
+            BuiltinFunction::MaterialColorScheme => true,
+            BuiltinFunction::MaterialSeedFromImage => true,
+            BuiltinFunction::PlatformContrastLevel => true,
             BuiltinFunction::SupportsNativeMenuBar => true,
             BuiltinFunction::SetupMenuBar => false,
             BuiltinFunction::SetupSystemTrayIcon => false,

@@ -2339,6 +2339,43 @@ fn call_builtin_function(
                 .unwrap_or_default();
             Value::Brush(i_slint_core::Brush::SolidColor(color))
         }
+        BuiltinFunction::MaterialColorScheme => {
+            let seed_color: i_slint_core::Color =
+                eval_expression(ctx, &arguments[0]).try_into().unwrap_or_default();
+            let variant: i_slint_core::items::MaterialSchemeVariant =
+                eval_expression(ctx, &arguments[1]).try_into().unwrap_or_default();
+            let spec_version: i_slint_core::items::MaterialSpecVersion =
+                eval_expression(ctx, &arguments[2]).try_into().unwrap_or_default();
+            let platform: i_slint_core::items::MaterialSchemePlatform =
+                eval_expression(ctx, &arguments[3]).try_into().unwrap_or_default();
+            let is_dark: bool = eval_expression(ctx, &arguments[4]).try_into().unwrap_or(false);
+            let contrast_level: f32 = eval_expression(ctx, &arguments[5]).try_into().unwrap_or(0.0);
+            i_slint_core::material::color_scheme(
+                seed_color,
+                variant,
+                spec_version,
+                platform,
+                is_dark,
+                contrast_level,
+            )
+            .into()
+        }
+        BuiltinFunction::MaterialSeedFromImage => {
+            let color = match eval_expression(ctx, &arguments[0]) {
+                Value::Image(image) => {
+                    i_slint_core::material::seed_from_image(&image).unwrap_or_default()
+                }
+                _ => Default::default(),
+            };
+            Value::Brush(i_slint_core::Brush::SolidColor(color))
+        }
+        BuiltinFunction::PlatformContrastLevel => {
+            let level = root_instance(ctx)
+                .map(vtable::VRc::into_dyn)
+                .map(|root| i_slint_core::window::contrast_preference(&root))
+                .unwrap_or(0.0);
+            Value::Number(level as f64)
+        }
         BuiltinFunction::SupportsNativeMenuBar => {
             let supports = find_window_adapter(ctx).is_some_and(|a| {
                 a.internal(i_slint_core::InternalToken)

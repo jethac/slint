@@ -33,6 +33,7 @@ import android.text.SpannableStringBuilder;
 import android.util.TypedValue;
 import android.view.inputmethod.InputMethodManager;
 import android.app.Activity;
+import android.app.UiModeManager;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.PopupWindow;
@@ -643,9 +644,25 @@ public class SlintAndroidJavaHelper {
     }
 
     public int accent_color() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            // Android 12+ dynamic color: the Material seed is the system's
+            // tonal palette accent (system_accent1_600).
+            return mActivity.getColor(android.R.color.system_accent1_600);
+        }
         TypedValue typedValue = new TypedValue();
         if (mActivity.getTheme().resolveAttribute(android.R.attr.colorAccent, typedValue, true)) {
             return mActivity.getColor(typedValue.resourceId);
+        }
+        return 0;
+    }
+
+    public float contrast() {
+        if (Build.VERSION.SDK_INT >= 34) { // Build.VERSION_CODES.UPSIDE_DOWN_CAKE
+            UiModeManager uiModeManager =
+                (UiModeManager) mActivity.getSystemService(Context.UI_MODE_SERVICE);
+            if (uiModeManager != null) {
+                return uiModeManager.getContrast();
+            }
         }
         return 0;
     }

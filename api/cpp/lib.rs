@@ -95,6 +95,45 @@ pub extern "C" fn slint_context_color_scheme(
         .map_or(i_slint_core::items::ColorScheme::Unknown, |ctx| ctx.color_scheme(Some(root)))
 }
 
+/// Runtime entry point for `BuiltinFunction::PlatformContrastLevel`.
+#[unsafe(no_mangle)]
+pub extern "C" fn slint_context_contrast_preference(
+    root: &i_slint_core::item_tree::ItemTreeRc,
+) -> f32 {
+    i_slint_core::window::contrast_preference(root)
+}
+
+/// Runtime entry point for `BuiltinFunction::MaterialColorScheme`.
+#[unsafe(no_mangle)]
+pub extern "C" fn slint_material_color_scheme(
+    seed_color: &i_slint_core::graphics::Color,
+    variant: i_slint_core::items::MaterialSchemeVariant,
+    spec_version: i_slint_core::items::MaterialSpecVersion,
+    platform: i_slint_core::items::MaterialSchemePlatform,
+    is_dark: bool,
+    contrast_level: f32,
+    out: &mut i_slint_core::items::MaterialColorScheme,
+) {
+    *out = i_slint_core::material::color_scheme(
+        *seed_color,
+        variant,
+        spec_version,
+        platform,
+        is_dark,
+        contrast_level,
+    );
+}
+
+/// Runtime entry point for `BuiltinFunction::MaterialSeedFromImage`. Writes the
+/// scored seed color, or transparent when the image has no readable pixels.
+#[unsafe(no_mangle)]
+pub extern "C" fn slint_material_seed_from_image(
+    image: &i_slint_core::graphics::Image,
+    out: &mut i_slint_core::graphics::Color,
+) {
+    *out = i_slint_core::material::seed_from_image(image).unwrap_or_default();
+}
+
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn slint_windowrc_init(out: *mut WindowAdapterRcOpaque) {
     assert_eq!(
