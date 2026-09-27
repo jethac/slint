@@ -518,23 +518,101 @@ fn object_stats(obj: &ResolvedObject) -> (Vec<&'static str>, Vec<String>) {
     (states, motion)
 }
 
+/// Default `(issues, needs)` for a component family. Every row of the
+/// inventory must carry both: an empty field means nothing, so `merge_status`
+/// fills any unset field from this table and a family not listed here fails
+/// the run loudly.
+fn family_defaults(family: &str) -> Result<(Vec<u32>, &'static str), String> {
+    // Issue map: #9 buttons/toggle/icon buttons; #10 button groups, split
+    // buttons, FAB menu, toolbars, loading indicator; #11 expressive rework
+    // of the remaining components; #12 adaptive layout/navigation. `needs`
+    // names engine capabilities from #5 (springs), #6 (shapes), #7
+    // (variable fonts/text scale), #8 (dynamic color), #12 (adaptive).
+    Ok(match family {
+        "App bars" => (vec![11], "springs (#5), shapes (#6)"),
+        "Autocomplete" => (vec![11], "none"),
+        "Badge" => (vec![11], "none"),
+        "Bottom app bar" => (vec![10], "adaptive (#12)"),
+        "Bottom sheets" => (vec![11], "springs (#5)"),
+        "Buttons" => (vec![9], "springs (#5), shapes (#6)"),
+        "Button groups" => (vec![10], "springs (#5), shapes (#6)"),
+        "Cards" => (vec![11], "none"),
+        "Carousel" => (vec![11], "springs (#5), shapes (#6)"),
+        "Checkbox" => (vec![11], "shapes (#6)"),
+        "Chips" => (vec![9], "shapes (#6)"),
+        "Date pickers" => (vec![11], "none"),
+        "Dialogs" => (vec![11], "none"),
+        "Divider" => (vec![11], "none"),
+        "FAB" => (vec![9], "springs (#5), shapes (#6)"),
+        "FAB menu" => (vec![10], "springs (#5), shapes (#6)"),
+        "Icon" => (vec![11], "none"),
+        "Icon buttons" => (vec![9], "springs (#5), shapes (#6)"),
+        "Lists" => (vec![11], "shapes (#6)"),
+        "Loading indicator" => (vec![10], "wavy shapes (#6), springs (#5)"),
+        "Menus" => (vec![11], "springs (#5), shapes (#6)"),
+        "Navigation bar" => (vec![11, 12], "adaptive (#12), springs (#5), shapes (#6)"),
+        "Navigation drawer" => (vec![11, 12], "adaptive (#12)"),
+        "Navigation items" => (vec![11, 12], "adaptive (#12), springs (#5)"),
+        "Navigation rail" => (vec![11, 12], "adaptive (#12), springs (#5)"),
+        "Progress indicators" => (vec![11], "wavy shapes (#6), springs (#5)"),
+        "Pull to refresh" => (vec![11], "springs (#5)"),
+        "Radio button" => (vec![11], "shapes (#6)"),
+        "Scaffold" => (vec![11, 12], "adaptive (#12)"),
+        "Scrim" => (vec![11], "none"),
+        "Search" => (vec![11], "springs (#5)"),
+        "Segmented buttons" => (vec![10], "springs (#5), shapes (#6)"),
+        "Slider" => (vec![11], "shapes (#6)"),
+        "Snackbar" => (vec![11], "none"),
+        "Split buttons" => (vec![10], "springs (#5), shapes (#6)"),
+        "Surface" => (vec![11], "dynamic color (#8)"),
+        "Swipe to dismiss" => (vec![11], "springs (#5)"),
+        "Switch" => (vec![11], "springs (#5), shapes (#6)"),
+        "Tabs" => (vec![11], "none"),
+        "Text" => (vec![7], "variable fonts (#7), text scale (#12)"),
+        "Text fields" => (vec![11], "variable fonts (#7), shapes (#6)"),
+        "Time pickers" => (vec![11], "none"),
+        "Toggle buttons" => (vec![9], "springs (#5), shapes (#6)"),
+        "Toolbars" => (vec![10], "springs (#5), adaptive (#12)"),
+        "Tooltips" => (vec![11], "none"),
+        other => return Err(format!("{other}: no defaults — add it to family_defaults()")),
+    })
+}
+
 /// Sync the status file with the current scan: add new upstream components as
-/// `missing`, drop entries for components upstream no longer ships. Returns
-/// true if the status changed (the file must be rewritten).
-pub fn merge_status(status: &mut Status, components: &[SourceComponent]) -> bool {
+/// `missing` with the family defaults, drop entries for components upstream
+/// no longer ships, and fill any unset `issues`/`needs` from the family
+/// defaults so no row renders empty. Returns true if the status changed (the
+/// file must be rewritten).
+pub fn merge_status(
+    status: &mut Status,
+    components: &[SourceComponent],
+) -> Result<bool, String> {
     let mut changed = false;
     for c in components {
-        if !status.components.contains_key(&c.name) {
-            status.components.insert(
-                c.name.clone(),
-                ComponentStatus {
-                    status: "missing".into(),
-                    issues: Vec::new(),
-                    needs: String::new(),
-                    notes: String::new(),
-                },
-            );
-            changed = true;
+        let (issues, needs) = family_defaults(&c.family)?;
+        match status.components.get_mut(&c.name) {
+            Some(cs) => {
+                if cs.issues.is_empty() {
+                    cs.issues = issues;
+                    changed = true;
+                }
+                if cs.needs.is_empty() {
+                    cs.needs = needs.to_string();
+                    changed = true;
+                }
+            }
+            None => {
+                status.components.insert(
+                    c.name.clone(),
+                    ComponentStatus {
+                        status: "missing".into(),
+                        issues,
+                        needs: needs.to_string(),
+                        notes: String::new(),
+                    },
+                );
+                changed = true;
+            }
         }
     }
     let scanned: std::collections::BTreeSet<&str> =
@@ -544,7 +622,7 @@ pub fn merge_status(status: &mut Status, components: &[SourceComponent]) -> bool
     if status.components.len() != before {
         changed = true;
     }
-    changed
+    Ok(changed)
 }
 
 /// Render `PARITY.md`.

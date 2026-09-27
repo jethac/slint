@@ -8,8 +8,10 @@
 // from the ui-libraries/material directory.
 
 /// One type-scale entry. `font_size`, `line_height` and
-/// `tracking` are emitted in px; the upstream `sp` values map to
-/// logical pixels at the default font scale.
+/// `tracking` are `sp` upstream and scale with
+/// `MaterialTextScale.factor` (the platform text scale).
+/// `font_family` binds to `MaterialTheme`'s configurable
+/// brand/plain families.
 export struct MaterialTypeStyle {
     font_family: string,
     font_weight: int,
@@ -18,198 +20,212 @@ export struct MaterialTypeStyle {
     tracking: length,
 }
 
+/// Multiplies every `sp` token to follow the platform text
+/// scale. The adaptive layer (#12) writes it.
+export global MaterialTextScale {
+    in-out property <float> factor: 1.0;
+}
+
+/// Theme-configurable brand and plain typeface families;
+/// the font work (#7) replaces the defaults with the bundled
+/// Google Sans Flex.
+export global MaterialTheme {
+    in-out property <string> brand_family: "sans-serif";
+    in-out property <string> plain_family: "sans-serif";
+}
+
 export global TypefaceTokens {
-    out property <string> brand: "sans-serif";
-    out property <string> plain: "sans-serif";
+    out property <string> brand: MaterialTheme.brand_family;
+    out property <string> plain: MaterialTheme.plain_family;
     out property <int> weight_bold: 700;
     out property <int> weight_medium: 500;
     out property <int> weight_regular: 400;
 }
 
 export global TypeScaleTokens {
-    out property <string> body_large_font: "sans-serif";
-    out property <length> body_large_line_height: 24px;
-    out property <length> body_large_size: 16px;
-    out property <length> body_large_tracking: 0.5px;
+    out property <string> body_large_font: MaterialTheme.plain_family;
+    out property <length> body_large_line_height: 24px * MaterialTextScale.factor;
+    out property <length> body_large_size: 16px * MaterialTextScale.factor;
+    out property <length> body_large_tracking: 0.5px * MaterialTextScale.factor;
     out property <int> body_large_weight: 400;
-    out property <string> body_medium_font: "sans-serif";
-    out property <length> body_medium_line_height: 20px;
-    out property <length> body_medium_size: 14px;
-    out property <length> body_medium_tracking: 0.2px;
+    out property <string> body_medium_font: MaterialTheme.plain_family;
+    out property <length> body_medium_line_height: 20px * MaterialTextScale.factor;
+    out property <length> body_medium_size: 14px * MaterialTextScale.factor;
+    out property <length> body_medium_tracking: 0.2px * MaterialTextScale.factor;
     out property <int> body_medium_weight: 400;
-    out property <string> body_small_font: "sans-serif";
-    out property <length> body_small_line_height: 16px;
-    out property <length> body_small_size: 12px;
-    out property <length> body_small_tracking: 0.4px;
+    out property <string> body_small_font: MaterialTheme.plain_family;
+    out property <length> body_small_line_height: 16px * MaterialTextScale.factor;
+    out property <length> body_small_size: 12px * MaterialTextScale.factor;
+    out property <length> body_small_tracking: 0.4px * MaterialTextScale.factor;
     out property <int> body_small_weight: 400;
-    out property <string> display_large_font: "sans-serif";
-    out property <length> display_large_line_height: 64px;
-    out property <length> display_large_size: 57px;
-    out property <length> display_large_tracking: -0.2px;
+    out property <string> display_large_font: MaterialTheme.brand_family;
+    out property <length> display_large_line_height: 64px * MaterialTextScale.factor;
+    out property <length> display_large_size: 57px * MaterialTextScale.factor;
+    out property <length> display_large_tracking: -0.2px * MaterialTextScale.factor;
     out property <int> display_large_weight: 400;
-    out property <string> display_medium_font: "sans-serif";
-    out property <length> display_medium_line_height: 52px;
-    out property <length> display_medium_size: 45px;
-    out property <length> display_medium_tracking: 0px;
+    out property <string> display_medium_font: MaterialTheme.brand_family;
+    out property <length> display_medium_line_height: 52px * MaterialTextScale.factor;
+    out property <length> display_medium_size: 45px * MaterialTextScale.factor;
+    out property <length> display_medium_tracking: 0px * MaterialTextScale.factor;
     out property <int> display_medium_weight: 400;
-    out property <string> display_small_font: "sans-serif";
-    out property <length> display_small_line_height: 44px;
-    out property <length> display_small_size: 36px;
-    out property <length> display_small_tracking: 0px;
+    out property <string> display_small_font: MaterialTheme.brand_family;
+    out property <length> display_small_line_height: 44px * MaterialTextScale.factor;
+    out property <length> display_small_size: 36px * MaterialTextScale.factor;
+    out property <length> display_small_tracking: 0px * MaterialTextScale.factor;
     out property <int> display_small_weight: 400;
-    out property <string> headline_large_font: "sans-serif";
-    out property <length> headline_large_line_height: 40px;
-    out property <length> headline_large_size: 32px;
-    out property <length> headline_large_tracking: 0px;
+    out property <string> headline_large_font: MaterialTheme.brand_family;
+    out property <length> headline_large_line_height: 40px * MaterialTextScale.factor;
+    out property <length> headline_large_size: 32px * MaterialTextScale.factor;
+    out property <length> headline_large_tracking: 0px * MaterialTextScale.factor;
     out property <int> headline_large_weight: 400;
-    out property <string> headline_medium_font: "sans-serif";
-    out property <length> headline_medium_line_height: 36px;
-    out property <length> headline_medium_size: 28px;
-    out property <length> headline_medium_tracking: 0px;
+    out property <string> headline_medium_font: MaterialTheme.brand_family;
+    out property <length> headline_medium_line_height: 36px * MaterialTextScale.factor;
+    out property <length> headline_medium_size: 28px * MaterialTextScale.factor;
+    out property <length> headline_medium_tracking: 0px * MaterialTextScale.factor;
     out property <int> headline_medium_weight: 400;
-    out property <string> headline_small_font: "sans-serif";
-    out property <length> headline_small_line_height: 32px;
-    out property <length> headline_small_size: 24px;
-    out property <length> headline_small_tracking: 0px;
+    out property <string> headline_small_font: MaterialTheme.brand_family;
+    out property <length> headline_small_line_height: 32px * MaterialTextScale.factor;
+    out property <length> headline_small_size: 24px * MaterialTextScale.factor;
+    out property <length> headline_small_tracking: 0px * MaterialTextScale.factor;
     out property <int> headline_small_weight: 400;
-    out property <string> label_large_font: "sans-serif";
-    out property <length> label_large_line_height: 20px;
-    out property <length> label_large_size: 14px;
-    out property <length> label_large_tracking: 0.1px;
+    out property <string> label_large_font: MaterialTheme.plain_family;
+    out property <length> label_large_line_height: 20px * MaterialTextScale.factor;
+    out property <length> label_large_size: 14px * MaterialTextScale.factor;
+    out property <length> label_large_tracking: 0.1px * MaterialTextScale.factor;
     out property <int> label_large_weight: 500;
-    out property <string> label_medium_font: "sans-serif";
-    out property <length> label_medium_line_height: 16px;
-    out property <length> label_medium_size: 12px;
-    out property <length> label_medium_tracking: 0.5px;
+    out property <string> label_medium_font: MaterialTheme.plain_family;
+    out property <length> label_medium_line_height: 16px * MaterialTextScale.factor;
+    out property <length> label_medium_size: 12px * MaterialTextScale.factor;
+    out property <length> label_medium_tracking: 0.5px * MaterialTextScale.factor;
     out property <int> label_medium_weight: 500;
-    out property <string> label_small_font: "sans-serif";
-    out property <length> label_small_line_height: 16px;
-    out property <length> label_small_size: 11px;
-    out property <length> label_small_tracking: 0.5px;
+    out property <string> label_small_font: MaterialTheme.plain_family;
+    out property <length> label_small_line_height: 16px * MaterialTextScale.factor;
+    out property <length> label_small_size: 11px * MaterialTextScale.factor;
+    out property <length> label_small_tracking: 0.5px * MaterialTextScale.factor;
     out property <int> label_small_weight: 500;
-    out property <string> title_large_font: "sans-serif";
-    out property <length> title_large_line_height: 28px;
-    out property <length> title_large_size: 22px;
-    out property <length> title_large_tracking: 0px;
+    out property <string> title_large_font: MaterialTheme.brand_family;
+    out property <length> title_large_line_height: 28px * MaterialTextScale.factor;
+    out property <length> title_large_size: 22px * MaterialTextScale.factor;
+    out property <length> title_large_tracking: 0px * MaterialTextScale.factor;
     out property <int> title_large_weight: 400;
-    out property <string> title_medium_font: "sans-serif";
-    out property <length> title_medium_line_height: 24px;
-    out property <length> title_medium_size: 16px;
-    out property <length> title_medium_tracking: 0.2px;
+    out property <string> title_medium_font: MaterialTheme.plain_family;
+    out property <length> title_medium_line_height: 24px * MaterialTextScale.factor;
+    out property <length> title_medium_size: 16px * MaterialTextScale.factor;
+    out property <length> title_medium_tracking: 0.2px * MaterialTextScale.factor;
     out property <int> title_medium_weight: 500;
-    out property <string> title_small_font: "sans-serif";
-    out property <length> title_small_line_height: 20px;
-    out property <length> title_small_size: 14px;
-    out property <length> title_small_tracking: 0.1px;
+    out property <string> title_small_font: MaterialTheme.plain_family;
+    out property <length> title_small_line_height: 20px * MaterialTextScale.factor;
+    out property <length> title_small_size: 14px * MaterialTextScale.factor;
+    out property <length> title_small_tracking: 0.1px * MaterialTextScale.factor;
     out property <int> title_small_weight: 500;
-    out property <string> body_large_emphasized_font: "sans-serif";
-    out property <length> body_large_emphasized_line_height: 24px;
-    out property <length> body_large_emphasized_size: 16px;
-    out property <length> body_large_emphasized_tracking: 0.15px;
+    out property <string> body_large_emphasized_font: MaterialTheme.plain_family;
+    out property <length> body_large_emphasized_line_height: 24px * MaterialTextScale.factor;
+    out property <length> body_large_emphasized_size: 16px * MaterialTextScale.factor;
+    out property <length> body_large_emphasized_tracking: 0.15px * MaterialTextScale.factor;
     out property <int> body_large_emphasized_weight: 500;
-    out property <string> body_medium_emphasized_font: "sans-serif";
-    out property <length> body_medium_emphasized_line_height: 20px;
-    out property <length> body_medium_emphasized_size: 14px;
-    out property <length> body_medium_emphasized_tracking: 0.25px;
+    out property <string> body_medium_emphasized_font: MaterialTheme.plain_family;
+    out property <length> body_medium_emphasized_line_height: 20px * MaterialTextScale.factor;
+    out property <length> body_medium_emphasized_size: 14px * MaterialTextScale.factor;
+    out property <length> body_medium_emphasized_tracking: 0.25px * MaterialTextScale.factor;
     out property <int> body_medium_emphasized_weight: 500;
-    out property <string> body_small_emphasized_font: "sans-serif";
-    out property <length> body_small_emphasized_line_height: 16px;
-    out property <length> body_small_emphasized_size: 12px;
-    out property <length> body_small_emphasized_tracking: 0.4px;
+    out property <string> body_small_emphasized_font: MaterialTheme.plain_family;
+    out property <length> body_small_emphasized_line_height: 16px * MaterialTextScale.factor;
+    out property <length> body_small_emphasized_size: 12px * MaterialTextScale.factor;
+    out property <length> body_small_emphasized_tracking: 0.4px * MaterialTextScale.factor;
     out property <int> body_small_emphasized_weight: 500;
-    out property <string> display_large_emphasized_font: "sans-serif";
-    out property <length> display_large_emphasized_line_height: 64px;
-    out property <length> display_large_emphasized_size: 57px;
-    out property <length> display_large_emphasized_tracking: 0px;
+    out property <string> display_large_emphasized_font: MaterialTheme.brand_family;
+    out property <length> display_large_emphasized_line_height: 64px * MaterialTextScale.factor;
+    out property <length> display_large_emphasized_size: 57px * MaterialTextScale.factor;
+    out property <length> display_large_emphasized_tracking: 0px * MaterialTextScale.factor;
     out property <int> display_large_emphasized_weight: 500;
-    out property <string> display_medium_emphasized_font: "sans-serif";
-    out property <length> display_medium_emphasized_line_height: 52px;
-    out property <length> display_medium_emphasized_size: 45px;
-    out property <length> display_medium_emphasized_tracking: 0px;
+    out property <string> display_medium_emphasized_font: MaterialTheme.brand_family;
+    out property <length> display_medium_emphasized_line_height: 52px * MaterialTextScale.factor;
+    out property <length> display_medium_emphasized_size: 45px * MaterialTextScale.factor;
+    out property <length> display_medium_emphasized_tracking: 0px * MaterialTextScale.factor;
     out property <int> display_medium_emphasized_weight: 500;
-    out property <string> display_small_emphasized_font: "sans-serif";
-    out property <length> display_small_emphasized_line_height: 44px;
-    out property <length> display_small_emphasized_size: 36px;
-    out property <length> display_small_emphasized_tracking: 0px;
+    out property <string> display_small_emphasized_font: MaterialTheme.brand_family;
+    out property <length> display_small_emphasized_line_height: 44px * MaterialTextScale.factor;
+    out property <length> display_small_emphasized_size: 36px * MaterialTextScale.factor;
+    out property <length> display_small_emphasized_tracking: 0px * MaterialTextScale.factor;
     out property <int> display_small_emphasized_weight: 500;
-    out property <string> headline_large_emphasized_font: "sans-serif";
-    out property <length> headline_large_emphasized_line_height: 40px;
-    out property <length> headline_large_emphasized_size: 32px;
-    out property <length> headline_large_emphasized_tracking: 0px;
+    out property <string> headline_large_emphasized_font: MaterialTheme.brand_family;
+    out property <length> headline_large_emphasized_line_height: 40px * MaterialTextScale.factor;
+    out property <length> headline_large_emphasized_size: 32px * MaterialTextScale.factor;
+    out property <length> headline_large_emphasized_tracking: 0px * MaterialTextScale.factor;
     out property <int> headline_large_emphasized_weight: 500;
-    out property <string> headline_medium_emphasized_font: "sans-serif";
-    out property <length> headline_medium_emphasized_line_height: 36px;
-    out property <length> headline_medium_emphasized_size: 28px;
-    out property <length> headline_medium_emphasized_tracking: 0px;
+    out property <string> headline_medium_emphasized_font: MaterialTheme.brand_family;
+    out property <length> headline_medium_emphasized_line_height: 36px * MaterialTextScale.factor;
+    out property <length> headline_medium_emphasized_size: 28px * MaterialTextScale.factor;
+    out property <length> headline_medium_emphasized_tracking: 0px * MaterialTextScale.factor;
     out property <int> headline_medium_emphasized_weight: 500;
-    out property <string> headline_small_emphasized_font: "sans-serif";
-    out property <length> headline_small_emphasized_line_height: 32px;
-    out property <length> headline_small_emphasized_size: 24px;
-    out property <length> headline_small_emphasized_tracking: 0px;
+    out property <string> headline_small_emphasized_font: MaterialTheme.brand_family;
+    out property <length> headline_small_emphasized_line_height: 32px * MaterialTextScale.factor;
+    out property <length> headline_small_emphasized_size: 24px * MaterialTextScale.factor;
+    out property <length> headline_small_emphasized_tracking: 0px * MaterialTextScale.factor;
     out property <int> headline_small_emphasized_weight: 500;
-    out property <string> label_large_emphasized_font: "sans-serif";
-    out property <length> label_large_emphasized_line_height: 20px;
-    out property <length> label_large_emphasized_size: 14px;
-    out property <length> label_large_emphasized_tracking: 0.1px;
+    out property <string> label_large_emphasized_font: MaterialTheme.plain_family;
+    out property <length> label_large_emphasized_line_height: 20px * MaterialTextScale.factor;
+    out property <length> label_large_emphasized_size: 14px * MaterialTextScale.factor;
+    out property <length> label_large_emphasized_tracking: 0.1px * MaterialTextScale.factor;
     out property <int> label_large_emphasized_weight: 700;
-    out property <string> label_medium_emphasized_font: "sans-serif";
-    out property <length> label_medium_emphasized_line_height: 16px;
-    out property <length> label_medium_emphasized_size: 12px;
-    out property <length> label_medium_emphasized_tracking: 0.5px;
+    out property <string> label_medium_emphasized_font: MaterialTheme.plain_family;
+    out property <length> label_medium_emphasized_line_height: 16px * MaterialTextScale.factor;
+    out property <length> label_medium_emphasized_size: 12px * MaterialTextScale.factor;
+    out property <length> label_medium_emphasized_tracking: 0.5px * MaterialTextScale.factor;
     out property <int> label_medium_emphasized_weight: 700;
-    out property <string> label_small_emphasized_font: "sans-serif";
-    out property <length> label_small_emphasized_line_height: 16px;
-    out property <length> label_small_emphasized_size: 11px;
-    out property <length> label_small_emphasized_tracking: 0.5px;
+    out property <string> label_small_emphasized_font: MaterialTheme.plain_family;
+    out property <length> label_small_emphasized_line_height: 16px * MaterialTextScale.factor;
+    out property <length> label_small_emphasized_size: 11px * MaterialTextScale.factor;
+    out property <length> label_small_emphasized_tracking: 0.5px * MaterialTextScale.factor;
     out property <int> label_small_emphasized_weight: 700;
-    out property <string> title_large_emphasized_font: "sans-serif";
-    out property <length> title_large_emphasized_line_height: 28px;
-    out property <length> title_large_emphasized_size: 22px;
-    out property <length> title_large_emphasized_tracking: 0px;
+    out property <string> title_large_emphasized_font: MaterialTheme.brand_family;
+    out property <length> title_large_emphasized_line_height: 28px * MaterialTextScale.factor;
+    out property <length> title_large_emphasized_size: 22px * MaterialTextScale.factor;
+    out property <length> title_large_emphasized_tracking: 0px * MaterialTextScale.factor;
     out property <int> title_large_emphasized_weight: 500;
-    out property <string> title_medium_emphasized_font: "sans-serif";
-    out property <length> title_medium_emphasized_line_height: 24px;
-    out property <length> title_medium_emphasized_size: 16px;
-    out property <length> title_medium_emphasized_tracking: 0.15px;
+    out property <string> title_medium_emphasized_font: MaterialTheme.plain_family;
+    out property <length> title_medium_emphasized_line_height: 24px * MaterialTextScale.factor;
+    out property <length> title_medium_emphasized_size: 16px * MaterialTextScale.factor;
+    out property <length> title_medium_emphasized_tracking: 0.15px * MaterialTextScale.factor;
     out property <int> title_medium_emphasized_weight: 700;
-    out property <string> title_small_emphasized_font: "sans-serif";
-    out property <length> title_small_emphasized_line_height: 20px;
-    out property <length> title_small_emphasized_size: 14px;
-    out property <length> title_small_emphasized_tracking: 0.1px;
+    out property <string> title_small_emphasized_font: MaterialTheme.plain_family;
+    out property <length> title_small_emphasized_line_height: 20px * MaterialTextScale.factor;
+    out property <length> title_small_emphasized_size: 14px * MaterialTextScale.factor;
+    out property <length> title_small_emphasized_tracking: 0.1px * MaterialTextScale.factor;
     out property <int> title_small_emphasized_weight: 700;
 }
 
 export global MaterialTypeScale {
-    out property <MaterialTypeStyle> body_large: { font_family: "sans-serif", font_weight: 400, font_size: 16px, line_height: 24px, tracking: 0.5px };
-    out property <MaterialTypeStyle> body_medium: { font_family: "sans-serif", font_weight: 400, font_size: 14px, line_height: 20px, tracking: 0.2px };
-    out property <MaterialTypeStyle> body_small: { font_family: "sans-serif", font_weight: 400, font_size: 12px, line_height: 16px, tracking: 0.4px };
-    out property <MaterialTypeStyle> display_large: { font_family: "sans-serif", font_weight: 400, font_size: 57px, line_height: 64px, tracking: -0.2px };
-    out property <MaterialTypeStyle> display_medium: { font_family: "sans-serif", font_weight: 400, font_size: 45px, line_height: 52px, tracking: 0px };
-    out property <MaterialTypeStyle> display_small: { font_family: "sans-serif", font_weight: 400, font_size: 36px, line_height: 44px, tracking: 0px };
-    out property <MaterialTypeStyle> headline_large: { font_family: "sans-serif", font_weight: 400, font_size: 32px, line_height: 40px, tracking: 0px };
-    out property <MaterialTypeStyle> headline_medium: { font_family: "sans-serif", font_weight: 400, font_size: 28px, line_height: 36px, tracking: 0px };
-    out property <MaterialTypeStyle> headline_small: { font_family: "sans-serif", font_weight: 400, font_size: 24px, line_height: 32px, tracking: 0px };
-    out property <MaterialTypeStyle> label_large: { font_family: "sans-serif", font_weight: 500, font_size: 14px, line_height: 20px, tracking: 0.1px };
-    out property <MaterialTypeStyle> label_medium: { font_family: "sans-serif", font_weight: 500, font_size: 12px, line_height: 16px, tracking: 0.5px };
-    out property <MaterialTypeStyle> label_small: { font_family: "sans-serif", font_weight: 500, font_size: 11px, line_height: 16px, tracking: 0.5px };
-    out property <MaterialTypeStyle> title_large: { font_family: "sans-serif", font_weight: 400, font_size: 22px, line_height: 28px, tracking: 0px };
-    out property <MaterialTypeStyle> title_medium: { font_family: "sans-serif", font_weight: 500, font_size: 16px, line_height: 24px, tracking: 0.2px };
-    out property <MaterialTypeStyle> title_small: { font_family: "sans-serif", font_weight: 500, font_size: 14px, line_height: 20px, tracking: 0.1px };
-    out property <MaterialTypeStyle> body_large_emphasized: { font_family: "sans-serif", font_weight: 500, font_size: 16px, line_height: 24px, tracking: 0.15px };
-    out property <MaterialTypeStyle> body_medium_emphasized: { font_family: "sans-serif", font_weight: 500, font_size: 14px, line_height: 20px, tracking: 0.25px };
-    out property <MaterialTypeStyle> body_small_emphasized: { font_family: "sans-serif", font_weight: 500, font_size: 12px, line_height: 16px, tracking: 0.4px };
-    out property <MaterialTypeStyle> display_large_emphasized: { font_family: "sans-serif", font_weight: 500, font_size: 57px, line_height: 64px, tracking: 0px };
-    out property <MaterialTypeStyle> display_medium_emphasized: { font_family: "sans-serif", font_weight: 500, font_size: 45px, line_height: 52px, tracking: 0px };
-    out property <MaterialTypeStyle> display_small_emphasized: { font_family: "sans-serif", font_weight: 500, font_size: 36px, line_height: 44px, tracking: 0px };
-    out property <MaterialTypeStyle> headline_large_emphasized: { font_family: "sans-serif", font_weight: 500, font_size: 32px, line_height: 40px, tracking: 0px };
-    out property <MaterialTypeStyle> headline_medium_emphasized: { font_family: "sans-serif", font_weight: 500, font_size: 28px, line_height: 36px, tracking: 0px };
-    out property <MaterialTypeStyle> headline_small_emphasized: { font_family: "sans-serif", font_weight: 500, font_size: 24px, line_height: 32px, tracking: 0px };
-    out property <MaterialTypeStyle> label_large_emphasized: { font_family: "sans-serif", font_weight: 700, font_size: 14px, line_height: 20px, tracking: 0.1px };
-    out property <MaterialTypeStyle> label_medium_emphasized: { font_family: "sans-serif", font_weight: 700, font_size: 12px, line_height: 16px, tracking: 0.5px };
-    out property <MaterialTypeStyle> label_small_emphasized: { font_family: "sans-serif", font_weight: 700, font_size: 11px, line_height: 16px, tracking: 0.5px };
-    out property <MaterialTypeStyle> title_large_emphasized: { font_family: "sans-serif", font_weight: 500, font_size: 22px, line_height: 28px, tracking: 0px };
-    out property <MaterialTypeStyle> title_medium_emphasized: { font_family: "sans-serif", font_weight: 700, font_size: 16px, line_height: 24px, tracking: 0.15px };
-    out property <MaterialTypeStyle> title_small_emphasized: { font_family: "sans-serif", font_weight: 700, font_size: 14px, line_height: 20px, tracking: 0.1px };
+    out property <MaterialTypeStyle> body_large: { font_family: MaterialTheme.plain_family, font_weight: 400, font_size: 16px * MaterialTextScale.factor, line_height: 24px * MaterialTextScale.factor, tracking: 0.5px * MaterialTextScale.factor };
+    out property <MaterialTypeStyle> body_medium: { font_family: MaterialTheme.plain_family, font_weight: 400, font_size: 14px * MaterialTextScale.factor, line_height: 20px * MaterialTextScale.factor, tracking: 0.2px * MaterialTextScale.factor };
+    out property <MaterialTypeStyle> body_small: { font_family: MaterialTheme.plain_family, font_weight: 400, font_size: 12px * MaterialTextScale.factor, line_height: 16px * MaterialTextScale.factor, tracking: 0.4px * MaterialTextScale.factor };
+    out property <MaterialTypeStyle> display_large: { font_family: MaterialTheme.brand_family, font_weight: 400, font_size: 57px * MaterialTextScale.factor, line_height: 64px * MaterialTextScale.factor, tracking: -0.2px * MaterialTextScale.factor };
+    out property <MaterialTypeStyle> display_medium: { font_family: MaterialTheme.brand_family, font_weight: 400, font_size: 45px * MaterialTextScale.factor, line_height: 52px * MaterialTextScale.factor, tracking: 0px * MaterialTextScale.factor };
+    out property <MaterialTypeStyle> display_small: { font_family: MaterialTheme.brand_family, font_weight: 400, font_size: 36px * MaterialTextScale.factor, line_height: 44px * MaterialTextScale.factor, tracking: 0px * MaterialTextScale.factor };
+    out property <MaterialTypeStyle> headline_large: { font_family: MaterialTheme.brand_family, font_weight: 400, font_size: 32px * MaterialTextScale.factor, line_height: 40px * MaterialTextScale.factor, tracking: 0px * MaterialTextScale.factor };
+    out property <MaterialTypeStyle> headline_medium: { font_family: MaterialTheme.brand_family, font_weight: 400, font_size: 28px * MaterialTextScale.factor, line_height: 36px * MaterialTextScale.factor, tracking: 0px * MaterialTextScale.factor };
+    out property <MaterialTypeStyle> headline_small: { font_family: MaterialTheme.brand_family, font_weight: 400, font_size: 24px * MaterialTextScale.factor, line_height: 32px * MaterialTextScale.factor, tracking: 0px * MaterialTextScale.factor };
+    out property <MaterialTypeStyle> label_large: { font_family: MaterialTheme.plain_family, font_weight: 500, font_size: 14px * MaterialTextScale.factor, line_height: 20px * MaterialTextScale.factor, tracking: 0.1px * MaterialTextScale.factor };
+    out property <MaterialTypeStyle> label_medium: { font_family: MaterialTheme.plain_family, font_weight: 500, font_size: 12px * MaterialTextScale.factor, line_height: 16px * MaterialTextScale.factor, tracking: 0.5px * MaterialTextScale.factor };
+    out property <MaterialTypeStyle> label_small: { font_family: MaterialTheme.plain_family, font_weight: 500, font_size: 11px * MaterialTextScale.factor, line_height: 16px * MaterialTextScale.factor, tracking: 0.5px * MaterialTextScale.factor };
+    out property <MaterialTypeStyle> title_large: { font_family: MaterialTheme.brand_family, font_weight: 400, font_size: 22px * MaterialTextScale.factor, line_height: 28px * MaterialTextScale.factor, tracking: 0px * MaterialTextScale.factor };
+    out property <MaterialTypeStyle> title_medium: { font_family: MaterialTheme.plain_family, font_weight: 500, font_size: 16px * MaterialTextScale.factor, line_height: 24px * MaterialTextScale.factor, tracking: 0.2px * MaterialTextScale.factor };
+    out property <MaterialTypeStyle> title_small: { font_family: MaterialTheme.plain_family, font_weight: 500, font_size: 14px * MaterialTextScale.factor, line_height: 20px * MaterialTextScale.factor, tracking: 0.1px * MaterialTextScale.factor };
+    out property <MaterialTypeStyle> body_large_emphasized: { font_family: MaterialTheme.plain_family, font_weight: 500, font_size: 16px * MaterialTextScale.factor, line_height: 24px * MaterialTextScale.factor, tracking: 0.15px * MaterialTextScale.factor };
+    out property <MaterialTypeStyle> body_medium_emphasized: { font_family: MaterialTheme.plain_family, font_weight: 500, font_size: 14px * MaterialTextScale.factor, line_height: 20px * MaterialTextScale.factor, tracking: 0.25px * MaterialTextScale.factor };
+    out property <MaterialTypeStyle> body_small_emphasized: { font_family: MaterialTheme.plain_family, font_weight: 500, font_size: 12px * MaterialTextScale.factor, line_height: 16px * MaterialTextScale.factor, tracking: 0.4px * MaterialTextScale.factor };
+    out property <MaterialTypeStyle> display_large_emphasized: { font_family: MaterialTheme.brand_family, font_weight: 500, font_size: 57px * MaterialTextScale.factor, line_height: 64px * MaterialTextScale.factor, tracking: 0px * MaterialTextScale.factor };
+    out property <MaterialTypeStyle> display_medium_emphasized: { font_family: MaterialTheme.brand_family, font_weight: 500, font_size: 45px * MaterialTextScale.factor, line_height: 52px * MaterialTextScale.factor, tracking: 0px * MaterialTextScale.factor };
+    out property <MaterialTypeStyle> display_small_emphasized: { font_family: MaterialTheme.brand_family, font_weight: 500, font_size: 36px * MaterialTextScale.factor, line_height: 44px * MaterialTextScale.factor, tracking: 0px * MaterialTextScale.factor };
+    out property <MaterialTypeStyle> headline_large_emphasized: { font_family: MaterialTheme.brand_family, font_weight: 500, font_size: 32px * MaterialTextScale.factor, line_height: 40px * MaterialTextScale.factor, tracking: 0px * MaterialTextScale.factor };
+    out property <MaterialTypeStyle> headline_medium_emphasized: { font_family: MaterialTheme.brand_family, font_weight: 500, font_size: 28px * MaterialTextScale.factor, line_height: 36px * MaterialTextScale.factor, tracking: 0px * MaterialTextScale.factor };
+    out property <MaterialTypeStyle> headline_small_emphasized: { font_family: MaterialTheme.brand_family, font_weight: 500, font_size: 24px * MaterialTextScale.factor, line_height: 32px * MaterialTextScale.factor, tracking: 0px * MaterialTextScale.factor };
+    out property <MaterialTypeStyle> label_large_emphasized: { font_family: MaterialTheme.plain_family, font_weight: 700, font_size: 14px * MaterialTextScale.factor, line_height: 20px * MaterialTextScale.factor, tracking: 0.1px * MaterialTextScale.factor };
+    out property <MaterialTypeStyle> label_medium_emphasized: { font_family: MaterialTheme.plain_family, font_weight: 700, font_size: 12px * MaterialTextScale.factor, line_height: 16px * MaterialTextScale.factor, tracking: 0.5px * MaterialTextScale.factor };
+    out property <MaterialTypeStyle> label_small_emphasized: { font_family: MaterialTheme.plain_family, font_weight: 700, font_size: 11px * MaterialTextScale.factor, line_height: 16px * MaterialTextScale.factor, tracking: 0.5px * MaterialTextScale.factor };
+    out property <MaterialTypeStyle> title_large_emphasized: { font_family: MaterialTheme.brand_family, font_weight: 500, font_size: 22px * MaterialTextScale.factor, line_height: 28px * MaterialTextScale.factor, tracking: 0px * MaterialTextScale.factor };
+    out property <MaterialTypeStyle> title_medium_emphasized: { font_family: MaterialTheme.plain_family, font_weight: 700, font_size: 16px * MaterialTextScale.factor, line_height: 24px * MaterialTextScale.factor, tracking: 0.15px * MaterialTextScale.factor };
+    out property <MaterialTypeStyle> title_small_emphasized: { font_family: MaterialTheme.plain_family, font_weight: 700, font_size: 14px * MaterialTextScale.factor, line_height: 20px * MaterialTextScale.factor, tracking: 0.1px * MaterialTextScale.factor };
 }
 
 export global TypographyTokens {

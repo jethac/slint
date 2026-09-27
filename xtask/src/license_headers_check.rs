@@ -525,6 +525,7 @@ static LICENSE_LOCATION_FOR_FILE: LazyLock<Vec<(regex::Regex, LicenseLocation)>>
             ("(^|/)partitions\\.csv$", LicenseLocation::NoLicense),
             ("(^|/)sdkconfig", LicenseLocation::NoLicense), // auto-generated
             ("(^|/)Pipfile$", LicenseLocation::Tag(LicenseTagStyle::shell_comment_style())),
+            ("(^|/)TOKENS_SOURCE$", LicenseLocation::Tag(LicenseTagStyle::shell_comment_style())),
             ("(^|/)\\.npmrc$", LicenseLocation::Tag(LicenseTagStyle::shell_comment_style())),
             ("(^|/)pnpm-lock\\.yaml$", LicenseLocation::NoLicense),
             ("(^|/)biome\\.json$", LicenseLocation::NoLicense),

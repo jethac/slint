@@ -18,6 +18,13 @@ pub struct Output {
     pub content: String,
 }
 
+/// Token objects emitted into `material_leaf_tokens.slint`: the styling
+/// files (material_palette.slint and friends) need these but can't import
+/// `material_component_tokens.slint`, which references `MaterialPalette`.
+/// In this file `ColorRole` values emit as `ColorSchemeKeyTokens` role keys
+/// instead of resolved palette colors.
+const LEAF_OBJECTS: &[&str] = &["ScrimTokens"];
+
 /// Token objects that get their own category file instead of landing in
 /// `material_component_tokens.slint`.
 const CATEGORY_FILES: &[&str] = &[
@@ -73,21 +80,36 @@ fn fmt_shape(s: &Shape) -> String {
     )
 }
 
+/// `TypefaceTokens` member names bind to the theme's configurable
+/// families; direct `FontFamily.*` values emit as string literals.
+fn font_family_expr(fam: &str) -> String {
+    match fam {
+        "Brand" => "MaterialTheme.brand_family".to_string(),
+        "Plain" => "MaterialTheme.plain_family".to_string(),
+        other => format!("\"{other}\""),
+    }
+}
+
+/// `N` (sp) -> `Npx * MaterialTextScale.factor`.
+fn fmt_sp(n: f64) -> String {
+    format!("{}px * MaterialTextScale.factor", fmt_num(n))
+}
+
 fn fmt_type_style(t: &TypeStyle) -> String {
     format!(
-        "{{ font_family: \"{}\", font_weight: {}, font_size: {}px, line_height: {}px, tracking: {}px }}",
-        t.font_family,
+        "{{ font_family: {}, font_weight: {}, font_size: {}, line_height: {}, tracking: {} }}",
+        font_family_expr(&t.font_family),
         t.font_weight,
-        fmt_num(t.font_size),
-        fmt_num(t.line_height),
-        fmt_num(t.letter_spacing),
+        fmt_sp(t.font_size),
+        fmt_sp(t.line_height),
+        fmt_sp(t.letter_spacing),
     )
 }
 
 /// The Slint property type for a resolved value.
 fn slint_type(v: &Value) -> &'static str {
     match v {
-        Value::Length(_) | Value::CornerRadius(_) => "length",
+        Value::Length(_) | Value::Sp(_) | Value::CornerRadius(_) => "length",
         Value::Number(_) => "float",
         Value::DurationMs(_) => "duration",
         Value::Color(..) | Value::ColorRole(_) => "color",
@@ -105,6 +127,7 @@ fn slint_type(v: &Value) -> &'static str {
 fn value_expr(v: &Value) -> String {
     match v {
         Value::Length(n) | Value::CornerRadius(n) => format!("{}px", fmt_num(*n)),
+        Value::Sp(n) => fmt_sp(*n),
         Value::Number(n) => fmt_num(*n),
         Value::DurationMs(n) => format!("{}ms", fmt_num(*n)),
         Value::Color(r, g, b) => format!("#{r:02x}{g:02x}{b:02x}"),
@@ -116,7 +139,7 @@ fn value_expr(v: &Value) -> String {
             fmt_num(*d)
         ),
         Value::Shape(s) => fmt_shape(s),
-        Value::FontFamily(f) => format!("\"{f}\""),
+        Value::FontFamily(f) => font_family_expr(f),
         Value::FontWeight(w) => w.to_string(),
         Value::ColorRole(role) => format!("MaterialPalette.{}", snake_case(role)),
         Value::ShapeRef(name) => format!("ShapeTokens.{name}"),
@@ -141,20 +164,41 @@ fn header(commit: &str, repo: &str, path: &str) -> String {
     s
 }
 
-fn emit_globals(out: &mut String, objects: &[&ResolvedObject]) {
+/// Emit globals. `roles_as_keys` (leaf file) emits `ColorRole` values as
+/// `ColorSchemeKeyTokens` int keys typed `int` instead of resolved palette
+/// colors, so the file stays free of `MaterialPalette` imports.
+fn emit_globals(
+    out: &mut String,
+    objects: &[&ResolvedObject],
+    roles_as_keys: bool,
+) -> Result<(), String> {
     for obj in objects {
         let _ = writeln!(out, "export global {} {{", obj.name);
         for m in &obj.members {
-            let _ = writeln!(
-                out,
-                "    out property <{}> {}: {};",
-                slint_type(&m.value),
-                snake_case(&m.name),
-                value_expr(&m.value),
-            );
+            let (ty, expr) = match (&m.value, obj.name.as_str(), m.name.as_str()) {
+                // The theme-configurable families in TypefaceTokens bind to
+                // MaterialTheme, keyed by the member name.
+                (Value::FontFamily(_), "TypefaceTokens", "Brand") => {
+                    (slint_type(&m.value), "MaterialTheme.brand_family".to_string())
+                }
+                (Value::FontFamily(_), "TypefaceTokens", "Plain") => {
+                    (slint_type(&m.value), "MaterialTheme.plain_family".to_string())
+                }
+                (Value::FontFamily(_), "TypefaceTokens", other) => {
+                    return Err(format!(
+                        "TypefaceTokens.{other}: new family token; map it to a MaterialTheme property"
+                    ))
+                }
+                (Value::ColorRole(role), _, _) if roles_as_keys => {
+                    ("int", format!("ColorSchemeKeyTokens.{}", snake_case(role)))
+                }
+                (v, _, _) => (slint_type(v), value_expr(v)),
+            };
+            let _ = writeln!(out, "    out property <{ty}> {}: {expr};", snake_case(&m.name),);
         }
         let _ = writeln!(out, "}}\n");
     }
+    Ok(())
 }
 
 fn get<'a>(lib: &'a Library, name: &str) -> Result<&'a ResolvedObject, String> {
@@ -238,7 +282,8 @@ pub fn emit(
                 get(lib, "ColorDarkTokens")?,
                 get(lib, "ColorSchemeKeyTokens")?,
             ],
-        );
+            false,
+        )?;
         outputs.push(Output {
             rel_path: "src/ui/styling/generated/material_color_tokens.slint".into(),
             content: s,
@@ -262,7 +307,7 @@ pub fn emit(
              \x20   full: bool,\n\
              }}\n"
         );
-        emit_globals(&mut s, &[get(lib, "ShapeTokens")?, get(lib, "ShapeKeyTokens")?]);
+        emit_globals(&mut s, &[get(lib, "ShapeTokens")?, get(lib, "ShapeKeyTokens")?], false)?;
         outputs.push(Output {
             rel_path: "src/ui/styling/generated/material_shape_tokens.slint".into(),
             content: s,
@@ -276,8 +321,10 @@ pub fn emit(
         let _ = writeln!(
             s,
             "/// One type-scale entry. `font_size`, `line_height` and\n\
-             /// `tracking` are emitted in px; the upstream `sp` values map to\n\
-             /// logical pixels at the default font scale.\n\
+             /// `tracking` are `sp` upstream and scale with\n\
+             /// `MaterialTextScale.factor` (the platform text scale).\n\
+             /// `font_family` binds to `MaterialTheme`'s configurable\n\
+             /// brand/plain families.\n\
              export struct MaterialTypeStyle {{\n\
              \x20   font_family: string,\n\
              \x20   font_weight: int,\n\
@@ -286,7 +333,23 @@ pub fn emit(
              \x20   tracking: length,\n\
              }}\n"
         );
-        emit_globals(&mut s, &[get(lib, "TypefaceTokens")?, get(lib, "TypeScaleTokens")?]);
+        let _ = writeln!(
+            s,
+            "/// Multiplies every `sp` token to follow the platform text\n\
+             /// scale. The adaptive layer (#12) writes it.\n\
+             export global MaterialTextScale {{\n\
+             \x20   in-out property <float> factor: 1.0;\n\
+             }}\n\
+             \n\
+             /// Theme-configurable brand and plain typeface families;\n\
+             /// the font work (#7) replaces the defaults with the bundled\n\
+             /// Google Sans Flex.\n\
+             export global MaterialTheme {{\n\
+             \x20   in-out property <string> brand_family: \"sans-serif\";\n\
+             \x20   in-out property <string> plain_family: \"sans-serif\";\n\
+             }}\n"
+        );
+        emit_globals(&mut s, &[get(lib, "TypefaceTokens")?, get(lib, "TypeScaleTokens")?], false)?;
 
         // Composed type scale: group the per-role parts of TypeScaleTokens.
         let scale = get(lib, "TypeScaleTokens")?;
@@ -335,7 +398,7 @@ pub fn emit(
             );
         }
         let _ = writeln!(s, "}}\n");
-        emit_globals(&mut s, &[get(lib, "TypographyKeyTokens")?]);
+        emit_globals(&mut s, &[get(lib, "TypographyKeyTokens")?], false)?;
 
         outputs.push(Output {
             rel_path: "src/ui/styling/generated/material_typography_tokens.slint".into(),
@@ -425,7 +488,8 @@ pub fn emit(
                 get(lib, "ExpressiveMotionTokens")?,
                 get(lib, "MotionSchemeKeyTokens")?,
             ],
-        );
+            false,
+        )?;
         outputs.push(Output {
             rel_path: "src/ui/styling/generated/material_motion_tokens.slint".into(),
             content: s,
@@ -436,7 +500,7 @@ pub fn emit(
     {
         let mut s = head.clone();
         let _ = writeln!(s);
-        emit_globals(&mut s, &[get(lib, "StateTokens")?]);
+        emit_globals(&mut s, &[get(lib, "StateTokens")?], false)?;
         let _ = writeln!(
             s,
             "/// The M3 focus indicator ring. Upstream these defaults live in\n\
@@ -473,9 +537,36 @@ pub fn emit(
     {
         let mut s = head.clone();
         let _ = writeln!(s);
-        emit_globals(&mut s, &[get(lib, "ElevationTokens")?]);
+        emit_globals(&mut s, &[get(lib, "ElevationTokens")?], false)?;
         outputs.push(Output {
             rel_path: "src/ui/styling/generated/material_elevation_tokens.slint".into(),
+            content: s,
+        });
+    }
+
+    // Leaf objects: consumed by the styling files, so the file must not
+    // import MaterialPalette (the palette imports this file). `ColorRole`
+    // members emit as `ColorSchemeKeyTokens` role keys.
+    {
+        let mut s = head.clone();
+        let leaf_objs: Vec<&ResolvedObject> = LEAF_OBJECTS
+            .iter()
+            .map(|name| get(lib, name))
+            .collect::<Result<_, _>>()?;
+        let needs_keys = leaf_objs
+            .iter()
+            .any(|o| o.members.iter().any(|m| matches!(m.value, Value::ColorRole(_))));
+        let _ = writeln!(s);
+        if needs_keys {
+            let _ = writeln!(
+                s,
+                "import {{ ColorSchemeKeyTokens }} from \"./material_color_tokens.slint\";"
+            );
+            let _ = writeln!(s);
+        }
+        emit_globals(&mut s, &leaf_objs, true)?;
+        outputs.push(Output {
+            rel_path: "src/ui/styling/generated/material_leaf_tokens.slint".into(),
             content: s,
         });
     }
@@ -485,16 +576,35 @@ pub fn emit(
         let mut s = head.clone();
         let mut needs_palette = false;
         let mut needs_shape = false;
-        let mut needs_type = false;
+        let mut needs_type_style = false;
+        let mut needs_typo = false;
+        let mut needs_scale = false;
+        let mut needs_theme = false;
         let mut needs_motion = false;
-        let component_objs: Vec<&ResolvedObject> =
-            lib.objects.iter().filter(|o| !CATEGORY_FILES.contains(&o.name.as_str())).collect();
+        let component_objs: Vec<&ResolvedObject> = lib
+            .objects
+            .iter()
+            .filter(|o| {
+                !CATEGORY_FILES.contains(&o.name.as_str())
+                    && !LEAF_OBJECTS.contains(&o.name.as_str())
+            })
+            .collect();
         for obj in &component_objs {
             for m in &obj.members {
                 match m.value {
                     Value::ColorRole(_) => needs_palette = true,
                     Value::Shape(_) | Value::ShapeRef(_) => needs_shape = true,
-                    Value::TypeStyle(_) | Value::TypeStyleRef(_) => needs_type = true,
+                    Value::TypeStyle(_) => {
+                        needs_type_style = true;
+                        needs_scale = true;
+                        needs_theme = true;
+                    }
+                    Value::TypeStyleRef(_) => {
+                        needs_type_style = true;
+                        needs_typo = true;
+                    }
+                    Value::Sp(_) => needs_scale = true,
+                    Value::FontFamily(_) => needs_theme = true,
                     Value::SpringKey(_) => needs_motion = true,
                     _ => {}
                 }
@@ -510,11 +620,27 @@ pub fn emit(
                 "import {{ MaterialCornerShape, ShapeTokens }} from \"./material_shape_tokens.slint\";"
             );
         }
-        if needs_type {
-            let _ = writeln!(
-                s,
-                "import {{ MaterialTypeStyle, TypographyTokens }} from \"./material_typography_tokens.slint\";"
-            );
+        {
+            let mut names: Vec<&str> = Vec::new();
+            if needs_scale {
+                names.push("MaterialTextScale");
+            }
+            if needs_theme {
+                names.push("MaterialTheme");
+            }
+            if needs_type_style {
+                names.push("MaterialTypeStyle");
+            }
+            if needs_typo {
+                names.push("TypographyTokens");
+            }
+            if !names.is_empty() {
+                let _ = writeln!(
+                    s,
+                    "import {{ {} }} from \"./material_typography_tokens.slint\";",
+                    names.join(", ")
+                );
+            }
         }
         if needs_motion {
             let _ = writeln!(
@@ -523,7 +649,7 @@ pub fn emit(
             );
         }
         let _ = writeln!(s);
-        emit_globals(&mut s, &component_objs);
+        emit_globals(&mut s, &component_objs, false)?;
         outputs.push(Output {
             rel_path: "src/ui/styling/generated/material_component_tokens.slint".into(),
             content: s,
@@ -580,15 +706,15 @@ fn compose_style(scale: &ResolvedObject, role: &str) -> Option<TypeStyle> {
             _ => return None,
         },
         font_size: match part("Size")? {
-            Value::Length(v) => *v,
+            Value::Sp(v) => *v,
             _ => return None,
         },
         line_height: match part("LineHeight")? {
-            Value::Length(v) => *v,
+            Value::Sp(v) => *v,
             _ => return None,
         },
         letter_spacing: match part("Tracking")? {
-            Value::Length(v) => *v,
+            Value::Sp(v) => *v,
             _ => return None,
         },
     })

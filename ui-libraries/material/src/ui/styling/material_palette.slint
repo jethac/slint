@@ -5,6 +5,7 @@ import { Palette } from "std-widgets.slint";
 import { MaterialSchemes, MaterialScheme } from "material_schemes.slint";
 import { ColorLightTokens, ColorDarkTokens } from "generated/material_color_tokens.slint";
 import { StateTokens } from "generated/material_state_tokens.slint";
+import { ScrimTokens } from "generated/material_leaf_tokens.slint";
 
 export global MaterialPalette {
     out property <color> primary: root.scheme.primary;
@@ -64,9 +65,7 @@ export global MaterialPalette {
     out property <float> state_layer_opacity_disabled: 12%;
     out property <float> state_layer_opacity_drag: StateTokens.dragged_state_layer_opacity;
     out property <float> disable_opacity: 38%;
-    // ScrimTokens.ContainerOpacity is 0.32 — ScrimTokens can't be imported
-    // here without an import cycle, so the literal stays with a comment.
-    out property <color> background_modal: root.scrim.with_alpha(32%);
+    out property <color> background_modal: root.scrim.with_alpha(ScrimTokens.container_opacity);
 
     in property <MaterialSchemes> schemes: {
         light: {

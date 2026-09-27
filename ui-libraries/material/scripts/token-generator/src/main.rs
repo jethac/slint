@@ -102,7 +102,7 @@ fn run() -> Result<(), String> {
     components.dedup_by(|a, b| a.name == b.name);
     let status_path = material_root.join("PARITY_STATUS.json");
     let mut status = parity::load_status(&status_path)?;
-    let status_changed = parity::merge_status(&mut status, &components);
+    let status_changed = parity::merge_status(&mut status, &components)?;
     let status_text = if status_changed || !status_path.exists() {
         Some(json::write(&parity::status_json(&status)))
     } else {

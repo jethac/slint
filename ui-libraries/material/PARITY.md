@@ -23,18 +23,18 @@ Sizes: large, medium, small
 
 | Component | Source | Status | Issues | Needs | Notes |
 |---|---|---|---|---|---|
-| AppBarColumn | AppBarColumn.kt | missing | - | - | - |
-| AppBarOverflowIndicator | AppBarDsl.kt | missing | - | - | - |
-| AppBarRow | AppBarRow.kt | missing | - | - | - |
-| BottomAppBar | AppBar.kt | partial | #11 | - | slint component: BottomAppBar |
-| CenterAlignedTopAppBar | AppBar.kt | partial | #11 | - | slint component: AppBar |
-| FlexibleBottomAppBar | AppBar.kt | missing | - | - | - |
-| LargeFlexibleTopAppBar | AppBar.kt | missing | - | - | - |
-| LargeTopAppBar | AppBar.kt | missing | - | - | - |
-| MediumFlexibleTopAppBar | AppBar.kt | missing | - | - | - |
-| MediumTopAppBar | AppBar.kt | partial | #11 | - | slint component: MediumAppBar |
-| TopAppBar | AppBar.kt | partial | #11 | - | slint component: AppBar/SmallAppBar |
-| TwoRowsTopAppBar | AppBar.kt | missing | - | - | - |
+| AppBarColumn | AppBarColumn.kt | missing | #11 | springs (#5), shapes (#6) | - |
+| AppBarOverflowIndicator | AppBarDsl.kt | missing | #11 | springs (#5), shapes (#6) | - |
+| AppBarRow | AppBarRow.kt | missing | #11 | springs (#5), shapes (#6) | - |
+| BottomAppBar | AppBar.kt | partial | #11 | springs (#5), shapes (#6) | slint component: BottomAppBar |
+| CenterAlignedTopAppBar | AppBar.kt | partial | #11 | springs (#5), shapes (#6) | slint component: AppBar |
+| FlexibleBottomAppBar | AppBar.kt | missing | #11 | springs (#5), shapes (#6) | - |
+| LargeFlexibleTopAppBar | AppBar.kt | missing | #11 | springs (#5), shapes (#6) | - |
+| LargeTopAppBar | AppBar.kt | missing | #11 | springs (#5), shapes (#6) | - |
+| MediumFlexibleTopAppBar | AppBar.kt | missing | #11 | springs (#5), shapes (#6) | - |
+| MediumTopAppBar | AppBar.kt | partial | #11 | springs (#5), shapes (#6) | slint component: MediumAppBar |
+| TopAppBar | AppBar.kt | partial | #11 | springs (#5), shapes (#6) | slint component: AppBar/SmallAppBar |
+| TwoRowsTopAppBar | AppBar.kt | missing | #11 | springs (#5), shapes (#6) | - |
 
 ### Autocomplete
 
@@ -48,8 +48,8 @@ Token objects: BadgeTokens
 
 | Component | Source | Status | Issues | Needs | Notes |
 |---|---|---|---|---|---|
-| Badge | Badge.kt | partial | - | - | slint component: Badge |
-| BadgedBox | Badge.kt | partial | - | - | slint component: Badge |
+| Badge | Badge.kt | partial | #11 | none | slint component: Badge |
+| BadgedBox | Badge.kt | partial | #11 | none | slint component: Badge |
 
 ### Bottom app bar
 
@@ -63,10 +63,10 @@ States: dragged, pressed, focused
 
 | Component | Source | Status | Issues | Needs | Notes |
 |---|---|---|---|---|---|
-| BottomSheet | BottomSheet.kt | missing | - | - | - |
-| BottomSheetScaffold | BottomSheetScaffold.kt | missing | - | - | - |
-| ModalBottomSheet | ModalBottomSheet.kt | partial | - | - | slint component: ModalBottomSheet |
-| VerticalDragHandle | DragHandle.kt | missing | - | - | - |
+| BottomSheet | BottomSheet.kt | missing | #11 | springs (#5) | - |
+| BottomSheetScaffold | BottomSheetScaffold.kt | missing | #11 | springs (#5) | - |
+| ModalBottomSheet | ModalBottomSheet.kt | partial | #11 | springs (#5) | slint component: ModalBottomSheet |
+| VerticalDragHandle | DragHandle.kt | missing | #11 | springs (#5) | - |
 
 ### Button groups
 
@@ -90,11 +90,11 @@ States: disabled, focused, hovered, selected, unselected, pressed
 
 | Component | Source | Status | Issues | Needs | Notes |
 |---|---|---|---|---|---|
-| Button | Button.kt | partial | #9 | - | slint component: FilledButton |
-| ElevatedButton | Button.kt | partial | #9 | - | slint component: ElevatedButton |
-| FilledTonalButton | Button.kt | partial | #9 | - | slint component: TonalButton |
-| OutlinedButton | Button.kt | partial | #9 | - | slint component: OutlineButton |
-| TextButton | Button.kt | partial | #9 | - | slint component: TextButton |
+| Button | Button.kt | partial | #9 | springs (#5), shapes (#6) | slint component: FilledButton |
+| ElevatedButton | Button.kt | partial | #9 | springs (#5), shapes (#6) | slint component: ElevatedButton |
+| FilledTonalButton | Button.kt | partial | #9 | springs (#5), shapes (#6) | slint component: TonalButton |
+| OutlinedButton | Button.kt | partial | #9 | springs (#5), shapes (#6) | slint component: OutlineButton |
+| TextButton | Button.kt | partial | #9 | springs (#5), shapes (#6) | slint component: TextButton |
 
 ### Cards
 
@@ -104,18 +104,18 @@ States: disabled, dragged, focused, hovered, pressed
 
 | Component | Source | Status | Issues | Needs | Notes |
 |---|---|---|---|---|---|
-| Card | Card.kt | partial | #11 | - | slint component: ElevatedCard/FilledCard/OutlinedCard |
-| ElevatedCard | Card.kt | partial | #11 | - | slint component: ElevatedCard |
-| OutlinedCard | Card.kt | partial | #11 | - | slint component: OutlinedCard |
+| Card | Card.kt | partial | #11 | none | slint component: ElevatedCard/FilledCard/OutlinedCard |
+| ElevatedCard | Card.kt | partial | #11 | none | slint component: ElevatedCard |
+| OutlinedCard | Card.kt | partial | #11 | none | slint component: OutlinedCard |
 
 ### Carousel
 
 | Component | Source | Status | Issues | Needs | Notes |
 |---|---|---|---|---|---|
-| HorizontalCenteredHeroCarousel | carousel/Carousel.kt | missing | - | - | - |
-| HorizontalMultiBrowseCarousel | carousel/Carousel.kt | missing | - | - | - |
-| HorizontalUncontainedCarousel | carousel/Carousel.kt | missing | - | - | - |
-| Modifier | carousel/CarouselParallaxScrollEffect.kt | missing | - | - | - |
+| HorizontalCenteredHeroCarousel | carousel/Carousel.kt | missing | #11 | springs (#5), shapes (#6) | - |
+| HorizontalMultiBrowseCarousel | carousel/Carousel.kt | missing | #11 | springs (#5), shapes (#6) | - |
+| HorizontalUncontainedCarousel | carousel/Carousel.kt | missing | #11 | springs (#5), shapes (#6) | - |
+| Modifier | carousel/CarouselParallaxScrollEffect.kt | missing | #11 | springs (#5), shapes (#6) | - |
 
 ### Checkbox
 
@@ -125,8 +125,8 @@ States: focused, selected, disabled, error, hovered, pressed, unselected
 
 | Component | Source | Status | Issues | Needs | Notes |
 |---|---|---|---|---|---|
-| Checkbox | Checkbox.kt | partial | - | - | slint component: CheckBox |
-| TriStateCheckbox | Checkbox.kt | missing | - | - | - |
+| Checkbox | Checkbox.kt | partial | #11 | shapes (#6) | slint component: CheckBox |
+| TriStateCheckbox | Checkbox.kt | missing | #11 | shapes (#6) | - |
 
 ### Chips
 
@@ -136,13 +136,13 @@ States: disabled, dragged, focused, hovered, pressed, selected, unselected
 
 | Component | Source | Status | Issues | Needs | Notes |
 |---|---|---|---|---|---|
-| AssistChip | Chip.kt | partial | #11 | - | slint component: Chip |
-| ElevatedAssistChip | Chip.kt | missing | - | - | - |
-| ElevatedFilterChip | Chip.kt | missing | - | - | - |
-| ElevatedSuggestionChip | Chip.kt | missing | - | - | - |
-| FilterChip | Chip.kt | partial | #11 | - | slint component: Chip |
-| InputChip | Chip.kt | partial | #11 | - | slint component: Chip |
-| SuggestionChip | Chip.kt | partial | #11 | - | slint component: Chip |
+| AssistChip | Chip.kt | partial | #11 | shapes (#6) | slint component: Chip |
+| ElevatedAssistChip | Chip.kt | missing | #9 | shapes (#6) | - |
+| ElevatedFilterChip | Chip.kt | missing | #9 | shapes (#6) | - |
+| ElevatedSuggestionChip | Chip.kt | missing | #9 | shapes (#6) | - |
+| FilterChip | Chip.kt | partial | #11 | shapes (#6) | slint component: Chip |
+| InputChip | Chip.kt | partial | #11 | shapes (#6) | slint component: Chip |
+| SuggestionChip | Chip.kt | partial | #11 | shapes (#6) | slint component: Chip |
 
 ### Date pickers
 
@@ -152,8 +152,8 @@ States: selected, unselected, active
 
 | Component | Source | Status | Issues | Needs | Notes |
 |---|---|---|---|---|---|
-| DatePicker | DatePicker.kt | partial | #11 | - | slint component: DatePickerPopup |
-| DateRangePicker | DateRangePicker.kt | missing | - | - | - |
+| DatePicker | DatePicker.kt | partial | #11 | none | slint component: DatePickerPopup |
+| DateRangePicker | DateRangePicker.kt | missing | #11 | none | - |
 
 ### Dialogs
 
@@ -163,9 +163,9 @@ States: focused, hovered, pressed
 
 | Component | Source | Status | Issues | Needs | Notes |
 |---|---|---|---|---|---|
-| AlertDialog | AlertDialog.kt | partial | #11 | - | slint component: Dialog |
-| BasicAlertDialog | AlertDialog.kt | missing | - | - | - |
-| DatePickerDialog | DatePickerDialog.kt | partial | #11 | - | slint component: DatePickerPopup |
+| AlertDialog | AlertDialog.kt | partial | #11 | none | slint component: Dialog |
+| BasicAlertDialog | AlertDialog.kt | missing | #11 | none | - |
+| DatePickerDialog | DatePickerDialog.kt | partial | #11 | none | slint component: DatePickerPopup |
 
 ### Divider
 
@@ -173,9 +173,9 @@ Token objects: DividerTokens
 
 | Component | Source | Status | Issues | Needs | Notes |
 |---|---|---|---|---|---|
-| Divider | Divider.kt | missing | - | - | - |
-| HorizontalDivider | Divider.kt | partial | - | - | slint component: HorizontalDivider |
-| VerticalDivider | Divider.kt | partial | - | - | slint component: VerticalDivider |
+| Divider | Divider.kt | missing | #11 | none | - |
+| HorizontalDivider | Divider.kt | partial | #11 | none | slint component: HorizontalDivider |
+| VerticalDivider | Divider.kt | partial | #11 | none | slint component: VerticalDivider |
 
 ### FAB
 
@@ -187,14 +187,14 @@ States: focused, hovered, pressed
 
 | Component | Source | Status | Issues | Needs | Notes |
 |---|---|---|---|---|---|
-| ExtendedFloatingActionButton | FloatingActionButton.kt | partial | #9 | - | slint component: FloatingActionButton |
-| FloatingActionButton | FloatingActionButton.kt | partial | #9 | - | slint component: FloatingActionButton |
-| LargeExtendedFloatingActionButton | FloatingActionButton.kt | missing | - | - | - |
-| LargeFloatingActionButton | FloatingActionButton.kt | missing | - | - | - |
-| MediumExtendedFloatingActionButton | FloatingActionButton.kt | missing | - | - | - |
-| MediumFloatingActionButton | FloatingActionButton.kt | missing | - | - | - |
-| SmallExtendedFloatingActionButton | FloatingActionButton.kt | missing | - | - | - |
-| SmallFloatingActionButton | FloatingActionButton.kt | missing | - | - | - |
+| ExtendedFloatingActionButton | FloatingActionButton.kt | partial | #9 | springs (#5), shapes (#6) | slint component: FloatingActionButton |
+| FloatingActionButton | FloatingActionButton.kt | partial | #9 | springs (#5), shapes (#6) | slint component: FloatingActionButton |
+| LargeExtendedFloatingActionButton | FloatingActionButton.kt | missing | #9 | springs (#5), shapes (#6) | - |
+| LargeFloatingActionButton | FloatingActionButton.kt | missing | #9 | springs (#5), shapes (#6) | - |
+| MediumExtendedFloatingActionButton | FloatingActionButton.kt | missing | #9 | springs (#5), shapes (#6) | - |
+| MediumFloatingActionButton | FloatingActionButton.kt | missing | #9 | springs (#5), shapes (#6) | - |
+| SmallExtendedFloatingActionButton | FloatingActionButton.kt | missing | #9 | springs (#5), shapes (#6) | - |
+| SmallFloatingActionButton | FloatingActionButton.kt | missing | #9 | springs (#5), shapes (#6) | - |
 
 ### FAB menu
 
@@ -205,14 +205,14 @@ Sizes: baseline
 | Component | Source | Status | Issues | Needs | Notes |
 |---|---|---|---|---|---|
 | FloatingActionButtonMenu | FloatingActionButtonMenu.kt | missing | #5, #10 | FAB menu + springs | - |
-| FloatingActionButtonMenuScope | FloatingActionButtonMenu.kt | missing | - | - | - |
-| ToggleFloatingActionButton | FloatingActionButtonMenu.kt | missing | - | - | - |
+| FloatingActionButtonMenuScope | FloatingActionButtonMenu.kt | missing | #10 | springs (#5), shapes (#6) | - |
+| ToggleFloatingActionButton | FloatingActionButtonMenu.kt | missing | #10 | springs (#5), shapes (#6) | - |
 
 ### Icon
 
 | Component | Source | Status | Issues | Needs | Notes |
 |---|---|---|---|---|---|
-| Icon | Icon.kt | partial | - | - | slint component: Icon |
+| Icon | Icon.kt | partial | #11 | none | slint component: Icon |
 
 ### Icon buttons
 
@@ -224,13 +224,13 @@ States: disabled, focused, hovered, pressed, selected, unselected
 
 | Component | Source | Status | Issues | Needs | Notes |
 |---|---|---|---|---|---|
-| FilledIconButton | IconButton.kt | partial | #9 | - | slint component: FilledIconButton |
+| FilledIconButton | IconButton.kt | partial | #9 | springs (#5), shapes (#6) | slint component: FilledIconButton |
 | FilledIconToggleButton | IconButton.kt | missing | #9 | toggle icon buttons | - |
-| FilledTonalIconButton | IconButton.kt | partial | #9 | - | slint component: TonalIconButton |
+| FilledTonalIconButton | IconButton.kt | partial | #9 | springs (#5), shapes (#6) | slint component: TonalIconButton |
 | FilledTonalIconToggleButton | IconButton.kt | missing | #9 | toggle icon buttons | - |
-| IconButton | IconButton.kt | partial | #9 | - | slint component: IconButton |
+| IconButton | IconButton.kt | partial | #9 | springs (#5), shapes (#6) | slint component: IconButton |
 | IconToggleButton | IconButton.kt | missing | #9 | toggle icon buttons | - |
-| OutlinedIconButton | IconButton.kt | partial | #9 | - | slint component: OutlineIconButton |
+| OutlinedIconButton | IconButton.kt | partial | #9 | springs (#5), shapes (#6) | slint component: OutlineIconButton |
 | OutlinedIconToggleButton | IconButton.kt | missing | #9 | toggle icon buttons | - |
 
 ### Lists
@@ -241,8 +241,8 @@ States: collapsed, expanded, focused, disabled, dragged, hovered, pressed, selec
 
 | Component | Source | Status | Issues | Needs | Notes |
 |---|---|---|---|---|---|
-| ListItem | ListItem.kt | partial | #11 | - | slint component: ListTile |
-| SegmentedListItem | ListItem.kt | missing | - | - | - |
+| ListItem | ListItem.kt | partial | #11 | shapes (#6) | slint component: ListTile |
+| SegmentedListItem | ListItem.kt | missing | #11 | shapes (#6) | - |
 
 ### Loading indicator
 
@@ -263,15 +263,15 @@ States: focused, selected, active, hovered, pressed, inactive, disabled
 
 | Component | Source | Status | Issues | Needs | Notes |
 |---|---|---|---|---|---|
-| CheckableDropdownMenuItem | Menu.kt | missing | - | - | - |
-| DropdownMenu | Menu.kt | partial | #11 | - | slint component: DropDownMenu/PopupMenu |
-| DropdownMenuGroup | Menu.kt | missing | - | - | - |
-| DropdownMenuItem | Menu.kt | partial | #11 | - | slint component: MenuItem in DropDownMenu |
-| DropdownMenuItemLegacy | Menu.kt | missing | - | - | - |
-| DropdownMenuPopup | Menu.kt | missing | - | - | - |
-| ExposedDropdownMenuBox | ExposedDropdownMenu.kt | missing | - | - | - |
-| ExposedDropdownMenuBoxScope | ExposedDropdownMenu.kt | missing | - | - | - |
-| SelectableDropdownMenuItem | Menu.kt | missing | - | - | - |
+| CheckableDropdownMenuItem | Menu.kt | missing | #11 | springs (#5), shapes (#6) | - |
+| DropdownMenu | Menu.kt | partial | #11 | springs (#5), shapes (#6) | slint component: DropDownMenu/PopupMenu |
+| DropdownMenuGroup | Menu.kt | missing | #11 | springs (#5), shapes (#6) | - |
+| DropdownMenuItem | Menu.kt | partial | #11 | springs (#5), shapes (#6) | slint component: MenuItem in DropDownMenu |
+| DropdownMenuItemLegacy | Menu.kt | missing | #11 | springs (#5), shapes (#6) | - |
+| DropdownMenuPopup | Menu.kt | missing | #11 | springs (#5), shapes (#6) | - |
+| ExposedDropdownMenuBox | ExposedDropdownMenu.kt | missing | #11 | springs (#5), shapes (#6) | - |
+| ExposedDropdownMenuBoxScope | ExposedDropdownMenu.kt | missing | #11 | springs (#5), shapes (#6) | - |
+| SelectableDropdownMenuItem | Menu.kt | missing | #11 | springs (#5), shapes (#6) | - |
 
 ### Navigation bar
 
@@ -281,8 +281,8 @@ States: active, inactive
 
 | Component | Source | Status | Issues | Needs | Notes |
 |---|---|---|---|---|---|
-| NavigationBar | NavigationBar.kt | partial | #12 | - | slint component: NavigationBar |
-| RowScope | NavigationBar.kt | missing | - | - | - |
+| NavigationBar | NavigationBar.kt | partial | #12 | adaptive (#12), springs (#5), shapes (#6) | slint component: NavigationBar |
+| RowScope | NavigationBar.kt | missing | #11, #12 | adaptive (#12), springs (#5), shapes (#6) | - |
 | ShortNavigationBar | ShortNavigationBar.kt | missing | #12 | adaptive layout | - |
 | ShortNavigationBarItem | ShortNavigationBar.kt | missing | #12 | adaptive layout | - |
 
@@ -294,13 +294,13 @@ States: focused, active, hovered, pressed, inactive
 
 | Component | Source | Status | Issues | Needs | Notes |
 |---|---|---|---|---|---|
-| DismissibleDrawerSheet | NavigationDrawer.kt | missing | - | - | - |
-| DismissibleNavigationDrawer | NavigationDrawer.kt | partial | #12 | - | slint component: ModalDrawer |
-| ModalDrawerSheet | NavigationDrawer.kt | partial | #12 | - | slint component: ModalDrawer |
-| ModalNavigationDrawer | NavigationDrawer.kt | partial | #12 | - | slint component: ModalNavigationDrawer |
-| NavigationDrawerItem | NavigationDrawer.kt | partial | #12 | - | slint component: NavigationItemTemplate |
-| PermanentDrawerSheet | NavigationDrawer.kt | missing | - | - | - |
-| PermanentNavigationDrawer | NavigationDrawer.kt | partial | #12 | - | slint component: Drawer |
+| DismissibleDrawerSheet | NavigationDrawer.kt | missing | #11, #12 | adaptive (#12) | - |
+| DismissibleNavigationDrawer | NavigationDrawer.kt | partial | #12 | adaptive (#12) | slint component: ModalDrawer |
+| ModalDrawerSheet | NavigationDrawer.kt | partial | #12 | adaptive (#12) | slint component: ModalDrawer |
+| ModalNavigationDrawer | NavigationDrawer.kt | partial | #12 | adaptive (#12) | slint component: ModalNavigationDrawer |
+| NavigationDrawerItem | NavigationDrawer.kt | partial | #12 | adaptive (#12) | slint component: NavigationItemTemplate |
+| PermanentDrawerSheet | NavigationDrawer.kt | missing | #11, #12 | adaptive (#12) | - |
+| PermanentNavigationDrawer | NavigationDrawer.kt | partial | #12 | adaptive (#12) | slint component: Drawer |
 
 ### Navigation rail
 
@@ -313,8 +313,8 @@ States: active, focused, hovered, pressed, inactive
 | Component | Source | Status | Issues | Needs | Notes |
 |---|---|---|---|---|---|
 | ModalWideNavigationRail | WideNavigationRail.kt | missing | #12 | adaptive layout | - |
-| NavigationRail | NavigationRail.kt | partial | #12 | - | slint component: NavigationRail |
-| NavigationRailItem | NavigationRail.kt | partial | #12 | - | slint component: NavigationItemTemplate |
+| NavigationRail | NavigationRail.kt | partial | #12 | adaptive (#12), springs (#5) | slint component: NavigationRail |
+| NavigationRailItem | NavigationRail.kt | partial | #12 | adaptive (#12), springs (#5) | slint component: NavigationItemTemplate |
 | WideNavigationRail | WideNavigationRail.kt | missing | #12 | adaptive layout | - |
 | WideNavigationRailItem | WideNavigationRail.kt | missing | #12 | adaptive layout | - |
 
@@ -326,9 +326,9 @@ States: active, indeterminate
 
 | Component | Source | Status | Issues | Needs | Notes |
 |---|---|---|---|---|---|
-| CircularProgressIndicator | ProgressIndicator.kt | partial | - | - | slint component: CircularProgressIndicator |
+| CircularProgressIndicator | ProgressIndicator.kt | partial | #11 | wavy shapes (#6), springs (#5) | slint component: CircularProgressIndicator |
 | CircularWavyProgressIndicator | WavyProgressIndicator.kt | missing | #6, #11 | wavy/morph shapes | - |
-| LinearProgressIndicator | ProgressIndicator.kt | partial | - | - | slint component: LinearProgressIndicator |
+| LinearProgressIndicator | ProgressIndicator.kt | partial | #11 | wavy shapes (#6), springs (#5) | slint component: LinearProgressIndicator |
 | LinearWavyProgressIndicator | WavyProgressIndicator.kt | missing | #6, #11 | wavy/morph shapes | - |
 
 ### Pull to refresh
@@ -345,7 +345,7 @@ States: selected, disabled, unselected, focused, hovered, pressed
 
 | Component | Source | Status | Issues | Needs | Notes |
 |---|---|---|---|---|---|
-| RadioButton | RadioButton.kt | partial | - | - | slint component: RadioButton |
+| RadioButton | RadioButton.kt | partial | #11 | shapes (#6) | slint component: RadioButton |
 
 ### Scaffold
 
@@ -366,13 +366,13 @@ States: focused, hovered, pressed
 | Component | Source | Status | Issues | Needs | Notes |
 |---|---|---|---|---|---|
 | AppBarWithSearch | SearchBar.kt | missing | #11 | search app bar | - |
-| DockedSearchBar | SearchBar.kt | partial | #11 | - | slint component: SearchBar |
-| ExpandedDockedSearchBar | SearchBar.kt | missing | - | - | - |
-| ExpandedDockedSearchBarWithGap | SearchBar.kt | missing | - | - | - |
-| ExpandedFullScreenContainedSearchBar | SearchBar.kt | missing | - | - | - |
-| ExpandedFullScreenSearchBar | SearchBar.kt | missing | - | - | - |
-| SearchBar | SearchBar.kt | partial | #11 | - | slint component: SearchBar |
-| TopSearchBar | SearchBar.kt | missing | - | - | - |
+| DockedSearchBar | SearchBar.kt | partial | #11 | springs (#5) | slint component: SearchBar |
+| ExpandedDockedSearchBar | SearchBar.kt | missing | #11 | springs (#5) | - |
+| ExpandedDockedSearchBarWithGap | SearchBar.kt | missing | #11 | springs (#5) | - |
+| ExpandedFullScreenContainedSearchBar | SearchBar.kt | missing | #11 | springs (#5) | - |
+| ExpandedFullScreenSearchBar | SearchBar.kt | missing | #11 | springs (#5) | - |
+| SearchBar | SearchBar.kt | partial | #11 | springs (#5) | slint component: SearchBar |
+| TopSearchBar | SearchBar.kt | missing | #11 | springs (#5) | - |
 
 ### Segmented buttons
 
@@ -382,10 +382,10 @@ States: disabled, selected, focused, hovered, pressed, unselected
 
 | Component | Source | Status | Issues | Needs | Notes |
 |---|---|---|---|---|---|
-| MultiChoiceSegmentedButtonRow | SegmentedButton.kt | missing | - | - | - |
-| MultiChoiceSegmentedButtonRowScope | SegmentedButton.kt | missing | - | - | - |
-| SingleChoiceSegmentedButtonRow | SegmentedButton.kt | missing | - | - | - |
-| SingleChoiceSegmentedButtonRowScope | SegmentedButton.kt | missing | - | - | - |
+| MultiChoiceSegmentedButtonRow | SegmentedButton.kt | missing | #10 | springs (#5), shapes (#6) | - |
+| MultiChoiceSegmentedButtonRowScope | SegmentedButton.kt | missing | #10 | springs (#5), shapes (#6) | - |
+| SingleChoiceSegmentedButtonRow | SegmentedButton.kt | missing | #10 | springs (#5), shapes (#6) | - |
+| SingleChoiceSegmentedButtonRowScope | SegmentedButton.kt | missing | #10 | springs (#5), shapes (#6) | - |
 
 ### Slider
 
@@ -395,9 +395,9 @@ States: active, disabled, inactive, focused, hovered, pressed, selected
 
 | Component | Source | Status | Issues | Needs | Notes |
 |---|---|---|---|---|---|
-| RangeSlider | Slider.kt | missing | - | - | - |
-| Slider | Slider.kt | partial | - | - | slint component: Slider |
-| VerticalSlider | Slider.kt | missing | - | - | - |
+| RangeSlider | Slider.kt | missing | #11 | shapes (#6) | - |
+| Slider | Slider.kt | partial | #11 | shapes (#6) | slint component: Slider |
+| VerticalSlider | Slider.kt | missing | #11 | shapes (#6) | - |
 
 ### Snackbar
 
@@ -407,8 +407,8 @@ States: focused, hovered, pressed
 
 | Component | Source | Status | Issues | Needs | Notes |
 |---|---|---|---|---|---|
-| Snackbar | Snackbar.kt | partial | - | - | slint component: SnackBar |
-| SnackbarHost | SnackbarHost.kt | missing | - | - | - |
+| Snackbar | Snackbar.kt | partial | #11 | none | slint component: SnackBar |
+| SnackbarHost | SnackbarHost.kt | missing | #11 | none | - |
 
 ### Split buttons
 
@@ -426,13 +426,13 @@ States: hovered, pressed, selected
 
 | Component | Source | Status | Issues | Needs | Notes |
 |---|---|---|---|---|---|
-| Surface | Surface.kt | missing | - | - | - |
+| Surface | Surface.kt | missing | #11 | dynamic color (#8) | - |
 
 ### Swipe to dismiss
 
 | Component | Source | Status | Issues | Needs | Notes |
 |---|---|---|---|---|---|
-| SwipeToDismissBox | SwipeToDismissBox.kt | missing | - | - | - |
+| SwipeToDismissBox | SwipeToDismissBox.kt | missing | #11 | springs (#5) | - |
 
 ### Switch
 
@@ -442,7 +442,7 @@ States: selected, disabled, unselected, focused, pressed, hovered
 
 | Component | Source | Status | Issues | Needs | Notes |
 |---|---|---|---|---|---|
-| Switch | Switch.kt | partial | - | - | slint component: Switch |
+| Switch | Switch.kt | partial | #11 | springs (#5), shapes (#6) | slint component: Switch |
 
 ### Tabs
 
@@ -452,19 +452,19 @@ States: active, focused, hovered, pressed, inactive
 
 | Component | Source | Status | Issues | Needs | Notes |
 |---|---|---|---|---|---|
-| LeadingIconTab | Tab.kt | missing | - | - | - |
-| PrimaryScrollableTabRow | TabRow.kt | missing | - | - | - |
-| PrimaryTabRow | TabRow.kt | partial | #11 | - | slint component: TabBar |
-| SecondaryScrollableTabRow | TabRow.kt | missing | - | - | - |
-| SecondaryTabRow | TabRow.kt | partial | #11 | - | slint component: SecondaryTabBar |
-| Tab | Tab.kt | partial | #11 | - | slint component: TabBar |
+| LeadingIconTab | Tab.kt | missing | #11 | none | - |
+| PrimaryScrollableTabRow | TabRow.kt | missing | #11 | none | - |
+| PrimaryTabRow | TabRow.kt | partial | #11 | none | slint component: TabBar |
+| SecondaryScrollableTabRow | TabRow.kt | missing | #11 | none | - |
+| SecondaryTabRow | TabRow.kt | partial | #11 | none | slint component: SecondaryTabBar |
+| Tab | Tab.kt | partial | #11 | none | slint component: TabBar |
 
 ### Text
 
 | Component | Source | Status | Issues | Needs | Notes |
 |---|---|---|---|---|---|
-| ProvideTextStyle | Text.kt | missing | - | - | - |
-| Text | Text.kt | partial | #11 | - | slint component: MaterialText |
+| ProvideTextStyle | Text.kt | missing | #7 | variable fonts (#7), text scale (#12) | - |
+| Text | Text.kt | partial | #11 | variable fonts (#7), text scale (#12) | slint component: MaterialText |
 
 ### Text fields
 
@@ -474,10 +474,10 @@ States: active, disabled, error, focused, hovered
 
 | Component | Source | Status | Issues | Needs | Notes |
 |---|---|---|---|---|---|
-| OutlinedSecureTextField | SecureTextField.kt | missing | - | - | - |
-| OutlinedTextField | OutlinedTextField.kt | partial | #11 | - | slint component: TextField |
-| SecureTextField | SecureTextField.kt | missing | - | - | - |
-| TextField | TextField.kt | partial | #11 | - | slint component: TextField |
+| OutlinedSecureTextField | SecureTextField.kt | missing | #11 | variable fonts (#7), shapes (#6) | - |
+| OutlinedTextField | OutlinedTextField.kt | partial | #11 | variable fonts (#7), shapes (#6) | slint component: TextField |
+| SecureTextField | SecureTextField.kt | missing | #11 | variable fonts (#7), shapes (#6) | - |
+| TextField | TextField.kt | partial | #11 | variable fonts (#7), shapes (#6) | slint component: TextField |
 
 ### Time pickers
 
@@ -487,19 +487,19 @@ States: focused, selected, hovered, pressed, unselected
 
 | Component | Source | Status | Issues | Needs | Notes |
 |---|---|---|---|---|---|
-| TimeInput | TimePicker.kt | missing | - | - | - |
-| TimePicker | TimePicker.kt | partial | #11 | - | slint component: TimePickerPopup |
-| TimePickerDialog | TimePickerDialog.kt | missing | - | - | - |
-| TimeScroll | TimePicker.kt | missing | - | - | - |
-| VibrantTimePickerDialog | TimePickerDialog.kt | missing | - | - | - |
+| TimeInput | TimePicker.kt | missing | #11 | none | - |
+| TimePicker | TimePicker.kt | partial | #11 | none | slint component: TimePickerPopup |
+| TimePickerDialog | TimePickerDialog.kt | missing | #11 | none | - |
+| TimeScroll | TimePicker.kt | missing | #11 | none | - |
+| VibrantTimePickerDialog | TimePickerDialog.kt | missing | #11 | none | - |
 
 ### Toggle buttons
 
 | Component | Source | Status | Issues | Needs | Notes |
 |---|---|---|---|---|---|
 | ElevatedToggleButton | ToggleButton.kt | missing | #9 | toggle buttons | - |
-| FilledTonalToggleButton | ToggleButton.kt | missing | - | - | - |
-| OutlinedToggleButton | ToggleButton.kt | missing | - | - | - |
+| FilledTonalToggleButton | ToggleButton.kt | missing | #9 | springs (#5), shapes (#6) | - |
+| OutlinedToggleButton | ToggleButton.kt | missing | #9 | springs (#5), shapes (#6) | - |
 | ToggleButton | ToggleButton.kt | missing | #9 | toggle buttons | - |
 
 ### Toolbars
@@ -521,8 +521,8 @@ States: focused, hovered, pressed
 
 | Component | Source | Status | Issues | Needs | Notes |
 |---|---|---|---|---|---|
-| TooltipBox | Tooltip.kt | partial | - | - | slint component: ToolTip |
-| TooltipScope | Tooltip.kt | missing | - | - | - |
+| TooltipBox | Tooltip.kt | partial | #11 | none | slint component: ToolTip |
+| TooltipScope | Tooltip.kt | missing | #11 | none | - |
 
 ## Token reference
 

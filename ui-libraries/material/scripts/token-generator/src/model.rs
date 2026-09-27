@@ -63,8 +63,11 @@ pub enum Expr {
 /// A fully resolved value ready to emit.
 #[derive(Debug, Clone, PartialEq)]
 pub enum Value {
-    /// A dimension in dp/sp; both map to logical pixels (px).
+    /// A dimension in dp; maps to logical pixels (px).
     Length(f64),
+    /// A text-unit dimension in sp; scales with the platform text scale
+    /// (emitted as `Npx * MaterialTextScale.factor`).
+    Sp(f64),
     /// A unitless float such as a state-layer opacity or a spring constant.
     Number(f64),
     /// A duration in milliseconds (MotionTokens `Duration*` constants).
@@ -469,7 +472,8 @@ fn resolve_expr(
     }
     Ok(match expr {
         Expr::Num(n) => Value::Number(*n),
-        Expr::Dp(n) | Expr::Sp(n) => Value::Length(*n),
+        Expr::Dp(n) => Value::Length(*n),
+        Expr::Sp(n) => Value::Sp(*n),
         Expr::Rgb { r, g, b } => Value::Color(
             u8::try_from(*r).map_err(|_| e("color channel > 255"))?,
             u8::try_from(*g).map_err(|_| e("color channel > 255"))?,
@@ -544,6 +548,15 @@ fn resolve_expr(
                     require_member(ctx, file, object, member, line)?;
                     Value::SpringKey(member.clone())
                 }
+                "TypefaceTokens" => {
+                    // Keep the member name (`Brand`, `Plain`, ...): the
+                    // emitted value binds to a configurable theme family,
+                    // not to the resolved `sans-serif` literal.
+                    match resolve_named_member(ctx, file, object, member, line, depth)? {
+                        Value::FontFamily(_) => Value::FontFamily(member.clone()),
+                        v => v,
+                    }
+                }
                 _ => return resolve_named_member(ctx, file, object, member, line, depth),
             }
         }
@@ -560,18 +573,18 @@ fn resolve_expr(
                 };
             let font_size = match resolve_expr(ctx, file, current_obj, font_size, line, depth + 1)?
             {
-                Value::Length(v) => v,
-                _ => return Err(e("text style fontSize is not a length")),
+                Value::Sp(v) => v,
+                _ => return Err(e("text style fontSize is not an sp value")),
             };
             let line_height =
                 match resolve_expr(ctx, file, current_obj, line_height, line, depth + 1)? {
-                    Value::Length(v) => v,
-                    _ => return Err(e("text style lineHeight is not a length")),
+                    Value::Sp(v) => v,
+                    _ => return Err(e("text style lineHeight is not an sp value")),
                 };
             let letter_spacing =
                 match resolve_expr(ctx, file, current_obj, letter_spacing, line, depth + 1)? {
-                    Value::Length(v) => v,
-                    _ => return Err(e("text style letterSpacing is not a length")),
+                    Value::Sp(v) => v,
+                    _ => return Err(e("text style letterSpacing is not an sp value")),
                 };
             Value::TypeStyle(TypeStyle {
                 font_family,
@@ -737,7 +750,9 @@ mod tests {
         assert_eq!(
             obj.members[0].value,
             Value::TypeStyle(TypeStyle {
-                font_family: "sans-serif".to_string(),
+                // The TypefaceTokens member name survives so the emitter can
+                // bind the theme-configurable family.
+                font_family: "Plain".to_string(),
                 font_weight: 400,
                 font_size: 16.0,
                 line_height: 24.0,
