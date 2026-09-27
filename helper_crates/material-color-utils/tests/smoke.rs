@@ -8,7 +8,7 @@ use material_color_utils::scheme::SchemeTonalSpot;
 #[test]
 fn smoke() {
     for (spec, (primary, surface)) in [
-        (SpecVersion::Spec2021, (0xff445e91i64, 0xfff9f9ffi64)),
+        (SpecVersion::Spec2021, (0xFF445E91_i64, 0xFFF9F9FF_i64)),
         (SpecVersion::Spec2025, (0xff495f8b, 0xfffaf9fe)),
         (SpecVersion::Spec2026, (0xff495f8b, 0xfffaf9fe)),
     ] {

@@ -6,6 +6,7 @@ actionchip
 adipiscing
 Adressliste
 aiohttp
+Albers
 alignas
 alignof
 aliqua
@@ -17,6 +18,7 @@ Amoled
 analogclock
 androideabi
 anyrender
+APCA
 Appbar
 appicon
 appiconset
@@ -30,6 +32,7 @@ armhf
 arrayvec
 artboard
 assetcatalog
+astar
 astrolib
 astrowind
 asyncio
@@ -38,6 +41,7 @@ Aurindam
 autorelease
 autoremove
 AUTOSAR
+availables
 ayoxxx
 Backtab
 BAPI
@@ -63,6 +67,7 @@ BRDA
 briefcasex
 brushprop
 brushval
+bstar
 bugtracker
 buildcode
 builtinfunctions
@@ -70,7 +75,10 @@ bytemuck
 calloop
 caplog
 casesensitive
+cbrt
 CDPATH
+celebi
+Celebi
 cfgs
 CFLAGS
 chacha
@@ -97,6 +105,7 @@ codepoint
 codepoints
 codesign
 codingame
+coeff
 coeffs
 coldict
 colorspace
@@ -115,6 +124,7 @@ Conv
 corelib
 coro
 cortexa
+coterminal
 CPACK
 Cpolygon
 cpos
@@ -144,6 +154,8 @@ defmt
 defதோசை
 deinit
 delenv
+delinearized
+Delinearizes
 depfile
 deque
 devcode
@@ -177,6 +189,7 @@ dsymutil
 dustygold
 Dxgi
 DYLD
+dynamiccolor
 eabi
 eabihf
 Eeprom
@@ -186,14 +199,15 @@ elems
 elevatedbutton
 elit
 emcmake
+Emre
 emscripten
 endforeach
 endfunction
 endrst
 enim
-epoll
 entrancy
 enummember
+epoll
 eprintln
 esope
 espidf
@@ -211,8 +225,10 @@ EXTRAVERSION
 extversion
 fabstyle
 Farbfeld
+fbits
 Fcntl
 fdiagnostics
+fdlibm
 fdroid
 fdroiddata
 FEFF
@@ -226,6 +242,7 @@ filterchip
 Fira
 FLASHMODE
 FLASHSIZE
+flate
 flathub
 Flexbox
 flexboxes
@@ -273,6 +290,7 @@ Grotesk
 gstreamer
 GWLP
 Hani
+hcts
 hdmipi
 heapless
 hidpi
@@ -280,8 +298,8 @@ highp
 HINSTANCE
 Hira
 hkdf
-hmac
 hlayout
+hmac
 hmenu
 horizontalbox
 horizontallayout
@@ -310,6 +328,7 @@ indexmap
 inputchip
 intprop
 intval
+invf
 iocp
 IRAM
 Irqs
@@ -322,6 +341,7 @@ itertools
 ivars
 Jemalloc
 jemallocator
+jstar
 kateversion
 Kconfig
 KDAB
@@ -369,9 +389,9 @@ librsvg
 libseat
 libslint
 libstdc
+libtest
 libudev
 libuv
-libtest
 libx
 libxcb
 libxcursor
@@ -380,9 +400,12 @@ libxkbcommon
 libxrandr
 lightimg
 limax
+Linearizes
 linearprogressindicator
 linebender
 linebreaker
+LINRGB
+linrgb
 linuxkms
 lipo
 Literata
@@ -392,6 +415,7 @@ LOADADDR
 LOWORD
 lpfn
 lpsz
+lstar
 Ltdc
 ltdcsel
 lumino
@@ -411,6 +435,7 @@ mdbook
 memsize
 menuconfig
 Meteo
+midgray
 millihertz
 mimxrt
 minmax
@@ -425,6 +450,7 @@ msgctx
 msgctxt
 msgfmt
 msgmerge
+mstar
 mult
 multisample
 multiview
@@ -440,6 +466,7 @@ navigationdrawer
 navigationrail
 navitem
 ncpu
+Neglible
 newlink
 nexp
 nixos
@@ -471,6 +498,7 @@ objfile
 Octa
 oklch
 oldsyspath
+Olguin's
 optipng
 ospi
 othercomp
@@ -485,6 +513,7 @@ pbjson
 PCLK
 pdoc
 peniko
+PENUM
 picotool
 pixabay
 pixelcolor
@@ -528,6 +557,9 @@ qtbase
 qtsvg
 qttypes
 qtwayland
+quantizer
+Quantizer
+quantizers
 Quis
 qwidget
 QXGA
@@ -569,8 +601,8 @@ rustls
 rustup
 Rustybuzz
 safeui
-Schukat
 scanout
+Schukat
 sclk
 scopeguard
 sdkconfig
@@ -591,17 +623,19 @@ shiki
 shikijs
 Shmelt
 signalsafe
+signum
 SIGUSR
 singlefile
 singleshot
 skrifa
 slintcov
-slnt
 slintlib
+slnt
 Smartwin
 smol
 Snackbars
 Softbuffer
+Somers
 Sorkin
 sourcestruct
 spake
@@ -680,6 +714,7 @@ TOPLEVEL
 Torizon
 toucharea
 toupper
+transcendentals
 trunc
 tungstenite
 typedoc
@@ -751,6 +786,8 @@ wordlike
 WQXGA
 writeback
 WRONLY
+Wsmeans
+wsmeans
 xbuild
 xcarchive
 xcassets
@@ -759,6 +796,7 @@ xchg
 xcrun
 xfer
 xfixes
+Xiaolin
 xlib
 xmark
 Xrgb
