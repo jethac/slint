@@ -149,7 +149,7 @@
     "issues": [
       11
     ],
-    "needs": "shapes (#6), springs (#5)",
+    "needs": "springs (#5), shapes (#6)",
     "notes": "slint component: CircularProgressIndicator",
     "status": "partial"
   },
@@ -158,7 +158,7 @@
       6,
       11
     ],
-    "needs": "shapes (#6), springs (#5)",
+    "needs": "springs (#5), shapes (#6)",
     "notes": "",
     "status": "missing"
   },
@@ -168,7 +168,7 @@
       6,
       10
     ],
-    "needs": "shapes (#6), springs (#5)",
+    "needs": "springs (#5), shapes (#6)",
     "notes": "",
     "status": "missing"
   },
@@ -578,7 +578,7 @@
     "issues": [
       11
     ],
-    "needs": "shapes (#6), springs (#5)",
+    "needs": "springs (#5), shapes (#6)",
     "notes": "slint component: LinearProgressIndicator",
     "status": "partial"
   },
@@ -587,7 +587,7 @@
       6,
       11
     ],
-    "needs": "shapes (#6), springs (#5)",
+    "needs": "springs (#5), shapes (#6)",
     "notes": "",
     "status": "missing"
   },
@@ -605,7 +605,7 @@
       6,
       10
     ],
-    "needs": "shapes (#6), springs (#5)",
+    "needs": "springs (#5), shapes (#6)",
     "notes": "",
     "status": "missing"
   },
@@ -669,7 +669,7 @@
     "issues": [
       12
     ],
-    "needs": "adaptive (#12), springs (#5)",
+    "needs": "springs (#5), adaptive (#12)",
     "notes": "",
     "status": "missing"
   },
@@ -701,7 +701,7 @@
     "issues": [
       12
     ],
-    "needs": "adaptive (#12), springs (#5), shapes (#6)",
+    "needs": "springs (#5), shapes (#6), adaptive (#12)",
     "notes": "slint component: NavigationBar",
     "status": "partial"
   },
@@ -717,7 +717,7 @@
     "issues": [
       12
     ],
-    "needs": "adaptive (#12), springs (#5)",
+    "needs": "springs (#5), adaptive (#12)",
     "notes": "slint component: NavigationRail",
     "status": "partial"
   },
@@ -725,7 +725,7 @@
     "issues": [
       12
     ],
-    "needs": "adaptive (#12), springs (#5)",
+    "needs": "springs (#5), adaptive (#12)",
     "notes": "slint component: NavigationItemTemplate",
     "status": "partial"
   },
@@ -765,7 +765,7 @@
     "issues": [
       11
     ],
-    "needs": "variable fonts (#7), shapes (#6)",
+    "needs": "shapes (#6), variable fonts (#7)",
     "notes": "",
     "status": "missing"
   },
@@ -773,7 +773,7 @@
     "issues": [
       11
     ],
-    "needs": "variable fonts (#7), shapes (#6)",
+    "needs": "shapes (#6), variable fonts (#7)",
     "notes": "slint component: TextField",
     "status": "partial"
   },
@@ -855,7 +855,7 @@
       11,
       12
     ],
-    "needs": "adaptive (#12), springs (#5), shapes (#6)",
+    "needs": "springs (#5), shapes (#6), adaptive (#12)",
     "notes": "",
     "status": "missing"
   },
@@ -895,7 +895,7 @@
     "issues": [
       11
     ],
-    "needs": "variable fonts (#7), shapes (#6)",
+    "needs": "shapes (#6), variable fonts (#7)",
     "notes": "",
     "status": "missing"
   },
@@ -919,7 +919,7 @@
     "issues": [
       12
     ],
-    "needs": "adaptive (#12), springs (#5), shapes (#6)",
+    "needs": "springs (#5), shapes (#6), adaptive (#12)",
     "notes": "",
     "status": "missing"
   },
@@ -927,7 +927,7 @@
     "issues": [
       12
     ],
-    "needs": "adaptive (#12), springs (#5), shapes (#6)",
+    "needs": "springs (#5), shapes (#6), adaptive (#12)",
     "notes": "",
     "status": "missing"
   },
@@ -1056,7 +1056,7 @@
     "issues": [
       11
     ],
-    "needs": "variable fonts (#7), shapes (#6)",
+    "needs": "shapes (#6), variable fonts (#7)",
     "notes": "slint component: TextField",
     "status": "partial"
   },
@@ -1200,7 +1200,7 @@
     "issues": [
       12
     ],
-    "needs": "adaptive (#12), springs (#5)",
+    "needs": "springs (#5), adaptive (#12)",
     "notes": "",
     "status": "missing"
   },
@@ -1208,7 +1208,7 @@
     "issues": [
       12
     ],
-    "needs": "adaptive (#12), springs (#5)",
+    "needs": "springs (#5), adaptive (#12)",
     "notes": "",
     "status": "missing"
   }

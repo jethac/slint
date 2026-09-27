@@ -252,8 +252,8 @@ States: active
 
 | Component | Source | Status | Issues | Needs | Notes |
 |---|---|---|---|---|---|
-| ContainedLoadingIndicator | LoadingIndicator.kt | missing | #5, #6, #10 | shapes (#6), springs (#5) | - |
-| LoadingIndicator | LoadingIndicator.kt | missing | #5, #6, #10 | shapes (#6), springs (#5) | - |
+| ContainedLoadingIndicator | LoadingIndicator.kt | missing | #5, #6, #10 | springs (#5), shapes (#6) | - |
+| LoadingIndicator | LoadingIndicator.kt | missing | #5, #6, #10 | springs (#5), shapes (#6) | - |
 
 ### Menus
 
@@ -281,10 +281,10 @@ States: active, inactive
 
 | Component | Source | Status | Issues | Needs | Notes |
 |---|---|---|---|---|---|
-| NavigationBar | NavigationBar.kt | partial | #12 | adaptive (#12), springs (#5), shapes (#6) | slint component: NavigationBar |
-| RowScope | NavigationBar.kt | missing | #11, #12 | adaptive (#12), springs (#5), shapes (#6) | - |
-| ShortNavigationBar | ShortNavigationBar.kt | missing | #12 | adaptive (#12), springs (#5), shapes (#6) | - |
-| ShortNavigationBarItem | ShortNavigationBar.kt | missing | #12 | adaptive (#12), springs (#5), shapes (#6) | - |
+| NavigationBar | NavigationBar.kt | partial | #12 | springs (#5), shapes (#6), adaptive (#12) | slint component: NavigationBar |
+| RowScope | NavigationBar.kt | missing | #11, #12 | springs (#5), shapes (#6), adaptive (#12) | - |
+| ShortNavigationBar | ShortNavigationBar.kt | missing | #12 | springs (#5), shapes (#6), adaptive (#12) | - |
+| ShortNavigationBarItem | ShortNavigationBar.kt | missing | #12 | springs (#5), shapes (#6), adaptive (#12) | - |
 
 ### Navigation drawer
 
@@ -312,11 +312,11 @@ States: active, focused, hovered, pressed, inactive
 
 | Component | Source | Status | Issues | Needs | Notes |
 |---|---|---|---|---|---|
-| ModalWideNavigationRail | WideNavigationRail.kt | missing | #12 | adaptive (#12), springs (#5) | - |
-| NavigationRail | NavigationRail.kt | partial | #12 | adaptive (#12), springs (#5) | slint component: NavigationRail |
-| NavigationRailItem | NavigationRail.kt | partial | #12 | adaptive (#12), springs (#5) | slint component: NavigationItemTemplate |
-| WideNavigationRail | WideNavigationRail.kt | missing | #12 | adaptive (#12), springs (#5) | - |
-| WideNavigationRailItem | WideNavigationRail.kt | missing | #12 | adaptive (#12), springs (#5) | - |
+| ModalWideNavigationRail | WideNavigationRail.kt | missing | #12 | springs (#5), adaptive (#12) | - |
+| NavigationRail | NavigationRail.kt | partial | #12 | springs (#5), adaptive (#12) | slint component: NavigationRail |
+| NavigationRailItem | NavigationRail.kt | partial | #12 | springs (#5), adaptive (#12) | slint component: NavigationItemTemplate |
+| WideNavigationRail | WideNavigationRail.kt | missing | #12 | springs (#5), adaptive (#12) | - |
+| WideNavigationRailItem | WideNavigationRail.kt | missing | #12 | springs (#5), adaptive (#12) | - |
 
 ### Progress indicators
 
@@ -326,10 +326,10 @@ States: active, indeterminate
 
 | Component | Source | Status | Issues | Needs | Notes |
 |---|---|---|---|---|---|
-| CircularProgressIndicator | ProgressIndicator.kt | partial | #11 | shapes (#6), springs (#5) | slint component: CircularProgressIndicator |
-| CircularWavyProgressIndicator | WavyProgressIndicator.kt | missing | #6, #11 | shapes (#6), springs (#5) | - |
-| LinearProgressIndicator | ProgressIndicator.kt | partial | #11 | shapes (#6), springs (#5) | slint component: LinearProgressIndicator |
-| LinearWavyProgressIndicator | WavyProgressIndicator.kt | missing | #6, #11 | shapes (#6), springs (#5) | - |
+| CircularProgressIndicator | ProgressIndicator.kt | partial | #11 | springs (#5), shapes (#6) | slint component: CircularProgressIndicator |
+| CircularWavyProgressIndicator | WavyProgressIndicator.kt | missing | #6, #11 | springs (#5), shapes (#6) | - |
+| LinearProgressIndicator | ProgressIndicator.kt | partial | #11 | springs (#5), shapes (#6) | slint component: LinearProgressIndicator |
+| LinearWavyProgressIndicator | WavyProgressIndicator.kt | missing | #6, #11 | springs (#5), shapes (#6) | - |
 
 ### Pull to refresh
 
@@ -474,10 +474,10 @@ States: active, disabled, error, focused, hovered
 
 | Component | Source | Status | Issues | Needs | Notes |
 |---|---|---|---|---|---|
-| OutlinedSecureTextField | SecureTextField.kt | missing | #11 | variable fonts (#7), shapes (#6) | - |
-| OutlinedTextField | OutlinedTextField.kt | partial | #11 | variable fonts (#7), shapes (#6) | slint component: TextField |
-| SecureTextField | SecureTextField.kt | missing | #11 | variable fonts (#7), shapes (#6) | - |
-| TextField | TextField.kt | partial | #11 | variable fonts (#7), shapes (#6) | slint component: TextField |
+| OutlinedSecureTextField | SecureTextField.kt | missing | #11 | shapes (#6), variable fonts (#7) | - |
+| OutlinedTextField | OutlinedTextField.kt | partial | #11 | shapes (#6), variable fonts (#7) | slint component: TextField |
+| SecureTextField | SecureTextField.kt | missing | #11 | shapes (#6), variable fonts (#7) | - |
+| TextField | TextField.kt | partial | #11 | shapes (#6), variable fonts (#7) | slint component: TextField |
 
 ### Time pickers
 

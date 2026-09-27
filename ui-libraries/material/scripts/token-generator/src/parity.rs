@@ -532,12 +532,20 @@ const NEEDS_VOCABULARY: &[(&str, u32)] = &[
     ("accessibility", 12),
 ];
 
-/// Render capability names in canonical `"springs (#5), shapes (#6)"` form.
-/// An empty list means the component needs nothing new: `"none"`.
+/// Render capability names in canonical `"springs (#5), shapes (#6)"` form:
+/// sorted by NEEDS_VOCABULARY order so the same set always serializes the
+/// same way. An empty list means the component needs nothing new: `"none"`.
 fn needs_text(names: &[&str]) -> String {
     if names.is_empty() {
         return "none".into();
     }
+    let mut names = names.to_vec();
+    names.sort_by_key(|name| {
+        NEEDS_VOCABULARY
+            .iter()
+            .position(|(n, _)| n == name)
+            .expect("need names come from NEEDS_VOCABULARY")
+    });
     names
         .iter()
         .map(|name| {
