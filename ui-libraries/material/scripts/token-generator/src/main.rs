@@ -85,16 +85,22 @@ fn run() -> Result<(), String> {
     let files = sources::collect_sources(&material3_dir)?;
     let mut parsed = Vec::new();
     let mut ripple_text = String::new();
+    let mut color_scheme_text = String::new();
     for (name, text) in &files {
         if name == "Ripple.kt" {
             ripple_text = text.clone();
+            continue;
+        }
+        if name == "ColorScheme.kt" {
+            color_scheme_text = text.clone();
             continue;
         }
         parsed.push(kotlin::parse_file(name, text).map_err(|e| format!("parse {name}: {e}"))?);
     }
     let focus = emit::parse_focus_ring(&ripple_text)?;
     let lib = model::resolve(&parsed).map_err(|e| format!("resolve: {e}"))?;
-    let outputs = emit::emit(&lib, &src.repo, &src.commit, &src.path, &focus)?;
+    let outputs =
+        emit::emit(&lib, &src.repo, &src.commit, &src.path, &focus, &color_scheme_text)?;
 
     // PARITY.md + PARITY_STATUS.json.
     let mut components = parity::scan_components(&material3_dir, &["internal", "tokens"])?;

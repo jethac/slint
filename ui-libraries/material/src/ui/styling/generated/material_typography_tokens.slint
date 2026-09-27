@@ -12,6 +12,10 @@
 /// `MaterialTextScale.factor` (the platform text scale).
 /// `font_family` binds to `MaterialTheme`'s configurable
 /// brand/plain families.
+///
+/// `MaterialTheme` itself is hand-written in
+/// `ui/styling/material_theme.slint` (it also holds the dynamic
+/// color-scheme inputs), so this file only imports it.
 export struct MaterialTypeStyle {
     font_family: string,
     font_weight: int,
@@ -20,18 +24,12 @@ export struct MaterialTypeStyle {
     tracking: length,
 }
 
+import { MaterialTheme } from "../material_theme.slint";
+
 /// Multiplies every `sp` token to follow the platform text
 /// scale. The adaptive layer (#12) writes it.
 export global MaterialTextScale {
     in-out property <float> factor: 1.0;
-}
-
-/// Theme-configurable brand and plain typeface families;
-/// the font work (#7) replaces the defaults with the bundled
-/// Google Sans Flex.
-export global MaterialTheme {
-    in-out property <string> brand_family: "sans-serif";
-    in-out property <string> plain_family: "sans-serif";
 }
 
 export global TypefaceTokens {
