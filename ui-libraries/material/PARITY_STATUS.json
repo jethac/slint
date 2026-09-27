@@ -35,7 +35,7 @@
     "issues": [
       11
     ],
-    "needs": "search app bar",
+    "needs": "springs (#5)",
     "notes": "",
     "status": "missing"
   },
@@ -109,7 +109,7 @@
       9,
       10
     ],
-    "needs": "button group layout + springs",
+    "needs": "springs (#5), shapes (#6)",
     "notes": "",
     "status": "missing"
   },
@@ -149,7 +149,7 @@
     "issues": [
       11
     ],
-    "needs": "wavy shapes (#6), springs (#5)",
+    "needs": "shapes (#6), springs (#5)",
     "notes": "slint component: CircularProgressIndicator",
     "status": "partial"
   },
@@ -158,7 +158,7 @@
       6,
       11
     ],
-    "needs": "wavy/morph shapes",
+    "needs": "shapes (#6), springs (#5)",
     "notes": "",
     "status": "missing"
   },
@@ -168,7 +168,7 @@
       6,
       10
     ],
-    "needs": "shape morph + wavy strokes",
+    "needs": "shapes (#6), springs (#5)",
     "notes": "",
     "status": "missing"
   },
@@ -313,7 +313,7 @@
     "issues": [
       9
     ],
-    "needs": "toggle buttons",
+    "needs": "springs (#5), shapes (#6)",
     "notes": "",
     "status": "missing"
   },
@@ -385,7 +385,7 @@
     "issues": [
       9
     ],
-    "needs": "toggle icon buttons",
+    "needs": "springs (#5), shapes (#6)",
     "notes": "",
     "status": "missing"
   },
@@ -409,7 +409,7 @@
     "issues": [
       9
     ],
-    "needs": "toggle icon buttons",
+    "needs": "springs (#5), shapes (#6)",
     "notes": "",
     "status": "missing"
   },
@@ -450,7 +450,7 @@
       5,
       10
     ],
-    "needs": "FAB menu + springs",
+    "needs": "springs (#5), shapes (#6)",
     "notes": "",
     "status": "missing"
   },
@@ -482,7 +482,7 @@
     "issues": [
       10
     ],
-    "needs": "floating toolbars",
+    "needs": "springs (#5), adaptive (#12)",
     "notes": "",
     "status": "missing"
   },
@@ -522,7 +522,7 @@
     "issues": [
       9
     ],
-    "needs": "toggle icon buttons",
+    "needs": "springs (#5), shapes (#6)",
     "notes": "",
     "status": "missing"
   },
@@ -578,7 +578,7 @@
     "issues": [
       11
     ],
-    "needs": "wavy shapes (#6), springs (#5)",
+    "needs": "shapes (#6), springs (#5)",
     "notes": "slint component: LinearProgressIndicator",
     "status": "partial"
   },
@@ -587,7 +587,7 @@
       6,
       11
     ],
-    "needs": "wavy/morph shapes",
+    "needs": "shapes (#6), springs (#5)",
     "notes": "",
     "status": "missing"
   },
@@ -605,7 +605,7 @@
       6,
       10
     ],
-    "needs": "shape morph + wavy strokes",
+    "needs": "shapes (#6), springs (#5)",
     "notes": "",
     "status": "missing"
   },
@@ -669,7 +669,7 @@
     "issues": [
       12
     ],
-    "needs": "adaptive layout",
+    "needs": "adaptive (#12), springs (#5)",
     "notes": "",
     "status": "missing"
   },
@@ -757,7 +757,7 @@
     "issues": [
       9
     ],
-    "needs": "toggle icon buttons",
+    "needs": "springs (#5), shapes (#6)",
     "notes": "",
     "status": "missing"
   },
@@ -822,7 +822,7 @@
     "issues": [
       7
     ],
-    "needs": "variable fonts (#7), text scale (#12)",
+    "needs": "variable fonts (#7), adaptive (#12)",
     "notes": "",
     "status": "missing"
   },
@@ -830,7 +830,7 @@
     "issues": [
       5
     ],
-    "needs": "springs",
+    "needs": "springs (#5)",
     "notes": "",
     "status": "missing"
   },
@@ -863,7 +863,7 @@
     "issues": [
       12
     ],
-    "needs": "adaptive scaffold",
+    "needs": "adaptive (#12)",
     "notes": "",
     "status": "missing"
   },
@@ -919,7 +919,7 @@
     "issues": [
       12
     ],
-    "needs": "adaptive layout",
+    "needs": "adaptive (#12), springs (#5), shapes (#6)",
     "notes": "",
     "status": "missing"
   },
@@ -927,7 +927,7 @@
     "issues": [
       12
     ],
-    "needs": "adaptive layout",
+    "needs": "adaptive (#12), springs (#5), shapes (#6)",
     "notes": "",
     "status": "missing"
   },
@@ -992,7 +992,7 @@
       9,
       10
     ],
-    "needs": "split buttons",
+    "needs": "springs (#5), shapes (#6)",
     "notes": "",
     "status": "missing"
   },
@@ -1040,7 +1040,7 @@
     "issues": [
       11
     ],
-    "needs": "variable fonts (#7), text scale (#12)",
+    "needs": "variable fonts (#7), adaptive (#12)",
     "notes": "slint component: MaterialText",
     "status": "partial"
   },
@@ -1096,7 +1096,7 @@
     "issues": [
       9
     ],
-    "needs": "toggle buttons",
+    "needs": "springs (#5), shapes (#6)",
     "notes": "",
     "status": "missing"
   },
@@ -1176,7 +1176,7 @@
     "issues": [
       10
     ],
-    "needs": "floating toolbars",
+    "needs": "springs (#5), adaptive (#12)",
     "notes": "",
     "status": "missing"
   },
@@ -1200,7 +1200,7 @@
     "issues": [
       12
     ],
-    "needs": "adaptive layout",
+    "needs": "adaptive (#12), springs (#5)",
     "notes": "",
     "status": "missing"
   },
@@ -1208,7 +1208,7 @@
     "issues": [
       12
     ],
-    "needs": "adaptive layout",
+    "needs": "adaptive (#12), springs (#5)",
     "notes": "",
     "status": "missing"
   }
