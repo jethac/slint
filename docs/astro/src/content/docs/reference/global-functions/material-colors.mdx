@@ -47,6 +47,20 @@ Quantizes `image` and scores the resulting colors to pick a seed color, like
 Material You's wallpaper-based color extraction. Returns black (`#00000000`)
 if the image has no pixels.
 
+## platform-color-scheme
+### platform-color-scheme(MaterialSchemeVariant, MaterialSpecVersion, MaterialSchemePlatform, bool, float) -> MaterialColorScheme
+
+Generates a color scheme from the platform's dynamic colors. On Android 12
+(API 31) and later this returns the exact system scheme the platform derives
+from the wallpaper — the same values as
+[`dynamicLightColorScheme`/`dynamicDarkColorScheme`](https://developer.android.com/develop/ui/compose/designsystems/material3#dynamic_color)
+in Jetpack Compose. On other platforms, or when the platform reports no
+dynamic colors, it falls back to generating a scheme from the platform accent
+color (or the baseline `#6750a4` seed when the platform reports no accent).
+
+The parameters have the same meaning as for `color-scheme`; they apply to the
+fallback scheme, while the platform scheme always uses the system's choices.
+
 ## platform-accent-color
 ### platform-accent-color() -> color
 
@@ -66,5 +80,8 @@ where the platform doesn't report one.
 The Material widget library's `MaterialTheme` global uses these functions to
 generate a scheme reactively: assign its `seed-color`, `variant`,
 `spec-version`, `platform`, `dark`, or `contrast-level` properties and every
-color role updates. Set `MaterialPalette.dynamic` to `true` to have all
+color role updates. `contrast-level` defaults to the platform's contrast
+preference. Set `use-platform-color` to `true` to seed from the platform's
+system scheme (the wallpaper-based scheme on Android 12+) instead of
+`seed-color`. Set `MaterialPalette.dynamic` to `true` to have all
 Material widgets use the generated scheme.

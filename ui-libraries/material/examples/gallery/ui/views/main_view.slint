@@ -89,6 +89,7 @@ export component MainView {
             activated(index) => {
                 if index < MainViewAdapter.first_dynamic_palette {
                     MaterialPalette.dynamic = false;
+                    MaterialTheme.use-platform-color = false;
                     MainViewAdapter.load_palette(index);
                 } else {
                     MaterialPalette.dynamic = true;
@@ -96,14 +97,18 @@ export component MainView {
                     // JSON files, so a dynamic scheme can be compared with
                     // its static counterpart.
                     if index == MainViewAdapter.first_dynamic_palette {
-                        MaterialTheme.seed-color = MaterialColors.platform-accent-color().alpha == 0 ? #6750a4 : MaterialColors.platform-accent-color();
+                        MaterialTheme.use-platform-color = true;
                     } else if index == MainViewAdapter.first_dynamic_palette + 1 {
+                        MaterialTheme.use-platform-color = false;
                         MaterialTheme.seed-color = #2379f4;
                     } else if index == MainViewAdapter.first_dynamic_palette + 2 {
+                        MaterialTheme.use-platform-color = false;
                         MaterialTheme.seed-color = #6750a4;
                     } else if index == MainViewAdapter.first_dynamic_palette + 3 {
+                        MaterialTheme.use-platform-color = false;
                         MaterialTheme.seed-color = #b33b15;
                     } else {
+                        MaterialTheme.use-platform-color = false;
                         MaterialTheme.seed-color = #63a002;
                     }
                 }

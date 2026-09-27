@@ -8,41 +8,61 @@ import { MaterialScheme } from "material_schemes.slint";
 // changing the seed color, variant, spec version, platform, dark mode or
 // contrast level re-evaluates `scheme` and every color role updates.
 export global MaterialTheme {
-    // The seed color the scheme is generated from. Defaults to the
-    // platform accent color where the operating system reports one
-    // (Android 12+ dynamic color and other platforms reporting an accent),
-    // falling back to the Material baseline seed #6750A4. Use
-    // `MaterialColors.seed-from-image(image)` to seed from an image instead.
-    in property <color> seed-color: MaterialColors.platform-accent-color().alpha == 0
-        ? #6750a4
-        : MaterialColors.platform-accent-color();
+    // The seed color the scheme is generated from, used when
+    // `use-platform-color` is false. Defaults to the Material baseline seed
+    // #6750A4. Use `MaterialColors.seed-from-image(image)` to seed from an
+    // image instead.
+    in property <color> seed-color: #6750a4;
 
-    // The scheme variant. Tonal Spot is the Material default.
+    // When true, the scheme follows the platform's dynamic color: the exact
+    // system scheme on Android 12+, and a scheme generated from the platform
+    // accent color elsewhere, using `variant`, `spec-version`, `platform` and
+    // `contrast-level`. `seed-color` is then unused.
+    in property <bool> use-platform-color: false;
+
+    // The scheme variant. Tonal Spot is the variant `MaterialTheme` and
+    // `MaterialExpressiveTheme` build their baseline schemes with upstream.
     in property <MaterialSchemeVariant> variant: MaterialSchemeVariant.tonal-spot;
 
-    // The version of the Material color specification to use.
+    // The version of the Material color specification to use; spec 2025 is
+    // the current one upstream.
     in property <MaterialSpecVersion> spec-version: MaterialSpecVersion.spec2025;
 
     // The device class the scheme is generated for.
     in property <MaterialSchemePlatform> platform: MaterialSchemePlatform.phone;
 
-    // Extra contrast on top of the platform contrast preference, in the
-    // continuous range -1 (lowest) to 1 (highest). 0 is standard contrast.
-    in property <float> contrast-level: 0;
+    // The contrast level in the continuous range -1 (lowest) to 1 (highest);
+    // 0 is standard contrast. Defaults to the platform contrast preference
+    // (Android 14+ "Contrast" setting, macOS "Increase contrast", ...);
+    // assigning a value overrides it. Values outside the range are clamped.
+    in property <float> contrast-level: MaterialColors.platform-contrast-level();
 
     // Whether to generate the dark scheme. Defaults to the platform's
     // light/dark setting.
     in property <bool> dark: Palette.color-scheme == ColorScheme.dark;
 
     // The generated scheme, with every color role.
-    out property <MaterialColorScheme> scheme: MaterialColors.color-scheme(
-        root.seed-color,
-        root.variant,
-        root.spec-version,
-        root.platform,
-        root.dark,
-        root.contrast-level + MaterialColors.platform-contrast-level()
-    );
+    out property <MaterialColorScheme> scheme: root.use-platform-color
+        ? MaterialColors.platform-color-scheme(
+            root.variant,
+            root.spec-version,
+            root.platform,
+            root.dark,
+            root.contrast-level
+        )
+        : MaterialColors.color-scheme(
+            root.seed-color,
+            root.variant,
+            root.spec-version,
+            root.platform,
+            root.dark,
+            root.contrast-level
+        );
+
+    // Theme-configurable brand and plain typeface families; the font work
+    // (#7) replaces the defaults with the bundled Google Sans Flex.
+    in-out property <string> brand-family: "sans-serif";
+    in-out property <string> plain-family: "sans-serif";
 
     // `scheme` in the `MaterialScheme` struct shape used by `MaterialPalette`
     // and the Material Theme Builder JSON format.

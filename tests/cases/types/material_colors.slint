@@ -4,14 +4,28 @@
 export component TestCase inherits Window {
     in-out property<color> seed: #6750a4;
     in-out property<bool> dark: false;
+    in-out property<MaterialSchemeVariant> variant: MaterialSchemeVariant.tonal-spot;
+    in-out property<MaterialSpecVersion> spec-version: MaterialSpecVersion.spec2025;
+    in-out property<float> contrast: 0;
 
     in-out property<MaterialColorScheme> scheme: MaterialColors.color-scheme(
         seed,
-        MaterialSchemeVariant.tonal-spot,
-        MaterialSpecVersion.spec2025,
+        variant,
+        spec-version,
         MaterialSchemePlatform.phone,
         dark,
-        0,
+        contrast,
+    );
+
+    out property<color> primary: scheme.primary;
+
+    // The system scheme read on Android 12+; a fallback elsewhere.
+    in-out property<MaterialColorScheme> platform-scheme: MaterialColors.platform-color-scheme(
+        variant,
+        spec-version,
+        MaterialSchemePlatform.phone,
+        dark,
+        contrast,
     );
 
     // Values produced by the material-color-utils crate, verified bit-exact
@@ -107,5 +121,35 @@ assert(t.test_blue_seed);
 assert(t.test_contrast_level);
 assert(t.test_seed_from_image);
 assert(t.test_accent);
+assert.equal(t.primary.toString(), "#655789");
+
+// Native code drives the scheme inputs and reads role colors back.
+t.seed = "#0057d0";
+assert.equal(t.primary.toString(), "#4c5e8b");
+t.variant = "vibrant";
+t.contrast = 0.5;
+t.dark = true;
+assert.equal(t.primary.toString(), "#9cb7ff");
+```
+
+```python
+import slint
+
+instance = TestCase()
+assert instance.test_light
+assert not instance.test_dark
+assert instance.test_blue_seed
+assert instance.test_contrast_level
+assert instance.test_seed_from_image
+assert instance.test_accent
+
+# Native code drives the scheme inputs and reads role colors back.
+assert instance.primary == slint.Color("#655789")
+instance.seed = slint.Color("#0057d0")
+assert instance.primary == slint.Color("#4c5e8b")
+instance.variant = slint.language.MaterialSchemeVariant.vibrant
+instance.contrast = 0.5
+instance.dark = True
+assert instance.primary == slint.Color("#9cb7ff")
 ```
 */
