@@ -3,7 +3,7 @@
 
 import { IconButton } from "./icon_button.slint";
 import { MaterialText } from "./material_text.slint";
-import { MaterialTypography, TextStyle } from "../styling/material_typography.slint";
+import { MaterialTypography, MaterialTypeStyle } from "../styling/material_typography.slint";
 import { MaterialPalette } from "../styling/material_palette.slint";
 import { MaterialStyleMetrics } from "../styling/material_style_metrics.slint";
 import { IconButtonItem } from "./bottom_app_bar.slint";
@@ -17,7 +17,7 @@ component BaseAppBar {
     in property <length> spacing;
     in property <length> vertical_spacing;
     in property <bool> two_rows;
-    in property <TextStyle> text_style;
+    in property <MaterialTypeStyle> text_style;
     in property <length> text_padding;
     in property <length> appbar_padding_right: 0;
     in property <length> appbar_padding_top: 0;

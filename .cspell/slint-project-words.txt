@@ -63,6 +63,7 @@ bindgen
 bindtextdomain
 bitmapfont
 blit
+blobless
 blogic
 blogica
 blogicb
@@ -364,6 +365,7 @@ Kconfig
 KDAB
 keepalive
 keepends
+Keylines
 Keymap
 keyrings
 kitware
@@ -563,6 +565,7 @@ protoc
 protox
 Pseudonymized
 psram
+pulltorefresh
 punct
 purelib
 pyclass
@@ -670,6 +673,7 @@ sourcestruct
 spake
 spinboxes
 SPIRAM
+splitn
 SPRINTF
 Spyrosoft
 srcroot
@@ -762,6 +766,7 @@ udivdi
 uintptr
 ullamco
 unclipped
+Uncontained
 unfocusable
 unhinted
 unicodes

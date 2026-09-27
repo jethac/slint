@@ -1,15 +1,18 @@
 // Copyright © SixtyFPS GmbH <info@slint.dev>
 // SPDX-License-Identifier: MIT
 
+import { MotionTokens } from "generated/material_motion_tokens.slint";
+
 export global MaterialAnimations {
-    out property <easing> emphasized_easing: cubic-bezier(0.05, 0.7, 0.1, 1.0);
-    out property <duration> emphasized_duration: 500ms;
-    out property <duration> emphasized_decelerate_duration: 400ms;
-    out property <duration> emphasized_accelerate_duration: 200ms;
-    out property <easing> standard_easing: cubic-bezier(0, 0, 0, 1);
-    out property <duration> standard_decelerate_duration: 250ms;
-    out property <duration> standard_accelerate_duration: 200ms;
-    out property <duration> standard_fast_duration: 150ms;
+    out property <easing> emphasized_easing: MotionTokens.easing_emphasized_decelerate_cubic_bezier;
+    out property <duration> emphasized_duration: MotionTokens.duration_long2;
+    out property <duration> emphasized_decelerate_duration: MotionTokens.duration_medium4;
+    out property <duration> emphasized_accelerate_duration: MotionTokens.duration_short4;
+    out property <easing> standard_easing: MotionTokens.easing_standard_cubic_bezier;
+    out property <duration> standard_decelerate_duration: MotionTokens.duration_medium1;
+    out property <duration> standard_accelerate_duration: MotionTokens.duration_short4;
+    out property <duration> standard_fast_duration: MotionTokens.duration_short3;
+    // Ripple/opacity timings are not tokens in material3 — kept local.
     out property <easing> ripple_easing: ease_out;
     out property <duration> ripple_duration: 2s;
     out property <easing> opacity_easing: ease;
