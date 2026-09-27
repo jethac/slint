@@ -531,6 +531,10 @@ impl JavaHelper {
         })
     }
 
+    pub fn contrast(&self) -> Result<f32, jni::errors::Error> {
+        self.with_jni_env(|env, helper| helper.contrast(env))
+    }
+
     pub fn get_safe_area(&self) -> Result<PhysicalEdges, jni::errors::Error> {
         self.with_jni_env(|env, helper| {
             let rect = helper.get_safe_area(env)?;
