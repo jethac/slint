@@ -518,62 +518,149 @@ fn object_stats(obj: &ResolvedObject) -> (Vec<&'static str>, Vec<String>) {
     (states, motion)
 }
 
+/// The fixed `needs` vocabulary: engine capabilities a component may lack,
+/// each mapped to its covering issue. `needs` strings must be drawn from
+/// this table — component names or feature descriptions are not engine
+/// capabilities — so `parse_needs` rejects anything else and
+/// `family_defaults` can only return entries from it.
+const NEEDS_VOCABULARY: &[(&str, u32)] = &[
+    ("springs", 5),
+    ("shapes", 6),
+    ("variable fonts", 7),
+    ("dynamic color", 8),
+    ("adaptive", 12),
+    ("accessibility", 12),
+];
+
+/// Render capability names in canonical `"springs (#5), shapes (#6)"` form:
+/// sorted by NEEDS_VOCABULARY order so the same set always serializes the
+/// same way. An empty list means the component needs nothing new: `"none"`.
+fn needs_text(names: &[&str]) -> String {
+    if names.is_empty() {
+        return "none".into();
+    }
+    let mut names = names.to_vec();
+    names.sort_by_key(|name| {
+        NEEDS_VOCABULARY
+            .iter()
+            .position(|(n, _)| n == name)
+            .expect("need names come from NEEDS_VOCABULARY")
+    });
+    names
+        .iter()
+        .map(|name| {
+            let issue = NEEDS_VOCABULARY
+                .iter()
+                .find(|(n, _)| n == name)
+                .map(|(_, i)| *i)
+                .expect("need names come from NEEDS_VOCABULARY");
+            format!("{name} (#{issue})")
+        })
+        .collect::<Vec<_>>()
+        .join(", ")
+}
+
+/// Validate a `needs` string against NEEDS_VOCABULARY. `"none"` must stand
+/// alone; each other entry is `name` or `name (#N)` where the issue number,
+/// if present, must match the vocabulary's. Returns the canonical form —
+/// entries reordered and renumbered — or an error naming the bad value.
+fn parse_needs(text: &str, context: &str) -> Result<String, String> {
+    if text.trim() == "none" {
+        return Ok("none".into());
+    }
+    let mut names = Vec::new();
+    for part in text.split(',') {
+        let part = part.trim();
+        let (name, issue) = match part.split_once("(#") {
+            Some((n, rest)) => (
+                n.trim(),
+                Some(
+                    rest.trim_end_matches(')')
+                        .parse::<u32>()
+                        .map_err(|_| format!("{context}: bad need {part:?}"))?,
+                ),
+            ),
+            None => (part, None),
+        };
+        let Some(&(_, canonical)) =
+            NEEDS_VOCABULARY.iter().find(|(n, _)| *n == name)
+        else {
+            return Err(format!(
+                "{context}: {name:?} is not an engine capability — allowed: {}",
+                NEEDS_VOCABULARY
+                    .iter()
+                    .map(|(n, _)| *n)
+                    .collect::<Vec<_>>()
+                    .join(", ")
+            ));
+        };
+        if let Some(i) = issue {
+            if i != canonical {
+                return Err(format!(
+                    "{context}: {name} covers issue #{canonical}, not #{i}"
+                ));
+            }
+        }
+        names.push(name);
+    }
+    Ok(needs_text(&names))
+}
+
 /// Default `(issues, needs)` for a component family. Every row of the
 /// inventory must carry both: an empty field means nothing, so `merge_status`
 /// fills any unset field from this table and a family not listed here fails
 /// the run loudly.
-fn family_defaults(family: &str) -> Result<(Vec<u32>, &'static str), String> {
+fn family_defaults(family: &str) -> Result<(Vec<u32>, &'static [&'static str]), String> {
     // Issue map: #9 buttons/toggle/icon buttons; #10 button groups, split
     // buttons, FAB menu, toolbars, loading indicator; #11 expressive rework
     // of the remaining components; #12 adaptive layout/navigation. `needs`
-    // names engine capabilities from #5 (springs), #6 (shapes), #7
-    // (variable fonts/text scale), #8 (dynamic color), #12 (adaptive).
+    // names engine capabilities only, from NEEDS_VOCABULARY.
     Ok(match family {
-        "App bars" => (vec![11], "springs (#5), shapes (#6)"),
-        "Autocomplete" => (vec![11], "none"),
-        "Badge" => (vec![11], "none"),
-        "Bottom app bar" => (vec![10], "adaptive (#12)"),
-        "Bottom sheets" => (vec![11], "springs (#5)"),
-        "Buttons" => (vec![9], "springs (#5), shapes (#6)"),
-        "Button groups" => (vec![10], "springs (#5), shapes (#6)"),
-        "Cards" => (vec![11], "none"),
-        "Carousel" => (vec![11], "springs (#5), shapes (#6)"),
-        "Checkbox" => (vec![11], "shapes (#6)"),
-        "Chips" => (vec![9], "shapes (#6)"),
-        "Date pickers" => (vec![11], "none"),
-        "Dialogs" => (vec![11], "none"),
-        "Divider" => (vec![11], "none"),
-        "FAB" => (vec![9], "springs (#5), shapes (#6)"),
-        "FAB menu" => (vec![10], "springs (#5), shapes (#6)"),
-        "Icon" => (vec![11], "none"),
-        "Icon buttons" => (vec![9], "springs (#5), shapes (#6)"),
-        "Lists" => (vec![11], "shapes (#6)"),
-        "Loading indicator" => (vec![10], "wavy shapes (#6), springs (#5)"),
-        "Menus" => (vec![11], "springs (#5), shapes (#6)"),
-        "Navigation bar" => (vec![11, 12], "adaptive (#12), springs (#5), shapes (#6)"),
-        "Navigation drawer" => (vec![11, 12], "adaptive (#12)"),
-        "Navigation items" => (vec![11, 12], "adaptive (#12), springs (#5)"),
-        "Navigation rail" => (vec![11, 12], "adaptive (#12), springs (#5)"),
-        "Progress indicators" => (vec![11], "wavy shapes (#6), springs (#5)"),
-        "Pull to refresh" => (vec![11], "springs (#5)"),
-        "Radio button" => (vec![11], "shapes (#6)"),
-        "Scaffold" => (vec![11, 12], "adaptive (#12)"),
-        "Scrim" => (vec![11], "none"),
-        "Search" => (vec![11], "springs (#5)"),
-        "Segmented buttons" => (vec![10], "springs (#5), shapes (#6)"),
-        "Slider" => (vec![11], "shapes (#6)"),
-        "Snackbar" => (vec![11], "none"),
-        "Split buttons" => (vec![10], "springs (#5), shapes (#6)"),
-        "Surface" => (vec![11], "dynamic color (#8)"),
-        "Swipe to dismiss" => (vec![11], "springs (#5)"),
-        "Switch" => (vec![11], "springs (#5), shapes (#6)"),
-        "Tabs" => (vec![11], "none"),
-        "Text" => (vec![7], "variable fonts (#7), text scale (#12)"),
-        "Text fields" => (vec![11], "variable fonts (#7), shapes (#6)"),
-        "Time pickers" => (vec![11], "none"),
-        "Toggle buttons" => (vec![9], "springs (#5), shapes (#6)"),
-        "Toolbars" => (vec![10], "springs (#5), adaptive (#12)"),
-        "Tooltips" => (vec![11], "none"),
+        "App bars" => (vec![11], &["springs", "shapes"]),
+        "Autocomplete" => (vec![11], &[]),
+        "Badge" => (vec![11], &[]),
+        "Bottom app bar" => (vec![10], &["adaptive"]),
+        "Bottom sheets" => (vec![11], &["springs"]),
+        "Buttons" => (vec![9], &["springs", "shapes"]),
+        "Button groups" => (vec![10], &["springs", "shapes"]),
+        "Cards" => (vec![11], &[]),
+        "Carousel" => (vec![11], &["springs", "shapes"]),
+        "Checkbox" => (vec![11], &["shapes"]),
+        "Chips" => (vec![9], &["shapes"]),
+        "Date pickers" => (vec![11], &[]),
+        "Dialogs" => (vec![11], &[]),
+        "Divider" => (vec![11], &[]),
+        "FAB" => (vec![9], &["springs", "shapes"]),
+        "FAB menu" => (vec![10], &["springs", "shapes"]),
+        "Icon" => (vec![11], &[]),
+        "Icon buttons" => (vec![9], &["springs", "shapes"]),
+        "Lists" => (vec![11], &["shapes"]),
+        "Loading indicator" => (vec![10], &["shapes", "springs"]),
+        "Menus" => (vec![11], &["springs", "shapes"]),
+        "Navigation bar" => (vec![11, 12], &["adaptive", "springs", "shapes"]),
+        "Navigation drawer" => (vec![11, 12], &["adaptive"]),
+        "Navigation items" => (vec![11, 12], &["adaptive", "springs"]),
+        "Navigation rail" => (vec![11, 12], &["adaptive", "springs"]),
+        "Progress indicators" => (vec![11], &["shapes", "springs"]),
+        "Pull to refresh" => (vec![11], &["springs"]),
+        "Radio button" => (vec![11], &["shapes"]),
+        "Scaffold" => (vec![11, 12], &["adaptive"]),
+        "Scrim" => (vec![11], &[]),
+        "Search" => (vec![11], &["springs"]),
+        "Segmented buttons" => (vec![10], &["springs", "shapes"]),
+        "Slider" => (vec![11], &["shapes"]),
+        "Snackbar" => (vec![11], &[]),
+        "Split buttons" => (vec![10], &["springs", "shapes"]),
+        "Surface" => (vec![11], &["dynamic color"]),
+        "Swipe to dismiss" => (vec![11], &["springs"]),
+        "Switch" => (vec![11], &["springs", "shapes"]),
+        "Tabs" => (vec![11], &[]),
+        "Text" => (vec![7], &["variable fonts", "adaptive"]),
+        "Text fields" => (vec![11], &["variable fonts", "shapes"]),
+        "Time pickers" => (vec![11], &[]),
+        "Toggle buttons" => (vec![9], &["springs", "shapes"]),
+        "Toolbars" => (vec![10], &["springs", "adaptive"]),
+        "Tooltips" => (vec![11], &[]),
         other => return Err(format!("{other}: no defaults — add it to family_defaults()")),
     })
 }
@@ -589,7 +676,8 @@ pub fn merge_status(
 ) -> Result<bool, String> {
     let mut changed = false;
     for c in components {
-        let (issues, needs) = family_defaults(&c.family)?;
+        let (issues, defaults) = family_defaults(&c.family)?;
+        let needs = needs_text(defaults);
         match status.components.get_mut(&c.name) {
             Some(cs) => {
                 if cs.issues.is_empty() {
@@ -597,8 +685,14 @@ pub fn merge_status(
                     changed = true;
                 }
                 if cs.needs.is_empty() {
-                    cs.needs = needs.to_string();
+                    cs.needs = needs;
                     changed = true;
+                } else {
+                    let canonical = parse_needs(&cs.needs, &c.name)?;
+                    if canonical != cs.needs {
+                        cs.needs = canonical;
+                        changed = true;
+                    }
                 }
             }
             None => {
@@ -607,7 +701,7 @@ pub fn merge_status(
                     ComponentStatus {
                         status: "missing".into(),
                         issues,
-                        needs: needs.to_string(),
+                        needs,
                         notes: String::new(),
                     },
                 );

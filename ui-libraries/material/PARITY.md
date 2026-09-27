@@ -78,7 +78,7 @@ States: pressed, selected
 
 | Component | Source | Status | Issues | Needs | Notes |
 |---|---|---|---|---|---|
-| ButtonGroup | ButtonGroup.kt | missing | #5, #9, #10 | button group layout + springs | - |
+| ButtonGroup | ButtonGroup.kt | missing | #5, #9, #10 | springs (#5), shapes (#6) | - |
 
 ### Buttons
 
@@ -204,7 +204,7 @@ Sizes: baseline
 
 | Component | Source | Status | Issues | Needs | Notes |
 |---|---|---|---|---|---|
-| FloatingActionButtonMenu | FloatingActionButtonMenu.kt | missing | #5, #10 | FAB menu + springs | - |
+| FloatingActionButtonMenu | FloatingActionButtonMenu.kt | missing | #5, #10 | springs (#5), shapes (#6) | - |
 | FloatingActionButtonMenuScope | FloatingActionButtonMenu.kt | missing | #10 | springs (#5), shapes (#6) | - |
 | ToggleFloatingActionButton | FloatingActionButtonMenu.kt | missing | #10 | springs (#5), shapes (#6) | - |
 
@@ -225,13 +225,13 @@ States: disabled, focused, hovered, pressed, selected, unselected
 | Component | Source | Status | Issues | Needs | Notes |
 |---|---|---|---|---|---|
 | FilledIconButton | IconButton.kt | partial | #9 | springs (#5), shapes (#6) | slint component: FilledIconButton |
-| FilledIconToggleButton | IconButton.kt | missing | #9 | toggle icon buttons | - |
+| FilledIconToggleButton | IconButton.kt | missing | #9 | springs (#5), shapes (#6) | - |
 | FilledTonalIconButton | IconButton.kt | partial | #9 | springs (#5), shapes (#6) | slint component: TonalIconButton |
-| FilledTonalIconToggleButton | IconButton.kt | missing | #9 | toggle icon buttons | - |
+| FilledTonalIconToggleButton | IconButton.kt | missing | #9 | springs (#5), shapes (#6) | - |
 | IconButton | IconButton.kt | partial | #9 | springs (#5), shapes (#6) | slint component: IconButton |
-| IconToggleButton | IconButton.kt | missing | #9 | toggle icon buttons | - |
+| IconToggleButton | IconButton.kt | missing | #9 | springs (#5), shapes (#6) | - |
 | OutlinedIconButton | IconButton.kt | partial | #9 | springs (#5), shapes (#6) | slint component: OutlineIconButton |
-| OutlinedIconToggleButton | IconButton.kt | missing | #9 | toggle icon buttons | - |
+| OutlinedIconToggleButton | IconButton.kt | missing | #9 | springs (#5), shapes (#6) | - |
 
 ### Lists
 
@@ -252,8 +252,8 @@ States: active
 
 | Component | Source | Status | Issues | Needs | Notes |
 |---|---|---|---|---|---|
-| ContainedLoadingIndicator | LoadingIndicator.kt | missing | #5, #6, #10 | shape morph + wavy strokes | - |
-| LoadingIndicator | LoadingIndicator.kt | missing | #5, #6, #10 | shape morph + wavy strokes | - |
+| ContainedLoadingIndicator | LoadingIndicator.kt | missing | #5, #6, #10 | springs (#5), shapes (#6) | - |
+| LoadingIndicator | LoadingIndicator.kt | missing | #5, #6, #10 | springs (#5), shapes (#6) | - |
 
 ### Menus
 
@@ -281,10 +281,10 @@ States: active, inactive
 
 | Component | Source | Status | Issues | Needs | Notes |
 |---|---|---|---|---|---|
-| NavigationBar | NavigationBar.kt | partial | #12 | adaptive (#12), springs (#5), shapes (#6) | slint component: NavigationBar |
-| RowScope | NavigationBar.kt | missing | #11, #12 | adaptive (#12), springs (#5), shapes (#6) | - |
-| ShortNavigationBar | ShortNavigationBar.kt | missing | #12 | adaptive layout | - |
-| ShortNavigationBarItem | ShortNavigationBar.kt | missing | #12 | adaptive layout | - |
+| NavigationBar | NavigationBar.kt | partial | #12 | springs (#5), shapes (#6), adaptive (#12) | slint component: NavigationBar |
+| RowScope | NavigationBar.kt | missing | #11, #12 | springs (#5), shapes (#6), adaptive (#12) | - |
+| ShortNavigationBar | ShortNavigationBar.kt | missing | #12 | springs (#5), shapes (#6), adaptive (#12) | - |
+| ShortNavigationBarItem | ShortNavigationBar.kt | missing | #12 | springs (#5), shapes (#6), adaptive (#12) | - |
 
 ### Navigation drawer
 
@@ -312,11 +312,11 @@ States: active, focused, hovered, pressed, inactive
 
 | Component | Source | Status | Issues | Needs | Notes |
 |---|---|---|---|---|---|
-| ModalWideNavigationRail | WideNavigationRail.kt | missing | #12 | adaptive layout | - |
-| NavigationRail | NavigationRail.kt | partial | #12 | adaptive (#12), springs (#5) | slint component: NavigationRail |
-| NavigationRailItem | NavigationRail.kt | partial | #12 | adaptive (#12), springs (#5) | slint component: NavigationItemTemplate |
-| WideNavigationRail | WideNavigationRail.kt | missing | #12 | adaptive layout | - |
-| WideNavigationRailItem | WideNavigationRail.kt | missing | #12 | adaptive layout | - |
+| ModalWideNavigationRail | WideNavigationRail.kt | missing | #12 | springs (#5), adaptive (#12) | - |
+| NavigationRail | NavigationRail.kt | partial | #12 | springs (#5), adaptive (#12) | slint component: NavigationRail |
+| NavigationRailItem | NavigationRail.kt | partial | #12 | springs (#5), adaptive (#12) | slint component: NavigationItemTemplate |
+| WideNavigationRail | WideNavigationRail.kt | missing | #12 | springs (#5), adaptive (#12) | - |
+| WideNavigationRailItem | WideNavigationRail.kt | missing | #12 | springs (#5), adaptive (#12) | - |
 
 ### Progress indicators
 
@@ -326,16 +326,16 @@ States: active, indeterminate
 
 | Component | Source | Status | Issues | Needs | Notes |
 |---|---|---|---|---|---|
-| CircularProgressIndicator | ProgressIndicator.kt | partial | #11 | wavy shapes (#6), springs (#5) | slint component: CircularProgressIndicator |
-| CircularWavyProgressIndicator | WavyProgressIndicator.kt | missing | #6, #11 | wavy/morph shapes | - |
-| LinearProgressIndicator | ProgressIndicator.kt | partial | #11 | wavy shapes (#6), springs (#5) | slint component: LinearProgressIndicator |
-| LinearWavyProgressIndicator | WavyProgressIndicator.kt | missing | #6, #11 | wavy/morph shapes | - |
+| CircularProgressIndicator | ProgressIndicator.kt | partial | #11 | springs (#5), shapes (#6) | slint component: CircularProgressIndicator |
+| CircularWavyProgressIndicator | WavyProgressIndicator.kt | missing | #6, #11 | springs (#5), shapes (#6) | - |
+| LinearProgressIndicator | ProgressIndicator.kt | partial | #11 | springs (#5), shapes (#6) | slint component: LinearProgressIndicator |
+| LinearWavyProgressIndicator | WavyProgressIndicator.kt | missing | #6, #11 | springs (#5), shapes (#6) | - |
 
 ### Pull to refresh
 
 | Component | Source | Status | Issues | Needs | Notes |
 |---|---|---|---|---|---|
-| PullToRefreshBox | pulltorefresh/PullToRefresh.kt | missing | #5 | springs | - |
+| PullToRefreshBox | pulltorefresh/PullToRefresh.kt | missing | #5 | springs (#5) | - |
 
 ### Radio button
 
@@ -351,7 +351,7 @@ States: selected, disabled, unselected, focused, hovered, pressed
 
 | Component | Source | Status | Issues | Needs | Notes |
 |---|---|---|---|---|---|
-| Scaffold | Scaffold.kt | missing | #12 | adaptive scaffold | - |
+| Scaffold | Scaffold.kt | missing | #12 | adaptive (#12) | - |
 
 ### Scrim
 
@@ -365,7 +365,7 @@ States: focused, hovered, pressed
 
 | Component | Source | Status | Issues | Needs | Notes |
 |---|---|---|---|---|---|
-| AppBarWithSearch | SearchBar.kt | missing | #11 | search app bar | - |
+| AppBarWithSearch | SearchBar.kt | missing | #11 | springs (#5) | - |
 | DockedSearchBar | SearchBar.kt | partial | #11 | springs (#5) | slint component: SearchBar |
 | ExpandedDockedSearchBar | SearchBar.kt | missing | #11 | springs (#5) | - |
 | ExpandedDockedSearchBarWithGap | SearchBar.kt | missing | #11 | springs (#5) | - |
@@ -420,7 +420,7 @@ States: hovered, pressed, selected
 
 | Component | Source | Status | Issues | Needs | Notes |
 |---|---|---|---|---|---|
-| SplitButtonLayout | SplitButton.kt | missing | #9, #10 | split buttons | - |
+| SplitButtonLayout | SplitButton.kt | missing | #9, #10 | springs (#5), shapes (#6) | - |
 
 ### Surface
 
@@ -463,8 +463,8 @@ States: active, focused, hovered, pressed, inactive
 
 | Component | Source | Status | Issues | Needs | Notes |
 |---|---|---|---|---|---|
-| ProvideTextStyle | Text.kt | missing | #7 | variable fonts (#7), text scale (#12) | - |
-| Text | Text.kt | partial | #11 | variable fonts (#7), text scale (#12) | slint component: MaterialText |
+| ProvideTextStyle | Text.kt | missing | #7 | variable fonts (#7), adaptive (#12) | - |
+| Text | Text.kt | partial | #11 | variable fonts (#7), adaptive (#12) | slint component: MaterialText |
 
 ### Text fields
 
@@ -474,10 +474,10 @@ States: active, disabled, error, focused, hovered
 
 | Component | Source | Status | Issues | Needs | Notes |
 |---|---|---|---|---|---|
-| OutlinedSecureTextField | SecureTextField.kt | missing | #11 | variable fonts (#7), shapes (#6) | - |
-| OutlinedTextField | OutlinedTextField.kt | partial | #11 | variable fonts (#7), shapes (#6) | slint component: TextField |
-| SecureTextField | SecureTextField.kt | missing | #11 | variable fonts (#7), shapes (#6) | - |
-| TextField | TextField.kt | partial | #11 | variable fonts (#7), shapes (#6) | slint component: TextField |
+| OutlinedSecureTextField | SecureTextField.kt | missing | #11 | shapes (#6), variable fonts (#7) | - |
+| OutlinedTextField | OutlinedTextField.kt | partial | #11 | shapes (#6), variable fonts (#7) | slint component: TextField |
+| SecureTextField | SecureTextField.kt | missing | #11 | shapes (#6), variable fonts (#7) | - |
+| TextField | TextField.kt | partial | #11 | shapes (#6), variable fonts (#7) | slint component: TextField |
 
 ### Time pickers
 
@@ -497,10 +497,10 @@ States: focused, selected, hovered, pressed, unselected
 
 | Component | Source | Status | Issues | Needs | Notes |
 |---|---|---|---|---|---|
-| ElevatedToggleButton | ToggleButton.kt | missing | #9 | toggle buttons | - |
+| ElevatedToggleButton | ToggleButton.kt | missing | #9 | springs (#5), shapes (#6) | - |
 | FilledTonalToggleButton | ToggleButton.kt | missing | #9 | springs (#5), shapes (#6) | - |
 | OutlinedToggleButton | ToggleButton.kt | missing | #9 | springs (#5), shapes (#6) | - |
-| ToggleButton | ToggleButton.kt | missing | #9 | toggle buttons | - |
+| ToggleButton | ToggleButton.kt | missing | #9 | springs (#5), shapes (#6) | - |
 
 ### Toolbars
 
@@ -510,8 +510,8 @@ States: selected, unselected
 
 | Component | Source | Status | Issues | Needs | Notes |
 |---|---|---|---|---|---|
-| HorizontalFloatingToolbar | FloatingToolbar.kt | missing | #10 | floating toolbars | - |
-| VerticalFloatingToolbar | FloatingToolbar.kt | missing | #10 | floating toolbars | - |
+| HorizontalFloatingToolbar | FloatingToolbar.kt | missing | #10 | springs (#5), adaptive (#12) | - |
+| VerticalFloatingToolbar | FloatingToolbar.kt | missing | #10 | springs (#5), adaptive (#12) | - |
 
 ### Tooltips
 
