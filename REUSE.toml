@@ -212,6 +212,7 @@ path = [
 
   "ui-libraries/material/**.md",
   "ui-libraries/material/**.mdx",
+  "ui-libraries/material/PARITY_STATUS.json",
   "ui-libraries/material/docs/**.json",
   "ui-libraries/material/docs/src/assets/styles/**.css",
   "ui-libraries/material/docs/src/assets/**.svg",

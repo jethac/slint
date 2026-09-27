@@ -1,0 +1,14 @@
+# Copyright © SixtyFPS GmbH <info@slint.dev>
+# SPDX-License-Identifier: MIT
+
+[package]
+name = "material-token-generator"
+description = "Generates the Slint Material 3 Expressive design tokens from the pinned androidx sources"
+authors.workspace = true
+edition.workspace = true
+homepage.workspace = true
+license = "MIT"
+repository.workspace = true
+rust-version.workspace = true
+version.workspace = true
+publish = false

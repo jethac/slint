@@ -64,6 +64,8 @@ jobs:
             with:
                 key: tests
                 save-if: ${{ github.ref == 'refs/heads/master' }}
+          - name: Check generated tokens are up to date
+            run: cargo run -p material-token-generator -- check
           - name: Build & run tests
             run: cargo test -p material-gallery
 
