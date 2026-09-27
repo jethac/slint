@@ -144,12 +144,14 @@ assert instance.test_seed_from_image
 assert instance.test_accent
 
 # Native code drives the scheme inputs and reads role colors back.
-assert instance.primary == slint.Color("#655789")
+assert instance.primary == slint.Brush(slint.Color("#655789"))
 instance.seed = slint.Color("#0057d0")
-assert instance.primary == slint.Color("#4c5e8b")
-instance.variant = slint.language.MaterialSchemeVariant.vibrant
+assert instance.primary == slint.Brush(slint.Color("#4c5e8b"))
+# Builtin enums annotate as None in the generated interface, so setattr avoids
+# assigning to a None-typed attribute.
+setattr(instance, "variant", slint.language.MaterialSchemeVariant.vibrant)
 instance.contrast = 0.5
 instance.dark = True
-assert instance.primary == slint.Color("#9cb7ff")
+assert instance.primary == slint.Brush(slint.Color("#9cb7ff"))
 ```
 */
