@@ -14,13 +14,11 @@
 //   # fix the few relative imports tsc emitted without a .js extension:
 //   find /tmp/mcu-js -name '*.js' -exec sed -i -E \
 //       "s|from '(\.{1,2}/[^']*[^/a-zA-Z0-9_.]?)'|from '\1.js'|g" {} +
-//   MCU_JS_DIR=/tmp/mcu-js node generate.mjs > vectors.txt
+//   MCU_JS_DIR=/tmp/mcu-js node generate.mjs | gzip -9 > vectors.txt.gz
 //
 // Format: one vector per line, "<kind> <key-fields> = <outputs>".
 // Floating-point outputs are encoded as their IEEE-754 bit pattern in hex
 // (prefix "f:") so that comparison is bit-exact.
-
-import { writeFileSync } from 'node:fs';
 
 const dir = process.env.MCU_JS_DIR;
 if (!dir) {
