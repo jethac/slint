@@ -68,7 +68,7 @@ export component TestCase inherits Window {
     // The platform accent accessor evaluates to some color (compared with
     // the testing backend's accent in the driver).
     out property<color> accent: MaterialColors.platform-accent-color();
-    out property<bool> test_accent: accent.alpha >= 0;
+    out property<bool> test_accent: accent == accent;
 }
 
 /*
@@ -105,12 +105,12 @@ assert(t.get_test_seed_from_image());
 assert(t.get_test_accent());
 
 // The platform accent accessor follows the system accent color.
-slint_testing::set_system_accent_color(slint::Color(0x12, 0x34, 0x56));
-assert(t.get_accent() == slint::Color(0x12, 0x34, 0x56));
+slint_testing::set_system_accent_color(slint::Color::from_rgb_uint8(0x12, 0x34, 0x56));
+assert(t.get_accent() == slint::Color::from_rgb_uint8(0x12, 0x34, 0x56));
 
 // Changing the seed updates every role live.
-t.set_seed(slint::Color(0x00, 0x57, 0xd0));
-assert(t.get_scheme().primary == slint::Color(0x4c, 0x5e, 0x8b));
+t.set_seed(slint::Color::from_rgb_uint8(0x00, 0x57, 0xd0));
+assert(t.get_scheme().primary == slint::Color::from_rgb_uint8(0x4c, 0x5e, 0x8b));
 ```
 
 ```js
