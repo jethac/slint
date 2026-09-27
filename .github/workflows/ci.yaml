@@ -98,6 +98,15 @@ jobs:
             UI_TESTS: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository }}
         steps:
             - uses: actions/checkout@v7
+            - name: Detect UI test credentials
+              if: matrix.suite == 'ui'
+              # Also skip when the token isn't configured on the repository at
+              # all (e.g. on forks without the secret), where the private
+              # index would reject the request.
+              env:
+                  TOKEN: ${{ secrets.SLINT_TESTING_TOKEN }}
+              run: |
+                  if [ -z "$TOKEN" ]; then echo "UI_TESTS=false" >> "$GITHUB_ENV"; fi
             - uses: ./.github/actions/install-skia-dependencies
             - uses: ./.github/actions/setup-rust
               with:
@@ -411,6 +420,10 @@ jobs:
               with:
                   buildtargets: esp32
                   ldproxy: false
+            - name: Check material-color-utils no_std
+              run: cargo check --target=thumbv6m-none-eabi -p material-color-utils --no-default-features --release
+            - name: Test material-color-utils no_std vectors
+              run: cargo test -p material-color-utils --no-default-features --test vectors
             - name: Check pico-st7789
               if: ${{ inputs.full || contains(fromJSON(inputs.changes), 'examples_mcu') || contains(fromJSON(inputs.changes), 'api_rs') }}
               env:
