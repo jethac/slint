@@ -350,6 +350,7 @@ itertools
 ivars
 javac
 Jemalloc
+Jetpack
 jemallocator
 jstar
 kateversion
@@ -676,6 +677,7 @@ struc
 structprop
 structval
 strvalue
+styleable
 styledprop
 styledtext
 styledtextprop
