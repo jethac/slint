@@ -1,6 +1,9 @@
 {
   "$schema": "https://unpkg.com/knip@5/schema.json",
-  "ignore": ["api/wasm-interpreter/pkg/**"],
+  "ignore": [
+    "api/wasm-interpreter/pkg/**",
+    "helper_crates/material-color-utils/tests/vectors/generate.mjs"
+  ],
   "ignoreDependencies": [
     "@interpreter/slint_wasm_interpreter.js",
     "@interpreter/slint_wasm_interpreter_bg.wasm"
