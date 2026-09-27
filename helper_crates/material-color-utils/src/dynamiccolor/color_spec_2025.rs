@@ -222,13 +222,7 @@ impl ColorSpec2025 {
 
     fn get_vibrant_neutral_chroma(source_color_hct: Hct, platform: Platform) -> f64 {
         let neutral_hue = Self::get_vibrant_neutral_hue(source_color_hct);
-        if platform == Platform::Phone {
-            28.0
-        } else if Hct::is_blue(neutral_hue) {
-            28.0
-        } else {
-            20.0
-        }
+        if platform == Platform::Phone || Hct::is_blue(neutral_hue) { 28.0 } else { 20.0 }
     }
 }
 
@@ -262,7 +256,7 @@ impl ColorSpec for ColorSpec2025 {
         ColorSpec2021.scrim()
     }
 
-    /// Kotlin `ColorSpec2021.highestSurface`, invoked on `this` (2025 object):
+    /// Java `ColorSpec2021.highestSurface`, invoked on `this` (2025 object):
     /// `surfaceBright`/`surfaceDim` dispatch to this spec's overrides.
     fn highest_surface(&self, s: &DynamicScheme) -> DynamicColor {
         if s.is_dark { ColorSpec2026.surface_bright() } else { ColorSpec2026.surface_dim() }
@@ -1923,11 +1917,7 @@ impl ColorSpec for ColorSpec2025 {
                 TonalPalette::from_hue_and_chroma(
                     expressive_neutral_hue,
                     expressive_neutral_chroma
-                        * if expressive_neutral_hue >= 105.0 && expressive_neutral_hue < 125.0 {
-                            1.6
-                        } else {
-                            2.3
-                        },
+                        * if (105.0..125.0).contains(&expressive_neutral_hue) { 1.6 } else { 2.3 },
                 )
             }
             Variant::Vibrant => {

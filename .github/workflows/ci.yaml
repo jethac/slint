@@ -95,7 +95,10 @@ jobs:
             # The UI tests need a private package that GitHub doesn't hand the
             # token for to pull requests from forks. Build and test the editor
             # there anyway, and skip only the steps that need the token.
-            UI_TESTS: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository }}
+            # Also skip when the token isn't configured on the repository at
+            # all (e.g. on forks), where the private index would reject the
+            # request.
+            UI_TESTS: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && secrets.SLINT_TESTING_TOKEN != '' }}
         steps:
             - uses: actions/checkout@v7
             - uses: ./.github/actions/install-skia-dependencies
@@ -411,6 +414,8 @@ jobs:
               with:
                   buildtargets: esp32
                   ldproxy: false
+            - name: Check material-color-utils no_std
+              run: cargo check --target=thumbv6m-none-eabi -p material-color-utils --no-default-features --release
             - name: Check pico-st7789
               if: ${{ inputs.full || contains(fromJSON(inputs.changes), 'examples_mcu') || contains(fromJSON(inputs.changes), 'api_rs') }}
               env:

@@ -6,6 +6,7 @@ use crate::Argb;
 /// An interface to allow use of different color spaces by quantizers.
 pub trait PointProvider {
     /// The four components in the color space of an sRGB color.
+    #[allow(clippy::wrong_self_convention)] // Java: `fromInt`
     fn from_int(&self, argb: Argb) -> [f64; 4];
     /// The ARGB (i.e. hex code) representation of this color.
     fn to_int(&self, point: [f64; 4]) -> Argb;

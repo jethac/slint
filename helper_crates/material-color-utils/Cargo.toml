@@ -16,7 +16,6 @@ keywords = ["material", "color", "hct", "cam16", "material-you"]
 [features]
 default = ["std"]
 std = []
-no_std = []
 
 [dependencies]
 # The reference implementations use fdlibm code for transcendentals; libm is a

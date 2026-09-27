@@ -73,7 +73,7 @@ pub struct DynamicColor {
     pub opacity: Option<OpacityFn>,
 }
 
-/// Builder for DynamicColor; mirrors the Kotlin data class's named parameters.
+/// Builder for DynamicColor; mirrors the Java class's named parameters.
 pub struct DynamicColorBuilder {
     name: &'static str,
     palette: PaletteFn,
@@ -349,6 +349,7 @@ impl DynamicColor {
 }
 
 impl DynamicColorBuilder {
+    #[allow(clippy::wrong_self_convention)] // Java: `setIsBackground`
     pub fn is_background(mut self, is_background: bool) -> Self {
         self.is_background = is_background;
         self

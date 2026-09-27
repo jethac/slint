@@ -164,7 +164,7 @@ impl ColorSpec for ColorSpec2026 {
         ColorSpec2025.inverse_primary()
     }
 
-    /// Kotlin `ColorSpec2021.highestSurface`, invoked on `this` (2026 object):
+    /// Java `ColorSpec2021.highestSurface`, invoked on `this` (2026 object):
     /// `surfaceBright`/`surfaceDim` dispatch to this spec's overrides.
     fn highest_surface(&self, s: &DynamicScheme) -> DynamicColor {
         if s.is_dark { self.surface_bright() } else { self.surface_dim() }

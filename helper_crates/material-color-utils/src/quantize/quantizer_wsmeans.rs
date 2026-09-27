@@ -21,7 +21,7 @@ use super::quantizer_map::InsertionMap;
 ///
 /// This algorithm was designed by M. Emre Celebi, and was found in their 2011
 /// paper, Improving the Performance of K-Means for Color Quantization.
-/// https://arxiv.org/abs/1101.0395
+/// <https://arxiv.org/abs/1101.0395>
 pub struct QuantizerWsmeans;
 
 const MAX_ITERATIONS: usize = 10;
@@ -53,7 +53,7 @@ impl QuantizerWsmeans {
     /// number of colors may be returned.
     ///
     /// Returns: ordered list of (color in ARGB, pixel count) pairs — matching
-    /// Kotlin's insertion-ordered `Map<Argb, Int>`.
+    /// Java's insertion-ordered `Map<Argb, Int>`.
     pub fn quantize(
         input_pixels: &[Argb],
         starting_clusters: &[Argb],
@@ -92,27 +92,25 @@ impl QuantizerWsmeans {
             clusters_created += 1;
         }
         let additional_clusters_needed = cluster_count as usize - clusters_created;
-        if starting_clusters.is_empty() && additional_clusters_needed > 0 {
-            // The TypeScript implementation fills the remaining clusters with
-            // random points (the Kotlin implementation iterates without a
-            // body — a no-op). The seeded RNG keeps this deterministic.
-            for i in 0..additional_clusters_needed {
-                let l = random.next_double() * 100.0;
-                let a = random.next_double() * (100.0 - (-100.0) + 1.0) + -100.0;
-                let b = random.next_double() * (100.0 - (-100.0) + 1.0) + -100.0;
-                clusters[clusters_created + i] = [l, a, b, 0.0];
-            }
+        if additional_clusters_needed > 0 {
+            // The Java reference iterates `additionalClustersNeeded` times with
+            // an empty body — a no-op that intentionally consumes no RNG. The
+            // TypeScript port instead fills those clusters with random LAB
+            // points. Follow Java.
+            for _ in 0..additional_clusters_needed {}
         }
         let cluster_count = cluster_count as usize;
         let mut cluster_indices: Vec<i32> = Vec::with_capacity(point_count);
         for _ in 0..point_count {
-            cluster_indices
-                .push(crate::math::floor(random.next_double() * cluster_count as f64) as i32);
+            // Java: random.nextInt(clusterCount), not floor(nextDouble() * n)
+            // — nextInt consumes one next(31) draw instead of two.
+            cluster_indices.push(random.next_int(cluster_count as i32));
         }
-        // The TypeScript implementation sorts distanceToIndexMatrix rows with
-        // `Array.sort()` and no comparator, which stringifies the Distance
-        // objects to "[object Object]" for every element — a no-op — so the
-        // matrix keeps insertion order (and indexMatrix is never read).
+        // The TypeScript port calls `Array.sort()` with no comparator on the
+        // Distance rows, which stringifies every element to "[object Object]"
+        // — a no-op. The Java reference does `Arrays.sort` on `Comparable`
+        // `Distance` objects and actually sorts ascending by distance; the
+        // `indexMatrix` it then fills is never read, so it is not ported.
         let mut distance_to_index_matrix: Vec<Vec<Distance>> =
             alloc::vec![alloc::vec![Distance::default(); cluster_count]; cluster_count];
         let mut pixel_count_sums = alloc::vec![0i64; cluster_count];
@@ -125,6 +123,7 @@ impl QuantizerWsmeans {
                     distance_to_index_matrix[i][j].distance = distance;
                     distance_to_index_matrix[i][j].index = j as i32;
                 }
+                distance_to_index_matrix[i].sort_by(|a, b| a.distance.total_cmp(&b.distance));
             }
             let mut points_moved = 0;
             for i in 0..point_count {

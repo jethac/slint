@@ -4,7 +4,6 @@
 use alloc::vec::Vec;
 
 use crate::Argb;
-use crate::math;
 use crate::utils::ColorUtils;
 
 use super::quantizer_map::QuantizerMap;
@@ -111,6 +110,12 @@ fn top(cube: &Box, direction: Direction, position: i32, moment: &[i32]) -> i32 {
                 - moment[get_index(cube.r0, cube.g1, position)]
                 + moment[get_index(cube.r0, cube.g0, position)]
         }
+    }
+}
+
+impl Default for QuantizerWu {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
@@ -255,12 +260,9 @@ impl QuantizerWu {
             let cube = self.cubes[i];
             let weight = volume(&self.weights, &cube);
             if weight > 0 {
-                let r = math::round_to_int(volume(&self.moments_r, &cube) as f64 / weight as f64)
-                    as i32;
-                let g = math::round_to_int(volume(&self.moments_g, &cube) as f64 / weight as f64)
-                    as i32;
-                let b = math::round_to_int(volume(&self.moments_b, &cube) as f64 / weight as f64)
-                    as i32;
+                let r = volume(&self.moments_r, &cube) / weight;
+                let g = volume(&self.moments_g, &cube) / weight;
+                let b = volume(&self.moments_b, &cube) / weight;
                 let color: Argb = ((255 << 24) as i64)
                     | (((r & 0x0ff) << 16) as i64)
                     | (((g & 0x0ff) << 8) as i64)
@@ -289,7 +291,7 @@ impl QuantizerWu {
         xx - hypotenuse as f64 / volume as f64
     }
 
-    /// Kotlin `cut(one: Box, two: Box)` mutates both boxes; here the boxes are
+    /// Java `cut(one: Box, two: Box)` mutates both boxes; here the boxes are
     /// indexed into `self.cubes`.
     fn cut(&mut self, one_i: usize, two_i: usize) -> bool {
         let one = self.cubes[one_i];

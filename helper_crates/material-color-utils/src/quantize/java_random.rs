@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
 /// Port of `java.util.Random`, required so that QuantizerWsmeans produces
-/// identical cluster assignments to the Kotlin implementation, which seeds
+/// identical cluster assignments to the Java implementation, which seeds
 /// `Random(0x42688)`.
 pub(crate) struct JavaRandom {
     seed: u64,
@@ -23,12 +23,12 @@ impl JavaRandom {
     }
 
     /// `java.util.Random.nextDouble()`.
+    #[allow(dead_code)]
     pub fn next_double(&mut self) -> f64 {
         (((self.next(26) as i64) << 27) + self.next(27) as i64) as f64 / (1_i64 << 53) as f64
     }
 
     /// `java.util.Random.nextInt(int bound)`.
-    #[allow(dead_code)]
     pub fn next_int(&mut self, bound: i32) -> i32 {
         if bound <= 0 {
             panic!("bound must be positive");

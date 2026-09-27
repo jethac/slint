@@ -11,7 +11,7 @@ use super::quantizer_result::QuantizerResult;
 /// An insertion-ordered ARGB→count map.
 ///
 /// Iteration order is load-bearing: QuantizerWsmeans consumes the entries in
-/// the exact order Kotlin's `LinkedHashMap` yields them (first-insertion
+/// the exact order Java's `LinkedHashMap` yields them (first-insertion
 /// order), and any deviation changes the cluster assignments.
 #[derive(Debug, Default)]
 pub(crate) struct InsertionMap {
@@ -60,7 +60,7 @@ impl QuantizerMap {
     /// `max_colors`: unused, kept for parity with the `Quantizer` interface.
     ///
     /// Returns: an ordered list of (color, count) pairs, in first-insertion
-    /// order — matching Kotlin `Map<Argb, Int>` built on `LinkedHashMap`.
+    /// order — matching Java `Map<Argb, Int>` built on `LinkedHashMap`.
     pub fn quantize(pixels: &[Argb], _max_colors: i32) -> QuantizerResult {
         let mut pixel_by_count = InsertionMap::default();
         for &pixel in pixels {

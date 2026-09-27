@@ -16,7 +16,7 @@ use crate::math::round_to_int;
 /// foreground color. From testing, the minimum luminance is 70 for texts on
 /// background colors.
 ///
-/// Design preferences on color, stated in https://m3.material.io, do not use
+/// Design preferences on color, stated in <https://m3.material.io>, do not use
 /// these colors.
 pub struct DislikeAnalyzer;
 

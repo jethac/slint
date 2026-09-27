@@ -12,7 +12,6 @@ use crate::utils::MathUtils;
 use alloc::vec::Vec;
 
 use super::color_spec::ColorSpec;
-use super::color_spec_2026::ColorSpec2026;
 use super::contrast_curve::ContrastCurve;
 use super::dynamic_color::{
     ColorFn, ContrastCurveFn, DynamicColor, PaletteFn, ToneDeltaPairFn, ToneFn,
@@ -140,7 +139,7 @@ impl ColorSpec for ColorSpec2021 {
     fn on_background(&self) -> DynamicColor {
         DynamicColor::builder("on_background", pal(|s| s.neutral_palette.clone()))
             .tone(tn(|s| if s.is_dark { 90.0 } else { 10.0 }))
-            .background(fixed_color(ColorSpec2026.background()))
+            .background(fixed_color(ColorSpec2021.background()))
             .contrast_curve(fixed_curve(ContrastCurve::new(3.0, 3.0, 4.5, 7.0)))
             .build()
     }
@@ -246,7 +245,7 @@ impl ColorSpec for ColorSpec2021 {
     fn on_surface(&self) -> DynamicColor {
         DynamicColor::builder("on_surface", pal(|s| s.neutral_palette.clone()))
             .tone(tn(|s| if s.is_dark { 90.0 } else { 10.0 }))
-            .background(bg(|s| Some(ColorSpec2026.highest_surface(s))))
+            .background(bg(|s| Some(ColorSpec2021.highest_surface(s))))
             .contrast_curve(fixed_curve(ContrastCurve::new(4.5, 7.0, 11.0, 21.0)))
             .build()
     }
@@ -261,7 +260,7 @@ impl ColorSpec for ColorSpec2021 {
     fn on_surface_variant(&self) -> DynamicColor {
         DynamicColor::builder("on_surface_variant", pal(|s| s.neutral_variant_palette.clone()))
             .tone(tn(|s| if s.is_dark { 80.0 } else { 30.0 }))
-            .background(bg(|s| Some(ColorSpec2026.highest_surface(s))))
+            .background(bg(|s| Some(ColorSpec2021.highest_surface(s))))
             .contrast_curve(fixed_curve(ContrastCurve::new(3.0, 4.5, 7.0, 11.0)))
             .build()
     }
@@ -276,7 +275,7 @@ impl ColorSpec for ColorSpec2021 {
     fn inverse_on_surface(&self) -> DynamicColor {
         DynamicColor::builder("inverse_on_surface", pal(|s| s.neutral_palette.clone()))
             .tone(tn(|s| if s.is_dark { 20.0 } else { 95.0 }))
-            .background(fixed_color(ColorSpec2026.inverse_surface()))
+            .background(fixed_color(ColorSpec2021.inverse_surface()))
             .contrast_curve(fixed_curve(ContrastCurve::new(4.5, 7.0, 11.0, 21.0)))
             .build()
     }
@@ -284,7 +283,7 @@ impl ColorSpec for ColorSpec2021 {
     fn outline(&self) -> DynamicColor {
         DynamicColor::builder("outline", pal(|s| s.neutral_variant_palette.clone()))
             .tone(tn(|s| if s.is_dark { 60.0 } else { 50.0 }))
-            .background(bg(|s| Some(ColorSpec2026.highest_surface(s))))
+            .background(bg(|s| Some(ColorSpec2021.highest_surface(s))))
             .contrast_curve(fixed_curve(ContrastCurve::new(1.5, 3.0, 4.5, 7.0)))
             .build()
     }
@@ -292,7 +291,7 @@ impl ColorSpec for ColorSpec2021 {
     fn outline_variant(&self) -> DynamicColor {
         DynamicColor::builder("outline_variant", pal(|s| s.neutral_variant_palette.clone()))
             .tone(tn(|s| if s.is_dark { 30.0 } else { 80.0 }))
-            .background(bg(|s| Some(ColorSpec2026.highest_surface(s))))
+            .background(bg(|s| Some(ColorSpec2021.highest_surface(s))))
             .contrast_curve(fixed_curve(ContrastCurve::new(1.0, 1.0, 3.0, 4.5)))
             .build()
     }
@@ -327,16 +326,17 @@ impl ColorSpec for ColorSpec2021 {
                 }
             }))
             .is_background(true)
-            .background(bg(|s| Some(ColorSpec2026.highest_surface(s))))
+            .background(bg(|s| Some(ColorSpec2021.highest_surface(s))))
             .contrast_curve(fixed_curve(ContrastCurve::new(3.0, 4.5, 7.0, 7.0)))
             .tone_delta_pair(tdp(|_| {
                 Some(ToneDeltaPair::new(
-                    ColorSpec2026.primary_container(),
-                    ColorSpec2026.primary(),
+                    ColorSpec2021.primary_container(),
+                    ColorSpec2021.primary(),
                     10.0,
-                    TonePolarity::RelativeLighter,
+                    #[allow(deprecated)]
+                    TonePolarity::Nearer,
                     false,
-                    DeltaConstraint::Nearer,
+                    DeltaConstraint::Exact,
                 ))
             }))
             .build()
@@ -355,7 +355,7 @@ impl ColorSpec for ColorSpec2021 {
                     if s.is_dark { 20.0 } else { 100.0 }
                 }
             }))
-            .background(fixed_color(ColorSpec2026.primary()))
+            .background(fixed_color(ColorSpec2021.primary()))
             .contrast_curve(fixed_curve(ContrastCurve::new(4.5, 7.0, 11.0, 21.0)))
             .build()
     }
@@ -372,16 +372,17 @@ impl ColorSpec for ColorSpec2021 {
                 }
             }))
             .is_background(true)
-            .background(bg(|s| Some(ColorSpec2026.highest_surface(s))))
+            .background(bg(|s| Some(ColorSpec2021.highest_surface(s))))
             .contrast_curve(fixed_curve(ContrastCurve::new(1.0, 1.0, 3.0, 4.5)))
             .tone_delta_pair(tdp(|_| {
                 Some(ToneDeltaPair::new(
-                    ColorSpec2026.primary_container(),
-                    ColorSpec2026.primary(),
+                    ColorSpec2021.primary_container(),
+                    ColorSpec2021.primary(),
                     10.0,
-                    TonePolarity::RelativeLighter,
+                    #[allow(deprecated)]
+                    TonePolarity::Nearer,
                     false,
-                    DeltaConstraint::Nearer,
+                    DeltaConstraint::Exact,
                 ))
             }))
             .build()
@@ -391,14 +392,14 @@ impl ColorSpec for ColorSpec2021 {
         DynamicColor::builder("on_primary_container", pal(|s| s.primary_palette.clone()))
             .tone(tn(|s| {
                 if Self::is_fidelity(s) {
-                    DynamicColor::foreground_tone((ColorSpec2026.primary_container().tone)(s), 4.5)
+                    DynamicColor::foreground_tone((ColorSpec2021.primary_container().tone)(s), 4.5)
                 } else if Self::is_monochrome(s) {
                     if s.is_dark { 0.0 } else { 100.0 }
                 } else {
                     if s.is_dark { 90.0 } else { 30.0 }
                 }
             }))
-            .background(fixed_color(ColorSpec2026.primary_container()))
+            .background(fixed_color(ColorSpec2021.primary_container()))
             .contrast_curve(fixed_curve(ContrastCurve::new(3.0, 4.5, 7.0, 11.0)))
             .build()
     }
@@ -406,7 +407,7 @@ impl ColorSpec for ColorSpec2021 {
     fn inverse_primary(&self) -> DynamicColor {
         DynamicColor::builder("inverse_primary", pal(|s| s.primary_palette.clone()))
             .tone(tn(|s| if s.is_dark { 40.0 } else { 80.0 }))
-            .background(fixed_color(ColorSpec2026.inverse_surface()))
+            .background(fixed_color(ColorSpec2021.inverse_surface()))
             .contrast_curve(fixed_curve(ContrastCurve::new(3.0, 4.5, 7.0, 7.0)))
             .build()
     }
@@ -418,16 +419,17 @@ impl ColorSpec for ColorSpec2021 {
         DynamicColor::builder("secondary", pal(|s| s.secondary_palette.clone()))
             .tone(tn(|s| if s.is_dark { 80.0 } else { 40.0 }))
             .is_background(true)
-            .background(bg(|s| Some(ColorSpec2026.highest_surface(s))))
+            .background(bg(|s| Some(ColorSpec2021.highest_surface(s))))
             .contrast_curve(fixed_curve(ContrastCurve::new(3.0, 4.5, 7.0, 7.0)))
             .tone_delta_pair(tdp(|_| {
                 Some(ToneDeltaPair::new(
-                    ColorSpec2026.secondary_container(),
-                    ColorSpec2026.secondary(),
+                    ColorSpec2021.secondary_container(),
+                    ColorSpec2021.secondary(),
                     10.0,
-                    TonePolarity::RelativeLighter,
+                    #[allow(deprecated)]
+                    TonePolarity::Nearer,
                     false,
-                    DeltaConstraint::Nearer,
+                    DeltaConstraint::Exact,
                 ))
             }))
             .build()
@@ -446,7 +448,7 @@ impl ColorSpec for ColorSpec2021 {
                     if s.is_dark { 20.0 } else { 100.0 }
                 }
             }))
-            .background(fixed_color(ColorSpec2026.secondary()))
+            .background(fixed_color(ColorSpec2021.secondary()))
             .contrast_curve(fixed_curve(ContrastCurve::new(4.5, 7.0, 11.0, 21.0)))
             .build()
     }
@@ -469,16 +471,17 @@ impl ColorSpec for ColorSpec2021 {
                 }
             }))
             .is_background(true)
-            .background(bg(|s| Some(ColorSpec2026.highest_surface(s))))
+            .background(bg(|s| Some(ColorSpec2021.highest_surface(s))))
             .contrast_curve(fixed_curve(ContrastCurve::new(1.0, 1.0, 3.0, 4.5)))
             .tone_delta_pair(tdp(|_| {
                 Some(ToneDeltaPair::new(
-                    ColorSpec2026.secondary_container(),
-                    ColorSpec2026.secondary(),
+                    ColorSpec2021.secondary_container(),
+                    ColorSpec2021.secondary(),
                     10.0,
-                    TonePolarity::RelativeLighter,
+                    #[allow(deprecated)]
+                    TonePolarity::Nearer,
                     false,
-                    DeltaConstraint::Nearer,
+                    DeltaConstraint::Exact,
                 ))
             }))
             .build()
@@ -493,12 +496,12 @@ impl ColorSpec for ColorSpec2021 {
                     if s.is_dark { 90.0 } else { 30.0 }
                 } else {
                     DynamicColor::foreground_tone(
-                        (ColorSpec2026.secondary_container().tone)(s),
+                        (ColorSpec2021.secondary_container().tone)(s),
                         4.5,
                     )
                 }
             }))
-            .background(fixed_color(ColorSpec2026.secondary_container()))
+            .background(fixed_color(ColorSpec2021.secondary_container()))
             .contrast_curve(fixed_curve(ContrastCurve::new(3.0, 4.5, 7.0, 11.0)))
             .build()
     }
@@ -516,16 +519,17 @@ impl ColorSpec for ColorSpec2021 {
                 }
             }))
             .is_background(true)
-            .background(bg(|s| Some(ColorSpec2026.highest_surface(s))))
+            .background(bg(|s| Some(ColorSpec2021.highest_surface(s))))
             .contrast_curve(fixed_curve(ContrastCurve::new(3.0, 4.5, 7.0, 7.0)))
             .tone_delta_pair(tdp(|_| {
                 Some(ToneDeltaPair::new(
-                    ColorSpec2026.tertiary_container(),
-                    ColorSpec2026.tertiary(),
+                    ColorSpec2021.tertiary_container(),
+                    ColorSpec2021.tertiary(),
                     10.0,
-                    TonePolarity::RelativeLighter,
+                    #[allow(deprecated)]
+                    TonePolarity::Nearer,
                     false,
-                    DeltaConstraint::Nearer,
+                    DeltaConstraint::Exact,
                 ))
             }))
             .build()
@@ -544,7 +548,7 @@ impl ColorSpec for ColorSpec2021 {
                     if s.is_dark { 20.0 } else { 100.0 }
                 }
             }))
-            .background(fixed_color(ColorSpec2026.tertiary()))
+            .background(fixed_color(ColorSpec2021.tertiary()))
             .contrast_curve(fixed_curve(ContrastCurve::new(4.5, 7.0, 11.0, 21.0)))
             .build()
     }
@@ -562,16 +566,17 @@ impl ColorSpec for ColorSpec2021 {
                 }
             }))
             .is_background(true)
-            .background(bg(|s| Some(ColorSpec2026.highest_surface(s))))
+            .background(bg(|s| Some(ColorSpec2021.highest_surface(s))))
             .contrast_curve(fixed_curve(ContrastCurve::new(1.0, 1.0, 3.0, 4.5)))
             .tone_delta_pair(tdp(|_| {
                 Some(ToneDeltaPair::new(
-                    ColorSpec2026.tertiary_container(),
-                    ColorSpec2026.tertiary(),
+                    ColorSpec2021.tertiary_container(),
+                    ColorSpec2021.tertiary(),
                     10.0,
-                    TonePolarity::RelativeLighter,
+                    #[allow(deprecated)]
+                    TonePolarity::Nearer,
                     false,
-                    DeltaConstraint::Nearer,
+                    DeltaConstraint::Exact,
                 ))
             }))
             .build()
@@ -585,10 +590,10 @@ impl ColorSpec for ColorSpec2021 {
                 } else if !Self::is_fidelity(s) {
                     if s.is_dark { 90.0 } else { 30.0 }
                 } else {
-                    DynamicColor::foreground_tone((ColorSpec2026.tertiary_container().tone)(s), 4.5)
+                    DynamicColor::foreground_tone((ColorSpec2021.tertiary_container().tone)(s), 4.5)
                 }
             }))
-            .background(fixed_color(ColorSpec2026.tertiary_container()))
+            .background(fixed_color(ColorSpec2021.tertiary_container()))
             .contrast_curve(fixed_curve(ContrastCurve::new(3.0, 4.5, 7.0, 11.0)))
             .build()
     }
@@ -600,16 +605,17 @@ impl ColorSpec for ColorSpec2021 {
         DynamicColor::builder("error", pal(|s| s.error_palette.clone()))
             .tone(tn(|s| if s.is_dark { 80.0 } else { 40.0 }))
             .is_background(true)
-            .background(bg(|s| Some(ColorSpec2026.highest_surface(s))))
+            .background(bg(|s| Some(ColorSpec2021.highest_surface(s))))
             .contrast_curve(fixed_curve(ContrastCurve::new(3.0, 4.5, 7.0, 7.0)))
             .tone_delta_pair(tdp(|_| {
                 Some(ToneDeltaPair::new(
-                    ColorSpec2026.error_container(),
-                    ColorSpec2026.error(),
+                    ColorSpec2021.error_container(),
+                    ColorSpec2021.error(),
                     10.0,
-                    TonePolarity::RelativeLighter,
+                    #[allow(deprecated)]
+                    TonePolarity::Nearer,
                     false,
-                    DeltaConstraint::Nearer,
+                    DeltaConstraint::Exact,
                 ))
             }))
             .build()
@@ -622,7 +628,7 @@ impl ColorSpec for ColorSpec2021 {
     fn on_error(&self) -> DynamicColor {
         DynamicColor::builder("on_error", pal(|s| s.error_palette.clone()))
             .tone(tn(|s| if s.is_dark { 20.0 } else { 100.0 }))
-            .background(fixed_color(ColorSpec2026.error()))
+            .background(fixed_color(ColorSpec2021.error()))
             .contrast_curve(fixed_curve(ContrastCurve::new(4.5, 7.0, 11.0, 21.0)))
             .build()
     }
@@ -631,16 +637,17 @@ impl ColorSpec for ColorSpec2021 {
         DynamicColor::builder("error_container", pal(|s| s.error_palette.clone()))
             .tone(tn(|s| if s.is_dark { 30.0 } else { 90.0 }))
             .is_background(true)
-            .background(bg(|s| Some(ColorSpec2026.highest_surface(s))))
+            .background(bg(|s| Some(ColorSpec2021.highest_surface(s))))
             .contrast_curve(fixed_curve(ContrastCurve::new(1.0, 1.0, 3.0, 4.5)))
             .tone_delta_pair(tdp(|_| {
                 Some(ToneDeltaPair::new(
-                    ColorSpec2026.error_container(),
-                    ColorSpec2026.error(),
+                    ColorSpec2021.error_container(),
+                    ColorSpec2021.error(),
                     10.0,
-                    TonePolarity::RelativeLighter,
+                    #[allow(deprecated)]
+                    TonePolarity::Nearer,
                     false,
-                    DeltaConstraint::Nearer,
+                    DeltaConstraint::Exact,
                 ))
             }))
             .build()
@@ -655,7 +662,7 @@ impl ColorSpec for ColorSpec2021 {
                     if s.is_dark { 90.0 } else { 30.0 }
                 }
             }))
-            .background(fixed_color(ColorSpec2026.error_container()))
+            .background(fixed_color(ColorSpec2021.error_container()))
             .contrast_curve(fixed_curve(ContrastCurve::new(3.0, 4.5, 7.0, 11.0)))
             .build()
     }
@@ -667,12 +674,12 @@ impl ColorSpec for ColorSpec2021 {
         DynamicColor::builder("primary_fixed", pal(|s| s.primary_palette.clone()))
             .tone(tn(|s| if Self::is_monochrome(s) { 40.0 } else { 90.0 }))
             .is_background(true)
-            .background(bg(|s| Some(ColorSpec2026.highest_surface(s))))
+            .background(bg(|s| Some(ColorSpec2021.highest_surface(s))))
             .contrast_curve(fixed_curve(ContrastCurve::new(1.0, 1.0, 3.0, 4.5)))
             .tone_delta_pair(tdp(|_| {
                 Some(ToneDeltaPair::new(
-                    ColorSpec2026.primary_fixed(),
-                    ColorSpec2026.primary_fixed_dim(),
+                    ColorSpec2021.primary_fixed(),
+                    ColorSpec2021.primary_fixed_dim(),
                     10.0,
                     TonePolarity::Lighter,
                     true,
@@ -686,12 +693,12 @@ impl ColorSpec for ColorSpec2021 {
         DynamicColor::builder("primary_fixed_dim", pal(|s| s.primary_palette.clone()))
             .tone(tn(|s| if Self::is_monochrome(s) { 30.0 } else { 80.0 }))
             .is_background(true)
-            .background(bg(|s| Some(ColorSpec2026.highest_surface(s))))
+            .background(bg(|s| Some(ColorSpec2021.highest_surface(s))))
             .contrast_curve(fixed_curve(ContrastCurve::new(1.0, 1.0, 3.0, 4.5)))
             .tone_delta_pair(tdp(|_| {
                 Some(ToneDeltaPair::new(
-                    ColorSpec2026.primary_fixed(),
-                    ColorSpec2026.primary_fixed_dim(),
+                    ColorSpec2021.primary_fixed(),
+                    ColorSpec2021.primary_fixed_dim(),
                     10.0,
                     TonePolarity::Lighter,
                     true,
@@ -704,8 +711,8 @@ impl ColorSpec for ColorSpec2021 {
     fn on_primary_fixed(&self) -> DynamicColor {
         DynamicColor::builder("on_primary_fixed", pal(|s| s.primary_palette.clone()))
             .tone(tn(|s| if Self::is_monochrome(s) { 100.0 } else { 10.0 }))
-            .background(fixed_color(ColorSpec2026.primary_fixed_dim()))
-            .second_background(fixed_color(ColorSpec2026.primary_fixed()))
+            .background(fixed_color(ColorSpec2021.primary_fixed_dim()))
+            .second_background(fixed_color(ColorSpec2021.primary_fixed()))
             .contrast_curve(fixed_curve(ContrastCurve::new(4.5, 7.0, 11.0, 21.0)))
             .build()
     }
@@ -713,8 +720,8 @@ impl ColorSpec for ColorSpec2021 {
     fn on_primary_fixed_variant(&self) -> DynamicColor {
         DynamicColor::builder("on_primary_fixed_variant", pal(|s| s.primary_palette.clone()))
             .tone(tn(|s| if Self::is_monochrome(s) { 90.0 } else { 30.0 }))
-            .background(fixed_color(ColorSpec2026.primary_fixed_dim()))
-            .second_background(fixed_color(ColorSpec2026.primary_fixed()))
+            .background(fixed_color(ColorSpec2021.primary_fixed_dim()))
+            .second_background(fixed_color(ColorSpec2021.primary_fixed()))
             .contrast_curve(fixed_curve(ContrastCurve::new(3.0, 4.5, 7.0, 11.0)))
             .build()
     }
@@ -726,12 +733,12 @@ impl ColorSpec for ColorSpec2021 {
         DynamicColor::builder("secondary_fixed", pal(|s| s.secondary_palette.clone()))
             .tone(tn(|s| if Self::is_monochrome(s) { 80.0 } else { 90.0 }))
             .is_background(true)
-            .background(bg(|s| Some(ColorSpec2026.highest_surface(s))))
+            .background(bg(|s| Some(ColorSpec2021.highest_surface(s))))
             .contrast_curve(fixed_curve(ContrastCurve::new(1.0, 1.0, 3.0, 4.5)))
             .tone_delta_pair(tdp(|_| {
                 Some(ToneDeltaPair::new(
-                    ColorSpec2026.secondary_fixed(),
-                    ColorSpec2026.secondary_fixed_dim(),
+                    ColorSpec2021.secondary_fixed(),
+                    ColorSpec2021.secondary_fixed_dim(),
                     10.0,
                     TonePolarity::Lighter,
                     true,
@@ -745,12 +752,12 @@ impl ColorSpec for ColorSpec2021 {
         DynamicColor::builder("secondary_fixed_dim", pal(|s| s.secondary_palette.clone()))
             .tone(tn(|s| if Self::is_monochrome(s) { 70.0 } else { 80.0 }))
             .is_background(true)
-            .background(bg(|s| Some(ColorSpec2026.highest_surface(s))))
+            .background(bg(|s| Some(ColorSpec2021.highest_surface(s))))
             .contrast_curve(fixed_curve(ContrastCurve::new(1.0, 1.0, 3.0, 4.5)))
             .tone_delta_pair(tdp(|_| {
                 Some(ToneDeltaPair::new(
-                    ColorSpec2026.secondary_fixed(),
-                    ColorSpec2026.secondary_fixed_dim(),
+                    ColorSpec2021.secondary_fixed(),
+                    ColorSpec2021.secondary_fixed_dim(),
                     10.0,
                     TonePolarity::Lighter,
                     true,
@@ -763,8 +770,8 @@ impl ColorSpec for ColorSpec2021 {
     fn on_secondary_fixed(&self) -> DynamicColor {
         DynamicColor::builder("on_secondary_fixed", pal(|s| s.secondary_palette.clone()))
             .tone(tn(|_| 10.0))
-            .background(fixed_color(ColorSpec2026.secondary_fixed_dim()))
-            .second_background(fixed_color(ColorSpec2026.secondary_fixed()))
+            .background(fixed_color(ColorSpec2021.secondary_fixed_dim()))
+            .second_background(fixed_color(ColorSpec2021.secondary_fixed()))
             .contrast_curve(fixed_curve(ContrastCurve::new(4.5, 7.0, 11.0, 21.0)))
             .build()
     }
@@ -772,8 +779,8 @@ impl ColorSpec for ColorSpec2021 {
     fn on_secondary_fixed_variant(&self) -> DynamicColor {
         DynamicColor::builder("on_secondary_fixed_variant", pal(|s| s.secondary_palette.clone()))
             .tone(tn(|s| if Self::is_monochrome(s) { 25.0 } else { 30.0 }))
-            .background(fixed_color(ColorSpec2026.secondary_fixed_dim()))
-            .second_background(fixed_color(ColorSpec2026.secondary_fixed()))
+            .background(fixed_color(ColorSpec2021.secondary_fixed_dim()))
+            .second_background(fixed_color(ColorSpec2021.secondary_fixed()))
             .contrast_curve(fixed_curve(ContrastCurve::new(3.0, 4.5, 7.0, 11.0)))
             .build()
     }
@@ -785,12 +792,12 @@ impl ColorSpec for ColorSpec2021 {
         DynamicColor::builder("tertiary_fixed", pal(|s| s.tertiary_palette.clone()))
             .tone(tn(|s| if Self::is_monochrome(s) { 40.0 } else { 90.0 }))
             .is_background(true)
-            .background(bg(|s| Some(ColorSpec2026.highest_surface(s))))
+            .background(bg(|s| Some(ColorSpec2021.highest_surface(s))))
             .contrast_curve(fixed_curve(ContrastCurve::new(1.0, 1.0, 3.0, 4.5)))
             .tone_delta_pair(tdp(|_| {
                 Some(ToneDeltaPair::new(
-                    ColorSpec2026.tertiary_fixed(),
-                    ColorSpec2026.tertiary_fixed_dim(),
+                    ColorSpec2021.tertiary_fixed(),
+                    ColorSpec2021.tertiary_fixed_dim(),
                     10.0,
                     TonePolarity::Lighter,
                     true,
@@ -804,12 +811,12 @@ impl ColorSpec for ColorSpec2021 {
         DynamicColor::builder("tertiary_fixed_dim", pal(|s| s.tertiary_palette.clone()))
             .tone(tn(|s| if Self::is_monochrome(s) { 30.0 } else { 80.0 }))
             .is_background(true)
-            .background(bg(|s| Some(ColorSpec2026.highest_surface(s))))
+            .background(bg(|s| Some(ColorSpec2021.highest_surface(s))))
             .contrast_curve(fixed_curve(ContrastCurve::new(1.0, 1.0, 3.0, 4.5)))
             .tone_delta_pair(tdp(|_| {
                 Some(ToneDeltaPair::new(
-                    ColorSpec2026.tertiary_fixed(),
-                    ColorSpec2026.tertiary_fixed_dim(),
+                    ColorSpec2021.tertiary_fixed(),
+                    ColorSpec2021.tertiary_fixed_dim(),
                     10.0,
                     TonePolarity::Lighter,
                     true,
@@ -822,8 +829,8 @@ impl ColorSpec for ColorSpec2021 {
     fn on_tertiary_fixed(&self) -> DynamicColor {
         DynamicColor::builder("on_tertiary_fixed", pal(|s| s.tertiary_palette.clone()))
             .tone(tn(|s| if Self::is_monochrome(s) { 100.0 } else { 10.0 }))
-            .background(fixed_color(ColorSpec2026.tertiary_fixed_dim()))
-            .second_background(fixed_color(ColorSpec2026.tertiary_fixed()))
+            .background(fixed_color(ColorSpec2021.tertiary_fixed_dim()))
+            .second_background(fixed_color(ColorSpec2021.tertiary_fixed()))
             .contrast_curve(fixed_curve(ContrastCurve::new(4.5, 7.0, 11.0, 21.0)))
             .build()
     }
@@ -831,8 +838,8 @@ impl ColorSpec for ColorSpec2021 {
     fn on_tertiary_fixed_variant(&self) -> DynamicColor {
         DynamicColor::builder("on_tertiary_fixed_variant", pal(|s| s.tertiary_palette.clone()))
             .tone(tn(|s| if Self::is_monochrome(s) { 90.0 } else { 30.0 }))
-            .background(fixed_color(ColorSpec2026.tertiary_fixed_dim()))
-            .second_background(fixed_color(ColorSpec2026.tertiary_fixed()))
+            .background(fixed_color(ColorSpec2021.tertiary_fixed_dim()))
+            .second_background(fixed_color(ColorSpec2021.tertiary_fixed()))
             .contrast_curve(fixed_curve(ContrastCurve::new(3.0, 4.5, 7.0, 11.0)))
             .build()
     }
@@ -841,7 +848,7 @@ impl ColorSpec for ColorSpec2021 {
     // Other //
     // ////////////////////////////////////////////////////////////////
     fn highest_surface(&self, scheme: &DynamicScheme) -> DynamicColor {
-        if scheme.is_dark { ColorSpec2026.surface_bright() } else { ColorSpec2026.surface_dim() }
+        if scheme.is_dark { ColorSpec2021.surface_bright() } else { ColorSpec2021.surface_dim() }
     }
 
     // ////////////////////////////////////////////////////////////////
@@ -871,11 +878,15 @@ impl ColorSpec for ColorSpec2021 {
             let delta = tone_delta_pair.delta;
             let polarity = tone_delta_pair.polarity;
             let stay_together = tone_delta_pair.stay_together;
-            // The TypeScript reference checks `darker && scheme.isDark`
-            // while the Kotlin one has `DARKER && !scheme.isDark`.
-            let a_is_nearer = tone_delta_pair.constraint == DeltaConstraint::Nearer
+            // The Kotlin and TypeScript ports moved `NEARER`/`FARTHER` into
+            // `DeltaConstraint`; the Java reference (the authority for this
+            // crate) still reads them from `TonePolarity`, and checks
+            // `DARKER && !isDark` here rather than TypeScript's
+            // `darker && isDark`. Follow Java.
+            #[allow(deprecated)]
+            let a_is_nearer = polarity == TonePolarity::Nearer
                 || (polarity == TonePolarity::Lighter && !scheme.is_dark)
-                || (polarity == TonePolarity::Darker && scheme.is_dark);
+                || (polarity == TonePolarity::Darker && !scheme.is_dark);
             let nearer = if a_is_nearer { &role_a } else { &role_b };
             let farther = if a_is_nearer { &role_b } else { &role_a };
             let am_nearer = color.name == nearer.name;
@@ -887,15 +898,15 @@ impl ColorSpec for ColorSpec2021 {
             let background = &color.background;
             let n_contrast_curve = nearer.contrast_curve.as_ref().and_then(|f| f(scheme));
             let f_contrast_curve = farther.contrast_curve.as_ref().and_then(|f| f(scheme));
-            if background.is_some()
-                && nearer.contrast_curve.is_some()
+            if nearer.contrast_curve.is_some()
                 && farther.contrast_curve.is_some()
-                && n_contrast_curve.is_some()
-                && f_contrast_curve.is_some()
+                && let Some(n_contrast_curve) = n_contrast_curve
+                && let Some(f_contrast_curve) = f_contrast_curve
+                && let Some(bg) = background.as_ref().and_then(|b| b(scheme))
             {
-                if let Some(bg) = background.as_ref().unwrap()(scheme) {
-                    let n_contrast = n_contrast_curve.unwrap().get(scheme.contrast_level);
-                    let f_contrast = f_contrast_curve.unwrap().get(scheme.contrast_level);
+                {
+                    let n_contrast = n_contrast_curve.get(scheme.contrast_level);
+                    let f_contrast = f_contrast_curve.get(scheme.contrast_level);
                     let bg_tone = bg.get_tone(scheme);
 
                     // If a color is good enough, it is not adjusted.

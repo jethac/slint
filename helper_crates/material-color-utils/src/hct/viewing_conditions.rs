@@ -39,16 +39,18 @@ pub struct ViewingConditions {
     pub(crate) z: f64,
 }
 
-impl ViewingConditions {
+impl Default for ViewingConditions {
     /// sRGB-like viewing conditions.
     ///
-    /// The Kotlin implementation shares a single lazily-initialized instance;
+    /// The Java implementation shares a single lazily-initialized instance;
     /// the values are pure math, so computing them on each call yields
     /// identical results.
-    pub fn default() -> ViewingConditions {
+    fn default() -> ViewingConditions {
         Self::default_with_background_lstar(50.0)
     }
+}
 
+impl ViewingConditions {
     /// Create ViewingConditions from a simple, physically relevant, set of
     /// parameters.
     ///

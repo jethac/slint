@@ -60,4 +60,12 @@ pub enum TonePolarity {
     /// The tone of roleA is lighter than the tone of roleB in light mode, and
     /// darker than the tone of roleB in dark mode.
     RelativeLighter,
+    /// Use `DeltaConstraint` instead; kept because the Java reference still
+    /// constructs the 2021 spec's container/on-container pairs with it.
+    #[deprecated = "use DeltaConstraint"]
+    Nearer,
+    /// Use `DeltaConstraint` instead; kept because the Java reference still
+    /// defines it.
+    #[deprecated = "use DeltaConstraint"]
+    Farther,
 }

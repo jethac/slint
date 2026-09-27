@@ -4,7 +4,7 @@
 use alloc::vec::Vec;
 
 use crate::hct::Hct;
-use crate::math::{atan2, cos, pow, round_to_int};
+use crate::math::{cos, pow, round_to_int};
 use crate::utils::ColorUtils;
 use crate::utils::MathUtils;
 
@@ -155,11 +155,11 @@ impl TemperatureCache {
         }
         let mut answers: Vec<Hct> = Vec::new();
         answers.push(self.input);
-        let ccw_count = ((count as f64 - 1.0) / 2.0).floor() as i32;
+        let ccw_count = crate::math::floor((count as f64 - 1.0) / 2.0) as i32;
         for i in 1..(ccw_count + 1) {
             let mut index = 0 - i;
             while index < 0 {
-                index = all_colors.len() as i32 + index;
+                index += all_colors.len() as i32;
             }
             if index >= all_colors.len() as i32 {
                 index %= all_colors.len() as i32;
@@ -170,7 +170,7 @@ impl TemperatureCache {
         for i in 1..(cw_count + 1) {
             let mut index = i;
             while index < 0 {
-                index = all_colors.len() as i32 + index;
+                index += all_colors.len() as i32;
             }
             if index >= all_colors.len() as i32 {
                 index %= all_colors.len() as i32;
@@ -231,8 +231,8 @@ impl TemperatureCache {
     /// - Li-Chen Ou's "Color Emotion and Color Harmony in Color Images"
     /// - Jose Antonio Camacho-Olguin's "Aesthetic-Based Multi-Objective
     ///   Optimization of the Color in Art Images" (2015)
-    /// - https://www.sensationalcolor.com/color-temperature/
-    /// - https://en.wikipedia.org/wiki/Color_temperature
+    /// - <https://www.sensationalcolor.com/color-temperature/>
+    /// - <https://en.wikipedia.org/wiki/Color_temperature>
     ///
     /// This is the data set used to determine cool-warm factor.
     ///
@@ -241,13 +241,13 @@ impl TemperatureCache {
     /// Returns: The cool-warm factor of the color.
     pub fn raw_temperature(color: Hct) -> f64 {
         let lab = ColorUtils::lab_from_argb(color.to_int());
-        let hue = MathUtils::sanitize_degrees_double(
-            atan2(lab[2], lab[1]) * 180.0 / core::f64::consts::PI,
-        );
-        let chroma = crate::math::sqrt(lab[1] * lab[1] + lab[2] * lab[2]);
+        let hue = MathUtils::sanitize_degrees_double(crate::math::to_degrees(crate::math::atan2(
+            lab[2], lab[1],
+        )));
+        let chroma = crate::math::hypot(lab[1], lab[2]);
         -0.5 + 0.02
             * pow(chroma, 1.07)
-            * cos(MathUtils::sanitize_degrees_double(hue - 50.0) * core::f64::consts::PI / 180.0)
+            * cos(crate::math::to_radians(MathUtils::sanitize_degrees_double(hue - 50.0)))
     }
 
     /// Determines if an angle is between two other angles, rotating clockwise.

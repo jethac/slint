@@ -387,7 +387,7 @@ impl HctSolver {
         let k_g = Y_FROM_LINRGB[1];
         let k_b = Y_FROM_LINRGB[2];
         let coord_a = if n % 4 <= 1 { 0.0 } else { 100.0 };
-        let coord_b = if n % 2 == 0 { 0.0 } else { 100.0 };
+        let coord_b = if n.is_multiple_of(2) { 0.0 } else { 100.0 };
         if n < 4 {
             let g = coord_a;
             let b = coord_b;
@@ -591,7 +591,7 @@ impl HctSolver {
         if chroma < 0.0001 || lstar < 0.0001 || lstar > 99.9999 {
             return ColorUtils::argb_from_lstar(lstar);
         }
-        let hue_radians = MathUtils::sanitize_degrees_double(hue_degrees) / 180.0 * PI;
+        let hue_radians = crate::math::to_radians(MathUtils::sanitize_degrees_double(hue_degrees));
         let y = ColorUtils::y_from_lstar(lstar);
         let exact_answer = Self::find_result_by_j(hue_radians, chroma, y);
         if exact_answer != 0 {

@@ -56,15 +56,15 @@ impl Score {
         for (key, value) in colors_to_population {
             let hct = Hct::from_int(*key);
             colors_hct.push(hct);
-            let hue = hct.hue().floor() as i64;
+            let hue = crate::math::floor(hct.hue()) as i64;
             hue_population[hue as usize] += value;
             population_sum += *value as f64;
         }
         // Hues with more usage in neighboring 30 degree slice get a larger
         // number.
         let mut hue_excited_proportions = [0.0f64; 360];
-        for hue in 0..360 {
-            let proportion = hue_population[hue] as f64 / population_sum;
+        for (hue, &population) in hue_population.iter().enumerate() {
+            let proportion = population as f64 / population_sum;
             for i in (hue as i64 - 14)..(hue as i64 + 16) {
                 let neighbor_hue = MathUtils::sanitize_degrees_int(i);
                 hue_excited_proportions[neighbor_hue as usize] += proportion;
@@ -90,7 +90,7 @@ impl Score {
             scored_hcts.push((hct, score));
         }
         // Sorted so that colors with higher scores come first. Stable sort to
-        // match Kotlin's Collections.sort.
+        // match Java's Collections.sort.
         scored_hcts.sort_by(|a, b| b.1.total_cmp(&a.1));
         // Iterates through potential hue differences in degrees in order to
         // select the colors with the largest distribution of hues possible.

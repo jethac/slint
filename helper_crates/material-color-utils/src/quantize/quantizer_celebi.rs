@@ -1,5 +1,6 @@
 // Copyright © SixtyFPS GmbH <info@slint.dev>
 // SPDX-License-Identifier: MIT OR Apache-2.0
+use alloc::vec::Vec;
 
 use crate::Argb;
 
@@ -13,7 +14,7 @@ use super::quantizer_wu::QuantizerWu;
 ///
 /// Algorithm was designed by M. Emre Celebi, and was found in 2011,
 /// Improving the Performance of K-Means for Color Quantization.
-/// https://arxiv.org/abs/1101.0395
+/// <https://arxiv.org/abs/1101.0395>
 pub struct QuantizerCelebi;
 
 impl QuantizerCelebi {

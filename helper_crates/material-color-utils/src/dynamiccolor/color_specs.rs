@@ -26,7 +26,7 @@ impl ColorSpecs {
         }
     }
 
-    /// `is_extended_fidelity` exists for parity with the Kotlin API surface.
+    /// `is_extended_fidelity` exists for parity with the Java API surface.
     /// It does not change dispatch.
     pub fn get_with_fidelity(
         spec_version: SpecVersion,

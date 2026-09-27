@@ -8,7 +8,6 @@ use crate::hct::ViewingConditions;
 use crate::math;
 use crate::utils::ColorUtils;
 use crate::utils::MathUtils;
-use core::f64::consts::PI;
 
 /// CAM16, a color appearance model. Colors are not just defined by their hex
 /// code, but rather, a hex code and viewing conditions.
@@ -111,7 +110,7 @@ impl Cam16 {
             alpha / math::pow(1.64 - math::pow(0.29, viewing_conditions.n), 0.73),
             1.0 / 0.9,
         );
-        let h_rad = self.hue * core::f64::consts::PI / 180.0;
+        let h_rad = math::to_radians(self.hue);
         let e_hue = 0.25 * (math::cos(h_rad + 2.0) + 3.8);
         let ac = viewing_conditions.aw
             * math::pow(self.j / 100.0, 1.0 / viewing_conditions.c / viewing_conditions.z);
@@ -209,9 +208,9 @@ impl Cam16 {
 
         // hue
         let atan2 = math::atan2(b, a);
-        let atan_degrees = atan2 * 180.0 / core::f64::consts::PI;
+        let atan_degrees = math::to_degrees(atan2);
         let hue = MathUtils::sanitize_degrees_double(atan_degrees);
-        let hue_radians = hue * core::f64::consts::PI / 180.0;
+        let hue_radians = math::to_radians(hue);
 
         // achromatic response to color
         let ac = p2 * viewing_conditions.nbb;
@@ -226,9 +225,9 @@ impl Cam16 {
 
         // CAM16 chroma, colorfulness, and saturation.
         let hue_prime = if hue < 20.14 { hue + 360.0 } else { hue };
-        let e_hue = 0.25 * (math::cos(hue_prime * core::f64::consts::PI / 180.0 + 2.0) + 3.8);
+        let e_hue = 0.25 * (math::cos(math::to_radians(hue_prime) + 2.0) + 3.8);
         let p1 = 50000.0 / 13.0 * e_hue * viewing_conditions.nc * viewing_conditions.ncb;
-        let t = p1 * math::sqrt(a * a + b * b) / (u + 0.305);
+        let t = p1 * math::hypot(a, b) / (u + 0.305);
         let alpha =
             math::pow(t, 0.9) * math::pow(1.64 - math::pow(0.29, viewing_conditions.n), 0.73);
         // CAM16 chroma, colorfulness, saturation
@@ -238,7 +237,7 @@ impl Cam16 {
 
         // CAM16-UCS components
         let jstar = (1.0 + 100.0 * 0.007) * j / (1.0 + 0.007 * j);
-        let mstar = math::ln(1.0 + 0.0228 * m) / 0.0228;
+        let mstar = 1.0 / 0.0228 * math::log1p(0.0228 * m);
         let astar = mstar * math::cos(hue_radians);
         let bstar = mstar * math::sin(hue_radians);
         Cam16 { hue, chroma: c, j, q, m, s, jstar, astar, bstar }
@@ -264,9 +263,9 @@ impl Cam16 {
         let m = c * viewing_conditions.fl_root;
         let alpha = c / math::sqrt(j / 100.0);
         let s = 50.0 * math::sqrt(alpha * viewing_conditions.c / (viewing_conditions.aw + 4.0));
-        let hue_radians = h * core::f64::consts::PI / 180.0;
+        let hue_radians = math::to_radians(h);
         let jstar = (1.0 + 100.0 * 0.007) * j / (1.0 + 0.007 * j);
-        let mstar = math::ln(1.0 + 0.0228 * m) / 0.0228;
+        let mstar = 1.0 / 0.0228 * math::log1p(0.0228 * m);
         let astar = mstar * math::cos(hue_radians);
         let bstar = mstar * math::sin(hue_radians);
         Cam16 { hue: h, chroma: c, j, q, m, s, jstar, astar, bstar }
@@ -297,10 +296,10 @@ impl Cam16 {
         bstar: f64,
         viewing_conditions: &ViewingConditions,
     ) -> Cam16 {
-        let m = math::sqrt(astar * astar + bstar * bstar);
-        let m2 = (math::exp(m * 0.0228) - 1.0) / 0.0228;
+        let m = math::hypot(astar, bstar);
+        let m2 = math::expm1(m * 0.0228) / 0.0228;
         let c = m2 / viewing_conditions.fl_root;
-        let mut h = math::atan2(bstar, astar) * (180.0 / PI);
+        let mut h = math::to_degrees(math::atan2(bstar, astar));
         if h < 0.0 {
             h += 360.0;
         }
