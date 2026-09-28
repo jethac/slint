@@ -1,6 +1,8 @@
 // Copyright © SixtyFPS GmbH <info@slint.dev>
 // SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0
 
+// cSpell: ignore akhn vkrn valt vpai DSIG subsetter VARC varc gvar varstore GDEF HVAR VVAR MVAR COLR repointing reserializes varidx subtables loca glyf subsetted subsetting instancer
+
 //! Partial instancing for embedded variable fonts: pin the fvar axes a build
 //! never varies at their default value.
 //!
