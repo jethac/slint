@@ -113,14 +113,20 @@ jobs:
                 distribution: temurin
                 java-version: "21"
           - name: Install Android SDK platform 36
-            # The ubuntu-latest runner image ships a preinstalled Android SDK
-            # (ANDROID_HOME / ANDROID_SDK_ROOT point at it). setup-android@v3
-            # is not used: it runs `sdkmanager tools`, a package removed from
-            # cmdline-tools 16.0, and fails on current runner images.
+            # The runner image ships an Android SDK (ANDROID_HOME is set) but
+            # its cmdline-tools/latest sdkmanager is too old for JDK 21 and
+            # exits silently, and setup-android@v3 fails on `sdkmanager tools`
+            # (a package removed from cmdline-tools 16.0). Fetch a known-good
+            # cmdline-tools build and drive that instead.
             run: |
-              SDKMANAGER="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
-              yes | "$SDKMANAGER" --licenses > /dev/null
-              "$SDKMANAGER" "platforms;android-36" "build-tools;36.0.0"
+              SDK_ROOT="${ANDROID_HOME:-$ANDROID_SDK_ROOT}"
+              curl -sSfLo /tmp/cmdtools.zip https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip
+              unzip -q -o /tmp/cmdtools.zip -d /tmp/cmdtools
+              mkdir -p "$SDK_ROOT/cmdline-tools/ci"
+              mv /tmp/cmdtools/cmdline-tools/* "$SDK_ROOT/cmdline-tools/ci/"
+              SDKMANAGER="$SDK_ROOT/cmdline-tools/ci/bin/sdkmanager"
+              yes | "$SDKMANAGER" --sdk_root="$SDK_ROOT" --licenses > /dev/null || true
+              "$SDKMANAGER" --sdk_root="$SDK_ROOT" "platforms;android-36" "build-tools;36.0.0"
             shell: bash
           - uses: Swatinem/rust-cache@v2
             with:
