@@ -646,6 +646,28 @@ impl ItemRc {
         self.borrow().as_ref().bounding_rect(window_adapter, self, *geometry)
     }
 
+    /// Returns the outline the item contributes for hit-testing, accessibility
+    /// bounds and the focus indicator: the `shape` when the item carries one,
+    /// else the rounded rectangle given by its corner radius, else its
+    /// rectangle.
+    pub fn boundary_shape(&self) -> crate::graphics::ElementOutline {
+        let boundary = self.borrow().as_ref().boundary_shape(self.geometry());
+        crate::graphics::ElementOutline::new(boundary.shape, boundary.fit, boundary.radius)
+    }
+
+    /// Whether `position`, in the item's parent coordinate space (the same
+    /// space `geometry()` returns), hits the item: inside its geometry
+    /// rectangle and inside the outline given by `boundary_shape`.
+    pub fn hit_test(&self, position: LogicalPoint) -> bool {
+        let geometry = self.geometry();
+        geometry.contains(position)
+            && self.boundary_shape().hit_test(
+                LogicalRect::from_size(geometry.size).to_f32(),
+                euclid::point2(position.x, position.y).to_f32()
+                    - geometry.origin.to_vector().to_f32(),
+            )
+    }
+
     /// Similar to `map_to_window` but considers also the popup location if the popup
     /// is not a dedicated window but of type ChildWindow
     /// Use this function if you wanna have the real absolute position

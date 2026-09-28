@@ -17,8 +17,8 @@ use i_slint_core::item_rendering::{
 };
 use i_slint_core::items::{ImageFit, ImageRendering, ItemRc, Layer, Opacity, RenderingResult};
 use i_slint_core::lengths::{
-    LogicalBorderRadius, LogicalLength, LogicalPoint, LogicalPx, LogicalRect, LogicalSize,
-    LogicalVector, PhysicalPx, RectLengths, ScaleFactor, SizeLengths, logical_size_from_api,
+    LogicalLength, LogicalPoint, LogicalPx, LogicalRect, LogicalSize, LogicalVector, PhysicalPx,
+    RectLengths, ScaleFactor, SizeLengths, logical_size_from_api,
 };
 use i_slint_core::textlayout::sharedparley::{self, GlyphRenderer, fontique};
 use i_slint_core::window::WindowInner;
@@ -112,11 +112,7 @@ impl<'a> SkiaItemRenderer<'a> {
             skia_safe::AlphaType::Premul,
         );
 
-        let rounded_rect = to_skia_rrect(
-            &PhysicalRect::new(shadow_options.shape_origin(), shape_size),
-            &shadow_options.outer_radius(),
-        );
-
+        let outline = shadow_options.element_outline();
         let mut paint = crate::solid_paint(&shadow_options.color);
         paint.set_anti_alias(true);
         if shadow_options.blur.get() > 0. {
@@ -130,7 +126,57 @@ impl<'a> SkiaItemRenderer<'a> {
         let mut surface = canvas.new_surface(&image_info, None)?;
         let surface_canvas = surface.canvas();
         surface_canvas.clear(skia_safe::Color::TRANSPARENT);
-        surface_canvas.draw_rrect(rounded_rect, &paint);
+        match &outline {
+            None => {
+                let rounded_rect = to_skia_rrect(
+                    &PhysicalRect::new(shadow_options.shape_origin(), shape_size),
+                    &shadow_options.outer_radius(),
+                );
+                surface_canvas.draw_rrect(rounded_rect, &paint);
+            }
+            Some(outline) => {
+                // The shadow silhouette is the outline grown by the spread, i.e.
+                // the Minkowski sum of the outline and a disk of that radius:
+                // fill(outline) ∪ stroke(outline, 2·spread). The outline sits
+                // at the unspread geometry's position within the texture.
+                // A negative spread instead shrinks the silhouette by fitting
+                // into the shrunken shape rect.
+                let spread = shadow_options.spread.get();
+                let target = if spread >= 0. {
+                    PhysicalRect::new(
+                        PhysicalPoint::new(
+                            shadow_options.shape_origin().x + spread,
+                            shadow_options.shape_origin().y + spread,
+                        ),
+                        PhysicalSize::new(shadow_options.width.get(), shadow_options.height.get()),
+                    )
+                } else {
+                    PhysicalRect::new(shadow_options.shape_origin(), shape_size)
+                };
+                let path = outline_to_skia_path(outline, target);
+                let mut builder = skia_safe::PathBuilder::new();
+                builder.set_fill_type(skia_safe::PathFillType::Winding);
+                builder.add_path(&path, skia_safe::path::AddPathMode::Append);
+                if shadow_options.spread.get() > 0. {
+                    let mut stroke_paint = skia_safe::Paint::default();
+                    stroke_paint.set_style(skia_safe::PaintStyle::Stroke);
+                    stroke_paint.set_stroke_width(2. * shadow_options.spread.get());
+                    stroke_paint.set_stroke_join(skia_safe::PaintJoin::Round);
+                    stroke_paint.set_stroke_cap(skia_safe::PaintCap::Round);
+                    let mut stroked = skia_safe::PathBuilder::new();
+                    if skia_safe::path_utils::fill_path_with_paint(
+                        &path,
+                        &stroke_paint,
+                        &mut stroked,
+                        None,
+                        None,
+                    ) {
+                        builder.add_path(&stroked.detach(), skia_safe::path::AddPathMode::Append);
+                    }
+                }
+                surface_canvas.draw_path(&builder.detach(), &paint);
+            }
+        }
         Some(surface.image_snapshot())
     }
 
@@ -158,10 +204,9 @@ impl<'a> SkiaItemRenderer<'a> {
             skia_safe::AlphaType::Premul,
         );
 
-        let geometry_rrect = to_skia_rrect(
-            &PhysicalRect::new(PhysicalPoint::zero(), PhysicalSize::new(width, height)),
-            &radius,
-        );
+        let outline = shadow_options.element_outline();
+        let geometry_rect =
+            PhysicalRect::new(PhysicalPoint::zero(), PhysicalSize::new(width, height));
 
         // Inner "hole" rrect: geometry inset by spread on each side, translated by offset.
         let inner_rect = skia_safe::Rect::new(
@@ -169,14 +214,6 @@ impl<'a> SkiaItemRenderer<'a> {
             spread + offset_y,
             width - spread + offset_x,
             height - spread + offset_y,
-        );
-        let inner_radius = shadow_options.inner_radius();
-        let inner_rrect = to_skia_rrect(
-            &PhysicalRect::new(
-                PhysicalPoint::new(inner_rect.left, inner_rect.top),
-                PhysicalSize::new(inner_rect.width(), inner_rect.height()),
-            ),
-            &inner_radius,
         );
 
         // Outer rect inflated well beyond the geometry so its blurred edge falls outside the clip.
@@ -187,7 +224,46 @@ impl<'a> SkiaItemRenderer<'a> {
         let mut path_builder = skia_safe::PathBuilder::new();
         path_builder.set_fill_type(skia_safe::PathFillType::EvenOdd);
         path_builder.add_rect(outer_rect, None, None);
-        path_builder.add_rrect(inner_rrect, None, None);
+        match &outline {
+            None => {
+                let inner_rrect = to_skia_rrect(
+                    &PhysicalRect::new(
+                        PhysicalPoint::new(inner_rect.left, inner_rect.top),
+                        PhysicalSize::new(inner_rect.width(), inner_rect.height()),
+                    ),
+                    &shadow_options.inner_radius(),
+                );
+                path_builder.add_rrect(inner_rrect, None, None);
+            }
+            Some(outline) => {
+                // The hole is the outline eroded by the spread: fill(outline)
+                // minus the band the stroke of width 2·spread covers, both
+                // translated by the inset offset. EvenOdd parity over
+                // [fill ⊕ stroke-band] leaves exactly the eroded interior.
+                let hole_path = outline_to_skia_path(
+                    outline,
+                    PhysicalRect::new(PhysicalPoint::new(offset_x, offset_y), geometry_rect.size),
+                );
+                path_builder.add_path(&hole_path, skia_safe::path::AddPathMode::Append);
+                if spread > 0. {
+                    let mut stroke_paint = skia_safe::Paint::default();
+                    stroke_paint.set_style(skia_safe::PaintStyle::Stroke);
+                    stroke_paint.set_stroke_width(2. * spread);
+                    stroke_paint.set_stroke_join(skia_safe::PaintJoin::Round);
+                    stroke_paint.set_stroke_cap(skia_safe::PaintCap::Round);
+                    let mut band = skia_safe::PathBuilder::new();
+                    if skia_safe::path_utils::fill_path_with_paint(
+                        &hole_path,
+                        &stroke_paint,
+                        &mut band,
+                        None,
+                        None,
+                    ) {
+                        path_builder.add_path(&band.detach(), skia_safe::path::AddPathMode::Append);
+                    }
+                }
+            }
+        }
         let path = path_builder.detach();
 
         let mut paint = crate::solid_paint(&shadow_options.color);
@@ -203,7 +279,16 @@ impl<'a> SkiaItemRenderer<'a> {
         let mut surface = canvas.new_surface(&image_info, None)?;
         let surface_canvas = surface.canvas();
         surface_canvas.clear(skia_safe::Color::TRANSPARENT);
-        surface_canvas.clip_rrect(geometry_rrect, None, true);
+        match &outline {
+            None => {
+                let geometry_rrect = to_skia_rrect(&geometry_rect, &radius);
+                surface_canvas.clip_rrect(geometry_rrect, None, true);
+            }
+            Some(outline) => {
+                let clip = outline_to_skia_path(outline, geometry_rect);
+                surface_canvas.clip_path(&clip, None, true);
+            }
+        }
         surface_canvas.draw_path(&path, &paint);
         Some(surface.image_snapshot())
     }
@@ -558,29 +643,52 @@ impl ItemRenderer for SkiaItemRenderer<'_> {
         };
         let brush_width = layout.brush_size.width_length();
         let brush_height = layout.brush_size.height_length();
+        let outline = rect.outline();
 
         if let Some(mut fill_paint) =
             self.brush_to_paint(rect.background(), brush_width, brush_height)
         {
-            let background_rect = to_skia_rrect(&layout.background_rect, &layout.background_radius);
-            fill_paint.set_style(skia_safe::PaintStyle::Fill);
-            if !background_rect.is_rect() || self.needs_anti_alias() {
-                fill_paint.set_anti_alias(true);
+            match &outline {
+                i_slint_core::graphics::ElementOutline::Rectangle(..) => {
+                    let background_rect =
+                        to_skia_rrect(&layout.background_rect, &layout.background_radius);
+                    fill_paint.set_style(skia_safe::PaintStyle::Fill);
+                    if !background_rect.is_rect() || self.needs_anti_alias() {
+                        fill_paint.set_anti_alias(true);
+                    }
+                    self.canvas.draw_rrect(background_rect, &fill_paint);
+                }
+                outline => {
+                    let path = outline_to_skia_path(outline, layout.background_rect);
+                    fill_paint.set_style(skia_safe::PaintStyle::Fill);
+                    fill_paint.set_anti_alias(true);
+                    self.canvas.draw_path(&path, &fill_paint);
+                }
             }
-            self.canvas.draw_rrect(background_rect, &fill_paint);
         }
 
         if layout.border_width.get() > 0.0
             && let Some(mut border_paint) =
                 self.brush_to_paint(layout.border_color, brush_width, brush_height)
         {
-            let border_rect = to_skia_rrect(&layout.border_rect, &layout.border_radius);
-            border_paint.set_style(skia_safe::PaintStyle::Stroke);
-            border_paint.set_stroke_width(layout.border_width.get());
-            if !border_rect.is_rect() || self.needs_anti_alias() {
-                border_paint.set_anti_alias(true);
+            match &outline {
+                i_slint_core::graphics::ElementOutline::Rectangle(..) => {
+                    let border_rect = to_skia_rrect(&layout.border_rect, &layout.border_radius);
+                    border_paint.set_style(skia_safe::PaintStyle::Stroke);
+                    border_paint.set_stroke_width(layout.border_width.get());
+                    if !border_rect.is_rect() || self.needs_anti_alias() {
+                        border_paint.set_anti_alias(true);
+                    }
+                    self.canvas.draw_rrect(border_rect, &border_paint);
+                }
+                outline => {
+                    let path = outline_to_skia_path(outline, layout.border_rect);
+                    border_paint.set_style(skia_safe::PaintStyle::Stroke);
+                    border_paint.set_stroke_width(layout.border_width.get());
+                    border_paint.set_anti_alias(true);
+                    self.canvas.draw_path(&path, &border_paint);
+                }
             }
-            self.canvas.draw_rrect(border_rect, &border_paint);
         }
     }
 
@@ -663,6 +771,10 @@ impl ItemRenderer for SkiaItemRenderer<'_> {
                     path.fitted_path_events(item_rc)?;
 
                 let mut builder = skia_safe::PathBuilder::new();
+                builder.set_fill_type(match path.effective_fill_rule() {
+                    i_slint_core::items::FillRule::Evenodd => skia_safe::PathFillType::EvenOdd,
+                    _ => skia_safe::PathFillType::Winding,
+                });
 
                 for x in path_events.iter() {
                     match x {
@@ -824,10 +936,22 @@ impl ItemRenderer for SkiaItemRenderer<'_> {
         }
     }
 
-    fn combine_clip(&mut self, rect: LogicalRect, radius: LogicalBorderRadius) -> bool {
-        let rounded_rect =
-            to_skia_rrect(&(rect * self.scale_factor), &(radius * self.scale_factor));
-        self.canvas.clip_rrect(rounded_rect, None, true);
+    fn combine_clip(
+        &mut self,
+        rect: LogicalRect,
+        outline: &i_slint_core::graphics::ElementOutline,
+    ) -> bool {
+        match outline {
+            i_slint_core::graphics::ElementOutline::Rectangle(radius) => {
+                let rounded_rect =
+                    to_skia_rrect(&(rect * self.scale_factor), &(*radius * self.scale_factor));
+                self.canvas.clip_rrect(rounded_rect, None, true);
+            }
+            outline => {
+                let path = outline_to_skia_path(outline, rect * self.scale_factor);
+                self.canvas.clip_path(&path, None, true);
+            }
+        }
         self.canvas.local_clip_bounds().is_some()
     }
 
@@ -1208,6 +1332,39 @@ pub fn from_skia_rect(rect: &skia_safe::Rect) -> PhysicalRect {
 
 pub fn to_skia_rect(rect: &PhysicalRect) -> skia_safe::Rect {
     skia_safe::Rect::from_xywh(rect.origin.x, rect.origin.y, rect.size.width, rect.size.height)
+}
+
+/// The outline's vector path fitted into `target` (physical pixels), for the
+/// [`i_slint_core::graphics::ElementOutline::Shape`] variant; rounded
+/// rectangles keep their [`to_skia_rrect`] fast path instead.
+pub fn outline_to_skia_path(
+    outline: &i_slint_core::graphics::ElementOutline,
+    target: PhysicalRect,
+) -> skia_safe::Path {
+    let mut builder = skia_safe::PathBuilder::new();
+    outline.for_each_path(target, &mut |el| match el {
+        i_slint_core::graphics::OutlinePathEl::MoveTo(p) => {
+            builder.move_to(skia_safe::Point::new(p.x, p.y));
+        }
+        i_slint_core::graphics::OutlinePathEl::LineTo(p) => {
+            builder.line_to(skia_safe::Point::new(p.x, p.y));
+        }
+        i_slint_core::graphics::OutlinePathEl::CurveTo(c0, c1, p) => {
+            builder.cubic_to(
+                skia_safe::Point::new(c0.x, c0.y),
+                skia_safe::Point::new(c1.x, c1.y),
+                skia_safe::Point::new(p.x, p.y),
+            );
+        }
+        i_slint_core::graphics::OutlinePathEl::Close => {
+            builder.close();
+        }
+    });
+    builder.set_fill_type(match outline.fill_rule() {
+        i_slint_core::items::FillRule::Evenodd => skia_safe::PathFillType::EvenOdd,
+        _ => skia_safe::PathFillType::Winding,
+    });
+    builder.detach()
 }
 
 pub fn to_skia_rrect(rect: &PhysicalRect, radius: &PhysicalBorderRadius) -> skia_safe::RRect {

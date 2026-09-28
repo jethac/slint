@@ -46,8 +46,8 @@ use i_slint_core::item_rendering::{
 use i_slint_core::item_tree::ItemTreeWeak;
 use i_slint_core::items::{ItemRc, TextOverflow, TextWrap};
 use i_slint_core::lengths::{
-    LogicalBorderRadius, LogicalLength, LogicalPoint, LogicalRect, LogicalSize, LogicalVector,
-    PhysicalPx, PointLengths, RectLengths, ScaleFactor, SizeLengths,
+    LogicalLength, LogicalPoint, LogicalRect, LogicalSize, LogicalVector, PhysicalPx, PointLengths,
+    RectLengths, ScaleFactor, SizeLengths,
 };
 use i_slint_core::partial_renderer::{DirtyRegion, PartialRenderer, PartialRenderingState};
 use i_slint_core::renderer::RendererSealed;
@@ -3336,7 +3336,11 @@ impl<T: ProcessScene> i_slint_core::item_rendering::ItemRenderer for SceneBuilde
         // TODO
     }
 
-    fn combine_clip(&mut self, other: LogicalRect, _radius: LogicalBorderRadius) -> bool {
+    fn combine_clip(
+        &mut self,
+        other: LogicalRect,
+        _outline: &i_slint_core::graphics::ElementOutline,
+    ) -> bool {
         match self.current_state.clip.intersection(&other) {
             Some(r) => {
                 self.current_state.clip = r;
@@ -3347,7 +3351,7 @@ impl<T: ProcessScene> i_slint_core::item_rendering::ItemRenderer for SceneBuilde
                 false
             }
         }
-        // TODO: handle radius
+        // TODO: apply the outline (rounded corners and shapes)
     }
 
     fn get_current_clip(&self) -> LogicalRect {

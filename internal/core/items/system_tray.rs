@@ -480,6 +480,13 @@ impl Item for SystemTrayIcon {
         geometry
     }
 
+    fn boundary_shape(
+        self: core::pin::Pin<&Self>,
+        _geometry: LogicalRect,
+    ) -> crate::graphics::ItemBoundaryShape {
+        Default::default()
+    }
+
     fn clips_children(self: core::pin::Pin<&Self>) -> bool {
         false
     }

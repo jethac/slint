@@ -16,8 +16,8 @@ use i_slint_core::item_rendering::{
 };
 use i_slint_core::items::{self, FillRule, ImageFit, ImageRendering, ItemRc};
 use i_slint_core::lengths::{
-    LogicalBorderRadius, LogicalPoint, LogicalRect, LogicalSize, LogicalVector,
-    PhysicalBorderRadius, ScaleFactor, logical_size_from_api,
+    LogicalPoint, LogicalRect, LogicalSize, LogicalVector, PhysicalBorderRadius, ScaleFactor,
+    logical_size_from_api,
 };
 use i_slint_core::textlayout::sharedparley::{self, GlyphRenderer, fontique, parley};
 use i_slint_core::{Brush, Color, ImageInner, SharedString};
@@ -150,27 +150,55 @@ impl<'a, S: PaintScene> ItemRenderer for AnyrenderItemRenderer<'a, S> {
         };
 
         let transform = self.current_state.transform;
-        self.fill_with_brush(
-            rect.background(),
-            layout.brush_size,
-            transform,
-            peniko::Fill::default(),
-            &phys_rect_shape(layout.background_rect, layout.background_radius),
-        );
+        let outline = rect.outline();
+        let fill_style = match outline.fill_rule() {
+            i_slint_core::items::FillRule::Evenodd => peniko::Fill::EvenOdd,
+            _ => peniko::Fill::NonZero,
+        };
+        match &outline {
+            i_slint_core::graphics::ElementOutline::Rectangle(..) => {
+                self.fill_with_brush(
+                    rect.background(),
+                    layout.brush_size,
+                    transform,
+                    fill_style,
+                    &phys_rect_shape(layout.background_rect, layout.background_radius),
+                );
 
-        if layout.border_width.get() > 0.0 {
-            // Miter joins, not kurbo's default round ones: a round join doesn't
-            // reach into sharp corners, leaving the corner tips of the border
-            // uncovered.
-            let stroke =
-                kurbo::Stroke::new(layout.border_width.get() as f64).with_join(kurbo::Join::Miter);
-            self.stroke_with_brush(
-                layout.border_color,
-                layout.brush_size,
-                transform,
-                &stroke,
-                &phys_rect_shape(layout.border_rect, layout.border_radius),
-            );
+                if layout.border_width.get() > 0.0 {
+                    // Miter joins, not kurbo's default round ones: a round join doesn't
+                    // reach into sharp corners, leaving the corner tips of the border
+                    // uncovered.
+                    let stroke = kurbo::Stroke::new(layout.border_width.get() as f64)
+                        .with_join(kurbo::Join::Miter);
+                    self.stroke_with_brush(
+                        layout.border_color,
+                        layout.brush_size,
+                        transform,
+                        &stroke,
+                        &phys_rect_shape(layout.border_rect, layout.border_radius),
+                    );
+                }
+            }
+            outline => {
+                self.fill_with_brush(
+                    rect.background(),
+                    layout.brush_size,
+                    transform,
+                    fill_style,
+                    &outline_to_bezpath(outline, layout.background_rect),
+                );
+                if layout.border_width.get() > 0.0 {
+                    let stroke = kurbo::Stroke::new(layout.border_width.get() as f64);
+                    self.stroke_with_brush(
+                        layout.border_color,
+                        layout.brush_size,
+                        transform,
+                        &stroke,
+                        &outline_to_bezpath(outline, layout.border_rect),
+                    );
+                }
+            }
         }
     }
 
@@ -476,7 +504,7 @@ impl<'a, S: PaintScene> ItemRenderer for AnyrenderItemRenderer<'a, S> {
 
         let brush_size = size * sf;
 
-        let fill_rule = match path.fill_rule() {
+        let fill_rule = match path.effective_fill_rule() {
             FillRule::Evenodd => peniko::Fill::EvenOdd,
             _ => peniko::Fill::NonZero,
         };
@@ -516,6 +544,24 @@ impl<'a, S: PaintScene> ItemRenderer for AnyrenderItemRenderer<'a, S> {
         let spread = (box_shadow.spread() * sf).get() as f64;
         let blur = (box_shadow.blur() * sf).get().max(0.) as f64;
         let phys_size = size * sf;
+
+        let outline = box_shadow.element_outline();
+        if let i_slint_core::graphics::ElementOutline::Shape { .. } = outline {
+            // vello has no blurred-path primitive, so compose the shadow out
+            // of layers with a Gaussian-blur filter: the silhouette is the
+            // outline dilated by a disk of `spread` radius, i.e.
+            // fill(outline) ∪ stroke(outline, 2·spread).
+            self.draw_shape_shadow(
+                color,
+                &outline,
+                kurbo::Vec2::new(offset.x as f64, offset.y as f64),
+                spread,
+                blur,
+                to_kurbo_size(phys_size),
+                box_shadow.inset(),
+            );
+            return;
+        }
 
         // anyrender's box shadow takes one uniform corner radius,
         // so approximate per-corner radii with their average
@@ -572,7 +618,11 @@ impl<'a, S: PaintScene> ItemRenderer for AnyrenderItemRenderer<'a, S> {
         }
     }
 
-    fn combine_clip(&mut self, clip_rect: LogicalRect, radius: LogicalBorderRadius) -> bool {
+    fn combine_clip(
+        &mut self,
+        clip_rect: LogicalRect,
+        outline: &i_slint_core::graphics::ElementOutline,
+    ) -> bool {
         let clip = &mut self.current_state.clip_rect;
         let clip_region_valid = match clip.intersection(&clip_rect) {
             Some(r) => {
@@ -585,9 +635,17 @@ impl<'a, S: PaintScene> ItemRenderer for AnyrenderItemRenderer<'a, S> {
             }
         };
 
-        let clip_shape = phys_rect_shape(clip_rect * self.scale_factor, radius * self.scale_factor);
-
-        self.scene.push_clip_layer(self.current_state.transform, &clip_shape);
+        match outline {
+            i_slint_core::graphics::ElementOutline::Rectangle(radius) => {
+                let clip_shape =
+                    phys_rect_shape(clip_rect * self.scale_factor, *radius * self.scale_factor);
+                self.scene.push_clip_layer(self.current_state.transform, &clip_shape);
+            }
+            outline => {
+                let clip_path = outline_to_bezpath(outline, clip_rect * self.scale_factor);
+                self.scene.push_clip_layer(self.current_state.transform, &clip_path);
+            }
+        }
         self.current_state.layer_count += 1;
 
         clip_region_valid
@@ -894,6 +952,114 @@ impl<'a, S: PaintScene> AnyrenderItemRenderer<'a, S> {
         self.scene.pop_layer();
     }
 
+    /// Draw a drop or inset shadow for a [`ElementOutline::Shape`] outline.
+    ///
+    /// vello has no blurred-path primitive, so the shadow is composed of
+    /// layers with a Gaussian-blur filter, following the same mask math as
+    /// the texture-based renderers:
+    ///
+    /// - drop: blur(fill(outline) ∪ stroke(outline, 2·spread)) — the outline
+    ///   dilated by a disk, drawn at the shadow offset.
+    /// - inset: inside a clip of the silhouette, punch the eroded hole
+    ///   fill(outline) ∖ stroke(outline, 2·|spread|) with a blurred
+    ///   destination-out layer. The erosion is expressed as a nested
+    ///   destination-out layer so the band subtracts from the hole before the
+    ///   blur is applied.
+    fn draw_shape_shadow(
+        &mut self,
+        color: Color,
+        outline: &i_slint_core::graphics::ElementOutline,
+        offset: kurbo::Vec2,
+        spread: f64,
+        blur: f64,
+        size: kurbo::Size,
+        inset: bool,
+    ) {
+        let transform = self.current_state.transform;
+        let size = PhysicalSize::new(size.width as f32, size.height as f32);
+        let geometry = PhysicalRect::new(PhysicalPoint::default(), size);
+        let clip_rect = kurbo::Rect::new(0., 0., size.width as f64, size.height as f64);
+        if clip_rect.is_zero_area() {
+            return;
+        }
+        let fill_style = match outline.fill_rule() {
+            i_slint_core::items::FillRule::Evenodd => peniko::Fill::EvenOdd,
+            _ => peniko::Fill::NonZero,
+        };
+        // The CSS drop-shadow convention Slint follows: the Gaussian's
+        // standard deviation is half the blur radius.
+        let blur_filter = || {
+            (blur > 0.).then(|| {
+                Arc::new(anyrender::Filter::single(anyrender::filters::FilterEffect::blur(
+                    (blur / 2.) as f32,
+                )))
+            })
+        };
+        let src_over = peniko::BlendMode::new(peniko::Mix::Normal, peniko::Compose::SrcOver);
+        let dest_out = peniko::BlendMode::new(peniko::Mix::Normal, peniko::Compose::DestOut);
+        let opaque = peniko::color::palette::css::BLACK;
+
+        if !inset {
+            let target = if spread >= 0. {
+                PhysicalRect::new(PhysicalPoint::new(offset.x as f32, offset.y as f32), size)
+            } else {
+                PhysicalRect::new(
+                    PhysicalPoint::new(offset.x as f32, offset.y as f32),
+                    PhysicalSize::new(
+                        (size.width as f64 + 2. * spread) as f32,
+                        (size.height as f64 + 2. * spread) as f32,
+                    ),
+                )
+            };
+            let path = outline_to_bezpath(outline, target);
+            // Bound the blur's bleed into the layer's clip.
+            let inflate = spread.abs() + blur * 2. + 8.;
+            let layer_clip = kurbo::Rect::new(
+                target.origin.x as f64 - inflate,
+                target.origin.y as f64 - inflate,
+                target.max_x() as f64 + inflate,
+                target.max_y() as f64 + inflate,
+            );
+            self.scene.push_layer(src_over, 1.0, transform, &layer_clip, blur_filter(), None);
+            let brush = peniko::BrushRef::Solid(to_peniko_color(color));
+            self.scene.fill(fill_style, transform, brush, None, &path);
+            if spread > 0. {
+                let stroke = kurbo::Stroke::new(2. * spread)
+                    .with_join(kurbo::Join::Round)
+                    .with_caps(kurbo::Cap::Round);
+                self.scene.stroke(&stroke, transform, brush, None, &path);
+            }
+            self.scene.pop_layer();
+        } else {
+            let silhouette = outline_to_bezpath(outline, geometry);
+            // The shadow must not paint outside the element.
+            self.scene.push_clip_layer(transform, &silhouette);
+            self.scene.fill(
+                peniko::Fill::default(),
+                transform,
+                peniko::BrushRef::Solid(to_peniko_color(color)),
+                None,
+                &clip_rect,
+            );
+
+            let hole_target =
+                PhysicalRect::new(PhysicalPoint::new(offset.x as f32, offset.y as f32), size);
+            let hole = outline_to_bezpath(outline, hole_target);
+            self.scene.push_layer(dest_out, 1.0, transform, &clip_rect, blur_filter(), None);
+            self.scene.fill(fill_style, transform, peniko::BrushRef::Solid(opaque), None, &hole);
+            if spread != 0. {
+                self.scene.push_layer(dest_out, 1.0, transform, &clip_rect, None, None);
+                let band = kurbo::Stroke::new(2. * spread.abs())
+                    .with_join(kurbo::Join::Round)
+                    .with_caps(kurbo::Cap::Round);
+                self.scene.stroke(&band, transform, peniko::BrushRef::Solid(opaque), None, &hole);
+                self.scene.pop_layer();
+            }
+            self.scene.pop_layer();
+            self.scene.pop_layer();
+        }
+    }
+
     /// Push a compositing layer that does not clip its content.
     fn push_unclipped_layer(&mut self, blend: peniko::BlendMode, alpha: f32) {
         self.scene.push_layer(blend, alpha, kurbo::Affine::IDENTITY, &UNCLIPPED, None, None);
@@ -1035,6 +1201,25 @@ fn to_peniko_stops(stops: &[i_slint_core::graphics::GradientStop]) -> peniko::Co
             })
             .collect(),
     )
+}
+
+/// Convert an [`ElementOutline`] fitted into `target` into a [`kurbo::BezPath`].
+fn outline_to_bezpath(
+    outline: &i_slint_core::graphics::ElementOutline,
+    target: PhysicalRect,
+) -> kurbo::BezPath {
+    let mut path = kurbo::BezPath::new();
+    outline.for_each_path(target, &mut |el| match el {
+        i_slint_core::graphics::OutlinePathEl::MoveTo(p) => path.move_to((p.x as f64, p.y as f64)),
+        i_slint_core::graphics::OutlinePathEl::LineTo(p) => path.line_to((p.x as f64, p.y as f64)),
+        i_slint_core::graphics::OutlinePathEl::CurveTo(c0, c1, p) => path.curve_to(
+            (c0.x as f64, c0.y as f64),
+            (c1.x as f64, c1.y as f64),
+            (p.x as f64, p.y as f64),
+        ),
+        i_slint_core::graphics::OutlinePathEl::Close => path.close_path(),
+    });
+    path
 }
 
 fn to_kurbo_point(p: PhysicalPoint) -> kurbo::Point {

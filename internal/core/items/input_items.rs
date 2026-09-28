@@ -263,6 +263,13 @@ impl Item for TouchArea {
         geometry
     }
 
+    fn boundary_shape(
+        self: core::pin::Pin<&Self>,
+        _geometry: LogicalRect,
+    ) -> crate::graphics::ItemBoundaryShape {
+        Default::default()
+    }
+
     fn clips_children(self: core::pin::Pin<&Self>) -> bool {
         false
     }
@@ -404,6 +411,13 @@ impl Item for WindowMoveArea {
         geometry
     }
 
+    fn boundary_shape(
+        self: core::pin::Pin<&Self>,
+        _geometry: LogicalRect,
+    ) -> crate::graphics::ItemBoundaryShape {
+        Default::default()
+    }
+
     fn clips_children(self: core::pin::Pin<&Self>) -> bool {
         false
     }
@@ -504,6 +518,13 @@ impl Item for KeyBinding {
         geometry: crate::lengths::LogicalRect,
     ) -> crate::lengths::LogicalRect {
         geometry
+    }
+
+    fn boundary_shape(
+        self: core::pin::Pin<&Self>,
+        _geometry: LogicalRect,
+    ) -> crate::graphics::ItemBoundaryShape {
+        Default::default()
     }
 
     fn clips_children(self: core::pin::Pin<&Self>) -> bool {
@@ -822,6 +843,13 @@ impl Item for FocusScope {
         geometry
     }
 
+    fn boundary_shape(
+        self: core::pin::Pin<&Self>,
+        _geometry: LogicalRect,
+    ) -> crate::graphics::ItemBoundaryShape {
+        Default::default()
+    }
+
     fn clips_children(self: core::pin::Pin<&Self>) -> bool {
         false
     }
@@ -1028,6 +1056,13 @@ impl Item for SwipeGestureHandler {
     ) -> LogicalRect {
         geometry.size = LogicalSize::zero();
         geometry
+    }
+
+    fn boundary_shape(
+        self: core::pin::Pin<&Self>,
+        _geometry: LogicalRect,
+    ) -> crate::graphics::ItemBoundaryShape {
+        Default::default()
     }
 
     fn clips_children(self: core::pin::Pin<&Self>) -> bool {
@@ -1296,6 +1331,13 @@ impl Item for ScaleRotateGestureHandler {
     ) -> LogicalRect {
         geometry.size = LogicalSize::zero();
         geometry
+    }
+
+    fn boundary_shape(
+        self: core::pin::Pin<&Self>,
+        _geometry: LogicalRect,
+    ) -> crate::graphics::ItemBoundaryShape {
+        Default::default()
     }
 
     fn clips_children(self: core::pin::Pin<&Self>) -> bool {

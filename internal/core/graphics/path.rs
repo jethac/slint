@@ -267,6 +267,28 @@ impl PathDataIterator {
         }
     }
 
+    /// An iterator over the cubic events of `shape`'s outline, in the shape's
+    /// own coordinate space.
+    pub fn from_shape(shape: &crate::graphics::Shape) -> Self {
+        let mut builder = lyon_path::Path::builder();
+        let cubics = shape.cubics();
+        if !cubics.is_empty() {
+            builder.begin(lyon_path::math::point(cubics[0], cubics[1]));
+            for cubic in cubics.chunks_exact(8) {
+                builder.cubic_bezier_to(
+                    lyon_path::math::point(cubic[2], cubic[3]),
+                    lyon_path::math::point(cubic[4], cubic[5]),
+                    lyon_path::math::point(cubic[6], cubic[7]),
+                );
+            }
+            builder.end(true);
+        }
+        PathDataIterator {
+            it: LyonPathIteratorVariant::FromPath(builder.build()),
+            transform: Default::default(),
+        }
+    }
+
     /// Applies a transformation on the elements this iterator provides that tries to fit everything
     /// into the specified width/height, respecting the provided viewbox. If no viewbox is specified,
     /// the bounding rectangle of the path is used.

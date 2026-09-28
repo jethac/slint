@@ -1644,7 +1644,7 @@ pub(crate) fn send_exit_events(
     for (idx, it) in old_input_state.item_stack.iter().enumerate() {
         let Some(item) = it.0.upgrade() else { break };
         let g = item.geometry();
-        let contains = pos.is_some_and(|p| g.contains(p));
+        let contains = pos.is_some_and(|p| item.hit_test(p));
         if let Some(p) = pos.as_mut() {
             *p -= g.origin.to_vector();
             if window_adapter.renderer().supports_transformations()
@@ -1818,7 +1818,7 @@ fn send_mouse_event_to_item(
         }
     }
 
-    let filter_result = if mouse_event.position().is_some_and(|p| geom.contains(p))
+    let filter_result = if mouse_event.position().is_some_and(|p| item_rc.hit_test(p))
         || item.as_ref().clips_children()
     {
         item.as_ref().input_event_filter_before_children(

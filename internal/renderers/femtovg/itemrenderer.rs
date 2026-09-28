@@ -22,8 +22,8 @@ use i_slint_core::items::{
     self, Clip, FillRule, ImageRendering, ImageTiling, ItemRc, Layer, Opacity, RenderingResult,
 };
 use i_slint_core::lengths::{
-    LogicalBorderRadius, LogicalLength, LogicalPoint, LogicalRect, LogicalSize, LogicalVector,
-    ScaleFactor, logical_size_from_api,
+    LogicalLength, LogicalPoint, LogicalRect, LogicalSize, LogicalVector, ScaleFactor,
+    logical_size_from_api,
 };
 use i_slint_core::textlayout::sharedparley::{self, GlyphRenderer, fontique, parley};
 use i_slint_core::{Brush, Color, ImageInner, SharedString};
@@ -138,6 +138,29 @@ fn rect_to_path(r: PhysicalRect) -> femtovg::Path {
     rect_with_radius_to_path(r, PhysicalBorderRadius::default())
 }
 
+fn outline_to_femtovg_path(
+    outline: &i_slint_core::graphics::ElementOutline,
+    target: PhysicalRect,
+) -> femtovg::Path {
+    let mut path = femtovg::Path::new();
+    outline.for_each_path(target, &mut |el| match el {
+        i_slint_core::graphics::OutlinePathEl::MoveTo(p) => path.move_to(p.x, p.y),
+        i_slint_core::graphics::OutlinePathEl::LineTo(p) => path.line_to(p.x, p.y),
+        i_slint_core::graphics::OutlinePathEl::CurveTo(c0, c1, p) => {
+            path.bezier_to(c0.x, c0.y, c1.x, c1.y, p.x, p.y)
+        }
+        i_slint_core::graphics::OutlinePathEl::Close => path.close(),
+    });
+    path
+}
+
+fn outline_fill_rule(outline: &i_slint_core::graphics::ElementOutline) -> femtovg::FillRule {
+    match outline.fill_rule() {
+        i_slint_core::items::FillRule::Evenodd => femtovg::FillRule::EvenOdd,
+        _ => femtovg::FillRule::NonZero,
+    }
+}
+
 impl<'a, R: femtovg::Renderer + TextureImporter> GLItemRenderer<'a, R> {
     pub fn metrics(&self) -> RenderingMetrics {
         self.metrics.clone()
@@ -182,8 +205,11 @@ impl<'a, R: femtovg::Renderer + TextureImporter> ItemRenderer for GLItemRenderer
         let Some(layout) = BorderRectLayout::new(rect, size, self.scale_factor) else {
             return;
         };
+        let outline = rect.outline();
 
-        let fill_paint = self.brush_to_paint(rect.background(), layout.brush_size);
+        let fill_paint = self
+            .brush_to_paint(rect.background(), layout.brush_size)
+            .map(|paint| paint.with_fill_rule(outline_fill_rule(&outline)));
 
         let border_paint = if layout.border_width.get() > 0.0 {
             self.brush_to_paint(layout.border_color, layout.brush_size).map(|mut paint| {
@@ -196,12 +222,21 @@ impl<'a, R: femtovg::Renderer + TextureImporter> ItemRenderer for GLItemRenderer
 
         let mut canvas = self.canvas.borrow_mut();
         if let Some(paint) = fill_paint {
-            let background_path =
-                rect_with_radius_to_path(layout.background_rect, layout.background_radius);
+            let background_path = match &outline {
+                i_slint_core::graphics::ElementOutline::Rectangle(..) => {
+                    rect_with_radius_to_path(layout.background_rect, layout.background_radius)
+                }
+                outline => outline_to_femtovg_path(outline, layout.background_rect),
+            };
             canvas.fill_path(&background_path, &paint);
         }
         if let Some(border_paint) = border_paint {
-            let border_path = rect_with_radius_to_path(layout.border_rect, layout.border_radius);
+            let border_path = match &outline {
+                i_slint_core::graphics::ElementOutline::Rectangle(..) => {
+                    rect_with_radius_to_path(layout.border_rect, layout.border_radius)
+                }
+                outline => outline_to_femtovg_path(outline, layout.border_rect),
+            };
             canvas.stroke_path(&border_path, &border_paint);
         }
     }
@@ -349,7 +384,7 @@ impl<'a, R: femtovg::Renderer + TextureImporter> ItemRenderer for GLItemRenderer
 
         let fill_paint =
             self.brush_to_paint(path.fill(), size * self.scale_factor).map(|mut fill_paint| {
-                fill_paint.set_fill_rule(match path.fill_rule() {
+                fill_paint.set_fill_rule(match path.effective_fill_rule() {
                     FillRule::Evenodd => femtovg::FillRule::EvenOdd,
                     FillRule::Nonzero | _ => femtovg::FillRule::NonZero,
                 });
@@ -404,15 +439,9 @@ impl<'a, R: femtovg::Renderer + TextureImporter> ItemRenderer for GLItemRenderer
         if box_shadow.color().alpha() == 0
             || (box_shadow.blur() == LogicalLength::zero()
                 && box_shadow.offset_x() == LogicalLength::zero()
-                && box_shadow.offset_y() == LogicalLength::zero())
+                && box_shadow.offset_y() == LogicalLength::zero()
+                && box_shadow.spread() == LogicalLength::zero())
         {
-            return;
-        }
-        // TODO: implement inset shadows and spread for femtovg, using the shape_size,
-        // outer_radius and inner_radius of the BoxShadowOptions. Until then, skip rendering
-        // inset shadows entirely (otherwise they'd render incorrectly as a drop shadow).
-        // Spread is silently ignored.
-        if box_shadow.inset() {
             return;
         }
 
@@ -423,17 +452,24 @@ impl<'a, R: femtovg::Renderer + TextureImporter> ItemRenderer for GLItemRenderer
             self.scale_factor,
             |shadow_options| {
                 let blur = shadow_options.blur;
+                let spread = shadow_options.spread;
+                let outline = shadow_options.element_outline();
                 let width = shadow_options.width;
                 let height = shadow_options.height;
-                let radius = shadow_options.radius;
-
-                let shadow_rect = PhysicalRect::new(
-                    PhysicalPoint::default(),
-                    PhysicalSize::from_lengths(width + blur * 2., height + blur * 2.),
-                );
+                let shadow_rect = if shadow_options.inset {
+                    PhysicalRect::new(
+                        PhysicalPoint::default(),
+                        PhysicalSize::from_lengths(width, height),
+                    )
+                } else {
+                    PhysicalRect::new(PhysicalPoint::default(), shadow_options.drop_texture_size())
+                };
 
                 let shadow_image_width = shadow_rect.width().ceil() as u32;
                 let shadow_image_height = shadow_rect.height().ceil() as u32;
+                if shadow_image_width == 0 || shadow_image_height == 0 {
+                    return None;
+                }
 
                 let shadow_image = Texture::new_empty_on_gpu(
                     &self.canvas,
@@ -457,17 +493,110 @@ impl<'a, R: femtovg::Renderer + TextureImporter> ItemRenderer for GLItemRenderer
                         femtovg::Color::rgba(0, 0, 0, 0),
                     );
 
-                    let shadow_path = rect_with_radius_to_path(
-                        PhysicalRect::new(
-                            shadow_options.shape_origin(),
+                    let mask_paint = femtovg::Paint::color(femtovg::Color::rgb(255, 255, 255))
+                        .with_fill_rule(
+                            outline.as_ref().map_or(femtovg::FillRule::NonZero, outline_fill_rule),
+                        );
+                    if !shadow_options.inset {
+                        // Drop shadow silhouette: the outline grown by the
+                        // spread — the Minkowski sum with a disk, i.e.
+                        // fill(outline) ∪ stroke(outline, 2·spread).
+                        match &outline {
+                            None => {
+                                let shadow_path = rect_with_radius_to_path(
+                                    PhysicalRect::new(
+                                        shadow_options.shape_origin(),
+                                        shadow_options.shape_size(),
+                                    ),
+                                    shadow_options.outer_radius(),
+                                );
+                                canvas.fill_path(&shadow_path, &mask_paint);
+                            }
+                            Some(outline) => {
+                                let target = if spread.get() >= 0. {
+                                    PhysicalRect::new(
+                                        PhysicalPoint::new(
+                                            shadow_options.shape_origin().x + spread.get(),
+                                            shadow_options.shape_origin().y + spread.get(),
+                                        ),
+                                        PhysicalSize::from_lengths(width, height),
+                                    )
+                                } else {
+                                    PhysicalRect::new(
+                                        shadow_options.shape_origin(),
+                                        shadow_options.shape_size(),
+                                    )
+                                };
+                                let shadow_path = outline_to_femtovg_path(outline, target);
+                                canvas.fill_path(&shadow_path, &mask_paint);
+                                if spread.get() > 0. {
+                                    let mut stroke_paint = mask_paint.clone();
+                                    stroke_paint.set_line_width(2. * spread.get());
+                                    stroke_paint.set_line_join(femtovg::LineJoin::Round);
+                                    stroke_paint.set_line_cap(femtovg::LineCap::Round);
+                                    canvas.stroke_path(&shadow_path, &stroke_paint);
+                                }
+                            }
+                        }
+                    } else {
+                        // Inset shadow: the silhouette is painted behind a hole
+                        // shaped like the outline eroded by the spread, i.e.
+                        // fill(outline) minus the band a stroke of width
+                        // 2·spread covers — punched via destination-out so the
+                        // outline's fill rule is handled by the rasterizer.
+                        let inflate = shadow_options.blur.get()
+                            + spread.get().abs()
+                            + shadow_options.offset_x_inset.abs()
+                            + shadow_options.offset_y_inset.abs()
+                            + 16.;
+                        let mut outer_path = femtovg::Path::new();
+                        outer_path.rect(
+                            -inflate,
+                            -inflate,
+                            width.get() + 2. * inflate,
+                            height.get() + 2. * inflate,
+                        );
+                        canvas.fill_path(&outer_path, &mask_paint);
+
+                        let hole_target = PhysicalRect::new(
+                            PhysicalPoint::new(
+                                shadow_options.offset_x_inset,
+                                shadow_options.offset_y_inset,
+                            ),
                             PhysicalSize::from_lengths(width, height),
-                        ),
-                        radius,
-                    );
-                    canvas.fill_path(
-                        &shadow_path,
-                        &femtovg::Paint::color(femtovg::Color::rgb(255, 255, 255)),
-                    );
+                        );
+                        canvas.global_composite_operation(
+                            femtovg::CompositeOperation::DestinationOut,
+                        );
+                        match &outline {
+                            None => {
+                                let hole_path = rect_with_radius_to_path(
+                                    PhysicalRect::new(
+                                        hole_target.origin,
+                                        PhysicalSize::new(
+                                            (hole_target.width() + 2. * spread.get()).max(0.),
+                                            (hole_target.height() + 2. * spread.get()).max(0.),
+                                        ),
+                                    )
+                                    .translate(euclid::vec2(-spread.get(), -spread.get())),
+                                    shadow_options.inner_radius(),
+                                );
+                                canvas.fill_path(&hole_path, &mask_paint);
+                            }
+                            Some(outline) => {
+                                let hole_path = outline_to_femtovg_path(outline, hole_target);
+                                if spread.get() != 0. {
+                                    let mut band_paint = mask_paint.clone();
+                                    band_paint.set_line_width(2. * spread.get().abs());
+                                    band_paint.set_line_join(femtovg::LineJoin::Round);
+                                    band_paint.set_line_cap(femtovg::LineCap::Round);
+                                    canvas.stroke_path(&hole_path, &band_paint);
+                                }
+                                canvas.fill_path(&hole_path, &mask_paint);
+                            }
+                        }
+                        canvas.global_composite_operation(femtovg::CompositeOperation::SourceOver);
+                    }
                 }
 
                 let shadow_image = if blur.get() > 0. {
@@ -495,6 +624,28 @@ impl<'a, R: femtovg::Renderer + TextureImporter> ItemRenderer for GLItemRenderer
                         &shadow_image_rect,
                         &femtovg::Paint::color(to_femtovg_color(&box_shadow.color())),
                     );
+
+                    if shadow_options.inset {
+                        // Keep the shadow inside the element's outline: the
+                        // blurred ring must not bleed out of the silhouette.
+                        canvas
+                            .global_composite_operation(femtovg::CompositeOperation::DestinationIn);
+                        let geometry_rect = PhysicalRect::new(
+                            PhysicalPoint::default(),
+                            PhysicalSize::from_lengths(width, height),
+                        );
+                        let clip_path = match &outline {
+                            None => rect_with_radius_to_path(geometry_rect, shadow_options.radius),
+                            Some(outline) => outline_to_femtovg_path(outline, geometry_rect),
+                        };
+                        let mask_paint = femtovg::Paint::color(femtovg::Color::rgb(255, 255, 255))
+                            .with_fill_rule(
+                                outline
+                                    .as_ref()
+                                    .map_or(femtovg::FillRule::NonZero, outline_fill_rule),
+                            );
+                        canvas.fill_path(&clip_path, &mask_paint);
+                    }
 
                     canvas.restore();
 
@@ -529,9 +680,12 @@ impl<'a, R: femtovg::Renderer + TextureImporter> ItemRenderer for GLItemRenderer
 
         self.canvas.borrow_mut().save_with(|canvas| {
             let blur = box_shadow.blur() * self.scale_factor;
+            let spread = box_shadow.spread() * self.scale_factor;
             let offset = LogicalPoint::from_lengths(box_shadow.offset_x(), box_shadow.offset_y())
                 * self.scale_factor;
-            canvas.translate(offset.x - blur.get(), offset.y - blur.get());
+            let dx = if box_shadow.inset() { 0. } else { offset.x - blur.get() - spread.get() };
+            let dy = if box_shadow.inset() { 0. } else { offset.y - blur.get() - spread.get() };
+            canvas.translate(dx, dy);
             canvas.fill_path(&shadow_image_rect, &shadow_image_paint);
         });
     }
@@ -589,7 +743,15 @@ impl<'a, R: femtovg::Renderer + TextureImporter> ItemRenderer for GLItemRenderer
             return RenderingResult::ContinueRenderingWithoutChildren;
         }
 
-        if !clip_radius.is_zero() {
+        let element_outline = clip_item.element_outline();
+        let outline = match element_outline.shape() {
+            Some((shape, fit)) => {
+                i_slint_core::graphics::ElementOutline::Shape { shape: shape.clone(), fit }
+            }
+            None => i_slint_core::graphics::ElementOutline::Rectangle(clip_radius),
+        };
+
+        if !outline.is_plain_rect() {
             if let Some((layer_origin, layer_image)) =
                 i_slint_core::item_rendering::render_layer(self, item_rc)
                 && let Some(layer_image_size) = layer_image.size()
@@ -604,12 +766,16 @@ impl<'a, R: femtovg::Renderer + TextureImporter> ItemRenderer for GLItemRenderer
                     layer_image_height,
                     0.0,
                     1.0,
-                );
+                )
+                .with_fill_rule(outline_fill_rule(&outline));
 
-                let layer_path = rect_with_radius_to_path(
-                    clip_rect * self.scale_factor,
-                    clip_radius * self.scale_factor,
-                );
+                let phys_rect = clip_rect * self.scale_factor;
+                let layer_path = match &outline {
+                    i_slint_core::graphics::ElementOutline::Rectangle(radius) => {
+                        rect_with_radius_to_path(phys_rect, *radius * self.scale_factor)
+                    }
+                    outline => outline_to_femtovg_path(outline, phys_rect),
+                };
 
                 self.canvas.borrow_mut().save_with(|canvas| {
                     // The layer_path can be bigger than the layer image (e.g. when the children occupy
@@ -628,12 +794,16 @@ impl<'a, R: femtovg::Renderer + TextureImporter> ItemRenderer for GLItemRenderer
             RenderingResult::ContinueRenderingWithoutChildren
         } else {
             self.layer_cache.release(item_rc);
-            self.combine_clip(clip_rect, clip_radius);
+            self.combine_clip(clip_rect, &outline);
             RenderingResult::ContinueRenderingChildren
         }
     }
 
-    fn combine_clip(&mut self, clip_rect: LogicalRect, radius: LogicalBorderRadius) -> bool {
+    fn combine_clip(
+        &mut self,
+        clip_rect: LogicalRect,
+        outline: &i_slint_core::graphics::ElementOutline,
+    ) -> bool {
         let clip = &mut self.state.last_mut().unwrap().scissor;
         let clip_region_valid = match clip.intersection(&clip_rect) {
             Some(r) => {
@@ -656,7 +826,7 @@ impl<'a, R: femtovg::Renderer + TextureImporter> ItemRenderer for GLItemRenderer
 
         // femtovg only supports rectangular clipping. Non-rectangular clips must be handled via
         // `visit_clip`, which renders children into a layer.
-        debug_assert!(radius.is_zero());
+        debug_assert!(outline.shape().is_none());
 
         clip_region_valid
     }
