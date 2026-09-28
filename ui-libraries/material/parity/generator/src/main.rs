@@ -47,6 +47,11 @@ struct Scene {
     params: serde_json::Map<String, serde_json::Value>,
     #[serde(default)]
     widgets: Vec<Widget>,
+    /// Scene-level `negative` defects, keyed by the emitter that consumes
+    /// them (`x_offset` shifts the spring-motion thumb off its animated
+    /// property).
+    #[serde(default)]
+    slint_overrides: serde_json::Map<String, serde_json::Value>,
 }
 
 #[derive(serde::Deserialize, serde::Serialize)]
@@ -457,6 +462,37 @@ fn slint_canvas(s: &mut String, scene: &Scene) {
                     }
                 )
                 .unwrap();
+                if let Some(cover) = w.slint_overrides.get("cover") {
+                    // `slint_overrides.cover` paints a rectangle over the
+                    // whole button: an opaque one masks the real fill and
+                    // every state layer, a translucent one adds a second
+                    // overlay. `label` redraws the button text on top so
+                    // the defect stays in the button's body.
+                    let fill = cover["fill"].as_str().unwrap_or("primary");
+                    let fill_expr = if fill.starts_with('#') {
+                        fill.to_lowercase()
+                    } else {
+                        format!("MaterialPalette.{}", fill.replace('-', "_"))
+                    };
+                    let label = if cover["label"].as_bool().unwrap_or(true) {
+                        let label_fill = cover["label_fill"]
+                            .as_str()
+                            .unwrap_or("on-primary")
+                            .replace('-', "_");
+                        format!(
+                            "        Text {{\n            text: \"{}\";\n            color: MaterialPalette.{label_fill};\n            font-family: \"Roboto\";\n            font-weight: 500;\n            font-size: 14px;\n            horizontal-alignment: center;\n            vertical-alignment: center;\n        }}\n",
+                            w.text.as_deref().unwrap_or_default()
+                        )
+                    } else {
+                        String::new()
+                    };
+                    writeln!(
+                        s,
+                        "    // Deliberate defect (scene `slint_overrides.cover`).\n    Rectangle {{\n        x: button{i}.x;\n        y: button{i}.y;\n        width: button{i}.width;\n        height: button{i}.height;\n        border-radius: button{i}.height / 2;\n        background: {fill_expr};\n        opacity: {};\n{label}    }}\n",
+                        cover["opacity"].as_f64().unwrap_or(1.0),
+                    )
+                    .unwrap();
+                }
             }
             "rect" => {
                 let radius = w
@@ -487,9 +523,17 @@ fn slint_spring_motion(s: &mut String, scene: &Scene) {
     let get = |k: &str| widget_num(&p[k]);
     writeln!(
         s,
-        "    // The property the trace and the Compose side both watch — the\n    // spring's animated value itself. Animating the property (not `thumb.x`,\n    // which would jump the source and animate only the binding) keeps the\n    // `get_thumb-x()` trace the live value. Pressing anywhere moves the\n    // thumb to `{target}px`; the spring settles it.\n    in-out property <length> thumb-x: {start}px;\n    animate thumb-x {{ duration: {dur}ms; easing: spring({bounce}); }}\n\n    thumb := Rectangle {{\n        x: root.thumb-x;\n        y: {y}px;\n        width: {size}px;\n        height: {size}px;\n        border-radius: {radius}px;\n        background: MaterialPalette.{color};\n    }}\n\n    TouchArea {{\n        pointer-event(event) => {{\n            if event.kind == PointerEventKind.down {{\n                root.thumb-x = {target}px;\n            }}\n        }}\n    }}",
+        "    // The property the trace and the Compose side both watch — the\n    // spring's animated value itself. Animating the property (not `thumb.x`,\n    // which would jump the source and animate only the binding) keeps the\n    // `get_thumb-x()` trace the live value. Pressing anywhere moves the\n    // thumb to `{target}px`; the spring settles it.\n    in-out property <length> thumb-x: {start}px;\n    animate thumb-x {{ duration: {dur}ms; easing: spring({bounce}); }}\n\n    thumb := Rectangle {{\n        x: root.thumb-x{x_offset};\n        y: {y}px;\n        width: {size}px;\n        height: {size}px;\n        border-radius: {radius}px;\n        background: MaterialPalette.{color};\n    }}\n\n    TouchArea {{\n        pointer-event(event) => {{\n            if event.kind == PointerEventKind.down {{\n                root.thumb-x = {target}px;\n            }}\n        }}\n    }}",
         start = get("start") as i64,
         target = get("target") as i64,
+        // Scene-level `slint_overrides.x_offset` renders the thumb off its
+        // animated property — the motion-class defect the trace layer must
+        // catch (a pure shift leaves zero strict pixels).
+        x_offset = scene
+            .slint_overrides
+            .get("x_offset")
+            .map(|v| format!(" + {}px", widget_num(v) as i64))
+            .unwrap_or_default(),
         y = get("y") as i64,
         size = get("size") as i64,
         radius = get("radius") as i64,
