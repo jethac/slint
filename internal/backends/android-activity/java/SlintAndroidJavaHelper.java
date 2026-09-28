@@ -30,6 +30,7 @@ import android.graphics.drawable.Drawable;
 import android.text.Editable;
 import android.text.Selection;
 import android.text.SpannableStringBuilder;
+import android.provider.Settings;
 import android.util.TypedValue;
 import android.view.inputmethod.InputMethodManager;
 import android.app.Activity;
@@ -772,6 +773,13 @@ public class SlintAndroidJavaHelper {
             }
         }
         return 0;
+    }
+
+    // Settings.Global.ANIMATOR_DURATION_SCALE; the accessibility "Remove
+    // animations" toggle sets it to 0.
+    public float animator_duration_scale() {
+        return Settings.Global.getFloat(
+            mActivity.getContentResolver(), Settings.Global.ANIMATOR_DURATION_SCALE, 1f);
     }
 
     // Get the size of the window

@@ -97,6 +97,26 @@ pub fn set_system_accent_color(color: i_slint_core::Color) {
     .unwrap();
 }
 
+/// Set the reduced-motion preference, as a platform backend would from the OS
+/// accessibility settings. Must be called after initializing the testing backend.
+pub fn set_reduced_motion(reduced: bool) {
+    i_slint_core::context::with_global_context(
+        || panic!("the testing backend must be initialized first"),
+        |ctx| ctx.set_reduced_motion(reduced),
+    )
+    .unwrap();
+}
+
+/// Set the global animation duration scale, as a platform backend would from a
+/// platform setting like Android's `animator_duration_scale`.
+pub fn set_animation_duration_scale(scale: f32) {
+    i_slint_core::context::with_global_context(
+        || panic!("the testing backend must be initialized first"),
+        |ctx| ctx.set_animation_duration_scale(scale),
+    )
+    .unwrap();
+}
+
 /// Replace the font collection with embedded NotoSans fonts for deterministic test results.
 /// Must be called after initializing the testing backend (e.g. after [`init_no_event_loop()`]).
 #[cfg(feature = "internal")]

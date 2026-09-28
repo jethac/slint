@@ -55,6 +55,10 @@ bind_java_type! {
             name = "font_scale",
             sig = () -> jfloat,
         },
+        fn animator_duration_scale {
+            name = "animator_duration_scale",
+            sig = () -> jfloat,
+        },
         fn system_color_schemes {
             name = "system_color_schemes",
             sig = () -> jint[],
@@ -538,6 +542,12 @@ impl JavaHelper {
 
     pub fn contrast(&self) -> Result<f32, jni::errors::Error> {
         self.with_jni_env(|env, helper| helper.contrast(env))
+    }
+
+    /// `Settings.Global.ANIMATOR_DURATION_SCALE`; Android's accessibility
+    /// "Remove animations" toggle sets it to 0.
+    pub fn animator_duration_scale(&self) -> Result<f32, jni::errors::Error> {
+        self.with_jni_env(|env, helper| helper.animator_duration_scale(env))
     }
 
     /// The platform's Material dynamic colors, packed as

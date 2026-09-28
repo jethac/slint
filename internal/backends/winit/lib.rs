@@ -895,6 +895,47 @@ impl i_slint_core::platform::Platform for Backend {
                     i_slint_core::lengths::LogicalLength::new(height as f32),
                 ));
             }
+
+            // Windows' "Animation effects" accessibility toggle surfaces as
+            // SPI_GETCLIENTAREAANIMATION; off means reduced motion.
+            use windows::Win32::UI::WindowsAndMessaging::SPI_GETCLIENTAREAANIMATION;
+            let mut enabled = windows::Win32::Foundation::BOOL::default();
+            if unsafe {
+                SystemParametersInfoForDpi(
+                    SPI_GETCLIENTAREAANIMATION.0,
+                    0,
+                    Some(&mut enabled as *mut _ as *mut core::ffi::c_void),
+                    0,
+                    96,
+                )
+            }
+            .is_ok()
+            {
+                ctx.set_reduced_motion(!enabled.as_bool());
+            }
+        }
+        #[cfg(target_os = "macos")]
+        if let Some(ctx) = _ctx.upgrade() {
+            ctx.set_reduced_motion(
+                objc2_app_kit::NSWorkspace::sharedWorkspace()
+                    .accessibilityDisplayShouldReduceMotion(),
+            );
+        }
+        #[cfg(target_os = "ios")]
+        if let Some(ctx) = _ctx.upgrade() {
+            unsafe extern "C" {
+                fn UIAccessibilityIsReduceMotionEnabled() -> objc2::runtime::Bool;
+            }
+            ctx.set_reduced_motion(unsafe { UIAccessibilityIsReduceMotionEnabled() }.as_bool());
+        }
+        #[cfg(target_arch = "wasm32")]
+        if let Some(ctx) = _ctx.upgrade() {
+            // CSS `prefers-reduced-motion` media query.
+            if let Some(media) = web_sys::window().and_then(|window| {
+                window.match_media("(prefers-reduced-motion: reduce)").ok().flatten()
+            }) {
+                ctx.set_reduced_motion(media.matches());
+            }
         }
     }
 

@@ -76,6 +76,11 @@ static SETTINGS: &[SettingDescriptor] = &[
     },
     SettingDescriptor { namespace: APPEARANCE, key: "accent-color", apply: apply_accent_value },
     SettingDescriptor { namespace: APPEARANCE, key: "contrast", apply: apply_contrast_value },
+    SettingDescriptor {
+        namespace: APPEARANCE,
+        key: "reduce-motion",
+        apply: apply_reduce_motion_value,
+    },
     SettingDescriptor { namespace: GNOME_INTERFACE, key: "font-name", apply: apply_font_value },
     SettingDescriptor {
         namespace: GNOME_INTERFACE,
@@ -148,6 +153,16 @@ fn apply_contrast_value(value: zbus::zvariant::OwnedValue, cx: &SettingsContext)
         && let Some(ctx) = cx.ctx.upgrade()
     {
         ctx.set_contrast_preference(if contrast == 1 { 1.0 } else { 0.0 });
+    }
+}
+
+/// The reduce-motion setting is a bool added to `org.freedesktop.appearance` for
+/// `prefers-reduced-motion`-style desktop settings.
+fn apply_reduce_motion_value(value: zbus::zvariant::OwnedValue, cx: &SettingsContext) {
+    if let Ok(reduced) = value.downcast_ref::<bool>()
+        && let Some(ctx) = cx.ctx.upgrade()
+    {
+        ctx.set_reduced_motion(reduced);
     }
 }
 
