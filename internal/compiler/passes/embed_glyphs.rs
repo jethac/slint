@@ -554,11 +554,7 @@ pub fn embed_glyphs(
     if !font_axes.dynamic.is_empty() && !compiler_config.exclude_vector_fonts {
         let mut embedded_paths: HashSet<std::path::PathBuf> = HashSet::new();
         let is_default_set = |path: &std::path::Path| default_fonts.iter().any(|(p, _)| p == path);
-        for (path, font) in default_fonts
-            .iter()
-            .map(|(p, f)| (p, f))
-            .chain(custom_fonts.iter())
-        {
+        for (path, font) in default_fonts.iter().map(|(p, f)| (p, f)).chain(custom_fonts.iter()) {
             if !embedded_paths.insert(path.clone()) {
                 continue;
             }
@@ -1110,21 +1106,20 @@ pub fn collect_font_axes_used(component: &Rc<Component>, seen: &mut FontAxesUsed
                 let mut all_constant = true;
                 for entry in values {
                     let constant_entry = match entry {
-                        Expression::Struct { values, .. } => match (
-                            values.get("tag"),
-                            values.get("value").and_then(number_value),
-                        ) {
-                            (Some(Expression::StringLiteral(tag)), Some(value))
-                                if tag.len() == 4
-                                    && tag.bytes().all(|b| (0x20..=0x7e).contains(&b)) =>
-                            {
-                                Some((
-                                    u32::from_be_bytes(tag.as_bytes().try_into().unwrap()),
-                                    CollectedAxisValue::Value(value as f32),
-                                ))
+                        Expression::Struct { values, .. } => {
+                            match (values.get("tag"), values.get("value").and_then(number_value)) {
+                                (Some(Expression::StringLiteral(tag)), Some(value))
+                                    if tag.len() == 4
+                                        && tag.bytes().all(|b| (0x20..=0x7e).contains(&b)) =>
+                                {
+                                    Some((
+                                        u32::from_be_bytes(tag.as_bytes().try_into().unwrap()),
+                                        CollectedAxisValue::Value(value as f32),
+                                    ))
+                                }
+                                _ => None,
                             }
-                            _ => None,
-                        },
+                        }
                         _ => None,
                     };
                     let Some(entry) = constant_entry else {
@@ -1314,18 +1309,13 @@ fn collect_markup_axes(
         let markup = match binding.value_expression() {
             Expression::StringLiteral(markup) => Some(markup.clone()),
             Expression::FunctionCall {
-                function: crate::expression_tree::Callable::Builtin(
-                    BuiltinFunction::ParseMarkdown,
-                ),
+                function: crate::expression_tree::Callable::Builtin(BuiltinFunction::ParseMarkdown),
                 arguments,
                 ..
-            } =>
-            {
-                match arguments.first() {
-                    Some(Expression::StringLiteral(markup)) => Some(markup.clone()),
-                    _ => None,
-                }
-            }
+            } => match arguments.first() {
+                Some(Expression::StringLiteral(markup)) => Some(markup.clone()),
+                _ => None,
+            },
             _ => None,
         };
         (markup, binding.span.clone().unwrap_or_default())
