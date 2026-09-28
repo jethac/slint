@@ -18,6 +18,9 @@ use i_slint_common::sharedfontique::{self, fontique, skrifa};
 #[cfg(not(target_arch = "wasm32"))]
 use skrifa::MetadataProvider;
 
+#[cfg(not(target_arch = "wasm32"))]
+mod instancer;
+
 /// Axis tag constants as big-endian `u32` (matching `u32::from_be_bytes`).
 const WDTH_TAG: u32 = u32::from_be_bytes(*b"wdth");
 const OPSZ_TAG: u32 = u32::from_be_bytes(*b"opsz");
@@ -57,6 +60,17 @@ pub struct FontAxesUsed {
     /// family, [`DynamicFamily::Default`] when none is set, or
     /// [`DynamicFamily::Any`] when `font-family` itself is non-constant.
     pub dynamic_families: HashSet<DynamicFamily>,
+    /// Axis tags (big-endian `u32`) a non-constant binding provably varies —
+    /// the literal tags inside a dynamic `font-variation-settings` array, plus
+    /// `wdth`/`opsz` for dynamic `font-stretch`/`font-optical-sizing`. Together
+    /// with the constant tuple tags and `wght`/`opsz` (every request carries a
+    /// weight and optical sizing tracks the size by default), they bound the
+    /// axes an embedded vector font must keep; the rest are pinned at their
+    /// defaults when subsetting.
+    pub dynamic_tags: HashSet<u32>,
+    /// A non-constant binding's tag set isn't compile-time known (a non-literal
+    /// tag or a dynamic markup string) — every axis must stay.
+    pub unbounded_tags: bool,
 }
 
 /// Which family a dynamically-bound axis request can come from at run time.
@@ -554,6 +568,30 @@ pub fn embed_glyphs(
     if !font_axes.dynamic.is_empty() && !compiler_config.exclude_vector_fonts {
         let mut embedded_paths: HashSet<std::path::PathBuf> = HashSet::new();
         let is_default_set = |path: &std::path::Path| default_fonts.iter().any(|(p, _)| p == path);
+        // The axes a request can carry for an embedded vector font: `wght`
+        // (every request has a weight), `opsz` (optical sizing is on by
+        // default), every constant tuple tag (a constant request can still
+        // resolve to this family), and every tag a dynamic binding provably
+        // uses. The remaining axes are pinned at their defaults.
+        let keep_axes: Option<std::collections::BTreeSet<skrifa::Tag>> = if font_axes.unbounded_tags
+        {
+            None
+        } else {
+            let mut tags = std::collections::BTreeSet::from([
+                skrifa::Tag::new(b"wght"),
+                skrifa::Tag::new(b"opsz"),
+            ]);
+            for tag in font_axes
+                .tuples_to_embed()
+                .iter()
+                .flatten()
+                .map(|(tag, _)| *tag)
+                .chain(font_axes.dynamic_tags.iter().copied())
+            {
+                tags.insert(skrifa::Tag::from_be_bytes(tag.to_be_bytes()));
+            }
+            Some(tags)
+        };
         for (path, font) in default_fonts.iter().map(|(p, f)| (p, f)).chain(custom_fonts.iter()) {
             if !embedded_paths.insert(path.clone()) {
                 continue;
@@ -577,12 +615,33 @@ pub fn embed_glyphs(
             }
             // Subset the face to the app's collected coverage — a full
             // variable font is far more flash than an MCU build should pay
-            // for glyphs it never shows. Axes are not prunable: a dynamic
-            // binding can drive any of them at run time, so fvar/gvar go
-            // through untouched. On subset failure the unsubsetted face is
-            // embedded; the bytes stay correct, just bigger.
-            let font_data = subset_vector_font(font.blob.data(), font.index, &characters_seen)
-                .unwrap_or_else(|| font.blob.data().to_vec());
+            // for glyphs it never shows. Axes the build never varies are
+            // pinned at their fvar defaults first (lossless: the request can
+            // only ever carry a kept axis), which shrinks gvar and the
+            // variation stores before klippa subsets the result. On any
+            // failure the uninstanced, unsubsetted face is embedded; the
+            // bytes stay correct, just bigger.
+            // `skrifa::Tag` and the fontcull `Tag` are different crate
+            // lineages — convert through the four-byte tag value.
+            let to_cull =
+                |tag: skrifa::Tag| fontcull_write_fonts::read::types::Tag::new(&tag.to_be_bytes());
+            let drop_axes: std::collections::BTreeSet<_> = keep_axes
+                .as_ref()
+                .map(|keep| {
+                    font_ref
+                        .axes()
+                        .iter()
+                        .map(|axis| axis.tag())
+                        .filter(|tag| !keep.contains(tag))
+                        .map(to_cull)
+                        .collect()
+                })
+                .unwrap_or_default();
+            let instanced =
+                instancer::pin_axes_to_defaults(font.blob.data(), font.index, &drop_axes);
+            let source = instanced.as_deref().unwrap_or_else(|| font.blob.data());
+            let font_data = subset_vector_font(source, font.index, &characters_seen)
+                .unwrap_or_else(|| source.to_vec());
             let resource_id = doc.embedded_file_resources.borrow_mut().push_and_get_key(
                 crate::embedded_resources::EmbeddedResources {
                     path: Some(path.to_string_lossy().as_ref().into()),
@@ -625,10 +684,12 @@ fn get_fallback_fonts() -> Vec<Font> {
 
 /// Subset `data` (the whole font file; `index` selects the face inside a
 /// collection) down to `characters_seen`, returning the subsetted font as a
-/// standalone file. All variation axes, name records, layout scripts and
-/// features are kept — a dynamic binding can drive any axis, and the runtime
-/// matches embedded fonts by their family name. `None` when the font can't be
-/// subsetted; the caller then embeds the original data instead.
+/// standalone file. Only the layout features Slint's shapers apply, the name
+/// records the runtime matches on (family/subfamily names), and English name
+/// languages are kept; DSIG and STAT are dropped (a STAT kept after axis
+/// pinning would reference fvar axis indices that no longer exist). `None`
+/// when the font can't be subsetted; the caller then embeds the original
+/// data instead.
 #[cfg(not(target_arch = "wasm32"))]
 fn subset_vector_font(data: &[u8], index: u32, characters_seen: &HashSet<char>) -> Option<Vec<u8>> {
     use fontcull_klippa::{Plan, SubsetFlags, subset_font};
@@ -641,16 +702,35 @@ fn subset_vector_font(data: &[u8], index: u32, characters_seen: &HashSet<char>) 
     let font = FontRef::from_index(data, index).ok()?;
     let mut unicodes: IntSet<u32> = IntSet::empty();
     unicodes.extend(characters_seen.iter().map(|c| *c as u32));
+    // The shaping features Slint's shapers (parley+swash) apply by default:
+    // the always-on sets for Latin/CJK/Indic/complex-script shaping, mark
+    // attachment and positioning, plus rvrn which variable fonts need.
+    let layout_features = IntSet::from_iter(
+        [
+            "kern", "dist", "abvm", "blwm", "curs", "mark", "mkmk", "ccmp", "locl", "rlig", "liga",
+            "clig", "calt", "rvrn", "isol", "init", "medi", "fina", "med2", "fin2", "fin3", "arhw",
+            "stch", "abvs", "blws", "psts", "pres", "post", "haln", "blwf", "abvf", "pstf", "rphf",
+            "rkrf", "pref", "half", "vatu", "cjct", "cfar", "ljmo", "vjmo", "tjmo", "nukt", "akhn",
+            "vert", "vrt2", "vkrn", "valt", "vpai",
+        ]
+        .iter()
+        .map(|f| Tag::new(f.as_bytes().try_into().unwrap())),
+    );
+    // Family/subfamily names the runtime matcher reads, plus the typographic
+    // variants.
+    let name_ids = IntSet::from_iter([1u16, 2, 4, 6, 16, 17].iter().map(|id| NameId::new(*id)));
+    let name_languages = IntSet::from_iter([0x409u16]);
+    let drop_tables = IntSet::from_iter([Tag::new(b"DSIG"), Tag::new(b"STAT")]);
     let plan = Plan::new(
         &IntSet::<GlyphId>::empty(),
         &unicodes,
         &font,
-        SubsetFlags::default(),
-        &IntSet::<Tag>::empty(), // drop_tables
-        &IntSet::<Tag>::all(),   // layout_scripts
-        &IntSet::<Tag>::all(),   // layout_features
-        &IntSet::<NameId>::all(),
-        &IntSet::<u16>::all(), // name_languages
+        SubsetFlags::SUBSET_FLAGS_NO_HINTING,
+        &drop_tables,
+        &IntSet::<Tag>::all(), // layout_scripts
+        &layout_features,
+        &name_ids,
+        &name_languages,
     );
     subset_font(&font, &plan).ok()
 }
@@ -1128,19 +1208,36 @@ pub fn collect_font_axes_used(component: &Rc<Component>, seen: &mut FontAxesUsed
     }
 
     /// Reads one axis-related binding: pushes constant entries into `tuple`,
-    /// records non-constant ones in `dynamic`. Returns nothing when the
+    /// records non-constant ones in `dynamic`. For a non-constant
+    /// `font-variation-settings` array the literal tags still bound which axes
+    /// it can vary — they land in `dynamic_tags`, while an entry whose tag
+    /// isn't a literal sets `unbounded_tags`. Returns nothing when the
     /// property isn't bound at all.
     fn collect_binding(
         elem: &ElementRc,
         property: &str,
         tuple: &mut CollectedAxisTuple,
         dynamic: &mut Vec<(smol_str::SmolStr, crate::diagnostics::SourceLocation)>,
+        dynamic_tags: &mut HashSet<u32>,
+        unbounded_tags: &mut bool,
     ) {
         let element = elem.borrow();
         let Some(binding) = element.binding(property) else { return };
         let span = || binding.span.clone().unwrap_or_default();
         if binding.animation.is_some() {
             dynamic.push((property.into(), span()));
+            match property {
+                "font-stretch" | "default-font-stretch" => {
+                    dynamic_tags.insert(WDTH_TAG);
+                }
+                "font-optical-sizing" | "default-font-optical-sizing" => {
+                    dynamic_tags.insert(OPSZ_TAG);
+                }
+                "font-variation-settings" | "default-font-variation-settings" => {
+                    *unbounded_tags = true;
+                }
+                _ => {}
+            }
             return;
         }
         match binding.value_expression() {
@@ -1148,6 +1245,14 @@ pub fn collect_font_axes_used(component: &Rc<Component>, seen: &mut FontAxesUsed
                 let mut entries: CollectedAxisTuple = Vec::new();
                 let mut all_constant = true;
                 for entry in values {
+                    // Keep collecting tags past a dynamic entry — the literal
+                    // tags bound the axes this binding can vary.
+                    if !matches!(
+                        entry,
+                        Expression::Struct { values, .. } if matches!(values.get("tag"), Some(Expression::StringLiteral(tag)) if tag.len() == 4 && tag.bytes().all(|b| (0x20..=0x7e).contains(&b)))
+                    ) {
+                        *unbounded_tags = true;
+                    }
                     let constant_entry = match entry {
                         Expression::Struct { values, .. } => {
                             match (values.get("tag"), values.get("value").and_then(number_value)) {
@@ -1165,13 +1270,16 @@ pub fn collect_font_axes_used(component: &Rc<Component>, seen: &mut FontAxesUsed
                         }
                         _ => None,
                     };
-                    let Some(entry) = constant_entry else {
-                        all_constant = false;
-                        break;
-                    };
-                    entries.push(entry);
+                    match constant_entry {
+                        Some(entry) => entries.push(entry),
+                        None => all_constant = false,
+                    }
                 }
                 if !all_constant {
+                    // The literal tags of a dynamic array bound its axes.
+                    for (tag, _) in &entries {
+                        dynamic_tags.insert(*tag);
+                    }
                     dynamic.push((property.into(), span()));
                     return;
                 }
@@ -1186,7 +1294,8 @@ pub fn collect_font_axes_used(component: &Rc<Component>, seen: &mut FontAxesUsed
             Expression::EnumerationValue(value) => {
                 // `font-optical-sizing`: Inherit resolves to the surrounding
                 // default (auto), Auto tracks the used size, None pins `opsz`
-                // to the font's default.
+                // to the font's default. The enum is exhaustive — the property
+                // can only ever touch `opsz`, which is always kept.
                 if matches!(value.enumeration.values[value.value].as_str(), "none")
                     && !tuple.iter().any(|(t, _)| *t == OPSZ_TAG)
                 {
@@ -1209,7 +1318,20 @@ pub fn collect_font_axes_used(component: &Rc<Component>, seen: &mut FontAxesUsed
                     tuple.push((WDTH_TAG, CollectedAxisValue::Value(*value as f32)));
                 }
             }
-            _ => dynamic.push((property.into(), span())),
+            _ => {
+                dynamic.push((property.into(), span()));
+                match property {
+                    "font-stretch" | "default-font-stretch" => {
+                        dynamic_tags.insert(WDTH_TAG);
+                    }
+                    "font-optical-sizing" | "default-font-optical-sizing" => {
+                        dynamic_tags.insert(OPSZ_TAG);
+                    }
+                    _ => {
+                        *unbounded_tags = true;
+                    }
+                }
+            }
         }
     }
 
@@ -1229,9 +1351,11 @@ pub fn collect_font_axes_used(component: &Rc<Component>, seen: &mut FontAxesUsed
         }
         // Dynamic bindings found on this element; merged into `seen.dynamic`
         // after the loop, together with the element's family for
-        // `dynamic_families`.
+        // `dynamic_families` and the provably-used axis tags for subsetting.
         let mut element_dynamic: Vec<(smol_str::SmolStr, crate::diagnostics::SourceLocation)> =
             Vec::new();
+        let mut element_dynamic_tags: HashSet<u32> = HashSet::new();
+        let mut element_unbounded_tags = false;
         let prefix = if is_window { "default-" } else { "" };
         let mut tuple: CollectedAxisTuple = Vec::new();
         for suffix in ["font-stretch", "font-optical-sizing", "font-variation-settings"] {
@@ -1240,6 +1364,8 @@ pub fn collect_font_axes_used(component: &Rc<Component>, seen: &mut FontAxesUsed
                 format!("{prefix}{suffix}").as_str(),
                 &mut tuple,
                 &mut element_dynamic,
+                &mut element_dynamic_tags,
+                &mut element_unbounded_tags,
             );
         }
 
@@ -1290,7 +1416,9 @@ pub fn collect_font_axes_used(component: &Rc<Component>, seen: &mut FontAxesUsed
         // constant. Each span's attributes merge over the element's own axes,
         // producing one tuple per distinct span configuration.
         if is_text && (base == "StyledTextItem" || base == "StyledText") {
-            for span_tuple in collect_markup_axes(elem, &tuple, &mut element_dynamic) {
+            for span_tuple in
+                collect_markup_axes(elem, &tuple, &mut element_dynamic, &mut element_unbounded_tags)
+            {
                 if !element_tuples.contains(&span_tuple) {
                     element_tuples.push(span_tuple);
                 }
@@ -1299,6 +1427,8 @@ pub fn collect_font_axes_used(component: &Rc<Component>, seen: &mut FontAxesUsed
         if !element_dynamic.is_empty() {
             seen.dynamic_families.insert(dynamic_family);
             seen.dynamic.extend(element_dynamic);
+            seen.dynamic_tags.extend(element_dynamic_tags);
+            seen.unbounded_tags |= element_unbounded_tags;
         }
         if !tuple.is_empty() {
             tuple.sort_by_key(|(tag, _)| *tag);
@@ -1345,6 +1475,7 @@ fn collect_markup_axes(
     elem: &ElementRc,
     element_tuple: &CollectedAxisTuple,
     dynamic: &mut Vec<(smol_str::SmolStr, crate::diagnostics::SourceLocation)>,
+    unbounded_tags: &mut bool,
 ) -> Vec<CollectedAxisTuple> {
     let (markup, span) = {
         let elem = elem.borrow();
@@ -1365,6 +1496,8 @@ fn collect_markup_axes(
     };
     let Some(markup) = markup else {
         dynamic.push(("text (styled markup)".into(), span));
+        // Non-literal markup can carry `<font>` attributes with any axis tag.
+        *unbounded_tags = true;
         return Vec::new();
     };
     let (paragraphs, _errors) = i_slint_common::styled_text::parse_interpolated::<
