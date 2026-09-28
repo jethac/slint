@@ -470,10 +470,6 @@ SPDX-License-Identifier = "Apache-2.0"
 [[annotations]]
 # Generated Kotlin goldens and the minimal Compose/stdlib stubs they are
 # built against.
-path = [
-  "tests/shapes/README.md",
-  "tests/shapes/golden/**",
-  "tests/shapes/src/stubs/**",
-]
+path = ["tests/shapes/README.md", "tests/shapes/golden/**", "tests/shapes/src/stubs/**"]
 SPDX-FileCopyrightText = "Copyright © SixtyFPS GmbH <info@slint.dev>"
 SPDX-License-Identifier = "GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0"
