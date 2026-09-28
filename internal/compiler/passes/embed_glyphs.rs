@@ -202,7 +202,7 @@ pub fn embed_glyphs(
                 "'{property_name}' is not constant, but the bitmap font embedding \
                  for this build rasterizes glyphs at fixed axis values. Give the \
                  property a constant value, or disable glyph embedding \
-                 (SLINT_EMBED_TEXTURES) so the variable font is used directly."
+                 (SLINT_EMBED_RESOURCES) so the variable font data is used directly."
             ),
             span.clone(),
         );
@@ -1080,12 +1080,19 @@ pub fn collect_font_axes_used(component: &Rc<Component>, seen: &mut FontAxesUsed
                 }
             }
             Expression::NumberLiteral(value, unit) if *unit == Unit::Percent => {
-                // `font-stretch` percent ↔ the `wdth` axis value.
-                let wdth = *value as f32 * 100.;
+                // `font-stretch` percent ↔ the `wdth` axis value: the literal
+                // already holds the percentage number (75% → 75). 0 is the
+                // "unset" sentinel — the runtime resolves the window's
+                // `default-font-stretch` in that case (see
+                // `WindowItem::resolved_font_request`), so it contributes no
+                // entry and the window tuple supplies one.
+                if *value == 0. {
+                    return;
+                }
                 if let Some(existing) = tuple.iter_mut().find(|(t, _)| *t == WDTH_TAG) {
-                    *existing = (WDTH_TAG, CollectedAxisValue::Value(wdth));
+                    *existing = (WDTH_TAG, CollectedAxisValue::Value(*value as f32));
                 } else {
-                    tuple.push((WDTH_TAG, CollectedAxisValue::Value(wdth)));
+                    tuple.push((WDTH_TAG, CollectedAxisValue::Value(*value as f32)));
                 }
             }
             _ => dynamic.push((property.into(), span())),
