@@ -72,26 +72,33 @@ font instance per combination of values it finds, clamped to the ranges the font
 free in flash terms because the size axis is already enumerated per pixel size.
 
 Every additional constant axis position multiplies the flash used by that font's embedded
-glyphs, so keep the number of distinct tuples small on constrained targets. Measured on a
-`thumbv6m-none-eabi` build with the `embed-for-software-renderer` option: a 13-glyph
-("Hello, world!") `Text` at 16 px embeds about 13.7 KiB per instance — roughly 1 KiB per
-glyph — so each extra `wght`/`wdth` position you reference costs that much flash again.
-Runtime CPU is the same as for static fonts: the bitmaps are blitted, not rasterized.
+glyphs, so keep the number of distinct tuples small on constrained targets. Each instance
+always covers the full printable-ASCII set plus the text found in the sources — about 96
+glyphs — measured on a `thumbv6m-none-eabi`-oriented `embed-for-software-renderer` build:
+roughly 6 KiB per instance at 12 px (~65 B/glyph average, since blank and small glyphs
+dominate) and about twice that per instance at 16 px (~90 B/glyph). Runtime CPU is the
+same as for static fonts: the bitmaps are blitted, not rasterized.
 
 A binding that computes its axis values at run time can't be pre-rasterized. For animated
-or otherwise non-constant axis bindings the compiler instead embeds the variable font's
-raw vector data and registers it through `register_font_from_memory`, so a runtime with a
-vector rasterizer (the `software-renderer-systemfonts` cargo feature, or the shared parley
-path used by the other renderers) rasterizes the exact instance each frame. That trades
-flash for flexibility: the raw file is 84 KiB for the subsetted test Noto Sans, but the
-full Google Sans Flex is about 4.2 MiB — versus 13.7 KiB for one pre-rendered instance —
-plus per-frame rasterization CPU proportional to the rendered string length.
+or otherwise non-constant axis bindings the compiler instead embeds the vector font data
+of the families those bindings can resolve to and registers it through
+`register_font_from_memory`, so a runtime with a vector rasterizer (the
+`software-renderer-systemfonts` cargo feature, or — without `std` — the software
+renderer's `embedded-vector-fonts` feature) rasterizes the exact instance each frame.
+That trades flash for flexibility: the raw file is 84 KiB for the subsetted test Noto
+Sans and about 4.2 MiB for the full Google Sans Flex — versus ~6 KiB for one
+pre-rendered instance — plus RAM for rasterized glyphs (bounded by a 1 MiB cache) and
+per-frame rasterization CPU that scales with the rendered string length (estimate; not
+measured on MCU hardware).
 
-When the build excludes vector fonts entirely — for example a freestanding C++ target,
-which sets `SLINT_EXCLUDE_VECTOR_FONTS` automatically — a non-constant axis binding is a
-compile error naming the binding, and a bound `font-family` that constant propagation
-can't reduce to a literal is as well. Use constant expressions (or `out` properties with
-constant initializers) to stay on the bitmap path.
+When the build excludes vector fonts entirely — a freestanding C++ target sets
+`SLINT_EXCLUDE_VECTOR_FONTS` automatically, and a Rust build does the same for targets
+whose triple names no operating system (`*-none-*`, `*-uefi`, Zephyr) unless the env var
+is set to a falsy value or `CompilerConfiguration::exclude_vector_fonts(false)` is
+called — a non-constant axis binding is a compile error naming the binding, and a bound
+`font-family` that constant propagation can't reduce to a literal is as well. Use
+constant expressions (or `out` properties with constant initializers) to stay on the
+bitmap path.
 
 On targets that do have an operating system, enable the `software-renderer-systemfonts` cargo
 feature to let the software renderer also use fonts installed on the system.
