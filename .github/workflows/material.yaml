@@ -137,6 +137,18 @@ jobs:
           - name: Build the Compose parity harness
             run: ./gradlew compileDebugUnitTestKotlin --no-daemon
             working-directory: ui-libraries/material/parity/compose
+          - name: Verify committed Compose references are reproducible
+            # Re-record every scene, then require a clean tree under
+            # references/ — proves the committed PNGs/masks/traces are what
+            # the harness produces, not a stale local render.
+            run: |
+              ./gradlew testDebugUnitTest -Pparity.record=1 --no-daemon
+              if ! git diff --exit-code -- ui-libraries/material/parity/compose/references || \
+                 [ -n "$(git status --porcelain -- ui-libraries/material/parity/compose/references)" ]; then
+                echo "::error::Compose parity references drifted — re-record locally: cd ui-libraries/material/parity/compose && ./gradlew testDebugUnitTest -Pparity.record=1, then commit the result."
+                exit 1
+              fi
+            shell: bash
           - name: Upload parity artifacts
             if: failure()
             uses: actions/upload-artifact@v7
