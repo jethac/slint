@@ -7,6 +7,11 @@
 
 namespace slint::cbindgen_private {
 struct PropertyAnimation;
+struct FontVariation;
+}
+namespace slint {
+template<typename T>
+class Model;
 }
 
 #include "private/slint_properties_internal.h"
@@ -50,6 +55,17 @@ inline void slint_property_set_animated_binding_helper(
 {
     cbindgen_private::slint_property_set_animated_binding_brush(handle, binding, user_data,
                                                                 drop_user_data, transition_data);
+}
+
+inline void slint_property_set_animated_binding_helper(
+        const cbindgen_private::PropertyHandleOpaque *handle,
+        void (*binding)(void *,
+                        std::shared_ptr<slint::Model<cbindgen_private::FontVariation>> *),
+        void *user_data, void (*drop_user_data)(void *),
+        cbindgen_private::PropertyAnimation (*transition_data)(void *, uint64_t **))
+{
+    cbindgen_private::slint_property_set_animated_binding_font_variations(
+            handle, binding, user_data, drop_user_data, transition_data);
 }
 
 template<typename T>
@@ -329,6 +345,16 @@ Property<Color>::set_animated_value(const Color &new_value,
 {
     cbindgen_private::slint_property_set_animated_value_color(&inner, get(), new_value,
                                                               &animation_data);
+}
+
+template<>
+inline void
+Property<std::shared_ptr<slint::Model<cbindgen_private::FontVariation>>>::set_animated_value(
+        const std::shared_ptr<slint::Model<cbindgen_private::FontVariation>> &new_value,
+        const cbindgen_private::PropertyAnimation &animation_data) const
+{
+    cbindgen_private::slint_property_set_animated_value_font_variations(&inner, &get(), &new_value,
+                                                                        &animation_data);
 }
 
 template<typename F>

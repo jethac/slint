@@ -19,6 +19,25 @@ pub enum Style {
     Underline,
     // ARGB encoded
     Color(u32),
+    /// An html `<font>` tag carrying attributes beyond `color`. A `<font>`
+    /// that sets only `color` still produces the `Color` variant.
+    FontTag(FontTagStyle),
+}
+
+#[derive(Clone, Debug, Default, PartialEq)]
+/// The attributes a `<font>` tag in styled text can carry, each mapping onto
+/// the corresponding text property: `color`, `font-stretch`,
+/// `font-optical-sizing` and `font-variation-settings`.
+#[allow(missing_docs)]
+pub struct FontTagStyle {
+    /// ARGB encoded
+    pub color: Option<u32>,
+    /// The `font-stretch` percentage (`wdth` axis value)
+    pub font_stretch: Option<f32>,
+    /// `font-optical-sizing`: `auto` is `Some(true)`, `none` `Some(false)`
+    pub font_optical_sizing: Option<bool>,
+    /// `font-variation-settings`: the whole `(axis tag, value)` list
+    pub font_variation_settings: Option<Vec<(String, f32)>>,
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -123,6 +142,9 @@ enum StyledTextParseErrorKind {
     /// Invalid color value
     #[display("Invalid color value '{_0}'")]
     InvalidColor(String),
+    /// Invalid value for a <font> tag attribute
+    #[display("Invalid value '{_1}' for the html {_0} attribute")]
+    InvalidFontAttribute(String, String),
 }
 
 #[cfg(feature = "markdown")]
@@ -548,7 +570,7 @@ pub fn parse_interpolated<S: AsRef<[StyledTextParagraph]>>(
                     };
 
                     let expected_tag = match &style {
-                        Style::Color(_) => "</font>",
+                        Style::Color(_) | Style::FontTag(_) => "</font>",
                         Style::Underline => "</u>",
                         _ => {
                             // The top of the stack is a markdown style, not
@@ -578,7 +600,10 @@ pub fn parse_interpolated<S: AsRef<[StyledTextParagraph]>>(
                     let end = paragraph.text.len();
                     close_span(&mut paragraphs, paragraph, pieces, start..end, style, None);
                 } else {
-                    let mut expecting_color_attribute = false;
+                    // Accumulates the attributes of a `<font>` tag until its `>` closes the
+                    // opening tag — `None` while not inside one. A `<font>` setting nothing but
+                    // `color` ends up as the plain `Style::Color` span it used to produce.
+                    let mut font_tag: Option<FontTagStyle> = None;
                     let mut push_skip = false;
 
                     // htmlparser offsets are relative to `html`; add event_range.start
@@ -605,7 +630,7 @@ pub fn parse_interpolated<S: AsRef<[StyledTextParagraph]>>(
                                     ));
                                 }
                                 "font" => {
-                                    expecting_color_attribute = true;
+                                    font_tag = Some(FontTagStyle::default());
                                 }
                                 _ => {
                                     let r = base + span.start()..base + span.end();
@@ -621,70 +646,142 @@ pub fn parse_interpolated<S: AsRef<[StyledTextParagraph]>>(
                                 value: Some(value),
                                 span,
                                 ..
-                            }) => match &*key {
-                                "color" => {
-                                    if !expecting_color_attribute {
-                                        let r = base + span.start()..base + span.end();
-                                        errors.push(StyledTextParseError::new(
-                                            E::UnexpectedAttribute((&*key).into(), (&*html).into()),
-                                            r,
-                                        ));
-                                        continue;
-                                    }
-                                    expecting_color_attribute = false;
-
-                                    let color_str =
-                                        if value.contains(MARKDOWN_INTERPOLATION_PLACEHOLDER) {
-                                            Some(substitute_in_string(
-                                                &value,
-                                                args,
-                                                &mut arg_index,
-                                                &mut errors,
-                                                &event_range,
-                                            ))
-                                        } else {
-                                            None
-                                        };
-                                    let color_str = color_str.as_deref().unwrap_or(&*value);
-
-                                    let color_value =
-                                        crate::color_parsing::parse_color_literal(color_str)
-                                            .or_else(|| {
-                                                crate::color_parsing::named_colors()
-                                                    .get(color_str)
-                                                    .copied()
-                                            });
-
-                                    let value = color_value.unwrap_or_else(|| {
-                                        let r = base + span.start()..base + span.end();
-                                        errors.push(StyledTextParseError::new(
-                                            E::InvalidColor(color_str.into()),
-                                            r,
-                                        ));
-                                        // A dummy style so the closing </font> tag can pop
-                                        // it without error
-                                        0
-                                    });
-                                    let paragraph = get_or_create_paragraph(
-                                        &mut current_paragraph,
+                            }) => {
+                                let value_str = if value
+                                    .contains(MARKDOWN_INTERPOLATION_PLACEHOLDER)
+                                {
+                                    substitute_in_string(
+                                        &value,
+                                        args,
+                                        &mut arg_index,
                                         &mut errors,
                                         &event_range,
-                                    );
-                                    style_stack.push((
-                                        Style::Color(value),
-                                        paragraph.text.len(),
-                                        Default::default(),
-                                    ));
-                                }
-                                _ => {
+                                    )
+                                } else {
+                                    String::from(&*value)
+                                };
+                                let invalid = |key: &str, value_str: &str| {
                                     let r = base + span.start()..base + span.end();
-                                    errors.push(StyledTextParseError::new(
-                                        E::UnexpectedAttribute((&*key).into(), (&*html).into()),
+                                    StyledTextParseError::new(
+                                        E::InvalidFontAttribute(
+                                            key.into(),
+                                            value_str.into(),
+                                        ),
                                         r,
-                                    ));
+                                    )
+                                };
+                                match (&*key, font_tag.as_mut()) {
+                                    ("color", Some(font_tag)) => {
+                                        let color_value =
+                                            crate::color_parsing::parse_color_literal(&value_str)
+                                                .or_else(|| {
+                                                    crate::color_parsing::named_colors()
+                                                        .get(&*value_str)
+                                                        .copied()
+                                                });
+
+                                        font_tag.color = Some(color_value.unwrap_or_else(|| {
+                                            let r = base + span.start()..base + span.end();
+                                            errors.push(StyledTextParseError::new(
+                                                E::InvalidColor((&*value_str).into()),
+                                                r,
+                                            ));
+                                            // A dummy color so the closing </font> tag can
+                                            // pop the style without error
+                                            0
+                                        }));
+                                    }
+                                    ("font-stretch", Some(font_tag)) => {
+                                        match parse_font_stretch_value(&value_str) {
+                                            Some(stretch) => font_tag.font_stretch = Some(stretch),
+                                            None => {
+                                                errors.push(invalid(&key, &value_str));
+                                            }
+                                        }
+                                    }
+                                    ("font-optical-sizing", Some(font_tag)) => {
+                                        match &*value_str {
+                                            "auto" => {
+                                                font_tag.font_optical_sizing = Some(true)
+                                            }
+                                            "none" => {
+                                                font_tag.font_optical_sizing = Some(false)
+                                            }
+                                            _ => errors.push(invalid(&key, &value_str)),
+                                        }
+                                    }
+                                    ("font-variation-settings", Some(font_tag)) => {
+                                        match parse_font_variation_settings(&value_str) {
+                                            Some(settings) => {
+                                                font_tag.font_variation_settings = Some(settings)
+                                            }
+                                            None => {
+                                                errors.push(invalid(&key, &value_str));
+                                            }
+                                        }
+                                    }
+                                    (key, _) => {
+                                        let r = base + span.start()..base + span.end();
+                                        errors.push(StyledTextParseError::new(
+                                            E::UnexpectedAttribute(key.into(), (&*html).into()),
+                                            r,
+                                        ));
+                                    }
                                 }
-                            },
-                            Ok(htmlparser::Token::ElementEnd { .. }) => {}
+                            }
+                            Ok(htmlparser::Token::ElementEnd { .. }) => {
+                                if let Some(font_tag) = font_tag.take() {
+                                    // The `<font>` open tag just closed: push its span. Only
+                                    // `color` keeps producing `Style::Color` for compatibility;
+                                    // anything more produces a `FontTag` span. A `<font>` with
+                                    // no usable attribute reports like before.
+                                    match font_tag {
+                                        FontTagStyle {
+                                            color: Some(color),
+                                            font_stretch: None,
+                                            font_optical_sizing: None,
+                                            font_variation_settings: None,
+                                        } => {
+                                            let paragraph = get_or_create_paragraph(
+                                                &mut current_paragraph,
+                                                &mut errors,
+                                                &event_range,
+                                            );
+                                            style_stack.push((
+                                                Style::Color(color),
+                                                paragraph.text.len(),
+                                                Default::default(),
+                                            ));
+                                        }
+                                        font_tag
+                                            if font_tag.font_stretch.is_some()
+                                                || font_tag.font_optical_sizing.is_some()
+                                                || font_tag.font_variation_settings.is_some()
+                                                || font_tag.color.is_some() =>
+                                        {
+                                            let paragraph = get_or_create_paragraph(
+                                                &mut current_paragraph,
+                                                &mut errors,
+                                                &event_range,
+                                            );
+                                            style_stack.push((
+                                                Style::FontTag(font_tag),
+                                                paragraph.text.len(),
+                                                Default::default(),
+                                            ));
+                                        }
+                                        _ => {
+                                            if errors.len() == errors_before {
+                                                errors.push(StyledTextParseError::new(
+                                                    E::MissingColor((&*html).into()),
+                                                    event_range.clone(),
+                                                ));
+                                            }
+                                            push_skip = true;
+                                        }
+                                    }
+                                }
+                            }
                             _ => {
                                 errors.push(StyledTextParseError::new(
                                     E::UnsupportedMarkdown(alloc::format!("{:?}", token)),
@@ -694,7 +791,7 @@ pub fn parse_interpolated<S: AsRef<[StyledTextParagraph]>>(
                         }
                     }
 
-                    if expecting_color_attribute {
+                    if font_tag.is_some() {
                         // Only report MissingColor when no other errors were
                         // reported for this HTML fragment (avoids cascading diagnostics)
                         if errors.len() == errors_before {
@@ -712,6 +809,7 @@ pub fn parse_interpolated<S: AsRef<[StyledTextParagraph]>>(
                 }
             }
             pulldown_cmark::Event::Rule
+
             | pulldown_cmark::Event::TaskListMarker(_)
             | pulldown_cmark::Event::FootnoteReference(_)
             | pulldown_cmark::Event::InlineMath(_)
@@ -741,6 +839,52 @@ pub fn parse_interpolated<S: AsRef<[StyledTextParagraph]>>(
     }
 
     (paragraphs, errors)
+}
+
+#[cfg(feature = "markdown")]
+/// The value of a `font-stretch` attribute: a CSS `<percentage>` or one of the
+/// nine CSS width keywords. A bare number is accepted as a percentage, too.
+fn parse_font_stretch_value(value: &str) -> Option<f32> {
+    match value {
+        "ultra-condensed" => Some(50.),
+        "extra-condensed" => Some(62.5),
+        "condensed" => Some(75.),
+        "semi-condensed" => Some(87.5),
+        "normal" => Some(100.),
+        "semi-expanded" => Some(112.5),
+        "expanded" => Some(125.),
+        "extra-expanded" => Some(150.),
+        "ultra-expanded" => Some(200.),
+        _ => {
+            let value = value.strip_suffix('%').unwrap_or(value).trim();
+            value.parse().ok()
+        }
+    }
+}
+
+#[cfg(feature = "markdown")]
+/// The value of a `font-variation-settings` attribute: the CSS list of
+/// `'tag' value` pairs (`normal` yields an empty list). One invalid entry —
+/// a tag that isn't four printable ASCII bytes or a missing value — fails the
+/// whole list.
+fn parse_font_variation_settings(value: &str) -> Option<Vec<(String, f32)>> {
+    if value.trim() == "normal" {
+        return Some(Vec::new());
+    }
+    let mut settings = Vec::new();
+    for pair in value.split(',') {
+        let mut it = pair.trim().split_whitespace();
+        let tag = it.next()?.trim_matches(|c| c == '\'' || c == '"');
+        if tag.len() != 4 || !tag.bytes().all(|b| (b' '..=b'~').contains(&b)) {
+            return None;
+        }
+        let value: f32 = it.next()?.parse().ok()?;
+        if it.next().is_some() {
+            return None;
+        }
+        settings.push((String::from(tag), value));
+    }
+    (!settings.is_empty()).then_some(settings)
 }
 
 #[cfg(all(feature = "markdown", test))]

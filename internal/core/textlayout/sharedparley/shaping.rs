@@ -10,6 +10,8 @@
 //! dependencies, so neither may shape through anything narrower.
 
 use super::*;
+use crate::SharedString;
+use crate::model::Model;
 
 /// Font size of inline `code` runs, as a fraction of the surrounding body
 /// text. Matches the convention used by GitHub-style markdown renderers — the
@@ -62,12 +64,15 @@ impl LayoutWithoutLineBreaksBuilder {
         }
     }
 
+    /// The builder plus the `FontVariations` axis list pushed as the default —
+    /// callers keep it in [`TextParagraph::variations`] so that renderers can
+    /// reconstruct a run's user-space axis settings.
     fn ranged_builder<'a>(
         &self,
         layout_ctx: &'a mut parley::LayoutContext<Brush>,
         font_ctx: &'a mut parley::FontContext,
         text: &'a str,
-    ) -> parley::RangedBuilder<'a, Brush> {
+    ) -> (parley::RangedBuilder<'a, Brush>, Vec<parley::style::FontVariation>) {
         // Use the requested font's natural line-height ratio for every run so fallback fonts,
         // such as the symbol font used for password characters, don't enlarge the line box.
         // `FontSizeRelative` scales the result with each styled span's font size.
@@ -75,6 +80,7 @@ impl LayoutWithoutLineBreaksBuilder {
             self.font_request.as_ref().and_then(|fr| line_height_ratio(font_ctx, fr));
 
         let mut builder = layout_ctx.ranged_builder(font_ctx, text, self.scale_factor.get(), false);
+        let mut default_variations = Vec::new();
 
         if let Some(ratio) = line_height_ratio {
             builder.push_default(parley::StyleProperty::LineHeight(
@@ -111,6 +117,21 @@ impl LayoutWithoutLineBreaksBuilder {
             if let Some(weight) = font_request.weight {
                 builder.push_default(parley::StyleProperty::FontWeight(
                     parley::style::FontWeight::new(weight as f32),
+                ));
+            }
+            if let Some(stretch) = font_request.stretch {
+                builder.push_default(parley::StyleProperty::FontWidth(
+                    parley::style::FontWidth::from_percentage(stretch),
+                ));
+            }
+            default_variations = parley_variation_list(
+                font_request.shaping_variations(Some(self.pixel_size.get())).drain(..),
+            );
+            if !default_variations.is_empty() {
+                builder.push_default(parley::StyleProperty::FontVariations(
+                    parley::style::FontVariations::List(std::borrow::Cow::Owned(
+                        default_variations.clone(),
+                    )),
                 ));
             }
             if let Some(letter_spacing) = font_request.letter_spacing {
@@ -152,24 +173,32 @@ impl LayoutWithoutLineBreaksBuilder {
             link_color: None,
         }));
 
-        builder
+        (builder, default_variations)
     }
 
     /// Note that the selection is deliberately absent here: it is a rendering concern, not a
     /// styling one, and baking it into the layout both makes the layout uncacheable across
     /// selection changes and makes sub-glyph selection boundaries unrepresentable. See
     /// [`SelectionSpan`].
+    ///
+    /// Besides the layout, this returns the `FontVariations` axis lists pushed
+    /// to the shaper (the paragraph default plus one list per styled range, in
+    /// push order), which renderers need to reconstruct a run's user-space
+    /// axis settings.
     pub(super) fn build(
         &self,
         font_context: &mut parley::FontContext,
         text: &str,
         formatting: impl IntoIterator<Item = i_slint_common::styled_text::FormattedSpan>,
         link_color: Option<Color>,
-    ) -> parley::Layout<Brush> {
+    ) -> (parley::Layout<Brush>, ParagraphVariations) {
         use i_slint_common::styled_text::Style;
 
         LAYOUT_CONTEXT.with_borrow_mut(|layout_ctx| {
-            let mut builder = self.ranged_builder(layout_ctx, font_context, text);
+            let (mut builder, default_variations) =
+                self.ranged_builder(layout_ctx, font_context, text);
+            let mut variation_ranges: Vec<(Range<usize>, Vec<parley::style::FontVariation>)> =
+                Vec::new();
 
             // filter empty ranges otherwise parley will panic on assert
             for span in formatting.into_iter().filter(|s| !s.range.is_empty()) {
@@ -232,12 +261,176 @@ impl LayoutWithoutLineBreaksBuilder {
                             span.range,
                         );
                     }
+                    Style::FontTag(font_tag) => {
+                        if let Some(color) = font_tag.color {
+                            builder.push(
+                                parley::StyleProperty::Brush(Brush {
+                                    override_fill_color: Some(crate::Color::from_argb_encoded(
+                                        color,
+                                    )),
+                                    stroke: self.stroke,
+                                    link_color: None,
+                                }),
+                                span.range.clone(),
+                            );
+                        }
+                        if let Some(stretch) = font_tag.font_stretch {
+                            builder.push(
+                                parley::StyleProperty::FontWidth(
+                                    parley::style::FontWidth::from_percentage(stretch),
+                                ),
+                                span.range.clone(),
+                            );
+                        }
+                        if font_tag.font_variation_settings.is_some()
+                            || font_tag.font_optical_sizing.is_some()
+                        {
+                            let variations = self.font_tag_variations(&font_tag);
+                            builder.push(
+                                parley::StyleProperty::FontVariations(
+                                    parley::style::FontVariations::List(std::borrow::Cow::Owned(
+                                        variations.clone(),
+                                    )),
+                                ),
+                                span.range.clone(),
+                            );
+                            variation_ranges.push((span.range, variations));
+                        }
+                    }
                 }
             }
 
-            builder.build(text)
+            (
+                builder.build(text),
+                ParagraphVariations { default_list: default_variations, ranges: variation_ranges },
+            )
         })
     }
+
+    /// The `FontVariations` list a `Style::FontTag` span pushes: `opsz` derived
+    /// from the span's `font-optical-sizing` (inheriting the element's
+    /// setting), then the span's `font-variation-settings` entries — or, when
+    /// the span doesn't set the shorthand, the element's entries, matching CSS
+    /// inheritance of the individual properties.
+    fn font_tag_variations(
+        &self,
+        font_tag: &i_slint_common::styled_text::FontTagStyle,
+    ) -> Vec<parley::style::FontVariation> {
+        let optical_auto = font_tag.font_optical_sizing.unwrap_or_else(|| {
+            self.font_request.as_ref().and_then(|f| f.optical_sizing).unwrap_or(true)
+        });
+        let mut entries: Vec<(SharedString, f32)> = Vec::new();
+        if optical_auto {
+            entries.push((SharedString::from("opsz"), self.pixel_size.get()));
+        }
+        match &font_tag.font_variation_settings {
+            Some(settings) => {
+                for (tag, value) in settings {
+                    let tag = SharedString::from(tag.as_str());
+                    if let Some(existing) = entries.iter_mut().find(|(t, _)| *t == tag) {
+                        existing.1 = *value;
+                    } else {
+                        entries.push((tag, *value));
+                    }
+                }
+            }
+            None => {
+                if let Some(request) = self.font_request.as_ref() {
+                    crate::graphics::merge_variation_entries(
+                        &mut entries,
+                        request.variations.iter(),
+                    );
+                }
+            }
+        }
+        parley_variation_list(entries.into_iter())
+    }
+}
+
+/// Converts `(tag, value)` user-space pairs into parley `FontVariation`s.
+/// Tags that aren't exactly four printable ASCII bytes are dropped; property
+/// values are validated at compile time, so this only filters axis lists built
+/// through an API binding.
+fn parley_variation_list(
+    entries: impl Iterator<Item = (SharedString, f32)>,
+) -> Vec<parley::style::FontVariation> {
+    entries
+        .filter_map(|(tag, value)| {
+            parley::setting::Tag::parse(tag.as_str())
+                .map(|tag| parley::style::FontVariation::new(tag, value))
+        })
+        .collect()
+}
+
+/// The `FontVariations` axis lists pushed for one paragraph, so renderers can
+/// reconstruct each run's user-space axis settings: parley shapes with
+/// `synthesis.variation_settings()` followed by the list that applies to the
+/// run's text range, and e.g. Skia needs the same merged list to pick the
+/// typeface instance (`normalized_coords` is post-avar and not invertible).
+pub(super) struct ParagraphVariations {
+    /// The list pushed as the paragraph default style.
+    pub default_list: Vec<parley::style::FontVariation>,
+    /// Lists pushed for styled ranges, in push order — the last entry whose
+    /// range covers the run wins, matching parley's range-style resolution.
+    pub ranges: Vec<(Range<usize>, Vec<parley::style::FontVariation>)>,
+}
+
+impl ParagraphVariations {
+    /// The list that applies to `range` — the last pushed covering range's,
+    /// or the default list.
+    pub(super) fn for_range(&self, range: &Range<usize>) -> &[parley::style::FontVariation] {
+        self.ranges
+            .iter()
+            .rev()
+            .find(|(r, _)| r.start <= range.start && r.end >= range.end)
+            .map_or(&self.default_list[..], |(_, list)| list)
+    }
+}
+
+/// Merges a font's synthesis settings with a pushed `FontVariations` list into
+/// the run's user-space axis list, later entries overriding earlier ones with
+/// the same tag. `(axis tag as big-endian u32, value)` pairs — the exact list
+/// the shaper consumed for the run.
+pub fn merged_variation_settings(
+    synthesis: &fontique::Synthesis,
+    pushed: &[parley::style::FontVariation],
+) -> Vec<(u32, f32)> {
+    let mut merged: Vec<(u32, f32)> = synthesis
+        .variation_settings()
+        .iter()
+        .map(|(tag, value)| (u32::from_be_bytes(tag.to_be_bytes()), *value))
+        .collect();
+    for variation in pushed {
+        let tag = u32::from_be_bytes(variation.tag.to_bytes());
+        if let Some(existing) = merged.iter_mut().find(|(t, _)| *t == tag) {
+            existing.1 = variation.value;
+        } else {
+            merged.push((tag, variation.value));
+        }
+    }
+    merged
+}
+
+/// A font's synthesis settings followed by the request's pushed axis list —
+/// the same axis settings the shaper applies to the default run style, so the
+/// location metrics compute from (`axes().location()` applies last-wins per
+/// axis and clamps to the fvar ranges itself).
+pub(super) fn location_settings(
+    synthesis: &fontique::Synthesis,
+    font_request: &FontRequest,
+) -> Vec<skrifa::setting::VariationSetting> {
+    let mut settings: Vec<skrifa::setting::VariationSetting> = synthesis
+        .variation_settings()
+        .iter()
+        .map(skrifa::setting::VariationSetting::from)
+        .collect();
+    settings.extend(
+        font_request
+            .shaping_variations(Some(font_request.pixel_size.unwrap_or(DEFAULT_FONT_SIZE).get()))
+            .iter()
+            .map(|(tag, value)| skrifa::setting::VariationSetting::from((tag.as_str(), *value))),
+    );
+    settings
 }
 
 /// The line-height ratio, relative to the font size, that every shaped line gets.
@@ -247,7 +440,7 @@ pub(super) fn line_height_ratio(
 ) -> Option<f32> {
     let font = font_request.query_fontique(&mut font_ctx.collection, &mut font_ctx.source_cache)?;
     let face = skrifa::FontRef::from_index(font.blob.data(), font.index).ok()?;
-    let location = face.axes().location(font.synthesis.variation_settings());
+    let location = face.axes().location(location_settings(&font.synthesis, font_request));
     let metrics = face.metrics(skrifa::instance::Size::unscaled(), &location);
     let units_per_em = metrics.units_per_em as f32;
     (units_per_em > 0.0)
@@ -288,9 +481,17 @@ pub(super) fn create_text_paragraphs(
                 .map(|s| s.range.clone())
                 .collect();
 
-            let layout = layout_builder.build(font_context, text, formatting, Some(link_color));
+            let (layout, variations) =
+                layout_builder.build(font_context, text, formatting, Some(link_color));
 
-            TextParagraph { range, y: PhysicalLength::default(), layout, links, code_ranges }
+            TextParagraph {
+                range,
+                y: PhysicalLength::default(),
+                layout,
+                links,
+                code_ranges,
+                variations,
+            }
         };
 
     let mut paragraphs = Vec::with_capacity(1);
@@ -398,4 +599,8 @@ pub(super) struct TextParagraph {
     /// translucent rounded background by `draw` for visual parity with common markdown
     /// renderers.
     pub(super) code_ranges: std::vec::Vec<Range<usize>>,
+    /// The axis lists pushed while shaping: renderers combine
+    /// [`ParagraphVariations::for_range`] with the run's synthesis settings to
+    /// recover the user-space axes the run was shaped at.
+    pub(super) variations: ParagraphVariations,
 }

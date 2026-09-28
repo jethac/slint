@@ -1,0 +1,109 @@
+// Copyright © SixtyFPS GmbH <info@slint.dev>
+// SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0
+
+// The font axis properties: `font-variation-settings`, `font-stretch` and
+// `font-optical-sizing` on text items, and the `default-*` counterparts on
+// `Window` (and on `StyledText` for markup defaults).
+
+export component TestCase inherits Window {
+    default-font-size: 16px;
+    default-font-family: "FixedTestFont";
+    default-font-stretch: 75%;
+    default-font-optical-sizing: none;
+    default-font-variation-settings: "wght" 650, "wdth" 90;
+
+    t1 := Text {
+        font-variation-settings: "wght" 500, "GRAD" -50;
+        // `[FontVariation]` is an animatable type.
+        animate font-variation-settings { duration: 500ms; }
+    }
+
+    t2 := Text {
+        font-stretch: 150%;
+        font-optical-sizing: auto;
+    }
+
+    t3 := Text {
+        font-weight: FontWeight.bold;
+        font-stretch: FontStretch.semi-condensed;
+    }
+
+    ti := TextInput {
+        font-variation-settings: "wght" 300;
+        font-stretch: 125%;
+    }
+
+    st := StyledText {
+        text: @markdown("base <font color='blue' font-stretch='semi-expanded' font-optical-sizing='none' font-variation-settings='\"wght\" 480, \"opsz\" 9'>span</font> end");
+        default-font-variation-settings: "wght" 550;
+        default-font-stretch: 80%;
+    }
+
+    t4 := Text {
+        font-variation-settings: root.anim;
+    }
+
+    in-out property <[FontVariation]> anim: [{ tag: "wght", value: 100 }, { tag: "GRAD", value: 0 }];
+    animate anim { duration: 1200ms; }
+
+    // `default-font-variation-settings` on `Window` is animatable too.
+    animate default-font-variation-settings { duration: 500ms; }
+
+    out property <bool> test:
+        t1.font-variation-settings.length == 2
+        && t1.font-variation-settings[0].tag == "wght"
+        && t1.font-variation-settings[0].value == 500
+        && t1.font-variation-settings[1].tag == "GRAD"
+        && t1.font-variation-settings[1].value == -50
+        && t2.font-stretch == 150%
+        && t2.font-optical-sizing == FontOpticalSizing.auto
+        && t3.font-stretch == 87.5%
+        && ti.font-stretch == 125%
+        && ti.font-variation-settings.length == 1
+        && self.default-font-stretch == 75%
+        && self.default-font-optical-sizing == FontOpticalSizing.none
+        && self.default-font-variation-settings.length == 2
+        && self.default-font-variation-settings[0].value == 650
+        && st.default-font-variation-settings[0].value == 550
+        && st.default-font-stretch == 80%;
+}
+
+/*
+```rust
+use slint::{Model, VecModel, language::FontVariation};
+use std::rc::Rc;
+
+let instance = TestCase::new().unwrap();
+assert!(instance.get_test());
+assert_eq!(instance.get_anim().row_data(0).unwrap().value, 100.);
+
+// Setting a new axis list animates it: pairwise linear interpolation, so the
+// midpoint of a 1200ms animation is halfway between the endpoints.
+instance.set_anim(Rc::new(VecModel::from_slice(&[
+    FontVariation { tag: "wght".into(), value: 900. },
+    FontVariation { tag: "GRAD".into(), value: -100. },
+])).into());
+slint_testing::mock_elapsed_time(600);
+assert_eq!(instance.get_anim().row_data(0).unwrap().value, 500.);
+assert_eq!(instance.get_anim().row_data(1).unwrap().value, -50.);
+slint_testing::mock_elapsed_time(600);
+assert_eq!(instance.get_anim().row_data(0).unwrap().value, 900.);
+assert_eq!(instance.get_anim().row_data(1).unwrap().value, -100.);
+
+// A target list whose tags don't match the previous one snaps instead of lerping.
+instance.set_anim(Rc::new(VecModel::from_slice(&[
+    FontVariation { tag: "opsz".into(), value: 72. },
+])).into());
+slint_testing::mock_elapsed_time(600);
+let anim = instance.get_anim();
+assert_eq!(anim.row_count(), 1);
+assert_eq!(anim.row_data(0).unwrap().tag, "opsz");
+assert_eq!(anim.row_data(0).unwrap().value, 72.);
+```
+
+```cpp
+auto handle = TestCase::create();
+const TestCase &instance = *handle;
+assert(instance.get_test());
+```
+*/

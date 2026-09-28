@@ -14,6 +14,7 @@ use crate::Coord;
 use crate::SharedString;
 use crate::api::PlatformError;
 use crate::lengths::LogicalLength;
+use crate::model::Model as _;
 use alloc::boxed::Box;
 
 pub use euclid;
@@ -120,6 +121,103 @@ pub struct FontRequest {
     pub line_height_factor: Option<f32>,
     /// Whether to select an italic face of the font family.
     pub italic: bool,
+    /// The font width as a CSS `font-stretch` percentage where 100 is the normal
+    /// width. `None` means unset.
+    pub stretch: Option<f32>,
+    /// Whether the optical-size axis (`opsz`) tracks the used font size.
+    /// `None` means unset (equivalent to `auto`).
+    pub optical_sizing: Option<bool>,
+    /// The variable font axis settings in the font's user coordinate space
+    /// (the equivalent of CSS `font-variation-settings`). Entries here override
+    /// the `wght`, `wdth` and `opsz` values derived from `weight`, `stretch` and
+    /// `optical_sizing` respectively. An empty model means unset.
+    pub variations: crate::model::ModelRc<crate::items::FontVariation>,
+}
+
+impl FontRequest {
+    /// The effective axis settings for shaping and rendering, in the font's
+    /// user coordinate space: an entry per requested axis, with `wght`, `wdth`
+    /// and (when `optical_sizing` is enabled) `opsz` derived from the
+    /// dedicated font properties first, then overridden by any matching
+    /// entries in `self.variations`.
+    ///
+    /// `pixel_size` is the used font size in physical pixels; pass `None` when
+    /// no size was configured.
+    pub fn effective_variations(
+        &self,
+        pixel_size: Option<f32>,
+    ) -> alloc::vec::Vec<(SharedString, f32)> {
+        let mut result: alloc::vec::Vec<(SharedString, f32)> = alloc::vec::Vec::new();
+        if let Some(weight) = self.weight {
+            result.push((SharedString::from("wght"), weight as f32));
+        }
+        if let Some(stretch) = self.stretch {
+            result.push((SharedString::from("wdth"), stretch));
+        }
+        // `shaping_variations` entries come last so that they override the
+        // dedicated-property values, matching CSS precedence.
+        merge_variation_pairs(&mut result, self.shaping_variations(pixel_size).iter());
+        result
+    }
+
+    /// The axis list pushed to the text shaper as a `FontVariations` style
+    /// property: the `opsz` axis derived from `optical_sizing`, then the
+    /// `font-variation-settings` entries, merged last-wins by axis tag so that
+    /// they override the `opsz` setting. `weight` and `stretch` are
+    /// deliberately absent — the shaper applies them through the selected
+    /// font's `fontique::Synthesis` instead, which styled spans override per
+    /// run.
+    ///
+    /// A consumer that reconstructs a run's axis settings in user space (the
+    /// Skia and Qt renderers, `char_size`/`font_metrics`) must apply this list
+    /// *after* the font's `Synthesis::variation_settings()` — the same order
+    /// the shaper applies.
+    ///
+    /// `pixel_size` is the used font size in logical pixels; pass `None` when
+    /// no size was configured.
+    pub fn shaping_variations(
+        &self,
+        pixel_size: Option<f32>,
+    ) -> alloc::vec::Vec<(SharedString, f32)> {
+        let mut result: alloc::vec::Vec<(SharedString, f32)> = alloc::vec::Vec::new();
+        if self.optical_sizing.unwrap_or(true)
+            && let Some(size) = pixel_size
+        {
+            result.push((SharedString::from("opsz"), size));
+        }
+        merge_variation_entries(&mut result, self.variations.iter());
+        result
+    }
+}
+
+/// Appends `entries` (tag, value pairs in user-space units) to `result`,
+/// replacing the value of an entry whose tag already occurs in `result`.
+pub fn merge_variation_entries(
+    result: &mut alloc::vec::Vec<(SharedString, f32)>,
+    entries: impl Iterator<Item = crate::items::FontVariation>,
+) {
+    for entry in entries {
+        if let Some(existing) = result.iter_mut().find(|(tag, _)| *tag == entry.tag) {
+            existing.1 = entry.value;
+        } else {
+            result.push((entry.tag, entry.value));
+        }
+    }
+}
+
+/// The same as [`merge_variation_entries`] but for `(tag, value)` pairs, used for
+/// merging per-paragraph markup overrides into a run's resolved axis list.
+pub fn merge_variation_pairs<'a>(
+    result: &mut alloc::vec::Vec<(SharedString, f32)>,
+    entries: impl Iterator<Item = &'a (SharedString, f32)>,
+) {
+    for (tag, value) in entries {
+        if let Some(existing) = result.iter_mut().find(|(t, _)| t == tag) {
+            existing.1 = *value;
+        } else {
+            result.push((tag.clone(), *value));
+        }
+    }
 }
 
 impl FontRequest {
@@ -162,7 +260,7 @@ impl FontRequest {
             } else {
                 fontique::FontStyle::Normal
             },
-            ..Default::default()
+            width: self.stretch.map(fontique::FontWidth::from_percentage).unwrap_or_default(),
         });
 
         let mut font = None;

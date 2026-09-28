@@ -65,7 +65,45 @@ fn parse_expression_helper(p: &mut impl Parser, precedence: OperatorPrecedence) 
             if p.nth(0).as_str().ends_with('{') {
                 parse_template_string(&mut *p)
             } else {
-                p.consume()
+                p.consume();
+                // A string literal followed by a value-like token starts the
+                // `font-variation-settings` shorthand, as in `"wght" 700, "wdth" 75`:
+                // a string can never continue an expression otherwise (adjacency is
+                // not a valid production). Strings are excluded (adjacent string
+                // literals concatenate) and so is `+` (string concatenation); only
+                // a negative literal introduces a value with a symbol.
+                let value_follows =
+                    matches!(p.nth(0).kind(), SyntaxKind::NumberLiteral | SyntaxKind::Identifier)
+                        || matches!(p.nth(0).kind(), SyntaxKind::Minus)
+                            && matches!(
+                                p.nth(1).kind(),
+                                SyntaxKind::NumberLiteral | SyntaxKind::Identifier
+                            );
+                if value_follows {
+                    // Opened at the checkpoint so that it covers the string token;
+                    // the Expression wrapping the first axis tag is nested inside it.
+                    let mut p = p.start_node_at(checkpoint.clone(), SyntaxKind::FontVariationList);
+                    {
+                        let _ = p.start_node_at(checkpoint.clone(), SyntaxKind::Expression);
+                    }
+                    loop {
+                        if !parse_expression(&mut *p) {
+                            return false;
+                        }
+                        if !p.test(SyntaxKind::Comma) {
+                            break;
+                        }
+                        // Next axis tag: a bare string literal, deliberately not
+                        // parsed through parse_expression so it doesn't recurse
+                        // into the shorthand itself.
+                        {
+                            let mut p = p.start_node(SyntaxKind::Expression);
+                            if !p.expect(SyntaxKind::StringLiteral) {
+                                return false;
+                            }
+                        }
+                    }
+                }
             }
         }
         SyntaxKind::NumberLiteral => {

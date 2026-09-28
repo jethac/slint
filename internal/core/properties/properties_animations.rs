@@ -503,6 +503,42 @@ impl InterpolatedPropertyValue for u8 {
     }
 }
 
+/// Two axis lists interpolate like CSS `font-variation-settings`: entry-wise
+/// when both lists pair up (same length, same tag at each position), snapping
+/// to the target otherwise.
+impl InterpolatedPropertyValue for crate::model::ModelRc<crate::items::FontVariation> {
+    fn interpolate(&self, target_value: &Self, t: f32) -> Self {
+        use crate::model::Model as _;
+        if self.row_count() != target_value.row_count() {
+            return target_value.clone();
+        }
+        let mut rows = alloc::vec::Vec::with_capacity(self.row_count());
+        for (from, to) in self.iter().zip(target_value.iter()) {
+            if from.tag != to.tag {
+                return target_value.clone();
+            }
+            rows.push(crate::items::FontVariation {
+                tag: to.tag.clone(),
+                value: from.value.interpolate(&to.value, t),
+            });
+        }
+        crate::model::ModelRc::new(crate::model::VecModel::from(rows))
+    }
+
+    fn scalar_delta(&self, target_value: &Self) -> f32 {
+        use crate::model::Model as _;
+        let mut delta = (self.row_count() as f32 - target_value.row_count() as f32).abs();
+        for (from, to) in self.iter().zip(target_value.iter()) {
+            if from.tag == to.tag {
+                delta += (to.value - from.value).abs();
+            } else {
+                delta += to.value.abs();
+            }
+        }
+        delta
+    }
+}
+
 impl InterpolatedPropertyValue for LogicalLength {
     fn interpolate(&self, target_value: &Self, t: f32) -> Self {
         LogicalLength::new(self.get().interpolate(&target_value.get(), t))

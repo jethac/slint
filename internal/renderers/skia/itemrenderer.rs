@@ -1108,13 +1108,41 @@ impl GlyphRenderer for SkiaItemRenderer<'_> {
         font_size: PhysicalLength,
         _normalized_coords: &[i16],
         synthesis: &fontique::Synthesis,
+        variations: &[sharedparley::parley::style::FontVariation],
         brush: Self::PlatformBrush,
         y_offset: sharedparley::PhysicalLength,
         glyphs_it: &mut dyn Iterator<Item = sharedparley::parley::layout::Glyph>,
     ) {
-        let Some(type_face) = crate::font_cache::FONT_CACHE
-            .with_borrow_mut(|font_cache| font_cache.font_with_variations(font, synthesis))
-        else {
+        let Some(type_face) = crate::font_cache::FONT_CACHE.with_borrow_mut(|font_cache| {
+            font_cache.font_with_variations(font, synthesis, variations)
+        }) else {
+            // The typeface can't take the run's variation arguments (or failed
+            // to load): rasterize glyph outlines at the exact coordinates the
+            // shaper used rather than silently dropping the requested axes.
+            let variation_settings =
+                sharedparley::merged_variation_settings(synthesis, variations);
+            let glyph_paths: Vec<_> = glyphs_it
+                .map(|g| {
+                    (
+                        g.id,
+                        g.x,
+                        g.y + y_offset.get(),
+                        crate::font_cache::FONT_CACHE.with_borrow_mut(|font_cache| {
+                            font_cache.glyph_path(
+                                font,
+                                g.id,
+                                font_size.get(),
+                                &variation_settings,
+                            )
+                        }),
+                    )
+                })
+                .collect();
+            for (_glyph_id, x, y, path) in glyph_paths {
+                if let Some(path) = path {
+                    self.canvas.draw_path(&path.make_offset((x, y)), &brush);
+                }
+            }
             return;
         };
         let mut font = skia_safe::Font::from_typeface(type_face, font_size.get());

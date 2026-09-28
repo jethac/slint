@@ -3590,6 +3590,7 @@ impl<T: ProcessScene> sharedparley::GlyphRenderer for SceneBuilder<'_, T> {
         font_size: sharedparley::PhysicalLength,
         normalized_coords: &[i16],
         synthesis: &fontique::Synthesis,
+        _variations: &[sharedparley::parley::style::FontVariation],
         color: Self::PlatformBrush,
         y_offset: sharedparley::PhysicalLength,
         glyphs_it: &mut dyn Iterator<Item = sharedparley::parley::layout::Glyph>,
