@@ -33,7 +33,11 @@ import {
     MaterialStyleMetrics,
     HorizontalDivider,
     Dialog,
-    FullscreenDialog
+    FullscreenDialog,
+    MaterialAnimations,
+    MaterialTheme,
+    Slider,
+    Switch
 } from "../../../../src/material.slint";
 
 import { Group } from "../components/group.slint";
@@ -553,6 +557,66 @@ export component ActionsView {
         TextIconButton {
             icon: OutlinedIcons.settings;
             text: "Settings";
+        }
+
+        Group {
+            title: "Theme";
+
+            ComponentCard {
+                title: "Motion & contrast";
+
+                Horizontal {
+                    alignment: center;
+
+                    SegmentedButton {
+                        items: [
+                            { text: "Expressive" },
+                            { text: "Standard" },
+                        ];
+                        current_index: MaterialAnimations.expressive ? 0 : 1;
+
+                        index_changed(index) => {
+                            MaterialAnimations.expressive = index == 0;
+                        }
+                    }
+                }
+
+                Horizontal {
+                    alignment: center;
+                    spacing: MaterialStyleMetrics.spacing_8;
+
+                    MaterialText {
+                        text: "Reduced motion";
+                        vertical_alignment: center;
+                    }
+
+                    Switch {
+                        checked <=> MaterialAnimations.reduced_motion;
+                    }
+                }
+
+                Horizontal {
+                    alignment: center;
+                    spacing: MaterialStyleMetrics.spacing_8;
+
+                    MaterialText {
+                        text: "Contrast";
+                        vertical_alignment: center;
+                    }
+
+                    Slider {
+                        minimum: -1;
+                        maximum: 1;
+                        value <=> MaterialTheme.contrast-level;
+                        width: 220px;
+                    }
+
+                    MaterialText {
+                        text: MaterialTheme.contrast-level.to-fixed(2);
+                        vertical_alignment: center;
+                    }
+                }
+            }
         }
     }
 
