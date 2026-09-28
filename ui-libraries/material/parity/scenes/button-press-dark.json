@@ -1,58 +1,69 @@
 {
-    "name": "button-press-dark",
-    "type": "canvas",
-    "parity": "motion",
-    "size": [
-        240,
-        96
-    ],
-    "densities": [
-        1,
-        2
-    ],
-    "theme": {
-        "seed": "6750A4",
-        "variant": "tonal-spot",
-        "spec": "spec2025",
-        "platform": "phone",
-        "dark": true,
-        "contrast": 0.0
+  "name": "button-press-dark",
+  "type": "canvas",
+  "parity": "motion",
+  "size": [
+    240,
+    96
+  ],
+  "densities": [
+    1,
+    2
+  ],
+  "theme": {
+    "seed": "6750A4",
+    "variant": "tonal-spot",
+    "spec": "spec2025",
+    "platform": "phone",
+    "dark": false,
+    "contrast": 0.0
+  },
+  "fonts": {
+    "plain": "Roboto",
+    "brand": "Roboto"
+  },
+  "times": [
+    0,
+    60,
+    120,
+    200,
+    333,
+    500,
+    1500,
+    2500
+  ],
+  "mask_inner": {
+    "button0": [
+      0,
+      60,
+      120,
+      200,
+      333,
+      500,
+      1500,
+      2500
+    ]
+  },
+  "widgets": [
+    {
+      "kind": "rect",
+      "x": 0,
+      "y": 0,
+      "width": 240,
+      "height": 96,
+      "radius": 0,
+      "color": "inverse-surface"
     },
-    "fonts": {
-        "plain": "Roboto",
-        "brand": "Roboto"
-    },
-    "times": [
-        0,
-        60,
-        120,
-        200,
-        333,
-        500,
-        1500,
-        2500
-    ],
-    "mask_inner": {
-        "button0": [
-            60,
-            120,
-            200,
-            333,
-            500,
-            1500
-        ]
-    },
-    "widgets": [
-        {
-            "kind": "filled-button",
-            "x": 16,
-            "y": 28,
-            "text": "Label",
-            "state": "pressed"
-        }
-    ],
-    "trace_elements": [
-        "button0"
-    ],
-    "trace_props": []
+    {
+      "kind": "filled-button",
+      "x": 16,
+      "y": 28,
+      "text": "Label",
+      "state": "pressed"
+    }
+  ],
+  "trace_elements": [
+    "button0"
+  ],
+  "trace_props": []
 }

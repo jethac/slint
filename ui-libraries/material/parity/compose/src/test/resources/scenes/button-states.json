@@ -26,7 +26,11 @@
     "plain": "Roboto"
   },
   "mask_decor": {},
-  "mask_inner": {},
+  "mask_inner": {
+    "button2": [
+      2000
+    ]
+  },
   "name": "button-states",
   "params": {},
   "parity": "static",

@@ -1,47 +1,47 @@
 {
-    "name": "negative-corner-leak-dark",
-    "type": "canvas",
-    "parity": "negative",
-    "negative_note": "dark theme: the light covering rectangle paints square corners over the pressed button's rounded shape \u2014 ink outside the corner arc is visibly light-on-dark and must fail the strict layer at both densities",
-    "size": [
-        240,
-        96
-    ],
-    "densities": [
-        1,
-        2
-    ],
-    "theme": {
-        "seed": "6750A4",
-        "variant": "tonal-spot",
-        "spec": "spec2025",
-        "platform": "phone",
-        "dark": true,
-        "contrast": 0.0
-    },
-    "fonts": {
-        "plain": "Roboto",
-        "brand": "Roboto"
-    },
-    "widgets": [
-        {
-            "kind": "filled-button",
-            "x": 16,
-            "y": 28,
-            "text": "Label",
-            "state": "pressed",
-            "slint_overrides": {
-                "cover": {
-                    "fill": "inverse-surface",
-                    "opacity": 0.2,
-                    "radius": 0
-                }
-            }
-        }
-    ],
-    "trace_elements": [
-        "button0"
-    ],
-    "trace_props": [],
-    "xfail_text": "issue #28: Slint ceils text layout widths where Compose keeps fractional advances"
+ "name": "negative-corner-leak-dark",
+ "type": "canvas",
+ "parity": "negative",
+ "negative_note": "the covering rectangle paints square corners over the pressed button's rounded shape \u2014 ink outside the corner arc is visibly dark-on-light and must fail the strict layer at both densities",
+ "size": [
+  240,
+  96
+ ],
+ "densities": [
+  1,
+  2
+ ],
+ "theme": {
+  "seed": "6750A4",
+  "variant": "tonal-spot",
+  "spec": "spec2025",
+  "platform": "phone",
+  "dark": false,
+  "contrast": 0.0
+ },
+ "fonts": {
+  "plain": "Roboto",
+  "brand": "Roboto"
+ },
+ "widgets": [
+  {
+   "kind": "filled-button",
+   "x": 16,
+   "y": 28,
+   "text": "Label",
+   "state": "pressed",
+   "slint_overrides": {
+    "cover": {
+     "fill": "inverse-surface",
+     "opacity": 0.2,
+     "radius": 0
+    }
+   }
+  }
+ ],
+ "trace_elements": [
+  "button0"
+ ],
+ "trace_props": [],
+ "xfail_text": "issue #28: Slint ceils text layout widths where Compose keeps fractional advances"
 }

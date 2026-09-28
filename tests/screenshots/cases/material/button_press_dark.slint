@@ -8,18 +8,18 @@
 //TIMES=0,60,120,200,333,500,1500,2500
 //TRACE_ELEMENTS=button0
 //ACTION=press:56,48
-//MASK_INNER=button0@60,120,200,333,500,1500
+//MASK_INNER=button0@0,60,120,200,333,500,1500,2500
 //DENSITIES=1,2
 import "../../fonts/Roboto-VariableFont.ttf";
 import { FilledButton, MaterialPalette, MaterialTheme, MaterialWindow } from "@material";
 
 export component TestCase inherits MaterialWindow {
     init => {
-        // The scene pins seed #6750A4, tonal-spot, spec2025, dark, contrast 0
+        // The scene pins seed #6750A4, tonal-spot, spec2025, light, contrast 0
         // (all the library defaults; restated here so a default change can't
         // silently move the parity baseline).
         MaterialTheme.seed-color = #6750A4;
-        MaterialTheme.dark = true;
+        MaterialTheme.dark = false;
         MaterialTheme.contrast-level = 0;
         MaterialTheme.use-platform-color = false;
         MaterialTheme.plain-family = "Roboto";
@@ -27,6 +27,15 @@ export component TestCase inherits MaterialWindow {
         // Compose builds its scene scheme from the same seed — use the
         // runtime-generated scheme, not the static expressive table.
         MaterialPalette.dynamic = true;
+    }
+
+    Rectangle {
+        x: 0px;
+        y: 0px;
+        width: 240px;
+        height: 96px;
+        border-radius: 0px;
+        background: MaterialPalette.inverse_surface;
     }
 
     button0 := FilledButton {

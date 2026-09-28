@@ -228,6 +228,19 @@ impl PxRect {
 /// boundary; a fill bleeding past it (the corner leak) lands on strict pixels.
 const CORNER_BAND: f64 = 2.0;
 
+/// Growth a `//MASK_INNER=` element's ink coverage must still have left one
+/// frame after the gesture: a bounded ripple expands over hundreds of ms,
+/// so coverage at the first post-action frame sits well below the settled
+/// coverage. An instantly full-size ripple (f579301e2's `width =
+/// root.width * 2 * 1.4142`) violates it at every density on every driver.
+/// Renderer- and engine-neutral: each image is measured against its own
+/// pre-action baseline and its own settled coverage.
+const INK_GROWTH_MARGIN: f64 = 0.30;
+/// Settled coverage below this means the ink never showed — layoutlib's
+/// ripple can legitimately stay sub-threshold, so the growth bound only
+/// applies once the settle frame proves ink reached the interior.
+const INK_SETTLED_MIN: f64 = 0.30;
+
 /// Corner-zone classification for [`PixelMask::mark_element`]: `Band` sits
 /// within `CORNER_BAND + drift` of the silhouette, `Outside` lies beyond it
 /// outside the maximal shape the bounds admit (only a spill or a wrong
@@ -1538,6 +1551,39 @@ fn build_frame_mask<C: i_slint_core::api::ComponentHandle>(
     mask
 }
 
+/// Fraction of an element's interior pixels that differ from the same
+/// render's own pre-action baseline frame — the ink coverage. Comparing
+/// each side against its own baseline keeps the measure renderer-neutral:
+/// overlay color, antialiasing and clip behavior cancel out.
+fn ink_coverage(
+    img: &SharedPixelBuffer<Rgba8Pixel>,
+    baseline: &SharedPixelBuffer<Rgba8Pixel>,
+    rect: &PxRect,
+    inset: f64,
+    eps: u8,
+) -> f64 {
+    let r = rect.dilated(-inset);
+    let (a, b) = (img.as_slice(), baseline.as_slice());
+    let (aw, ah) = (img.width() as i64, img.height() as i64);
+    let (mut total, mut inked) = (0u64, 0u64);
+    for y in (r.y0.ceil() as i64)..(r.y1.floor() as i64) {
+        for x in (r.x0.ceil() as i64)..(r.x1.floor() as i64) {
+            if x < 0 || y < 0 || x >= aw || y >= ah {
+                continue;
+            }
+            total += 1;
+            let i = (y * aw + x) as usize;
+            if channel_diff(&a[i], &b[i]) > eps {
+                inked += 1;
+            }
+        }
+    }
+    if total == 0 {
+        return 0.0;
+    }
+    inked as f64 / total as f64
+}
+
 /// For each `(slint, compose, id)` pair, compare the painted silhouette in
 /// every corner zone: scan each boundary row/column from outside the bounds
 /// inward and compare the position where each image first departs from the
@@ -1563,12 +1609,6 @@ fn corner_silhouette_findings(
         (x >= 0 && y >= 0 && x < aw && y < ah).then(|| img[(y * aw + x) as usize])
     };
     for (slint, compose, id) in pairs {
-        let drift = (slint.x0 - compose.x0)
-            .abs()
-            .max((slint.x1 - compose.x1).abs())
-            .max((slint.y0 - compose.y0).abs())
-            .max((slint.y1 - compose.y1).abs());
-        let band = CORNER_BAND + drift;
         let u = PxRect {
             x0: slint.x0.min(compose.x0),
             y0: slint.y0.min(compose.y0),
@@ -1577,41 +1617,74 @@ fn corner_silhouette_findings(
         };
         let r_pill = u.width().min(u.height()) / 2.0;
         let zone = r_pill + margin;
-        // (along_x, outside pos, scan end, spans on the other axis, name)
-        let scans = [
-            (true, u.x0 - margin - 1.0, u.x0 + zone, "left"),
-            (true, u.x1 + margin + 1.0, u.x1 - zone, "right"),
-            (false, u.y0 - margin - 1.0, u.y0 + zone, "top"),
-            (false, u.y1 + margin + 1.0, u.y1 - zone, "bottom"),
-        ];
-        for (along_x, outer, inner, side) in scans {
-            let (step, p_out) = if inner > outer {
-                (1i64, outer.floor() as i64)
-            } else {
-                (-1i64, outer.ceil() as i64)
+        for (along_x, side) in
+            [(true, "left"), (true, "right"), (false, "top"), (false, "bottom")]
+        {
+            // Scan each boundary side inward from just outside each render's
+            // own bound: the outside origin, the inward step, the scan's
+            // inner end, and the bound the edge position is measured
+            // against are all per render. The comparison is therefore the
+            // silhouette's shape — edge offsets relative to each side's own
+            // bounds — not its placement: bounds legitimately differ by the
+            // text-hinting drift the trace layer bounds, and a width drift
+            // moves an arc tangent's measured edge by more than the drift
+            // itself.
+            let params = |r: &PxRect| -> (f64, i64, f64, f64) {
+                match side {
+                    "left" => (r.x0 - margin - 1.0, 1, r.x0 + zone, r.x0),
+                    "right" => (r.x1 + margin + 1.0, -1, r.x1 - zone, r.x1),
+                    "top" => (r.y0 - margin - 1.0, 1, r.y0 + zone, r.y0),
+                    _ => (r.y1 + margin + 1.0, -1, r.y1 - zone, r.y1),
+                }
             };
-            let p_end = if step > 0 { inner.floor() as i64 } else { inner.ceil() as i64 };
-            let spans: [(f64, f64); 2] = if along_x {
-                [(u.y0, u.y0 + zone), (u.y1 - zone, u.y1)]
-            } else {
-                [(u.x0, u.x0 + zone), (u.x1 - zone, u.x1)]
-            };
-            for (s0, s1) in spans {
-                for f in (s0.floor() as i64)..(s1.ceil() as i64) {
+            // Corner offsets on the perpendicular axis: +1 measures the
+            // offset from that render's own lo bound, −1 from its hi bound.
+            for corner in [1i64, -1i64] {
+                for off in 0..(zone.ceil() as i64) {
+                    let coord = |r: &PxRect| -> f64 {
+                        let (lo, hi) = if along_x { (r.y0, r.y1) } else { (r.x0, r.x1) };
+                        if corner > 0 { lo + off as f64 } else { hi - off as f64 }
+                    };
+                    let (fa, fe) = (coord(slint), coord(compose));
+                    // A scan line outside a render's own bounds isn't a
+                    // corner of its silhouette — nothing comparable there.
+                    let claims = |r: &PxRect, f: f64| {
+                        let (lo, hi) = if along_x { (r.y0, r.y1) } else { (r.x0, r.x1) };
+                        f >= lo && f < hi
+                    };
+                    if !claims(slint, fa) || !claims(compose, fe) {
+                        continue;
+                    }
+                    let (outer_a, step_a, inner_a, bound_a) = params(slint);
+                    let (outer_e, step_e, inner_e, bound_e) = params(compose);
+                    let p_out_a =
+                        if step_a > 0 { outer_a.floor() as i64 } else { outer_a.ceil() as i64 };
+                    let p_out_e =
+                        if step_e > 0 { outer_e.floor() as i64 } else { outer_e.ceil() as i64 };
+                    let p_end_a =
+                        if step_a > 0 { inner_a.floor() as i64 } else { inner_a.ceil() as i64 };
+                    let p_end_e =
+                        if step_e > 0 { inner_e.floor() as i64 } else { inner_e.ceil() as i64 };
+                    let (fai, fei) = (fa.round() as i64, fe.round() as i64);
                     let (sa, se) = if along_x {
-                        (get(a, p_out, f), get(e, p_out, f))
+                        (get(a, p_out_a, fai), get(e, p_out_e, fei))
                     } else {
-                        (get(a, f, p_out), get(e, f, p_out))
+                        (get(a, fai, p_out_a), get(e, fei, p_out_e))
                     };
                     let (Some(sa), Some(se)) = (sa, se) else { continue };
                     if channel_diff(&sa, &se) > eps {
                         continue;
                     }
-                    let edge = |img: &[Rgba8Pixel], outside: &Rgba8Pixel| -> Option<i64> {
+                    let edge = |img: &[Rgba8Pixel],
+                                outside: &Rgba8Pixel,
+                                p_out: i64,
+                                step: i64,
+                                p_end: i64,
+                                f: i64|
+                     -> Option<i64> {
                         let mut p = p_out + step;
                         while (p - p_end) * step <= 0 {
-                            let cell =
-                                if along_x { get(img, p, f) } else { get(img, f, p) };
+                            let cell = if along_x { get(img, p, f) } else { get(img, f, p) };
                             match cell {
                                 Some(c) if channel_diff(&c, outside) > eps => {
                                     return Some(p)
@@ -1622,57 +1695,63 @@ fn corner_silhouette_findings(
                         }
                         None
                     };
-                    let (ea, ee) = (edge(a, &sa), edge(e, &se));
-                    // A side legitimately has no silhouette edge along a
-                    // scan line its own bounds don't claim: `button<N>`
-                    // widths differ by the text-hinting drift (bounded in
-                    // the trace layer), so columns past a narrower shape
-                    // are outside its silhouette, not missing from it.
-                    let claims = |r: &PxRect, f: i64| {
-                        let (lo, hi) = if along_x {
-                            (r.y0, r.y1)
-                        } else {
-                            (r.x0, r.x1)
-                        };
-                        f as f64 >= lo && (f as f64) < hi
-                    };
-                    let bad = match (ea, ee) {
-                        (Some(xa), Some(xe)) => (xa - xe).abs() as f64 > band,
-                        (Some(xa), None) => {
-                            claims(compose, f) && {
-                                let (x, y) =
-                                    if along_x { (xa, f) } else { (f, xa) };
-                                match (get(a, x, y), get(e, x, y)) {
-                                    (Some(ca), Some(ce)) => {
-                                        channel_diff(&ca, &ce) > eps
-                                    }
-                                    _ => false,
-                                }
+                    let ea = edge(a, &sa, p_out_a, step_a, p_end_a, fai);
+                    let ee = edge(e, &se, p_out_e, step_e, p_end_e, fei);
+                    // Edge position relative to each render's own bound —
+                    // the silhouette's depth, positive inward.
+                    let rel = |pos: i64, step: i64, bound: f64| step as f64 * (pos as f64 - bound);
+                    let ra = ea.map(|p| rel(p, step_a, bound_a));
+                    let re = ee.map(|p| rel(p, step_e, bound_e));
+                    // One side has an edge where the other has none: a real
+                    // difference only when the pixel content actually
+                    // differs at the same bound-relative position.
+                    let bad = match (ra, re) {
+                        (Some(ra), Some(re)) => (ra - re).abs() > CORNER_BAND,
+                        (Some(ra), None) => {
+                            let pos_in_other = bound_e + step_e as f64 * ra;
+                            let (x, y) = if along_x {
+                                (ea.unwrap(), fa.round() as i64)
+                            } else {
+                                (fa.round() as i64, ea.unwrap())
+                            };
+                            let (cx, cy) = if along_x {
+                                (pos_in_other.round() as i64, fe.round() as i64)
+                            } else {
+                                (fe.round() as i64, pos_in_other.round() as i64)
+                            };
+                            match (get(a, x, y), get(e, cx, cy)) {
+                                (Some(ca), Some(ce)) => channel_diff(&ca, &ce) > eps,
+                                _ => false,
                             }
                         }
-                        (None, Some(xe)) => {
-                            claims(slint, f) && {
-                                let (x, y) =
-                                    if along_x { (xe, f) } else { (f, xe) };
-                                match (get(a, x, y), get(e, x, y)) {
-                                    (Some(ca), Some(ce)) => {
-                                        channel_diff(&ca, &ce) > eps
-                                    }
-                                    _ => false,
-                                }
+                        (None, Some(re)) => {
+                            let pos_in_other = bound_a + step_a as f64 * re;
+                            let (x, y) = if along_x {
+                                (ee.unwrap(), fe.round() as i64)
+                            } else {
+                                (fe.round() as i64, ee.unwrap())
+                            };
+                            let (cx, cy) = if along_x {
+                                (pos_in_other.round() as i64, fa.round() as i64)
+                            } else {
+                                (fa.round() as i64, pos_in_other.round() as i64)
+                            };
+                            match (get(a, cx, cy), get(e, x, y)) {
+                                (Some(ca), Some(ce)) => channel_diff(&ca, &ce) > eps,
+                                _ => false,
                             }
                         }
                         (None, None) => false,
                     };
                     if bad {
                         let (x, y) = if along_x {
-                            (ea.or(ee).unwrap() as f64, f as f64)
+                            (ea.or(ee).unwrap() as f64, if ea.is_some() { fa } else { fe })
                         } else {
-                            (f as f64, ea.or(ee).unwrap() as f64)
+                            (if ea.is_some() { fa } else { fe }, ea.or(ee).unwrap() as f64)
                         };
                         out.push((
                             format!(
-                                "{id} {side} silhouette edge at {f}: slint {ea:?} vs compose {ee:?} (band {band:.1})"
+                                "{id} {side} silhouette edge at corner offset {off}: slint {ra:?} vs compose {re:?} (band {CORNER_BAND:.1})"
                             ),
                             x,
                             y,
@@ -1813,6 +1892,13 @@ pub fn run_parity_case<C: i_slint_core::api::ComponentHandle>(
         let mut frames = Vec::new();
         let mut actions_applied = actions_before_first_frame;
         let mut artifacts_written = false;
+        // The first listed-time frames on each side are the pre-action
+        // baseline `ink_coverage` measures against; `early_coverage` holds
+        // the first post-action frame's coverage per element.
+        let mut baseline_actual: Option<SharedPixelBuffer<Rgba8Pixel>> = None;
+        let mut baseline_expected: Option<SharedPixelBuffer<Rgba8Pixel>> = None;
+        let mut early_coverage: std::collections::HashMap<String, (f64, f64)> =
+            Default::default();
         for &t in &times {
             advance_mock_time_to(start, t);
             let actual = render_frame(&component);
@@ -1835,6 +1921,10 @@ pub fn run_parity_case<C: i_slint_core::api::ComponentHandle>(
                     continue;
                 }
             };
+            if t == times[0] {
+                baseline_actual = Some(actual.clone());
+                baseline_expected = Some(expected.clone());
+            }
             let png_mask = load_png(&mask_path).ok();
             let inner_masked: Vec<String> = spec
                 .mask_inner
@@ -1935,6 +2025,55 @@ pub fn run_parity_case<C: i_slint_core::api::ComponentHandle>(
                             caught_at_density[di] = true;
                         }
                         failures.push(format!("d{density} t={tag}: {msg}"));
+                    }
+                    // `//MASK_INNER=` skips the ripple ink's coverage
+                    // entirely — the circle's shape and growth rate differ
+                    // legitimately between engines. What cannot differ is
+                    // that it grows: an instantly full-size ripple (the
+                    // f579301e2 defect) covers ~the whole interior from the
+                    // first post-action frame. Measure each image's ink
+                    // coverage against its own baseline, and require the
+                    // first post-action frame to sit well below the settled
+                    // coverage. Layoutlib's recorded ripple fades early on
+                    // Compose, so the bound applies only where the settle
+                    // frame proves ink actually reached the interior.
+                    if let (Some(ba), Some(be)) = (&baseline_actual, &baseline_expected) {
+                        for (slint_r, compose_r, id) in &pairs {
+                            let inset = CORNER_BAND + 2.0 * d;
+                            let ca = ink_coverage(&actual, ba, slint_r, inset, pixel_eps);
+                            let ce = ink_coverage(&expected, be, compose_r, inset, pixel_eps);
+                            if Some(&t) == times.get(1) {
+                                early_coverage.insert(id.clone(), (ca, ce));
+                            }
+                            if t == *times.last().unwrap() {
+                                let Some(&(early_a, early_c)) = early_coverage.get(id)
+                                else {
+                                    continue;
+                                };
+                                for (early, cov, img_name) in
+                                    [(early_a, ca, "slint"), (early_c, ce, "compose")]
+                                {
+                                    if cov > INK_SETTLED_MIN && early > cov - INK_GROWTH_MARGIN
+                                    {
+                                        strict_caught += 1;
+                                        silhouette_failed = true;
+                                        failures.push(format!(
+                                            "d{density} t={tag}: {id} {img_name} ink coverage already {early:.2} one frame after the action; settled {cov:.2} — expected a growing ripple"
+                                        ));
+                                        if negative
+                                            && region.map_or(true, |r| {
+                                                r.contains(
+                                                    (slint_r.x0 + slint_r.x1) / 2.0,
+                                                    (slint_r.y0 + slint_r.y1) / 2.0,
+                                                )
+                                            })
+                                        {
+                                            caught_at_density[di] = true;
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }

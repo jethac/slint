@@ -10,10 +10,12 @@ import androidx.compose.ui.text.font.FontVariation
 import androidx.compose.ui.text.font.FontWeight
 import app.cash.paparazzi.DeviceConfig
 import app.cash.paparazzi.Paparazzi
+import app.cash.paparazzi.TestName
 import com.android.resources.Density
 import java.io.File
-import app.cash.paparazzi.TestName
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.junit.runners.Parameterized
 
 /** Renders every parity scene on Jetpack Compose material3 through Paparazzi
  * (layoutlib — the same rasterizer Android Studio previews use) and writes the
@@ -24,54 +26,51 @@ import org.junit.Test
  * `fps = 1000` frame `i` is rendered at `t = i` ms, so scene timestamps map to
  * frame indexes exactly. Renders land under `build/parity-out/`; the Gradle
  * property `-Pparity.record` writes them into `references/` to regenerate the
- * committed references. */
-class RenderTest {
+ * committed references.
+ *
+ * One parameterized case per (scene, density), one JVM per case
+ * (`forkEvery = 1`): composition state that survives teardown — the frame
+ * clock keeps its epoch across render sessions — can freeze a scene's
+ * coroutine-driven animations on a later render in a shared JVM, so each
+ * render gets a fresh one. Scene-filtered and full-suite records therefore
+ * produce identical PNGs. */
+@RunWith(Parameterized::class)
+class RenderTest(private val sceneName: String, private val density: Int) {
 
     private val frames = FrameSink()
 
     @Test
-    fun renderAllScenes() {
-        // -Dparity.scene=<name> restricts the run to one scene (debugging).
-        val only = System.getProperty("parity.scene")
-        val testName = TestName(
-            RenderTest::class.java.packageName,
-            RenderTest::class.java.name,
-            "renderAllScenes",
+    fun render() {
+        val scene = Scene.loadAll().first { it.name == sceneName }
+        // The generator resolves the scheme with Slint's own
+        // material-color-utils port; the Compose side re-derives it with
+        // the Kotlin MCU port. If they disagree a port has drifted —
+        // fail here, not in a pixel diff.
+        assertSchemeMatches(scene)
+        renderScene(
+            scene,
+            density,
+            TestName(
+                RenderTest::class.java.packageName,
+                RenderTest::class.java.name,
+                "render_${sceneName}_d$density",
+            ),
         )
-        for (scene in Scene.loadAll()) {
-            if (only != null && scene.name != only) continue
-            // The generator resolves the scheme with Slint's own
-            // material-color-utils port; the Compose side re-derives it with
-            // the Kotlin MCU port. If they disagree a port has drifted —
-            // fail here, not in a pixel diff.
-            assertSchemeMatches(scene)
-            // A fresh Paparazzi per scene: one layoutlib render session per
-            // gif() leaks ImageReader buffers, and `teardown()` is the only
-            // point they are released — long runs SIGABRT without it.
-            val paparazzi = Paparazzi(
-                deviceConfig = DeviceConfig.NEXUS_5,
-                theme = "android:Theme.Material.Light.NoActionBar",
-                snapshotHandler = frames,
-                appCompatEnabled = false,
-                // Render at the configured pixel size — the default scales
-                // renders down when the surface exceeds layoutlib's cap,
-                // breaking the 1:1 physical-pixel compare at 2x.
-                useDeviceResolution = true,
-            )
-            try {
-                paparazzi.setup(testName)
-                for (density in scene.densities) {
-                    renderScene(paparazzi, scene, density)
-                }
-            } finally {
-                paparazzi.teardown()
-            }
-        }
     }
 
-    private fun renderScene(paparazzi: Paparazzi, scene: Scene, density: Int) {
+    private fun renderScene(scene: Scene, density: Int, testName: TestName) {
         val (w, h) = scene.sizeDp
-        paparazzi.unsafeUpdateConfig(deviceConfig = deviceFor(w, h, density))
+        val paparazzi = Paparazzi(
+            deviceConfig = deviceFor(w, h, density),
+            theme = "android:Theme.Material.Light.NoActionBar",
+            snapshotHandler = frames,
+            appCompatEnabled = false,
+            // Render at the configured pixel size — the default scales
+            // renders down when the surface exceeds layoutlib's cap,
+            // breaking the 1:1 physical-pixel compare at 2x.
+            useDeviceResolution = true,
+        )
+        paparazzi.setup(testName)
         val outDir = outDir(scene, density)
         outDir.deleteRecursively()
         // `times` marks a timed scene (motion or a motion-class negative):
@@ -80,8 +79,15 @@ class RenderTest {
         val tracer = Tracer()
         tracer.noteDensity(density.toFloat())
 
+        // Press emissions the scene's `pressed` widgets registered. The sink
+        // runs them right after its first presented frame — the same point
+        // the Slint driver dispatches //ACTION= (just after the pre-press
+        // baseline frame). Synchronous tryEmit: a coroutine-resume race
+        // would land the press either before frame 0 (ink in the baseline)
+        // or too late.
+        val emitPress = java.util.concurrent.CopyOnWriteArrayList<Runnable>()
         val host = ComposeView(paparazzi.context)
-        host.setContent { SceneContent(scene, robotoFamily(), tracer) }
+        host.setContent { SceneContent(scene, robotoFamily(), tracer, emitPress) }
 
         // fps = 1000 makes frame indexes equal milliseconds; static scenes
         // step at 50 ms and keep only the settled last frame. Static scenes
@@ -93,6 +99,9 @@ class RenderTest {
         val fps = if (motion) 1000 else 20
 
         frames.setSink(java.util.function.BiConsumer { index, image ->
+            if (index == 0) {
+                emitPress.forEach { it.run() }
+            }
             if (motion && index.toLong() in wanted) {
                 FrameSink.writeFrame(outDir.resolve("frame_${index}ms.png"), image)
             }
@@ -102,14 +111,18 @@ class RenderTest {
                 frames.writeLast(outDir.resolve("frame_settled.png"))
             }
         })
+        try {
+            paparazzi.gif(host, scene.name, startMs, lastMs, fps)
+            frames.setSink(null)
+            frames.setOnFramesDone(null)
 
-        paparazzi.gif(host, scene.name, startMs, lastMs, fps)
-        frames.setSink(null)
-        frames.setOnFramesDone(null)
-
-        writeMasks(outDir, motion, wanted, tracer, density.toFloat(), w * density, h * density)
-        val times = if (motion) scene.times else listOf(STATIC_SETTLE_MS)
-        outDir.resolve("trace.json").writeText(tracer.traceJson(times).toString(2))
+            writeMasks(outDir, motion, wanted, tracer, density.toFloat(), w * density, h * density)
+            val times = if (motion) scene.times else listOf(STATIC_SETTLE_MS)
+            outDir.resolve("trace.json").writeText(tracer.traceJson(times).toString(2))
+        } finally {
+            host.disposeComposition()
+            paparazzi.teardown()
+        }
     }
 
     /** One mask per frame: white inside the text nodes' bounds, black
@@ -190,5 +203,16 @@ class RenderTest {
 
     companion object {
         private const val STATIC_SETTLE_MS = 2000L
+
+        /** `-Dparity.scene=<name>` restricts the run to one scene
+         * (debugging); every (scene, density) pair is one JVM. */
+        @JvmStatic
+        @Parameterized.Parameters(name = "{0}_d{1}")
+        fun scenesAndDensities(): List<Array<Any>> {
+            val only = System.getProperty("parity.scene")
+            return Scene.loadAll()
+                .filter { only == null || it.name == only }
+                .flatMap { scene -> scene.densities.map { arrayOf(scene.name, it) } }
+        }
     }
 }

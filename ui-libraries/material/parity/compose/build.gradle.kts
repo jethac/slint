@@ -67,6 +67,10 @@ dependencies {
 
 tasks.withType<Test>().configureEach {
     testLogging.showStandardStreams = true
+    // One JVM per render: composition state that survives teardown (the
+    // frame clock keeps its epoch across render sessions) can freeze a
+    // later render's coroutine-driven animations in a shared JVM.
+    forkEvery = 1
     providers.systemProperty("parity.scene").orNull?.let { systemProperty("parity.scene", it) }
     // Paparazzi decompresses layoutlib natives at runtime.
     jvmArgs = (jvmArgs ?: emptyList()) + listOf(

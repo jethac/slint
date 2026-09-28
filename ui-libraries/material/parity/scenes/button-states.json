@@ -1,63 +1,68 @@
 {
-    "name": "button-states",
-    "type": "canvas",
-    "parity": "static",
-    "size": [
-        480,
-        96
-    ],
-    "densities": [
-        1,
-        2
-    ],
-    "theme": {
-        "seed": "6750A4",
-        "variant": "tonal-spot",
-        "spec": "spec2025",
-        "platform": "phone",
-        "dark": false,
-        "contrast": 0.0
+  "name": "button-states",
+  "type": "canvas",
+  "parity": "static",
+  "size": [
+    480,
+    96
+  ],
+  "densities": [
+    1,
+    2
+  ],
+  "theme": {
+    "seed": "6750A4",
+    "variant": "tonal-spot",
+    "spec": "spec2025",
+    "platform": "phone",
+    "dark": false,
+    "contrast": 0.0
+  },
+  "fonts": {
+    "plain": "Roboto",
+    "brand": "Roboto"
+  },
+  "widgets": [
+    {
+      "kind": "filled-button",
+      "x": 16,
+      "y": 28,
+      "text": "Enabled",
+      "state": "enabled"
     },
-    "fonts": {
-        "plain": "Roboto",
-        "brand": "Roboto"
+    {
+      "kind": "filled-button",
+      "x": 132,
+      "y": 28,
+      "text": "Focused",
+      "state": "focused"
     },
-    "widgets": [
-        {
-            "kind": "filled-button",
-            "x": 16,
-            "y": 28,
-            "text": "Enabled",
-            "state": "enabled"
-        },
-        {
-            "kind": "filled-button",
-            "x": 132,
-            "y": 28,
-            "text": "Focused",
-            "state": "focused"
-        },
-        {
-            "kind": "filled-button",
-            "x": 248,
-            "y": 28,
-            "text": "Pressed",
-            "state": "pressed"
-        },
-        {
-            "kind": "filled-button",
-            "x": 364,
-            "y": 28,
-            "text": "Disabled",
-            "enabled": false
-        }
-    ],
-    "trace_elements": [
-        "button0",
-        "button1",
-        "button2",
-        "button3"
-    ],
-    "trace_props": [],
-    "xfail_text": "issue #28: Slint ceils text layout widths where Compose keeps fractional advances"
+    {
+      "kind": "filled-button",
+      "x": 248,
+      "y": 28,
+      "text": "Pressed",
+      "state": "pressed"
+    },
+    {
+      "kind": "filled-button",
+      "x": 364,
+      "y": 28,
+      "text": "Disabled",
+      "enabled": false
+    }
+  ],
+  "trace_elements": [
+    "button0",
+    "button1",
+    "button2",
+    "button3"
+  ],
+  "trace_props": [],
+  "xfail_text": "issue #28: Slint ceils text layout widths where Compose keeps fractional advances",
+  "mask_inner": {
+    "button2": [
+      2000
+    ]
+  }
 }

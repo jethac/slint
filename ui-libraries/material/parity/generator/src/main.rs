@@ -502,9 +502,14 @@ fn widget_num(v: &serde_json::Value) -> f64 {
 }
 
 fn slint_canvas(s: &mut String, scene: &Scene) {
-    for (i, w) in scene.widgets.iter().enumerate() {
+    // Buttons are named `button{n}` by count of filled buttons, not widget
+    // index — a backdrop `rect` ahead of a button leaves `button0` intact.
+    let mut buttons = 0;
+    for w in scene.widgets.iter() {
         match w.kind.as_str() {
             "filled-button" => {
+                let i = buttons;
+                buttons += 1;
                 writeln!(
                     s,
                     "    button{i} := FilledButton {{\n        x: {}px;\n        y: {}px;\n        text: \"{}\";\n{}    }}\n",

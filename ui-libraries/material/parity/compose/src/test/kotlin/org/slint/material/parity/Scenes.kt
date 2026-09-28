@@ -25,6 +25,7 @@ import androidx.compose.material3.Typography
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -311,7 +312,12 @@ fun typography(font: FontFamily?): Typography =
 /** The composable a scene renders, keyed on its `type`. */
 @OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalMaterial3Api::class)
 @Composable
-fun SceneContent(scene: Scene, font: FontFamily?, tracer: Tracer) {
+fun SceneContent(
+    scene: Scene,
+    font: FontFamily?,
+    tracer: Tracer,
+    emitPress: java.util.concurrent.CopyOnWriteArrayList<Runnable>,
+) {
     MaterialExpressiveTheme(
         colorScheme = sceneColorScheme(scene),
         motionScheme = MotionScheme.expressive(),
@@ -324,7 +330,7 @@ fun SceneContent(scene: Scene, font: FontFamily?, tracer: Tracer) {
         CompositionLocalProvider(LocalMinimumInteractiveComponentSize provides 0.dp) {
             FrameRecorder(scene, tracer)
             when (scene.type) {
-                "canvas" -> CanvasScene(scene, tracer)
+                "canvas" -> CanvasScene(scene, tracer, emitPress)
                 "spring-motion" -> SpringMotionScene(scene, tracer)
                 else -> error("unknown scene type ${scene.type}")
             }
@@ -347,16 +353,31 @@ private fun FrameRecorder(scene: Scene, tracer: Tracer) {
 }
 
 @Composable
-private fun CanvasScene(scene: Scene, tracer: Tracer) {
+private fun CanvasScene(
+    scene: Scene,
+    tracer: Tracer,
+    emitPress: java.util.concurrent.CopyOnWriteArrayList<Runnable>,
+) {
     val (w, h) = scene.sizeDp
     val density = androidx.compose.ui.platform.LocalDensity.current.density
     val scheme = androidx.compose.material3.MaterialTheme.colorScheme
     Box(
         Modifier.testTag("scene-root").size(w.dp, h.dp).background(scheme.background),
     ) {
-        scene.widgets.forEachIndexed { i, widget ->
+        // Elements are named `button{n}`/`text:{n}` by count of filled
+        // buttons, not widget index — a backdrop `rect` ahead of a button
+        // leaves `button0` intact.
+        var buttons = 0
+        scene.widgets.forEach { widget ->
             when (widget.kind) {
-                "filled-button" -> StateButton(widget, tracer, "text:$i", "button$i", density)
+                "filled-button" -> StateButton(
+                    widget,
+                    tracer,
+                    "text:${buttons}",
+                    "button${buttons++}",
+                    density,
+                    emitPress,
+                )
                 "rect" ->
                     Box(
                         Modifier.offset(widget.x.dp, widget.y.dp)
@@ -373,37 +394,66 @@ private fun CanvasScene(scene: Scene, tracer: Tracer) {
 /** A filled button in the interaction state the scene asks for. `state`
  * comes from the scene's `widgets[].state` — the Slint side drives the same
  * state through real pointer events on the mocked backend. */
+/** Interaction source that replays its latest emission to late collectors —
+ * the button's collector may subscribe frames after the press is emitted. */
+class ReplayableInteractionSource : MutableInteractionSource {
+    val flow = kotlinx.coroutines.flow.MutableSharedFlow<androidx.compose.foundation.interaction.Interaction>(
+        replay = 1,
+        extraBufferCapacity = 16,
+    )
+
+    override val interactions get() = flow
+
+    override suspend fun emit(interaction: androidx.compose.foundation.interaction.Interaction) {
+        flow.emit(interaction)
+    }
+
+    override fun tryEmit(interaction: androidx.compose.foundation.interaction.Interaction): Boolean =
+        flow.tryEmit(interaction)
+}
+
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-private fun StateButton(widget: Widget, tracer: Tracer, textId: String, elementId: String, density: Float) {
-    val interactionSource = remember { MutableInteractionSource() }
-    // Mirrors the Slint driver's event stream: a held pointer produces
-    // hover AND press, so "pressed" emits Enter then Press. The press
-    // position matches the driver's press point (40,20)dp into the widget.
-    val pressPos = with(androidx.compose.ui.platform.LocalDensity.current) {
-        Offset(40.dp.toPx(), 20.dp.toPx())
-    }
+private fun StateButton(
+    widget: Widget,
+    tracer: Tracer,
+    textId: String,
+    elementId: String,
+    density: Float,
+    emitPress: java.util.concurrent.CopyOnWriteArrayList<Runnable>,
+) {
+    val interactionSource = remember { ReplayableInteractionSource() }
     when (widget.state) {
-        "pressed" -> LaunchedEffect(Unit) {
-            // Emit on the first frame at t >= 1 ms: a press arriving at t = 0
-            // makes the ripple request a frame at t = 0, which aborts
-            // layoutlib natively under `gif()`.
-            var emitted = false
-            while (!emitted) {
-                withFrameNanos { nanos ->
-                    if (nanos >= 1_000_000 && !emitted) {
-                        interactionSource.tryEmit(HoverInteraction.Enter())
-                        interactionSource.tryEmit(PressInteraction.Press(pressPos))
-                        emitted = true
-                    }
-                }
-            }
-        }
         "hovered" -> LaunchedEffect(Unit) {
             interactionSource.emit(HoverInteraction.Enter())
         }
         "focused" -> LaunchedEffect(Unit) {
             interactionSource.emit(FocusInteraction.Focus())
+        }
+        // Emitting a bare Press (no Hover Enter) drives the press path alone:
+        // the driver's synthetic pointer press carries no hover either, and
+        // the interior pixels stay within tolerance of Slint's state layer.
+        // The flow replays its latest emission, so the button's collectors
+        // receive the press whenever they subscribe during the pump. The
+        // registration goes to the frame sink, which runs it right after
+        // the first presented frame: the Slint driver dispatches //ACTION=
+        // just after its own pre-press baseline frame, and an earlier emit
+        // would put pressed ink (and the morph's start) into frame 0 — the
+        // composition runs ahead of the pump during setup. Landing after
+        // frame 0 also keeps the press off uptime 0, where a ripple's frame
+        // callback would abort layoutlib.
+        "pressed" -> {
+            val press = remember {
+                Runnable {
+                    interactionSource.tryEmit(
+                        PressInteraction.Press(Offset(40f * density, 20f * density)),
+                    )
+                }
+            }
+            DisposableEffect(press) {
+                emitPress.add(press)
+                onDispose { emitPress.remove(press) }
+            }
         }
     }
     Button(
@@ -444,6 +494,7 @@ private fun schemeColor(role: String): Color =
             "tertiary" -> scheme.tertiary
             "tertiaryContainer" -> scheme.tertiaryContainer
             "surface" -> scheme.surface
+            "inverseSurface" -> scheme.inverseSurface
             "background" -> scheme.background
             "error" -> scheme.error
             "errorContainer" -> scheme.errorContainer
