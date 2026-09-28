@@ -18,6 +18,15 @@ export global MaterialAnimations {
     // with springs (spatial/effects per the motion spec).
     out property <MaterialMotionSchemeSpec> motion_scheme: root.expressive ? MaterialMotion.expressive : MaterialMotion.standard;
 
+    // The default spatial spring in Slint's duration+bounce
+    // parameterization: a physical spring's natural period is 2π/√stiffness
+    // and damping ratio maps to (1 - bounce). `easing:` accepts no bound
+    // spring() call — bounce stays a number, matched to the scheme's
+    // damping ratio by the `spring_bounce` property and inlined literally
+    // where the easing is declared.
+    out property <duration> default_spatial_duration: root.reduced_motion ? 0ms : 6.283185307 / Math.sqrt(root.motion_scheme.default_spatial.stiffness) * 1s;
+    out property <float> default_spatial_bounce: 1 - root.motion_scheme.default_spatial.damping_ratio;
+
     out property <easing> emphasized_easing: root.expressive ? MotionTokens.easing_emphasized_decelerate_cubic_bezier : MotionTokens.easing_legacy_decelerate_cubic_bezier;
     out property <duration> emphasized_duration: root.reduced_motion ? 0ms : MotionTokens.duration_long2;
     out property <duration> emphasized_decelerate_duration: root.reduced_motion ? 0ms : MotionTokens.duration_medium4;
