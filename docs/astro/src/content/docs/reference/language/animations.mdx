@@ -221,10 +221,20 @@ animated channel is at rest, matching the settling behavior of
 Colors — including the colors inside gradient brushes — animate in the Oklab
 color space, so mid-flight hues stay perceptually smooth.
 
-When the platform reports a reduced-motion preference — for example Android's
-`animator_duration_scale` set to 0, or a browser's `prefers-reduced-motion` —
-all animations complete immediately. `SlintInternal.reduced-motion` exposes the
-preference to `.slint` code.
+Two distinct mechanisms reflect the platform's motion preferences.
+
+`SlintInternal.reduced-motion` (also exposed as `Palette.reduced-motion`) is a
+*semantic* flag: platform sources — a browser's `prefers-reduced-motion`, the
+Windows "show animations" setting, the XDG `reduce-motion` portal or GNOME's
+`enable-animations`, the macOS/iOS reduce-motion accessibility options, and
+Android's `animator_duration_scale` reaching 0 — feed the flag, and `.slint`
+code decides what to do with it. The Material widgets, for example, disable
+their decorative animations with `enabled: !MaterialPalette.reduced-motion`.
+
+Independently, a global animation *duration scale* multiplies every
+`duration`. Only a scale of 0 — the value Android reports when animator
+duration scale is disabled — makes finite animations complete immediately and
+parks infinite ones until the scale rises again.
 
 ### Iterations and Directions
 
