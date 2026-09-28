@@ -1055,9 +1055,10 @@ fn test_rgb_to_oklch() {
 
 #[test]
 fn test_oklab_compose_reference() {
-    // Reference `(l, a, b)` values computed with numpy in f32 by porting the
-    // pinned androidx path verbatim: `Rgb.eotfFunc` → `Srgb.adapt(D50)` →
-    // `Oklab.fromXyz` (commit 23327507f7fc7d5b19d65fec4b090f60c970079b). The
+    // Reference `(l, a, b)` values computed by `oklab_compose_reference.py` in
+    // this directory — an f32 numpy port of the pinned androidx path verbatim:
+    // `Rgb.eotfFunc` → `Srgb.adapt(D50)` → `Oklab.fromXyz` (commit
+    // 23327507f7fc7d5b19d65fec4b090f60c970079b). The
     // same constant matrices and operation order are used here, so the (l, a,
     // b) values are expected to agree to a few ulps; the sRGB round trip gets a
     // wider 1e-4 bound since `toXyz` clamps out-of-gamut excursions on the way.
