@@ -389,6 +389,7 @@
     "tools/figma-inspector/fixtures/**",
     "tools/figma-inspector/src/ui/syntax-assets/**",
     "**/*.gltf",
+    "**/gradlew",
     "**/*.po",
     "**/*.pot",
     "**/*.svg",
@@ -396,6 +397,37 @@
     "**/node_modules/**"
   ],
   "overrides": [
+    {
+      "filename": "ui-libraries/material/parity/**",
+      "words": [
+        "aliyun",
+        "argbs",
+        "Dparity",
+        "gradlew",
+        "JPMS",
+        "jvmargs",
+        "layoutlib",
+        "lightdark",
+        "mdpi",
+        "Pparity",
+        "robolectric",
+        "Robolectric"
+      ]
+    },
+    {
+      "filename": "tests/screenshots/**",
+      "words": [
+        "attribs",
+        "cpath",
+        "dasharray",
+        "khronos",
+        "llvmpipe",
+        "rasterizers",
+        "surfaceless",
+        "Surfaceless",
+        "SURFACELESS"
+      ]
+    },
     {
       "filename": "tools/figma-inspector/**",
       "words": [

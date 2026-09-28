@@ -27,10 +27,12 @@ are compared pixel-per-pixel (with text masked) plus numerically for motion.
   cargo run --manifest-path ui-libraries/material/Cargo.toml -p material-parity-generator -- --check
   ```
 
-- `compose/` — Android library module with a Robolectric unit test
-  (`ParityTest`) that composes every scene under `LocalDensity` 1.0 and 2.0,
-  renders frames and writes `references/<case>/d{1,2}/frame_<tag>.png` plus a
-  text-bounds mask (`mask_<tag>.png`) and `trace.json` for motion scenes.
+- `compose/` — Android library module with a Paparazzi test (`RenderTest`)
+  that composes every scene at density 1 and 2, renders frames through
+  layoutlib, and writes `references/<case>/d{1,2}/frame_<tag>.png` plus a
+  text-bounds mask (`mask_<tag>.png`) and `trace.json` (element rects, text
+  metrics, motion samples). The references are committed; the Slint driver
+  fails when they're missing or stale.
 
 ## Running the Slint side
 
@@ -42,10 +44,10 @@ Every `//PARITY=` case runs on the software renderer, the software line-by-line
 renderer, and Skia — plus FemtoVG when built with `--features femtovg` (uses a
 surfaceless EGL context, so it works headless under Mesa llvmpipe).
 
-Without committed Compose references the parity comparison warns and skips; the
-Slint-side harness (scene loading, actions, mocked-time capture, trace
-recording, self-tests) still runs. Set `PARITY_REQUIRE_REFS=1` to turn missing
-references into hard failures — CI does this for cases that have references.
+References are required in CI: `PARITY_REQUIRE_REFS=1` turns a missing or
+stale reference into a hard failure. Without the env var a case with no
+committed reference warns and skips — the Slint-side harness (scene loading,
+actions, mocked-time capture, trace recording, self-tests) still runs.
 
 ## Case markers
 
@@ -68,17 +70,26 @@ A parity case is a normal `.slint` file with marker comments:
 
 | Layer | Check | Tolerance |
 | --- | --- | --- |
-| Geometry/color | per-pixel RGBA, excluding masked cells | `PARITY_EPS` (8) per channel |
-| Text | pixels inside `mask_*.png` cells: metric-agreement — outlier cells may differ in ≤5% of pixels at ≤96 | `TEXT_CELL_EPS` 24 |
+| Geometry/color | per-pixel RGBA on flat regions | `PARITY_EPS` (8) per channel |
+| Outlines | pixels near a detected image edge: AA drift is a fraction of the edge's contrast | `min(EDGE_EPS 56, contrast/2)` |
+| Traced elements | the outline-disagreement zone between the Slint and Compose bounds (dilated for decorations like focus ring and elevation shadow) is skipped; geometry is compared numerically instead | `GEOM_EPS` 0.5px, drift-aware |
+| Text | pixels in the union of both sides' text bounds: per-cell mean/outlier bound, plus numeric position/width — width validates against the font's own unhinted metrics (`frac_w`), not the hinted layout width | `TEXT_CELL_EPS` 40, ≤25% outliers at >96, `w` ±1px, `cx` drift-bounded |
 | Motion | trace values per timestamp, plus settle time | `TRACE_EPS` 1.0px, settle within 25% |
 | Negative | must fail the comparator | — |
+
+Why text tolerances look loose: layoutlib's hinted, integer-advance text
+layout renders measurably bolder and ~0.5px/glyph wider than unhinted font
+metrics; Slint's text is closer to the font's own numbers. The trace layer
+validates Slint's text width against `frac_w` (a hinting-off `Paint`
+measure of the same string/font/size, emitted by the Compose harness) at
+1px, so the cross-engine drift is bounded, not pixel-compared.
 
 Diffs, masks and trace plots land in `target/parity-artifacts/<driver>/<case>/`
 (`$PARITY_ARTIFACT_DIR` overrides).
 
 ## Regenerating Compose references
 
-Needs an Android SDK (`ANDROID_HOME`, `platforms;android-35+`, build-tools 35+)
+Needs an Android SDK (`ANDROID_HOME`, `platforms;android-36`, build-tools 36)
 and JDK 17:
 
 ```sh
@@ -90,20 +101,21 @@ References are written to `compose/references/`; commit them.
 
 ### Rendering choice (recorded for #4)
 
-Robolectric with `graphicsMode=NATIVE` — real rasterization through the Android
-native graphics stack — instead of Paparazzi/layoutlib, because the harness
-needs the test-runtime clock (`mainClock.autoAdvance = false` +
-`advanceTimeBy`) and pointer injection (`performTouchInput`,
-`performMouseInput`), which the compose-ui-test rule provides. Paparazzi
-renders a single composed frame per invocation and has neither.
+Paparazzi/layoutlib — the same rasterizer Android Studio previews use —
+instead of Robolectric's `graphicsMode=NATIVE`. Two reasons:
 
-### Known blocker: reference generation
+- Robolectric's native runtime fails to initialize the system font map on
+  this host (`Typeface.loadPreinstalledSystemFontMap` NPE, upstream
+  [robolectric#9039](https://github.com/robolectric/robolectric/issues/9039)).
+  Paparazzi avoids the JNI font path and is what Cash App's own screenshot
+  tests use.
+- The harness needs deterministic frame times and scripted interaction
+  states. Paparazzi's `gif()` at `fps = 1000` makes frame indexes equal
+  milliseconds, and interaction states are emitted directly into the
+  scene's `MutableInteractionSource` (`PressInteraction`,
+  `HoverInteraction`, `FocusInteraction`) rather than pointer injection —
+  the state under test is the same, only the input path differs.
 
-On some hosts the Robolectric native runtime fails to initialize the system
-font map — `Typeface.loadPreinstalledSystemFontMap` throws an NPE in
-`Typeface.create` ("Cannot read field mStyle because family is null",
-upstream [robolectric#9039](https://github.com/robolectric/robolectric/issues/9039),
-open since 4.11). The Gradle project builds and the test is wired correctly;
-on a host where native font initialization works, `-Pparity.record=1` produces
-the references. Until the first set lands, Slint-side parity comparisons
-warn-skip.
+Regenerating references needs JDK 17+ and an Android SDK with
+`platforms;android-36` and `build-tools` (`ANDROID_HOME` or
+`sdk.dir` in `local.properties`).
