@@ -93,8 +93,8 @@ resvg = { workspace = true, optional = true }
 # font embedding
 swash = { workspace = true, optional = true, features = ["scale", "render", "std"] }
 skrifa = { workspace = true, optional = true, features = ["std", "autohint_shaping"] }
-# `fontcull-*` are bearcove's vendored fontations forks — deliberately a
-# different version line than the workspace's fontations crates.
+# `fontcull-*` are vendored fontations forks — deliberately a different
+# version line than the workspace's fontations crates.
 fontcull-klippa = { version = "0.1.2", optional = true }
 fontcull-write-fonts = { version = "0.44.3", optional = true, features = ["read"] }
 fdsm = { version = "0.8.0", optional = true }
