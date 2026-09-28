@@ -416,9 +416,7 @@ mod spring_regime_tests {
             let mut damping = [0.0f32; 6];
             let mut stiffness = [0.0f32; 6];
             for line in body.lines() {
-                let Some(rest) =
-                    line.trim().strip_prefix("out property <float> spring_")
-                else {
+                let Some(rest) = line.trim().strip_prefix("out property <float> spring_") else {
                     continue;
                 };
                 let Some((name, value)) = rest.split_once(':') else { continue };
@@ -458,7 +456,8 @@ mod spring_regime_tests {
     /// `1e-2` absolute term.
     #[test]
     fn regime_matches_compose_reference() {
-        let specs = m3_token_specs().into_iter()
+        let specs = m3_token_specs()
+            .into_iter()
             // undamped, barely damped, and heavily overdamped edges
             .chain([(0.0, 380.), (0.01, 700.), (5.0, 300.), (1.0, 1200.)]);
         for (zeta, stiffness) in specs {
@@ -499,14 +498,15 @@ mod spring_regime_tests {
             // estimated settle for a −100 → 0 approach (the stiff effects
             // tokens are done in ~100 ms; a fixed 400 ms would already be at
             // rest).
-            let settle_ms = super::super::spring_estimation::estimate_animation_duration_ms_with_mass(
-                k as f64,
-                2.0 * zeta as f64 * f64::sqrt(k as f64 * mass as f64),
-                mass as f64,
-                0.0,
-                -100.0,
-                delta as f64,
-            );
+            let settle_ms =
+                super::super::spring_estimation::estimate_animation_duration_ms_with_mass(
+                    k as f64,
+                    2.0 * zeta as f64 * f64::sqrt(k as f64 * mass as f64),
+                    mass as f64,
+                    0.0,
+                    -100.0,
+                    delta as f64,
+                );
             let mid_flight_secs = settle_ms as f32 / 2000.;
             for from_rest in [true, false] {
                 // Spring at rest at limit 100 (x0=0, v0=0) or halfway through

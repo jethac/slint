@@ -141,7 +141,7 @@ inline slint::interpreter::Value into_slint_value(const cbindgen_private::Easing
 }
 
 inline cbindgen_private::EasingCurve from_slint_value(const slint::interpreter::Value &val,
-                                                    const cbindgen_private::EasingCurve *)
+                                                      const cbindgen_private::EasingCurve *)
 {
     return val.to_easing_curve().value_or(cbindgen_private::EasingCurve {});
 }

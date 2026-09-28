@@ -1745,10 +1745,8 @@ mod animation_tests {
         impl crate::platform::Platform for DummyPlatform {
             fn create_window_adapter(
                 &self,
-            ) -> Result<
-                Rc<dyn crate::platform::WindowAdapter>,
-                crate::platform::PlatformError,
-            > {
+            ) -> Result<Rc<dyn crate::platform::WindowAdapter>, crate::platform::PlatformError>
+            {
                 Err(crate::platform::PlatformError::Other("dummy".into()))
             }
         }
@@ -1768,31 +1766,39 @@ mod animation_tests {
         crate::animations::CURRENT_ANIMATION_DRIVER
             .with(|driver| driver.update_animations(start_time + DURATION / 10));
         assert_eq!(get_prop_value(&compo.width), 110);
-        assert!(crate::animations::CURRENT_ANIMATION_DRIVER
-            .with(|driver| driver.has_active_animations()));
+        assert!(
+            crate::animations::CURRENT_ANIMATION_DRIVER
+                .with(|driver| driver.has_active_animations())
+        );
 
         // Scale 0: the loop parks at its end value and requests no more frames.
         ctx.set_animation_duration_scale(0.);
         crate::animations::CURRENT_ANIMATION_DRIVER
             .with(|driver| driver.update_animations(start_time + DURATION));
         assert_eq!(get_prop_value(&compo.width), 200);
-        assert!(!crate::animations::CURRENT_ANIMATION_DRIVER
-            .with(|driver| driver.has_active_animations()));
+        assert!(
+            !crate::animations::CURRENT_ANIMATION_DRIVER
+                .with(|driver| driver.has_active_animations())
+        );
 
         // It stays suspended: later ticks produce the end value and no frame request.
         crate::animations::CURRENT_ANIMATION_DRIVER
             .with(|driver| driver.update_animations(start_time + DURATION * 2));
         assert_eq!(get_prop_value(&compo.width), 200);
-        assert!(!crate::animations::CURRENT_ANIMATION_DRIVER
-            .with(|driver| driver.has_active_animations()));
+        assert!(
+            !crate::animations::CURRENT_ANIMATION_DRIVER
+                .with(|driver| driver.has_active_animations())
+        );
 
         // Scale back above 0: the loop restarts and requests frames again.
         ctx.set_animation_duration_scale(1.);
         crate::animations::CURRENT_ANIMATION_DRIVER
             .with(|driver| driver.update_animations(start_time + DURATION * 3));
         assert_ne!(get_prop_value(&compo.width), 200);
-        assert!(crate::animations::CURRENT_ANIMATION_DRIVER
-            .with(|driver| driver.has_active_animations()));
+        assert!(
+            crate::animations::CURRENT_ANIMATION_DRIVER
+                .with(|driver| driver.has_active_animations())
+        );
     }
 
     #[test]
