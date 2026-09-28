@@ -228,6 +228,9 @@ fn test_extract_library_paths() {
 /// - `//ACTION=move:x,y` / `//ACTION=press:x,y` / `//ACTION=release:x,y` —
 ///   pointer input dispatched to the window before the case is rendered, in
 ///   declaration order (logical coordinates).
+/// - `//ACTION=key:Tab` — a named key press+release (`Key::Tab`, `Key::Backtab`,
+///   or a character). Keyboard input moves focus without moving the pointer, so
+///   `focused` widgets stay focused while the pointer hovers or presses another.
 /// - `//DENSITIES=1,2` — the densities the case is rendered and compared at
 ///   (default: `1,2`).
 /// - `//PARITY_EPS=8` — per-channel strict-pixel tolerance override; only use
@@ -246,12 +249,15 @@ pub struct ParityMarkers {
     pub negative_note: Option<String>,
 }
 
-/// One `//ACTION=` pointer step.
+/// One `//ACTION=` input step.
 #[derive(Debug, Clone, PartialEq)]
 pub enum ParityAction {
     Move { x: f32, y: f32 },
     Press { x: f32, y: f32 },
     Release { x: f32, y: f32 },
+    /// A named key (`Tab`, `Backtab`, `Escape`, ...) dispatched as a
+    /// press+release pair; anything else is dispatched as the literal text.
+    Key { name: String },
 }
 
 /// Extract the parity markers listed on [`ParityMarkers`] from a case's source.
@@ -286,15 +292,23 @@ pub fn extract_parity(source: &str) -> ParityMarkers {
     };
 
     let mut actions = Vec::new();
-    static ACTION_RX: LazyLock<Regex> =
-        LazyLock::new(|| Regex::new(r"//ACTION=\s*([a-z]+)\s*:\s*([0-9.\-]+)\s*,\s*([0-9.\-]+)").unwrap());
+    static ACTION_RX: LazyLock<Regex> = LazyLock::new(|| {
+        Regex::new(r"//ACTION=\s*([a-z]+)\s*:\s*(?:([0-9.\-]+)\s*,\s*([0-9.\-]+)|([A-Za-z]+))")
+            .unwrap()
+    });
     for m in ACTION_RX.captures_iter(source) {
-        let (x, y) = (m[2].parse().unwrap(), m[3].parse().unwrap());
         actions.push(match &m[1] {
-            "move" => ParityAction::Move { x, y },
-            "press" => ParityAction::Press { x, y },
-            "release" => ParityAction::Release { x, y },
-            other => panic!("Unknown //ACTION= kind '{other}' (expected move|press|release)"),
+            "move" => ParityAction::Move { x: m[2].parse().unwrap(), y: m[3].parse().unwrap() },
+            "press" => {
+                ParityAction::Press { x: m[2].parse().unwrap(), y: m[3].parse().unwrap() }
+            }
+            "release" => {
+                ParityAction::Release { x: m[2].parse().unwrap(), y: m[3].parse().unwrap() }
+            }
+            "key" => ParityAction::Key { name: m[4].to_string() },
+            other => {
+                panic!("Unknown //ACTION= kind '{other}' (expected move|press|release|key)")
+            }
         });
     }
 

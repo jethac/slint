@@ -129,7 +129,14 @@ fn generate_source(
     compiler_config.embed_resources = embed_resources;
     compiler_config.enable_experimental = true;
     compiler_config.style = Some("fluent".to_string());
-    compiler_config.const_scale_factor = scale_factor.into();
+    // A `//PARITY=` case renders at each of its densities by dispatching
+    // `ScaleFactorChanged` per render — a compile-time constant would lock
+    // the window at 1.0 and silently drop those events.
+    compiler_config.const_scale_factor =
+        (!source.contains("//PARITY=")).then_some(scale_factor);
+    // Parity cases query elements by id (`//TRACE_ELEMENTS=`, text metrics),
+    // which needs element debug info in the generated code.
+    compiler_config.debug_info = source.contains("//PARITY=");
     let (root_component, diag, loader) =
         spin_on::spin_on(compile_syntax_node(syntax_node, diag, compiler_config));
 
