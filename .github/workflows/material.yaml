@@ -154,6 +154,9 @@ jobs:
               if ! git diff --exit-code -- references || \
                  [ -n "$(git status --porcelain -- references)" ]; then
                 echo "::error::Compose parity references drifted — re-record locally: cd ui-libraries/material/parity/compose && ./gradlew testDebugUnitTest -Pparity.record=1, then commit the result."
+                mkdir -p "$GITHUB_WORKSPACE/target/parity-artifacts"
+                cp -r references "$GITHUB_WORKSPACE/target/parity-artifacts/re-recorded-references"
+                git status --porcelain -- references > "$GITHUB_WORKSPACE/target/parity-artifacts/reference-drift.txt"
                 exit 1
               fi
             working-directory: ui-libraries/material/parity/compose
