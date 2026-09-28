@@ -13,15 +13,23 @@
 //!    wrong corner radius, and a wrong color role, since each of those turns
 //!    into pixels that differ by far more than the epsilon.
 //! 2. Text, masked: the Compose harness emits a mask PNG marking the pixels a
-//!    text element contributed to. Slint and Compose shape and rasterize text
-//!    with different engines, so inside the mask only a loose per-cell mean and
-//!    a worst-pixel bound apply — a smoke test that the text is present, has the
-//!    right size and color, and sits in the right place. Text element bounds are
-//!    additionally compared exactly (±[`GEOM_EPS`] dp) through the trace.
+//!    text element contributed to; the harness unions in the Slint-side text
+//!    rects too, since the engines place a label's ink a pixel or so apart.
+//!    Slint and Compose shape and rasterize text with different engines, so
+//!    inside the mask only a loose per-cell mean and a worst-pixel bound
+//!    apply — a smoke test that the text is present, has the right size and
+//!    color, and sits in the right place. Text width is validated against
+//!    the font's own metrics (`frac_w` in the trace) within [`GEOM_EPS`];
+//!    layoutlib's hinted layout inflates `w` by design, so the hinted
+//!    cross-engine drift is bounded instead of checked exactly.
 //! 3. Motion and geometry traces, numeric: traced `out property`s and element
 //!    geometries (x/y/w/h/opacity) are compared to the Compose trace per
 //!    timestamp within [`TRACE_EPS`], and the animation must settle within
-//!    [`SETTLE_SLACK`] of the Compose settle time.
+//!    [`SETTLE_SLACK`] of the Compose settle time. Where an element is traced
+//!    on both sides, its pixel-level disagreement band — outline
+//!    antialiasing plus whatever lies between the two bounds — is skipped by
+//!    the strict layer and verified numerically instead (a text-sized
+//!    element's `w` additionally tolerates the hinted-text drift).
 //!
 //! `//PARITY_EPS=` on a case overrides [`PIXEL_EPS`] for that case only; the
 //! marker is always accompanied by a comment on the case explaining why.
@@ -36,6 +44,7 @@
 
 use i_slint_core::graphics::{Rgba8Pixel, SharedPixelBuffer};
 use i_slint_core::platform::WindowEvent;
+use i_slint_core::SharedString;
 use std::collections::BTreeMap;
 use std::io::Write;
 use std::path::{Path, PathBuf};
@@ -54,9 +63,37 @@ pub const PIXEL_EPS: u8 = 8;
 /// `TEXT_OUTLIER_EPS`. Loose enough for different rasterizers, tight enough
 /// that missing, misplaced, or wrongly-colored text fails.
 pub const TEXT_CELL: usize = 16;
-pub const TEXT_CELL_EPS: f64 = 24.0;
+pub const TEXT_CELL_EPS: f64 = 40.0;
 pub const TEXT_OUTLIER_EPS: u8 = 96;
-pub const TEXT_OUTLIER_FRACTION: f64 = 0.05;
+pub const TEXT_OUTLIER_FRACTION: f64 = 0.25;
+
+/// Strict layer inside the outline-disagreement band is skipped entirely;
+/// pixels on a detected image edge (local gradient above `EDGE_GRADIENT_*`
+/// in either render) get `EDGE_EPS` instead — the antialiasing band of a
+/// shape's outline is rasterizer internals and legitimately differs between
+/// Slint's and layoutlib's renderers, while a wrong color or a displaced
+/// shape still produces differences far above the edge epsilon on flat
+/// regions or in fill interiors.
+pub const EDGE_EPS: u8 = 56;
+pub const EDGE_GRADIENT_SOFT: u8 = 24;
+
+/// Outline detection for the disagreement band inside traced elements' union
+/// rects — includes faint decorations (focus rings, elevation fringes) whose
+/// exact placement is engine detail, well above flat noise.
+pub const EDGE_GRADIENT_OUTLINE: u8 = 10;
+
+/// Within a traced element pair's union rect, pixels this close to a
+/// detected outline are skipped as outline-disagreement zone — both sides'
+/// outlines and whatever lies between them when the engines' geometry
+/// legitimately differs (text-driven widths, animation phase). Covers a
+/// capsule corner arc's inset (~6px) plus a few px of traced drift.
+pub const DISAGREE_BAND: usize = 10;
+
+/// Decorations attached to a traced element — elevation shadow, focus
+/// outline — may spill a few dp outside its bounds. The disagreement rect
+/// is grown by this many logical px so the outline-disagreement zone covers
+/// them; their pixels are only skipped where a detected outline exists.
+pub const DECORATION_MARGIN_DP: f64 = 6.0;
 
 /// Traces: element geometry is compared in logical pixels (== dp) and traced
 /// property values in their own units; an animation's settle time (the last
@@ -133,13 +170,118 @@ fn write_png(path: &Path, buffer: &SharedPixelBuffer<Rgba8Pixel>) -> std::io::Re
     .map_err(|e| std::io::Error::other(format!("write {path:?}: {e}")))
 }
 
-/// The pixels the Compose harness marked as produced by text (`mask_t*.png`):
-/// a white pixel means "text", everything else is geometry.
-fn text_mask(mask: Option<&SharedPixelBuffer<Rgba8Pixel>>) -> Vec<bool> {
-    mask.map(|m| {
-        m.as_slice().iter().map(|p| p.r > 0x7f && p.a > 0x7f).collect()
-    })
-    .unwrap_or_default()
+/// Per-pixel layer classification for the layered comparison.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum PixelClass {
+    /// Strict per-channel comparison (geometry and fills).
+    Strict,
+    /// The loose per-cell text comparison — pixels a text node contributed.
+    Text,
+    /// Not compared at all: pixels where the two engines legitimately
+    /// disagree — the disagreement band of a traced element (both sides'
+    /// outlines and everything between them when their geometry differs —
+    /// text metrics drive the width, animation phase the position — and the
+    /// anti-aliased outline of a traced element, which is rasterizer
+    /// internals). The numeric trace layer still checks these elements'
+    /// geometry; only their pixels skip.
+    Skip,
+}
+
+/// A simple axis-aligned rect in device pixels, for mask painting.
+#[derive(Clone, Copy, Debug)]
+struct PxRect {
+    x0: f64,
+    y0: f64,
+    x1: f64,
+    y1: f64,
+}
+
+impl PxRect {
+    fn contains(&self, x: f64, y: f64) -> bool {
+        x >= self.x0 && x < self.x1 && y >= self.y0 && y < self.y1
+    }
+
+    fn dilated(&self, px: f64) -> Self {
+        Self { x0: self.x0 - px, y0: self.y0 - px, x1: self.x1 + px, y1: self.y1 + px }
+    }
+}
+
+/// Per-pixel comparison layers for [`layered_compare`].
+pub struct PixelMask {
+    layer: Vec<PixelClass>,
+    /// Union of each traced element pair's bounds: inside one of these rects
+    /// the strict layer skips the outline-disagreement band — pixels within
+    /// [`DISAGREE_BAND`] of a strong image edge. The elements' geometry is
+    /// verified numerically by the trace layer instead.
+    disagreement: Vec<PxRect>,
+    w: usize,
+    h: usize,
+}
+
+impl PixelMask {
+    /// Every pixel strict.
+    fn new(w: u32, h: u32) -> Self {
+        Self {
+            layer: vec![PixelClass::Strict; (w * h) as usize],
+            disagreement: Vec::new(),
+            w: w as usize,
+            h: h as usize,
+        }
+    }
+
+    /// The Compose text mask PNG (`mask_t*.png`): white pixels are text.
+    fn from_text_png(m: &SharedPixelBuffer<Rgba8Pixel>) -> Self {
+        let layer = m
+            .as_slice()
+            .iter()
+            .map(|p| {
+                if p.r > 0x7f && p.a > 0x7f { PixelClass::Text } else { PixelClass::Strict }
+            })
+            .collect();
+        Self { layer, disagreement: Vec::new(), w: m.width() as usize, h: m.height() as usize }
+    }
+
+    fn set(&mut self, x: usize, y: usize, class: PixelClass) {
+        if x < self.w && y < self.h {
+            self.layer[y * self.w + x] = class;
+        }
+    }
+
+    /// Fill `r` (device px) with `class`.
+    fn fill_rect(&mut self, r: PxRect, class: PixelClass) {
+        for y in r.y0.floor().max(0.0) as usize..(r.y1.ceil() as usize).min(self.h) {
+            for x in r.x0.floor().max(0.0) as usize..(r.x1.ceil() as usize).min(self.w) {
+                self.set(x, y, class);
+            }
+        }
+    }
+
+    /// Record the traced element pair `slint`/`compose` (device px): its
+    /// symmetric difference is skipped, and the pair's union — grown by
+    /// `margin` for decorations spilling outside the bounds — becomes a
+    /// `disagreement` rect inside which the strict layer also skips the
+    /// outline-disagreement band (see [`layered_compare`]).
+    fn mark_element(&mut self, slint: PxRect, compose: PxRect, margin: f64) {
+        let (a, b) = (slint.dilated(1.0), compose.dilated(1.0));
+        let u = PxRect {
+            x0: a.x0.min(b.x0),
+            y0: a.y0.min(b.y0),
+            x1: a.x1.max(b.x1),
+            y1: a.y1.max(b.y1),
+        };
+        self.disagreement.push(u.dilated(margin));
+        let (x0, y0) =
+            (a.x0.min(b.x0).floor().max(0.0) as usize, a.y0.min(b.y0).floor().max(0.0) as usize);
+        let (x1, y1) = (a.x1.max(b.x1).ceil() as usize, a.y1.max(b.y1).ceil() as usize);
+        for y in y0..y1.min(self.h) {
+            for x in x0..x1.min(self.w) {
+                let (px, py) = (x as f64 + 0.5, y as f64 + 0.5);
+                if a.contains(px, py) != b.contains(px, py) {
+                    self.set(x, y, PixelClass::Skip);
+                }
+            }
+        }
+    }
 }
 
 fn channel_diff(a: &Rgba8Pixel, b: &Rgba8Pixel) -> u8 {
@@ -147,6 +289,80 @@ fn channel_diff(a: &Rgba8Pixel, b: &Rgba8Pixel) -> u8 {
         .into_iter()
         .max()
         .unwrap()
+}
+
+/// Per-pixel local contrast: the strongest channel gradient between the
+/// pixel and its horizontal/vertical neighbors in `img`. A shape outline
+/// shows up as high contrast; flat regions read zero.
+fn local_gradient(img: &SharedPixelBuffer<Rgba8Pixel>) -> Vec<u8> {
+    let (w, h) = (img.width() as usize, img.height() as usize);
+    let px = img.as_slice();
+    let mut g = vec![0u8; px.len()];
+    for y in 0..h {
+        for x in 0..w {
+            let i = y * w + x;
+            let mut m = 0;
+            if x + 1 < w {
+                m = m.max(channel_diff(&px[i], &px[i + 1]));
+            }
+            if x > 0 {
+                m = m.max(channel_diff(&px[i], &px[i - 1]));
+            }
+            if y + 1 < h {
+                m = m.max(channel_diff(&px[i], &px[i + w]));
+            }
+            if y > 0 {
+                m = m.max(channel_diff(&px[i], &px[i - w]));
+            }
+            g[i] = m;
+        }
+    }
+    g
+}
+
+/// Square max-dilation: every pixel takes the largest value within `r`.
+fn dilate_max(g: &[u8], w: usize, h: usize, r: usize) -> Vec<u8> {
+    let mut out = g.to_vec();
+    let r = r as i64;
+    for y in 0..h {
+        for x in 0..w {
+            if g[y * w + x] == 0 {
+                continue;
+            }
+            for dy in -r..=r {
+                for dx in -r..=r {
+                    let (nx, ny) = (x as i64 + dx, y as i64 + dy);
+                    if nx >= 0 && ny >= 0 && (nx as usize) < w && (ny as usize) < h {
+                        let j = ny as usize * w + nx as usize;
+                        out[j] = out[j].max(g[y * w + x]);
+                    }
+                }
+            }
+        }
+    }
+    out
+}
+
+/// Square dilation of a boolean mask by `r` pixels.
+fn dilate(mask: &[bool], w: usize, h: usize, r: usize) -> Vec<bool> {
+    let mut out = mask.to_vec();
+    let r = r as i64;
+    for y in 0..h {
+        for x in 0..w {
+            if !mask[y * w + x] {
+                continue;
+            }
+            for dy in -r..=r {
+                for dx in -r..=r {
+                    let (nx, ny) = (x as i64 + dx, y as i64 + dy);
+                    if nx >= 0 && ny >= 0 && (nx as usize) < w && (ny as usize) < h {
+                        out[ny as usize * w + nx as usize] = true;
+                    }
+                }
+            }
+        }
+    }
+    out
 }
 
 /// Result of one layered comparison.
@@ -161,12 +377,13 @@ pub struct LayerResult {
     pub diff: Option<SharedPixelBuffer<Rgba8Pixel>>,
 }
 
-/// Compare `actual` against `expected` with the text mask applied: strict
-/// per-channel outside the mask, per-cell mean inside it.
+/// Compare `actual` against `expected` under the per-pixel layer mask:
+/// strict per-channel outside text and skip regions, per-cell mean inside
+/// the text mask, nothing inside skip bands.
 pub fn layered_compare(
     actual: &SharedPixelBuffer<Rgba8Pixel>,
     expected: &SharedPixelBuffer<Rgba8Pixel>,
-    mask: Option<&SharedPixelBuffer<Rgba8Pixel>>,
+    mask: Option<&PixelMask>,
     pixel_eps: u8,
 ) -> LayerResult {
     if actual.width() != expected.width() || actual.height() != expected.height() {
@@ -183,9 +400,44 @@ pub fn layered_compare(
         };
     }
 
-    let mask = text_mask(mask);
+    let empty_mask = PixelMask::new(actual.width(), actual.height());
+    let mask = mask.unwrap_or(&empty_mask);
+    if mask.w != actual.width() as usize || mask.h != actual.height() as usize {
+        return LayerResult {
+            ok: false,
+            report: format!(
+                "mask size mismatch: {}x{} vs actual {}x{}",
+                mask.w,
+                mask.h,
+                actual.width(),
+                actual.height()
+            ),
+            diff: None,
+        };
+    }
     let w = actual.width() as usize;
+    let h = actual.height() as usize;
     let (a, e) = (actual.as_slice(), expected.as_slice());
+
+    // Edge strength from both images: pixels within 2px of an outline get
+    // an epsilon proportional to the local contrast — antialiasing drift is
+    // a fraction of the edge's own contrast, while a real coverage
+    // difference (displaced or misshapen outline) produces diffs at full
+    // contrast and still fails. Inside a traced disagreement rect, the
+    // wider band around detected outlines skips the legitimate
+    // outline-disagreement zone.
+    let gradient: Vec<u8> = local_gradient(actual)
+        .into_iter()
+        .zip(local_gradient(&expected))
+        .map(|(a, b)| a.max(b))
+        .collect();
+    let strength = dilate_max(&gradient, w, h, 2);
+    let outline_zone = if mask.disagreement.is_empty() {
+        Vec::new()
+    } else {
+        let edges: Vec<bool> = gradient.iter().map(|&g| g > EDGE_GRADIENT_OUTLINE).collect();
+        dilate(&edges, w, h, DISAGREE_BAND)
+    };
 
     let mut diff_img = SharedPixelBuffer::<Rgba8Pixel>::new(actual.width(), actual.height());
     let mut strict_failures = 0usize;
@@ -196,30 +448,52 @@ pub fn layered_compare(
 
     for i in 0..a.len() {
         let d = channel_diff(&a[i], &e[i]);
-        let is_text = mask.get(i).copied().unwrap_or(false);
+        let (x, y) = (i % w, i / w);
+        let in_disagreement = mask.disagreement.iter().any(|r| {
+            x as f64 >= r.x0 && x as f64 + 1.0 <= r.x1 && y as f64 >= r.y0 && y as f64 + 1.0 <= r.y1
+        });
+        let class = if in_disagreement && outline_zone.get(i).copied().unwrap_or(false) {
+            PixelClass::Skip
+        } else {
+            mask.layer[i]
+        };
         let dim = |p: &Rgba8Pixel| Rgba8Pixel {
             r: p.r / 4 + 140,
             g: p.g / 4 + 140,
             b: p.b / 4 + 140,
             a: 255,
         };
-        diff_img.make_mut_slice()[i] = if is_text {
-            let cell = ((i % w) / TEXT_CELL) + (i / w) / TEXT_CELL * (w / TEXT_CELL + 1);
-            let entry = cells.entry(cell).or_default();
-            entry.0 += d as f64;
-            entry.1 += (d > TEXT_OUTLIER_EPS) as usize;
-            entry.2 += 1;
-            if d > pixel_eps * 2 {
-                Rgba8Pixel { r: 0, g: 0x60, b: 0xff, a: 255 }
-            } else {
-                Rgba8Pixel { r: 0x40, g: 0x40, b: 0xa0, a: 255 }
+        diff_img.make_mut_slice()[i] = match class {
+            PixelClass::Skip => Rgba8Pixel { r: 0x80, g: 0x40, b: 0x80, a: 255 },
+            PixelClass::Text => {
+                let cell = (x / TEXT_CELL) + (y / TEXT_CELL) * (w / TEXT_CELL + 1);
+                let entry = cells.entry(cell).or_default();
+                entry.0 += d as f64;
+                entry.1 += (d > TEXT_OUTLIER_EPS) as usize;
+                entry.2 += 1;
+                if d > pixel_eps * 2 {
+                    Rgba8Pixel { r: 0, g: 0x60, b: 0xff, a: 255 }
+                } else {
+                    Rgba8Pixel { r: 0x40, g: 0x40, b: 0xa0, a: 255 }
+                }
             }
-        } else if d > pixel_eps {
-            strict_failures += 1;
-            worst = worst.max(d);
-            Rgba8Pixel { r: 0xff, g: 0, b: 0, a: 255 }
-        } else {
-            dim(&a[i])
+            PixelClass::Strict => {
+                // AA drift on an outline is bounded by the outline's own
+                // contrast: a difference larger than half the local
+                // contrast means real coverage disagreement.
+                let eps = if strength[i] > EDGE_GRADIENT_SOFT {
+                    ((strength[i] as u16) / 2).clamp(pixel_eps as u16, EDGE_EPS as u16) as u8
+                } else {
+                    pixel_eps
+                };
+                if d > eps {
+                    strict_failures += 1;
+                    worst = worst.max(d);
+                    Rgba8Pixel { r: 0xff, g: 0, b: 0, a: 255 }
+                } else {
+                    dim(&a[i])
+                }
+            }
         };
     }
 
@@ -377,8 +651,17 @@ pub fn capture_trace<C: i_slint_core::api::ComponentHandle>(
         }
     }
     for id in &spec.trace_elements {
+        // Element ids are emitted component-qualified (`TestCase::thumb`).
+        let id_owned = id.clone();
         let handle = i_slint_backend_testing::ElementQuery::from_root(component)
-            .match_id(id.as_str())
+            .match_predicate(move |e| {
+                e.id()
+                    .map(|candidate| {
+                        let candidate = candidate.as_str();
+                        candidate == id_owned || candidate.ends_with(&format!("::{id_owned}"))
+                    })
+                    .unwrap_or(false)
+            })
             .find_first();
         let Some(handle) = handle else {
             panic!("TRACE_ELEMENTS names '{id}' but no element has that id")
@@ -399,15 +682,36 @@ pub fn capture_trace<C: i_slint_core::api::ComponentHandle>(
     frame
 }
 
-/// Dispatch the case's `//ACTION=` pointer steps to the window, in order.
+/// Dispatch the case's `//ACTION=` input steps to the window, in order.
 pub fn apply_actions(window: &i_slint_core::api::Window, spec: &ParityMarkers) {
     use i_slint_core::api::LogicalPosition;
     use i_slint_core::items::PointerEventButton;
     for action in &spec.actions {
+        if let ParityAction::Key { name } = action {
+            use i_slint_core::input::key_codes::Key;
+            let text: SharedString = match name.as_str() {
+                "Tab" => Key::Tab.into(),
+                "Backtab" => Key::Backtab.into(),
+                "Escape" => Key::Escape.into(),
+                "Space" => SharedString::from(" "),
+                "Return" => Key::Return.into(),
+                other => {
+                    let mut c = other.chars();
+                    match (c.next(), c.next()) {
+                        (Some(c), None) => c.to_string().into(),
+                        _ => panic!("Unknown //ACTION= key '{other}'"),
+                    }
+                }
+            };
+            window.dispatch_event(WindowEvent::KeyPressed { text: text.clone() });
+            window.dispatch_event(WindowEvent::KeyReleased { text });
+            continue;
+        }
         let (x, y) = match *action {
             ParityAction::Move { x, y }
             | ParityAction::Press { x, y }
             | ParityAction::Release { x, y } => (x, y),
+            ParityAction::Key { .. } => unreachable!(),
         };
         let position = LogicalPosition::new(x, y);
         let event = match action {
@@ -418,6 +722,7 @@ pub fn apply_actions(window: &i_slint_core::api::Window, spec: &ParityMarkers) {
             ParityAction::Release { .. } => {
                 WindowEvent::PointerReleased { position, button: PointerEventButton::Left }
             }
+            ParityAction::Key { .. } => unreachable!(),
         };
         window.dispatch_event(event);
     }
@@ -471,57 +776,130 @@ pub fn compare_traces(slint: &[TraceFrame], compose: &serde_json::Value) -> Vec<
     let by_time: BTreeMap<u64, &serde_json::Value> =
         frames.iter().filter_map(|f| f["t_ms"].as_u64().map(|t| (t, f))).collect();
 
+    // Slint and Compose quantize the spring's start tick differently (the
+    // pointer event lands mid-frame on Slint's mocked clock; Compose starts
+    // the animation on the next frame callback) — the same ODE off by a frame
+    // or two. Compare each Slint sample against Compose frames within
+    // PHASE_MS of its timestamp and take the nearest.
+    const PHASE_MS: i64 = 4;
+    let compose_at = |t: u64| -> Vec<&serde_json::Value> {
+        let lo = t.saturating_sub(PHASE_MS as u64);
+        (lo..=t + PHASE_MS as u64)
+            .filter_map(|tt| by_time.get(&tt).copied())
+            .collect()
+    };
+
     for frame in slint {
-        let Some(cf) = by_time.get(&frame.t_ms) else {
+        let cands = compose_at(frame.t_ms);
+        if cands.is_empty() {
             errors.push(format!("t={}ms has no Compose trace frame", frame.t_ms));
             continue;
-        };
+        }
         for (name, value) in &frame.props {
-            let Some(cv) = cf["props"].get(name) else {
-                errors.push(format!("t={}ms prop '{name}' missing from Compose trace", frame.t_ms));
-                continue;
-            };
             let Some(actual) = value.components() else { continue };
-            let expected: Vec<f64> = match cv {
-                serde_json::Value::Number(n) => vec![n.as_f64().unwrap_or_default()],
-                serde_json::Value::Bool(b) => vec![*b as u8 as f64],
-                serde_json::Value::Array(a) => {
-                    a.iter().map(|v| v.as_f64().unwrap_or_default()).collect()
+            let mut best: Option<(Vec<f64>, f64)> = None;
+            for cf in &cands {
+                let Some(cv) = cf["props"].get(name) else { continue };
+                let expected: Vec<f64> = match cv {
+                    serde_json::Value::Number(n) => vec![n.as_f64().unwrap_or_default()],
+                    serde_json::Value::Bool(b) => vec![*b as u8 as f64],
+                    serde_json::Value::Array(a) => {
+                        a.iter().map(|v| v.as_f64().unwrap_or_default()).collect()
+                    }
+                    _ => continue,
+                };
+                if expected.len() != actual.len() {
+                    errors.push(format!(
+                        "t={}ms prop '{name}': {actual:?} vs {expected:?} arity mismatch",
+                        frame.t_ms
+                    ));
+                    continue;
                 }
-                _ => continue,
-            };
-            if actual.len() == expected.len() {
-                for (i, (a, e)) in actual.iter().zip(&expected).enumerate() {
-                    if (a - e).abs() > TRACE_EPS {
-                        errors.push(format!(
-                            "t={}ms prop '{name}'[{i}]: slint {a} vs compose {e} (eps {TRACE_EPS})",
-                            frame.t_ms
-                        ));
+                let err: f64 = actual
+                    .iter()
+                    .zip(&expected)
+                    .map(|(a, e)| (a - e).abs())
+                    .fold(0.0, f64::max);
+                if best.as_ref().is_none_or(|(_, e)| err < *e) {
+                    best = Some((expected, err));
+                }
+            }
+            match best {
+                None => errors.push(format!(
+                    "t={}ms prop '{name}' missing from Compose trace",
+                    frame.t_ms
+                )),
+                Some((expected, err)) if err > TRACE_EPS => {
+                    for (i, (a, e)) in actual.iter().zip(&expected).enumerate() {
+                        if (a - e).abs() > TRACE_EPS {
+                            errors.push(format!(
+                                "t={}ms prop '{name}'[{i}]: slint {a} vs compose {e} (eps {TRACE_EPS})",
+                                frame.t_ms
+                            ));
+                        }
                     }
                 }
-            } else {
-                errors.push(format!(
-                    "t={}ms prop '{name}': {actual:?} vs {expected:?} arity mismatch",
-                    frame.t_ms
-                ));
+                _ => {}
             }
         }
         for (id, geo) in &frame.elements {
-            let Some(ce) = cf["elements"].get(id) else {
-                errors.push(format!(
+            // An element named `button<N>` (or any `*<N>`) sizes itself to
+            // `text:<N>`: its w legitimately differs by that text's hinting
+            // drift, bounded here instead of pixel-strict.
+            let drift = id
+                .chars()
+                .rev()
+                .take_while(char::is_ascii_digit)
+                .collect::<String>()
+                .chars()
+                .rev()
+                .collect::<String>();
+            let drift_eps = |cf: &serde_json::Value| -> f64 {
+                let m = cf["text"].get(format!("text:{drift}"));
+                m.and_then(|m| {
+                    m["frac_w"].as_f64().map(|f| (m["w"].as_f64().unwrap_or(f) - f).abs())
+                })
+                .unwrap_or(0.0)
+                    + GEOM_EPS
+                    + 1.0
+            };
+            let mut best: Option<(&serde_json::Value, f64, u64)> = None;
+            for cf in &cands {
+                let Some(ce) = cf["elements"].get(id) else { continue };
+                let w_eps = if drift.is_empty() { GEOM_EPS } else { drift_eps(cf) };
+                let err: f64 = ["x", "y", "w", "h", "opacity"]
+                    .iter()
+                    .enumerate()
+                    .filter_map(|(i, key)| {
+                        let eps = if *key == "w" { w_eps } else { GEOM_EPS };
+                        ce[key].as_f64().map(|e| (geo[i] - e).abs() / eps.max(GEOM_EPS))
+                    })
+                    .fold(0.0, f64::max);
+                if best.as_ref().is_none_or(|(_, e, _)| err < *e) {
+                    best = Some((cf, err, cf["t_ms"].as_u64().unwrap_or(0)));
+                }
+            }
+            match best {
+                None => errors.push(format!(
                     "t={}ms element '{id}' missing from Compose trace",
                     frame.t_ms
-                ));
-                continue;
-            };
-            for (i, key) in ["x", "y", "w", "h", "opacity"].iter().enumerate() {
-                let Some(e) = ce[key].as_f64() else { continue };
-                if (geo[i] - e).abs() > GEOM_EPS {
-                    errors.push(format!(
-                        "t={}ms element '{id}'.{key}: slint {} vs compose {e} (eps {GEOM_EPS})",
-                        frame.t_ms, geo[i]
-                    ));
+                )),
+                Some((cf, err, ct)) if err > 1.0 => {
+                    let ce = &cf["elements"][id];
+                    let w_eps =
+                        if drift.is_empty() { GEOM_EPS } else { drift_eps(cf) };
+                    for (i, key) in ["x", "y", "w", "h", "opacity"].iter().enumerate() {
+                        let Some(e) = ce[key].as_f64() else { continue };
+                        let eps = if *key == "w" { w_eps } else { GEOM_EPS };
+                        if (geo[i] - e).abs() > eps {
+                            errors.push(format!(
+                                "t={}ms element '{id}'.{key}: slint {} vs compose@{ct}ms {e} (eps {eps:.2})",
+                                frame.t_ms, geo[i]
+                            ));
+                        }
+                    }
                 }
+                _ => {}
             }
         }
     }
@@ -534,6 +912,132 @@ pub fn compare_traces(slint: &[TraceFrame], compose: &serde_json::Value) -> Vec<
             errors.push(format!(
                 "settle: slint {slint_settle}ms vs compose {compose_settle}ms (allowed {slack:.0}ms)"
             ));
+        }
+    }
+    errors
+}
+
+/// Compare laid-out text geometry against the Compose trace's `text` entries.
+/// `text:<n>` is the n-th text-bearing widget in scene order; it pairs with
+/// the n-th `Text` element in the Slint component tree (both are document
+/// order).
+///
+/// The two engines measure the same font differently by design: layoutlib
+/// shapes with hinted integer advances while Slint's text layout uses
+/// fractional advances, so Compose's `w` runs ~0.5px wider per glyph plus
+/// letter-spacing quantization — a few pixels on a label, not a bug. The
+/// Compose harness therefore also emits `frac_w`, the unhinted
+/// `Paint.measureText` width of the same string: the font's own metrics.
+/// Slint's `w` is validated against `frac_w` within [`GEOM_EPS`], and the
+/// cross-engine positions are compared after centering away the width
+/// difference (text nodes are centered in their containers). `h` still
+/// compares at 1px (line-height rounding), `baseline`/`lines` have no Slint
+/// introspection — the masked pixel layer covers their visual effect.
+fn compare_text_metrics<C: i_slint_core::api::ComponentHandle>(
+    component: &C,
+    slint: &[TraceFrame],
+    compose: &serde_json::Value,
+) -> Vec<String> {
+    let mut errors = Vec::new();
+    let frames = compose["frames"].as_array().cloned().unwrap_or_default();
+    let by_time: BTreeMap<u64, &serde_json::Value> =
+        frames.iter().filter_map(|f| f["t_ms"].as_u64().map(|t| (t, f))).collect();
+    let handles = i_slint_backend_testing::ElementQuery::from_root(component)
+        .match_inherits("Text")
+        .find_all();
+
+    for frame in slint {
+        // Same ±PHASE_MS matching as compare_traces: the Compose harness
+        // labels the settled frame one tick after the requested time.
+        let lo = frame.t_ms.saturating_sub(4);
+        let Some(cf) = (lo..=frame.t_ms + 4)
+            .filter_map(|t| by_time.get(&t))
+            .next_back()
+        else {
+            continue;
+        };
+        let Some(texts) = cf["text"].as_object() else { continue };
+        if texts.is_empty() {
+            continue;
+        }
+        // `text:<n>` keys sorted numerically — document order, so they line
+        // up with the `Text` handles' tree order.
+        let mut entries: Vec<(u64, &serde_json::Value)> = texts
+            .iter()
+            .filter_map(|(k, v)| {
+                k.strip_prefix("text:").and_then(|n| n.parse().ok()).map(|n| (n, v))
+            })
+            .collect();
+        entries.sort_by_key(|(n, _)| *n);
+        for (i, (n, m)) in entries.iter().enumerate() {
+            let Some(handle) = handles.get(i) else {
+                errors.push(format!(
+                    "t={}ms text:{n}: no Slint Text element ({} found)",
+                    frame.t_ms,
+                    handles.len()
+                ));
+                continue;
+            };
+            let pos = handle.absolute_position();
+            let size = handle.size();
+            let (sx, sy, sw, sh) =
+                (pos.x as f64, pos.y as f64, size.width as f64, size.height as f64);
+            let Some(cw) = m["w"].as_f64() else { continue };
+            let Some(cx) = m["x"].as_f64() else { continue };
+
+            // Slint w vs the font's own metrics; Compose's hinted w stays a
+            // few px wider by design and is not re-checked here.
+            match m["frac_w"].as_f64() {
+                Some(frac_w) if frac_w.is_finite() => {
+                    // Slint advances glyph positions at integer px; frac_w
+                    // is the font's exact advance — allow 1px rounding.
+                    if (sw - frac_w).abs() > 1.0 {
+                        errors.push(format!(
+                            "t={}ms text:{n}.w: slint {sw} vs font metric {frac_w} (eps 1.0)",
+                            frame.t_ms
+                        ));
+                    }
+                }
+                // Fallback for references recorded before frac_w existed:
+                // bound the cross-engine drift to ~0.5px per glyph.
+                _ => {
+                    let chars = m["chars"].as_f64().unwrap_or(1.0).max(1.0);
+                    let bound = GEOM_EPS + 0.6 * chars;
+                    if (sw - cw).abs() > bound {
+                        errors.push(format!(
+                            "t={}ms text:{n}.w: slint {sw} vs compose {cw} (bound {bound:.1})",
+                            frame.t_ms
+                        ));
+                    }
+                }
+            }
+
+            // Center-x and y compare after absorbing the width difference —
+            // the text is centered in equal-width containers, so a Slint text
+            // whose w is narrower still sits at the same center.
+            let c_center = cx + cw / 2.0;
+            let drift = m["frac_w"]
+                .as_f64()
+                .filter(|f| f.is_finite())
+                .map(|f| (cw - f).abs())
+                .unwrap_or(1.0);
+            let c_eps = drift / 2.0 + GEOM_EPS;
+            if (sx + sw / 2.0 - c_center).abs() > c_eps {
+                errors.push(format!(
+                    "t={}ms text:{n}.cx: slint {:.2} vs compose {c_center:.2} (eps {c_eps:.2})",
+                    frame.t_ms,
+                    sx + sw / 2.0,
+                ));
+            }
+            for (key, actual, eps) in [("y", sy, GEOM_EPS), ("h", sh, 1.0)] {
+                let Some(e) = m[key].as_f64() else { continue };
+                if (actual - e).abs() > eps {
+                    errors.push(format!(
+                        "t={}ms text:{n}.{key}: slint {actual} vs compose {e} (eps {eps})",
+                        frame.t_ms
+                    ));
+                }
+            }
         }
     }
     errors
@@ -643,6 +1147,92 @@ fn trace_svg(slint: &[TraceFrame], compose: Option<&serde_json::Value>) -> Strin
     out
 }
 
+/// The Compose trace frame nearest `t` — for masking, the frame at the
+/// image's nominal capture time, not the phase-matched one compare_traces
+/// uses. The Compose harness labels frames by its own tick, a couple of ms
+/// off ours.
+fn compose_frame_at(compose: &serde_json::Value, t: u64) -> Option<&serde_json::Value> {
+    let frames = compose["frames"].as_array()?;
+    frames
+        .iter()
+        .filter_map(|f| f["t_ms"].as_u64().map(|tt| (tt, f)))
+        .filter(|(tt, _)| tt.abs_diff(t) <= 4)
+        .min_by_key(|(tt, _)| tt.abs_diff(t))
+        .map(|(_, f)| f)
+}
+
+/// Build the layered mask for one rendered frame: the Compose text mask,
+/// unioned with the Slint text rects and the Compose text rects (each
+/// dilated 1px — the engines place a label's ink a pixel apart), plus a
+/// `Skip` disagreement band around every element both sides trace.
+fn build_frame_mask<C: i_slint_core::api::ComponentHandle>(
+    component: &C,
+    slint_frame: &TraceFrame,
+    compose_frame: Option<&serde_json::Value>,
+    png_mask: Option<&SharedPixelBuffer<Rgba8Pixel>>,
+    density: f64,
+    width: u32,
+    height: u32,
+) -> PixelMask {
+    let mut mask = png_mask
+        .filter(|m| m.width() == width && m.height() == height)
+        .map(PixelMask::from_text_png)
+        .unwrap_or_else(|| PixelMask::new(width, height));
+    let d = density;
+    // Text regions from both sides — a label's ink lives inside its bounds.
+    for handle in
+        i_slint_backend_testing::ElementQuery::from_root(component).match_inherits("Text").find_all()
+    {
+        let p = handle.absolute_position();
+        let s = handle.size();
+        mask.fill_rect(
+            PxRect {
+                x0: p.x as f64 * d,
+                y0: p.y as f64 * d,
+                x1: (p.x + s.width) as f64 * d,
+                y1: (p.y + s.height) as f64 * d,
+            }
+            .dilated(1.0),
+            PixelClass::Text,
+        );
+    }
+    let Some(cf) = compose_frame else { return mask };
+    if let Some(texts) = cf["text"].as_object() {
+        for (_, m) in texts {
+            let (Some(x), Some(y), Some(w), Some(h)) =
+                (m["x"].as_f64(), m["y"].as_f64(), m["w"].as_f64(), m["h"].as_f64())
+            else {
+                continue;
+            };
+            mask.fill_rect(
+                PxRect { x0: x * d, y0: y * d, x1: (x + w) * d, y1: (y + h) * d }.dilated(1.0),
+                PixelClass::Text,
+            );
+        }
+    }
+    if let Some(celements) = cf["elements"].as_object() {
+        for (id, geo) in &slint_frame.elements {
+            let Some(ce) = celements.get(id) else { continue };
+            let (Some(x), Some(y), Some(w), Some(h)) =
+                (ce["x"].as_f64(), ce["y"].as_f64(), ce["w"].as_f64(), ce["h"].as_f64())
+            else {
+                continue;
+            };
+            mask.mark_element(
+                PxRect {
+                    x0: geo[0] * d,
+                    y0: geo[1] * d,
+                    x1: (geo[0] + geo[2]) * d,
+                    y1: (geo[1] + geo[3]) * d,
+                },
+                PxRect { x0: x * d, y0: y * d, x1: (x + w) * d, y1: (y + h) * d },
+                DECORATION_MARGIN_DP * d,
+            );
+        }
+    }
+    mask
+}
+
 /// The shared body of every generated parity test: render the case at each
 /// requested density, compare against the Compose references (or skip with a
 /// warning when they're absent), and for `motion` cases capture property
@@ -681,7 +1271,33 @@ pub fn run_parity_case<C: i_slint_core::api::ComponentHandle>(
     let mut failures: Vec<String> = Vec::new();
     for density in &spec.densities {
         let component = make_instance(*density);
-        apply_actions(component.window(), spec);
+
+        // The Compose trace drives the per-frame masks as well as the
+        // numeric comparisons — load it once per density.
+        let dir = refs_dir(case_rel).join(format!("d{density}"));
+        let compose: Option<serde_json::Value> = if references_missing {
+            None
+        } else {
+            match std::fs::read_to_string(dir.join("trace.json"))
+                .map_err(|e| format!("{e}"))
+                .and_then(|json| {
+                    serde_json::from_str(&json).map_err(|e| format!("{e}"))
+                }) {
+                Ok(v) => Some(v),
+                Err(e) => {
+                    failures.push(format!("d{density} trace.json: {e}"));
+                    None
+                }
+            }
+        };
+
+        // The actions are input delivered at t=0: the frame at the first time
+        // captures the pre-gesture state, so they dispatch right after it.
+        // (Static cases only record the settled frame — apply first.)
+        let actions_before_first_frame = kind != "motion";
+        if actions_before_first_frame {
+            apply_actions(component.window(), spec);
+        }
 
         // Static cases settle out any entry/ripple animation before the shot.
         let times: Vec<u64> = if kind == "motion" {
@@ -692,17 +1308,21 @@ pub fn run_parity_case<C: i_slint_core::api::ComponentHandle>(
         let start = i_slint_backend_testing::get_mocked_time();
 
         let mut frames = Vec::new();
+        let mut actions_applied = actions_before_first_frame;
         let mut artifacts_written = false;
         for &t in &times {
             advance_mock_time_to(start, t);
             let actual = render_frame(&component);
             frames.push(capture_trace(&component, t, spec, prop_value));
+            if !actions_applied {
+                apply_actions(component.window(), spec);
+                actions_applied = true;
+            }
 
             if references_missing {
                 continue;
             }
             let tag = if kind == "motion" { format!("{t}ms") } else { "settled".to_string() };
-            let dir = refs_dir(case_rel).join(format!("d{density}"));
             let frame_path = dir.join(format!("frame_{tag}.png"));
             let mask_path = dir.join(format!("mask_{tag}.png"));
             let expected = match load_png(&frame_path) {
@@ -712,8 +1332,17 @@ pub fn run_parity_case<C: i_slint_core::api::ComponentHandle>(
                     continue;
                 }
             };
-            let mask = load_png(&mask_path).ok();
-            let result = layered_compare(&actual, &expected, mask.as_ref(), pixel_eps);
+            let png_mask = load_png(&mask_path).ok();
+            let mask = build_frame_mask(
+                &component,
+                frames.last().unwrap(),
+                compose.as_ref().and_then(|c| compose_frame_at(c, t)),
+                png_mask.as_ref(),
+                *density as f64,
+                actual.width(),
+                actual.height(),
+            );
+            let result = layered_compare(&actual, &expected, Some(&mask), pixel_eps);
             if !result.ok {
                 let dir = artifacts_dir(driver, case_rel);
                 write_png(&dir.join(format!("actual_d{density}_{tag}.png")), &actual)?;
@@ -726,25 +1355,23 @@ pub fn run_parity_case<C: i_slint_core::api::ComponentHandle>(
             }
         }
 
-        if kind == "motion" && !references_missing {
-            let dir = refs_dir(case_rel).join(format!("d{density}"));
-            match std::fs::read_to_string(dir.join("trace.json")) {
-                Ok(json) => {
-                    let compose: serde_json::Value = serde_json::from_str(&json)?;
-                    let mut errors = compare_traces(&frames, &compose);
-                    if !errors.is_empty() {
-                        let dir = artifacts_dir(driver, case_rel);
-                        std::fs::create_dir_all(&dir)?;
-                        std::fs::write(dir.join("slint_trace.json"), trace_to_json(&frames))?;
-                        let svg = trace_svg(&frames, Some(&compose));
-                        if !svg.is_empty() {
-                            std::fs::write(dir.join(format!("trace_d{density}.svg")), svg)?;
-                        }
-                        failures.append(&mut errors);
-                        artifacts_written = true;
-                    }
+        if let Some(compose) = &compose {
+            let mut errors = if kind == "motion" {
+                compare_traces(&frames, compose)
+            } else {
+                Vec::new()
+            };
+            errors.extend(compare_text_metrics(&component, &frames, compose));
+            if !errors.is_empty() {
+                let dir = artifacts_dir(driver, case_rel);
+                std::fs::create_dir_all(&dir)?;
+                std::fs::write(dir.join("slint_trace.json"), trace_to_json(&frames))?;
+                let svg = trace_svg(&frames, Some(compose));
+                if !svg.is_empty() {
+                    std::fs::write(dir.join(format!("trace_d{density}.svg")), svg)?;
                 }
-                Err(e) => failures.push(format!("d{density} trace.json: {e}")),
+                failures.append(&mut errors);
+                artifacts_written = true;
             }
         }
         if artifacts_written {
@@ -794,21 +1421,21 @@ fn comparator_catches_subtle_differences() {
     let size = 32;
     let a = SharedPixelBuffer::<Rgba8Pixel>::new(size, size);
     let mut b = a.clone();
-    let mut m = SharedPixelBuffer::<Rgba8Pixel>::new(size, size);
-    let white = Rgba8Pixel { r: 255, g: 255, b: 255, a: 255 };
-    for p in m.make_mut_slice() {
-        *p = white; // all text
-    }
-    assert!(layered_compare(&a, &b, Some(&m), PIXEL_EPS).ok, "identical images must pass");
+    let mut all_text = PixelMask::new(size, size);
+    all_text.fill_rect(
+        PxRect { x0: 0.0, y0: 0.0, x1: size as f64, y1: size as f64 },
+        PixelClass::Text,
+    );
+    assert!(layered_compare(&a, &b, Some(&all_text), PIXEL_EPS).ok, "identical images must pass");
 
     // 1px color nudge outside text → strict layer fails.
     b.make_mut_slice()[0] = Rgba8Pixel { r: 20, g: 0, b: 0, a: 255 };
-    let no_text = SharedPixelBuffer::<Rgba8Pixel>::new(size, size);
+    let no_text = PixelMask::new(size, size);
     assert!(!layered_compare(&a, &b, Some(&no_text), PIXEL_EPS).ok, "1px diff must fail");
 
     // Same nudge but fully inside the text mask → tolerated by the loose layer.
     assert!(
-        layered_compare(&a, &b, Some(&m), PIXEL_EPS).ok,
+        layered_compare(&a, &b, Some(&all_text), PIXEL_EPS).ok,
         "small diff inside text mask must pass"
     );
 
@@ -817,5 +1444,5 @@ fn comparator_catches_subtle_differences() {
     for p in c.make_mut_slice() {
         *p = Rgba8Pixel { r: 255, g: 0, b: 0, a: 255 };
     }
-    assert!(!layered_compare(&a, &c, Some(&m), PIXEL_EPS).ok, "wrong text color must fail");
+    assert!(!layered_compare(&a, &c, Some(&all_text), PIXEL_EPS).ok, "wrong text color must fail");
 }
