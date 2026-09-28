@@ -4,11 +4,30 @@
 #[cfg(test)]
 pub mod testing;
 
+/// Layered pixel/property-trace comparison against Compose references; used
+/// by every driver for `//PARITY=` cases in `cases/material/`.
+#[cfg(test)]
+pub mod parity;
+
+/// Compilation helpers shared by the interpreter-based drivers.
+#[cfg(all(
+    test,
+    any(
+        feature = "skia",
+        all(feature = "femtovg", target_os = "linux"),
+        feature = "anyrender"
+    )
+))]
+pub mod interpreter;
+
 #[cfg(all(test, feature = "software"))]
 pub mod software;
 
 #[cfg(all(test, feature = "skia"))]
 pub mod skia;
+
+#[cfg(all(test, feature = "femtovg", target_os = "linux"))]
+pub mod femtovg;
 
 #[cfg(all(test, feature = "anyrender"))]
 pub mod anyrender;
