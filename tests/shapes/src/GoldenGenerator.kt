@@ -1,14 +1,11 @@
-/*
- * Copyright © SixtyFPS GmbH <info@slint.dev>
- * SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0
- *
- * Golden-vector generator for the Slint shapes parity tests.
- *
- * Compiles the pinned androidx.graphics.shapes sources (vendored under
- * src/androidx/graphics/shapes/) plus MaterialShapes.kt at
- * 23327507f7fc7d5b19d65fec4b090f60c970079b and emits JSON where every f32 is
- * encoded as its IEEE-754 bit pattern (u32) so comparisons are bit-exact.
- */
+// Copyright © SixtyFPS GmbH <info@slint.dev>
+// SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0
+
+// Golden-vector generator for the Slint shapes parity tests. Compiles the
+// pinned androidx.graphics.shapes sources (vendored under
+// src/androidx/graphics/shapes/) plus MaterialShapes.kt at
+// 23327507f7fc7d5b19d65fec4b090f60c970079b and emits JSON where every f32 is
+// encoded as its IEEE-754 bit pattern (u32) so comparisons are bit-exact.
 
 @file:OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
 

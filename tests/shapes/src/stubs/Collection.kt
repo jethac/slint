@@ -1,9 +1,5 @@
-/*
- * Minimal semantic stubs of androidx.collection types, for compiling the pinned
- * graphics-shapes sources with plain kotlinc (no androidx dependencies).
- * Semantics are identical to the real implementation for the operations the
- * library uses (packing is pure bit-packing of the two floats either way).
- */
+// Copyright © SixtyFPS GmbH <info@slint.dev>
+// SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0
 
 package androidx.collection
 

@@ -1,9 +1,5 @@
-/*
- * Minimal stubs of androidx.compose.ui.graphics / .unit / .util / .runtime and
- * androidx.compose.material3-internal symbols used by MaterialShapes.kt and
- * ShapeUtil.kt. Only symbols needed to compile are provided; functions whose
- * result would feed golden vectors (Matrix.map) use the real pinned source.
- */
+// Copyright © SixtyFPS GmbH <info@slint.dev>
+// SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0
 
 package androidx.compose.ui.graphics
 

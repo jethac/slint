@@ -1,8 +1,5 @@
-/*
- * Minimal semantic stubs of androidx.compose.ui.geometry types used by
- * MaterialShapes.kt / ShapeUtil.kt at the pin. Value-class packing is elided;
- * the math semantics are identical (all per-component Float ops).
- */
+// Copyright © SixtyFPS GmbH <info@slint.dev>
+// SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0
 
 package androidx.compose.ui.geometry
 
