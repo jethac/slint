@@ -104,7 +104,7 @@ jobs:
           - name: Install Linux dependencies
             run: |
               sudo timeout 600 apt-get update
-              sudo timeout 600 apt-get install libxcb-shape0-dev libxcb-xfixes0-dev libxkbcommon-dev libxkbcommon-x11-dev libfontconfig-dev libegl1-mesa-dev libgl1-mesa-dri mesa-utils
+              sudo timeout 600 apt-get install libxcb-shape0-dev libxcb-xfixes0-dev libxkbcommon-dev libxkbcommon-x11-dev libfontconfig-dev libegl1-mesa-dev libgl1-mesa-dri mesa-utils xvfb
             shell: bash
           - name: Install Rust
             uses: dtolnay/rust-toolchain@stable
@@ -133,19 +133,15 @@ jobs:
                 key: parity
                 save-if: ${{ github.ref == 'refs/heads/master' }}
           - name: Check headless EGL (FemtoVG renders through surfaceless Mesa)
-            # The femtovg driver uses EGL_PLATFORM_SURFACELESS_MESA. On the
-            # runner libEGL is glvnd's dispatcher, and a non-Mesa vendor
-            # library answering eglGetPlatformDisplay would fail
-            # eglInitialize — force the Mesa vendor JSON.
             run: |
               ls /usr/share/glvnd/egl_vendor.d/
-              __EGL_VENDOR_LIBRARY_FILENAMES=/usr/share/glvnd/egl_vendor.d/50_mesa.json \
-                eglinfo -B surfaceless | grep -i 'platform\|vendor\|version' | head -10 || true
+              eglinfo -p surfaceless 2>&1 | head -20 || true
             shell: bash
           - name: Run material parity cases on all renderers
-            run: SLINT_TEST_FILTER=material cargo test --manifest-path tests/Cargo.toml -p test-driver-screenshots --features femtovg
-            env:
-              __EGL_VENDOR_LIBRARY_FILENAMES: /usr/share/glvnd/egl_vendor.d/50_mesa.json
+            # xvfb gives the EGL default display an X server to land on when
+            # Mesa's surfaceless platform can't initialize headless (no
+            # /dev/dri on the runner); the driver falls back to it.
+            run: xvfb-run -a env SLINT_TEST_FILTER=material cargo test --manifest-path tests/Cargo.toml -p test-driver-screenshots --features femtovg
           - name: Build the Compose parity harness
             run: ./gradlew compileDebugUnitTestKotlin --no-daemon
             working-directory: ui-libraries/material/parity/compose

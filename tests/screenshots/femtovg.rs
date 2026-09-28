@@ -32,13 +32,20 @@ impl SurfacelessEgl {
         const PLATFORM_SURFACELESS_MESA: khronos_egl::Enum = 0x31DD;
 
         let egl = &khronos_egl::API;
+        // Prefer the surfaceless Mesa platform; newer Mesa can hand back a
+        // display whose eglInitialize still fails headless (no /dev/dri
+        // node) — then fall back to the default display, which an
+        // xvfb-provided X server satisfies.
         let display = unsafe {
             egl.get_platform_display(PLATFORM_SURFACELESS_MESA, khronos_egl::DEFAULT_DISPLAY, &[])
                 .ok()
-                .or_else(|| egl.get_display(khronos_egl::DEFAULT_DISPLAY))
+                .filter(|d| egl.initialize(*d).is_ok())
+                .or_else(|| {
+                    egl.get_display(khronos_egl::DEFAULT_DISPLAY)
+                        .filter(|d| egl.initialize(*d).is_ok())
+                })
         }
-        .ok_or("eglGetPlatformDisplay/eglGetDisplay: no EGL display")?;
-        egl.initialize(display).map_err(|e| format!("eglInitialize: {e:?}"))?;
+        .ok_or("eglGetPlatformDisplay/eglGetDisplay/eglInitialize: no usable EGL display")?;
         egl.bind_api(khronos_egl::OPENGL_ES_API).map_err(|e| format!("eglBindAPI: {e:?}"))?;
 
         let attribs = [
