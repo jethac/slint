@@ -64,15 +64,19 @@ export component StateLayer {
         @children
     }
 
+    // First matching state wins: `pressed` is deliberately first so an active
+    // press suppresses the focus/hover overlay — the Ripple already paints
+    // the pressed overlay, so the state layer contributes nothing while
+    // pressed (matching Compose, where the ripple *is* the pressed layer).
     states [
+        pressed when root.enabled && root.pressed : {
+            root.state_layer_opacity: 0;
+        }
         disabled when !root.enabled && root.display_background : {
             root.state_layer_opacity: MaterialPalette.state_layer_opacity_focus;
         }
         focus when root.enabled && root.has_focus : {
             root.state_layer_opacity: MaterialPalette.state_layer_opacity_focus;
-        }
-        pressed when root.enabled && root.pressed : {
-            root.state_layer_opacity: MaterialPalette.state_layer_opacity_press;
         }
         hover when root.enabled && root.has_hover && !MaterialWindowAdapter.disable_hover : {
             root.state_layer_opacity: MaterialPalette.state_layer_opacity_hover;
