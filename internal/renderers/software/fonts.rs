@@ -206,8 +206,10 @@ pub fn match_font(
         .and_then(|weight| weight.try_into().ok())
         .unwrap_or(/* CSS normal */ 400);
 
-    let requested_variations =
-        request.effective_variations(request.pixel_size.map(|s| s.get() as f32));
+    let requested_variations = request.effective_variations(
+        #[allow(clippy::unnecessary_cast)] // Coord is f32, but i16 with `slint_int_coord`
+        request.pixel_size.map(|s| s.get() as f32),
+    );
     // `opsz` entries in `font-variation-settings` pin the axis explicitly;
     // otherwise it comes from `font-optical-sizing` and an `auto_opsz` bitmap
     // font satisfies it per glyph set.
@@ -241,7 +243,7 @@ pub fn match_font(
     });
 
     let font = match bitmap_font {
-        Some((bitmap_font, score)) if score == 0. => bitmap_font,
+        Some((bitmap_font, 0.)) => bitmap_font,
         Some((bitmap_font, _)) => {
             // The best bitmap font doesn't cover the requested axes: prefer a
             // vector font that can rasterize the exact instance.

@@ -7,6 +7,7 @@ description = "GUI toolkit to efficiently develop fluid graphical user interface
 authors.workspace = true
 documentation.workspace = true
 edition = "2024"
+links = "slint"
 homepage = "https://slint.rs"
 keywords.workspace = true
 license.workspace = true

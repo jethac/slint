@@ -228,11 +228,35 @@ fn markup_font_attributes_produce_one_tuple_per_span() {
     // rasterize its own instance with GRAD at 50 — proof the span isn't folded
     // into the element tuple.
     const GRAD: u32 = u32::from_be_bytes(*b"GRAD");
+    // Roboto Flex declares GRAD: the `font-variation-settings` span must
+    // rasterize its own instance with GRAD at 50 — proof the span isn't folded
+    // into the element tuple. Exact check: the span tuple equals the default
+    // instance's tuple (GRAD 0, wdth 100) with only GRAD and wdth replaced.
+    let roboto_tuples: Vec<Vec<(u32, f32)>> = bitmap_variations(&doc)
+        .into_iter()
+        .filter(|(f, _, _)| f == "Roboto Flex")
+        .map(|(_, _, v)| v)
+        .collect();
+    let default = roboto_tuples
+        .iter()
+        .find(|v| v.contains(&(GRAD, 0.0)) && v.contains(&(WDTX, 100.0)))
+        .expect("the default Roboto Flex instance must be embedded");
+    let expected: Vec<(u32, f32)> = default
+        .iter()
+        .map(|&(tag, value)| {
+            let value = if tag == GRAD {
+                50.0
+            } else if tag == WDTX {
+                50.0
+            } else {
+                value
+            };
+            (tag, value)
+        })
+        .collect();
     assert!(
-        bitmap_variations(&doc)
-            .iter()
-            .any(|(f, _, v)| f == "Roboto Flex" && v.contains(&(GRAD, 50.0))),
-        "the GRAD-only span must rasterize its own Roboto Flex instance"
+        roboto_tuples.iter().any(|v| *v == expected),
+        "the GRAD span's exact tuple {expected:?} missing from {roboto_tuples:?}"
     );
 }
 
@@ -250,6 +274,7 @@ fn const_propagated_weight_family_and_size_stay_bitmap() {
         }"#,
         true,
     );
+    assert!(diags.iter().all(|d| !d.starts_with("error")), "{diags:?}");
     assert_eq!(embedded_vector_fonts(&doc), 0);
     assert!(
         bitmap_variations(&doc).iter().any(|(f, w, _)| f == "Noto Sans" && *w == 700),

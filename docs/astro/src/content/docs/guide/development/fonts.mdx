@@ -76,7 +76,7 @@ glyphs, so keep the number of distinct tuples small on constrained targets. Each
 always covers the full printable-ASCII set plus the text found in the sources — about 96
 glyphs — measured on a `thumbv6m-none-eabi`-oriented `embed-for-software-renderer` build:
 roughly 6 KiB per instance at 12 px (~65 B/glyph average, since blank and small glyphs
-dominate) and about twice that per instance at 16 px (~90 B/glyph). Runtime CPU is the
+dominate) and about 12 KiB per instance at 16 px (~125 B/glyph). Runtime CPU is the
 same as for static fonts: the bitmaps are blitted, not rasterized.
 
 A binding that computes its axis values at run time can't be pre-rasterized. For animated
@@ -87,18 +87,28 @@ of the families those bindings can resolve to and registers it through
 renderer's `embedded-vector-fonts` feature) rasterizes the exact instance each frame.
 That trades flash for flexibility: the raw file is 84 KiB for the subsetted test Noto
 Sans and about 4.2 MiB for the full Google Sans Flex — versus ~6 KiB for one
-pre-rendered instance — plus RAM for rasterized glyphs (bounded by a 1 MiB cache) and
-per-frame rasterization CPU that scales with the rendered string length (estimate; not
-measured on MCU hardware).
+pre-rendered instance — plus RAM for rasterized glyphs (bounded by a cache that defaults
+to 1 MiB; set `SLINT_VECTOR_FONT_CACHE_BYTES` in the environment or in
+`.cargo/config.toml`'s `[env]` table to shrink it on small MCUs, and rebuild from clean
+after changing it) and per-frame rasterization CPU that scales with the rendered string
+length (estimate; not measured on MCU hardware).
 
 When the build excludes vector fonts entirely — a freestanding C++ target sets
 `SLINT_EXCLUDE_VECTOR_FONTS` automatically, and a Rust build does the same for targets
 whose triple names no operating system (`*-none-*`, `*-uefi`, Zephyr) unless the env var
 is set to a falsy value or `CompilerConfiguration::exclude_vector_fonts(false)` is
 called — a non-constant axis binding is a compile error naming the binding, and a bound
-`font-family` that constant propagation can't reduce to a literal is as well. Use
-constant expressions (or `out` properties with constant initializers) to stay on the
-bitmap path.
+`font-family` that constant propagation can't reduce to a literal is as well. The
+auto-detection is skipped when the software renderer's `embedded-vector-fonts` feature is
+enabled (detected via `DEP_SLINT_EMBEDDED_VECTOR_FONTS` for `slint-build` users, or via a
+same-named passthrough feature on the application crate). Builds using the `slint!` macro
+can't see the target triple: generated code checks the rasterizer feature at compile time
+and fails the build with the same instruction. Use constant expressions (or `out`
+properties with constant initializers) to stay on the bitmap path.
+
+Cortex-M0 and M0+ (`thumbv6m-none-eabi`) lack the atomic compare-and-swap instructions
+`alloc::sync::Arc` needs, so those cores always need a vector-excluded build — the
+auto-detection already does this for them.
 
 On targets that do have an operating system, enable the `software-renderer-systemfonts` cargo
 feature to let the software renderer also use fonts installed on the system.

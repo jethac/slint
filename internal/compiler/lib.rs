@@ -343,17 +343,31 @@ impl CompilerConfiguration {
                 // that does have the software renderer's `embedded-vector-fonts`
                 // feature enabled.
                 Ok(v) => !matches!(v.to_ascii_lowercase().as_str(), "0" | "false" | "no" | "off"),
-                // `TARGET` is only set for build-script-driven compiles. On
-                // bare-metal (`*-none-*`), UEFI and Zephyr triples there is no
-                // `std` runtime for the fontique-based rasterizer, so unless
-                // the build opted in, dynamic font axes must be a compile
-                // error — the same diagnostic C++ freestanding builds get from
-                // `SLINT_EXCLUDE_VECTOR_FONTS`.
-                Err(_) => std::env::var("TARGET").is_ok_and(|t| {
-                    let t = t.to_ascii_lowercase();
-                    t.split('-').any(|field| field == "none" || field == "zephyr")
-                        || t.ends_with("-uefi")
-                }),
+                Err(_) => {
+                    // An enabled `embedded-vector-fonts` feature means a no_std
+                    // rasterizer is compiled in. `DEP_SLINT_EMBEDDED_VECTOR_FONTS`
+                    // is exported by the `slint` crate's build script into
+                    // dependent build scripts (slint-build); the
+                    // `embedded-vector-fonts` passthrough feature convention
+                    // covers crates that re-expose it under the same name.
+                    let has_rasterizer = std::env::var_os("DEP_SLINT_EMBEDDED_VECTOR_FONTS")
+                        .is_some_and(|v| v != "0")
+                        || std::env::var_os("CARGO_FEATURE_EMBEDDED_VECTOR_FONTS").is_some();
+                    // `TARGET` is only set for build-script-driven compiles. On
+                    // bare-metal (`*-none-*`), UEFI and Zephyr triples there is no
+                    // `std` runtime for the fontique-based rasterizer, so unless
+                    // the build opted in, dynamic font axes must be a compile
+                    // error — the same diagnostic C++ freestanding builds get
+                    // from `SLINT_EXCLUDE_VECTOR_FONTS`. The `slint!` macro
+                    // can't see the target: generated code asserts on the
+                    // rasterizer feature instead.
+                    !has_rasterizer
+                        && std::env::var("TARGET").is_ok_and(|t| {
+                            let t = t.to_ascii_lowercase();
+                            t.split('-').any(|field| field == "none" || field == "zephyr")
+                                || t.ends_with("-uefi")
+                        })
+                }
             },
             #[cfg(feature = "bundle-translations")]
             bundled_translations_path: std::env::var("SLINT_BUNDLE_TRANSLATIONS")

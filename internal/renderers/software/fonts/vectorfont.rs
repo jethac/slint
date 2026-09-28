@@ -174,8 +174,31 @@ mod glyph_cache {
 
 use glyph_cache::GlyphCache;
 
+/// Alpha-map cache capacity in bytes. The default 1 MiB covers full-screen
+/// text on typical displays; MCUs with little RAM can shrink it by setting
+/// `SLINT_VECTOR_FONT_CACHE_BYTES` in the environment or in
+/// `.cargo/config.toml`'s `[env]` table, which Cargo exports to dependency
+/// compilations as well.
+const GLYPH_CACHE_CAPACITY_BYTES: usize = {
+    const fn parse_usize(s: &str) -> usize {
+        let bytes = s.as_bytes();
+        let mut value = 0usize;
+        let mut i = 0;
+        while i < bytes.len() {
+            assert!(bytes[i].is_ascii_digit(), "SLINT_VECTOR_FONT_CACHE_BYTES must be a number");
+            value = value * 10 + (bytes[i] - b'0') as usize;
+            i += 1;
+        }
+        value
+    }
+    match option_env!("SLINT_VECTOR_FONT_CACHE_BYTES") {
+        Some(s) => parse_usize(s),
+        None => 1024 * 1024,
+    }
+};
+
 i_slint_core::thread_local!(static GLYPH_CACHE: core::cell::RefCell<GlyphCache>  =
-    core::cell::RefCell::new(GlyphCache::new(1024 * 1024))
+    core::cell::RefCell::new(GlyphCache::new(GLYPH_CACHE_CAPACITY_BYTES))
 );
 
 /// The font bytes a `VectorFont` rasterizes from: a fontique-managed blob when

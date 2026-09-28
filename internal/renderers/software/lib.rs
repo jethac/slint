@@ -1480,13 +1480,14 @@ impl RendererSealed for SoftwareRenderer {
         data: &'static [u8],
     ) -> Result<(), alloc::boxed::Box<dyn core::error::Error>> {
         #[cfg(feature = "systemfonts")]
-        {
+        let result = {
             let ctx = self.slint_context().ok_or("slint platform not initialized")?;
             ctx.font_context().borrow_mut().register_static_font(data);
-            return Ok(());
-        }
+            Ok(())
+        };
         #[cfg(all(feature = "embedded-vector-fonts", not(feature = "systemfonts")))]
-        fonts::embeddedfonts::register(data)
+        let result = fonts::embeddedfonts::register(data);
+        result
     }
 
     #[cfg(all(feature = "systemfonts", not(target_arch = "wasm32")))]

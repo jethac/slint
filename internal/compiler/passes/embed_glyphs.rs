@@ -222,10 +222,10 @@ pub fn embed_glyphs(
                     "'{property_name}' is not constant, but this build rasterizes glyphs \
                      at fixed axis values and vector fonts are excluded — give the \
                      property a constant value, enable the software renderer's \
-                     `embedded-vector-fonts` feature (Rust builds; clear \
-                     `SLINT_EXCLUDE_VECTOR_FONTS` if it was set automatically for a \
-                     no-std target), or disable glyph embedding (SLINT_EMBED_RESOURCES) \
-                     so the variable font data is used directly"
+                     `embedded-vector-fonts` feature (Rust builds; with an auto-detected \
+                     no-std exclusion set `SLINT_EXCLUDE_VECTOR_FONTS=0`, since unsetting \
+                     the variable re-enables the detection), or disable glyph embedding \
+                     (SLINT_EMBED_RESOURCES) so the variable font data is used directly"
                 ),
                 span.clone(),
             );

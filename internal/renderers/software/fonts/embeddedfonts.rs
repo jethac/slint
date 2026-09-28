@@ -273,9 +273,49 @@ mod tests {
             match_font(&request("Noto Sans", &[axis("wdth", 100.)]), ScaleFactor::new(1.)).unwrap();
         let narrow_advance = narrow.glyph_for_char('A').unwrap().advance;
         let wide_advance = wide.glyph_for_char('A').unwrap().advance;
+        // Exact values pin the normalized coordinates the rasterizer receives:
+        // 'A' at the default size advances 5 px at wdth 62.5 and 7 px at
+        // wdth 100 in the test font.
+        assert_eq!(narrow_advance.get(), 5, "wdth 62.5 advance");
+        assert_eq!(wide_advance.get(), 7, "wdth 100 advance");
         assert!(
             narrow_advance < wide_advance,
             "wdth 62.5 must shape narrower than wdth 100: {narrow_advance:?} vs {wide_advance:?}"
+        );
+
+        // A real rasterization run through the no_std path: 'A' must produce
+        // non-empty alpha maps at both axis values, and the wider instance a
+        // wider bitmap.
+        struct NoopPlatform;
+        impl i_slint_core::platform::Platform for NoopPlatform {
+            fn create_window_adapter(
+                &self,
+            ) -> Result<
+                alloc::rc::Rc<dyn i_slint_core::platform::WindowAdapter>,
+                i_slint_core::api::PlatformError,
+            > {
+                unimplemented!()
+            }
+        }
+        let context = i_slint_core::SlintContext::new(alloc::boxed::Box::new(NoopPlatform));
+        let narrow_glyph = narrow.render_vector_glyph(
+            narrow.glyph_for_char('A').unwrap().glyph_id.unwrap(),
+            0,
+            &context,
+        );
+        let wide_glyph = wide.render_vector_glyph(
+            wide.glyph_for_char('A').unwrap().glyph_id.unwrap(),
+            0,
+            &context,
+        );
+        let (narrow_glyph, wide_glyph) = (narrow_glyph.unwrap(), wide_glyph.unwrap());
+        assert!(narrow_glyph.alpha_map.iter().copied().any(|p| p != 0));
+        assert!(wide_glyph.alpha_map.iter().copied().any(|p| p != 0));
+        assert!(
+            narrow_glyph.width.get() <= wide_glyph.width.get(),
+            "wdth 62.5 must not render wider than wdth 100: {} vs {}",
+            narrow_glyph.width.get(),
+            wide_glyph.width.get()
         );
     }
 }

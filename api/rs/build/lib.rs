@@ -203,6 +203,15 @@ impl CompilerConfiguration {
     /// `font-optical-sizing` or `font-weight`) is embedded as vector data so
     /// the runtime can rasterize any axis position. When this is set, such
     /// bindings are a compile error instead.
+    ///
+    /// The default is auto-detected: builds for bare-metal targets
+    /// (`*-none-*`, `*-uefi`, Zephyr triples) exclude vector fonts unless the
+    /// software renderer's `embedded-vector-fonts` feature is enabled
+    /// (detected through `DEP_SLINT_EMBEDDED_VECTOR_FONTS` from the `slint`
+    /// crate's build script, or a same-named passthrough feature on the
+    /// application crate) or `SLINT_EXCLUDE_VECTOR_FONTS` is set to a falsy
+    /// value. The `slint!` macro cannot see the target, so generated code
+    /// asserts the rasterizer feature at compile time instead.
     #[must_use]
     pub fn exclude_vector_fonts(mut self, exclude: bool) -> Self {
         self.config.exclude_vector_fonts = exclude;

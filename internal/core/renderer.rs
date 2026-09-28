@@ -295,16 +295,17 @@ pub trait RendererSealed {
         data: &'static [u8],
     ) -> Result<(), Box<dyn core::error::Error>> {
         #[cfg(feature = "shared-parley")]
-        {
+        let result = {
             let ctx = self.slint_context().ok_or("slint platform not initialized")?;
             ctx.font_context().borrow_mut().register_static_font(data);
-            return Ok(());
-        }
+            Ok(())
+        };
         #[cfg(not(feature = "shared-parley"))]
-        {
+        let result = {
             let _ = data;
             Err("This renderer does not support registering custom fonts.".into())
-        }
+        };
+        result
     }
 
     #[cfg(all(feature = "std", not(feature = "shared-parley")))]
