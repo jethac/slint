@@ -509,8 +509,6 @@ path = ["ui-libraries/material/parity/compose/vendor/mcu/**"]
 precedence = "aggregate"
 SPDX-FileCopyrightText = "Copyright 2021 Google LLC"
 SPDX-License-Identifier = "Apache-2.0"
-||||||| b10942a76
-=======
 
 [[annotations]]
 # Vendored androidx.graphics.shapes / MaterialShapes sources (Apache-2.0,
@@ -526,4 +524,3 @@ SPDX-License-Identifier = "Apache-2.0"
 path = ["tests/shapes/README.md", "tests/shapes/golden/**", "tests/shapes/src/stubs/**"]
 SPDX-FileCopyrightText = "Copyright © SixtyFPS GmbH <info@slint.dev>"
 SPDX-License-Identifier = "GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0"
->>>>>>> origin/master
