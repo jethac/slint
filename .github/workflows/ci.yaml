@@ -432,6 +432,19 @@ jobs:
             - name: Test embedded-vector-fonts font registration and matching
               if: ${{ inputs.full || contains(fromJSON(inputs.changes), 'internal') || contains(fromJSON(inputs.changes), 'api_rs') }}
               run: cargo test -p i-slint-renderer-software --no-default-features --features=embedded-vector-fonts,libm,i-slint-core/unsafe-single-threaded
+            - name: Compile test: dynamic axis errors without a vector rasterizer
+              if: ${{ inputs.full || contains(fromJSON(inputs.changes), 'internal') || contains(fromJSON(inputs.changes), 'api_rs') }}
+              working-directory: tests/vector_font_build_check
+              run: |
+                  if cargo check -p vector-font-build-fail >check.log 2>&1; then
+                      echo "a dynamic font-variation-settings binding must not compile without a vector font rasterizer"
+                      exit 1
+                  fi
+                  grep -F "vector font rasterizer" check.log
+            - name: Compile test: dynamic axis builds with embedded-vector-fonts
+              if: ${{ inputs.full || contains(fromJSON(inputs.changes), 'internal') || contains(fromJSON(inputs.changes), 'api_rs') }}
+              working-directory: tests/vector_font_build_check
+              run: cargo check -p vector-font-build-ok
             - name: Check pico-st7789
               if: ${{ inputs.full || contains(fromJSON(inputs.changes), 'examples_mcu') || contains(fromJSON(inputs.changes), 'api_rs') }}
               env:
