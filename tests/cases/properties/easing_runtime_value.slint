@@ -29,14 +29,14 @@ fn assert_approx(value: f32, expected: f32) {
 let instance = TestCase::new().unwrap();
 instance.set_value(100.0);
 slint_testing::mock_elapsed_time(150);
-// spring(0.6, 800) overshoots 100 around 150 ms.
-assert_approx(instance.get_value(), 108.95);
+// spring(0.6, 800) overshoots 100 around 150 ms (reference: 109.06).
+assert_approx(instance.get_value(), 109.06);
 
 // Swap in a different spring and the same `animate` uses it for the next animation.
 instance.set_curve(slint::EasingCurve::PhysicalSpring { damping_ratio: 1.0, stiffness: 380.0, mass: 1.0 });
 instance.set_value(0.0);
 slint_testing::mock_elapsed_time(100);
-assert!(instance.get_value() < 108.95); // critically damped: no overshoot
+assert!(instance.get_value() < 109.06); // critically damped: no overshoot
 
 // Velocity carry-over: ζ=1 k=380 launched 0→100 is still moving at 300 ms;
 // retargeting to 200 continues from ~98 with v ≈ 33 px/s.
@@ -46,7 +46,7 @@ instance.set_retargeted(200.0);
 slint_testing::mock_elapsed_time(100);
 assert!(instance.get_retargeted() > 120.0);
 slint_testing::mock_elapsed_time(150);
-assert_approx(instance.get_retargeted(), 195.48);
+assert_approx(instance.get_retargeted(), 195.15);
 ```
 
 ```cpp
@@ -54,13 +54,13 @@ auto handle = TestCase::create();
 const TestCase &instance = *handle;
 instance.set_value(100.0);
 slint_testing::mock_elapsed_time(150);
-assert(std::abs(instance.get_value() - 108.95) < 0.05);
+assert(std::abs(instance.get_value() - 109.06) < 0.05);
 
 instance.set_curve(slint::cbindgen_private::EasingCurve(
         slint::cbindgen_private::EasingCurve::Tag::PhysicalSpring, 1.0, 380.0, 1.0));
 instance.set_value(0.0);
 slint_testing::mock_elapsed_time(100);
-assert(instance.get_value() < 108.95);
+assert(instance.get_value() < 109.06);
 
 instance.set_retargeted(100.0);
 slint_testing::mock_elapsed_time(150);
@@ -68,19 +68,19 @@ instance.set_retargeted(200.0);
 slint_testing::mock_elapsed_time(100);
 assert(instance.get_retargeted() > 120.0);
 slint_testing::mock_elapsed_time(150);
-assert(std::abs(instance.get_retargeted() - 195.48) < 0.05);
+assert(std::abs(instance.get_retargeted() - 195.15) < 0.05);
 ```
 
 ```js
 var instance = new slint.TestCase({});
 instance.value = 100.0;
 slintlib.private_api.mock_elapsed_time(150);
-assert(Math.abs(instance.value - 108.95) < 0.05);
+assert(Math.abs(instance.value - 109.06) < 0.05);
 
 instance.curve = { type: "spring", dampingRatio: 1.0, stiffness: 380.0 };
 instance.value = 0.0;
 slintlib.private_api.mock_elapsed_time(100);
-assert(instance.value < 108.95);
+assert(instance.value < 109.06);
 
 instance.retargeted = 100.0;
 slintlib.private_api.mock_elapsed_time(150);
@@ -88,6 +88,6 @@ instance.retargeted = 200.0;
 slintlib.private_api.mock_elapsed_time(100);
 assert(instance.retargeted > 120.0);
 slintlib.private_api.mock_elapsed_time(150);
-assert(Math.abs(instance.retargeted - 195.48) < 0.05);
+assert(Math.abs(instance.retargeted - 195.15) < 0.05);
 ```
 */

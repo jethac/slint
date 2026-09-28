@@ -55,8 +55,10 @@ assert_approx(instance.get_second_width(), 39.89);
 assert_eq!(instance.get_second_x(), instance.get_first_width());
 assert_approx(instance.get_selected_opacity(), 0.98);
 
-// Mid-flight retarget: toggle back while both springs are moving. The next
-// tick continues from the current values — a reset would jump ~20px.
+// Mid-flight retarget: toggle back at 250 ms — ~54% of the width springs'
+// ~461 ms estimated settle and ~82% of the opacity spring's ~304 ms
+// (SpringEstimation, delta 0.01), both still moving. The next tick continues
+// from the current values — a reset would jump ~20px.
 let w2_before = instance.get_second_width();
 let w1_before = instance.get_first_width();
 let op_before = instance.get_selected_opacity();
@@ -73,6 +75,8 @@ assert_approx(instance.get_first_width(), 40.26);
 assert_approx(instance.get_selected_opacity(), 0.73);
 assert_eq!(instance.get_second_x(), instance.get_first_width());
 
+// +1100 ms exceeds the longest post-retarget estimate (~460 ms widths,
+// ~304 ms opacity): all springs have settled on their targets.
 slint_testing::mock_elapsed_time(1100); // settle
 assert_approx(instance.get_first_width(), 40.0);
 assert_approx(instance.get_second_width(), 20.0);
@@ -108,6 +112,8 @@ assert_approx(instance.get_selected_opacity(), 0.98);
 float w2_before = instance.get_second_width();
 float w1_before = instance.get_first_width();
 float op_before = instance.get_selected_opacity();
+// Retarget at 250 ms: ~54% of the width springs' ~461 ms estimated settle,
+// ~82% of the opacity spring's ~304 ms — all still moving.
 instance.set_second_selected(false);
 slint_testing::mock_elapsed_time(1);
 assert(std::abs(instance.get_second_width() - w2_before) < 0.1);
@@ -121,6 +127,7 @@ assert_approx(instance.get_first_width(), 40.26);
 assert_approx(instance.get_selected_opacity(), 0.73);
 assert(instance.get_second_x() == instance.get_first_width());
 
+// +1100 ms exceeds the longest post-retarget estimate (~460 ms): settled.
 slint_testing::mock_elapsed_time(1100);
 assert_approx(instance.get_first_width(), 40.0);
 assert_approx(instance.get_second_width(), 20.0);
@@ -151,6 +158,8 @@ assert(Math.abs(instance.selected_opacity - 0.98) < 0.05);
 var w2_before = instance.second_width;
 var w1_before = instance.first_width;
 var op_before = instance.selected_opacity;
+// Retarget at 250 ms: ~54% of the width springs' ~461 ms settle estimate,
+// ~82% of the opacity spring's ~304 ms — all still moving.
 instance.second_selected = false;
 slintlib.private_api.mock_elapsed_time(1);
 assert(Math.abs(instance.second_width - w2_before) < 0.1);
@@ -164,6 +173,7 @@ assert(Math.abs(instance.first_width - 40.26) < 0.05);
 assert(Math.abs(instance.selected_opacity - 0.73) < 0.05);
 assert(instance.second_x === instance.first_width);
 
+// +1100 ms exceeds the longest post-retarget estimate (~460 ms): settled.
 slintlib.private_api.mock_elapsed_time(1100);
 assert(Math.abs(instance.first_width - 40.0) < 0.05);
 assert(Math.abs(instance.second_width - 20.0) < 0.05);
