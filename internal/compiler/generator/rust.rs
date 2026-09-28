@@ -3554,6 +3554,7 @@ fn compile_expression_to_value(expr: &Expression, ctx: &EvaluationContext) -> To
             | Expression::Array { .. }
             | Expression::Struct { .. }
             | Expression::EasingCurve(..)
+            | Expression::EasingCurveCtor { .. }
             | Expression::LinearGradient { .. }
             | Expression::RadialGradient { .. }
             | Expression::ConicGradient { .. }
@@ -3717,10 +3718,31 @@ fn compile_expression(expr: &Expression, ctx: &EvaluationContext) -> TokenStream
         Expression::EasingCurve(EasingCurve::Spring(a)) => {
             quote!(sp::EasingCurve::Spring(#a))
         }
+        Expression::EasingCurve(EasingCurve::PhysicalSpring(damping_ratio, stiffness, mass)) => {
+            quote!(sp::EasingCurve::PhysicalSpring { damping_ratio: #damping_ratio, stiffness: #stiffness, mass: #mass })
+        }
         // The other curves have no parameters and map to a runtime variant with the same name.
         Expression::EasingCurve(e) => {
             let ident = format_ident!("{e:?}");
             quote!(sp::EasingCurve::#ident)
+        }
+        Expression::EasingCurveCtor { variant, args } => {
+            let args = args.iter().map(|a| compile_expression_to_value(a, ctx));
+            match variant {
+                crate::expression_tree::EasingCurveCtor::CubicBezier => {
+                    quote!(sp::EasingCurve::CubicBezier([#(#args as f32),*]))
+                }
+                crate::expression_tree::EasingCurveCtor::PhysicalSpring => {
+                    quote!({
+                        let mut args = [#(#args as f32),*].into_iter();
+                        sp::EasingCurve::PhysicalSpring {
+                            damping_ratio: args.next().unwrap_or_default(),
+                            stiffness: args.next().unwrap_or(0.),
+                            mass: args.next().unwrap_or(1.),
+                        }
+                    })
+                }
+            }
         }
         Expression::LinearGradient { .. } => compile_linear_gradient(expr, ctx),
         Expression::RadialGradient { .. } => compile_radial_gradient(expr, ctx),
@@ -5159,6 +5181,13 @@ fn compile_builtin_function_call(
         BuiltinFunction::AccentColor => {
             let global_access = &ctx.generator_state.global_access;
             quote!(sp::accent_color(&#global_access.root_item_tree_weak.upgrade().unwrap()))
+        }
+        BuiltinFunction::ReducedMotion => {
+            let global_access = &ctx.generator_state.global_access;
+            quote!({
+                let _root = #global_access.root_item_tree_weak.upgrade().unwrap();
+                sp::context_for_root(&_root).map_or(false, |c| c.reduced_motion())
+            })
         }
         BuiltinFunction::MaterialColorScheme => {
             let (seed_color, variant, spec_version, platform, is_dark, contrast_level) = (

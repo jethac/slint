@@ -242,10 +242,6 @@ impl Type {
         )
     }
 
-    pub fn ok_for_public_api(&self) -> bool {
-        !matches!(self, Self::Easing)
-    }
-
     /// Assume it is an enumeration, panic if it isn't
     pub fn as_enum(&self) -> &Arc<Enumeration> {
         match self {

@@ -202,6 +202,13 @@ pub enum Expression {
 
     EasingCurve(crate::expression_tree::EasingCurve),
 
+    /// An easing constructor evaluated at runtime, for `cubic-bezier(...)` or
+    /// `spring(damping_ratio, stiffness[, mass])` with non-constant arguments.
+    EasingCurveCtor {
+        variant: crate::expression_tree::EasingCurveCtor,
+        args: Vec<Expression>,
+    },
+
     MouseCursor(MouseCursorInner<Expression>),
 
     LinearGradient {
@@ -518,7 +525,7 @@ impl Expression {
             Self::Condition { false_expr, .. } => false_expr.ty(ctx),
             Self::Array { element_ty, .. } => Type::Array(element_ty.clone().into()),
             Self::Struct { ty, .. } => ty.clone().into(),
-            Self::EasingCurve(_) => Type::Easing,
+            Self::EasingCurve(_) | Self::EasingCurveCtor { .. } => Type::Easing,
             Self::MouseCursor(_) => Type::MouseCursor,
             Self::LinearGradient { .. } => Type::Brush,
             Self::RadialGradient { .. } => Type::Brush,
@@ -597,6 +604,7 @@ macro_rules! visit_impl {
             Expression::Array { values, .. } => values.$iter().for_each($visitor),
             Expression::Struct { values, .. } => values.$values().for_each($visitor),
             Expression::EasingCurve(_) => {}
+            Expression::EasingCurveCtor { args, .. } => args.$iter().for_each($visitor),
             Expression::MouseCursor(cursor) => match cursor {
                 MouseCursorInner::CustomMouseCursor { image, hotspot_x, hotspot_y } => {
                     $visitor(image);
