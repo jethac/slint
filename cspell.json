@@ -443,6 +443,12 @@
       ]
     },
     {
+      "filename": "tests/driver/**",
+      "words": [
+        "xfail"
+      ]
+    },
+    {
       "filename": "tools/figma-inspector/**",
       "words": [
         "aqid",
