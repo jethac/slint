@@ -151,11 +151,12 @@ jobs:
             # the harness produces, not a stale local render.
             run: |
               ./gradlew testDebugUnitTest -Pparity.record=1 --no-daemon
-              if ! git diff --exit-code -- ui-libraries/material/parity/compose/references || \
-                 [ -n "$(git status --porcelain -- ui-libraries/material/parity/compose/references)" ]; then
+              if ! git diff --exit-code -- references || \
+                 [ -n "$(git status --porcelain -- references)" ]; then
                 echo "::error::Compose parity references drifted — re-record locally: cd ui-libraries/material/parity/compose && ./gradlew testDebugUnitTest -Pparity.record=1, then commit the result."
                 exit 1
               fi
+            working-directory: ui-libraries/material/parity/compose
             shell: bash
           - name: Upload parity artifacts
             if: failure()
