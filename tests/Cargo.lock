@@ -2608,6 +2608,7 @@ dependencies = [
  "read-fonts",
  "scoped-tls-hkt",
  "skia-safe",
+ "skrifa",
  "softbuffer",
  "spin_on",
  "unicode-segmentation",

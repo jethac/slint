@@ -767,6 +767,22 @@ jobs:
             - name: Run Clippy
               run: ./scripts/run_clippy.sh
 
+    # The variable-font sweep asserts the 16.6 ms frame budget only in release
+    # builds (debug rasterizes an order of magnitude slower), so it needs its
+    # own release-mode run.
+    skia_font_benchmark:
+        if: ${{ inputs.full || contains(fromJSON(inputs.changes), 'internal') }}
+        runs-on: ubuntu-22.04
+        steps:
+            - uses: actions/checkout@v7
+            - uses: ./.github/actions/install-linux-dependencies
+            - uses: ./.github/actions/install-skia-dependencies
+            - uses: ./.github/actions/setup-rust
+            - name: Run the Skia font benchmark in release
+              # --no-default-features keeps softbuffer/wgpu out of the build;
+              # the font cache tests don't need a presentation path.
+              run: cargo test --release -p i-slint-renderer-skia --no-default-features --lib font_cache -- --nocapture
+
     # === Extended tests (only in full CI mode) ===
 
     full_build_and_test:

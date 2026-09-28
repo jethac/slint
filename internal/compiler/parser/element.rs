@@ -4,7 +4,7 @@
 //! The parser functions for elements and things inside them
 
 use super::document::parse_qualified_name;
-use super::expressions::parse_expression;
+use super::expressions::{parse_expression, parse_expression_allowing_variation_shorthand};
 use super::prelude::*;
 use super::statements::parse_statement;
 use super::r#type::parse_type;
@@ -448,10 +448,16 @@ fn parse_case_inner(p: &mut impl Parser, after: &str) {
 /// foo: {};
 /// ```
 fn parse_property_binding(p: &mut impl Parser) {
+    // The `font-variation-settings` shorthand (`"wght" 700, "wdth" 75`) is only
+    // parsed for properties declared as `[FontVariation]` — the two builtin
+    // properties carrying that type. Everywhere else a string literal keeps its
+    // normal meaning and diagnostics.
+    let variation_shorthand =
+        matches!(p.peek().as_str(), "font-variation-settings" | "default-font-variation-settings");
     let mut p = p.start_node(SyntaxKind::Binding);
     p.consume();
     p.expect(SyntaxKind::Colon);
-    parse_binding_expression(&mut *p);
+    parse_binding_expression(&mut *p, variation_shorthand);
 }
 
 #[cfg_attr(test, parser_test)]
@@ -462,7 +468,7 @@ fn parse_property_binding(p: &mut impl Parser) {
 /// {object: 42};
 /// {};
 /// ```
-fn parse_binding_expression(p: &mut impl Parser) -> bool {
+fn parse_binding_expression(p: &mut impl Parser, variation_shorthand: bool) -> bool {
     let mut p = p.start_node(SyntaxKind::BindingExpression);
     // Tell a code block from an object literal, which is '{};' or '{ identifier:'
     if p.nth(0).kind() == SyntaxKind::LBrace
@@ -474,7 +480,11 @@ fn parse_binding_expression(p: &mut impl Parser) -> bool {
         parse_code_block(&mut *p);
         p.test(SyntaxKind::Semicolon);
         true
-    } else if parse_expression(&mut *p) {
+    } else if if variation_shorthand {
+        parse_expression_allowing_variation_shorthand(&mut *p)
+    } else {
+        parse_expression(&mut *p)
+    } {
         p.expect(SyntaxKind::Semicolon)
     } else {
         p.test(SyntaxKind::Semicolon);
@@ -703,6 +713,15 @@ fn parse_property_declaration<P: Parser>(p: &mut P, checkpoint: Option<P::Checkp
         return;
     }
     let mut p = p.start_node_at(checkpoint, SyntaxKind::PropertyDeclaration);
+    // `property<[FontVariation]> x: "wght" 700` gets the same shorthand as the
+    // builtin font-variation-settings properties. The parser is still on the
+    // `property` keyword, so the lookahead starts at nth(1).
+    let variation_shorthand = p.nth(1).kind() == SyntaxKind::LAngle
+        && p.nth(2).kind() == SyntaxKind::LBracket
+        && p.nth(3).kind() == SyntaxKind::Identifier
+        && p.nth(3).as_str() == "FontVariation"
+        && p.nth(4).kind() == SyntaxKind::RBracket
+        && p.nth(5).kind() == SyntaxKind::RAngle;
     p.consume(); // property
 
     if p.test(SyntaxKind::LAngle) {
@@ -722,7 +741,7 @@ fn parse_property_declaration<P: Parser>(p: &mut P, checkpoint: Option<P::Checkp
     match p.nth(0).kind() {
         SyntaxKind::Colon => {
             p.consume();
-            parse_binding_expression(&mut *p);
+            parse_binding_expression(&mut *p, variation_shorthand);
         }
         SyntaxKind::DoubleArrow => {
             let mut p = p.start_node(SyntaxKind::TwoWayBinding);
@@ -864,9 +883,21 @@ fn parse_state(p: &mut impl Parser) -> bool {
                     continue;
                 };
                 let checkpoint = p.checkpoint();
+                // Shorthand is enabled when the last component of the qualified
+                // name is a [FontVariation]-typed property name.
+                let mut i = 0;
+                while p.nth(i).kind() == SyntaxKind::Identifier
+                    && p.nth(i + 1).kind() == SyntaxKind::Dot
+                {
+                    i += 2;
+                }
+                let variation_shorthand = matches!(
+                    p.nth(i).as_str(),
+                    "font-variation-settings" | "default-font-variation-settings"
+                );
                 if !parse_qualified_name(&mut *p)
                     || !p.expect(SyntaxKind::Colon)
-                    || !parse_binding_expression(&mut *p)
+                    || !parse_binding_expression(&mut *p, variation_shorthand)
                 {
                     p.test(SyntaxKind::RBrace);
                     return false;
