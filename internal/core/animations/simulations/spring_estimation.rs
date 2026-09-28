@@ -7,6 +7,9 @@
 //!
 //! The math runs in `f64` exactly like the Kotlin implementation.
 
+#[cfg(not(feature = "std"))]
+use num_traits::Float;
+
 /// Returns the estimated time that the spring will last be at `delta`,
 /// in milliseconds.
 ///

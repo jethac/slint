@@ -766,7 +766,7 @@ impl InterpolatedPropertyValue for LogicalLength {
     }
 
     fn set_single_channel(&mut self, channel: f32) {
-        *self = LogicalLength::new(channel);
+        *self = LogicalLength::new(channel as crate::Coord);
     }
 }
 
