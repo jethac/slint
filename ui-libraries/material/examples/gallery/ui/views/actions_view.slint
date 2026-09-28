@@ -32,6 +32,8 @@ import {
     MaterialText,
     MaterialStyleMetrics,
     HorizontalDivider,
+    VerticalDivider,
+    Badge,
     Dialog,
     FullscreenDialog,
     MaterialAnimations,
@@ -326,6 +328,20 @@ export component ActionsView {
             ComponentCard {
                 title: "Badges";
 
+                HorizontalLayout {
+                    alignment: start;
+                    spacing: MaterialStyleMetrics.spacing_8;
+                    padding-bottom: MaterialStyleMetrics.spacing_8;
+
+                    Badge {
+                        text: "3";
+                    }
+
+                    Badge {
+                        text: "999+";
+                    }
+                }
+
                 NavigationBar {
                     items: [
                           {
@@ -520,6 +536,14 @@ export component ActionsView {
 
                 Horizontal {
                     HorizontalDivider {}
+
+                    HorizontalLayout {
+                        spacing: MaterialStyleMetrics.spacing_8;
+                        height: 40px;
+
+                        VerticalDivider {}
+                        VerticalDivider {}
+                    }
                 }
             }
         }
