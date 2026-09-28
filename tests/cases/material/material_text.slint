@@ -32,6 +32,18 @@ export component TestCase inherits MaterialWindow {
         }
 
         explicit-gsf-14 := Text { text: "abc"; font-family: "Google Sans Flex"; font-size: 14px; }
+
+        // MaterialWindow sets default-font-optical-sizing: none (Compose
+        // parity), so a plain TextInput renders at the axis default.
+        ti-themed := TextInput { text: "abc"; font-size: 14px; }
+        ti-none := TextInput { text: "abc"; font-size: 14px; font-optical-sizing: none; }
+        // opsz must be a live axis on Google Sans Flex for the parity check
+        // to mean anything.
+        ti-opsz60 := TextInput {
+            text: "abc";
+            font-size: 14px;
+            font-variation-settings: [{ tag: "opsz", value: 60 }];
+        }
     }
 
     out property <bool> fam: MaterialTheme.plain_family == "Google Sans Flex"
@@ -40,6 +52,11 @@ export component TestCase inherits MaterialWindow {
         && themed.font-metrics.descent == explicit-gsf.font-metrics.descent;
     out property <bool> mt-fam: material-text.font-metrics.ascent == explicit-gsf-14.font-metrics.ascent;
     out property <length> mt-height: material-text.height;
+    // TextInput under MaterialWindow renders at the axis default (none), not at
+    // size-pinned opsz — and the opsz pin proves the axis is live on the font.
+    out property <bool> opsz-parity: ti-themed.min-width == ti-none.min-width
+        && ti-opsz60.min-width != ti-none.min-width;
     // MaterialText forwards the style's absolute line height.
-    out property <bool> test: fam && themed-fam && mt-fam && material-text.height == 20phx;
+    out property <bool> test: fam && themed-fam && mt-fam && material-text.height == 20phx
+        && opsz-parity;
 }

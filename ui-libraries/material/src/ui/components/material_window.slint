@@ -13,6 +13,10 @@ export component MaterialWindow inherits Window {
 
     background: MaterialPalette.background;
     default-font-family: MaterialTheme.plain_family;
+    // Compose applies no variation settings to the type scale (TypeScaleTokens.kt
+    // pins no `opsz`), so Material text renders at the optical-size default even
+    // under a variable font: engine `auto` would tie `opsz` to the pixel size.
+    default-font-optical-sizing: none;
 
     changed disable_hover => {
         MaterialWindowAdapter.disable_hover = root.disable_hover;
