@@ -49,7 +49,9 @@ def estimate_critically_damped(first_root_real, p0, v0, delta):
         t_curr = max(t1, t2)
 
     t_inflection = -(r * c1 + c2) / (r * c2)
-    x_inflection = c1 * math.exp(r * t_inflection) + c2 * t_inflection * math.exp(r * t_inflection)
+    x_inflection = c1 * math.exp(r * t_inflection) + c2 * t_inflection * math.exp(
+        r * t_inflection
+    )
 
     if math.isnan(t_inflection) or t_inflection <= 0.0:
         signed_delta = -delta
@@ -122,15 +124,22 @@ def estimate_over_damped(first_root_real, second_root_real, p0, v0, delta):
 
 
 def estimate_duration_internal(
-    first_root_real, first_root_imaginary, second_root_real,
-    damping_ratio, initial_velocity, initial_position, delta,
+    first_root_real,
+    first_root_imaginary,
+    second_root_real,
+    damping_ratio,
+    initial_velocity,
+    initial_position,
+    delta,
 ):
     if initial_position == 0.0 and initial_velocity == 0.0:
         return 0
     v0 = -initial_velocity if initial_position < 0 else initial_velocity
     p0 = abs(initial_position)
     if damping_ratio > 1.0:
-        estimate = estimate_over_damped(first_root_real, second_root_real, p0, v0, delta)
+        estimate = estimate_over_damped(
+            first_root_real, second_root_real, p0, v0, delta
+        )
     elif damping_ratio < 1.0:
         estimate = estimate_under_damped(
             first_root_real, first_root_imaginary, p0, v0, delta
@@ -141,12 +150,19 @@ def estimate_duration_internal(
 
 
 def estimate_animation_duration_ms_with_mass(
-    spring_constant, damping_coefficient, mass, initial_velocity, initial_displacement, delta
+    spring_constant,
+    damping_coefficient,
+    mass,
+    initial_velocity,
+    initial_displacement,
+    delta,
 ):
     """`SpringEstimation.estimateAnimationDurationMillis` (mass overload)."""
     critical_damping = 2.0 * math.sqrt(spring_constant * mass)
     damping_ratio = damping_coefficient / critical_damping
-    partial_root = damping_coefficient * damping_coefficient - 4.0 * mass * spring_constant
+    partial_root = (
+        damping_coefficient * damping_coefficient - 4.0 * mass * spring_constant
+    )
     divisor = 1.0 / (2.0 * mass)
     partial_root_real = 0.0 if partial_root < 0.0 else math.sqrt(partial_root)
     partial_root_imaginary = math.sqrt(abs(partial_root)) if partial_root < 0.0 else 0.0
@@ -190,7 +206,9 @@ def main():
     for name, zeta, k in M3_TOKEN_SPECS:
         damping_coefficient = 2.0 * zeta * math.sqrt(k * MASS)
         row = [
-            estimate_animation_duration_ms_with_mass(k, damping_coefficient, MASS, v0, x0, DELTA)
+            estimate_animation_duration_ms_with_mass(
+                k, damping_coefficient, MASS, v0, x0, DELTA
+            )
             for x0, v0 in CASES
         ]
         print(f"    ({zeta}, {k:g}., {row}),  // {name}")

@@ -566,5 +566,3 @@ mod spring_regime_tests {
         assert!((current - 100.0).abs() < 100.5);
     }
 }
-
-

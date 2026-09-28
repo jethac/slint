@@ -2166,4 +2166,3 @@ mod animation_tests {
         check(linear.clone(), linear.clone());
     }
 }
-

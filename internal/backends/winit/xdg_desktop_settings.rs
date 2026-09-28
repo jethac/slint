@@ -46,11 +46,7 @@ impl DesktopSettings {
     /// Records one animation-toggle source and returns the combined state:
     /// reduced when either source says reduced. Tracking them independently
     /// keeps one namespace's update from erasing the other's.
-    pub(crate) fn update_reduced_motion(
-        &self,
-        source: ReducedMotionSource,
-        reduced: bool,
-    ) -> bool {
+    pub(crate) fn update_reduced_motion(&self, source: ReducedMotionSource, reduced: bool) -> bool {
         match source {
             ReducedMotionSource::Portal => self.motion_portal.set(Some(reduced)),
             ReducedMotionSource::Gnome => self.motion_gnome.set(Some(reduced)),
@@ -197,10 +193,11 @@ fn apply_reduce_motion_value(value: zbus::zvariant::OwnedValue, cx: &SettingsCon
         && let Some(shared) = cx.shared.upgrade()
         && let Some(ctx) = cx.ctx.upgrade()
     {
-        ctx.set_reduced_motion(shared.desktop_settings.update_reduced_motion(
-            ReducedMotionSource::Portal,
-            reduced == 1,
-        ));
+        ctx.set_reduced_motion(
+            shared
+                .desktop_settings
+                .update_reduced_motion(ReducedMotionSource::Portal, reduced == 1),
+        );
     }
 }
 
@@ -211,10 +208,9 @@ fn apply_enable_animations_value(value: zbus::zvariant::OwnedValue, cx: &Setting
         && let Some(shared) = cx.shared.upgrade()
         && let Some(ctx) = cx.ctx.upgrade()
     {
-        ctx.set_reduced_motion(shared.desktop_settings.update_reduced_motion(
-            ReducedMotionSource::Gnome,
-            !enabled,
-        ));
+        ctx.set_reduced_motion(
+            shared.desktop_settings.update_reduced_motion(ReducedMotionSource::Gnome, !enabled),
+        );
     }
 }
 

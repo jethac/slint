@@ -152,10 +152,7 @@ fn easing_curve_to_js<'a>(env: &'a Env, curve: &EasingCurve) -> Result<Object<'a
     o.set_named_property("type", env.create_string(easing_curve_type_name(curve))?)?;
     match curve {
         EasingCurve::CubicBezier([a, b, c, d]) => {
-            o.set_named_property(
-                "p",
-                vec![as_f64(*a), as_f64(*b), as_f64(*c), as_f64(*d)],
-            )?;
+            o.set_named_property("p", vec![as_f64(*a), as_f64(*b), as_f64(*c), as_f64(*d)])?;
         }
         EasingCurve::Spring(bounce) => {
             o.set_named_property("bounce", as_f64(*bounce))?;

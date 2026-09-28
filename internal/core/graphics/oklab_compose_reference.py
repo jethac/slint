@@ -107,8 +107,12 @@ def srgb_to_xyz_d65():
     one_wx_wy = (1.0 - wx) / wy
     rx_ry, gx_gy, bx_by, wx_wy = rx / ry, gx / gy, bx / by, wx / wy
     by_lum = (
-        (one_wx_wy - one_rx_ry) * (gx_gy - rx_ry) - (wx_wy - rx_ry) * (one_gx_gy - one_rx_ry)
-    ) / ((one_bx_by - one_rx_ry) * (gx_gy - rx_ry) - (bx_by - rx_ry) * (one_gx_gy - one_rx_ry))
+        (one_wx_wy - one_rx_ry) * (gx_gy - rx_ry)
+        - (wx_wy - rx_ry) * (one_gx_gy - one_rx_ry)
+    ) / (
+        (one_bx_by - one_rx_ry) * (gx_gy - rx_ry)
+        - (bx_by - rx_ry) * (one_gx_gy - one_rx_ry)
+    )
     gy_lum = (wx_wy - rx_ry - by_lum * (bx_by - rx_ry)) / (gx_gy - rx_ry)
     ry_lum = 1.0 - gy_lum - by_lum
     r_ry, g_gy, b_by = ry_lum / ry, gy_lum / gy, by_lum / by
@@ -173,7 +177,9 @@ def srgb_eotf(c):
 
 def srgb_to_oklab(r, g, b):
     """`Connector.transform` sRGB→Oklab, returning `(l, a, b)`."""
-    v = mul3x3f3(SRGB_TO_XYZ_D50, np.array([srgb_eotf(r), srgb_eotf(g), srgb_eotf(b)], dtype=f32))
+    v = mul3x3f3(
+        SRGB_TO_XYZ_D50, np.array([srgb_eotf(r), srgb_eotf(g), srgb_eotf(b)], dtype=f32)
+    )
     v = mul3x3f3(OKLAB_M1, v)
     v = np.cbrt(v).astype(f32)
     return mul3x3f3(OKLAB_M2, v)
