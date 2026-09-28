@@ -391,25 +391,59 @@ mod spring_regime_tests {
 
     /// The 12 `MaterialMotion` spring specs — `(damping_ratio, stiffness)` for
     /// `{default, fast, slow} × {spatial, effects}` in both the `standard` and
-    /// `expressive` schemes, from `MotionScheme.kt`/`MotionTokens` at the
-    /// pinned androidx commit (mirrored in
-    /// `ui-libraries/material/src/ui/styling/generated/material_motion_tokens.slint`).
-    const M3_TOKEN_SPECS: [(f32, f32); 12] = [
-        // standard scheme
-        (0.9, 700.),  // default spatial
-        (1.0, 1600.), // default effects
-        (0.9, 1400.), // fast spatial
-        (1.0, 3800.), // fast effects
-        (0.9, 300.),  // slow spatial
-        (1.0, 800.),  // slow effects
-        // expressive scheme
-        (0.8, 380.),  // default spatial
-        (1.0, 1600.), // default effects
-        (0.6, 800.),  // fast spatial
-        (1.0, 3800.), // fast effects
-        (0.8, 200.),  // slow spatial
-        (1.0, 800.),  // slow effects
-    ];
+    /// `expressive` schemes — parsed out of the #3 token pipeline's generated
+    /// output, so this list cannot drift from what the library ships. The
+    /// generated values mirror `MotionScheme.kt`/`MotionTokens` at the pinned
+    /// androidx commit.
+    fn m3_token_specs() -> [(f32, f32); 12] {
+        const GENERATED: &str = include_str!(
+            "../../../../ui-libraries/material/src/ui/styling/generated/material_motion_tokens.slint"
+        );
+        const ORDER: [&str; 6] = [
+            "default_spatial",
+            "default_effects",
+            "fast_spatial",
+            "fast_effects",
+            "slow_spatial",
+            "slow_effects",
+        ];
+        let mut specs = [(0.0f32, 0.0f32); 12];
+        for (i, global) in ["StandardMotionTokens", "ExpressiveMotionTokens"].iter().enumerate() {
+            let start = GENERATED
+                .find(&alloc::format!("export global {global} {{"))
+                .unwrap_or_else(|| panic!("{global} not found in generated motion tokens"));
+            let body = &GENERATED[start..start + GENERATED[start..].find("\n}").unwrap()];
+            let mut damping = [0.0f32; 6];
+            let mut stiffness = [0.0f32; 6];
+            for line in body.lines() {
+                let Some(rest) =
+                    line.trim().strip_prefix("out property <float> spring_")
+                else {
+                    continue;
+                };
+                let Some((name, value)) = rest.split_once(':') else { continue };
+                let name = name.trim();
+                let num: f32 = value
+                    .trim()
+                    .trim_end_matches(';')
+                    .trim()
+                    .parse()
+                    .unwrap_or_else(|_| panic!("unparsable spring value in {line:?}"));
+                let Some(idx) = ORDER.iter().position(|key| name.starts_with(key)) else {
+                    continue;
+                };
+                if name.ends_with("_damping") {
+                    damping[idx] = num;
+                } else if name.ends_with("_stiffness") {
+                    stiffness[idx] = num;
+                }
+            }
+            for j in 0..6 {
+                specs[i * 6 + j] = (damping[j], stiffness[j]);
+            }
+        }
+        specs
+    }
 
     /// Every regime matches the f64 reference trajectory, position and
     /// velocity, for all 12 `MaterialMotion` spring tokens plus damping edge
@@ -424,9 +458,7 @@ mod spring_regime_tests {
     /// `1e-2` absolute term.
     #[test]
     fn regime_matches_compose_reference() {
-        let specs = M3_TOKEN_SPECS
-            .iter()
-            .copied()
+        let specs = m3_token_specs().into_iter()
             // undamped, barely damped, and heavily overdamped edges
             .chain([(0.0, 380.), (0.01, 700.), (5.0, 300.), (1.0, 1200.)]);
         for (zeta, stiffness) in specs {
@@ -460,14 +492,35 @@ mod spring_regime_tests {
     #[test]
     fn retarget_preserves_velocity_and_settles() {
         let delta = crate::animations::SPRING_DEFAULT_DISPLACEMENT_THRESHOLD;
-        for &(zeta, k) in &M3_TOKEN_SPECS {
+        for &(zeta, k) in &m3_token_specs() {
             let mass = 1.0f32;
             let w_n = f32::sqrt(k / mass);
+            // Mid-flight means a different time for every token: half its
+            // estimated settle for a −100 → 0 approach (the stiff effects
+            // tokens are done in ~100 ms; a fixed 400 ms would already be at
+            // rest).
+            let settle_ms = super::super::spring_estimation::estimate_animation_duration_ms_with_mass(
+                k as f64,
+                2.0 * zeta as f64 * f64::sqrt(k as f64 * mass as f64),
+                mass as f64,
+                0.0,
+                -100.0,
+                delta as f64,
+            );
+            let mid_flight_secs = settle_ms as f32 / 2000.;
             for from_rest in [true, false] {
-                // Spring at rest at limit 100 (x0=0, v0=0) or 400 ms into a
-                // −100 → 0 approach.
+                // Spring at rest at limit 100 (x0=0, v0=0) or halfway through
+                // its settle time into a −100 → 0 approach.
                 let mut regime = SpringRegime::new(-100.0, 0.0, w_n, zeta);
-                let (rel_pos, rel_vel) = if from_rest { (0.0, 0.0) } else { regime.evaluate(0.4) };
+                let (rel_pos, rel_vel) =
+                    if from_rest { (0.0, 0.0) } else { regime.evaluate(mid_flight_secs) };
+                if !from_rest {
+                    assert!(
+                        rel_pos.abs() > delta || rel_vel.abs() > 0.05,
+                        "retarget point is not mid-flight: ζ={zeta} k={k} \
+                         t={mid_flight_secs}s pos={rel_pos} vel={rel_vel}"
+                    );
+                }
                 // The limit moves 100 → 200: re-anchor like `PhysicalSpringToLimit`.
                 regime = SpringRegime::new(rel_pos - 100.0, rel_vel, w_n, zeta);
                 let (pos, vel) = regime.evaluate(0.0);

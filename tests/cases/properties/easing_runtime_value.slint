@@ -38,8 +38,8 @@ instance.set_value(0.0);
 slint_testing::mock_elapsed_time(100);
 assert!(instance.get_value() < 109.06); // critically damped: no overshoot
 
-// Velocity carry-over: ζ=1 k=380 launched 0→100 is still moving at 300 ms;
-// retargeting to 200 continues from ~98 with v ≈ 33 px/s.
+// Velocity carry-over: ζ=1 k=380 launched 0→100 reaches ~79 at 150 ms still
+// moving ~306 px/s; retargeting to 200 carries both forward.
 instance.set_retargeted(100.0);
 slint_testing::mock_elapsed_time(150);
 instance.set_retargeted(200.0);
