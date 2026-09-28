@@ -122,6 +122,18 @@ export component TestCase inherits Window {
 }
 
 #[test]
+fn setting_the_line_height_selects_complex_text() {
+    let root = compile(
+        r#"
+export component TestCase inherits Window {
+    spaced := Text { text: "hello"; line-height: 20px; }
+}
+"#,
+    );
+    assert_eq!(class_of(&root, "spaced"), "ComplexText");
+}
+
+#[test]
 fn reading_the_line_height_factor_selects_complex_text() {
     let root = compile(
         r#"

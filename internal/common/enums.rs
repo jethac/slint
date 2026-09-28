@@ -72,6 +72,20 @@ macro_rules! for_each_enums {
                 Elide,
             }
 
+            /// This enum describes whether a variable font's optical-size axis (`opsz`)
+            /// tracks the rendered font size automatically, like the CSS
+            /// `font-optical-sizing` property.
+            pub enum FontOpticalSizing {
+                /// The setting is not specified here and resolves to the window's
+                /// `default-font-optical-sizing`, or `auto` when that is unset too.
+                Inherit,
+                /// The `opsz` axis is set to the font's used size.
+                Auto,
+                /// The `opsz` axis is not set automatically; it keeps the font's
+                /// default value unless set via `font-variation-settings`.
+                None,
+            }
+
             /// This enum describes the positioning of a text stroke relative to the border of the glyphs in a `Text` or `StyledText` element.
             #[non_exhaustive]
             enum TextStrokeStyle {

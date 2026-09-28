@@ -110,6 +110,11 @@ pub fn configure_test_fonts() {
         include_bytes!("../../../tests/screenshots/fonts/NotoSans-Italic.ttf"),
         include_bytes!("../../../tests/screenshots/fonts/NotoSansSymbols2-Regular.ttf"),
     ];
+    // Roboto Flex covers axes the NotoSans subsets lack (opsz, GRAD, slnt, ...) and is
+    // registered without joining the generic fallback chain, so it can only be reached by
+    // an explicit `font-family: "Roboto Flex"` and never changes another family's resolution.
+    static EXTRA_FONTS: &[&[u8]] =
+        &[include_bytes!("../../../tests/screenshots/fonts/RobotoFlex.ttf")];
 
     i_slint_core::with_existing_context(|ctx| {
         let mut font_context = ctx.font_context().borrow_mut();
@@ -130,6 +135,11 @@ pub fn configure_test_fonts() {
                     chain_families.push(*family_id);
                 }
             }
+        }
+        for font in EXTRA_FONTS {
+            font_context
+                .collection
+                .register_fonts(fontique::Blob::new(std::sync::Arc::new(*font)), None);
         }
         // Map the fallback generics plus monospace (used by markdown code spans) to the bundled
         // fonts, so all generic families resolve deterministically with system fonts disabled.

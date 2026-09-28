@@ -303,4 +303,18 @@ mod tests {
 
         assert_eq!(layout.line_height, Some(PhysicalLength::new(0)));
     }
+
+    #[test]
+    fn line_height_absolute_takes_precedence() {
+        let font_request = FontRequest {
+            pixel_size: Some(LogicalLength::new(20.)),
+            line_height_factor: Some(2.),
+            line_height: Some(LogicalLength::new(10.)),
+            ..Default::default()
+        };
+
+        let layout = text_layout_for_font(&TestFont, &font_request, ScaleFactor::new(1.));
+
+        assert_eq!(layout.line_height, Some(PhysicalLength::new(10)));
+    }
 }

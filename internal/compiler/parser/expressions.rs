@@ -34,7 +34,17 @@ use super::prelude::*;
 /// ```
 pub fn parse_expression(p: &mut impl Parser) -> bool {
     p.peek(); // consume the whitespace so they aren't part of the Expression node
-    parse_expression_helper(p, OperatorPrecedence::Default)
+    parse_expression_helper(p, OperatorPrecedence::Default, false)
+}
+
+/// Like `parse_expression`, but the `font-variation-settings` shorthand
+/// (`"wght" 700, "wdth" 75`) is accepted in the outermost expression position.
+/// Only used for the binding of properties declared as `[FontVariation]`, so
+/// that strings in every other expression context keep their usual meaning and
+/// diagnostics.
+pub fn parse_expression_allowing_variation_shorthand(p: &mut impl Parser) -> bool {
+    p.peek(); // consume the whitespace so they aren't part of the Expression node
+    parse_expression_helper(p, OperatorPrecedence::Default, true)
 }
 
 #[derive(Eq, PartialEq, Ord, PartialOrd)]
@@ -53,7 +63,11 @@ enum OperatorPrecedence {
     Unary,
 }
 
-fn parse_expression_helper(p: &mut impl Parser, precedence: OperatorPrecedence) -> bool {
+fn parse_expression_helper(
+    p: &mut impl Parser,
+    precedence: OperatorPrecedence,
+    variation_shorthand: bool,
+) -> bool {
     let mut p = p.start_node(SyntaxKind::Expression);
     let checkpoint = p.checkpoint();
     let mut possible_range = false;
@@ -65,7 +79,49 @@ fn parse_expression_helper(p: &mut impl Parser, precedence: OperatorPrecedence) 
             if p.nth(0).as_str().ends_with('{') {
                 parse_template_string(&mut *p)
             } else {
-                p.consume()
+                p.consume();
+                // A string literal followed by a value-like token starts the
+                // `font-variation-settings` shorthand, as in `"wght" 700, "wdth" 75`.
+                // The shorthand is only enabled in the outermost binding position of
+                // `[FontVariation]`-typed properties; everywhere else a string keeps
+                // its normal meaning. Strings are excluded as the value token
+                // (adjacent string literals concatenate) and so is `+` (string
+                // concatenation); only a negative literal introduces a value with a
+                // symbol.
+                let value_follows = variation_shorthand
+                    && (matches!(
+                        p.nth(0).kind(),
+                        SyntaxKind::NumberLiteral | SyntaxKind::Identifier
+                    ) || matches!(p.nth(0).kind(), SyntaxKind::Minus)
+                        && matches!(
+                            p.nth(1).kind(),
+                            SyntaxKind::NumberLiteral | SyntaxKind::Identifier
+                        ));
+                if value_follows {
+                    // Opened at the checkpoint so that it covers the string token;
+                    // the Expression wrapping the first axis tag is nested inside it.
+                    let mut p = p.start_node_at(checkpoint.clone(), SyntaxKind::FontVariationList);
+                    {
+                        let _ = p.start_node_at(checkpoint.clone(), SyntaxKind::Expression);
+                    }
+                    loop {
+                        if !parse_expression(&mut *p) {
+                            return false;
+                        }
+                        if !p.test(SyntaxKind::Comma) {
+                            break;
+                        }
+                        // Next axis tag: a bare string literal, deliberately not
+                        // parsed through parse_expression so it doesn't recurse
+                        // into the shorthand itself.
+                        {
+                            let mut p = p.start_node(SyntaxKind::Expression);
+                            if !p.expect(SyntaxKind::StringLiteral) {
+                                return false;
+                            }
+                        }
+                    }
+                }
             }
         }
         SyntaxKind::NumberLiteral => {
@@ -92,7 +148,7 @@ fn parse_expression_helper(p: &mut impl Parser, precedence: OperatorPrecedence) 
         SyntaxKind::Plus | SyntaxKind::Minus | SyntaxKind::Bang => {
             let mut p = p.start_node(SyntaxKind::UnaryOpExpression);
             p.consume();
-            parse_expression_helper(&mut *p, OperatorPrecedence::Unary);
+            parse_expression_helper(&mut *p, OperatorPrecedence::Unary, false);
         }
         SyntaxKind::At => {
             parse_at_keyword(&mut *p);
@@ -155,7 +211,7 @@ fn parse_expression_helper(p: &mut impl Parser, precedence: OperatorPrecedence) 
         }
         let mut p = p.start_node_at(checkpoint.clone(), SyntaxKind::BinaryExpression);
         p.consume();
-        parse_expression_helper(&mut *p, OperatorPrecedence::Mul);
+        parse_expression_helper(&mut *p, OperatorPrecedence::Mul, false);
     }
 
     if p.nth(0).kind() == SyntaxKind::Percent {
@@ -174,7 +230,7 @@ fn parse_expression_helper(p: &mut impl Parser, precedence: OperatorPrecedence) 
         }
         let mut p = p.start_node_at(checkpoint.clone(), SyntaxKind::BinaryExpression);
         p.consume();
-        parse_expression_helper(&mut *p, OperatorPrecedence::Add);
+        parse_expression_helper(&mut *p, OperatorPrecedence::Add, false);
     }
 
     if precedence > OperatorPrecedence::Equality {
@@ -199,7 +255,7 @@ fn parse_expression_helper(p: &mut impl Parser, precedence: OperatorPrecedence) 
         }
         let mut p = p.start_node_at(checkpoint.clone(), SyntaxKind::BinaryExpression);
         p.consume();
-        parse_expression_helper(&mut *p, OperatorPrecedence::Equality);
+        parse_expression_helper(&mut *p, OperatorPrecedence::Equality, false);
     }
 
     if precedence >= OperatorPrecedence::Logical {
@@ -222,7 +278,7 @@ fn parse_expression_helper(p: &mut impl Parser, precedence: OperatorPrecedence) 
         }
         let mut p = p.start_node_at(checkpoint.clone(), SyntaxKind::BinaryExpression);
         p.consume();
-        parse_expression_helper(&mut *p, OperatorPrecedence::Logical);
+        parse_expression_helper(&mut *p, OperatorPrecedence::Logical, false);
     }
 
     if p.nth(0).kind() == SyntaxKind::Question {
