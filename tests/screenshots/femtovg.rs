@@ -222,10 +222,7 @@ pub fn run_test(testcase: TestCase) -> Result<(), Box<dyn std::error::Error>> {
 
 /// Runs the `//PARITY=` checks on the FemtoVG renderer, re-instantiating the
 /// component per density.
-fn run_parity(
-    testcase: &TestCase,
-    source: &str,
-) -> Result<(), Box<dyn std::error::Error>> {
+fn run_parity(testcase: &TestCase, source: &str) -> Result<(), Box<dyn std::error::Error>> {
     let spec = test_driver_lib::extract_parity(source);
     if spec.parity.is_none() {
         return Ok(());
@@ -244,9 +241,9 @@ fn run_parity(
         },
         |density| {
             let component = def.create().unwrap();
-            component.window().dispatch_event(WindowEvent::ScaleFactorChanged {
-                scale_factor: density as f32,
-            });
+            component
+                .window()
+                .dispatch_event(WindowEvent::ScaleFactorChanged { scale_factor: density as f32 });
             component.window().set_size(i_slint_core::api::WindowSize::Physical(
                 PhysicalSize::new(w * density, h * density),
             ));

@@ -136,9 +136,11 @@ fn run_parity(
         },
         |density| {
             let component = def.create().unwrap();
-            component.window().dispatch_event(i_slint_core::platform::WindowEvent::ScaleFactorChanged {
-                scale_factor: density as f32,
-            });
+            component.window().dispatch_event(
+                i_slint_core::platform::WindowEvent::ScaleFactorChanged {
+                    scale_factor: density as f32,
+                },
+            );
             component.window().set_size(i_slint_core::api::WindowSize::Physical(
                 PhysicalSize::new(w * density, h * density),
             ));
