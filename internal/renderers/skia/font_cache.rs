@@ -63,6 +63,8 @@ pub struct FontCache {
     // Outline paths rasterized at exact variation coordinates, for fonts whose
     // typeface can't take variation arguments. Keyed by glyph + coords + size.
     glyph_paths: CLruCache<(HashedBlob, u32, u32, u32, u64), Option<skia_safe::Path>>,
+    // Whether the face has an `opsz` fvar axis, per (blob, index).
+    has_opsz_axis: std::collections::HashMap<(HashedBlob, u32), bool>,
 }
 
 impl Default for FontCache {
@@ -71,6 +73,7 @@ impl Default for FontCache {
             font_mgr: skia_safe::FontMgr::new(),
             fonts: CLruCache::new(FONT_CACHE_CAPACITY),
             glyph_paths: CLruCache::new(GLYPH_PATH_CACHE_CAPACITY),
+            has_opsz_axis: Default::default(),
         }
     }
 }
@@ -87,9 +90,12 @@ impl FontCache {
         synthesis: &fontique::Synthesis,
         variations: &[parley::style::FontVariation],
     ) -> Option<skia_safe::Typeface> {
-        let variation_settings = i_slint_core::textlayout::sharedparley::merged_variation_settings(
-            synthesis, variations,
-        );
+        let mut variation_settings =
+            i_slint_core::textlayout::sharedparley::merged_variation_settings(
+                synthesis,
+                variations,
+            );
+        self.without_unsupported_opsz(font, &mut variation_settings);
         let variations_hash = variation_settings_hash(&variation_settings);
 
         let key = (font.data.clone().into(), font.index, variations_hash);
@@ -139,12 +145,14 @@ impl FontCache {
         pixel_size: f32,
         variation_settings: &[(u32, f32)],
     ) -> Option<skia_safe::Path> {
+        let mut variation_settings = variation_settings.to_vec();
+        self.without_unsupported_opsz(font, &mut variation_settings);
         let key = (
             font.data.clone().into(),
             font.index,
             glyph,
             pixel_size.to_bits(),
-            variation_settings_hash(variation_settings),
+            variation_settings_hash(&variation_settings),
         );
         if let Some(cached) = self.glyph_paths.get(&key) {
             return cached.clone();
@@ -176,6 +184,35 @@ impl FontCache {
 
         self.glyph_paths.put(key, path.clone());
         path
+    }
+
+    /// Drops the automatically injected `opsz` pair when the face has no
+    /// `opsz` fvar axis: `font-optical-sizing: auto` on such a font must keep
+    /// the base instance rather than clone a typeface carrying an axis it
+    /// can't take (which also splits the cache per pixel size).
+    fn without_unsupported_opsz(
+        &mut self,
+        font: &parley::FontData,
+        variation_settings: &mut Vec<(u32, f32)>,
+    ) {
+        const OPSZ: u32 = u32::from_be_bytes(*b"opsz");
+        if !variation_settings.iter().any(|&(tag, _)| tag == OPSZ) {
+            return;
+        }
+        let has_opsz = *self
+            .has_opsz_axis
+            .entry((font.data.clone().into(), font.index))
+            .or_insert_with(|| {
+                use skrifa::MetadataProvider;
+                skrifa::FontRef::from_index(font.data.as_ref(), font.index)
+                    .map(|font_ref| {
+                        font_ref.axes().iter().any(|axis| axis.tag() == skrifa::Tag::new(b"opsz"))
+                    })
+                    .unwrap_or_default()
+            });
+        if !has_opsz {
+            variation_settings.retain(|&(tag, _)| tag != OPSZ);
+        }
     }
 
     fn load_typeface_internal(&self, font: &parley::FontData) -> Option<skia_safe::Typeface> {

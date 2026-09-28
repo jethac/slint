@@ -504,18 +504,19 @@ impl InterpolatedPropertyValue for u8 {
 }
 
 /// Two axis lists interpolate like CSS `font-variation-settings`: entry-wise
-/// when both lists pair up (same length, same tag at each position), snapping
-/// to the target otherwise.
+/// when both lists pair up (same length, same tag at each position). Lists
+/// that don't pair up animate discretely, switching to the target halfway
+/// through the progress like a CSS discrete animation.
 impl InterpolatedPropertyValue for crate::model::ModelRc<crate::items::FontVariation> {
     fn interpolate(&self, target_value: &Self, t: f32) -> Self {
         use crate::model::Model as _;
         if self.row_count() != target_value.row_count() {
-            return target_value.clone();
+            return if t < 0.5 { self.clone() } else { target_value.clone() };
         }
         let mut rows = alloc::vec::Vec::with_capacity(self.row_count());
         for (from, to) in self.iter().zip(target_value.iter()) {
             if from.tag != to.tag {
-                return target_value.clone();
+                return if t < 0.5 { self.clone() } else { target_value.clone() };
             }
             rows.push(crate::items::FontVariation {
                 tag: to.tag.clone(),

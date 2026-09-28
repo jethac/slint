@@ -89,7 +89,9 @@ impl InterpolatedPropertyValue for Value {
 
 /// A `[FontVariation]`-typed model animates like CSS `font-variation-settings`:
 /// rows pair up by position and rows whose `tag` fields match interpolate
-/// their `value`; any other model, or a shape mismatch, snaps to the target.
+/// their `value`. Any other model, or a shape mismatch, animates discretely,
+/// switching to the target halfway through the progress like a CSS discrete
+/// animation.
 fn interpolate_font_variations(
     from: &i_slint_core::model::ModelRc<Value>,
     to: &i_slint_core::model::ModelRc<Value>,
@@ -97,15 +99,15 @@ fn interpolate_font_variations(
 ) -> Value {
     use i_slint_core::model::Model as _;
     if from.row_count() != to.row_count() {
-        return Value::Model(to.clone());
+        return Value::Model(if t < 0.5 { from.clone() } else { to.clone() });
     }
     let mut rows = std::vec::Vec::with_capacity(from.row_count());
     for (from_row, to_row) in from.iter().zip(to.iter()) {
         let (Value::Struct(from_row), Value::Struct(to_row)) = (&from_row, &to_row) else {
-            return Value::Model(to.clone());
+            return Value::Model(if t < 0.5 { from.clone() } else { to.clone() });
         };
         if from_row.get_field("tag") != to_row.get_field("tag") {
-            return Value::Model(to.clone());
+            return Value::Model(if t < 0.5 { from.clone() } else { to.clone() });
         }
         let mut row = to_row.clone();
         if let (Some(Value::Number(a)), Some(Value::Number(b))) =

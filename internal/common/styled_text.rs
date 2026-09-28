@@ -862,7 +862,7 @@ fn parse_font_variation_settings(value: &str) -> Option<Vec<(String, f32)>> {
     }
     let mut settings = Vec::new();
     for pair in value.split(',') {
-        let mut it = pair.trim().split_whitespace();
+        let mut it = pair.split_whitespace();
         let tag = it.next()?.trim_matches(|c| c == '\'' || c == '"');
         if tag.len() != 4 || !tag.bytes().all(|b| (b' '..=b'~').contains(&b)) {
             return None;
