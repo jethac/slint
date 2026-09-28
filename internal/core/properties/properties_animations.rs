@@ -96,6 +96,13 @@ pub(super) struct PropertyValueAnimationData<T> {
     spring: Option<PropertySpring>,
     /// Whether the final iteration's spring has already been re-damped
     spring_settle_clamped: bool,
+    /// Set while an infinite animation (`iteration_count < 0`) is parked at its
+    /// end value because the duration scale is 0 — Compose's
+    /// `InfiniteTransition` `skipToEnd()` + suspend, which stops requesting
+    /// frames instead of spinning at the end value. The `duration_scale` read
+    /// inside `compute_interpolated_value` keeps the binding registered as a
+    /// dependent of the scale property, so a later scale change wakes it.
+    suspended_at_zero: bool,
 }
 
 /// How a spring animates the value: the normalized legacy `spring(bounce)` or a
@@ -148,6 +155,7 @@ impl<T: InterpolatedPropertyValue + Clone> PropertyValueAnimationData<T> {
             map: None,
             spring,
             spring_settle_clamped: false,
+            suspended_at_zero: false,
         }
     }
 
@@ -274,12 +282,25 @@ impl<T: InterpolatedPropertyValue + Clone> PropertyValueAnimationData<T> {
 
     /// The current velocity (one value per channel, in channel units per scaled
     /// second) of a live spring animation.
+    ///
+    /// Also answers for a binding that was installed but not evaluated yet
+    /// (`Delaying`), so a `set_animated_value` retarget made before the next
+    /// frame still carries the outgoing spring's velocity: its regime was
+    /// computed at install and can be sampled analytically. During the `delay`
+    /// window the spring hasn't started — like Compose's
+    /// `SuspendAnimation.getVelocityVectorFromNanos`, which clamps `playTimeNanos`
+    /// at 0, the regime's initial velocity is reported.
     fn current_channel_velocities(&self) -> Option<Vec<f32>> {
-        if !matches!(self.state, AnimationState::Animating { .. }) {
+        if matches!(self.state, AnimationState::Done { .. }) {
             return None;
         }
         let spring = self.spring.as_ref()?;
-        let elapsed_secs = self.scaled_elapsed_secs(crate::animations::current_tick());
+        let elapsed_secs = if matches!(self.state, AnimationState::Delaying) {
+            let delay_secs = self.details.delay.max(0) as f32 / 1000.0;
+            (self.scaled_elapsed_secs(crate::animations::current_tick()) - delay_secs).max(0.0)
+        } else {
+            self.scaled_elapsed_secs(crate::animations::current_tick())
+        };
         let to_value = self.to_value.as_ref().expect("The animation should have a to_value");
         match spring {
             PropertySpring::DurationBounce(spring) => {
@@ -331,6 +352,24 @@ impl<T: InterpolatedPropertyValue + Clone> PropertyValueAnimationData<T> {
                 AnimationDirection::AlternateReverse => iteration % 2 == 0,
             }
         };
+
+        // Compose `InfiniteTransition.run` (pin …:182-194): at duration scale 0
+        // every animation is `skipToEnd()`ed and the frame loop then suspends
+        // until the scale rises above 0. The binding stays installed (the caller
+        // sees `suspended_at_zero` and requests no frames) — the scale property
+        // read above keeps it subscribed, so it wakes on the next change. On
+        // wake-up Compose also `reset()`s the animations, so restart from 0.
+        if self.details.iteration_count < 0. {
+            if scale <= 0.0 {
+                self.suspended_at_zero = true;
+                return (self.apply_map(to_value), false);
+            }
+            if core::mem::take(&mut self.suspended_at_zero) {
+                self.start_time = new_tick;
+                self.state = AnimationState::Animating { current_iteration: 0 };
+                time_progress = 0;
+            }
+        }
 
         match self.state {
             AnimationState::Delaying => {
@@ -391,19 +430,14 @@ impl<T: InterpolatedPropertyValue + Clone> PropertyValueAnimationData<T> {
                         self.spring.as_ref()
                     {
                         if scale <= 0.0 {
-                            // Duration scale 0: report the end-of-iteration (settled)
-                            // value directly instead of advancing iterations, which
-                            // would recurse without bound for `iteration-count: -1`.
-                            if self.details.iteration_count >= 0. {
-                                self.state = AnimationState::Done {
-                                    iteration_count: (self.details.iteration_count.ceil() as u64)
-                                        .saturating_sub(1),
-                                };
-                                return self.compute_interpolated_value();
-                            }
-                            let progress = if reversed(current_iteration) { 0. } else { 1. };
-                            let val = self.from_value.interpolate(&to_value, progress);
-                            return (self.apply_map(val), false);
+                            // Duration scale 0 on a finite animation: report the
+                            // settled end-of-iteration value directly. (Infinite
+                            // ones are suspended before this match.)
+                            self.state = AnimationState::Done {
+                                iteration_count: (self.details.iteration_count.ceil() as u64)
+                                    .saturating_sub(1),
+                            };
+                            return self.compute_interpolated_value();
                         }
                         let next_iteration = current_iteration + 1;
                         let has_more_iterations = self.details.iteration_count < 0.
@@ -490,22 +524,16 @@ impl<T: InterpolatedPropertyValue + Clone> PropertyValueAnimationData<T> {
                 let duration = self.details.duration as u64;
                 if time_progress >= duration {
                     if scale <= 0.0 {
-                        if self.details.iteration_count >= 0. {
-                            // Finite animations snap to and finish at the end of
-                            // their last iteration, like Compose's
-                            // `playTimeNanos = durationNanos` at scale 0 in
-                            // `SuspendAnimation.kt`.
-                            self.state = AnimationState::Done {
-                                iteration_count: (self.details.iteration_count.ceil() as u64)
-                                    .saturating_sub(1),
-                            };
-                            return self.compute_interpolated_value();
-                        }
-                        // Infinite animations pin at their end value and keep
-                        // running (`getValueFromNanos(durationNanos)`).
-                        current_iteration = 0;
-                        time_progress = duration;
-                        self.start_time = crate::animations::Instant(new_tick.0);
+                        // Finite animations snap to and finish at the end of
+                        // their last iteration, like Compose's
+                        // `playTimeNanos = durationNanos` at scale 0 in
+                        // `SuspendAnimation.kt`. (Infinite ones suspend before
+                        // this match.)
+                        self.state = AnimationState::Done {
+                            iteration_count: (self.details.iteration_count.ceil() as u64)
+                                .saturating_sub(1),
+                        };
+                        return self.compute_interpolated_value();
                     } else {
                         // wrap around
                         current_iteration =
@@ -582,11 +610,13 @@ impl<T: InterpolatedPropertyValue + Clone, A: Fn() -> AnimationDetail> BindingCa
         );
         match self.state.get() {
             AnimatedBindingState::Animating => {
-                let (val, finished) = self.animation_data.borrow_mut().compute_interpolated_value();
+                let mut animation_data = self.animation_data.borrow_mut();
+                let (val, finished) = animation_data.compute_interpolated_value();
+                let suspended = animation_data.suspended_at_zero;
                 *value = val;
                 if finished {
                     self.state.set(AnimatedBindingState::NotAnimating)
-                } else {
+                } else if !suspended {
                     crate::animations::CURRENT_ANIMATION_DRIVER
                         .with(|driver| driver.set_has_active_animations());
                 }
@@ -630,10 +660,11 @@ impl<T: InterpolatedPropertyValue + Clone, A: Fn() -> AnimationDetail> BindingCa
 
                 self.state.set(AnimatedBindingState::Animating);
                 let (val, finished) = animation_data.compute_interpolated_value();
+                let suspended = animation_data.suspended_at_zero;
                 *value = val;
                 if finished {
                     self.state.set(AnimatedBindingState::NotAnimating)
-                } else {
+                } else if !suspended {
                     crate::animations::CURRENT_ANIMATION_DRIVER
                         .with(|driver| driver.set_has_active_animations());
                 }
@@ -646,7 +677,10 @@ impl<T: InterpolatedPropertyValue + Clone, A: Fn() -> AnimationDetail> BindingCa
             return;
         }
         let original_dirty = self.original_binding.access(|b| b.unwrap().dirty.get());
-        if original_dirty {
+        // A suspended infinite animation is woken by a `duration_scale` change —
+        // the dependency that dirtied this binding then — which never touches
+        // the original binding.
+        if original_dirty || self.animation_data.borrow().suspended_at_zero {
             *self.carried_velocity.borrow_mut() =
                 self.animation_data.borrow().current_channel_velocities().unwrap_or_default();
             self.state.set(AnimatedBindingState::ShouldStart);
@@ -840,13 +874,17 @@ impl<T: InterpolatedPropertyValue + Clone + 'static> BindingCallable<T>
     for AnimatedValueBinding<T>
 {
     fn evaluate(self: Pin<&Self>, value: &mut T) -> BindingResult {
-        let (val, finished) = self.animation_data.borrow_mut().compute_interpolated_value();
+        let mut animation_data = self.animation_data.borrow_mut();
+        let (val, finished) = animation_data.compute_interpolated_value();
+        let suspended = animation_data.suspended_at_zero;
         *value = val;
         if finished {
             BindingResult::RemoveBinding
         } else {
-            crate::animations::CURRENT_ANIMATION_DRIVER
-                .with(|driver| driver.set_has_active_animations());
+            if !suspended {
+                crate::animations::CURRENT_ANIMATION_DRIVER
+                    .with(|driver| driver.set_has_active_animations());
+            }
             BindingResult::KeepBinding
         }
     }
@@ -2128,3 +2166,4 @@ mod animation_tests {
         check(linear.clone(), linear.clone());
     }
 }
+

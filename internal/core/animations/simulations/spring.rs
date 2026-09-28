@@ -342,37 +342,50 @@ mod spring_regime_tests {
         assert_approx_eq!(vel, -X0 * W_N);
     }
 
-    /// Reference closed-form solution of the spring ODE in `f64`, matching
-    /// androidx `SpringSimulation` (`SpringSimulation.kt`) at the pinned commit.
-    /// `x0`/`v0` are measured relative to the target.
+    /// Structural port of `SpringSimulation.updateValues` from androidx
+    /// `SpringSimulation.kt` (pinned commit
+    /// 23327507f7fc7d5b19d65fec4b090f60c970079b), in `f64`: the reference
+    /// trajectory the `f32` `SpringRegime` is checked against. `x0`/`v0` are
+    /// measured relative to the target (`finalPosition == 0`), so
+    /// `adjustedDisplacement` is `x0` and `displacement` is the returned
+    /// relative position.
     fn reference(t: f64, x0: f64, v0: f64, zeta: f64, w_n: f64) -> (f64, f64) {
-        if zeta < 1.0 {
-            let w_d = w_n * f64::sqrt(1.0 - zeta * zeta);
-            let e = f64::exp(-zeta * w_n * t);
-            let c2 = (v0 + zeta * w_n * x0) / w_d;
-            let pos = e * (x0 * f64::cos(w_d * t) + c2 * f64::sin(w_d * t));
-            let vel =
-                -zeta * w_n * pos + e * w_d * (-x0 * f64::sin(w_d * t) + c2 * f64::cos(w_d * t));
-            (pos, vel)
+        let damping_ratio_squared = zeta * zeta;
+        let r = -zeta * w_n;
+        if zeta > 1.0 {
+            // Over damping
+            let s = w_n * f64::sqrt(damping_ratio_squared - 1.0);
+            let gamma_plus = r + s;
+            let gamma_minus = r - s;
+            let coeff_b = (gamma_minus * x0 - v0) / (gamma_minus - gamma_plus);
+            let coeff_a = x0 - coeff_b;
+            let displacement =
+                coeff_a * f64::exp(gamma_minus * t) + coeff_b * f64::exp(gamma_plus * t);
+            let velocity = coeff_a * gamma_minus * f64::exp(gamma_minus * t)
+                + coeff_b * gamma_plus * f64::exp(gamma_plus * t);
+            (displacement, velocity)
+        } else if zeta == 1.0 {
+            // Critically damped
+            let coeff_a = x0;
+            let coeff_b = v0 + w_n * x0;
+            let n_fd_t = -w_n * t;
+            let displacement = (coeff_a + coeff_b * t) * f64::exp(n_fd_t);
+            let velocity =
+                (coeff_a + coeff_b * t) * f64::exp(n_fd_t) * (-w_n) + coeff_b * f64::exp(n_fd_t);
+            (displacement, velocity)
         } else {
-            // Compose uses the "real mode" expression for zeta > 1 and a
-            // critically damped form at zeta == 1.
-            if (zeta - 1.0).abs() < 1e-9 {
-                let e = f64::exp(-w_n * t);
-                let c2 = v0 + w_n * x0;
-                let pos = e * (x0 + c2 * t);
-                let vel = e * (c2 - w_n * (x0 + c2 * t));
-                (pos, vel)
-            } else {
-                let disc = f64::sqrt(zeta * zeta - 1.0);
-                let r1 = w_n * (-zeta + disc);
-                let r2 = w_n * (-zeta - disc);
-                let c1 = (v0 - r2 * x0) / (r1 - r2);
-                let c2 = x0 - c1;
-                let pos = c1 * f64::exp(r1 * t) + c2 * f64::exp(r2 * t);
-                let vel = c1 * r1 * f64::exp(r1 * t) + c2 * r2 * f64::exp(r2 * t);
-                (pos, vel)
-            }
+            // Underdamped
+            let damped_freq = w_n * f64::sqrt(1.0 - damping_ratio_squared);
+            let cos_coeff = x0;
+            let sin_coeff = (-r * x0 + v0) / damped_freq;
+            let d_fd_t = damped_freq * t;
+            let displacement =
+                f64::exp(r * t) * (cos_coeff * f64::cos(d_fd_t) + sin_coeff * f64::sin(d_fd_t));
+            let velocity = displacement * r
+                + f64::exp(r * t)
+                    * (-damped_freq * cos_coeff * f64::sin(d_fd_t)
+                        + damped_freq * sin_coeff * f64::cos(d_fd_t));
+            (displacement, velocity)
         }
     }
 
@@ -553,3 +566,5 @@ mod spring_regime_tests {
         assert!((current - 100.0).abs() < 100.5);
     }
 }
+
+
