@@ -518,9 +518,6 @@ struct LayerResult {
     /// Strict failures inside `count_in` — a negative case asserts its catch
     /// within the region the mutation affected, not anywhere in the frame.
     pub strict_failures_in_region: usize,
-    /// Bounding box (x0, y0, x1, y1, in device px) of the strict-layer
-    /// failures, when any.
-    pub strict_bbox: Option<(usize, usize, usize, usize)>,
 }
 
 /// Compare `actual` against `expected` under the per-pixel layer mask:
@@ -547,7 +544,6 @@ fn layered_compare(
             diff: None,
             strict_failures: 0,
             strict_failures_in_region: 0,
-            strict_bbox: None,
         };
     }
 
@@ -566,7 +562,6 @@ fn layered_compare(
             diff: None,
             strict_failures: 0,
             strict_failures_in_region: 0,
-            strict_bbox: None,
         };
     }
     let w = actual.width() as usize;
@@ -684,7 +679,6 @@ fn layered_compare(
         diff: if strict_failures == 0 && text_failures.is_empty() { None } else { Some(diff_img) },
         strict_failures,
         strict_failures_in_region,
-        strict_bbox,
     }
 }
 
