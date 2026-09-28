@@ -3,7 +3,7 @@
 
 // Coordinated springs: a segmented-button group where one `selected` toggle
 // drives two widths on the M3 fast-spatial spring (ζ = 0.6, k = 800) and an
-// opacity on the default-effects spring (ζ = 1, k = 1600). `second-x` is a
+// opacity on the slow-spatial spring (ζ = 0.9, k = 300). `second-x` is a
 // plain binding onto the animated `first-width`, so the neighbor tracks the
 // live spring output — equal to it on every tick, never the target. The
 // second leg of the test toggles mid-flight: the retargeted springs continue
@@ -22,7 +22,7 @@ export component TestCase inherits Rectangle {
     in-out property <length> second-x: first-width;
 
     in-out property <float> selected-opacity: second-selected ? 1.0 : 0.5;
-    animate selected-opacity { easing: spring(1.0, 1600); }
+    animate selected-opacity { easing: spring(0.9, 300); }
 }
 
 /*
@@ -32,6 +32,12 @@ fn assert_approx(value: f32, expected: f32) {
 }
 
 let instance = TestCase::new().unwrap();
+// Read the properties once: the binding has to have run once for
+// `second-selected` to know it has dependents to retarget.
+assert_eq!(instance.get_first_width(), 40.0);
+assert_eq!(instance.get_second_width(), 20.0);
+assert_eq!(instance.get_second_x(), 40.0);
+assert_eq!(instance.get_selected_opacity(), 0.5);
 instance.set_second_selected(true);
 
 slint_testing::mock_elapsed_time(150);
@@ -64,7 +70,7 @@ assert_eq!(instance.get_second_x(), instance.get_first_width());
 slint_testing::mock_elapsed_time(99); // +100ms after retarget
 assert_approx(instance.get_second_width(), 19.74);
 assert_approx(instance.get_first_width(), 40.26);
-assert_approx(instance.get_selected_opacity(), 0.71);
+assert_approx(instance.get_selected_opacity(), 0.73);
 assert_eq!(instance.get_second_x(), instance.get_first_width());
 
 slint_testing::mock_elapsed_time(1100); // settle
@@ -81,6 +87,10 @@ auto assert_approx = [](float value, float expected) {
     assert(std::abs(value - expected) < 0.05);
 };
 
+assert(instance.get_first_width() == 40.0);
+assert(instance.get_second_width() == 20.0);
+assert(instance.get_second_x() == 40.0);
+assert(instance.get_selected_opacity() == 0.5);
 instance.set_second_selected(true);
 
 slint_testing::mock_elapsed_time(150);
@@ -108,7 +118,7 @@ assert(instance.get_second_x() == instance.get_first_width());
 slint_testing::mock_elapsed_time(99);
 assert_approx(instance.get_second_width(), 19.74);
 assert_approx(instance.get_first_width(), 40.26);
-assert_approx(instance.get_selected_opacity(), 0.71);
+assert_approx(instance.get_selected_opacity(), 0.73);
 assert(instance.get_second_x() == instance.get_first_width());
 
 slint_testing::mock_elapsed_time(1100);
@@ -120,6 +130,10 @@ assert(instance.get_second_x() == instance.get_first_width());
 
 ```js
 var instance = new slint.TestCase({});
+assert(instance.first_width === 40);
+assert(instance.second_width === 20);
+assert(instance.second_x === 40);
+assert(instance.selected_opacity === 0.5);
 instance.second_selected = true;
 
 slintlib.private_api.mock_elapsed_time(150);
@@ -147,7 +161,7 @@ assert(instance.second_x === instance.first_width);
 slintlib.private_api.mock_elapsed_time(99);
 assert(Math.abs(instance.second_width - 19.74) < 0.05);
 assert(Math.abs(instance.first_width - 40.26) < 0.05);
-assert(Math.abs(instance.selected_opacity - 0.71) < 0.05);
+assert(Math.abs(instance.selected_opacity - 0.73) < 0.05);
 assert(instance.second_x === instance.first_width);
 
 slintlib.private_api.mock_elapsed_time(1100);

@@ -775,6 +775,10 @@ pub fn lower_animation(a: &PropertyAnimation, ctx: &mut ExpressionLoweringCtx<'_
             (SmolStr::new_static("initial-velocity"), Type::Float32),
             (SmolStr::new_static("delay"), Type::Int32),
             (SmolStr::new_static("enabled"), Type::Bool),
+            // Internal-only runtime field (`PropertyAnimation::visibility_threshold`):
+            // not an `animate` property, emitted as 0 so compiled code falls back to
+            // the animated type's own settle threshold.
+            (SmolStr::new_static("visibility-threshold"), Type::Float32),
         ])
     }
 
