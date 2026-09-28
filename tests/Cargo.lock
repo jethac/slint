@@ -2318,6 +2318,7 @@ dependencies = [
  "either",
  "flate2",
  "i-slint-common",
+ "i-slint-core",
  "icu_normalizer",
  "icu_properties",
  "image",

@@ -1,0 +1,35 @@
+// Copyright © SixtyFPS GmbH <info@slint.dev>
+// SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0
+
+// Invalid shape inputs must produce a runtime warning and a defined result
+// (the empty shape, or a morph snapped to its target) — never a panic.
+// The arguments are non-constant so they reach the runtime, not the
+// compile-time checks.
+
+export component TestCase inherits Rectangle {
+    in-out property<shape> unset;
+    in-out property<shape> circle8: Shapes.circle(8);
+
+    in property<string> bad-path: "totally not a path";
+    in property<string> multi-outline-path: "M0 0L1 0L1 1Z M2 2L3 2L3 3Z";
+    in property<string> percent-path: "M0 0L50% 0Z";
+    in property<float> bad-inner-radius: 2;
+    in property<float> bad-radius: -1;
+    in property<int> bad-vertex-count: 2;
+
+    out property<bool> test:
+        Shapes.star(4, bad-inner-radius, {radius: 0, smoothing: 0}, {radius: 0, smoothing: 0}) == unset
+        && Shapes.circle(bad-vertex-count) == unset
+        && Shapes.path(bad-path) == unset
+        // Multi-outline and % paths warn and produce the empty shape at runtime.
+        && Shapes.path(multi-outline-path) == unset
+        && Shapes.path(percent-path) == unset
+        && Shapes.pill(-5, bad-radius, 0) == unset
+        && Shapes.regular-polygon(bad-vertex-count, {radius: 0, smoothing: 0}) == unset
+        // Kotlin produces a polygon for negative sizes; don't reject it.
+        && Shapes.rectangle(bad-radius, 10, [{radius: 0, smoothing: 0}]) != unset
+        // Morphing to/from an unmeasurable shape degenerates to the finite
+        // endpoint instead of panicking.
+        && Shapes.morph(unset, circle8, 0.5) == circle8
+        && Shapes.morph(circle8, unset, 0.5) == unset;
+}

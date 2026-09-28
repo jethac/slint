@@ -4835,6 +4835,7 @@ dependencies = [
  "derive_more",
  "either",
  "i-slint-common",
+ "i-slint-core",
  "icu_normalizer",
  "icu_properties",
  "image",

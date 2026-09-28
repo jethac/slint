@@ -78,7 +78,7 @@ macro_rules! generate_builtin_structs_pyi {
     ($(
         $(#[doc = $struct_doc:literal])*
         $(#[non_exhaustive])?
-        $(#[derive(Copy, Eq)])?
+        $(#[derive(Copy $(, Eq)?)])?
         $vis:vis struct $Name:ident {
             $( $(#[doc = $field_doc:literal])* $field:ident : $field_type:ident $(= $field_default:expr)?, )*
         }

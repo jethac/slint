@@ -1,0 +1,30 @@
+// Copyright © SixtyFPS GmbH <info@slint.dev>
+// SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0
+
+export component Foo {
+    property<shape> ok: Shapes.path("M0 0L40 0L40 40Z");
+
+    property<shape> ok_evenodd: Shapes.path(FillRule.evenodd, "M0 0L40 0L40 40Z");
+
+    property<shape> multiple_outlines: Shapes.path("M0 0L10 0L10 10Z M20 20L30 20L30 30Z");
+//                                            >  <error{a shape path must describe a single outline}
+
+    property<shape> relative_move: Shapes.path("M0 0L10 0L10 10Z m20 20l10 0l0 10z");
+//                                        >  <error{a shape path must describe a single outline}
+
+    property<shape> percent_in_path: Shapes.path("M0 0L50% 0L40 40Z");
+//                                          >  <error{percentages are not supported in shape paths}
+
+    property<shape> percent_arg: Shapes.path(50%);
+//                                      >  <error{percentages are not supported in shape paths}
+
+    property<shape> not_a_move: Shapes.path("L0 0L40 40Z");
+//                                     >  <error{SVG path data must start with a move command}
+
+    property<shape> empty: Shapes.path("");
+//                                >  <error{Polygons must have at least 2 features}
+
+    property<shape> bad_fill_rule: Shapes.path(bogus, "M0 0L40 0L40 40Z");
+//                                             >   <error{Unknown unqualified identifier 'bogus'}
+//                                             >   <^error{Shapes.path() fill rule must be nonzero or evenodd}
+}

@@ -221,3 +221,7 @@ unnecessary_cast = { level = "allow" }
 
 [package.metadata.docs.rs]
 rustdoc-args = ["--generate-link-to-definition"]
+
+[[bench]]
+name = "shape_morph"
+harness = false
