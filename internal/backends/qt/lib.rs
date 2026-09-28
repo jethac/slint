@@ -187,6 +187,7 @@ impl i_slint_core::platform::Platform for Backend {
         // there are multiple windows and outright broken when there are zero windows.
         update_palette_state();
         update_font_state();
+        update_motion_state();
         install_app_state_observer();
     }
 
@@ -444,6 +445,23 @@ fn update_font_state() {
     });
 }
 
+/// Qt proxies the OS animation toggle through the style hint `Qt::UI_GeneralAnimate`
+/// (off means reduced motion); it follows the active platform theme (e.g. KDE's
+/// kinetic settings). `QEvent::StyleChange` re-reads it after a style/theme switch.
+#[cfg(not(no_qt))]
+fn update_motion_state() {
+    use cpp::cpp;
+    let enabled = cpp! {unsafe [] -> bool as "bool" {
+        #include <QtGui/QStyleHints>
+        return (qApp->styleHints()->uiEffects() & Qt::UI_GeneralAnimate) != 0;
+    }};
+    QT_CONTEXT.with(|cell| {
+        if let Some(ctx) = cell.get().and_then(|w| w.upgrade()) {
+            ctx.set_reduced_motion(!enabled);
+        }
+    });
+}
+
 #[cfg(not(no_qt))]
 fn install_app_state_observer() {
     use cpp::cpp;
@@ -465,6 +483,10 @@ fn install_app_state_observer() {
                     } else if (event->type() == QEvent::ApplicationFontChange) {
                         rust!(Slint_qt_font_changed [] {
                             crate::update_font_state();
+                        });
+                    } else if (event->type() == QEvent::StyleChange) {
+                        rust!(Slint_qt_style_changed [] {
+                            crate::update_motion_state();
                         });
                     }
                 }

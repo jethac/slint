@@ -76,9 +76,16 @@ static SETTINGS: &[SettingDescriptor] = &[
     },
     SettingDescriptor { namespace: APPEARANCE, key: "accent-color", apply: apply_accent_value },
     SettingDescriptor { namespace: APPEARANCE, key: "contrast", apply: apply_contrast_value },
+    // GNOME proxies `enable-animations` into `reduced-motion`, so read it first
+    // and let the appearance key win when both are set.
+    SettingDescriptor {
+        namespace: GNOME_INTERFACE,
+        key: "enable-animations",
+        apply: apply_enable_animations_value,
+    },
     SettingDescriptor {
         namespace: APPEARANCE,
-        key: "reduce-motion",
+        key: "reduced-motion",
         apply: apply_reduce_motion_value,
     },
     SettingDescriptor { namespace: GNOME_INTERFACE, key: "font-name", apply: apply_font_value },
@@ -156,13 +163,23 @@ fn apply_contrast_value(value: zbus::zvariant::OwnedValue, cx: &SettingsContext)
     }
 }
 
-/// The reduce-motion setting is a bool added to `org.freedesktop.appearance` for
-/// `prefers-reduced-motion`-style desktop settings.
+/// The `org.freedesktop.appearance` `reduced-motion` setting is a u32:
+/// `0` means no preference and `1` means reduced motion.
 fn apply_reduce_motion_value(value: zbus::zvariant::OwnedValue, cx: &SettingsContext) {
-    if let Ok(reduced) = value.downcast_ref::<bool>()
+    if let Ok(reduced) = value.downcast_ref::<u32>()
         && let Some(ctx) = cx.ctx.upgrade()
     {
-        ctx.set_reduced_motion(reduced);
+        ctx.set_reduced_motion(reduced == 1);
+    }
+}
+
+/// GNOME's `org.gnome.desktop.interface` `enable-animations` is the boolean
+/// animation toggle: it being off means reduced motion.
+fn apply_enable_animations_value(value: zbus::zvariant::OwnedValue, cx: &SettingsContext) {
+    if let Ok(enabled) = value.downcast_ref::<bool>()
+        && let Some(ctx) = cx.ctx.upgrade()
+    {
+        ctx.set_reduced_motion(!enabled);
     }
 }
 

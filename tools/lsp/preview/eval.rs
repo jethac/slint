@@ -214,6 +214,13 @@ fn eval_expression(
             expression_tree::EasingCurve::Spring(a) => {
                 i_slint_core::animations::EasingCurve::Spring(*a)
             }
+            expression_tree::EasingCurve::PhysicalSpring(damping_ratio, stiffness, mass) => {
+                i_slint_core::animations::EasingCurve::PhysicalSpring {
+                    damping_ratio: *damping_ratio,
+                    stiffness: *stiffness,
+                    mass: *mass,
+                }
+            }
         }),
         Expression::LinearGradient { angle, stops } => {
             let angle = eval_expression(angle, local_context, None);

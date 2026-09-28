@@ -156,6 +156,10 @@ bind_java_type! {
             sig = (font_scale: jfloat) -> (),
             fn = callback_set_font_scale,
         },
+        pub static fn set_animator_duration_scale {
+            sig = (scale: jfloat) -> (),
+            fn = callback_set_animator_duration_scale,
+        },
         pub static fn update_text {
             sig = (
                     text: JString,
@@ -724,6 +728,26 @@ fn callback_set_font_scale<'local>(
         if let Some(w) = CURRENT_WINDOW.with_borrow(|x| x.upgrade()) {
             let ctx = i_slint_core::window::WindowInner::from_pub(&w.window).context();
             ctx.set_platform_default_font_size(Some(size));
+        }
+    })
+    .unwrap();
+    Ok(())
+}
+
+fn callback_set_animator_duration_scale<'local>(
+    _env: &mut Env<'local>,
+    _class: JClass<'local>,
+    scale: jfloat,
+) -> Result<(), jni::errors::Error> {
+    // Reject transients for the same reason as `callback_set_font_scale`.
+    if !(scale.is_finite() && scale >= 0.0) {
+        return Ok(());
+    }
+    i_slint_core::api::invoke_from_event_loop(move || {
+        if let Some(w) = CURRENT_WINDOW.with_borrow(|x| x.upgrade()) {
+            let ctx = i_slint_core::window::WindowInner::from_pub(&w.window).context();
+            ctx.set_animation_duration_scale(scale);
+            ctx.set_reduced_motion(scale == 0.0);
         }
     })
     .unwrap();
