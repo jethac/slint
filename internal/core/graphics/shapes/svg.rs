@@ -688,7 +688,7 @@ fn parse_cubics_str(
             continue;
         }
 
-        let tok = &serialized[point_start..point_end];
+        let tok = serialized[point_start..point_end].trim();
         points[point_count] = tok.parse::<f32>().map_err(|_| ShapeError::new("Invalid number"))?;
         point_count += 1;
         point_start = point_end + 1;
@@ -711,7 +711,7 @@ fn parse_cubics_str(
     }
 
     // add last point and last cubic
-    let tok = &serialized[point_start..point_end.min(serialized.len())];
+    let tok = serialized[point_start..point_end.min(serialized.len())].trim();
     points[window_size - 1] = tok.parse::<f32>().map_err(|_| ShapeError::new("Invalid number"))?;
     result.push(Cubic { points });
     Ok(result)

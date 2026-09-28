@@ -147,7 +147,7 @@ struct DistanceVertex {
 
 /// Returns a mapping of the features between `features1` and `features2`, sorted by
 /// the progress of the first feature. Port of `doMapping`.
-fn do_mapping(
+pub(crate) fn do_mapping(
     features1: &[ProgressableFeature],
     features2: &[ProgressableFeature],
 ) -> Option<Vec<(f32, f32)>> {

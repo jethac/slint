@@ -42,6 +42,9 @@ mod shape;
 mod svg;
 mod utils;
 
+#[cfg(test)]
+mod tests;
+
 pub use api::{
     circle_shape, custom_shape, pill_shape, pill_star_shape, rectangle_shape, regular_polygon,
     regular_polygon_per_vertex, rounded_polygon_per_vertex, rounded_polygon_polygon, star_shape,

@@ -204,7 +204,7 @@ pub(crate) fn detect_features(cubics: &[Cubic]) -> Vec<Feature> {
 impl Cubic {
     /// Convert to [Feature::Edge] if this cubic describes a straight line, otherwise
     /// to a [Feature::Corner]. Corner convexity is determined by `convex`.
-    fn as_feature(&self, next: &Cubic) -> Feature {
+    pub(crate) fn as_feature(&self, next: &Cubic) -> Feature {
         if self.straight_ish() {
             Feature::Edge(alloc::vec![*self])
         } else {
@@ -214,7 +214,7 @@ impl Cubic {
 
     /// Determine if the cubic is close to a straight line. Empty cubics don't count as
     /// straight-ish.
-    fn straight_ish(&self) -> bool {
+    pub(crate) fn straight_ish(&self) -> bool {
         !self.zero_length()
             && collinear_ish(
                 self.anchor0_x(),
@@ -239,7 +239,7 @@ impl Cubic {
     /// Determine if next is a smooth continuation of this cubic. Smooth meaning that
     /// the first control point of next is a reflection of this' second control point,
     /// similar to the S/s or t/T command in svg paths.
-    fn smoothes_into_ish(&self, next: &Cubic) -> bool {
+    pub(crate) fn smoothes_into_ish(&self, next: &Cubic) -> bool {
         collinear_ish(
             self.control1_x(),
             self.control1_y(),
@@ -253,7 +253,7 @@ impl Cubic {
 
     /// Determine if all of this' points align with next's points. For straight lines,
     /// this is the same as if next was a continuation of this.
-    fn aligns_ish_with(&self, next: &Cubic) -> bool {
+    pub(crate) fn aligns_ish_with(&self, next: &Cubic) -> bool {
         (self.straight_ish() && next.straight_ish() && self.smoothes_into_ish(next))
             || self.zero_length()
             || next.zero_length()
