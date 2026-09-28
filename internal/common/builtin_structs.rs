@@ -211,6 +211,23 @@ macro_rules! for_each_builtin_structs {
                 shortcut: Keys,
             }
 
+            /// The amount and quality of rounding around a single vertex of a `shape`.
+            /// `radius` is the radius of the circle which forms the basis of the
+            /// rounding for the vertex; `smoothing` is the amount by which the curve is
+            /// extended from the circular arc around the corner to the edge between
+            /// vertices (0 is a purely circular curve, 1 maximizes the flanking
+            /// curves). Mirrors androidx.graphics.shapes' `CornerRounding` and is
+            /// used by the `Shapes.*` constructor functions.
+            #[non_exhaustive]
+            #[derive(Copy)]
+            pub struct CornerRounding {
+                /// The radius of the circle that defines the inner rounding arc of
+                /// the corner. A value of 0 means the corner is sharp.
+                radius: f32,
+                /// The amount by which the arc is smoothed, in the 0 to 1 range.
+                smoothing: f32,
+            }
+
             /// A structure representing the four edges of an axis-aligned rectangle
             struct Edges {
                 /// The left edge value

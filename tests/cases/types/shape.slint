@@ -1,0 +1,84 @@
+// Copyright © SixtyFPS GmbH <info@slint.dev>
+// SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0
+
+global ShapesGlobal {
+    in-out property<shape> square: Shapes.regular-polygon(4, {radius: 6, smoothing: 0.5});
+}
+
+export component TestCase inherits Rectangle {
+    in-out property<shape> unset;
+    in-out property<shape> circle8: Shapes.circle(8);
+    in-out property<shape> rounded-rect: Shapes.rectangle(100, 60, [{radius: 12, smoothing: 0.5}]);
+    in-out property<shape> star: Shapes.star(4, 0.5, {radius: 4, smoothing: 0}, {radius: 2, smoothing: 0});
+    in-out property<shape> poly: Shapes.polygon(
+        [{x: 0px, y: 0px}, {x: 40px, y: 0px}, {x: 40px, y: 40px}, {x: 0px, y: 40px}],
+        {radius: 8, smoothing: 0});
+    in-out property<shape> per-vertex: Shapes.polygon-per-vertex(
+        [{x: 0px, y: 0px}, {x: 40px, y: 0px}, {x: 40px, y: 40px}],
+        [{radius: 8, smoothing: 0}, {radius: 0, smoothing: 0}, {radius: 4, smoothing: 0}]);
+    in-out property<shape> from-path: Shapes.path("M0 0L40 0L40 40L0 40Z");
+    in-out property<shape> from-path-eo: Shapes.path(FillRule.evenodd, "M0 0L40 0L40 40L0 40Z");
+    property<shape> morphed: Shapes.morph(circle8, rounded-rect, 0.5);
+
+    pure callback pick-shape(shape, shape, float) -> shape;
+    pick-shape(a, b, t) => { t < 0.5 ? a : b }
+
+    out property<bool> test: unset == unset
+        && unset != circle8
+        && circle8 == Shapes.circle(8)
+        && circle8 != Shapes.circle(4)
+        && rounded-rect != unset
+        && poly != unset
+        && per-vertex != unset
+        && star != unset
+        && from-path != unset
+        && from-path-eo != unset
+        // The fill rule is part of the shape value.
+        && from-path-eo != from-path
+        && Shapes.morph(from-path-eo, from-path, 0.5) == from-path-eo
+        && Shapes.morph(from-path, from-path-eo, 0.5) == from-path
+        && morphed != circle8 && morphed != rounded-rect
+        && Shapes.morph(circle8, rounded-rect, 0) != unset
+        && Shapes.morph(circle8, rounded-rect, 1) != unset
+        && Shapes.scaled(circle8, 2, 2) != circle8
+        && Shapes.translated(circle8, 10, 0) != circle8
+        && Shapes.rotated(circle8, 45deg) != unset
+        && Shapes.normalized(circle8) != unset
+        // Transforms preserve the fill rule.
+        && Shapes.rotated(from-path-eo, 0deg) == from-path-eo
+        && Shapes.rotated(from-path-eo, 0deg) != from-path
+        && ShapesGlobal.square != unset
+        && Shapes.regular-polygon-per-vertex(5, [{radius: 2, smoothing: 0}, {radius: 2, smoothing: 0}, {radius: 2, smoothing: 0}, {radius: 2, smoothing: 0}, {radius: 2, smoothing: 0}]) != unset
+        && Shapes.pill(100, 40, 0.5) != unset
+        && Shapes.pill-star(4, 100, 40, 0.5, {radius: 4, smoothing: 0}) != unset
+        && Shapes.custom(
+            [{x: 0px, y: 0px}, {x: 20px, y: 0px}, {x: 20px, y: 20px}],
+            [{radius: 2, smoothing: 0}, {radius: 2, smoothing: 0}, {radius: 2, smoothing: 0}],
+            1, false) != unset
+        && pick-shape(circle8, rounded-rect, 0) == circle8
+        && pick-shape(circle8, rounded-rect, 1) == rounded-rect;
+}
+
+/*
+```rust
+let instance = TestCase::new().unwrap();
+assert!(instance.get_test());
+let circle = instance.get_circle8();
+assert_eq!(circle, slint::shapes::circle(8));
+assert_eq!(
+    instance.get_from_path_eo(),
+    slint::shapes::path("M0 0L40 0L40 40L0 40Z", slint::FillRule::Evenodd).unwrap()
+);
+assert_ne!(circle, instance.get_unset());
+instance.set_circle8(slint::shapes::pill(100., 40., 0.5));
+assert_ne!(instance.get_circle8(), circle);
+```
+
+```cpp
+auto handle = TestCase::create();
+const TestCase &instance = *handle;
+assert(instance.get_test());
+assert(instance.get_circle8() == slint::shapes::circle(8));
+assert(instance.get_circle8() != instance.get_unset());
+```
+*/

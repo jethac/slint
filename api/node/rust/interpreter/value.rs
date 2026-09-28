@@ -385,6 +385,7 @@ pub fn to_value(
         | Type::Easing
         | Type::PathData
         | Type::ArrayOfCoord
+        | Type::Shape
         | Type::ArrayOfU16
         | Type::ElementReference
         | Type::MouseCursor

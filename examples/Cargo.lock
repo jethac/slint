@@ -4765,6 +4765,7 @@ dependencies = [
  "data-url",
  "derive_more",
  "i-slint-common",
+ "i-slint-core",
  "icu_normalizer",
  "icu_properties",
  "image",

@@ -68,7 +68,24 @@ impl BuiltinFunction {
             | BuiltinFunction::Exp
             | BuiltinFunction::ATan
             | BuiltinFunction::ATan2
-            | BuiltinFunction::ToStringUnlocalized => true,
+            | BuiltinFunction::ToStringUnlocalized
+            | BuiltinFunction::ShapesEmpty
+            | BuiltinFunction::ShapesPolygon
+            | BuiltinFunction::ShapesPolygonPerVertex
+            | BuiltinFunction::ShapesRegularPolygon
+            | BuiltinFunction::ShapesRegularPolygonPerVertex
+            | BuiltinFunction::ShapesRectangle
+            | BuiltinFunction::ShapesCircle
+            | BuiltinFunction::ShapesStar
+            | BuiltinFunction::ShapesPill
+            | BuiltinFunction::ShapesPillStar
+            | BuiltinFunction::ShapesCustom
+            | BuiltinFunction::ShapesNormalized
+            | BuiltinFunction::ShapesRotated
+            | BuiltinFunction::ShapesScaled
+            | BuiltinFunction::ShapesTranslated
+            | BuiltinFunction::ShapesMorph
+            | BuiltinFunction::ShapesFromPath => true,
             // The result depends on the locale's decimal separator, like DecimalSeparator.
             // The constant propagation folds the locale-independent cases and promotes
             // their binding back to constant.
@@ -173,6 +190,7 @@ pub enum BuiltinMacroFunction {
     ArrayIndexOf,
     CustomMouseCursor,
     Spring,
+    ShapePath,
 }
 
 /// The base of a Expression::FunctionCall
@@ -1527,6 +1545,11 @@ impl Expression {
             Type::Bool => Expression::BoolLiteral(false),
             Type::Model => Expression::Invalid,
             Type::PathData => Expression::PathData(Path::Elements(Vec::new())),
+            Type::Shape => Expression::FunctionCall {
+                function: Callable::Builtin(BuiltinFunction::ShapesEmpty),
+                arguments: Vec::new(),
+                source_location: None,
+            },
             Type::Array(element_ty) => {
                 Expression::Array { element_ty: (**element_ty).clone(), values: Vec::new() }
             }

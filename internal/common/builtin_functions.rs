@@ -134,6 +134,23 @@ macro_rules! for_each_builtin_function {
             MaterialPlatformColorScheme: pure fn(variant: MaterialSchemeVariant, spec_version: MaterialSpecVersion, platform: MaterialSchemePlatform, is_dark: bool, contrast_level: f32) -> MaterialColorScheme
             MaterialSeedFromImage: pure fn(image: Image) -> Color
             PlatformContrastLevel: pure fn() -> f32
+            ShapesEmpty: pure fn() -> Shape
+            ShapesPolygon: pure fn(vertices: [LogicalPosition], rounding: CornerRounding) -> Shape
+            ShapesPolygonPerVertex: pure fn(vertices: [LogicalPosition], roundings: [CornerRounding]) -> Shape
+            ShapesRegularPolygon: pure fn(num_vertices: i32, rounding: CornerRounding) -> Shape
+            ShapesRegularPolygonPerVertex: pure fn(num_vertices: i32, roundings: [CornerRounding]) -> Shape
+            ShapesRectangle: pure fn(width: f32, height: f32, roundings: [CornerRounding]) -> Shape
+            ShapesCircle: pure fn(num_vertices: i32) -> Shape
+            ShapesStar: pure fn(num_vertices_per_radius: i32, inner_radius: f32, rounding: CornerRounding, inner_rounding: CornerRounding) -> Shape
+            ShapesPill: pure fn(width: f32, height: f32, smoothing: f32) -> Shape
+            ShapesPillStar: pure fn(num_vertices_per_radius: i32, width: f32, height: f32, inner_radius_ratio: f32, rounding: CornerRounding) -> Shape
+            ShapesCustom: pure fn(vertices: [LogicalPosition], roundings: [CornerRounding], reps: i32, mirror: bool) -> Shape
+            ShapesNormalized: pure fn(shape: Shape) -> Shape
+            ShapesRotated: pure fn(shape: Shape, angle: Angle) -> Shape
+            ShapesScaled: pure fn(shape: Shape, scale_x: f32, scale_y: f32) -> Shape
+            ShapesTranslated: pure fn(shape: Shape, dx: f32, dy: f32) -> Shape
+            ShapesMorph: pure fn(from: Shape, to: Shape, progress: f32) -> Shape
+            ShapesFromPath: pure fn(svg_path_data: SharedString, fill_rule: FillRule) -> Shape
             SupportsNativeMenuBar: pure fn() -> bool
             /// Setup the menu bar
             ///

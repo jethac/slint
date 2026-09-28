@@ -123,6 +123,8 @@ macro_rules! builtin_type {
     (OklchColor) => { $crate::typeregister::builtin_structs::get(&$crate::langtype::BuiltinStruct::ColorOklch).into() };
     (Size) => { $crate::typeregister::builtin_structs::get(&$crate::langtype::BuiltinStruct::Size).into() };
     (MaterialColorScheme) => { $crate::typeregister::builtin_structs::get(&$crate::langtype::BuiltinStruct::MaterialColorScheme).into() };
+    (Shape) => { $crate::langtype::Type::Shape };
+    (CornerRounding) => { $crate::typeregister::builtin_structs::get(&$crate::langtype::BuiltinStruct::CornerRounding).into() };
     (NoArgCallback) => { $crate::typeregister::noarg_callback_type() };
     (ScaleFactor) => {
         $crate::langtype::Type::UnitProduct(vec![
