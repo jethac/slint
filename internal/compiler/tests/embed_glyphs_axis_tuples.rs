@@ -18,6 +18,14 @@ use i_slint_compiler::parser::parse;
 use i_slint_compiler::{CompilerConfiguration, compile_syntax_node};
 
 fn compile(source: &str, exclude_vector_fonts: bool) -> (Document, Vec<String>) {
+    let (doc, diags, _) = compile_full(source, exclude_vector_fonts);
+    (doc, diags)
+}
+
+fn compile_full(
+    source: &str,
+    exclude_vector_fonts: bool,
+) -> (Document, Vec<String>, i_slint_compiler::typeloader::TypeLoader) {
     // SAFETY: single-threaded test binary usage pattern; the font collection is
     // initialized per compile, before any other test reads the variable.
     unsafe {
@@ -31,8 +39,8 @@ fn compile(source: &str, exclude_vector_fonts: bool) -> (Document, Vec<String>) 
     let mut config = CompilerConfiguration::new(OutputFormat::Llr);
     config.embed_resources = i_slint_compiler::EmbedResourcesKind::EmbedTextures;
     config.exclude_vector_fonts = exclude_vector_fonts;
-    let (doc, diag, _loader) = spin_on::spin_on(compile_syntax_node(syntax_node, diag, config));
-    (doc, diag.to_string_vec())
+    let (doc, diag, loader) = spin_on::spin_on(compile_syntax_node(syntax_node, diag, config));
+    (doc, diag.to_string_vec(), loader)
 }
 
 fn bitmap_variations(doc: &Document) -> Vec<(String, u16, Vec<(u32, f32)>)> {
@@ -56,13 +64,33 @@ fn embedded_vector_font_paths(doc: &Document) -> Vec<String> {
         .borrow()
         .iter()
         .filter_map(|r| {
-            matches!(&r.kind, EmbeddedResourcesKind::FileData)
-                .then(|| r.path.as_ref().map(|p| p.to_string()))?
+            matches!(
+                &r.kind,
+                EmbeddedResourcesKind::FileData | EmbeddedResourcesKind::DataUriPayload(..)
+            )
+            .then(|| r.path.as_ref().map(|p| p.to_string()))?
         })
         .collect();
     paths.sort();
     paths.dedup();
     paths
+}
+
+fn embedded_vector_font_bytes(doc: &Document) -> Vec<(String, Vec<u8>)> {
+    doc.embedded_file_resources
+        .borrow()
+        .iter()
+        .filter_map(|r| {
+            let path = r.path.as_ref()?.to_string();
+            match &r.kind {
+                EmbeddedResourcesKind::DataUriPayload(bytes, _) => Some((path, bytes.clone())),
+                EmbeddedResourcesKind::FileData => {
+                    Some((path.clone(), std::fs::read(&path).unwrap()))
+                }
+                _ => None,
+            }
+        })
+        .collect()
 }
 
 fn embedded_vector_fonts(doc: &Document) -> usize {
@@ -244,18 +272,12 @@ fn markup_font_attributes_produce_one_tuple_per_span() {
     let expected: Vec<(u32, f32)> = default
         .iter()
         .map(|&(tag, value)| {
-            let value = if tag == GRAD {
-                50.0
-            } else if tag == WDTX {
-                50.0
-            } else {
-                value
-            };
+            let value = if tag == GRAD || tag == WDTX { 50.0 } else { value };
             (tag, value)
         })
         .collect();
     assert!(
-        roboto_tuples.iter().any(|v| *v == expected),
+        roboto_tuples.contains(&expected),
         "the GRAD span's exact tuple {expected:?} missing from {roboto_tuples:?}"
     );
 }
@@ -340,4 +362,70 @@ fn dynamic_binding_without_family_embeds_the_default_set() {
     // named-family element from the previous test is absent, so nothing beyond
     // the default set may appear.
     assert!(embedded_vector_fonts(&doc) > 0, "default fonts must be embedded");
+}
+
+/// The embedded vector font is subsetted down to the coverage the app
+/// collects: smaller than the source file, still parseable, with the full
+/// variation space and the family name kept (the runtime matches by name).
+#[test]
+fn embedded_vector_font_is_subsetted_to_collected_coverage() {
+    use skrifa::MetadataProvider as _;
+
+    let (doc, diags) = compile(SOURCE_DYNAMIC, false);
+    assert!(diags.iter().all(|d| !d.starts_with("error")), "{diags:?}");
+    let embedded = embedded_vector_font_bytes(&doc);
+    let subset = &embedded
+        .iter()
+        .find(|(path, _)| path.ends_with("NotoSans-Regular.ttf"))
+        .expect("Noto Sans is embedded")
+        .1;
+
+    let source_path =
+        concat!(env!("CARGO_MANIFEST_DIR"), "/../../tests/screenshots/fonts/NotoSans-Regular.ttf");
+    let source = std::fs::read(source_path).unwrap();
+    // Smaller, and the cmap check below proves it is the uncollected glyphs
+    // that went away — not e.g. the name table.
+    assert!(subset.len() < source.len(), "subset {}B vs source {}B", subset.len(), source.len());
+
+    let face = skrifa::FontRef::new(subset).expect("subset must parse as a font");
+    let source_face = skrifa::FontRef::new(&source).unwrap();
+    // Same variation space: a dynamic binding can drive any axis.
+    assert_eq!(face.axes().len(), source_face.axes().len(), "all axes must survive subsetting");
+    // Family matching needs the name records.
+    let family = face
+        .localized_strings(skrifa::string::StringId::FAMILY_NAME)
+        .next()
+        .expect("subset must keep the family name");
+    assert_eq!(family.to_string(), "Noto Sans");
+
+    let charmap = face.charmap();
+    // Collected: the strings in the source plus the always-added ASCII set.
+    for c in "sweep".chars() {
+        assert!(charmap.map(c).is_some(), "'{c}' must survive subsetting");
+    }
+    // A codepoint outside the collected coverage is gone.
+    assert!(charmap.map('\u{4e2d}').is_none());
+}
+
+/// `slint!`-macro builds can't see the target, so generated code asserts on
+/// the rasterizer feature instead of relying on build-time detection.
+#[cfg(feature = "rust")]
+#[test]
+fn rust_codegen_emits_vector_rasterizer_assert() {
+    let (doc, diags, loader) = compile_full(SOURCE_DYNAMIC, false);
+    assert!(diags.iter().all(|d| !d.starts_with("error")), "{diags:?}");
+    let mut out = Vec::new();
+    i_slint_compiler::generator::generate(
+        OutputFormat::Rust,
+        &mut out,
+        None,
+        &doc,
+        &loader.compiler_config,
+    )
+    .unwrap();
+    let generated = String::from_utf8(out).unwrap();
+    assert!(
+        generated.contains("HAS_EMBEDDED_VECTOR_FONT_SUPPORT"),
+        "the const assert guards user-crate builds without a rasterizer feature"
+    );
 }

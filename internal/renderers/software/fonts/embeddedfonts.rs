@@ -210,6 +210,8 @@ pub fn fallback_font(request: &FontRequest, scale_factor: ScaleFactor) -> Option
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::fonts::RenderableVectorGlyph;
+    use alloc::vec::Vec;
     use i_slint_core::SharedString;
     use i_slint_core::items::FontVariation;
     use i_slint_core::model::{ModelRc, VecModel};
@@ -286,18 +288,7 @@ mod tests {
         // A real rasterization run through the no_std path: 'A' must produce
         // non-empty alpha maps at both axis values, and the wider instance a
         // wider bitmap.
-        struct NoopPlatform;
-        impl i_slint_core::platform::Platform for NoopPlatform {
-            fn create_window_adapter(
-                &self,
-            ) -> Result<
-                alloc::rc::Rc<dyn i_slint_core::platform::WindowAdapter>,
-                i_slint_core::api::PlatformError,
-            > {
-                unimplemented!()
-            }
-        }
-        let context = i_slint_core::SlintContext::new(alloc::boxed::Box::new(NoopPlatform));
+        let context = test_context();
         let narrow_glyph = narrow.render_vector_glyph(
             narrow.glyph_for_char('A').unwrap().glyph_id.unwrap(),
             0,
@@ -311,11 +302,101 @@ mod tests {
         let (narrow_glyph, wide_glyph) = (narrow_glyph.unwrap(), wide_glyph.unwrap());
         assert!(narrow_glyph.alpha_map.iter().copied().any(|p| p != 0));
         assert!(wide_glyph.alpha_map.iter().copied().any(|p| p != 0));
+        // The rendered bitmap pins the whole chain — request to normalized
+        // coordinates to instancer to rasterizer — so it is asserted exactly.
+        // Dimensions and checksums are recorded against the pinned font and
+        // skrifa/swash versions; a change in any stage shifts the bytes.
+        assert_eq!(glyph_signature(&narrow_glyph), (6, 9, 0xf3e8fd75f6570f79));
+        assert_eq!(glyph_signature(&wide_glyph), (8, 9, 0xe385c9a1591b0903));
+
+        renders_text_string_end_to_end();
+    }
+
+    /// (width, height, checksum) of a rendered glyph's alpha map.
+    fn glyph_signature(glyph: &RenderableVectorGlyph) -> (i16, i16, u64) {
+        let mut hash = 0xcbf29ce484222325u64;
+        for &b in glyph.alpha_map.iter() {
+            hash = (hash ^ b as u64).wrapping_mul(0x100000001b3);
+        }
+        (glyph.width.get(), glyph.height.get(), hash)
+    }
+
+    /// A short string through the text path: `match_font` resolves the
+    /// embedded font, `shape_text` positions the glyphs and
+    /// `render_vector_glyph` rasterizes them — the same calls
+    /// `draw_text_paragraph`/`draw_glyph_run` make. Called from the single
+    /// test that owns the shared `EMBEDDED_FONTS`.
+    fn renders_text_string_end_to_end() {
+        let context = test_context();
+
+        fn render(
+            font: &VectorFont,
+            text: &str,
+            buffer: &mut [u8],
+            width: usize,
+            baseline: i32,
+            context: &i_slint_core::SlintContext,
+        ) -> usize {
+            let mut glyphs = Vec::new();
+            font.shape_text(text, &mut glyphs);
+            let mut pen_x = 0f32;
+            let mut rightmost_ink = 0usize;
+            for glyph in &glyphs {
+                let Some(id) = glyph.glyph_id else {
+                    pen_x += glyph.advance.get() as f32;
+                    continue;
+                };
+                let rendered = font.render_vector_glyph(id, 0, context).unwrap();
+                // Same blit origin as `draw_glyph_run`: the glyph box hangs
+                // `placement.top` above the baseline.
+                let dst_x = pen_x.round() as i32 + rendered.x.truncate() as i32;
+                let dst_y = baseline - rendered.y.truncate() as i32 - rendered.height.get() as i32;
+                for row in 0..rendered.height.get() as i32 {
+                    for col in 0..rendered.pixel_stride as i32 {
+                        let (x, y) = (dst_x + col, dst_y + row);
+                        let alpha =
+                            rendered.alpha_map[(row * rendered.pixel_stride as i32 + col) as usize];
+                        if alpha != 0 && (0..width as i32).contains(&x) && (0..32).contains(&y) {
+                            buffer[y as usize * width + x as usize] =
+                                buffer[y as usize * width + x as usize].max(alpha);
+                            rightmost_ink = rightmost_ink.max(x as usize);
+                        }
+                    }
+                }
+                pen_x += glyph.advance.get() as f32;
+            }
+            rightmost_ink
+        }
+
+        const W: usize = 64;
+        let mut narrow = [0u8; W * 32];
+        let mut wide = [0u8; W * 32];
+        let narrow_font =
+            match_font(&request("Noto Sans", &[axis("wdth", 62.5)]), ScaleFactor::new(1.)).unwrap();
+        let wide_font =
+            match_font(&request("Noto Sans", &[axis("wdth", 100.)]), ScaleFactor::new(1.)).unwrap();
+        let narrow_ink = render(&narrow_font, "AV", &mut narrow, W, 20, &context);
+        let wide_ink = render(&wide_font, "AV", &mut wide, W, 20, &context);
+
+        assert!(narrow.iter().any(|&p| p > 200), "the string must put ink on the page");
         assert!(
-            narrow_glyph.width.get() <= wide_glyph.width.get(),
-            "wdth 62.5 must not render wider than wdth 100: {} vs {}",
-            narrow_glyph.width.get(),
-            wide_glyph.width.get()
+            narrow_ink < wide_ink,
+            "wdth 62.5 shapes tighter than wdth 100: rightmost ink {narrow_ink} vs {wide_ink}"
         );
+    }
+
+    fn test_context() -> i_slint_core::SlintContext {
+        struct NoopPlatform;
+        impl i_slint_core::platform::Platform for NoopPlatform {
+            fn create_window_adapter(
+                &self,
+            ) -> Result<
+                alloc::rc::Rc<dyn i_slint_core::platform::WindowAdapter>,
+                i_slint_core::api::PlatformError,
+            > {
+                unimplemented!()
+            }
+        }
+        i_slint_core::SlintContext::new(alloc::boxed::Box::new(NoopPlatform))
     }
 }

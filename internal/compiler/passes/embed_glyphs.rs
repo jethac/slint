@@ -575,10 +575,21 @@ pub fn embed_glyphs(
             if font_ref.axes().iter().next().is_none() {
                 continue;
             }
+            // Subset the face to the app's collected coverage — a full
+            // variable font is far more flash than an MCU build should pay
+            // for glyphs it never shows. Axes are not prunable: a dynamic
+            // binding can drive any of them at run time, so fvar/gvar go
+            // through untouched. On subset failure the unsubsetted face is
+            // embedded; the bytes stay correct, just bigger.
+            let font_data = subset_vector_font(font.blob.data(), font.index, &characters_seen)
+                .unwrap_or_else(|| font.blob.data().to_vec());
             let resource_id = doc.embedded_file_resources.borrow_mut().push_and_get_key(
                 crate::embedded_resources::EmbeddedResources {
                     path: Some(path.to_string_lossy().as_ref().into()),
-                    kind: crate::embedded_resources::EmbeddedResourcesKind::FileData,
+                    kind: crate::embedded_resources::EmbeddedResourcesKind::DataUriPayload(
+                        font_data,
+                        "ttf".into(),
+                    ),
                 },
             );
             for c in doc.exported_roots() {
@@ -610,6 +621,38 @@ fn get_fallback_fonts() -> Vec<Font> {
     });
 
     fallback_fonts
+}
+
+/// Subset `data` (the whole font file; `index` selects the face inside a
+/// collection) down to `characters_seen`, returning the subsetted font as a
+/// standalone file. All variation axes, name records, layout scripts and
+/// features are kept — a dynamic binding can drive any axis, and the runtime
+/// matches embedded fonts by their family name. `None` when the font can't be
+/// subsetted; the caller then embeds the original data instead.
+#[cfg(not(target_arch = "wasm32"))]
+fn subset_vector_font(data: &[u8], index: u32, characters_seen: &HashSet<char>) -> Option<Vec<u8>> {
+    use fontcull_klippa::{Plan, SubsetFlags, subset_font};
+    use fontcull_write_fonts::read::{
+        FontRef,
+        collections::int_set::IntSet,
+        types::{GlyphId, NameId, Tag},
+    };
+
+    let font = FontRef::from_index(data, index).ok()?;
+    let mut unicodes: IntSet<u32> = IntSet::empty();
+    unicodes.extend(characters_seen.iter().map(|c| *c as u32));
+    let plan = Plan::new(
+        &IntSet::<GlyphId>::empty(),
+        &unicodes,
+        &font,
+        SubsetFlags::default(),
+        &IntSet::<Tag>::empty(), // drop_tables
+        &IntSet::<Tag>::all(),   // layout_scripts
+        &IntSet::<Tag>::all(),   // layout_features
+        &IntSet::<NameId>::all(),
+        &IntSet::<u16>::all(), // name_languages
+    );
+    subset_font(&font, &plan).ok()
 }
 
 #[cfg(not(target_arch = "wasm32"))]

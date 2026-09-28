@@ -4944,7 +4944,9 @@ fn compile_builtin_function_call(
                 quote!({
                     const _: () = ::core::assert!(
                         slint::private_unstable_api::HAS_EMBEDDED_VECTOR_FONT_SUPPORT,
-                        "the compiled UI embeds vector font data, but this build has no                          vector font rasterizer — enable the `slint` crate's `std` or                          `embedded-vector-fonts` feature"
+                        "the compiled UI embeds vector font data, but this build has no \
+                         vector font rasterizer — enable the `slint` crate's `std` or \
+                         `embedded-vector-fonts` feature"
                     );
                     #global_access.window_adapter_ref()?.renderer().register_font_from_memory(#symbol.into()).unwrap()
                 })

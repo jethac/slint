@@ -93,6 +93,15 @@ to 1 MiB; set `SLINT_VECTOR_FONT_CACHE_BYTES` in the environment or in
 after changing it) and per-frame rasterization CPU that scales with the rendered string
 length (estimate; not measured on MCU hardware).
 
+The cache holds one alpha map per (glyph, size, axis position) the UI draws. Each entry
+is roughly the glyph's pixel area — a 16 px glyph is about 200 B — so the 1 MiB default
+covers a large label set animating across many axis positions. For a small MCU a value
+like `SLINT_VECTOR_FONT_CACHE_BYTES=65536` (64 KiB) still holds a few hundred glyphs —
+enough for a screen of text at a handful of axis positions; going lower, e.g. 32 KiB,
+keeps a single line's worth and makes every axis step or longer string re-rasterize
+instead of hitting the cache. Entries are evicted least-recently-used, so the trade-off
+is purely rasterization CPU per frame; nothing breaks when the cache is too small.
+
 When the build excludes vector fonts entirely — a freestanding C++ target sets
 `SLINT_EXCLUDE_VECTOR_FONTS` automatically, and a Rust build does the same for targets
 whose triple names no operating system (`*-none-*`, `*-uefi`, Zephyr) unless the env var
