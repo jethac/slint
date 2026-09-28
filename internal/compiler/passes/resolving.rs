@@ -3457,10 +3457,10 @@ fn check_shape_call(e: &Expression, node: &dyn Spanned, ctx: &mut LookupCtx) {
             if len(0).is_some_and(|n| n < 3) {
                 err("polygons must have at least 3 vertices");
             }
-            if let (Some(v), Some(r)) = (len(0), len(1)) {
-                if v != r {
-                    err("roundings must have the same size as vertices");
-                }
+            if let (Some(v), Some(r)) = (len(0), len(1))
+                && v != r
+            {
+                err("roundings must have the same size as vertices");
             }
         }
         BuiltinFunction::ShapesRegularPolygon => {
@@ -3472,10 +3472,10 @@ fn check_shape_call(e: &Expression, node: &dyn Spanned, ctx: &mut LookupCtx) {
             if num(0).is_some_and(|n| n < 3.) {
                 err("regular polygons must have at least 3 vertices");
             }
-            if let (Some(n), Some(r)) = (num(0), len(1)) {
-                if n as usize != r {
-                    err("roundings must have the same size as vertices");
-                }
+            if let (Some(n), Some(r)) = (num(0), len(1))
+                && n as usize != r
+            {
+                err("roundings must have the same size as vertices");
             }
         }
         BuiltinFunction::ShapesRectangle => {
@@ -3519,10 +3519,10 @@ fn check_shape_call(e: &Expression, node: &dyn Spanned, ctx: &mut LookupCtx) {
             if len(0).is_some_and(|n| n < 1) {
                 err("custom shapes must have at least 1 vertex");
             }
-            if let (Some(v), Some(r)) = (len(0), len(1)) {
-                if v != r {
-                    err("roundings must have the same size as vertices");
-                }
+            if let (Some(v), Some(r)) = (len(0), len(1))
+                && v != r
+            {
+                err("roundings must have the same size as vertices");
             }
             if num(2).is_some_and(|n| n < 1.) {
                 err("reps must be >= 1");
