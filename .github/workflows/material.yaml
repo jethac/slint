@@ -112,8 +112,11 @@ jobs:
             with:
                 distribution: temurin
                 java-version: "21"
-          - uses: android-actions/setup-android@v3
           - name: Install Android SDK platform 36
+            # The ubuntu-latest runner image ships a preinstalled Android SDK
+            # (ANDROID_HOME / ANDROID_SDK_ROOT point at it). setup-android@v3
+            # is not used: it runs `sdkmanager tools`, a package removed from
+            # cmdline-tools 16.0, and fails on current runner images.
             run: |
               yes | sdkmanager --licenses > /dev/null
               sdkmanager "platforms;android-36" "build-tools;36.0.0"
