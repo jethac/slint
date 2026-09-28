@@ -34,8 +34,7 @@
         "Realloc",
         "refcell",
         "rtti",
-        "SETTINGCHANGE", // WM_SETTINGCHANGE
-        "Smol",
+                "Smol",
         "smolstr",
         "subspan",
         "ulps",
@@ -147,6 +146,7 @@
     "distros",
     "embedders",
     "emsdk", // the Emscripten SDK, one of Skia's DEPS entries
+    "eotf", // electro-optical transfer function
     "espflash",
     "Femto",
     "femtovg",
@@ -186,6 +186,7 @@
     "miscompilation",
     "miscompiled",
     "miscompiles",
+    "Millis",
     "MSVC",
     "muda",
     "napi",
@@ -221,6 +222,7 @@
     "SANDBOXING",
     "scrollview",
     "SDK",
+    "SETTINGCHANGE", // WM_SETTINGCHANGE
     "seti",
     "sharedparley",
     "sixtyfps",
