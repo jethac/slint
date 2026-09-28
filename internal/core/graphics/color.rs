@@ -649,6 +649,10 @@ impl From<OklabColor> for OklchColor {
 /// — and the same f32 width — as `mul3x3Float3`/`mul3x3`/`inverse3x3` in
 /// `ColorSpace.kt`.
 mod compose_oklab {
+    #[cfg(not(feature = "std"))]
+    #[allow(unused_imports)]
+    use num_traits::Float;
+
     const fn mul3x3f3(m: &[f32; 9], v: [f32; 3]) -> [f32; 3] {
         [
             m[0] * v[0] + m[3] * v[1] + m[6] * v[2],

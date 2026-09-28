@@ -924,7 +924,10 @@ fn windows_client_area_animation_disabled() -> Option<bool> {
 /// on the `prefers-reduced-motion` `MediaQueryList`.
 #[cfg(any(target_os = "macos", target_os = "ios", target_arch = "wasm32"))]
 struct ReducedMotionObserver {
+    // Held for its lifetime: deallocating unregisters it from
+    // NSNotificationCenter (automatic since macOS 10.11 / iOS 9).
     #[cfg(any(target_os = "macos", target_os = "ios"))]
+    #[allow(dead_code)]
     observer:
         objc2::rc::Retained<objc2::runtime::ProtocolObject<dyn objc2::runtime::NSObjectProtocol>>,
     #[cfg(target_arch = "wasm32")]

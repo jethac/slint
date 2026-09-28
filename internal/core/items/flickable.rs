@@ -700,8 +700,8 @@ impl FlickableDataInner {
                         // Target where the fling would naturally stop —
                         // v² = 2·a·d — clamped into the scroll bounds, rather
                         // than always the content edge.
-                        let stop =
-                            content.get().0 + velocity * velocity.abs() / (2.0 * DECELERATION);
+                        let stop = content.get().0 as f32
+                            + velocity * velocity.abs() / (2.0 * DECELERATION);
                         let calculate_target = {
                             let flick_weak = flick_rc.downgrade();
                             move || {
