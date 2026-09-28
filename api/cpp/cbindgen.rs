@@ -129,7 +129,7 @@ fn builtin_structs(path: &Path) -> anyhow::Result<()> {
         ($(
             $(#[doc = $struct_doc:literal])*
             $(#[non_exhaustive])?
-            $(#[derive(Copy, Eq)])?
+            $(#[derive(Copy $(, Eq)?)])?
             $vis:vis struct $Name:ident {
                 $( $(#[doc = $field_doc:literal])* $field:ident : $field_type:ty $(= $field_default:expr)?, )*
             }
