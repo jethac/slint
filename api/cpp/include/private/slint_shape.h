@@ -99,6 +99,12 @@ struct Shape
     /// Part of the value (equality and serialization preserve it); ignored by
     /// measuring, morphing and transforms.
     cbindgen_private::FillRule fill_rule() const { return fill_rule_; }
+    /// The content hash the Rust side computed at construction (morph cache
+    /// key); 0 for a C++-default Shape. Only meaningful to Rust.
+    uint64_t content_hash() const { return content_hash_; }
+    /// The interned construction id the Rust side assigned; 0 when unset.
+    /// Only meaningful to Rust.
+    uint64_t id() const { return id_; }
 
     /// Returns a copy of this shape normalized so its bounding box fits the
     /// unit square centered on the origin.
@@ -158,9 +164,9 @@ private:
     ShapePoint center_ = {};
     /// Content hash computed by the Rust side at construction (morph cache
     /// key). Read and written by Rust only; always 0 for a C++-default Shape.
-    [[maybe_unused]] uint64_t content_hash_ = 0;
+    uint64_t content_hash_ = 0;
     /// Interned construction id assigned by the Rust side; 0 when unset.
-    [[maybe_unused]] uint64_t id_ = 0;
+    uint64_t id_ = 0;
     cbindgen_private::FillRule fill_rule_ = cbindgen_private::FillRule::Nonzero;
 };
 
