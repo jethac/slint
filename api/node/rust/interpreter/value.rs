@@ -384,6 +384,7 @@ pub fn to_value(
         | Type::ComponentFactory
         | Type::Easing
         | Type::PathData
+        | Type::Shape
         | Type::LayoutCache
         | Type::ArrayOfU16
         | Type::ElementReference

@@ -81,6 +81,7 @@ impl InterpolatedPropertyValue for Value {
                 Value::Number((a + (b - a) * t) as f64)
             }
             (Value::Brush(a), Value::Brush(b)) => Value::Brush(Brush::interpolate(a, b, t)),
+            (Value::Shape(a), Value::Shape(b)) => Value::Shape(a.interpolate(b, t)),
             (Value::Model(from), Value::Model(to)) => interpolate_font_variations(from, to, t),
             _ => target.clone(),
         }

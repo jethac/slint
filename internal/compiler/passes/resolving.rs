@@ -2008,7 +2008,13 @@ impl Expression {
             }
         };
 
-        Expression::FunctionCall { function, arguments, source_location: Some(source_location) }
+        let e = Expression::FunctionCall {
+            function,
+            arguments,
+            source_location: Some(source_location),
+        };
+        check_shape_call(&e, &node, ctx);
+        e
     }
 
     fn from_member_access_node(
@@ -3486,5 +3492,110 @@ fn check_slint_sc_handler_body(
             "A callback handler body that isn't a callback invocation is",
             name.as_ref().map_or(&**node as &dyn Spanned, |name| name),
         );
+    }
+}
+
+/// Validates `Shapes.*` builtin calls whose arguments are constant: a constant
+/// argument violating a constructor's precondition is a compile error, matching
+/// the runtime `ShapeError` the core constructors would produce.
+fn check_shape_call(e: &Expression, node: &dyn Spanned, ctx: &mut LookupCtx) {
+    let Expression::FunctionCall { function: Callable::Builtin(f), arguments, .. } = e else {
+        return;
+    };
+    let num = |i: usize| -> Option<f64> {
+        match arguments.get(i) {
+            Some(Expression::NumberLiteral(v, Unit::None)) => Some(*v),
+            _ => None,
+        }
+    };
+    let len = |i: usize| -> Option<usize> {
+        match arguments.get(i) {
+            Some(Expression::Array { values, .. }) => Some(values.len()),
+            _ => None,
+        }
+    };
+    let mut err = |msg: &str| ctx.diag.push_error(msg.into(), node);
+    match f {
+        BuiltinFunction::ShapesPolygon => {
+            if len(0).is_some_and(|n| n < 3) {
+                err("polygons must have at least 3 vertices");
+            }
+        }
+        BuiltinFunction::ShapesPolygonPerVertex => {
+            if len(0).is_some_and(|n| n < 3) {
+                err("polygons must have at least 3 vertices");
+            }
+            if let (Some(v), Some(r)) = (len(0), len(1))
+                && v != r
+            {
+                err("roundings must have the same size as vertices");
+            }
+        }
+        BuiltinFunction::ShapesRegularPolygon => {
+            if num(0).is_some_and(|n| n < 3.) {
+                err("regular polygons must have at least 3 vertices");
+            }
+        }
+        BuiltinFunction::ShapesRegularPolygonPerVertex => {
+            if num(0).is_some_and(|n| n < 3.) {
+                err("regular polygons must have at least 3 vertices");
+            }
+            if let (Some(n), Some(r)) = (num(0), len(1))
+                && n as usize != r
+            {
+                err("roundings must have the same size as vertices");
+            }
+        }
+        BuiltinFunction::ShapesRectangle => {
+            if len(2).is_some_and(|n| ![0, 1, 4].contains(&n)) {
+                err("rectangle takes 0, 1 or 4 corner roundings");
+            }
+            if num(0).is_some_and(|w| w <= 0.) || num(1).is_some_and(|h| h <= 0.) {
+                err("rectangle must have positive width and height");
+            }
+        }
+        BuiltinFunction::ShapesCircle => {
+            if num(0).is_some_and(|n| n < 3.) {
+                err("circles must have at least 3 vertices");
+            }
+        }
+        BuiltinFunction::ShapesStar => {
+            if num(0).is_some_and(|n| n < 1.) {
+                err("stars must have at least 1 vertex per radius");
+            }
+            if num(1).is_some_and(|ir| !(ir > 0. && ir < 1.)) {
+                err("inner-radius must be in the (0, 1) range");
+            }
+        }
+        BuiltinFunction::ShapesPill => {
+            if num(0).is_some_and(|w| w <= 0.) || num(1).is_some_and(|h| h <= 0.) {
+                err("pills must have positive width and height");
+            }
+        }
+        BuiltinFunction::ShapesPillStar => {
+            if num(0).is_some_and(|n| n < 1.) {
+                err("pill-stars must have at least 1 vertex per radius");
+            }
+            if num(1).is_some_and(|w| w <= 0.) || num(2).is_some_and(|h| h <= 0.) {
+                err("pill-stars must have positive width and height");
+            }
+            if num(3).is_some_and(|r| !(r > 0. && r <= 1.)) {
+                err("inner-radius-ratio must be in the (0, 1] range");
+            }
+        }
+        BuiltinFunction::ShapesCustom => {
+            if len(0).is_some_and(|n| n < 1) {
+                err("custom shapes must have at least 1 vertex");
+            }
+            if let (Some(v), Some(r)) = (len(0), len(1))
+                && v != r
+            {
+                err("roundings must have the same size as vertices");
+            }
+            if num(2).is_some_and(|n| n < 1.) {
+                err("reps must be >= 1");
+            }
+        }
+        _ => {}
     }
 }
