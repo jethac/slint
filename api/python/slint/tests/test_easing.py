@@ -1,13 +1,15 @@
 # Copyright © SixtyFPS GmbH <info@slint.dev>
 # SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0
 
+from pathlib import Path
+
 from slint import slint as native
 from slint.slint import EasingCurve
 
 
 def test_easing_curve_round_trip() -> None:
     compiler = native.Compiler()
-    compdef = compiler.build_from_source(
+    result = compiler.build_from_source(
         """
         export component Test {
             in-out property <easing> e1: linear;
@@ -16,9 +18,10 @@ def test_easing_curve_round_trip() -> None:
             in-out property <easing> e4: spring(0.4);
             in-out property <easing> e5: ease-out-bounce;
         }
-        """
+        """,
+        Path(""),
     )
-    instance = compdef.create()
+    instance = result.component("Test").create()
     assert instance is not None
 
     assert instance.get_property("e1") == EasingCurve.linear()

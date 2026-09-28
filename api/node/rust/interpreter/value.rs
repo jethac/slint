@@ -145,28 +145,39 @@ pub fn to_js_unknown<'a>(env: &'a Env, value: &Value) -> Result<Unknown<'a>> {
 /// The JavaScript shape of an `easing` value:
 /// `{ type: "linear" }`, `{ type: "cubicBezier", p: [x1, y1, x2, y2] }`,
 /// `{ type: "spring", dampingRatio, stiffness, mass? }`,
-/// `{ type: "springBounce", bounce }` and `{ type: "named", name }`.
+/// `{ type: "springBounce", bounce }` and `{ type: "<named curve>" }`.
+/// `{ type: "named", name: "<named curve>" }` is also accepted on the way in.
 fn easing_curve_to_js<'a>(env: &'a Env, curve: &EasingCurve) -> Result<Object<'a>> {
     let mut o = Object::new(env)?;
     o.set_named_property("type", env.create_string(easing_curve_type_name(curve))?)?;
     match curve {
         EasingCurve::CubicBezier([a, b, c, d]) => {
-            o.set_named_property("p", vec![*a as f64, *b as f64, *c as f64, *d as f64])?;
+            o.set_named_property(
+                "p",
+                vec![as_f64(*a), as_f64(*b), as_f64(*c), as_f64(*d)],
+            )?;
         }
         EasingCurve::Spring(bounce) => {
-            o.set_named_property("bounce", *bounce)?;
+            o.set_named_property("bounce", as_f64(*bounce))?;
         }
         EasingCurve::PhysicalSpring { damping_ratio, stiffness, mass } => {
-            o.set_named_property("dampingRatio", *damping_ratio)?;
-            o.set_named_property("stiffness", *stiffness)?;
-            o.set_named_property("mass", *mass)?;
+            o.set_named_property("dampingRatio", as_f64(*damping_ratio))?;
+            o.set_named_property("stiffness", as_f64(*stiffness))?;
+            o.set_named_property("mass", as_f64(*mass))?;
         }
-        EasingCurve::Linear => {}
-        named => {
-            o.set_named_property("name", env.create_string(easing_curve_type_name(named))?)?;
-        }
+        // `linear` and the named curves are identified by `type` alone,
+        // e.g. `{ type: "ease-out-bounce" }`.
+        _ => {}
     }
     Ok(o)
+}
+
+/// `f32` fields surface as `f64`s on the JS side; a widening cast exposes the
+/// f32 grid (`0.1` becomes `0.10000000149011612`). Going through the shortest
+/// f32→string round-trip keeps the emitted double at the decimal the user
+/// wrote while still mapping back to the identical `f32` bits.
+fn as_f64(x: f32) -> f64 {
+    x.to_string().parse().unwrap_or(x as f64)
 }
 
 fn easing_curve_type_name(curve: &EasingCurve) -> &'static str {
@@ -237,7 +248,9 @@ fn js_to_easing_curve(obj: Object) -> Result<EasingCurve> {
             })?;
             named_easing_curve(&name)
         }
-        other => Err(napi::Error::from_reason(format!("Unknown easing type '{other}'"))),
+        // `easing_curve_to_js` emits the curve name as `type` for named curves,
+        // so accept that shape back for a clean round trip.
+        other => named_easing_curve(other),
     }
 }
 
