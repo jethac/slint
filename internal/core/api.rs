@@ -13,6 +13,7 @@ use crate::window::{WindowAdapter, WindowInner};
 use alloc::boxed::Box;
 use alloc::string::String;
 
+pub use crate::animations::EasingCurve;
 pub use crate::data_transfer::DataTransfer;
 #[cfg(target_has_atomic = "ptr")]
 pub use crate::future::*;

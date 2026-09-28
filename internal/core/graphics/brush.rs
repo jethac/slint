@@ -921,6 +921,238 @@ impl InterpolatedPropertyValue for Brush {
             }
         }
     }
+
+    fn channel_count(&self, target_value: &Self) -> usize {
+        BrushChannelLayout::of(self, target_value).channel_count()
+    }
+
+    fn write_channels(&self, target_value: &Self, out: &mut [f32]) {
+        BrushChannelLayout::of(self, target_value).write(self, target_value, out);
+    }
+
+    fn from_channels(&self, target_value: &Self, channels: &[f32]) -> Self {
+        BrushChannelLayout::of(self, target_value).build(self, channels)
+    }
+}
+
+/// The channel layout a physical `spring(damping_ratio, stiffness)` animates a
+/// `Brush` in: the structured side of the pair dictates the shape, and same-kind
+/// gradients use the longer side's stop count (`interpolate` pads instead of
+/// dropping stops). This is a property of the brush pair, not of either value.
+#[derive(Clone, Copy)]
+enum BrushChannelLayout {
+    /// Just a color: `(alpha, l, a, b)` in Oklab.
+    Solid,
+    /// `angle`, then `(alpha, l, a, b, position)` per stop.
+    Linear { stops: usize },
+    /// `center_x`, `center_y`, `radius`, then `(alpha, l, a, b, position)` per stop.
+    Radial { stops: usize },
+    /// `angle`, `center_x`, `center_y`, then `(alpha, l, a, b, position)` per stop.
+    Conic { stops: usize },
+}
+
+impl BrushChannelLayout {
+    /// Which of a pair's shapes the channels follow: `interpolate` lets a gradient
+    /// win over a `SolidColor`, and for cross-kind gradients the more structured
+    /// variant wins — ranked radial > conic > linear so the result doesn't depend
+    /// on the order `of` is invoked with.
+    fn of(a: &Brush, b: &Brush) -> Self {
+        fn kind_rank(brush: &Brush) -> u8 {
+            match brush {
+                Brush::SolidColor(_) => 0,
+                Brush::LinearGradient(_) => 1,
+                Brush::ConicGradient(_) => 2,
+                Brush::RadialGradient(_) => 3,
+            }
+        }
+        match (a, b) {
+            (Brush::SolidColor(_), Brush::SolidColor(_)) => Self::Solid,
+            (Brush::LinearGradient(a), Brush::LinearGradient(b)) => {
+                Self::Linear { stops: a.stops_slice().len().max(b.stops_slice().len()) }
+            }
+            (Brush::RadialGradient(a), Brush::RadialGradient(b)) => {
+                Self::Radial { stops: a.stops_slice().len().max(b.stops_slice().len()) }
+            }
+            (Brush::ConicGradient(a), Brush::ConicGradient(b)) => {
+                Self::Conic { stops: a.stops_slice().len().max(b.stops_slice().len()) }
+            }
+            (a, b) => {
+                let structured = if kind_rank(a) >= kind_rank(b) { a } else { b };
+                match structured {
+                    Brush::SolidColor(_) => unreachable!(),
+                    Brush::LinearGradient(g) => Self::Linear { stops: g.stops_slice().len() },
+                    Brush::RadialGradient(g) => Self::Radial { stops: g.stops_slice().len() },
+                    Brush::ConicGradient(g) => Self::Conic { stops: g.stops_slice().len() },
+                }
+            }
+        }
+    }
+
+    fn header_count(&self) -> usize {
+        match self {
+            Self::Solid => 0,
+            Self::Linear { .. } => 1,
+            Self::Radial { .. } | Self::Conic { .. } => 3,
+        }
+    }
+
+    fn stop_count(&self) -> usize {
+        match self {
+            Self::Solid => 0,
+            Self::Linear { stops } | Self::Radial { stops } | Self::Conic { stops } => *stops,
+        }
+    }
+
+    fn channel_count(&self) -> usize {
+        match self {
+            Self::Solid => 4,
+            _ => self.header_count() + self.stop_count() * 5,
+        }
+    }
+
+    /// The layout's color stops of `brush`: `None` when `brush` doesn't take part in
+    /// the layout's gradient shape (a solid color, a different gradient kind) — such a
+    /// side has no real stops at all, let alone a tail.
+    fn stops<'b>(&self, brush: &'b Brush) -> Option<&'b [GradientStop]> {
+        match (self, brush) {
+            (Self::Linear { .. }, Brush::LinearGradient(g)) => Some(g.stops_slice()),
+            (Self::Radial { .. }, Brush::RadialGradient(g)) => Some(g.stops_slice()),
+            (Self::Conic { .. }, Brush::ConicGradient(g)) => Some(g.stops_slice()),
+            _ => None,
+        }
+    }
+
+    /// `brush`'s value for header channel `index`: `None` when `brush` can't express
+    /// it — different shape, or a NaN center/negative radius meaning "derive from the
+    /// bounding box" and therefore not animatable.
+    fn header_value(&self, brush: &Brush, index: usize) -> Option<f32> {
+        match (self, brush) {
+            (Self::Linear { .. }, Brush::LinearGradient(g)) if index == 0 => Some(g.angle()),
+            (Self::Radial { .. }, Brush::RadialGradient(g)) => match index {
+                0 | 1 => {
+                    let c = [g.center_x(), g.center_y()][index];
+                    (!c.is_nan()).then_some(c)
+                }
+                2 => (g.radius() >= 0.0).then(|| g.radius()),
+                _ => None,
+            },
+            (Self::Conic { .. }, Brush::ConicGradient(g)) => match index {
+                0 => Some(g.angle()),
+                1 | 2 => {
+                    let c = [g.center_x(), g.center_y()][index - 1];
+                    (!c.is_nan()).then_some(c)
+                }
+                _ => None,
+            },
+            _ => None,
+        }
+    }
+
+    /// Write `brush`'s channels in this pair's layout: channels `brush` can't express
+    /// take `other`'s value (zero displacement — the channel is constant, like
+    /// `interpolate` leaving unmatched geometry untouched). A stop `brush` is short of
+    /// in an otherwise same-kind pair adopts `other`'s color pinned to position `1.0`,
+    /// matching `interpolate`'s padding of the shorter side. Solid and cross-kind
+    /// sides broadcast their plain color into every stop, so stop colors still fly
+    /// while the geometry stays at `other`'s.
+    fn write(&self, brush: &Brush, other: &Brush, out: &mut [f32]) {
+        debug_assert_eq!(out.len(), self.channel_count());
+        if let Self::Solid = self {
+            out[..4].copy_from_slice(&Color::oklab_channels(&brush.color()));
+            return;
+        }
+        for i in 0..self.header_count() {
+            out[i] =
+                self.header_value(brush, i).or_else(|| self.header_value(other, i)).unwrap_or(0.0);
+        }
+        let stops = self.stops(brush);
+        for i in 0..self.stop_count() {
+            let base = self.header_count() + i * 5;
+            match stops.map(|stops| stops.get(i)) {
+                Some(Some(stop)) => {
+                    let oklab = Color::oklab_channels(&stop.color);
+                    out[base..base + 5].copy_from_slice(&[
+                        oklab[0],
+                        oklab[1],
+                        oklab[2],
+                        oklab[3],
+                        stop.position,
+                    ]);
+                }
+                Some(None) => {
+                    let other_stop = self.stops(other).and_then(|stops| stops.get(i));
+                    let color = other_stop.map(|stop| stop.color).unwrap_or_default();
+                    let oklab = Color::oklab_channels(&color);
+                    out[base..base + 5]
+                        .copy_from_slice(&[oklab[0], oklab[1], oklab[2], oklab[3], 1.0]);
+                }
+                None => {
+                    let other_stop = self.stops(other).and_then(|stops| stops.get(i));
+                    let oklab = Color::oklab_channels(&brush.color());
+                    out[base..base + 5].copy_from_slice(&[
+                        oklab[0],
+                        oklab[1],
+                        oklab[2],
+                        oklab[3],
+                        other_stop.map(|stop| stop.position).unwrap_or(1.0),
+                    ]);
+                }
+            }
+        }
+    }
+
+    /// Rebuild a brush from channels: the layout's gradient shape, header values the
+    /// `from` side can't express keep its NaN/negative defaults (as `interpolate`
+    /// leaves them to the bounding box), stops straight from the channels.
+    fn build(&self, from: &Brush, channels: &[f32]) -> Brush {
+        debug_assert_eq!(channels.len(), self.channel_count());
+        let stop_at = |index: usize| GradientStop {
+            color: Color::from_oklab_channels(&channels[index..index + 4]),
+            position: channels[index + 4],
+        };
+        match self {
+            Self::Solid => Brush::SolidColor(Color::from_oklab_channels(&channels[0..4])),
+            Self::Linear { stops } => {
+                let mut v = SharedVector::with_capacity(1 + stops);
+                v.push(GradientStop { color: Default::default(), position: channels[0] });
+                for i in 0..*stops {
+                    v.push(stop_at(1 + i * 5));
+                }
+                Brush::LinearGradient(LinearGradientBrush(v))
+            }
+            Self::Radial { stops } => {
+                let mut v = SharedVector::with_capacity(RadialGradientBrush::HEADER + stops);
+                for i in 0..RadialGradientBrush::HEADER {
+                    // A default (`None`) header on the `from` side is a constant
+                    // channel: keep the default rather than baking `other`'s value in.
+                    let value = match self.header_value(from, i) {
+                        None => [f32::NAN, f32::NAN, -1.0][i],
+                        _ => channels[i],
+                    };
+                    v.push(GradientStop { color: Default::default(), position: value });
+                }
+                for i in 0..*stops {
+                    v.push(stop_at(RadialGradientBrush::HEADER + i * 5));
+                }
+                Brush::RadialGradient(RadialGradientBrush(v))
+            }
+            Self::Conic { stops } => {
+                let mut v = SharedVector::with_capacity(ConicGradientBrush::HEADER + stops);
+                v.push(GradientStop { color: Default::default(), position: channels[0] });
+                for i in 1..ConicGradientBrush::HEADER {
+                    let value = match self.header_value(from, i) {
+                        None => f32::NAN,
+                        _ => channels[i],
+                    };
+                    v.push(GradientStop { color: Default::default(), position: value });
+                }
+                for i in 0..*stops {
+                    v.push(stop_at(ConicGradientBrush::HEADER + i * 5));
+                }
+                Brush::ConicGradient(ConicGradientBrush(v))
+            }
+        }
+    }
 }
 
 /// A [`Brush`] resolved by [`resolve_brush`]: gradient geometry in physical pixels

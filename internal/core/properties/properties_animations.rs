@@ -6,10 +6,12 @@ use crate::{
     animations::simulations::{
         Parameter, Simulation,
         spring::{SpringDurationBounceParameters, SpringParameters, SpringRegime},
+        spring_estimation,
     },
     items::{AnimationDirection, PropertyAnimation},
     lengths::LogicalLength,
 };
+use alloc::vec::Vec;
 use euclid::Length;
 #[cfg(not(feature = "std"))]
 use num_traits::Float;
@@ -29,6 +31,10 @@ enum AnimationState {
 pub(super) struct PropertyPhysicsAnimationData<S> {
     simulation: S,
     state: AnimationState,
+    /// Tick at which the simulation was installed: simulations remember their own
+    /// start time, so the global duration scale is applied by feeding the simulation
+    /// a tick stretched relative to this anchor.
+    installed_at: crate::animations::Instant,
 }
 
 impl<S> PropertyPhysicsAnimationData<S>
@@ -36,7 +42,11 @@ where
     S: Simulation,
 {
     pub fn new(simulation: S) -> PropertyPhysicsAnimationData<S> {
-        PropertyPhysicsAnimationData { simulation, state: AnimationState::Delaying }
+        PropertyPhysicsAnimationData {
+            simulation,
+            state: AnimationState::Delaying,
+            installed_at: crate::animations::current_tick(),
+        }
     }
 
     /// Single iteration of the animation
@@ -50,7 +60,16 @@ where
             AnimationState::Animating { current_iteration: _ } => {
                 // TODO: Pass in Coord directly?
                 let mut value: f32 = *target as f32;
-                let finished = self.simulation.step(&mut value, crate::animations::current_tick());
+                let tick = crate::animations::current_tick();
+                let scale = crate::animations::duration_scale();
+                let tick = if scale <= 0.0 {
+                    crate::animations::Instant(u64::MAX)
+                } else {
+                    crate::animations::Instant(self.installed_at.0.saturating_add(
+                        (tick.0.saturating_sub(self.installed_at.0) as f64 / scale as f64) as u64,
+                    ))
+                };
+                let finished = self.simulation.step(&mut value, tick);
                 *target = value as crate::Coord;
                 if finished {
                     self.state = AnimationState::Done { iteration_count: 0 };
@@ -74,25 +93,52 @@ pub(super) struct PropertyValueAnimationData<T> {
     /// type-erased property (the interpreter's `Property<Value>`) reproduce
     /// the interpolation of the erased type, e.g. rounding for `int`.
     map: Option<fn(T) -> T>,
-    spring: Option<SpringRegime>,
+    spring: Option<PropertySpring>,
     /// Whether the final iteration's spring has already been re-damped
     spring_settle_clamped: bool,
 }
 
+/// How a spring animates the value: the normalized legacy `spring(bounce)` or a
+/// per-channel physical `spring(damping_ratio, stiffness[, mass])`.
+enum PropertySpring {
+    /// `easing: spring(bounce)`: a normalized spring over the whole value, driven
+    /// by the animation's `duration`.
+    DurationBounce(SpringRegime),
+    /// `easing: spring(damping_ratio, stiffness[, mass])`: an independent spring per
+    /// animation channel, running until it settles — the `VectorizedSpringSpec`/
+    /// `SpringSimulation` model of androidx.compose.animation.core.
+    Physical(PhysicalSpring),
+}
+
+struct PhysicalSpring {
+    /// One regime per channel: `evaluate(t)` returns `(channel - to_channel, velocity)`.
+    regimes: Vec<SpringRegime>,
+    /// `to_value` decomposed into the same channels.
+    to_channels: Vec<f32>,
+    /// Estimated time in milliseconds after which every channel has settled: the
+    /// maximum over the channels of [`spring_estimation::estimate_animation_duration_ms_with_mass`].
+    /// Effectively infinite (`u64::MAX`) when a channel never settles
+    /// (`damping_ratio == 0`).
+    duration_ms: u64,
+}
+
 impl<T: InterpolatedPropertyValue + Clone> PropertyValueAnimationData<T> {
     pub fn new(from_value: T, to_value: Option<T>, details: PropertyAnimation) -> Self {
-        Self::new_with_velocity(from_value, to_value, details, 0.0)
+        Self::new_with_velocity(from_value, to_value, details, Vec::new())
     }
 
-    /// Used to carry velocity over across a retarget.
+    /// Used to carry velocity over across a retarget: `carried_velocity` holds one
+    /// velocity per channel of the outgoing animation (empty when there was none).
+    /// Per channel, [`PropertyAnimation::initial_velocity`] applies where no velocity
+    /// is carried over.
     pub fn new_with_velocity(
         from_value: T,
         to_value: Option<T>,
         details: PropertyAnimation,
-        initial_velocity: f32,
+        carried_velocity: Vec<f32>,
     ) -> Self {
         let start_time = crate::animations::current_tick();
-        let spring = Self::compute_spring(&details, &from_value, &to_value, initial_velocity);
+        let spring = Self::compute_spring(&details, &from_value, &to_value, &carried_velocity);
         Self {
             from_value,
             to_value,
@@ -110,13 +156,10 @@ impl<T: InterpolatedPropertyValue + Clone> PropertyValueAnimationData<T> {
         details: &PropertyAnimation,
         from_value: &T,
         to_value: &Option<T>,
-        initial_velocity: f32,
-    ) -> Option<SpringRegime> {
-        matches!(details.easing, crate::animations::EasingCurve::Spring(_))
-            .then(|| {
-                let crate::animations::EasingCurve::Spring(bounce) = details.easing else {
-                    return None;
-                };
+        carried_velocity: &[f32],
+    ) -> Option<PropertySpring> {
+        match details.easing {
+            crate::animations::EasingCurve::Spring(bounce) => {
                 let (w_n, zeta) = if details.duration > 0 {
                     Some(
                         SpringDurationBounceParameters::new(
@@ -132,10 +175,71 @@ impl<T: InterpolatedPropertyValue + Clone> PropertyValueAnimationData<T> {
                 // -1 so that the spring knows to go to 0; re-express the carried-over velocity
                 // (in property units/sec) in the spring's -1..=0-relative units.
                 let delta = to_value.as_ref().map_or(0.0, |tv| from_value.scalar_delta(tv));
-                let v0 = if delta != 0.0 { initial_velocity / delta } else { 0.0 };
-                Some(SpringRegime::new(-1.0, v0, w_n, zeta))
-            })
-            .flatten()
+                let v0 = if delta != 0.0 {
+                    carried_velocity.first().copied().unwrap_or(0.0) / delta
+                } else {
+                    0.0
+                };
+                Some(PropertySpring::DurationBounce(SpringRegime::new(-1.0, v0, w_n, zeta)))
+            }
+            crate::animations::EasingCurve::PhysicalSpring { damping_ratio, stiffness, mass } => {
+                let to_value = to_value.as_ref()?;
+                let channel_count = from_value.channel_count(to_value);
+                if channel_count == 0 {
+                    return None;
+                }
+                // Invalid parameters can't be simulated: the compiler diagnoses
+                // literals, so clamp what only a runtime value can produce.
+                let mass = f64::from(mass.max(0.0001));
+                let stiffness = f64::from(stiffness.max(0.0));
+                let damping_ratio = damping_ratio.max(0.0);
+                // `SpringSimulation` fixes the mass at 1, so `w_n = sqrt(k / m)`
+                // covers the optional mass parameter.
+                let w_n = f32::sqrt(stiffness as f32 / mass as f32);
+                let damping_coefficient =
+                    2.0 * f64::from(damping_ratio) * f64::sqrt(stiffness * mass);
+                let threshold = f64::from(from_value.visibility_threshold(to_value));
+
+                let mut from_channels = alloc::vec![0.0; channel_count];
+                from_value.write_channels(to_value, &mut from_channels);
+                let mut to_channels = alloc::vec![0.0; channel_count];
+                to_value.write_channels(from_value, &mut to_channels);
+                // A velocity carried over from an animation with a different channel
+                // count doesn't map onto this one, so it falls back to
+                // `initial_velocity` on every channel.
+                let carried = if carried_velocity.len() == channel_count {
+                    Some(carried_velocity)
+                } else {
+                    None
+                };
+
+                // `estimate_animation_duration_ms_with_mass` takes the
+                // under-damped branch for `damping_ratio == 0` and yields an
+                // estimate of 0 or worse — but a spring without damping never
+                // settles, which Compose's `(stiffness, dampingRatio)` overload
+                // reports as its maximum duration.
+                let mut duration_ms = if damping_ratio == 0.0 { u64::MAX } else { 0 };
+                let regimes = (0..channel_count)
+                    .map(|i| {
+                        let displacement = from_channels[i] - to_channels[i];
+                        let v0 = carried.map(|c| c[i]).unwrap_or(details.initial_velocity);
+                        duration_ms = duration_ms.max(
+                            spring_estimation::estimate_animation_duration_ms_with_mass(
+                                stiffness,
+                                damping_coefficient,
+                                mass,
+                                f64::from(v0) / threshold,
+                                f64::from(displacement) / threshold,
+                                1.0,
+                            ),
+                        );
+                        SpringRegime::new(displacement, v0, w_n, damping_ratio)
+                    })
+                    .collect();
+                Some(PropertySpring::Physical(PhysicalSpring { regimes, to_channels, duration_ms }))
+            }
+            _ => None,
+        }
     }
 
     pub fn with_map(mut self, map: fn(T) -> T) -> Self {
@@ -150,18 +254,36 @@ impl<T: InterpolatedPropertyValue + Clone> PropertyValueAnimationData<T> {
         }
     }
 
-    /// The current velocity (in property units per second) of a live spring animation
-    fn current_velocity(&self) -> Option<f32> {
+    /// The current velocity (one value per channel, in channel units per scaled
+    /// second) of a live spring animation.
+    fn current_channel_velocities(&self) -> Option<Vec<f32>> {
         if !matches!(self.state, AnimationState::Animating { .. }) {
             return None;
         }
         let spring = self.spring.as_ref()?;
-        let elapsed_secs =
-            crate::animations::current_tick().duration_since(self.start_time).as_millis() as f32
-                / 1000.0;
-        let (_, rel_vel) = spring.evaluate(elapsed_secs);
+        let elapsed_secs = self.scaled_elapsed_secs(crate::animations::current_tick());
         let to_value = self.to_value.as_ref().expect("The animation should have a to_value");
-        Some(rel_vel * self.from_value.scalar_delta(to_value))
+        match spring {
+            PropertySpring::DurationBounce(spring) => {
+                let (_, rel_vel) = spring.evaluate(elapsed_secs);
+                Some(alloc::vec![rel_vel * self.from_value.scalar_delta(to_value)])
+            }
+            PropertySpring::Physical(physical) => Some(
+                physical.regimes.iter().map(|regime| regime.evaluate(elapsed_secs).1).collect(),
+            ),
+        }
+    }
+
+    /// Elapsed time since `start_time`, with the global duration scale applied: at
+    /// scale `0` an animation's progress and a spring's velocity are read as if
+    /// infinitely much time had passed.
+    fn scaled_elapsed_secs(&self, new_tick: crate::animations::Instant) -> f32 {
+        let scale = crate::animations::duration_scale();
+        if scale <= 0.0 {
+            return f32::MAX / 1000.0;
+        }
+        (new_tick.duration_since(self.start_time).as_millis() as f64 / f64::from(scale)) as f32
+            / 1000.0
     }
 
     /// Single iteration of the animation
@@ -173,7 +295,15 @@ impl<T: InterpolatedPropertyValue + Clone> PropertyValueAnimationData<T> {
         }
 
         let new_tick = crate::animations::current_tick();
-        let mut time_progress = new_tick.duration_since(self.start_time).as_millis() as u64;
+        // The duration scale multiplies durations; scale `0` makes every animation
+        // finish immediately, which `u64::MAX` progress expresses for all the
+        // comparisons below.
+        let scale = crate::animations::duration_scale();
+        let mut time_progress = if scale <= 0.0 {
+            u64::MAX
+        } else {
+            (new_tick.duration_since(self.start_time).as_millis() as f64 / f64::from(scale)) as u64
+        };
         let reversed = |iteration: u64| -> bool {
             #[allow(clippy::manual_is_multiple_of)] // keep symmetry
             match self.details.direction {
@@ -209,13 +339,33 @@ impl<T: InterpolatedPropertyValue + Clone> PropertyValueAnimationData<T> {
                 }
             }
             AnimationState::Animating { current_iteration } => {
+                // A physical spring runs in (scaled) real time and ends only once its
+                // channels are estimated to have settled: `duration`, `direction` and
+                // `iteration_count` don't apply to it.
+                if let Some(PropertySpring::Physical(physical)) = self.spring.as_ref() {
+                    if self.details.iteration_count == 0. || time_progress >= physical.duration_ms {
+                        self.state = AnimationState::Done { iteration_count: 0 };
+                        return self.compute_interpolated_value();
+                    }
+                    let elapsed_secs = time_progress as f32 / 1000.0;
+                    let channels: Vec<f32> = physical
+                        .regimes
+                        .iter()
+                        .zip(physical.to_channels.iter())
+                        .map(|(regime, to)| to + regime.evaluate(elapsed_secs).0)
+                        .collect();
+                    let val = self.from_value.from_channels(&to_value, &channels);
+                    return (self.apply_map(val), false);
+                }
                 // A spring runs in real time and ends only once it settles.
                 if matches!(self.details.easing, crate::animations::EasingCurve::Spring(_)) {
                     if self.details.iteration_count == 0. {
                         self.state = AnimationState::Done { iteration_count: 0 };
                         return self.compute_interpolated_value();
                     }
-                    return if let Some(spring) = self.spring.as_ref() {
+                    return if let Some(PropertySpring::DurationBounce(spring)) =
+                        self.spring.as_ref()
+                    {
                         let next_iteration = current_iteration + 1;
                         let has_more_iterations = self.details.iteration_count < 0.
                             || (next_iteration as f64) < self.details.iteration_count as f64;
@@ -242,7 +392,9 @@ impl<T: InterpolatedPropertyValue + Clone> PropertyValueAnimationData<T> {
                             } else {
                                 -1.0
                             };
-                            self.spring = Some(SpringRegime::new(x0, rel_vel, w_n, zeta));
+                            self.spring = Some(PropertySpring::DurationBounce(SpringRegime::new(
+                                x0, rel_vel, w_n, zeta,
+                            )));
                             self.start_time += core::time::Duration::from_millis(duration_ms);
                             self.state =
                                 AnimationState::Animating { current_iteration: next_iteration };
@@ -266,7 +418,7 @@ impl<T: InterpolatedPropertyValue + Clone> PropertyValueAnimationData<T> {
                                     duration_secs,
                                     w_n,
                                 );
-                                self.spring = Some(settled_regime);
+                                self.spring = Some(PropertySpring::DurationBounce(settled_regime));
                                 self.start_time += core::time::Duration::from_millis(duration_ms);
                                 return self.compute_interpolated_value();
                             }
@@ -352,7 +504,9 @@ pub(super) struct AnimatedBindingCallable<T, A> {
     pub(super) compute_animation_details: A,
     /// Tick captured by `mark_dirty`
     pub(super) dirty_time: Cell<crate::animations::Instant>,
-    pub(crate) carried_velocity: Cell<f32>,
+    /// Velocity of the interrupted animation, one value per channel; refreshed by
+    /// `mark_dirty` whenever the animated value is retargeted mid-flight.
+    pub(crate) carried_velocity: RefCell<Vec<f32>>,
 }
 
 pub(super) type AnimationDetail = (PropertyAnimation, Option<crate::animations::Instant>);
@@ -409,7 +563,7 @@ impl<T: InterpolatedPropertyValue + Clone, A: Fn() -> AnimationDetail> BindingCa
                         &animation_data.details,
                         &animation_data.from_value,
                         &animation_data.to_value,
-                        self.carried_velocity.get(),
+                        &self.carried_velocity.take(),
                     );
                     animation_data.spring_settle_clamped = false;
                 }
@@ -433,15 +587,19 @@ impl<T: InterpolatedPropertyValue + Clone, A: Fn() -> AnimationDetail> BindingCa
         }
         let original_dirty = self.original_binding.access(|b| b.unwrap().dirty.get());
         if original_dirty {
-            self.carried_velocity
-                .set(self.animation_data.borrow().current_velocity().unwrap_or(0.0));
+            *self.carried_velocity.borrow_mut() =
+                self.animation_data.borrow().current_channel_velocities().unwrap_or_default();
             self.state.set(AnimatedBindingState::ShouldStart);
             self.dirty_time.set(crate::animations::current_tick());
         }
     }
 
-    fn velocity(self: Pin<&Self>) -> Option<f32> {
-        self.animation_data.borrow().current_velocity()
+    fn velocity(self: Pin<&Self>) -> Option<Vec<f32>> {
+        self.animation_data.borrow().current_channel_velocities()
+    }
+
+    fn declared_animation(self: Pin<&Self>) -> Option<PropertyAnimation> {
+        Some((self.compute_animation_details)().0)
     }
 }
 
@@ -460,6 +618,53 @@ pub trait InterpolatedPropertyValue: PartialEq + Default + 'static {
     fn scalar_delta(&self, _target_value: &Self) -> f32 {
         0.0
     }
+
+    /// The number of independent channels a physical `spring(damping_ratio, stiffness)`
+    /// animates between `self` and `target_value`: one for scalars, four (Oklab +
+    /// alpha) for colors, and the gradient's channels for brushes. The layout is a
+    /// property of the `(self, target_value)` pair, not of either value alone, so all
+    /// channel methods take the pair's other end. `0` for values a spring can't
+    /// decompose, which makes them snap.
+    fn channel_count(&self, target_value: &Self) -> usize {
+        let _ = target_value;
+        1
+    }
+
+    /// Write `self`'s channel values into `out` (of length
+    /// [`channel_count`](Self::channel_count)), in the `(self, target_value)` pair's
+    /// layout.
+    fn write_channels(&self, target_value: &Self, out: &mut [f32]) {
+        debug_assert_eq!(out.len(), self.channel_count(target_value));
+        out[0] = Self::default().scalar_delta(self);
+    }
+
+    /// Rebuild a value from channels in the `(self, target_value)` pair's layout:
+    /// `self` contributes what isn't animated (e.g. a gradient's variant) while
+    /// `target_value` resolves pair-dependent details (e.g. the longer side's stop
+    /// count).
+    fn from_channels(&self, target_value: &Self, channels: &[f32]) -> Self {
+        debug_assert_eq!(channels.len(), self.channel_count(target_value));
+        let _ = (self, target_value);
+        let mut value = Self::default();
+        value.set_single_channel(channels[0]);
+        value
+    }
+
+    /// For scalar single-channel types: rebuild `self` so that its one channel equals
+    /// `channel`. Kept internal; multi-channel types override [`from_channels`]
+    /// instead.
+    #[doc(hidden)]
+    fn set_single_channel(&mut self, channel: f32) {
+        let _ = channel;
+    }
+
+    /// The per-channel displacement at which a spring is considered settled — the
+    /// `visibilityThreshold` of androidx.compose.animation.core:
+    /// [`SPRING_DEFAULT_DISPLACEMENT_THRESHOLD`](crate::animations::SPRING_DEFAULT_DISPLACEMENT_THRESHOLD)
+    /// by default and `1.0` for integer-typed properties.
+    fn visibility_threshold(&self, _target_value: &Self) -> f32 {
+        crate::animations::SPRING_DEFAULT_DISPLACEMENT_THRESHOLD
+    }
 }
 
 impl InterpolatedPropertyValue for f32 {
@@ -469,6 +674,14 @@ impl InterpolatedPropertyValue for f32 {
 
     fn scalar_delta(&self, target_value: &Self) -> f32 {
         target_value - self
+    }
+
+    fn write_channels(&self, _target_value: &Self, out: &mut [f32]) {
+        out[0] = *self;
+    }
+
+    fn set_single_channel(&mut self, channel: f32) {
+        *self = channel;
     }
 }
 
@@ -480,6 +693,18 @@ impl InterpolatedPropertyValue for i32 {
     fn scalar_delta(&self, target_value: &Self) -> f32 {
         (target_value - self) as f32
     }
+
+    fn write_channels(&self, _target_value: &Self, out: &mut [f32]) {
+        out[0] = *self as f32;
+    }
+
+    fn set_single_channel(&mut self, channel: f32) {
+        *self = channel.round() as i32;
+    }
+
+    fn visibility_threshold(&self, _target_value: &Self) -> f32 {
+        1.0
+    }
 }
 
 impl InterpolatedPropertyValue for i64 {
@@ -489,6 +714,18 @@ impl InterpolatedPropertyValue for i64 {
 
     fn scalar_delta(&self, target_value: &Self) -> f32 {
         (target_value - self) as f32
+    }
+
+    fn write_channels(&self, _target_value: &Self, out: &mut [f32]) {
+        out[0] = *self as f32;
+    }
+
+    fn set_single_channel(&mut self, channel: f32) {
+        *self = channel.round() as i64;
+    }
+
+    fn visibility_threshold(&self, _target_value: &Self) -> f32 {
+        1.0
     }
 }
 
@@ -501,6 +738,18 @@ impl InterpolatedPropertyValue for u8 {
     fn scalar_delta(&self, target_value: &Self) -> f32 {
         (*target_value as f32) - (*self as f32)
     }
+
+    fn write_channels(&self, _target_value: &Self, out: &mut [f32]) {
+        out[0] = *self as f32;
+    }
+
+    fn set_single_channel(&mut self, channel: f32) {
+        *self = channel.round().clamp(0., 255.) as u8;
+    }
+
+    fn visibility_threshold(&self, _target_value: &Self) -> f32 {
+        1.0
+    }
 }
 
 impl InterpolatedPropertyValue for LogicalLength {
@@ -510,6 +759,14 @@ impl InterpolatedPropertyValue for LogicalLength {
 
     fn scalar_delta(&self, target_value: &Self) -> f32 {
         (target_value.get() - self.get()) as f32
+    }
+
+    fn write_channels(&self, _target_value: &Self, out: &mut [f32]) {
+        out[0] = self.get() as f32;
+    }
+
+    fn set_single_channel(&mut self, channel: f32) {
+        *self = LogicalLength::new(channel);
     }
 }
 
@@ -534,8 +791,12 @@ impl<T: InterpolatedPropertyValue + Clone + 'static> BindingCallable<T>
         }
     }
 
-    fn velocity(self: Pin<&Self>) -> Option<f32> {
-        self.animation_data.borrow().current_velocity()
+    fn velocity(self: Pin<&Self>) -> Option<Vec<f32>> {
+        self.animation_data.borrow().current_channel_velocities()
+    }
+
+    fn declared_animation(self: Pin<&Self>) -> Option<PropertyAnimation> {
+        Some(self.animation_data.borrow().details.clone())
     }
 }
 
@@ -581,7 +842,7 @@ impl<T: Clone + InterpolatedPropertyValue + 'static> Property<T> {
         map: Option<fn(T) -> T>,
     ) {
         // Carry over the outgoing binding's velocity
-        let carried_velocity = self.handle.current_velocity().unwrap_or(0.0);
+        let carried_velocity = self.handle.current_velocity().unwrap_or_default();
         let mut d = properties_animations::PropertyValueAnimationData::new_with_velocity(
             self.get(),
             Some(value),
@@ -660,7 +921,7 @@ impl<T: Clone + InterpolatedPropertyValue + 'static> Property<T> {
             animation_data: RefCell::new(animation_data),
             compute_animation_details,
             dirty_time: Cell::new(crate::animations::current_tick()),
-            carried_velocity: Cell::new(0.0),
+            carried_velocity: RefCell::new(Vec::new()),
         };
 
         // Safety: the `AnimatedBindingCallable`'s type match the property type
@@ -1735,5 +1996,75 @@ mod animation_tests {
             driver.update_animations(start_time + core::time::Duration::from_millis(3000))
         });
         compo.width.handle.access(|binding| assert!(binding.is_some()));
+    }
+
+    /// `from_channels(write_channels(v)) == v` for every animatable type that
+    /// decomposes a value pair into spring channels.
+    #[test]
+    fn channel_round_trips() {
+        fn check<T: InterpolatedPropertyValue + core::fmt::Debug>(a: T, b: T) {
+            let mut channels = alloc::vec![0.0; a.channel_count(&b)];
+            a.write_channels(&b, &mut channels);
+            let rebuilt = a.from_channels(&b, &channels);
+            assert_eq!(rebuilt, a, "round-trip failed for {a:?} -> {b:?}");
+            let mut channels_b = alloc::vec![0.0; b.channel_count(&a)];
+            b.write_channels(&a, &mut channels_b);
+            let rebuilt_b = b.from_channels(&a, &channels_b);
+            assert_eq!(rebuilt_b, b, "reverse round-trip failed for {b:?} -> {a:?}");
+        }
+
+        check(0.0f32, 100.0f32);
+        check(3i32, -17i32);
+        check(crate::lengths::LogicalLength::new(12.5), crate::lengths::LogicalLength::new(300.0));
+
+        // Colors animate in Oklab; the round-trip is sRGB → Oklab → sRGB and
+        // loses a bit of precision to gamut clamping, so compare visually.
+        for pair in [
+            (crate::Color::from_rgb_u8(0, 0, 0), crate::Color::from_rgb_u8(255, 255, 255)),
+            (crate::Color::from_rgb_u8(255, 0, 0), crate::Color::from_rgb_u8(0, 255, 0)),
+            (
+                crate::Color::from_argb_u8(0x80, 12, 34, 56),
+                crate::Color::from_argb_u8(0xff, 200, 100, 50),
+            ),
+        ] {
+            let (a, b) = pair;
+            let mut channels = alloc::vec![0.0; a.channel_count(&b)];
+            a.write_channels(&b, &mut channels);
+            let rebuilt = a.from_channels(&b, &channels);
+            let (ra, rr) = (
+                crate::graphics::RgbaColor::<u8>::from(a),
+                crate::graphics::RgbaColor::<u8>::from(rebuilt),
+            );
+            assert!(
+                (ra.red as i16 - rr.red as i16).abs() <= 1
+                    && (ra.green as i16 - rr.green as i16).abs() <= 1
+                    && (ra.blue as i16 - rr.blue as i16).abs() <= 1
+                    && (ra.alpha as i16 - rr.alpha as i16).abs() <= 1,
+                "color round-trip drifted: {a:?} -> {rebuilt:?}"
+            );
+        }
+
+        // Brushes: solid, same-kind and cross-kind gradient pairs.
+        let solid = crate::Brush::SolidColor(crate::Color::from_rgb_u8(10, 20, 30));
+        let stops: crate::SharedVector<crate::graphics::GradientStop> = [
+            crate::graphics::GradientStop {
+                color: crate::Color::from_rgb_u8(255, 0, 0),
+                position: 0.0,
+            },
+            crate::graphics::GradientStop {
+                color: crate::Color::from_rgb_u8(0, 0, 255),
+                position: 45.0,
+            },
+            crate::graphics::GradientStop {
+                color: crate::Color::from_rgb_u8(0, 255, 0),
+                position: 1.0,
+            },
+        ]
+        .into_iter()
+        .collect();
+        let linear =
+            crate::Brush::LinearGradient(crate::graphics::LinearGradientBrush::new(90.0, stops));
+        check(solid.clone(), solid.clone());
+        check(linear.clone(), linear.clone());
     }
 }

@@ -11,6 +11,7 @@
 pub mod constant_deceleration;
 pub mod constant_deceleration_spring_damper;
 pub mod spring;
+pub mod spring_estimation;
 
 use crate::animations::Instant;
 

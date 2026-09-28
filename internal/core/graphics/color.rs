@@ -247,6 +247,28 @@ impl Color {
         <RgbaColor<f32>>::from(hsva).into()
     }
 
+    /// The color's four animation channels, `(alpha, lightness, a, b)` in Oklab —
+    /// the same decomposition androidx.compose.animation.core animates `Color` on.
+    pub(crate) fn oklab_channels(&self) -> [f32; 4] {
+        let oklab = OklabColor::from(RgbaColor::<f32>::from(*self));
+        [oklab.alpha, oklab.l, oklab.a, oklab.b]
+    }
+
+    /// Rebuild a color from `(alpha, lightness, a, b)` Oklab channels — the inverse
+    /// of [`Self::oklab_channels`]. Channels are clamped exactly like
+    /// androidx.compose.animation's `Color.VectorConverter` on the way back:
+    /// alpha to `0..=1`, lightness to `0..=1`, `a`/`b` to `-0.5..=0.5`, then the
+    /// result to sRGB gamut.
+    pub(crate) fn from_oklab_channels(channels: &[f32]) -> Self {
+        RgbaColor::from(OklabColor {
+            alpha: channels[0].clamp(0.0, 1.0),
+            l: channels[1].clamp(0.0, 1.0),
+            a: channels[2].clamp(-0.5, 0.5),
+            b: channels[3].clamp(-0.5, 0.5),
+        })
+        .into()
+    }
+
     /// Converts this color to the Oklch color space.
     ///
     /// Oklch is a perceptually uniform color space with:
@@ -424,8 +446,33 @@ impl Color {
 }
 
 impl InterpolatedPropertyValue for Color {
+    /// Interpolates in Oklab space (`alpha`, `l`, `a`, `b`) — the perceptually uniform
+    /// space androidx.compose.animation.core uses for color animations.
     fn interpolate(&self, target_value: &Self, t: f32) -> Self {
-        target_value.mix(self, t)
+        let from = OklabColor::from(RgbaColor::<f32>::from(*self));
+        let to = OklabColor::from(RgbaColor::<f32>::from(*target_value));
+        RgbaColor::from(OklabColor {
+            alpha: from.alpha + t * (to.alpha - from.alpha),
+            l: from.l + t * (to.l - from.l),
+            a: from.a + t * (to.a - from.a),
+            b: from.b + t * (to.b - from.b),
+        })
+        .into()
+    }
+
+    /// Color channels are `(alpha, l, a, b)` in Oklab — the same four channels
+    /// androidx.compose.animation.core animates `Color` on.
+    fn channel_count(&self, _target_value: &Self) -> usize {
+        4
+    }
+
+    fn write_channels(&self, _target_value: &Self, out: &mut [f32]) {
+        let oklab = OklabColor::from(RgbaColor::<f32>::from(*self));
+        out[..4].copy_from_slice(&[oklab.alpha, oklab.l, oklab.a, oklab.b]);
+    }
+
+    fn from_channels(&self, _target_value: &Self, channels: &[f32]) -> Self {
+        Self::from_oklab_channels(channels)
     }
 }
 
@@ -745,13 +792,21 @@ fn test_brighter_darker() {
 
 #[test]
 fn test_transparent_transition() {
+    // Interpolation happens in Oklab: fading from transparent black to a gray
+    // crosses darker grays, like `lerp`ing Compose's `Color` channels does —
+    // only the alpha tracks `t` 1:1.
     let color = Color::from_argb_f32(0.0, 0.0, 0.0, 0.0);
-    let interpolated = color.interpolate(&Color::from_rgb_f32(0.8, 0.8, 0.8), 0.25);
-    assert_eq!(interpolated, Color::from_argb_f32(0.25, 0.8, 0.8, 0.8));
-    let interpolated = color.interpolate(&Color::from_rgb_f32(0.8, 0.8, 0.8), 0.5);
-    assert_eq!(interpolated, Color::from_argb_f32(0.5, 0.8, 0.8, 0.8));
-    let interpolated = color.interpolate(&Color::from_rgb_f32(0.8, 0.8, 0.8), 0.75);
-    assert_eq!(interpolated, Color::from_argb_f32(0.75, 0.8, 0.8, 0.8));
+    let target = Color::from_rgb_f32(0.8, 0.8, 0.8);
+    for (t, expected) in [(0.25, 0.0961), (0.5, 0.3045), (0.75, 0.5418)] {
+        let interpolated = RgbaColor::<f32>::from(color.interpolate(&target, t));
+        assert!(
+            (interpolated.alpha - t as f32).abs() < 0.01
+                && (interpolated.red - expected).abs() < 0.01
+                && (interpolated.green - expected).abs() < 0.01
+                && (interpolated.blue - expected).abs() < 0.01,
+            "t={t}: {interpolated:?}"
+        );
+    }
 }
 
 #[test]

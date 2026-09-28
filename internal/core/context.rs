@@ -72,6 +72,23 @@ pub(crate) struct SlintContextInner {
     /// doesn't report one.
     #[pin]
     pub(crate) platform_default_font_size: Property<Option<LogicalLength>>,
+    /// Process-wide reduced-motion preference. Backends' accessibility observers write
+    /// here; bindings read from it through [`SlintContext::reduced_motion`]
+    /// (`SlintInternal.reduced-motion` in `.slint`).
+    #[pin]
+    pub(crate) reduced_motion: Property<bool>,
+    /// Process-wide animation duration scale: a multiplier on animation durations where
+    /// `0` finishes every animation immediately, `1` is real-time and larger values slow
+    /// animations down. Backends write platform settings here (e.g. Android's
+    /// `animator_duration_scale`); bindings read it through
+    /// [`crate::animations::duration_scale`].
+    #[pin]
+    pub(crate) animation_duration_scale: Property<f32>,
+    /// When `Some`, overrides the platform-provided [`Self::reduced_motion`]: installed
+    /// by a style's reduced-motion selector widget so `.slint` code can force the
+    /// preference on or off.
+    #[pin]
+    pub(crate) reduced_motion_override: Property<Option<bool>>,
     pub(crate) window_shown_hook:
         core::cell::RefCell<Option<Box<dyn FnMut(&Rc<dyn crate::platform::WindowAdapter>)>>>,
     pub(crate) window_event_hook: core::cell::RefCell<Option<WindowEventHook>>,
@@ -87,6 +104,23 @@ pub(crate) struct SlintContextInner {
     /// The timers registered on this context. Shared, so that `Timer` handles can hold a
     /// `Weak` to the list they registered in without knowing which context owns it.
     pub(crate) timers: crate::timers::TimerListRc,
+}
+
+/// The initial [`SlintContext::animation_duration_scale`]: the `ANIMATOR_DURATION_SCALE`
+/// environment variable when set (Android's developer setting of the same name),
+/// else `1`.
+#[cfg(feature = "std")]
+fn initial_animation_duration_scale() -> f32 {
+    std::env::var("ANIMATOR_DURATION_SCALE")
+        .ok()
+        .and_then(|v| v.parse::<f32>().ok())
+        .unwrap_or(1.0)
+        .max(0.0)
+}
+
+#[cfg(not(feature = "std"))]
+fn initial_animation_duration_scale() -> f32 {
+    1.0
 }
 
 /// This context is meant to hold the state and the backend.
@@ -127,6 +161,17 @@ impl SlintContext {
             platform_default_font_size: Property::new_named(
                 None,
                 "SlintContext::platform_default_font_size",
+            ),
+            reduced_motion: Property::new_named(false, "SlintContext::reduced_motion"),
+            // Upstream note: `ANIMATOR_DURATION_SCALE` deliberately matches
+            // Android's developer setting of the same name.
+            animation_duration_scale: Property::new_named(
+                initial_animation_duration_scale(),
+                "SlintContext::animation_duration_scale",
+            ),
+            reduced_motion_override: Property::new_named(
+                None,
+                "SlintContext::reduced_motion_override",
             ),
             window_shown_hook: Default::default(),
             window_event_hook: Default::default(),
@@ -341,6 +386,45 @@ impl SlintContext {
     /// backends that track the system setting; `Property::set` short-circuits no-op writes.
     pub fn set_platform_default_font_size(&self, size: Option<LogicalLength>) {
         self.0.as_ref().project_ref().platform_default_font_size.set(size);
+    }
+
+    /// Returns whether the platform requests reduced motion (e.g. Windows' animations
+    /// toggle, macOS' "Reduce motion", GNOME's `enable-animations`, Android's
+    /// `animator_duration_scale == 0`, or a web browser's `prefers-reduced-motion`), or
+    /// the style-provided override when one is installed. Reads register a property
+    /// dependency, so bindings re-evaluate when the preference changes.
+    pub fn reduced_motion(&self) -> bool {
+        let inner = self.0.as_ref().project_ref();
+        inner.reduced_motion_override.get().unwrap_or_else(|| inner.reduced_motion.get())
+    }
+
+    /// Backend-side write path for the platform's reduced-motion preference. Called by
+    /// each platform's accessibility observer; `Property::set` short-circuits no-op
+    /// writes. A style override takes precedence over this value.
+    pub fn set_reduced_motion(&self, reduced: bool) {
+        self.0.as_ref().project_ref().reduced_motion.set(reduced);
+    }
+
+    /// Install or remove a reduced-motion override, shadowing the platform value — this
+    /// is what a style's reduced-motion selector global calls. `Property::set`
+    /// short-circuits no-op writes.
+    pub fn set_reduced_motion_override(&self, reduced: Option<bool>) {
+        self.0.as_ref().project_ref().reduced_motion_override.set(reduced);
+    }
+
+    /// Returns the global animation duration scale (see
+    /// [`crate::animations::duration_scale`]). `0` means every animation finishes
+    /// immediately. Reads register a property dependency, so animations re-evaluate
+    /// when the platform reports a change.
+    pub fn animation_duration_scale(&self) -> f32 {
+        self.0.as_ref().project_ref().animation_duration_scale.get()
+    }
+
+    /// Backend-side write path for the platform's animation duration scale (e.g.
+    /// Android's `animator_duration_scale`). Negative values are clamped to `0`
+    /// (immediate animations); `Property::set` short-circuits no-op writes.
+    pub fn set_animation_duration_scale(&self, scale: f32) {
+        self.0.as_ref().project_ref().animation_duration_scale.set(scale.max(0.0));
     }
 
     #[doc(hidden)]
