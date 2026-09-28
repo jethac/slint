@@ -5537,8 +5537,7 @@ fn compile_builtin_function_call(
         }
         BuiltinFunction::ShapesFromPath => {
             let [d, fr] = [a.next().unwrap(), a.next().unwrap()];
-            let _ = fr;
-            quote!(slint::Shape::from_svg_path(&#d).unwrap_or_default())
+            quote!(slint::Shape::from_svg_path_lossy(&#d, #fr))
         }
         BuiltinFunction::ArrayAny => {
             let model = a.next().unwrap();

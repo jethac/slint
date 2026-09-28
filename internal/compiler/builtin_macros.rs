@@ -210,12 +210,52 @@ fn shape_path_macro(
         (fill, args.remove(0))
     };
     let (path_expr, _path_node) = path;
+    if path_expr.ty() == Type::Percent {
+        diag.push_error("percentages are not supported in shape paths".into(), node);
+        return Expression::Invalid;
+    }
     let path_expr = path_expr.maybe_convert_to(Type::String, node, diag, symbol_counters);
+    // Mirrors `Shape::from_svg_path`: a literal failing the checks the runtime
+    // performs is a compile error instead of a warning + empty shape.
+    if let Expression::StringLiteral(d) = &path_expr
+        && let Some(msg) = shape_path_literal_error(d)
+    {
+        diag.push_error(msg.into(), node);
+        return Expression::Invalid;
+    }
     Expression::FunctionCall {
         function: Callable::Builtin(BuiltinFunction::ShapesFromPath),
         arguments: vec![path_expr, fill_rule],
         source_location: Some(node.to_source_location()),
     }
+}
+
+/// The checks `Shapes.path` applies to a literal `d` string at compile time —
+/// `Shape::from_svg_path` runs the same checks at runtime. Returns the error
+/// message, or `None` when the literal passes.
+fn shape_path_literal_error(d: &str) -> Option<&'static str> {
+    if d.contains('%') {
+        return Some("percentages are not supported in shape paths");
+    }
+    // Count the outlines: SVG path data splits before each `m`/`M` (a move
+    // command always starts a new outline), dropping all-empty pieces.
+    let mut outlines = 0usize;
+    let mut piece = String::new();
+    for c in d.chars() {
+        if (c == 'm' || c == 'M') && !piece.is_empty() {
+            outlines += usize::from(!piece.trim().is_empty());
+            piece.clear();
+        }
+        piece.push(c);
+    }
+    outlines += usize::from(!piece.trim().is_empty());
+    if outlines == 0 || !d.trim_start().starts_with(['m', 'M']) {
+        return Some("SVG path data must start with a move command");
+    }
+    if outlines > 1 {
+        return Some("a shape path must describe a single outline");
+    }
+    None
 }
 
 fn spring_macro(

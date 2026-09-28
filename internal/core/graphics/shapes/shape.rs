@@ -17,6 +17,7 @@ use super::rounded_polygon::RoundedPolygon;
 use super::svg::SvgPathParser;
 use super::utils::{Point, PointTransformer, interpolate, k_cos, k_sin};
 use crate::SharedVector;
+use crate::items::FillRule;
 use alloc::collections::VecDeque;
 use alloc::rc::Rc;
 use alloc::string::String;
@@ -92,6 +93,11 @@ pub struct Shape {
     /// so the morph cache compares them without touching the outline data.
     #[doc(hidden)]
     pub id: u64,
+    /// The fill rule a renderer applies when filling this shape's outline
+    /// (`nonzero` unless the shape was built by `Shapes.path(evenodd, …)`).
+    /// It is part of the value — equality and serialization preserve it — but
+    /// not of the geometry, so it is excluded from `content_hash`.
+    pub fill_rule: FillRule,
 }
 
 impl PartialEq for Shape {
@@ -101,6 +107,7 @@ impl PartialEq for Shape {
         self.cubics == other.cubics
             && self.features == other.features
             && self.center == other.center
+            && self.fill_rule == other.fill_rule
     }
 }
 
@@ -123,7 +130,14 @@ impl Shape {
             }
         }
         let content_hash = hash_parts(&cubics, &features, &center);
-        Ok(Shape { cubics, features, center, content_hash, id: next_shape_id() })
+        Ok(Shape {
+            cubics,
+            features,
+            center,
+            content_hash,
+            id: next_shape_id(),
+            fill_rule: FillRule::Nonzero,
+        })
     }
 
     /// A shape from a [RoundedPolygon].
@@ -182,7 +196,11 @@ impl Shape {
     /// logs a warning and returns the empty shape.
     pub fn transformed(&self, f: impl PointTransformer) -> Shape {
         match self.polygon().and_then(|p| p.transformed(&f)) {
-            Ok(p) => Shape::from_polygon(&p),
+            Ok(p) => {
+                let mut shape = Shape::from_polygon(&p);
+                shape.fill_rule = self.fill_rule;
+                shape
+            }
             Err(e) => {
                 crate::debug_log!("Shapes: {e}");
                 Shape::empty()
@@ -192,10 +210,36 @@ impl Shape {
 
     /// A shape parsed from an SVG path data string (the `path()` builtin).
     /// See [SvgPathParser::parse_features].
-    pub fn from_svg_path(svg_path: &str) -> Result<Shape, ShapeError> {
+    ///
+    /// A shape is a single closed outline: `svg_path` must not describe more
+    /// than one outline (i.e. contain a second `m`/`M` section), and percentages
+    /// are not supported — shapes have no reference box to resolve them against.
+    pub fn from_svg_path(svg_path: &str, fill_rule: FillRule) -> Result<Shape, ShapeError> {
+        if svg_path.contains('%') {
+            return Err(ShapeError::new("percentages are not supported in shape paths"));
+        }
+        if super::svg::has_multiple_outlines(svg_path) {
+            return Err(ShapeError::new("a shape path must describe a single outline"));
+        }
         let features = SvgPathParser::parse_features(svg_path)?;
         let polygon = RoundedPolygon::from_features(features, None)?;
-        Ok(Shape::from_polygon(&polygon))
+        let mut shape = Shape::from_polygon(&polygon);
+        shape.fill_rule = fill_rule;
+        Ok(shape)
+    }
+
+    /// Like [`Shape::from_svg_path`], but for the `.slint` runtime where `d` is
+    /// not a compile-time literal: invalid input logs a warning and produces
+    /// the empty shape instead of an error.
+    #[doc(hidden)]
+    pub fn from_svg_path_lossy(svg_path: &str, fill_rule: FillRule) -> Shape {
+        match Self::from_svg_path(svg_path, fill_rule) {
+            Ok(shape) => shape,
+            Err(e) => {
+                crate::debug_log!("Shapes.path: {e}");
+                Shape::empty()
+            }
+        }
     }
 
     /// This shape rotated by `angle` degrees around its center.
@@ -232,7 +276,11 @@ impl Shape {
     /// empty shape.
     pub fn normalized(&self) -> Shape {
         match self.polygon().and_then(|p| p.normalized()) {
-            Ok(p) => Shape::from_polygon(&p),
+            Ok(p) => {
+                let mut shape = Shape::from_polygon(&p);
+                shape.fill_rule = self.fill_rule;
+                shape
+            }
             Err(e) => {
                 crate::debug_log!("Shapes: {e}");
                 Shape::empty()
@@ -464,7 +512,15 @@ fn morph_to_shape(morph: &Morph, progress: f32, endpoints: Option<(&Shape, &Shap
     });
     let features = detect_features(&cubics);
     match RoundedPolygon::from_features(features, center) {
-        Ok(p) => Shape::from_polygon(&p),
+        Ok(p) => {
+            let mut shape = Shape::from_polygon(&p);
+            // A morph animates the outline, not the fill rule: the result keeps
+            // the `from` shape's rule.
+            if let Some((a, _)) = endpoints {
+                shape.fill_rule = a.fill_rule;
+            }
+            shape
+        }
         Err(_) => Shape::empty(),
     }
 }

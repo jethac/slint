@@ -484,13 +484,13 @@ pub mod shapes {
     }
 
     /// `Shapes.path(d)` / `Shapes.path(fill_rule, d)`: parse an SVG path data
-    /// string into a [`crate::Shape`].
+    /// string into a [`crate::Shape`]. The fill rule is stored on the shape and
+    /// applies when it is used to fill an area.
     pub fn path(
         d: &str,
         fill_rule: crate::FillRule,
     ) -> Result<crate::Shape, i_slint_core::graphics::shapes::ShapeError> {
-        let _ = fill_rule;
-        crate::Shape::from_svg_path(d)
+        crate::Shape::from_svg_path(d, fill_rule)
     }
 }
 

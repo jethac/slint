@@ -100,6 +100,10 @@ struct Shape
     uint64_t content_hash = 0;
     /// Interned construction id assigned by the Rust side; 0 when unset.
     uint64_t id = 0;
+    /// The fill rule a renderer applies when filling this shape's outline.
+    /// Part of the value (equality and serialization preserve it); ignored by
+    /// measuring, morphing and transforms.
+    cbindgen_private::FillRule fill_rule = cbindgen_private::FillRule::Nonzero;
 
     /// Returns a copy of this shape normalized so its bounding box fits the
     /// unit square centered on the origin.

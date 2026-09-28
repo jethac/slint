@@ -204,7 +204,8 @@ pub fn value_from_json(t: &langtype::Type, v: &serde_json::Value) -> Result<Valu
 }
 
 /// Serialize a `shape` value to the JSON interchange format
-/// `{"type": "shape", "cubics": [[8 floats]...], "features": [{start, len, kind, convex}...], "center": [x, y]}`.
+/// `{"type": "shape", "cubics": [[8 floats]...], "features": [{start, len, kind, convex}...],
+///  "center": [x, y], "fill_rule": "nonzero"|"evenodd"}`.
 fn shape_to_json(shape: &i_slint_core::graphics::Shape) -> serde_json::Value {
     use i_slint_core::graphics::ShapeFeatureKind;
     let cubics = serde_json::Value::Array(
@@ -250,6 +251,14 @@ fn shape_to_json(shape: &i_slint_core::graphics::Shape) -> serde_json::Value {
     o.insert("cubics".into(), cubics);
     o.insert("features".into(), features);
     o.insert("center".into(), center);
+    o.insert(
+        "fill_rule".into(),
+        match shape.fill_rule {
+            i_slint_core::items::FillRule::Evenodd => "evenodd",
+            _ => "nonzero",
+        }
+        .into(),
+    );
     serde_json::Value::Object(o)
 }
 
@@ -306,8 +315,16 @@ fn shape_from_json(obj: &serde_json::Map<String, serde_json::Value>) -> Result<V
     else {
         return err("'center' must be [x, y]");
     };
+    let fill_rule = match obj.get("fill_rule").and_then(|v| v.as_str()) {
+        None | Some("nonzero") => i_slint_core::items::FillRule::Nonzero,
+        Some("evenodd") => i_slint_core::items::FillRule::Evenodd,
+        _ => return err("'fill_rule' must be 'nonzero' or 'evenodd'"),
+    };
     i_slint_core::graphics::Shape::new(cubics, features, ShapePoint { x: x as f32, y: y as f32 })
-        .map(Value::Shape)
+        .map(|mut shape| {
+            shape.fill_rule = fill_rule;
+            Value::Shape(shape)
+        })
         .map_err(|e| format!("Invalid shape JSON: {e}"))
 }
 

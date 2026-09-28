@@ -110,6 +110,16 @@ impl SvgPathParser {
     }
 }
 
+/// Whether `svg_path` contains more than one outline (a second `m`/`M` section),
+/// splitting on move commands exactly like [SvgPathParser::parse_cubics].
+pub(crate) fn has_multiple_outlines(svg_path: &str) -> bool {
+    split_before(svg_path, |c| c == 'm' || c == 'M')
+        .iter()
+        .filter(|p| !p.trim().is_empty())
+        .nth(1)
+        .is_some()
+}
+
 /// `String.split(Regex("(?=[mM])"))`-like: split `input` before each char matching
 /// `pred`.
 fn split_before(input: &str, pred: impl Fn(char) -> bool) -> Vec<String> {

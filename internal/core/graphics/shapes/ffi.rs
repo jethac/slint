@@ -242,14 +242,15 @@ pub unsafe extern "C" fn slint_shape_morph(
 }
 
 #[unsafe(no_mangle)]
-/// `Shapes.path(d, fill_rule)`. `fill_rule` only affects how the path renders
-/// when the shape is used for filling; the polygonalization ignores it.
+/// `Shapes.path(d, fill_rule)`. The fill rule is stored on the resulting shape;
+/// it only affects how the path renders when the shape is used for filling —
+/// the polygonalization ignores it.
 pub unsafe extern "C" fn slint_shapes_path(
     d: &crate::SharedString,
-    _fill_rule: FillRule,
+    fill_rule: FillRule,
     out: *mut c_void,
 ) {
-    let shape = Shape::from_svg_path(d.as_str()).unwrap_or_default();
+    let shape = Shape::from_svg_path_lossy(d.as_str(), fill_rule);
     unsafe { core::ptr::write(out as *mut Shape, shape) };
 }
 

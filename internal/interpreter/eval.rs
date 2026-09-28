@@ -751,10 +751,10 @@ fn eval_shape_builtin(
             let d = eval_expression(ctx, &arguments[0])
                 .try_into()
                 .unwrap_or_else(|_| SharedString::new());
-            // The FillRule only matters for rendering; it is not part of the
-            // shape payload, so it is evaluated but not stored.
-            let _ = fill_rule_arg(ctx, &arguments[1]);
-            i_slint_core::graphics::shapes::Shape::from_svg_path(d.as_str()).unwrap_or_default()
+            i_slint_core::graphics::shapes::Shape::from_svg_path_lossy(
+                d.as_str(),
+                fill_rule_arg(ctx, &arguments[1]),
+            )
         }
         _ => Default::default(),
     };
@@ -2743,7 +2743,7 @@ fn call_builtin_function(
         | BuiltinFunction::ShapesScaled
         | BuiltinFunction::ShapesTranslated
         | BuiltinFunction::ShapesMorph
-        | BuiltinFunction::ShapesFromPath => eval_shape_builtin(&f, ctx, &arguments),
+        | BuiltinFunction::ShapesFromPath => eval_shape_builtin(&f, ctx, arguments),
         BuiltinFunction::ArrayAny | BuiltinFunction::ArrayAll => {
             let is_all = matches!(f, BuiltinFunction::ArrayAll);
             let model: i_slint_core::model::ModelRc<Value> =

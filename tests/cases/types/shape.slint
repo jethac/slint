@@ -33,6 +33,10 @@ export component TestCase inherits Rectangle {
         && star != unset
         && from-path != unset
         && from-path-eo != unset
+        // The fill rule is part of the shape value.
+        && from-path-eo != from-path
+        && Shapes.morph(from-path-eo, from-path, 0.5) == from-path-eo
+        && Shapes.morph(from-path, from-path-eo, 0.5) == from-path
         && morphed != circle8 && morphed != rounded-rect
         && Shapes.morph(circle8, rounded-rect, 0) != unset
         && Shapes.morph(circle8, rounded-rect, 1) != unset
@@ -40,6 +44,9 @@ export component TestCase inherits Rectangle {
         && Shapes.translated(circle8, 10, 0) != circle8
         && Shapes.rotated(circle8, 45deg) != unset
         && Shapes.normalized(circle8) != unset
+        // Transforms preserve the fill rule.
+        && Shapes.rotated(from-path-eo, 0deg) == from-path-eo
+        && Shapes.rotated(from-path-eo, 0deg) != from-path
         && ShapesGlobal.square != unset
         && Shapes.regular-polygon-per-vertex(5, [{radius: 2, smoothing: 0}, {radius: 2, smoothing: 0}, {radius: 2, smoothing: 0}, {radius: 2, smoothing: 0}, {radius: 2, smoothing: 0}]) != unset
         && Shapes.pill(100, 40, 0.5) != unset
@@ -58,6 +65,10 @@ let instance = TestCase::new().unwrap();
 assert!(instance.get_test());
 let circle = instance.get_circle8();
 assert_eq!(circle, slint::shapes::circle(8));
+assert_eq!(
+    instance.get_from_path_eo(),
+    slint::shapes::path("M0 0L40 0L40 40L0 40Z", slint::FillRule::Evenodd).unwrap()
+);
 assert_ne!(circle, instance.get_unset());
 instance.set_circle8(slint::shapes::pill(100., 40., 0.5));
 assert_ne!(instance.get_circle8(), circle);
