@@ -41,6 +41,12 @@ fetch "NotoSans-unhinted/NotoColorEmoji.ttf" \
 fetch "NotoSans-unhinted/Twemoji.Mozilla.ttf" \
     "https://github.com/mozilla/twemoji-colr/releases/download/v0.7.0/Twemoji.Mozilla.ttf"
 
+# Roboto Flex covers axes NotoSans lacks (opsz, GRAD, slnt, ...) for tests that
+# exercise them. Sourced from google/fonts, same pin as the Material library.
+ROBOTO_FLEX_PIN="8b0a1d0f5983c89bc2b93f1b5fb55f9e252744b5"
+fetch "RobotoFlex-full.ttf" \
+    "https://github.com/google/fonts/raw/$ROBOTO_FLEX_PIN/ofl/robotoflex/RobotoFlex%5BGRAD,XOPQ,XTRA,YOPQ,YTAS,YTDE,YTFI,YTLC,YTUC,opsz,slnt,wdth,wght%5D.ttf"
+
 # U+0020-00FF: Basic Latin + Latin-1 Supplement
 # U+2026: horizontal ellipsis (used for text truncation)
 NOTOSANS_UNICODES="U+0020-00FF,U+2026"
@@ -91,6 +97,10 @@ SPDX-FileCopyrightText: Twitter, Inc and other contributors (graphics), Mozilla 
 SPDX-License-Identifier: CC-BY-4.0
 LICENSE
 
+# Roboto Flex keeps every declared axis (opsz, wdth, wght, GRAD, slnt, XOPQ, ...)
+# so tests can exercise arbitrary `font-variation-settings`.
+subset_font RobotoFlex-full.ttf RobotoFlex.ttf "$NOTOSANS_UNICODES"
+
 # Generate .license files
 for f in NotoSans-Regular.ttf NotoSans-Italic.ttf NotoSansSymbols2-Regular.ttf; do
     cat > "$f.license" <<'LICENSE'
@@ -100,6 +110,12 @@ SPDX-License-Identifier: OFL-1.1-RFN
 LICENSE
 done
 
+cat > RobotoFlex.ttf.license <<'LICENSE'
+SPDX-FileCopyrightText: 2020 The Roboto Flex Project Authors <https://github.com/googlefonts/roboto-flex>
+
+SPDX-License-Identifier: OFL-1.1
+LICENSE
+
 # Verify that the variation axes survived subsetting (only for the NotoSans pair)
 for f in NotoSans-Regular.ttf NotoSans-Italic.ttf; do
     axes=$(uvx --from fonttools fonttools ttx -o - -t fvar "$f" 2>/dev/null \
@@ -107,6 +123,16 @@ for f in NotoSans-Regular.ttf NotoSans-Italic.ttf; do
     echo "$f axes: $axes"
     if ! echo "$axes" | grep -q "wght"; then
         echo "ERROR: $f is missing the wght axis after subsetting!" >&2
+        exit 1
+    fi
+done
+
+axes=$(uvx --from fonttools fonttools ttx -o - -t fvar RobotoFlex.ttf 2>/dev/null \
+    | grep -o '<AxisTag>[^<]*</AxisTag>')
+echo "RobotoFlex.ttf axes: $axes"
+for axis in opsz wdth wght; do
+    if ! echo "$axes" | grep -q "$axis"; then
+        echo "ERROR: RobotoFlex.ttf is missing the $axis axis after subsetting!" >&2
         exit 1
     fi
 done

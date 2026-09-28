@@ -47,6 +47,8 @@ struct FontQueryKey {
     family: Option<crate::SharedString>,
     weight: Option<i32>,
     italic: bool,
+    /// `FontRequest::stretch` as bits, since `f32` isn't `Eq`.
+    stretch: Option<u32>,
 }
 
 /// What [`FontContext::query_font`] memoizes per font request.
@@ -89,6 +91,7 @@ impl FontContext {
             family: request.family.clone(),
             weight: request.weight,
             italic: request.italic,
+            stretch: request.stretch.map(f32::to_bits),
         };
         let inner = &mut self.inner;
         self.resolved_fonts
@@ -147,6 +150,7 @@ mod tests;
 
 pub use cache::TextLayoutCache;
 pub use draw::{GlyphRenderer, RectangleBorder};
+pub use shaping::merged_variation_settings;
 
 use cache::cached_paragraphs;
 use layout::{Layout, LayoutOptions, layout};
@@ -692,7 +696,7 @@ pub fn char_size(
 
     let pixel_size = font_request.pixel_size.unwrap_or(DEFAULT_FONT_SIZE);
 
-    let location = face.axes().location(font.synthesis.variation_settings());
+    let location = face.axes().location(shaping::location_settings(&font.synthesis, &font_request));
 
     let glyph_metrics = skrifa::metrics::GlyphMetrics::new(
         &face,
@@ -736,7 +740,7 @@ pub fn font_metrics(
     let font = &font.font;
 
     let face = skrifa::FontRef::from_index(font.blob.data(), font.index).unwrap();
-    let location = face.axes().location(font.synthesis.variation_settings());
+    let location = face.axes().location(shaping::location_settings(&font.synthesis, &font_request));
     let metrics = face.metrics(skrifa::instance::Size::unscaled(), &location);
 
     let units_per_em = metrics.units_per_em as f32;

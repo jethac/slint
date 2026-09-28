@@ -164,6 +164,17 @@ macro_rules! for_each_builtin_structs {
                 cap_height: Coord,
             }
 
+            /// A single OpenType font variation axis setting: the four-byte axis
+            /// `tag` (e.g. `"wght"`, `"wdth"`, `"opsz"`) and its value in user-space
+            /// font design units.
+            pub struct FontVariation {
+                /// The four-byte axis tag, e.g. `"wght"`. Must be exactly 4 characters,
+                /// which is enforced at compile time.
+                tag: SharedString,
+                /// The axis value in the font's user coordinate space.
+                value: f32,
+            }
+
             /// This structure holds the hints that a `TextInput` gives to the platform's input method
             /// (e.g. a soft keyboard) about the expected input.
             /// The input method may take these hints into account, but might also ignore them.

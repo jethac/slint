@@ -362,7 +362,11 @@ pub fn set_preview_default_fonts(api: &Api<'_>, instance: &slint_interpreter::Co
         0,
         i_slint_core::lengths::LogicalLength::default(),
         i_slint_core::lengths::LogicalLength::default(),
+        i_slint_core::lengths::LogicalLength::default(),
         false,
+        0.0,
+        i_slint_core::items::FontOpticalSizing::Inherit,
+        Default::default(),
     );
     api.set_preview_default_font_family(font.family.unwrap_or_default());
     api.set_preview_default_font_size(

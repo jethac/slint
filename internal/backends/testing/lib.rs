@@ -118,11 +118,13 @@ pub fn configure_test_fonts() {
         include_bytes!("../../../tests/screenshots/fonts/NotoSans-Italic.ttf"),
         include_bytes!("../../../tests/screenshots/fonts/NotoSansSymbols2-Regular.ttf"),
     ];
-    // Color emoji fonts, only for the cases that name them: left out of the fallback chain so
-    // they can't change any other case.
+    // Fonts that only the cases naming them can reach: left out of the fallback chain so they
+    // can't change any other case. The color emoji fonts cover U+1F600; Roboto Flex covers the
+    // axes the NotoSans subsets lack (opsz, GRAD, slnt, ...).
     static NAMED_FONTS: &[&[u8]] = &[
         include_bytes!("../../../tests/screenshots/fonts/NotoColorEmoji-Subset.ttf"),
         include_bytes!("../../../tests/screenshots/fonts/TwemojiMozilla-Subset.ttf"),
+        include_bytes!("../../../tests/screenshots/fonts/RobotoFlex.ttf"),
     ];
 
     i_slint_core::with_existing_context(|ctx| {

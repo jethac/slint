@@ -8,11 +8,12 @@ This module contains the builtin text related items.
 When adding an item or a property, it needs to be kept in sync with different place.
 Lookup the [`crate::items`] module documentation.
 */
+use super::FontVariationModel;
 use super::{
-    EventResult, FontMetrics, InputMethodHints, InputType, Item, ItemConsts, ItemRc, ItemRef,
-    KeyEventArg, KeyEventResult, KeyEventType, PointArg, PointerEventButton, RenderingResult,
-    StringArg, TextHorizontalAlignment, TextOverflow, TextStrokeStyle, TextVerticalAlignment,
-    TextWrap, VoidArg,
+    EventResult, FontMetrics, FontOpticalSizing, InputMethodHints, InputType, Item, ItemConsts,
+    ItemRc, ItemRef, KeyEventArg, KeyEventResult, KeyEventType, PointArg, PointerEventButton,
+    RenderingResult, StringArg, TextHorizontalAlignment, TextOverflow, TextStrokeStyle,
+    TextVerticalAlignment, TextWrap, VoidArg,
 };
 use crate::graphics::{Brush, Color, FontRequest};
 use crate::input::{
@@ -25,6 +26,7 @@ use crate::item_rendering::{
 };
 use crate::layout::{LayoutInfo, Orientation};
 use crate::lengths::{LogicalLength, LogicalPoint, LogicalRect, LogicalSize};
+use crate::model::ModelRc;
 use crate::platform::Clipboard;
 #[cfg(feature = "rtti")]
 use crate::rtti::*;
@@ -56,10 +58,14 @@ pub struct ComplexText {
 
     pub font_family: Property<SharedString>,
     pub font_italic: Property<bool>,
+    pub font_stretch: Property<f32>,
+    pub font_optical_sizing: Property<FontOpticalSizing>,
+    pub font_variation_settings: Property<FontVariationModel>,
     pub wrap: Property<TextWrap>,
     pub overflow: Property<TextOverflow>,
     pub letter_spacing: Property<LogicalLength>,
     pub line_height_factor: Property<f32>,
+    pub line_height: Property<LogicalLength>,
     pub stroke: Property<Brush>,
     pub stroke_width: Property<LogicalLength>,
     pub stroke_style: Property<TextStrokeStyle>,
@@ -174,7 +180,11 @@ impl HasFont for ComplexText {
             self.font_weight(),
             self.font_size(),
             self.letter_spacing(),
+            self.line_height(),
             self.font_italic(),
+            self.font_stretch(),
+            self.font_optical_sizing(),
+            self.font_variation_settings(),
         )
     }
 }
@@ -246,6 +256,9 @@ pub struct StyledTextItem {
     pub default_color: Property<Brush>,
     pub default_font_size: Property<LogicalLength>,
     pub default_font_family: Property<SharedString>,
+    pub default_font_stretch: Property<f32>,
+    pub default_font_optical_sizing: Property<FontOpticalSizing>,
+    pub default_font_variation_settings: Property<FontVariationModel>,
     pub horizontal_alignment: Property<TextHorizontalAlignment>,
     pub vertical_alignment: Property<TextVerticalAlignment>,
     pub max_lines: Property<i32>,
@@ -367,7 +380,7 @@ impl Item for StyledTextItem {
                 self,
                 self_rc,
                 LogicalSize::from_lengths(self.width(), self.height()),
-                *position * scale_factor,
+                position.cast() * scale_factor,
                 window_adapter.window(),
                 renderer.text_layout_cache(),
             )
@@ -519,6 +532,10 @@ impl HasFont for StyledTextItem {
             self.default_font_size(),
             Default::default(),
             Default::default(),
+            Default::default(),
+            self.default_font_stretch(),
+            self.default_font_optical_sizing(),
+            self.default_font_variation_settings(),
         )
     }
 }
@@ -911,7 +928,11 @@ impl HasFont for SimpleText {
             self.font_weight(),
             self.font_size(),
             LogicalLength::default(),
+            LogicalLength::default(),
             false,
+            0.0,
+            FontOpticalSizing::Inherit,
+            ModelRc::default(),
         )
     }
 }
@@ -1108,6 +1129,9 @@ pub struct TextInput {
     pub font_size: Property<LogicalLength>,
     pub font_weight: Property<i32>,
     pub font_italic: Property<bool>,
+    pub font_stretch: Property<f32>,
+    pub font_optical_sizing: Property<FontOpticalSizing>,
+    pub font_variation_settings: Property<FontVariationModel>,
     pub color: Property<Brush>,
     pub selection_foreground_color: Property<Color>,
     pub selection_background_color: Property<Color>,
@@ -1118,6 +1142,7 @@ pub struct TextInput {
     pub input_method_hints: Property<InputMethodHints>,
     pub letter_spacing: Property<LogicalLength>,
     pub line_height_factor: Property<f32>,
+    pub line_height: Property<LogicalLength>,
     pub width: Property<LogicalLength>,
     pub height: Property<LogicalLength>,
     pub cursor_position_byte_offset: Property<i32>,
@@ -1693,7 +1718,11 @@ impl HasFont for TextInput {
             self.font_weight(),
             self.font_size(),
             self.letter_spacing(),
+            self.line_height(),
             self.font_italic(),
+            self.font_stretch(),
+            self.font_optical_sizing(),
+            self.font_variation_settings(),
         )
     }
 }

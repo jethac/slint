@@ -652,7 +652,11 @@ impl HasFont for (SharedString, Brush) {
             0,
             LogicalLength::default(),
             LogicalLength::default(),
+            LogicalLength::default(),
             false,
+            0.0,
+            crate::items::FontOpticalSizing::Inherit,
+            crate::model::ModelRc::default(),
         )
     }
 }

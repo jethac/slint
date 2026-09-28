@@ -1,0 +1,99 @@
+// Copyright © SixtyFPS GmbH <info@slint.dev>
+// SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0
+
+// Axis values must reach text *metrics*, not just the renderer: a wider `wdth`
+// or heavier `wght` produces a wider line, markup `<font>` axis attributes
+// contribute to `StyledText` layout, and an animating axis yields intermediate
+// metrics at intermediate times.
+
+export component TestCase inherits Window {
+    default-font-family: "Noto Sans";
+    default-font-size: 16px;
+
+    condensed := Text {
+        text: "Hamburgefonstiv";
+        font-stretch: 62.5%;
+    }
+
+    normal := Text {
+        text: "Hamburgefonstiv";
+    }
+
+    thin := Text {
+        text: "Hamburgefonstiv";
+        font-variation-settings: "wght" 100;
+    }
+
+    black := Text {
+        text: "Hamburgefonstiv";
+        font-variation-settings: "wght" 900;
+    }
+
+    // Roboto Flex carries an `opsz` axis; the same pixel size at different
+    // optical sizes measures differently.
+    small-opsz := Text {
+        font-family: "Roboto Flex";
+        text: "Hamburgefonstiv";
+        font-variation-settings: "opsz" 8;
+    }
+
+    large-opsz := Text {
+        font-family: "Roboto Flex";
+        text: "Hamburgefonstiv";
+        font-variation-settings: "opsz" 144;
+    }
+
+    // Markup `<font>` axis ranges must feed layout too: the stretched span
+    // makes the whole line wider than the plain text.
+    plain-styled := StyledText {
+        text: @markdown("Hamburgefonstiv");
+        default-font-family: "Noto Sans";
+        default-font-size: 16px;
+    }
+
+    condensed-styled := StyledText {
+        text: @markdown("<font font-stretch='ultra-condensed'>Hamburgefonstiv</font>");
+        default-font-family: "Noto Sans";
+        default-font-size: 16px;
+    }
+
+    // An animating axis reports intermediate metrics at intermediate times.
+    anim := Text {
+        text: "Hamburgefonstiv";
+        font-variation-settings: root.ax;
+    }
+
+    in-out property <[FontVariation]> ax: [{ tag: "wght", value: 100 }];
+    animate ax { duration: 1200ms; }
+
+    out property <length> anim-width: anim.min-width;
+
+    out property <bool> test:
+        normal.min-width > condensed.min-width
+        && black.min-width > thin.min-width
+        && large-opsz.min-width != small-opsz.min-width
+        && plain-styled.min-width > condensed-styled.min-width;
+}
+
+/*
+```rust
+use slint::{VecModel, language::FontVariation};
+use std::rc::Rc;
+
+let instance = TestCase::new().unwrap();
+assert!(instance.get_test());
+
+// Interpolated axes feed layout at every intermediate animation frame, so the
+// element's measured width moves continuously rather than jumping at the end.
+let start = instance.get_anim_width();
+instance.set_ax(Rc::new(VecModel::from_slice(&[
+    FontVariation { tag: "wght".into(), value: 900. },
+])).into());
+slint_testing::mock_elapsed_time(600);
+let middle = instance.get_anim_width();
+slint_testing::mock_elapsed_time(600);
+let end = instance.get_anim_width();
+assert!(start < middle, "start {start} middle {middle}");
+assert!(middle < end, "middle {middle} end {end}");
+```
+*/

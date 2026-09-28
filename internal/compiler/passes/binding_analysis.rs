@@ -1552,6 +1552,7 @@ fn visit_implicit_layout_info_dependencies(
                     &NamedReference::new(item, SmolStr::new_static("line-height-factor")).into(),
                     N,
                 );
+                vis(&NamedReference::new(item, SmolStr::new_static("line-height")).into(), N);
             }
             vis(&NamedReference::new(item, SmolStr::new_static("wrap")).into(), N);
             if builtin.name == "TextInput" {

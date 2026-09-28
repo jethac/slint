@@ -48,6 +48,23 @@ export component TestCase inherits Window {
             line-height-factor: 2;
         }
 
+        absolute-text := Text {
+            text: "One\nTwo";
+            line-height: 30px;
+        }
+
+        absolute-beats-factor := Text {
+            text: "One\nTwo";
+            line-height-factor: 2;
+            line-height: 15px;
+        }
+
+        parley-absolute := Text {
+            text: "One\nTwo";
+            font-family: "Inter 24pt";
+            line-height: 30px;
+        }
+
     }
 
     hit-test-input := TextInput {
@@ -70,6 +87,11 @@ export component TestCase inherits Window {
         && text-input.height == 40phx
         && zero-text.height == 0phx
         && negative-text.height == 20phx
+        // `line-height` sets the line box to the given length directly, and wins over
+        // `line-height-factor`.
+        && absolute-text.height == 60phx
+        && absolute-beats-factor.height == 30phx
+        && parley-absolute.height == 60phx
         // Text-block heights are rounded up to whole physical pixels, so doubling the
         // reference height can differ from the factor-2 height by up to 2 pixels.
         && Math.abs((parley-text.height - 2 * parley-default-text.height) / 1phx) < 2;

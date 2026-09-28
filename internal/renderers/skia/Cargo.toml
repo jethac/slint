@@ -60,6 +60,7 @@ scoped-tls-hkt = "0.1"
 raw-window-handle = { version = "0.6", features = ["std"] }
 clru = { workspace = true }
 bytemuck = { workspace = true }
+skrifa = { workspace = true }
 
 skia-safe = { version = "0.157.0", features = ["gl"] }
 glow = { workspace = true }
