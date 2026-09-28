@@ -4939,7 +4939,18 @@ fn compile_builtin_function_call(
                 let global_access = &ctx.generator_state.global_access;
                 let resource_id: usize = *resource_id as _;
                 let symbol = format_ident!("SLINT_EMBEDDED_RESOURCE_{}", resource_id);
-                quote!(#global_access.window_adapter_ref()?.renderer().register_font_from_memory(#symbol.into()).unwrap())
+                // `slint!`-macro builds can't detect the target: without a
+                // rasterizer feature this fails the user crate's compile
+                // instead of panicking at font registration.
+                quote!({
+                    const _: () = ::core::assert!(
+                        slint::private_unstable_api::HAS_EMBEDDED_VECTOR_FONT_SUPPORT,
+                        "the compiled UI embeds vector font data, but this build has no \
+                         vector font rasterizer — enable the `slint` crate's `std` or \
+                         `embedded-vector-fonts` feature"
+                    );
+                    #global_access.window_adapter_ref()?.renderer().register_font_from_memory(#symbol.into()).unwrap()
+                })
             } else {
                 panic!("internal error: invalid args to RegisterCustomFontByMemory {arguments:?}")
             }
@@ -6267,7 +6278,12 @@ fn generate_resources(doc: &Document) -> Vec<TokenStream> {
                     )
                 },
                 #[cfg(feature = "renderer-software")]
-                crate::embedded_resources::EmbeddedResourcesKind::BitmapFontData(crate::embedded_resources::BitmapFont { family_name, character_map, units_per_em, ascent, descent, x_height, cap_height, glyphs, weight, italic, sdf }) => {
+                crate::embedded_resources::EmbeddedResourcesKind::BitmapFontData(crate::embedded_resources::BitmapFont { family_name, character_map, units_per_em, ascent, descent, x_height, cap_height, glyphs, weight, italic, sdf, variations, auto_opsz }) => {
+
+                    let variations_size = variations.len();
+                    let variations_data = variations.iter().map(|crate::embedded_resources::BitmapFontVariation{tag, value, default_value}| {
+                        quote!(sp::BitmapFontVariation { tag: #tag, value: #value, default_value: #default_value })
+                    });
 
                     let character_map_size = character_map.len();
 
@@ -6329,6 +6345,12 @@ fn generate_resources(doc: &Document) -> Vec<TokenStream> {
                             weight: #weight,
                             italic: #italic,
                             sdf: #sdf,
+                            variations: sp::Slice::from_slice({
+                                #link_section
+                                static VARIATIONS : [sp::BitmapFontVariation; #variations_size] = [#(#variations_data),*];
+                                &VARIATIONS
+                            }),
+                            auto_opsz: #auto_opsz,
                         };
                     )
                 },

@@ -1,0 +1,31 @@
+// Copyright © SixtyFPS GmbH <info@slint.dev>
+// SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0
+
+// Skia rasterizes variable-font instances differently per
+// platform (macOS vs Linux references differ by up to ~200/255 per pixel).
+//ignore:skia
+// SIZE=140x120
+
+// CSS precedence between `Window`'s `default-font-*` properties and per-element
+// settings: per-tag, an element's own `font-variation-settings` wins over the
+// window default, while unset tags inherit; `font-stretch` overrides the
+// `wdth` tag like CSS's two-level font-variation-settings model.
+export component TestCase inherits Window {
+    width: 140px;
+    height: 120px;
+    background: white;
+    default-font-family: "Noto Sans";
+    default-font-size: 13px;
+    default-font-variation-settings: "wght" 900, "wdth" 62.5;
+
+    VerticalLayout {
+        // Inherits wght 900 + wdth 62.5 from the window.
+        Text { text: "w900 narrow"; }
+        // wght overridden per element; wdth 62.5 still inherited.
+        Text { text: "w100 narrow"; font-variation-settings: "wght" 100; }
+        // font-stretch wins over the wdth tag on this element only.
+        Text { text: "w900 stretch100"; font-stretch: 100%; }
+        // font-variation-settings list replaces the wdth tag from the window.
+        Text { text: "w900 wdth100"; font-variation-settings: "wdth" 100; }
+    }
+}

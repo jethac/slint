@@ -1,0 +1,32 @@
+// Copyright © SixtyFPS GmbH <info@slint.dev>
+// SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0
+
+// Malformed `font-variation-settings` shorthand: parse errors.
+
+export component TestCase inherits Window {
+
+    Text {
+        font-variation-settings: "wght" 700, "wdth" 85;
+    }
+
+    Text {
+        // A missing comma between pairs is a parse error.
+        font-variation-settings: "wght" 700 "wdth" 85;
+//                                          >    <error{Syntax error: expected ';'}
+//                                          >    <^error{Parse error}
+    }
+
+    Text {
+        // Axis tags must be string literals.
+        font-variation-settings: wght 700;
+//                                    > <error{Syntax error: expected ';'}
+//                                    > <^error{Parse error}
+    }
+
+    // The shorthand only parses in `font-variation-settings` bindings: on any
+    // other property the string is a plain string literal and the number is
+    // unexpected input.
+    property <string> not-variations: "wght" 700;
+//                                           > <error{Syntax error: expected ';'}
+//                                           > <^error{Parse error}
+}

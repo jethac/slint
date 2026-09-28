@@ -899,6 +899,7 @@ impl<'a, R: femtovg::Renderer + TextureImporter> GlyphRenderer for GLItemRendere
         font_size: PhysicalLength,
         normalized_coords: &[i16],
         _synthesis: &fontique::Synthesis,
+        _variations: &[parley::style::FontVariation],
         mut brush: Self::PlatformBrush,
         y_offset: sharedparley::PhysicalLength,
         glyphs_it: &mut dyn Iterator<Item = parley::layout::Glyph>,

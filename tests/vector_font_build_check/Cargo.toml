@@ -1,0 +1,8 @@
+# Copyright © SixtyFPS GmbH <info@slint.dev>
+# SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0
+
+# Detached from the tests workspace: the two members must each control the
+# `slint` feature set, which a shared workspace build would unify.
+[workspace]
+members = ["fails_without_rasterizer", "builds_with_rasterizer"]
+resolver = "2"

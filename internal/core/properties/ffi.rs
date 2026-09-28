@@ -6,6 +6,10 @@ use crate::graphics::{Brush, Color};
 use crate::items::PropertyAnimation;
 use core::ffi::c_void;
 
+/// cbindgen can't express `ModelRc<T>` — a named alias plus the `FontVariationModel`
+/// entry in cbindgen's rename map emits `std::shared_ptr<slint::Model<FontVariation>>`.
+type FontVariationModel = crate::model::ModelRc<crate::items::FontVariation>;
+
 #[repr(C)]
 /// Has the same layout as PropertyHandle
 pub struct PropertyHandleOpaque(PropertyHandle);
@@ -283,6 +287,17 @@ pub unsafe extern "C" fn slint_property_set_animated_value_brush(
     c_set_animated_value(handle, from.clone(), to.clone(), animation_data);
 }
 
+/// Internal function to set up a property animation to the specified target value for a `[FontVariation]` property.
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn slint_property_set_animated_value_font_variations(
+    handle: &PropertyHandleOpaque,
+    from: &FontVariationModel,
+    to: &FontVariationModel,
+    animation_data: &PropertyAnimation,
+) {
+    c_set_animated_value(handle, from.clone(), to.clone(), animation_data);
+}
+
 unsafe fn c_set_animated_binding<T: InterpolatedPropertyValue + Clone>(
     handle: &PropertyHandleOpaque,
     binding: extern "C" fn(*mut c_void, *mut T),
@@ -400,6 +415,23 @@ pub unsafe extern "C" fn slint_property_set_animated_binding_color(
 pub unsafe extern "C" fn slint_property_set_animated_binding_brush(
     handle: &PropertyHandleOpaque,
     binding: extern "C" fn(*mut c_void, *mut Brush),
+    user_data: *mut c_void,
+    drop_user_data: Option<extern "C" fn(*mut c_void)>,
+    transition_data: extern "C" fn(
+        user_data: *mut c_void,
+        start_instant: &mut *mut u64,
+    ) -> PropertyAnimation,
+) {
+    unsafe {
+        c_set_animated_binding(handle, binding, user_data, drop_user_data, transition_data);
+    }
+}
+
+/// Internal function to set up a property animation between values produced by the specified binding for a `[FontVariation]` property.
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn slint_property_set_animated_binding_font_variations(
+    handle: &PropertyHandleOpaque,
+    binding: extern "C" fn(*mut c_void, *mut FontVariationModel),
     user_data: *mut c_void,
     drop_user_data: Option<extern "C" fn(*mut c_void)>,
     transition_data: extern "C" fn(

@@ -408,7 +408,7 @@ declare_syntax! {
         Expression-> [ ?Expression, ?FunctionCallExpression, ?IndexExpression, ?SelfAssignment,
                        ?ConditionalExpression, ?QualifiedName, ?BinaryExpression, ?Array, ?ObjectLiteral,
                        ?UnaryOpExpression, ?CodeBlock, ?StringTemplate, ?AtImageUrl, ?AtGradient, ?AtTr,
-                       ?MemberAccess, ?AtKeys, ?Closure ],
+                       ?MemberAccess, ?AtKeys, ?Closure, ?FontVariationList ],
         /// Concatenate the children Expressions and StringLiteral to make a string
         StringTemplate -> [*Expression],
         /// `@image-url("foo.png")`
@@ -442,6 +442,11 @@ declare_syntax! {
         MemberAccess -> [Expression],
         /// `[ ... ]`
         Array -> [ *Expression ],
+        /// `"wght" 700, "wdth" 75` — the `font-variation-settings` shorthand: a
+        /// comma-separated list of axis settings where each pair is a string
+        /// literal (the four-character axis tag) followed by a value expression.
+        /// Only valid where the property type is `[FontVariation]`.
+        FontVariationList -> [ *Expression ],
         /// `{ foo: bar }`
         ObjectLiteral -> [ *ObjectMember ],
         /// `foo: bar` inside an ObjectLiteral

@@ -786,6 +786,11 @@ impl Expression {
                         ctx.diag.slint_sc_error("Array expressions are", &node);
                         return Self::from_array_node(node.into(), ctx);
                     }
+                    SyntaxKind::FontVariationList => {
+                        #[cfg(feature = "slint-sc")]
+                        ctx.diag.slint_sc_error("Font variation settings expressions are", &node);
+                        return Self::from_font_variation_list_node(node.into(), ctx);
+                    }
                     SyntaxKind::CodeBlock => {
                         #[cfg(feature = "slint-sc")]
                         ctx.diag.slint_sc_error("Code blocks are", &node);
@@ -2353,6 +2358,69 @@ impl Expression {
             );
         }
 
+        Expression::Array { element_ty, values }
+    }
+
+    /// Resolve the `font-variation-settings` shorthand syntax
+    /// (`"wght" 700, "wdth" 75`) into an array of `FontVariation` structs. The
+    /// shorthand is only valid where the property type is `[FontVariation]`.
+    fn from_font_variation_list_node(
+        node: syntax_nodes::FontVariationList,
+        ctx: &mut LookupCtx,
+    ) -> Expression {
+        let element_ty = Type::Struct(crate::typeregister::builtin_structs::FontVariation());
+        let array_ty = Type::Array(element_ty.clone().into());
+        if ctx.property_type != array_ty {
+            ctx.diag.push_error(
+                "A list of axis settings is only valid for 'font-variation-settings'".into(),
+                &node,
+            );
+            return Self::Invalid;
+        }
+        let mut values = Vec::new();
+        let mut entries = node.Expression();
+        loop {
+            let (tag_node, value_node) = match (entries.next(), entries.next()) {
+                (Some(tag_node), Some(value_node)) => (tag_node, value_node),
+                (Some(tag_node), None) => {
+                    ctx.diag.push_error("Expected a value after the axis tag".into(), &tag_node);
+                    return Self::Invalid;
+                }
+                _ => break,
+            };
+            let tag_expression = Self::from_expression_node(tag_node.clone(), ctx);
+            let tag = match &tag_expression {
+                Expression::StringLiteral(tag) => tag.clone(),
+                _ => {
+                    ctx.diag
+                        .push_error("Expected a four-character axis tag string".into(), &tag_node);
+                    return Self::Invalid;
+                }
+            };
+            if tag.len() != 4 || !tag.bytes().all(|b| (0x20..=0x7e).contains(&b)) {
+                ctx.diag.push_error(
+                    format!(
+                        "Invalid axis tag '{tag}': expected exactly 4 printable ASCII characters"
+                    ),
+                    &tag_node,
+                );
+                return Self::Invalid;
+            }
+            let value_expression = ctx
+                .with_expected_type(Type::Float32, |ctx| {
+                    Self::from_expression_node(value_node.clone(), ctx)
+                })
+                .maybe_convert_to(Type::Float32, &value_node, ctx.diag, &ctx.symbol_counters);
+            values.push(Expression::Struct {
+                ty: match &element_ty {
+                    Type::Struct(s) => s.clone(),
+                    _ => unreachable!(),
+                },
+                values: [("tag".into(), tag_expression), ("value".into(), value_expression)]
+                    .into_iter()
+                    .collect(),
+            });
+        }
         Expression::Array { element_ty, values }
     }
 

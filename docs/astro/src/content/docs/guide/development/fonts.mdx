@@ -5,7 +5,7 @@ description: Font Handling
 
 import LangRefLink from '@slint/common-files/src/components/LangRefLink.astro';
 
-{/* cSpell: ignore Noto sdf */}
+{/* cSpell: ignore Noto sdf blitted subsetted */}
 
 Elements such as `Text` and `TextInput` can render text and allow customizing the appearance of the text through
 different properties. The properties prefixed with `font-`, such as `font-family`, `font-size` and `font-weight`
@@ -58,6 +58,66 @@ of pre-rendered bitmaps, trading some rendering quality for a smaller footprint.
 <LangRefLink lang="rust-slint-build" relpath="struct.CompilerConfiguration.html#method.with_sdf_fonts">`CompilerConfiguration::with_sdf_fonts()`</LangRefLink> (Rust, requires the `sdf-fonts` Cargo
 feature), or by setting `SLINT_EMBED_RESOURCES` to `embed-for-software-renderer-with-sdf` (C++,
 requires the `SLINT_FEATURE_SDF_FONTS` feature).
+
+### Variable fonts on embedded targets
+
+A variable font stores one outline set plus a variation space; at rasterization time it is
+instantiated at a position on its axes (such as `wght` or `opsz`). When glyphs are embedded as
+pre-rendered bitmaps there is no font rasterizer on the device, so each *axis position in use*
+costs a complete set of glyph bitmaps: the compiler scans the `.slint` sources for constant
+`font-variation-settings`, `font-stretch`, and `font-optical-sizing` bindings — including the
+`default-*` properties on `Window`, which merge with per-element settings — and embeds one
+font instance per combination of values it finds, clamped to the ranges the font declares.
+`font-optical-sizing: auto` embeds each glyph set with `opsz` equal to its used size, which is
+free in flash terms because the size axis is already enumerated per pixel size.
+
+Every additional constant axis position multiplies the flash used by that font's embedded
+glyphs, so keep the number of distinct tuples small on constrained targets. Each instance
+always covers the full printable-ASCII set plus the text found in the sources — about 96
+glyphs — measured on a `thumbv6m-none-eabi`-oriented `embed-for-software-renderer` build:
+roughly 6 KiB per instance at 12 px (~65 B/glyph average, since blank and small glyphs
+dominate) and about 12 KiB per instance at 16 px (~125 B/glyph). Runtime CPU is the
+same as for static fonts: the bitmaps are blitted, not rasterized.
+
+A binding that computes its axis values at run time can't be pre-rasterized. For animated
+or otherwise non-constant axis bindings the compiler instead embeds the vector font data
+of the families those bindings can resolve to and registers it through
+`register_font_from_memory`, so a runtime with a vector rasterizer (the
+`software-renderer-systemfonts` cargo feature, or — without `std` — the software
+renderer's `embedded-vector-fonts` feature) rasterizes the exact instance each frame.
+That trades flash for flexibility: the raw file is 81.8 KiB for the subsetted test Noto
+Sans and 3.96 MiB for the full Google Sans Flex — versus ~6 KiB for one
+pre-rendered instance — plus RAM for rasterized glyphs (bounded by a cache that defaults
+to 1 MiB; set `SLINT_VECTOR_FONT_CACHE_BYTES` in the environment or in
+`.cargo/config.toml`'s `[env]` table to shrink it on small MCUs, and rebuild from clean
+after changing it) and per-frame rasterization CPU that scales with the rendered string
+length (estimate; not measured on MCU hardware).
+
+The cache holds one alpha map per (glyph, size, axis position) the UI draws. Each entry
+is roughly the glyph's pixel area — a 16 px glyph is about 200 B — so the 1 MiB default
+covers a large label set animating across many axis positions. For a small MCU a value
+like `SLINT_VECTOR_FONT_CACHE_BYTES=65536` (64 KiB) still holds a few hundred glyphs —
+enough for a screen of text at a handful of axis positions; going lower, e.g. 32 KiB,
+keeps a single line's worth and makes every axis step or longer string re-rasterize
+instead of hitting the cache. Entries are evicted least-recently-used, so the trade-off
+is purely rasterization CPU per frame; nothing breaks when the cache is too small.
+
+When the build excludes vector fonts entirely — a freestanding C++ target sets
+`SLINT_EXCLUDE_VECTOR_FONTS` automatically, and a Rust build does the same for targets
+whose triple names no operating system (`*-none-*`, `*-uefi`, Zephyr) unless the env var
+is set to a falsy value or `CompilerConfiguration::exclude_vector_fonts(false)` is
+called — a non-constant axis binding is a compile error naming the binding, and a bound
+`font-family` that constant propagation can't reduce to a literal is as well. The
+auto-detection is skipped when the software renderer's `embedded-vector-fonts` feature is
+enabled (detected via `DEP_SLINT_EMBEDDED_VECTOR_FONTS` for `slint-build` users, or via a
+same-named passthrough feature on the application crate). Builds using the `slint!` macro
+can't see the target triple: generated code checks the rasterizer feature at compile time
+and fails the build with the same instruction. Use constant expressions (or `out`
+properties with constant initializers) to stay on the bitmap path.
+
+Cortex-M0 and M0+ (`thumbv6m-none-eabi`) lack the atomic compare-and-swap instructions
+`alloc::sync::Arc` needs, so those cores always need a vector-excluded build — the
+auto-detection already does this for them.
 
 On targets that do have an operating system, enable the `software-renderer-systemfonts` cargo
 feature to let the software renderer also use fonts installed on the system.

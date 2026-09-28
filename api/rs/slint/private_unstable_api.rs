@@ -237,3 +237,11 @@ pub mod re_exports {
     #[cfg(feature = "live-preview")]
     pub use i_slint_live_preview::live_component as live_preview;
 }
+
+/// `true` when the build includes a vector-font rasterizer able to serve fonts
+/// the compiler embedded as data: every `std` build (system fonts through
+/// fontique) plus `no_std` builds with the `embedded-vector-fonts` feature.
+/// Generated code asserts on this at compile time: without a rasterizer the
+/// registration of the embedded font data can only fail at run time.
+pub const HAS_EMBEDDED_VECTOR_FONT_SUPPORT: bool =
+    cfg!(feature = "std") || cfg!(feature = "embedded-vector-fonts");

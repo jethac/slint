@@ -192,6 +192,7 @@ pub enum BuiltinNamespace {
     Math,
     Key,
     FontWeight,
+    FontStretch,
     MouseCursor,
     MaterialColors,
     Shapes,
@@ -279,6 +280,9 @@ impl LookupObject for LookupResult {
             LookupResult::Namespace(BuiltinNamespace::FontWeight) => {
                 FontWeightLookup.for_each_entry(ctx, f)
             }
+            LookupResult::Namespace(BuiltinNamespace::FontStretch) => {
+                FontStretchLookup.for_each_entry(ctx, f)
+            }
             LookupResult::Namespace(BuiltinNamespace::MouseCursor) => {
                 MouseCursorSpecific.for_each_entry(ctx, f)
             }
@@ -307,6 +311,9 @@ impl LookupObject for LookupResult {
             LookupResult::Namespace(BuiltinNamespace::Key) => KeysLookup.lookup(ctx, name),
             LookupResult::Namespace(BuiltinNamespace::FontWeight) => {
                 FontWeightLookup.lookup(ctx, name)
+            }
+            LookupResult::Namespace(BuiltinNamespace::FontStretch) => {
+                FontStretchLookup.lookup(ctx, name)
             }
             LookupResult::Namespace(BuiltinNamespace::MouseCursor) => {
                 MouseCursorSpecific.lookup(ctx, name)
@@ -879,6 +886,29 @@ impl LookupObject for EasingSpecific {
     }
 }
 
+struct FontStretchLookup;
+impl LookupObject for FontStretchLookup {
+    fn for_each_entry<R>(
+        &self,
+        _ctx: &LookupCtx,
+        f: &mut impl FnMut(&SmolStr, LookupResult) -> Option<R>,
+    ) -> Option<R> {
+        // The CSS font-stretch keyword values, expressed as percentages.
+        let mut stretch = |n, v: f64| {
+            f(&SmolStr::new_static(n), Expression::NumberLiteral(v, Unit::Percent).into())
+        };
+        None.or_else(|| stretch("ultra-condensed", 50.0))
+            .or_else(|| stretch("extra-condensed", 62.5))
+            .or_else(|| stretch("condensed", 75.0))
+            .or_else(|| stretch("semi-condensed", 87.5))
+            .or_else(|| stretch("normal", 100.0))
+            .or_else(|| stretch("semi-expanded", 112.5))
+            .or_else(|| stretch("expanded", 125.0))
+            .or_else(|| stretch("extra-expanded", 150.0))
+            .or_else(|| stretch("ultra-expanded", 200.0))
+    }
+}
+
 struct FontWeightLookup;
 impl LookupObject for FontWeightLookup {
     fn for_each_entry<R>(
@@ -1170,6 +1200,7 @@ impl LookupObject for BuiltinNamespaceLookup {
             .or_else(|| f("Math", LookupResult::Namespace(BuiltinNamespace::Math)))
             .or_else(|| f("Key", LookupResult::Namespace(BuiltinNamespace::Key)))
             .or_else(|| f("FontWeight", LookupResult::Namespace(BuiltinNamespace::FontWeight)))
+            .or_else(|| f("FontStretch", LookupResult::Namespace(BuiltinNamespace::FontStretch)))
             .or_else(|| {
                 if ctx.type_register.expose_internal_types {
                     f("SlintInternal", LookupResult::Namespace(BuiltinNamespace::SlintInternal))
