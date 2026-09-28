@@ -483,6 +483,7 @@ fn gen_corelib(
         "PointerScrollEvent",
         "Rect",
         "BitmapFont",
+        "BitmapFontVariation",
         "DataTransferOpaque",
         // Return type of the ItemTree vtable's flexbox_layout_item_info* methods.
         // cbindgen can't see those (not extern "C"), and it is no longer reachable

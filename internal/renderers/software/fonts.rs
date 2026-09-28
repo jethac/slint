@@ -9,6 +9,7 @@ use core::cell::RefCell;
 use super::{Fixed, PhysicalLength, PhysicalSize};
 use i_slint_core::graphics::{BitmapFont, FontRequest};
 use i_slint_core::lengths::ScaleFactor;
+use i_slint_core::model::Model;
 use i_slint_core::textlayout::TextLayout;
 
 i_slint_core::thread_local! {
@@ -144,6 +145,60 @@ pub fn match_font(
         .and_then(|weight| weight.try_into().ok())
         .unwrap_or(/* CSS normal */ 400);
 
+    let requested_variations = request.effective_variations(request.pixel_size.map(|s| s.get()));
+    // `opsz` entries in `font-variation-settings` pin the axis explicitly;
+    // otherwise it comes from `font-optical-sizing` and an `auto_opsz` bitmap
+    // font satisfies it per glyph set.
+    let opsz_is_explicit = request.variations.iter().any(|entry| entry.tag.as_str() == "opsz");
+
+    /// Scores an embedded bitmap font against the requested axis settings:
+    /// sum of |requested − rasterized| over the requested axes plus
+    /// |rasterized − fvar default| over axes the request didn't pin. `wght` is
+    /// carried by the font's `weight` field. Axes the font doesn't declare are
+    /// inert and score zero — no bitmap or vector font could do better.
+    fn axis_score(
+        font: &'static BitmapFont,
+        requested_weight: u16,
+        requested_variations: &[(i_slint_core::SharedString, f32)],
+        opsz_is_explicit: bool,
+        scale_factor: ScaleFactor,
+    ) -> f32 {
+        const WGHT: u32 = u32::from_be_bytes(*b"wght");
+        const OPSZ: u32 = u32::from_be_bytes(*b"opsz");
+
+        let mut score = (font.weight as f32 - requested_weight as f32).abs();
+        for (tag, requested) in requested_variations {
+            let Ok(tag_bytes) = <[u8; 4]>::try_from(tag.as_bytes()) else { continue };
+            let tag = u32::from_be_bytes(tag_bytes);
+            if tag == WGHT {
+                continue;
+            }
+            if tag == OPSZ && font.auto_opsz {
+                if !opsz_is_explicit {
+                    continue;
+                }
+                // A pinned opsz only matches glyph sets rasterized near it.
+                score += font
+                    .glyphs
+                    .iter()
+                    .map(|glyphs| (glyphs.pixel_size as f32 / scale_factor.get() - requested).abs())
+                    .fold(f32::MAX, f32::min);
+                continue;
+            }
+            if let Some(axis) = font.variations.iter().find(|axis| axis.tag == tag) {
+                score += (axis.value - requested).abs();
+            }
+        }
+        for axis in font.variations.iter() {
+            if !requested_variations.iter().any(|(tag, _)| {
+                tag.as_bytes().try_into().map(u32::from_be_bytes).ok() == Some(axis.tag)
+            }) {
+                score += (axis.value - axis.default_value).abs();
+            }
+        }
+        score
+    }
+
     let bitmap_font = BITMAP_FONTS.with(|fonts| {
         let fonts = fonts.borrow();
 
@@ -155,13 +210,38 @@ pub fn match_font(
                         == requested_family.as_str()
                         && bitmap_font.italic == request.italic
                 })
-                .min_by_key(|bitmap_font| bitmap_font.weight.abs_diff(requested_weight))
-                .copied()
+                .map(|bitmap_font| {
+                    (
+                        *bitmap_font,
+                        axis_score(
+                            bitmap_font,
+                            requested_weight,
+                            &requested_variations,
+                            opsz_is_explicit,
+                            scale_factor,
+                        ),
+                    )
+                })
+                .min_by(|(_, a), (_, b)| a.total_cmp(b))
         })
     });
 
     let font = match bitmap_font {
-        Some(bitmap_font) => bitmap_font,
+        Some((bitmap_font, score)) if score == 0. => bitmap_font,
+        Some((bitmap_font, _)) => {
+            // The best bitmap font doesn't cover the requested axes: prefer a
+            // vector font that can rasterize the exact instance.
+            #[cfg(feature = "systemfonts")]
+            if let Some(vectorfont) = systemfonts::match_font(
+                request,
+                scale_factor,
+                &mut font_context.collection,
+                &mut font_context.source_cache,
+            ) {
+                return vectorfont.into();
+            }
+            bitmap_font
+        }
         None => {
             #[cfg(feature = "systemfonts")]
             if let Some(vectorfont) = systemfonts::match_font(

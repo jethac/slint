@@ -6193,7 +6193,12 @@ fn generate_resources(doc: &Document) -> Vec<TokenStream> {
                     )
                 },
                 #[cfg(feature = "renderer-software")]
-                crate::embedded_resources::EmbeddedResourcesKind::BitmapFontData(crate::embedded_resources::BitmapFont { family_name, character_map, units_per_em, ascent, descent, x_height, cap_height, glyphs, weight, italic, sdf }) => {
+                crate::embedded_resources::EmbeddedResourcesKind::BitmapFontData(crate::embedded_resources::BitmapFont { family_name, character_map, units_per_em, ascent, descent, x_height, cap_height, glyphs, weight, italic, sdf, variations, auto_opsz }) => {
+
+                    let variations_size = variations.len();
+                    let variations_data = variations.iter().map(|crate::embedded_resources::BitmapFontVariation{tag, value, default_value}| {
+                        quote!(sp::BitmapFontVariation { tag: #tag, value: #value, default_value: #default_value })
+                    });
 
                     let character_map_size = character_map.len();
 
@@ -6255,6 +6260,12 @@ fn generate_resources(doc: &Document) -> Vec<TokenStream> {
                             weight: #weight,
                             italic: #italic,
                             sdf: #sdf,
+                            variations: sp::Slice::from_slice({
+                                #link_section
+                                static VARIATIONS : [sp::BitmapFontVariation; #variations_size] = [#(#variations_data),*];
+                                &VARIATIONS
+                            }),
+                            auto_opsz: #auto_opsz,
                         };
                     )
                 },

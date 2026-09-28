@@ -73,6 +73,20 @@ pub struct CharacterMapEntry {
 
 #[cfg(feature = "renderer-software")]
 #[derive(Debug, Clone)]
+/// One resolved axis setting of a pre-rendered [`BitmapFont`], in user-space units.
+/// `default_value` is the axis' fvar default and lets the runtime score a bitmap font
+/// against requests that don't mention the axis.
+pub struct BitmapFontVariation {
+    /// The axis tag as a big-endian `u32` (`u32::from_be_bytes(*b"wght")`).
+    pub tag: u32,
+    /// The user-space value the glyphs were rasterized at.
+    pub value: f32,
+    /// The axis' default value in the source font.
+    pub default_value: f32,
+}
+
+#[cfg(feature = "renderer-software")]
+#[derive(Debug, Clone)]
 pub struct BitmapFont {
     pub family_name: String,
     /// map of available glyphs, sorted by char
@@ -87,6 +101,14 @@ pub struct BitmapFont {
     pub italic: bool,
     /// true when the font is represented as a signed distance field
     pub sdf: bool,
+    /// The resolved axis tuple the glyphs were rasterized at: every fvar axis of the
+    /// source font except `wght` (carried by `weight`) and `opsz` when `auto_opsz` is
+    /// set. Empty for static fonts.
+    pub variations: Vec<BitmapFontVariation>,
+    /// true when the source font has an `opsz` axis and each glyph set was rasterized
+    /// with `opsz` equal to its used (logical) size. The `opsz` axis is then absent
+    /// from `variations` because its value differs per glyph set.
+    pub auto_opsz: bool,
 }
 
 #[derive(Debug, Clone)]

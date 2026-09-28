@@ -59,5 +59,24 @@ of pre-rendered bitmaps, trading some rendering quality for a smaller footprint.
 feature), or by setting `SLINT_EMBED_RESOURCES` to `embed-for-software-renderer-with-sdf` (C++,
 requires the `SLINT_FEATURE_SDF_FONTS` feature).
 
+### Variable fonts on embedded targets
+
+A variable font stores one outline set plus a variation space; at rasterization time it is
+instantiated at a position on its axes (such as `wght` or `opsz`). When glyphs are embedded as
+pre-rendered bitmaps there is no font rasterizer on the device, so each *axis position in use*
+costs a complete set of glyph bitmaps: the compiler scans the `.slint` sources for constant
+`font-variation-settings`, `font-stretch`, and `font-optical-sizing` bindings — including the
+`default-*` properties on `Window`, which merge with per-element settings — and embeds one
+font instance per combination of values it finds, clamped to the ranges the font declares.
+`font-optical-sizing: auto` embeds each glyph set with `opsz` equal to its used size, which is
+free in flash terms because the size axis is already enumerated per pixel size.
+
+Every additional constant axis position multiplies the flash used by that font's embedded
+glyphs, so keep the number of distinct tuples small on constrained targets. Since a binding
+that computes its axis values at run time can't be pre-rasterized, *animated* or otherwise
+non-constant axis bindings are a compile error under glyph embedding: rasterizing arbitrary
+positions requires a vector font path, which needs an operating-system environment (the
+`software-renderer-systemfonts` cargo feature) or the Skia renderer instead of glyph embedding.
+
 On targets that do have an operating system, enable the `software-renderer-systemfonts` cargo
 feature to let the software renderer also use fonts installed on the system.

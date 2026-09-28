@@ -18,6 +18,70 @@ use i_slint_common::sharedfontique::{self, fontique, skrifa};
 #[cfg(not(target_arch = "wasm32"))]
 use skrifa::MetadataProvider;
 
+/// Axis tag constants as big-endian `u32` (matching `u32::from_be_bytes`).
+const WDTH_TAG: u32 = u32::from_be_bytes(*b"wdth");
+const OPSZ_TAG: u32 = u32::from_be_bytes(*b"opsz");
+
+/// One axis value collected from a constant `font-variation-settings`,
+/// `font-stretch` or `font-optical-sizing` binding. `FontDefault` resolves to
+/// the source font's fvar default — used for `font-optical-sizing: none`, which
+/// asks for `opsz` at its default instead of tracking the used size.
+#[derive(Clone, Copy, PartialEq, Debug)]
+pub enum CollectedAxisValue {
+    Value(f32),
+    FontDefault,
+}
+
+/// A normalized axis tuple: sorted by tag, one entry per tag.
+pub type CollectedAxisTuple = Vec<(u32, CollectedAxisValue)>;
+
+const EMPTY_TUPLE: CollectedAxisTuple = Vec::new();
+
+/// The result of [`collect_font_axes_used`]: the constant axis tuples used in a
+/// component (element settings already merged with every window default of that
+/// component), plus the axis-property bindings that aren't constant and
+/// therefore need runtime rasterization, which embedded bitmap fonts cannot
+/// provide.
+#[derive(Default)]
+pub struct FontAxesUsed {
+    /// The distinct constant tuples on text-like elements.
+    pub tuples: Vec<CollectedAxisTuple>,
+    /// The distinct constant `default-*` tuples on window elements. The runtime
+    /// merges them into descendant requests, so embed_glyphs embeds every
+    /// element tuple merged with every window tuple.
+    pub window_tuples: Vec<CollectedAxisTuple>,
+    /// `(property name, binding location)` of the non-constant axis bindings.
+    pub dynamic: Vec<(smol_str::SmolStr, crate::diagnostics::SourceLocation)>,
+}
+
+impl FontAxesUsed {
+    /// Every axis tuple bitmaps need to cover: each element tuple, each window
+    /// tuple alone (for elements without their own settings), and every
+    /// element tuple merged last-wins with every window tuple.
+    pub fn tuples_to_embed(&self) -> Vec<CollectedAxisTuple> {
+        let mut result = self.tuples.clone();
+        for window in &self.window_tuples {
+            for element in self.tuples.iter().map(Some).chain(core::iter::once(None)) {
+                let mut tuple = window.clone();
+                if let Some(element) = element {
+                    for entry in element {
+                        if let Some(existing) = tuple.iter_mut().find(|(t, _)| *t == entry.0) {
+                            *existing = *entry;
+                        } else {
+                            tuple.push(*entry);
+                        }
+                    }
+                    tuple.sort_by_key(|(tag, _)| *tag);
+                }
+                if !result.contains(&tuple) {
+                    result.push(tuple);
+                }
+            }
+        }
+        result
+    }
+}
+
 #[derive(Clone)]
 struct Font {
     font: fontique::QueryFont,
@@ -103,6 +167,7 @@ pub fn embed_glyphs<'a>(
     _scale_factor: f64,
     _pixel_sizes: Vec<i16>,
     _font_weights: Vec<u16>,
+    _axis_tuples: Vec<CollectedAxisTuple>,
     _characters_seen: HashSet<char>,
     _all_docs: impl Iterator<Item = &'a crate::object_tree::Document> + 'a,
     _diag: &mut BuildDiagnostics,
@@ -116,6 +181,7 @@ pub fn embed_glyphs(
     compiler_config: &CompilerConfiguration,
     mut pixel_sizes: Vec<i16>,
     font_weights: Vec<u16>,
+    font_axes: FontAxesUsed,
     mut characters_seen: HashSet<char>,
     font_collection: &SharedFontCollection,
     diag: &mut BuildDiagnostics,
@@ -124,6 +190,28 @@ pub fn embed_glyphs(
 
     let generic_diag_location = doc.node.as_ref().map(|n| n.to_source_location());
     let scale_factor = compiler_config.const_scale_factor.unwrap_or(1.);
+
+    // Embedded bitmap glyphs are rasterized at a fixed axis tuple, so any
+    // axis property that can change at runtime (animated or computed binding)
+    // has nothing to rasterize against — vector font data is excluded by
+    // `EmbedTextures`. Report the offending bindings rather than silently
+    // rendering the font's default instance.
+    for (property_name, span) in &font_axes.dynamic {
+        diag.push_error_with_span(
+            format!(
+                "'{property_name}' is not constant, but the bitmap font embedding \
+                 for this build rasterizes glyphs at fixed axis values. Give the \
+                 property a constant value, or disable glyph embedding \
+                 (SLINT_EMBED_TEXTURES) so the variable font is used directly."
+            ),
+            span.clone(),
+        );
+    }
+    if diag.has_errors() {
+        return;
+    }
+
+    let tuples_to_embed = font_axes.tuples_to_embed();
 
     characters_seen.extend(
         ('a'..='z')
@@ -299,30 +387,108 @@ pub fn embed_glyphs(
         let axes = font_ref.axes();
         let wght_axis = axes.iter().find(|axis| axis.tag() == skrifa::Tag::new(b"wght"));
 
-        if let Some(wght_axis) = wght_axis {
-            // Variable font: embed one BitmapFont per requested weight
-            let weights = if font_weights.is_empty() {
-                vec![fontique::FontWeight::NORMAL.value() as u16]
-            } else {
-                font_weights.clone()
-            };
-            for &weight in &weights {
-                let clamped = (weight as f32).clamp(wght_axis.min_value(), wght_axis.max_value());
-                let location = axes.location([("wght", clamped)]);
-                let variations = vec![(skrifa::Tag::new(b"wght"), clamped)];
+        if axes.iter().next().is_some() {
+            // Variable font: embed one BitmapFont per (axis tuple, weight)
+            // combination used in the .slint sources, so every constant
+            // axis setting renders its own pre-rasterized instance.
+            for tuple in tuples_to_embed
+                .iter()
+                .filter(|t| !t.is_empty())
+                .chain(core::iter::once(&EMPTY_TUPLE))
+            {
+                // Resolve the tuple against this font's fvar axes; axes the font
+                // doesn't declare are inert and dropped from the rasterization.
+                let mut tuple_settings: Vec<(skrifa::Tag, f32)> = Vec::new();
+                for (tag_bits, value) in tuple {
+                    let tag = skrifa::Tag::new(&tag_bits.to_be_bytes());
+                    let Some(axis) = axes.iter().find(|axis| axis.tag() == tag) else {
+                        continue;
+                    };
+                    let value = match value {
+                        CollectedAxisValue::Value(v) => *v,
+                        CollectedAxisValue::FontDefault => axis.default_value(),
+                    };
+                    tuple_settings.push((tag, value.clamp(axis.min_value(), axis.max_value())));
+                }
+                let tuple_wght = tuple_settings
+                    .iter()
+                    .find(|(tag, _)| *tag == skrifa::Tag::new(b"wght"))
+                    .map(|(_, value)| *value as u16);
+                // `opsz` set by a tuple disables the per-size optical sizing;
+                // otherwise the axis tracks the glyph set's used size.
+                let auto_opsz = axes.iter().any(|axis| axis.tag() == skrifa::Tag::new(b"opsz"))
+                    && !tuple_settings.iter().any(|(tag, _)| *tag == skrifa::Tag::new(b"opsz"));
 
-                let embedded = embed_font(
-                    family_name.to_owned(),
-                    Font { font: font.clone() },
-                    &pixel_sizes,
-                    characters_seen.iter().cloned(),
-                    &fallback_fonts,
-                    compiler_config,
-                    location.coords(),
-                    &variations,
-                    Some(weight),
-                );
-                register_embedded_font(path, embedded);
+                let weights: Vec<u16> = if let Some(weight) = tuple_wght {
+                    vec![weight]
+                } else if font_weights.is_empty() {
+                    vec![fontique::FontWeight::NORMAL.value() as u16]
+                } else {
+                    font_weights.clone()
+                };
+
+                for &weight in &weights {
+                    let mut settings = tuple_settings.clone();
+                    if let Some(wght_axis) = &wght_axis {
+                        let clamped =
+                            (weight as f32).clamp(wght_axis.min_value(), wght_axis.max_value());
+                        if let Some(existing) =
+                            settings.iter_mut().find(|(tag, _)| *tag == wght_axis.tag())
+                        {
+                            existing.1 = clamped;
+                        } else {
+                            settings.push((wght_axis.tag(), clamped));
+                        }
+                    }
+                    let location = axes.location(settings.iter().copied());
+
+                    // Record the resolved tuple on the embedded font so the
+                    // runtime can score it against a request: every fvar axis
+                    // with its used and default value, except `wght` (carried
+                    // by `weight`) and `opsz` while it tracks the size.
+                    let recorded: Vec<crate::embedded_resources::BitmapFontVariation> = axes
+                        .iter()
+                        .filter_map(|axis| {
+                            let tag = axis.tag();
+                            if tag == skrifa::Tag::new(b"wght")
+                                || (auto_opsz && tag == skrifa::Tag::new(b"opsz"))
+                            {
+                                return None;
+                            }
+                            let used = settings
+                                .iter()
+                                .find(|(t, _)| *t == tag)
+                                .map(|(_, v)| *v)
+                                .unwrap_or_else(|| axis.default_value());
+                            Some(crate::embedded_resources::BitmapFontVariation {
+                                tag: u32::from_be_bytes(tag.to_be_bytes()),
+                                value: used,
+                                default_value: axis.default_value(),
+                            })
+                        })
+                        .collect();
+
+                    let embedded = embed_font(
+                        family_name.to_owned(),
+                        Font { font: font.clone() },
+                        &pixel_sizes,
+                        characters_seen.iter().cloned(),
+                        &fallback_fonts,
+                        compiler_config,
+                        location.coords(),
+                        &settings,
+                        Some(weight),
+                        recorded,
+                        if auto_opsz {
+                            axes.iter()
+                                .find(|axis| axis.tag() == skrifa::Tag::new(b"opsz"))
+                                .map(|axis| (axis, scale_factor))
+                        } else {
+                            None
+                        },
+                    );
+                    register_embedded_font(path, embedded);
+                }
             }
         } else {
             // Static font: embed once
@@ -335,6 +501,8 @@ pub fn embed_glyphs(
                 compiler_config,
                 &[],
                 &[],
+                None,
+                Vec::new(),
                 None,
             );
             register_embedded_font(path, embedded);
@@ -384,6 +552,10 @@ fn embed_font(
     normalized_coords: &[skrifa::instance::NormalizedCoord],
     _variations: &[(skrifa::Tag, f32)],
     override_weight: Option<u16>,
+    recorded_variations: Vec<crate::embedded_resources::BitmapFontVariation>,
+    // `Some((axis, scale_factor))` rasterizes every glyph set with `opsz` equal
+    // to its used (logical) size — automatic optical sizing on the bitmap path.
+    auto_opsz: Option<(skrifa::Axis, f32)>,
 ) -> BitmapFont {
     let coords_i16: Vec<i16> = normalized_coords.iter().map(|c| c.to_bits()).collect();
 
@@ -401,15 +573,39 @@ fn embed_font(
         })
         .collect();
 
+    let auto_opsz = auto_opsz.map(|(axis, scale_factor)| {
+        let index = skrifa::FontRef::from_index(font.font.blob.data(), font.font.index)
+            .expect("embed_font is only called with parseable fonts")
+            .axes()
+            .iter()
+            .position(|a| a.tag() == axis.tag())
+            .expect("auto_opsz is only set when the font declares an opsz axis");
+        (axis, index, scale_factor)
+    });
+    let has_auto_opsz = auto_opsz.is_some();
+
     #[cfg(feature = "sdf-fonts")]
     let glyphs = if _compiler_config.use_sdf_fonts {
-        embed_sdf_glyphs(pixel_sizes, &character_map, &font, fallback_fonts, _variations)
+        embed_sdf_glyphs(pixel_sizes, &character_map, &font, fallback_fonts, _variations, auto_opsz)
     } else {
-        embed_alpha_map_glyphs(pixel_sizes, &character_map, &font, fallback_fonts, &coords_i16)
+        embed_alpha_map_glyphs(
+            pixel_sizes,
+            &character_map,
+            &font,
+            fallback_fonts,
+            &coords_i16,
+            auto_opsz,
+        )
     };
     #[cfg(not(feature = "sdf-fonts"))]
-    let glyphs =
-        embed_alpha_map_glyphs(pixel_sizes, &character_map, &font, fallback_fonts, &coords_i16);
+    let glyphs = embed_alpha_map_glyphs(
+        pixel_sizes,
+        &character_map,
+        &font,
+        fallback_fonts,
+        &coords_i16,
+        auto_opsz,
+    );
 
     character_map.sort_by_key(|entry| entry.code_point);
 
@@ -434,6 +630,8 @@ fn embed_font(
         sdf: _compiler_config.use_sdf_fonts,
         #[cfg(not(feature = "sdf-fonts"))]
         sdf: false,
+        variations: recorded_variations,
+        auto_opsz: has_auto_opsz,
     }
 }
 
@@ -444,6 +642,9 @@ fn embed_alpha_map_glyphs(
     font: &Font,
     fallback_fonts: &[Font],
     normalized_coords: &[i16],
+    // `Some((axis, index, scale_factor))` overrides the `opsz` coordinate of each
+    // glyph set with that set's used (logical) size.
+    auto_opsz: Option<(skrifa::Axis, usize, f32)>,
 ) -> Vec<BitmapGlyphs> {
     use rayon::prelude::*;
     use std::cell::RefCell;
@@ -456,6 +657,28 @@ fn embed_alpha_map_glyphs(
     pixel_sizes
         .par_iter()
         .map(|pixel_size| {
+            // With automatic optical sizing the opsz coordinate follows each
+            // glyph set's used (logical) size — physical size divided by the
+            // constant scale factor.
+            let coords_storage;
+            let normalized_coords: &[i16] =
+                if let Some((axis, index, scale_factor)) = auto_opsz.as_ref() {
+                    coords_storage = normalized_coords
+                        .iter()
+                        .enumerate()
+                        .map(|(i, c)| {
+                            if i == *index {
+                                axis.normalize(*pixel_size as f32 / scale_factor).to_bits()
+                            } else {
+                                *c
+                            }
+                        })
+                        .collect::<Vec<_>>();
+                    &coords_storage
+                } else {
+                    normalized_coords
+                };
+
             let glyph_data = character_map
                 .par_iter()
                 .map(|CharacterMapEntry { code_point, .. }| {
@@ -524,6 +747,9 @@ fn embed_sdf_glyphs(
     font: &Font,
     fallback_fonts: &[Font],
     variations: &[(skrifa::Tag, f32)],
+    // `Some((axis, _index, scale_factor))` rasterizes the SDF with `opsz` equal
+    // to the target glyph set's used (logical) size.
+    auto_opsz: Option<(skrifa::Axis, usize, f32)>,
 ) -> Vec<BitmapGlyphs> {
     use rayon::prelude::*;
 
@@ -534,6 +760,17 @@ fn embed_sdf_glyphs(
     };
     let min_size = pixel_sizes.iter().min().expect("we have a 'max' so the vector is not empty");
     let target_pixel_size = (max_size * 2 / 3).max(16).min(RANGE as i16 * min_size);
+
+    let auto_opsz_setting = auto_opsz
+        .map(|(axis, _, scale_factor)| (axis.tag(), target_pixel_size as f32 / scale_factor));
+    let variations_storage;
+    let variations = if let Some(opsz_setting) = auto_opsz_setting {
+        variations_storage =
+            variations.iter().copied().chain(core::iter::once(opsz_setting)).collect::<Vec<_>>();
+        variations_storage.as_slice()
+    } else {
+        variations
+    };
 
     let glyph_data = character_map
         .par_iter()
@@ -755,4 +992,149 @@ pub fn scan_string_literals(component: &Rc<Component>, characters_seen: &mut Has
             }
         })
     })
+}
+
+/// Collects the constant font-axis tuples used by a component's text and window
+/// elements. `font-stretch` contributes a `wdth` entry, `font-optical-sizing:
+/// none` an `opsz` entry at the font's default, and `font-variation-settings`
+/// its literal list. Element-level tuples are merged last-wins with every
+/// `default-*` tuple declared on a window of the same component, since the
+/// runtime merges them the same way into the request.
+///
+/// Bindings that aren't constant (expressions or `animate`d properties) land in
+/// `seen.dynamic` — embedded bitmap fonts can't express runtime-varying axes.
+pub fn collect_font_axes_used(component: &Rc<Component>, seen: &mut FontAxesUsed) {
+    fn number_value(expr: &Expression) -> Option<f64> {
+        match expr {
+            Expression::NumberLiteral(value, _) => Some(*value),
+            Expression::Cast { from, .. } => number_value(from),
+            _ => None,
+        }
+    }
+
+    /// Reads one axis-related binding: pushes constant entries into `tuple`,
+    /// records non-constant ones in `dynamic`. Returns nothing when the
+    /// property isn't bound at all.
+    fn collect_binding(
+        elem: &ElementRc,
+        property: &str,
+        tuple: &mut CollectedAxisTuple,
+        dynamic: &mut Vec<(smol_str::SmolStr, crate::diagnostics::SourceLocation)>,
+    ) {
+        let element = elem.borrow();
+        let Some(binding) = element.binding(property) else { return };
+        let span = || binding.span.clone().unwrap_or_default();
+        if binding.animation.is_some() {
+            dynamic.push((property.into(), span()));
+            return;
+        }
+        match binding.value_expression() {
+            Expression::Array { values, .. } => {
+                let mut entries: CollectedAxisTuple = Vec::new();
+                let mut all_constant = true;
+                for entry in values {
+                    let constant_entry = match entry {
+                        Expression::Struct { values, .. } => match (
+                            values.get("tag"),
+                            values.get("value").and_then(|e| number_value(e)),
+                        ) {
+                            (Some(Expression::StringLiteral(tag)), Some(value))
+                                if tag.len() == 4
+                                    && tag.bytes().all(|b| (0x20..=0x7e).contains(&b)) =>
+                            {
+                                Some((
+                                    u32::from_be_bytes(tag.as_bytes().try_into().unwrap()),
+                                    CollectedAxisValue::Value(value as f32),
+                                ))
+                            }
+                            _ => None,
+                        },
+                        _ => None,
+                    };
+                    let Some(entry) = constant_entry else {
+                        all_constant = false;
+                        break;
+                    };
+                    entries.push(entry);
+                }
+                if !all_constant {
+                    dynamic.push((property.into(), span()));
+                    return;
+                }
+                for entry in entries {
+                    if let Some(existing) = tuple.iter_mut().find(|(t, _)| *t == entry.0) {
+                        *existing = entry;
+                    } else {
+                        tuple.push(entry);
+                    }
+                }
+            }
+            Expression::EnumerationValue(value) => {
+                // `font-optical-sizing`: Inherit resolves to the surrounding
+                // default (auto), Auto tracks the used size, None pins `opsz`
+                // to the font's default.
+                if matches!(value.enumeration.values[value.value].as_str(), "none")
+                    && !tuple.iter().any(|(t, _)| *t == OPSZ_TAG)
+                {
+                    tuple.push((OPSZ_TAG, CollectedAxisValue::FontDefault));
+                }
+            }
+            Expression::NumberLiteral(value, unit) if *unit == Unit::Percent => {
+                // `font-stretch` percent ↔ the `wdth` axis value.
+                let wdth = *value as f32 * 100.;
+                if let Some(existing) = tuple.iter_mut().find(|(t, _)| *t == WDTH_TAG) {
+                    *existing = (WDTH_TAG, CollectedAxisValue::Value(wdth));
+                } else {
+                    tuple.push((WDTH_TAG, CollectedAxisValue::Value(wdth)));
+                }
+            }
+            _ => dynamic.push((property.into(), span())),
+        }
+    }
+
+    let mut element_tuples: Vec<CollectedAxisTuple> = Vec::new();
+    let mut window_tuples: Vec<CollectedAxisTuple> = Vec::new();
+
+    recurse_elem_including_sub_components(component, &(), &mut |elem, _| {
+        let base = elem.borrow().base_type.to_string();
+        let (is_text, is_window) = match base.as_str() {
+            "TextInput" | "Text" | "SimpleText" | "ComplexText" | "StyledTextItem" => (true, false),
+            "Dialog" | "Window" | "WindowItem" | "PopupWindow" => (false, true),
+            _ => (false, false),
+        };
+        if !is_text && !is_window {
+            return;
+        }
+        let prefix = if is_window { "default-" } else { "" };
+        let mut tuple: CollectedAxisTuple = Vec::new();
+        for suffix in ["font-stretch", "font-optical-sizing", "font-variation-settings"] {
+            collect_binding(
+                elem,
+                format!("{prefix}{suffix}").as_str(),
+                &mut tuple,
+                &mut seen.dynamic,
+            );
+        }
+        if !tuple.is_empty() {
+            tuple.sort_by_key(|(tag, _)| *tag);
+            if is_window {
+                if !window_tuples.contains(&tuple) {
+                    window_tuples.push(tuple);
+                }
+            } else if !element_tuples.contains(&tuple) {
+                element_tuples.push(tuple);
+            }
+        }
+    });
+
+    for tuple in element_tuples {
+        if !seen.tuples.contains(&tuple) {
+            seen.tuples.push(tuple);
+        }
+    }
+    for tuple in window_tuples {
+        if !seen.window_tuples.contains(&tuple) {
+            seen.window_tuples.push(tuple);
+        }
+    }
 }
