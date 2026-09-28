@@ -195,6 +195,25 @@ fn builtin_function_cost(function: &BuiltinFunction) -> isize {
         BuiltinFunction::MacosBringAllWindowsToFront => isize::MAX,
         BuiltinFunction::PathPointAt => isize::MAX,
         BuiltinFunction::PathAngleAt => isize::MAX,
+        // Shape constructors and morphs allocate vectors and run geometry code;
+        // morph additionally measures and feature-matches both polygons.
+        BuiltinFunction::ShapesEmpty
+        | BuiltinFunction::ShapesPolygon
+        | BuiltinFunction::ShapesPolygonPerVertex
+        | BuiltinFunction::ShapesRegularPolygon
+        | BuiltinFunction::ShapesRegularPolygonPerVertex
+        | BuiltinFunction::ShapesRectangle
+        | BuiltinFunction::ShapesCircle
+        | BuiltinFunction::ShapesStar
+        | BuiltinFunction::ShapesPill
+        | BuiltinFunction::ShapesPillStar
+        | BuiltinFunction::ShapesCustom
+        | BuiltinFunction::ShapesNormalized
+        | BuiltinFunction::ShapesRotated
+        | BuiltinFunction::ShapesScaled
+        | BuiltinFunction::ShapesTranslated
+        | BuiltinFunction::ShapesFromPath => ALLOC_COST,
+        BuiltinFunction::ShapesMorph => isize::MAX,
         // Iterating the model and running the closure is unbounded; never inline.
         BuiltinFunction::ArrayAny | BuiltinFunction::ArrayAll | BuiltinFunction::ArrayFindIndex => {
             isize::MAX

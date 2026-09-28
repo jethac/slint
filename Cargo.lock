@@ -3604,6 +3604,7 @@ dependencies = [
  "fontcull-klippa",
  "fontcull-write-fonts",
  "i-slint-common",
+ "i-slint-core",
  "i-slint-parser-test-macro",
  "icu_normalizer",
  "icu_properties",
