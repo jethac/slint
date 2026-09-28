@@ -68,15 +68,15 @@ i-slint-backend-testing = { workspace = true, features = ["internal"] }
 
 i-slint-renderer-femtovg = { workspace = true, features = ["opengl"], optional = true }
 
-# EGL without X11: `static` links libEGL so a surfaceless context works headless.
-# Linux only — khronos-egl's build script requires pkg-config.
-[target.'cfg(target_os = "linux")'.dependencies]
-khronos-egl = { version = "6.0", features = ["static"], optional = true }
-
 test_driver_lib = { path = "../driver/driverlib" }
 
 image = { workspace = true }
 crossterm = "0.29"
+
+# EGL without X11: `static` links libEGL so a surfaceless context works headless.
+# Linux only — khronos-egl's build script requires pkg-config.
+[target.'cfg(target_os = "linux")'.dependencies]
+khronos-egl = { version = "6.0", features = ["static"], optional = true }
 
 [build-dependencies]
 i-slint-compiler = { workspace = true, features = ["default", "rust", "display-diagnostics", "renderer-software"], optional = true }

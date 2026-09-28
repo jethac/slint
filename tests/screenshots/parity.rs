@@ -210,13 +210,26 @@ impl PxRect {
         x >= self.x0 && x < self.x1 && y >= self.y0 && y < self.y1
     }
 
+    fn width(&self) -> f64 {
+        self.x1 - self.x0
+    }
+
+    fn height(&self) -> f64 {
+        self.y1 - self.y0
+    }
+
     fn dilated(&self, px: f64) -> Self {
         Self { x0: self.x0 - px, y0: self.y0 - px, x1: self.x1 + px, y1: self.y1 + px }
     }
 }
 
+/// Half-width of the boundary band a corner zone keeps masked, in device px.
+/// Anti-aliasing on the true corner shape lives inside this distance of the
+/// boundary; a fill bleeding past it (the corner leak) lands on strict pixels.
+const CORNER_BAND: f64 = 2.0;
+
 /// Per-pixel comparison layers for [`layered_compare`].
-pub struct PixelMask {
+struct PixelMask {
     layer: Vec<PixelClass>,
     w: usize,
     h: usize,
@@ -271,8 +284,23 @@ impl PixelMask {
     ///
     /// `margin` is the outer decoration allowance and `inset` the inner
     /// outline allowance, both in device px (see [`DECORATION_MARGIN_DP`]
-    /// and [`OUTLINE_INSET_DP`]).
-    fn mark_element(&mut self, slint: PxRect, compose: PxRect, margin: f64, inset: f64) {
+    /// and [`OUTLINE_INSET_DP`]). Inside a corner zone — the square that can
+    /// hold any corner radius the bounds admit — the band collapses to
+    /// `CORNER_BAND` around the true boundary: the sharp edge lines or the
+    /// maximal pill-endcap arc. Pixels further from that boundary stay
+    /// strict, so a fill spilling past a rounded corner is caught instead of
+    /// absorbed by the decoration margin. `corners_strict` disables that
+    /// carve-out (`//MASK_DECOR=`): when the element carries a decoration
+    /// the reference engine cannot render, corner zones take the normal
+    /// margin band.
+    fn mark_element(
+        &mut self,
+        slint: PxRect,
+        compose: PxRect,
+        margin: f64,
+        inset: f64,
+        corners_strict: bool,
+    ) {
         let (a, b) = (slint.dilated(1.0), compose.dilated(1.0));
         let (x0, y0) =
             (a.x0.min(b.x0).floor().max(0.0) as usize, a.y0.min(b.y0).floor().max(0.0) as usize);
@@ -285,6 +313,44 @@ impl PixelMask {
                 }
             }
         }
+        // `Some(true)` when (px,py) sits within `CORNER_BAND` of a corner
+        // boundary of `r`, `Some(false)` when it is in a corner zone but off
+        // the boundary (strict — spill must land here), `None` when outside
+        // every corner zone (the normal margin/inset band applies). The band
+        // grows by the bounds' displacement: an edge or corner arc that moved
+        // by the drift the traced bounds report is still the same boundary,
+        // while a wrong radius or spill shows up strictly off it.
+        let drift = (slint.x0 - compose.x0)
+            .abs()
+            .max((slint.x1 - compose.x1).abs())
+            .max((slint.y0 - compose.y0).abs())
+            .max((slint.y1 - compose.y1).abs());
+        let band = CORNER_BAND + drift;
+        let corner_band = |r: PxRect, px: f64, py: f64| -> Option<bool> {
+            if !corners_strict {
+                return None;
+            }
+            let r_pill = r.width().min(r.height()) / 2.0;
+            let zone = r_pill + margin;
+            let corners = [
+                (r.x0, r.y0, r.x0 + r_pill, r.y0 + r_pill),
+                (r.x1, r.y0, r.x1 - r_pill, r.y0 + r_pill),
+                (r.x0, r.y1, r.x0 + r_pill, r.y1 - r_pill),
+                (r.x1, r.y1, r.x1 - r_pill, r.y1 - r_pill),
+            ];
+            corners
+                .iter()
+                .find(|(cx, cy, ..)| (px - cx).abs() <= zone && (py - cy).abs() <= zone)
+                .map(|(.., ax, ay)| {
+                    let near_edge = (px - r.x0).abs() <= band
+                        || (px - r.x1).abs() <= band
+                        || (py - r.y0).abs() <= band
+                        || (py - r.y1).abs() <= band;
+                    let arc_d =
+                        ((px - ax).powi(2) + (py - ay).powi(2)).sqrt() - r_pill;
+                    near_edge || arc_d.abs() <= band
+                })
+        };
         for r in [a, b] {
             let outer = r.dilated(margin);
             let inner =
@@ -293,8 +359,13 @@ impl PixelMask {
                 for x in outer.x0.floor().max(0.0) as usize..(outer.x1.ceil() as usize).min(self.w)
                 {
                     let (px, py) = (x as f64 + 0.5, y as f64 + 0.5);
-                    if !inner.contains(px, py) {
-                        self.set(x, y, PixelClass::Skip);
+                    match corner_band(r, px, py) {
+                        Some(in_band) if in_band => self.set(x, y, PixelClass::Skip),
+                        Some(_) => {}
+                        None if !inner.contains(px, py) => {
+                            self.set(x, y, PixelClass::Skip)
+                        }
+                        _ => {}
                     }
                 }
             }
@@ -385,7 +456,7 @@ fn dilate(mask: &[bool], w: usize, h: usize, r: usize) -> Vec<bool> {
 
 /// Result of one layered comparison.
 #[derive(Debug)]
-pub struct LayerResult {
+struct LayerResult {
     /// True when every layer passed.
     pub ok: bool,
     /// Human-readable verdict, included in test failure output.
@@ -397,6 +468,9 @@ pub struct LayerResult {
     /// must produce (any other failure could be a missing file or a trace
     /// mismatch, not the render rejecting the defect).
     pub strict_failures: usize,
+    /// Strict failures inside `count_in` — a negative case asserts its catch
+    /// within the region the mutation affected, not anywhere in the frame.
+    pub strict_failures_in_region: usize,
     /// Bounding box (x0, y0, x1, y1, in device px) of the strict-layer
     /// failures, when any.
     pub strict_bbox: Option<(usize, usize, usize, usize)>,
@@ -404,12 +478,14 @@ pub struct LayerResult {
 
 /// Compare `actual` against `expected` under the per-pixel layer mask:
 /// strict per-channel outside text and skip regions, per-cell mean inside
-/// the text mask, nothing inside skip bands.
-pub fn layered_compare(
+/// the text mask, nothing inside skip bands. `count_in` additionally counts
+/// strict failures whose pixel lies inside that region.
+fn layered_compare(
     actual: &SharedPixelBuffer<Rgba8Pixel>,
     expected: &SharedPixelBuffer<Rgba8Pixel>,
     mask: Option<&PixelMask>,
     pixel_eps: u8,
+    count_in: Option<PxRect>,
 ) -> LayerResult {
     if actual.width() != expected.width() || actual.height() != expected.height() {
         return LayerResult {
@@ -423,6 +499,7 @@ pub fn layered_compare(
             ),
             diff: None,
             strict_failures: 0,
+            strict_failures_in_region: 0,
             strict_bbox: None,
         };
     }
@@ -441,6 +518,7 @@ pub fn layered_compare(
             ),
             diff: None,
             strict_failures: 0,
+            strict_failures_in_region: 0,
             strict_bbox: None,
         };
     }
@@ -470,6 +548,7 @@ pub fn layered_compare(
 
     let mut diff_img = SharedPixelBuffer::<Rgba8Pixel>::new(actual.width(), actual.height());
     let mut strict_failures = 0usize;
+    let mut strict_failures_in_region = 0usize;
     let mut strict_bbox = None;
     let mut worst = 0u8;
 
@@ -513,6 +592,9 @@ pub fn layered_compare(
                 };
                 if d > eps {
                     strict_failures += 1;
+                    if count_in.is_some_and(|r| r.contains(x as f64 + 0.5, y as f64 + 0.5)) {
+                        strict_failures_in_region += 1;
+                    }
                     strict_bbox = match strict_bbox {
                         None => Some((x, y, x + 1, y + 1)),
                         Some((x0, y0, x1, y1)) => {
@@ -551,6 +633,7 @@ pub fn layered_compare(
         report,
         diff: if strict_failures == 0 && text_failures.is_empty() { None } else { Some(diff_img) },
         strict_failures,
+        strict_failures_in_region,
         strict_bbox,
     }
 }
@@ -801,15 +884,10 @@ fn settle_time_ms(frames: &[TraceFrame]) -> Option<u64> {
 /// "settle_ms": n }`. Returns the list of mismatches found.
 /// The Compose-side clock offset relative to the Slint timeline, in ms.
 ///
-/// Slint dispatches the scene's pointer gesture at the recorded timestamp on
-/// the mocked clock, so the animation's effective t=0 is the dispatch
-/// itself. Compose starts the same `animateTo` from a `LaunchedEffect`, so
-/// its spring's t=0 is the next frame callback — a fixed startup latency of
-/// a few ms under Paparazzi's 1ms frame clock. Both runs integrate the same
-/// ODE once started, so the honest comparison is not "nearest frame within a
-/// window" (which hides a systematic lead) but identical timestamps after
-/// shifting the Compose clock by this measured latency. The shift is
-/// estimated per trace over ±16ms and reported with the result.
+/// Comparison happens at identical timestamps — the Compose frame clock is
+/// known to start one frame late (#27), and that lead is a real divergence,
+/// not something a fitted shift may hide. The offset is still measured and
+/// reported (for the `xfail` note that tracks #27), but it is not applied.
 fn estimate_phase(slint: &[TraceFrame], by_time: &BTreeMap<u64, &serde_json::Value>) -> i64 {
     let frame_err = |sf: &TraceFrame, ct: i64| -> f64 {
         let Some(cf) = (ct >= 0).then(|| by_time.get(&(ct as u64))).flatten() else {
@@ -873,26 +951,33 @@ pub fn compare_traces(slint: &[TraceFrame], compose: &serde_json::Value) -> Vec<
     let by_time: BTreeMap<u64, &serde_json::Value> =
         frames.iter().filter_map(|f| f["t_ms"].as_u64().map(|t| (t, f))).collect();
 
-    let phase_ms = estimate_phase(slint, &by_time);
-    eprintln!(
-        "parity: compose animation clock runs {phase_ms}ms behind slint's dispatch — comparing at identical shifted timestamps"
-    );
+    // Identical timestamps: the Compose trace records a frame every
+    // millisecond, so a missing frame is itself a finding, not something to
+    // approximate by a neighbor. The measured clock offset is reported below
+    // for the xfail note; it is never applied to the comparison.
     let compose_at = |t: u64| -> Vec<&serde_json::Value> {
-        let t = t as i64 + phase_ms;
-        if let Some(cf) = (t >= 0).then(|| by_time.get(&(t as u64))).flatten() {
-            return vec![*cf];
-        }
-        // Boundary only: the shifted timestamp ran past the recorded trace —
-        // compare against the nearest frame on the Compose clock (the trace
-        // is sampled densely enough that the clamp lands within the
-        // tolerance the numeric compare already applies).
-        by_time
-            .iter()
-            .min_by_key(|(ct, _)| (**ct as i64 - t).unsigned_abs())
-            .map(|(_, f)| *f)
-            .into_iter()
-            .collect()
+        by_time.get(&t).copied().into_iter().collect()
     };
+
+    // The hinted drift `|w - unhinted advance|` of `text:<N>` is a constant
+    // of the string, face and density — `onTextLayout` hasn't run yet on the
+    // earliest frames, so a same-frame lookup would degrade the bound there.
+    // Collect each text's drift from every frame that has metrics.
+    let mut text_drift: BTreeMap<String, f64> = BTreeMap::new();
+    for cf in &frames {
+        if let Some(texts) = cf["text"].as_object() {
+            for (tid, m) in texts {
+                let Some(unhinted) =
+                    m["unhint_w"].as_f64().or_else(|| m["frac_w"].as_f64())
+                else {
+                    continue;
+                };
+                let d = (m["w"].as_f64().unwrap_or(unhinted) - unhinted).abs();
+                let e = text_drift.entry(tid.clone()).or_insert(d);
+                *e = e.max(d);
+            }
+        }
+    }
 
     for frame in slint {
         let candidates = compose_at(frame.t_ms);
@@ -954,19 +1039,15 @@ pub fn compare_traces(slint: &[TraceFrame], compose: &serde_json::Value) -> Vec<
                 .chars()
                 .rev()
                 .collect::<String>();
-            let drift_eps = |cf: &serde_json::Value| -> f64 {
-                let m = cf["text"].get(format!("text:{drift}"));
-                m.and_then(|m| {
-                    m["frac_w"].as_f64().map(|f| (m["w"].as_f64().unwrap_or(f) - f).abs())
-                })
-                .unwrap_or(0.0)
+            let drift_eps = || -> f64 {
+                text_drift.get(&format!("text:{drift}")).copied().unwrap_or(0.0)
                     + GEOM_EPS
                     + 1.0
             };
             let mut best: Option<(&serde_json::Value, f64, u64)> = None;
             for cf in &candidates {
                 let Some(ce) = cf["elements"].get(id) else { continue };
-                let w_eps = if drift.is_empty() { GEOM_EPS } else { drift_eps(cf) };
+                let w_eps = if drift.is_empty() { GEOM_EPS } else { drift_eps() };
                 let err: f64 = ["x", "y", "w", "h", "opacity"]
                     .iter()
                     .enumerate()
@@ -984,7 +1065,7 @@ pub fn compare_traces(slint: &[TraceFrame], compose: &serde_json::Value) -> Vec<
                     .push(format!("t={}ms element '{id}' missing from Compose trace", frame.t_ms)),
                 Some((cf, err, ct)) if err > 1.0 => {
                     let ce = &cf["elements"][id];
-                    let w_eps = if drift.is_empty() { GEOM_EPS } else { drift_eps(cf) };
+                    let w_eps = if drift.is_empty() { GEOM_EPS } else { drift_eps() };
                     for (i, key) in ["x", "y", "w", "h", "opacity"].iter().enumerate() {
                         let Some(e) = ce[key].as_f64() else { continue };
                         let eps = if *key == "w" { w_eps } else { GEOM_EPS };
@@ -1011,6 +1092,14 @@ pub fn compare_traces(slint: &[TraceFrame], compose: &serde_json::Value) -> Vec<
             ));
         }
     }
+
+    // Report the measured clock offset for the record (the comparison itself
+    // stays at identical timestamps — see #27).
+    if !slint.is_empty() && !by_time.is_empty() {
+        let phase = estimate_phase(slint, &by_time);
+        eprintln!("parity: measured compose clock offset {phase:+}ms (Slint leads while >0)");
+    }
+
     errors
 }
 
@@ -1079,25 +1168,30 @@ fn compare_text_metrics<C: i_slint_core::api::ComponentHandle>(
             let Some(cw) = m["w"].as_f64() else { continue };
             let Some(cx) = m["x"].as_f64() else { continue };
 
-            // Slint w vs the font's own metrics; Compose's hinted w stays a
-            // few px wider by design and is not re-checked here.
-            let chars = m["chars"].as_f64().unwrap_or(1.0).max(1.0);
-            match m["frac_w"].as_f64() {
-                Some(frac_w) if frac_w.is_finite() => {
-                    // frac_w is the engine's exact fractional advance; the
-                    // engines' glyph advances differ by sub-pixel hinting
-                    // drift per glyph, bounded by glyph count.
-                    let w_bound = 0.5 + 0.25 * chars;
-                    if (sw - frac_w).abs() > w_bound {
+            // Slint's Text element width is `ceil(unhinted advance)` — so
+            // the unhinted Compose advance of the same string, same face,
+            // size and letter-spacing must land in `(sw - 1, sw]`. Any
+            // cross-engine advance difference that moves a whole pixel is
+            // caught exactly; sub-pixel drift is bounded by the 1px
+            // quantization window. `unhint_w` is measured at 8x and scaled
+            // down, which leaves ~0.125dp of residual quantization — the
+            // window widens by that much on both sides. Compose's hinted
+            // `w`/`frac_w` stay a few px wider by design and are not
+            // re-checked here.
+            match m["unhint_w"].as_f64() {
+                Some(unhint_w) if unhint_w.is_finite() => {
+                    let slack = sw - unhint_w;
+                    if !(-0.15..1.15).contains(&slack) {
                         errors.push(format!(
-                            "t={}ms text:{n}.w: slint {sw} vs font metric {frac_w} (bound {w_bound})",
+                            "t={}ms text:{n}.w: slint {sw} vs unhinted compose {unhint_w} (must satisfy sw = ceil(metric))",
                             frame.t_ms
                         ));
                     }
                 }
-                // Fallback for references recorded before frac_w existed:
+                // Fallback for references recorded before unhint_w existed:
                 // bound the cross-engine drift to ~0.5px per glyph.
                 _ => {
+                    let chars = m["chars"].as_f64().unwrap_or(1.0).max(1.0);
                     let bound = GEOM_EPS + 0.6 * chars;
                     if (sw - cw).abs() > bound {
                         errors.push(format!(
@@ -1282,6 +1376,8 @@ fn build_frame_mask<C: i_slint_core::api::ComponentHandle>(
     component: &C,
     slint_frame: &TraceFrame,
     compose_frame: Option<&serde_json::Value>,
+    inner_masked: &[String],
+    decor_masked: &[String],
     png_mask: Option<&SharedPixelBuffer<Rgba8Pixel>>,
     density: f64,
     width: u32,
@@ -1332,16 +1428,35 @@ fn build_frame_mask<C: i_slint_core::api::ComponentHandle>(
             else {
                 continue;
             };
+            let slint_rect = PxRect {
+                x0: geo[0] * d,
+                y0: geo[1] * d,
+                x1: (geo[0] + geo[2]) * d,
+                y1: (geo[1] + geo[3]) * d,
+            };
+            let compose_rect =
+                PxRect { x0: x * d, y0: y * d, x1: (x + w) * d, y1: (y + h) * d };
+            if inner_masked.contains(id) {
+                // `//MASK_INNER=` — overlay ink (the ripple) is mid-animation
+                // at this timestamp: skip the element interior, then let
+                // mark_element restore the corner zones' strict cells — the
+                // shape morph is verified exactly where it moves pixels.
+                mask.fill_rect(
+                    PxRect {
+                        x0: slint_rect.x0.min(compose_rect.x0),
+                        y0: slint_rect.y0.min(compose_rect.y0),
+                        x1: slint_rect.x1.max(compose_rect.x1),
+                        y1: slint_rect.y1.max(compose_rect.y1),
+                    },
+                    PixelClass::Skip,
+                );
+            }
             mask.mark_element(
-                PxRect {
-                    x0: geo[0] * d,
-                    y0: geo[1] * d,
-                    x1: (geo[0] + geo[2]) * d,
-                    y1: (geo[1] + geo[3]) * d,
-                },
-                PxRect { x0: x * d, y0: y * d, x1: (x + w) * d, y1: (y + h) * d },
+                slint_rect,
+                compose_rect,
                 DECORATION_MARGIN_DP * d,
                 OUTLINE_INSET_DP * d,
+                !decor_masked.contains(id),
             );
         }
     }
@@ -1367,6 +1482,7 @@ pub fn run_parity_case<C: i_slint_core::api::ComponentHandle>(
     let kind = spec.parity.as_deref().unwrap_or("static");
     let pixel_eps = spec.eps.map(|e| e as u8).unwrap_or(PIXEL_EPS);
     let negative = kind == "negative";
+    let xfail = kind == "xfail";
     let references_missing = !refs_dir(case_rel).join("d1").is_dir();
 
     if references_missing {
@@ -1378,7 +1494,7 @@ pub fn run_parity_case<C: i_slint_core::api::ComponentHandle>(
             return Err(msg.into());
         }
         eprintln!("{msg}");
-        if !negative {
+        if !negative && !xfail {
             return Ok(());
         }
     }
@@ -1389,7 +1505,12 @@ pub fn run_parity_case<C: i_slint_core::api::ComponentHandle>(
     // (e.g. an offset on a moving element) is *supposed* to be caught by:
     // its pixels legitimately sit inside the elements' disagreement band.
     let mut compare_findings = 0usize;
-    for density in &spec.densities {
+    // A negative case must be caught at EVERY density, and a pixel defect
+    // must be caught inside the region the mutation actually touched — the
+    // traced elements' bounds union at the settle frame, dilated to cover
+    // decorations and corner spill. (`None` = whole frame.)
+    let mut caught_at_density = vec![false; spec.densities.len()];
+    for (di, density) in spec.densities.iter().enumerate() {
         let component = make_instance(*density);
 
         // The Compose trace drives the per-frame masks as well as the
@@ -1409,6 +1530,47 @@ pub fn run_parity_case<C: i_slint_core::api::ComponentHandle>(
                 }
             }
         };
+
+        // Region the mutation may affect: the traced elements' bounds union
+        // from the Compose trace's last (settled) frame, dilated past the
+        // decoration margin so a defect bleeding outside the bounds — the
+        // corner spill — still lands inside it. Without traced elements the
+        // whole frame counts.
+        let region: Option<PxRect> = compose
+            .as_ref()
+            .and_then(|c| c["frames"].as_array().and_then(|f| f.last()))
+            .and_then(|f| f["elements"].as_object())
+            .map(|els| {
+                let mut u: Option<PxRect> = None;
+                for id in &spec.trace_elements {
+                    let Some(e) = els.get(id) else { continue };
+                    let (Some(x), Some(y), Some(w), Some(h)) = (
+                        e["x"].as_f64(),
+                        e["y"].as_f64(),
+                        e["w"].as_f64(),
+                        e["h"].as_f64(),
+                    ) else {
+                        continue;
+                    };
+                    let r = PxRect {
+                        x0: x * *density as f64,
+                        y0: y * *density as f64,
+                        x1: (x + w) * *density as f64,
+                        y1: (y + h) * *density as f64,
+                    };
+                    u = Some(match u {
+                        None => r,
+                        Some(u) => PxRect {
+                            x0: u.x0.min(r.x0),
+                            y0: u.y0.min(r.y0),
+                            x1: u.x1.max(r.x1),
+                            y1: u.y1.max(r.y1),
+                        },
+                    });
+                }
+                u.map(|u| u.dilated((DECORATION_MARGIN_DP + 4.0) * *density as f64))
+            })
+            .flatten();
 
         // The actions are input delivered at t=0: the frame at the first time
         // captures the pre-gesture state, so they dispatch right after it.
@@ -1451,17 +1613,37 @@ pub fn run_parity_case<C: i_slint_core::api::ComponentHandle>(
                 }
             };
             let png_mask = load_png(&mask_path).ok();
+            let inner_masked: Vec<String> = spec
+                .mask_inner
+                .iter()
+                .filter(|(_, ts)| *ts == t)
+                .map(|(id, _)| id.clone())
+                .collect();
+            let decor_masked: Vec<String> = spec
+                .mask_decor
+                .iter()
+                .filter(|(_, ts)| *ts == t)
+                .map(|(id, _)| id.clone())
+                .collect();
             let mask = build_frame_mask(
                 &component,
                 frames.last().unwrap(),
                 compose.as_ref().and_then(|c| compose_frame_at(c, t)),
+                &inner_masked,
+                &decor_masked,
                 png_mask.as_ref(),
                 *density as f64,
                 actual.width(),
                 actual.height(),
             );
-            let result = layered_compare(&actual, &expected, Some(&mask), pixel_eps);
+            let result = layered_compare(&actual, &expected, Some(&mask), pixel_eps, region);
             strict_caught += result.strict_failures;
+            if negative
+                && (region.map_or(result.strict_failures, |_| result.strict_failures_in_region)
+                    > 0)
+            {
+                caught_at_density[di] = true;
+            }
             if !result.ok {
                 let dir = artifacts_dir(driver, case_rel);
                 write_png(&dir.join(format!("actual_d{density}_{tag}.png")), &actual)?;
@@ -1479,6 +1661,11 @@ pub fn run_parity_case<C: i_slint_core::api::ComponentHandle>(
                 if !spec.times.is_empty() { compare_traces(&frames, compose) } else { Vec::new() };
             errors.extend(compare_text_metrics(&component, &frames, compose));
             compare_findings += errors.len();
+            // A motion-class defect is caught by the trace layer; record the
+            // density as caught when any trace/geometry/text finding fired.
+            if negative && !errors.is_empty() {
+                caught_at_density[di] = true;
+            }
             if !errors.is_empty() {
                 let dir = artifacts_dir(driver, case_rel);
                 std::fs::create_dir_all(&dir)?;
@@ -1512,16 +1699,26 @@ pub fn run_parity_case<C: i_slint_core::api::ComponentHandle>(
         }
         // The case is deliberately wrong (see its `PARITY=negative:` note): a
         // pixel-class defect (color, overlay, shape) must fail at the strict
-        // layer; a motion-class defect (a //TIMES= case) may instead be
-        // caught by the numeric trace layer — a moved element's displaced
-        // pixels legitimately sit inside the mask's disagreement band. A
-        // failure reported for any other reason (missing file, IO) proves
+        // layer *inside the mutated region*; a motion-class defect (a
+        // //TIMES= case) may instead be caught by the numeric trace layer —
+        // a moved element's displaced pixels legitimately sit inside the
+        // mask's disagreement band. The defect must be caught at EVERY
+        // density: a comparator strong enough only at d1 is half a harness.
+        // A failure reported for any other reason (missing file, IO) proves
         // nothing.
-        let defect_caught = strict_caught > 0 || (!spec.times.is_empty() && compare_findings > 0);
+        let defect_caught = caught_at_density.iter().all(|&c| c);
         if !defect_caught {
+            let missed: Vec<String> = spec
+                .densities
+                .iter()
+                .zip(&caught_at_density)
+                .filter(|(_, c)| !*c)
+                .map(|(d, _)| format!("d{d}"))
+                .collect();
             return Err(format!(
-                "negative case {case_rel} produced no strict-pixel{} differences{} — the harness did not catch the deliberate defect: {}",
+                "negative case {case_rel} produced no strict-pixel{} differences at {}{} — the harness did not catch the deliberate defect: {}",
                 if spec.times.is_empty() { "" } else { " or trace" },
+                missed.join(","),
                 if failures.is_empty() {
                     String::new()
                 } else {
@@ -1532,10 +1729,37 @@ pub fn run_parity_case<C: i_slint_core::api::ComponentHandle>(
             .into());
         }
         eprintln!(
-            "parity: negative case {case_rel} correctly rejected ({strict_caught} strict pixels, {compare_findings} trace findings, {} failures)",
+            "parity: negative case {case_rel} correctly rejected at every density ({strict_caught} strict pixels, {compare_findings} trace findings, {} failures)",
             failures.len()
         );
         return Ok(());
+    }
+
+    if xfail {
+        if references_missing {
+            // Same rule as negative: without references there is nothing
+            // real to diverge from — skip, don't count IO errors as the
+            // tracked divergence.
+            return Ok(());
+        }
+        // A known, tracked divergence: the comparison MUST report at least
+        // one finding — if it stops finding any, either the divergence was
+        // fixed (retire the marker, the case graduates to a positive) or the
+        // comparator went blind.
+        return if failures.is_empty() {
+            Err(format!(
+                "xfail case {case_rel} passed — expected a failure for: {} (remove the marker or reinstate the defect)",
+                spec.xfail_note.as_deref().unwrap_or("(undocumented)")
+            )
+            .into())
+        } else {
+            eprintln!(
+                "parity: xfail {case_rel} diverges as expected ({}): {} findings",
+                spec.xfail_note.as_deref().unwrap_or("(undocumented)"),
+                failures.len()
+            );
+            Ok(())
+        };
     }
 
     if failures.is_empty() {
@@ -1555,16 +1779,16 @@ fn comparator_catches_subtle_differences() {
     let mut all_text = PixelMask::new(size, size);
     all_text
         .fill_rect(PxRect { x0: 0.0, y0: 0.0, x1: size as f64, y1: size as f64 }, PixelClass::Text);
-    assert!(layered_compare(&a, &b, Some(&all_text), PIXEL_EPS).ok, "identical images must pass");
+    assert!(layered_compare(&a, &b, Some(&all_text), PIXEL_EPS, None).ok, "identical images must pass");
 
     // 1px color nudge outside text → strict layer fails.
     b.make_mut_slice()[0] = Rgba8Pixel { r: 20, g: 0, b: 0, a: 255 };
     let no_text = PixelMask::new(size, size);
-    assert!(!layered_compare(&a, &b, Some(&no_text), PIXEL_EPS).ok, "1px diff must fail");
+    assert!(!layered_compare(&a, &b, Some(&no_text), PIXEL_EPS, None).ok, "1px diff must fail");
 
     // Same nudge but fully inside the text mask → tolerated by the loose layer.
     assert!(
-        layered_compare(&a, &b, Some(&all_text), PIXEL_EPS).ok,
+        layered_compare(&a, &b, Some(&all_text), PIXEL_EPS, None).ok,
         "small diff inside text mask must pass"
     );
 
@@ -1573,5 +1797,8 @@ fn comparator_catches_subtle_differences() {
     for p in c.make_mut_slice() {
         *p = Rgba8Pixel { r: 255, g: 0, b: 0, a: 255 };
     }
-    assert!(!layered_compare(&a, &c, Some(&all_text), PIXEL_EPS).ok, "wrong text color must fail");
+    assert!(
+        !layered_compare(&a, &c, Some(&all_text), PIXEL_EPS, None).ok,
+        "wrong text color must fail"
+    );
 }

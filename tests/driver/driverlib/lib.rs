@@ -218,6 +218,10 @@ fn test_extract_library_paths() {
 ///   property trace per timestamp.
 /// - `//PARITY=negative` — the case is intentionally wrong; the test passes only
 ///   when the layered comparator rejects it.
+/// - `//PARITY=xfail:<reason>` — a known divergence the harness must report,
+///   not absorb: the test passes only while the comparison finds at least one
+///   difference (an unexpected pass fails, so the marker can't outlive the
+///   divergence it names).
 ///
 /// Optional markers:
 /// - `//TIMES=0,64,128` — motion capture timestamps (required for `motion`).
@@ -235,6 +239,14 @@ fn test_extract_library_paths() {
 ///   (default: `1,2`).
 /// - `//PARITY_EPS=8` — per-channel strict-pixel tolerance override; only use
 ///   with a comment on the case explaining why this case needs it.
+/// - `//MASK_INNER=id@t1,t2` — at the listed timestamps the element's
+///   interior is excluded from pixel comparison (overlay ink mid-flight,
+///   e.g. a ripple whose coverage is implementation detail); its boundary
+///   band still compares strictly. One line per element, may repeat.
+/// - `//MASK_DECOR=id@t1,t2` — at the listed timestamps the element's
+///   decoration outside its silhouette (a drop shadow, a blur) is not
+///   comparable on the reference engine; the corner zones fall back to
+///   the normal decoration band. One line per element, may repeat.
 #[derive(Debug, Default, Clone, PartialEq)]
 pub struct ParityMarkers {
     /// `Some("static"|"motion"|"negative")` when a `//PARITY=` marker is present.
@@ -247,6 +259,12 @@ pub struct ParityMarkers {
     pub eps: Option<f32>,
     /// `PARITY=negative` cases declare what they get wrong after a `:`.
     pub negative_note: Option<String>,
+    /// `PARITY=xfail` cases name the tracked divergence after a `:`.
+    pub xfail_note: Option<String>,
+    /// `(element-id, t_ms)` pairs from `//MASK_INNER=` markers.
+    pub mask_inner: Vec<(String, u64)>,
+    /// `(element-id, t_ms)` pairs from `//MASK_DECOR=` markers.
+    pub mask_decor: Vec<(String, u64)>,
 }
 
 /// One `//ACTION=` input step.
@@ -283,12 +301,15 @@ pub fn extract_parity(source: &str) -> ParityMarkers {
         let end = rest.find(char::is_whitespace).unwrap_or(rest.len());
         rest[..end].to_string()
     });
-    let (parity, negative_note) = match parity.as_deref().map(str::trim) {
+    let (parity, negative_note, xfail_note) = match parity.as_deref().map(str::trim) {
         Some(v) if v.starts_with("negative") => {
-            (Some("negative".to_string()), v.split_once(':').map(|(_, n)| n.trim().to_string()))
+            (Some("negative".to_string()), v.split_once(':').map(|(_, n)| n.trim().to_string()), None)
         }
-        Some(v) => (Some(v.to_string()), None),
-        None => (None, None),
+        Some(v) if v.starts_with("xfail") => {
+            (Some("xfail".to_string()), None, v.split_once(':').map(|(_, n)| n.trim().to_string()))
+        }
+        Some(v) => (Some(v.to_string()), None, None),
+        None => (None, None, None),
     };
 
     let mut actions = Vec::new();
@@ -324,6 +345,30 @@ pub fn extract_parity(source: &str) -> ParityMarkers {
             .expect("Cannot parse PARITY_EPS=")
     });
 
+    let mut mask_inner = Vec::new();
+    static MASK_INNER_RX: LazyLock<Regex> =
+        LazyLock::new(|| Regex::new(r"//MASK_INNER=\s*([A-Za-z0-9_]+)\s*@\s*([0-9,\s]+)").unwrap());
+    for m in MASK_INNER_RX.captures_iter(source) {
+        for t in m[2].split(',').map(str::trim).filter(|s| !s.is_empty()) {
+            mask_inner.push((
+                m[1].to_string(),
+                t.parse().expect("Cannot parse //MASK_INNER= timestamp"),
+            ));
+        }
+    }
+
+    let mut mask_decor = Vec::new();
+    static MASK_DECOR_RX: LazyLock<Regex> =
+        LazyLock::new(|| Regex::new(r"//MASK_DECOR=\s*([A-Za-z0-9_]+)\s*@\s*([0-9,\s]+)").unwrap());
+    for m in MASK_DECOR_RX.captures_iter(source) {
+        for t in m[2].split(',').map(str::trim).filter(|s| !s.is_empty()) {
+            mask_decor.push((
+                m[1].to_string(),
+                t.parse().expect("Cannot parse //MASK_DECOR= timestamp"),
+            ));
+        }
+    }
+
     ParityMarkers {
         parity,
         times: csv("//TIMES=").into_iter().filter_map(|s| s.parse().ok()).collect(),
@@ -333,6 +378,9 @@ pub fn extract_parity(source: &str) -> ParityMarkers {
         densities,
         eps,
         negative_note,
+        xfail_note,
+        mask_inner,
+        mask_decor,
     }
 }
 
