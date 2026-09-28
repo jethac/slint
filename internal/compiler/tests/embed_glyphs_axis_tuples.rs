@@ -236,6 +236,49 @@ fn markup_font_attributes_produce_one_tuple_per_span() {
     );
 }
 
+/// Bound properties that constant propagation folds still rasterize bitmap
+/// instances: an `out property` chain to a literal is a constant, so the
+/// collectors see the same number or string the source chain resolves to.
+#[test]
+fn const_propagated_weight_family_and_size_stay_bitmap() {
+    let (doc, diags) = compile(
+        r#"export component Main inherits Window {
+            property <int> w: 700;
+            property <string> fam: "Noto Sans";
+            property <length> s: 14px;
+            Text { font-family: fam; font-weight: w; font-size: s; text: "x"; }
+        }"#,
+        true,
+    );
+    assert_eq!(embedded_vector_fonts(&doc), 0);
+    assert!(
+        bitmap_variations(&doc).iter().any(|(f, w, _)| f == "Noto Sans" && *w == 700),
+        "the folded 700 weight must produce a bitmap instance: {:?}",
+        bitmap_variations(&doc)
+    );
+}
+
+/// A `font-weight`/`font-size` that isn't compile-time constant takes the
+/// vector path like the axis bindings, and errors with the binding's property
+/// name when vector fonts are excluded.
+#[test]
+fn non_constant_weight_and_size_take_the_vector_path() {
+    const SOURCE: &str = r#"
+export component Main inherits Window {
+    in property <int> w;
+    in property <length> s;
+    Text { font-family: "Noto Sans"; font-weight: w; font-size: s; text: "x"; }
+}
+"#;
+    let (_doc, diags) = compile(SOURCE, true);
+    assert!(diags.iter().any(|d| d.contains("'font-weight'")), "{diags:?}");
+    assert!(diags.iter().any(|d| d.contains("'font-size'")), "{diags:?}");
+
+    let (doc, diags) = compile(SOURCE, false);
+    assert!(diags.iter().all(|d| !d.starts_with("error")), "{diags:?}");
+    assert!(embedded_vector_fonts(&doc) > 0, "the font bytes must be embedded");
+}
+
 /// Dynamic axis bindings embed the vector font data, but only for the families
 /// the bindings can actually resolve to — flash on the MCU target is scarce.
 #[test]

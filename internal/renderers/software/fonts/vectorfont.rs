@@ -77,12 +77,10 @@ mod glyph_cache {
 
     impl GlyphCache {
         pub fn new(capacity_bytes: usize) -> Self {
-            Self(
-                clru::CLruCache::with_config(
-                    clru::CLruCacheConfig::new(core::num::NonZeroUsize::new(capacity_bytes).unwrap())
-                        .with_scale(RenderableGlyphWeightScale),
-                ),
-            )
+            Self(clru::CLruCache::with_config(
+                clru::CLruCacheConfig::new(core::num::NonZeroUsize::new(capacity_bytes).unwrap())
+                    .with_scale(RenderableGlyphWeightScale),
+            ))
         }
 
         pub fn get(&mut self, key: &GlyphCacheKey) -> Option<RenderableVectorGlyph> {

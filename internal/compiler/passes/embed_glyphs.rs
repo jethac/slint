@@ -1205,22 +1205,21 @@ pub fn collect_font_axes_used(component: &Rc<Component>, seen: &mut FontAxesUsed
         }
 
         // `font-weight` feeds the `wght` axis through the `font_weights`
-        // collection, which only understands literals. A bound or animated
-        // weight would silently snap to the nearest embedded instance, so it
-        // takes the same route as other non-constant axis inputs.
-        if let Some(binding) = elem.borrow().binding(format!("{prefix}font-weight").as_str()) {
-            if binding.animation.is_some()
-                || try_extract_literal_from_element(
-                    elem,
-                    &format!("{prefix}font-weight"),
-                    Unit::None,
-                )
-                .is_none()
-            {
-                element_dynamic.push((
-                    format!("{prefix}font-weight").into(),
-                    binding.span.clone().unwrap_or_default(),
-                ));
+        // collection and `font-size` the `font_pixel_sizes` one, both of which
+        // only understand literals. A bound or animated value would silently
+        // snap to the nearest embedded instance, so it takes the same route as
+        // other non-constant axis inputs.
+        for (suffix, unit) in [("font-weight", Unit::None), ("font-size", Unit::Px)] {
+            if let Some(binding) = elem.borrow().binding(format!("{prefix}{suffix}").as_str()) {
+                if binding.animation.is_some()
+                    || try_extract_literal_from_element(elem, &format!("{prefix}{suffix}"), unit)
+                        .is_none()
+                {
+                    element_dynamic.push((
+                        format!("{prefix}{suffix}").into(),
+                        binding.span.clone().unwrap_or_default(),
+                    ));
+                }
             }
         }
 

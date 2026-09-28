@@ -13,9 +13,9 @@
 //! adds (right-to-left scripts, ligatures, kerning) is not available — the
 //! same limitation the pre-rendered bitmap fonts have.
 
-use i_slint_core::api::ToSharedString as _;
 use alloc::vec::Vec;
 use core::cell::RefCell;
+use i_slint_core::api::ToSharedString as _;
 
 use skrifa::MetadataProvider as _;
 
@@ -120,9 +120,7 @@ fn normalized_coords(
         .map(|(tag, min, default, max)| {
             let value = variations
                 .iter()
-                .find(|(t, _)| {
-                    t.as_bytes().try_into().map(u32::from_be_bytes).ok() == Some(*tag)
-                })
+                .find(|(t, _)| t.as_bytes().try_into().map(u32::from_be_bytes).ok() == Some(*tag))
                 .map(|(_, v)| *v)
                 .unwrap_or(*default)
                 .clamp(*min, *max);
@@ -269,14 +267,10 @@ mod tests {
 
         // The request's axis values reach the rasterizer as normalized
         // coordinates: a narrower `wdth` produces a narrower advance.
-        let narrow = match_font(
-            &request("Noto Sans", &[axis("wdth", 62.5)]),
-            ScaleFactor::new(1.),
-        )
-        .unwrap();
+        let narrow =
+            match_font(&request("Noto Sans", &[axis("wdth", 62.5)]), ScaleFactor::new(1.)).unwrap();
         let wide =
-            match_font(&request("Noto Sans", &[axis("wdth", 100.)]), ScaleFactor::new(1.))
-                .unwrap();
+            match_font(&request("Noto Sans", &[axis("wdth", 100.)]), ScaleFactor::new(1.)).unwrap();
         let narrow_advance = narrow.glyph_for_char('A').unwrap().advance;
         let wide_advance = wide.glyph_for_char('A').unwrap().advance;
         assert!(

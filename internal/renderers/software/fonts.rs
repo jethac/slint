@@ -51,13 +51,19 @@ pub struct RenderableVectorGlyph {
     pub pixel_stride: u16,
     /// Only the parley glyph-run path (`systemfonts`) positions glyphs at
     /// sub-pixel offsets; the embedded path renders the offset into the bitmap.
-    #[cfg_attr(all(feature = "embedded-vector-fonts", not(feature = "systemfonts")), allow(dead_code))]
+    #[cfg_attr(
+        all(feature = "embedded-vector-fonts", not(feature = "systemfonts")),
+        allow(dead_code)
+    )]
     pub glyph_origin_x: f32,
 }
 
 #[cfg(any(feature = "systemfonts", feature = "embedded-vector-fonts"))]
 impl RenderableVectorGlyph {
-    #[cfg_attr(all(feature = "embedded-vector-fonts", not(feature = "systemfonts")), allow(dead_code))]
+    #[cfg_attr(
+        all(feature = "embedded-vector-fonts", not(feature = "systemfonts")),
+        allow(dead_code)
+    )]
     pub fn size(&self) -> PhysicalSize {
         PhysicalSize::from_lengths(self.width, self.height)
     }
@@ -288,9 +294,7 @@ pub fn match_font(
                 )
                 .into();
                 #[cfg(all(feature = "embedded-vector-fonts", not(feature = "systemfonts")))]
-                if let Some(vectorfont) =
-                    embeddedfonts::fallback_font(request, scale_factor)
-                {
+                if let Some(vectorfont) = embeddedfonts::fallback_font(request, scale_factor) {
                     return vectorfont.into();
                 }
                 #[cfg(not(feature = "systemfonts"))]
