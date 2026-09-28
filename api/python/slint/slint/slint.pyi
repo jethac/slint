@@ -292,7 +292,10 @@ class ValueType(Enum):
     Brush = auto()
     Image = auto()
     StyledText = auto()
+    Enumeration = auto()
     Keys = auto()
+    MouseCursor = auto()
+    Easing = auto()
 
 class DiagnosticLevel(Enum):
     Error = auto()
