@@ -291,11 +291,13 @@ glutin
 glyphclusters
 gnueabihf
 goldens
+GRAD
 grcov
 Grimme
 Grotesk
 gstreamer
 GWLP
+Hamburgefonstiv
 Hani
 hcts
 hdmipi
@@ -606,6 +608,7 @@ rlib
 rlibs
 Roboto
 RODATA
+ROND
 rowcol
 rsplit
 rspolib
@@ -810,6 +813,8 @@ writeback
 WRONLY
 Wsmeans
 wsmeans
+XOPQ
+XTRA
 xbuild
 xcarchive
 xcassets
@@ -824,6 +829,12 @@ xmark
 Xrgb
 xshell
 xxaaxx
+YOPQ
+YTAS
+YTDE
+YTFI
+YTLC
+YTUC
 yoyo
 zaimoku
 Zbuild
