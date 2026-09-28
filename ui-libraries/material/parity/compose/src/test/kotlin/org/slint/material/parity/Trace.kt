@@ -21,6 +21,10 @@ data class TextMetric(
     val baseline: Double,
     val lines: Int,
     val fracW: Double,
+    /** Unhinted advance of the same text (`Paint` with `HINTING_OFF`) — the
+     * same quantity Slint's text layout computes before it ceils to whole
+     * pixels, density-independent. */
+    val unhintW: Double,
     val chars: Int,
 ) {
     fun toJson(): JSONObject = JSONObject()
@@ -31,6 +35,7 @@ data class TextMetric(
         .put("baseline", baseline)
         .put("lines", lines)
         .put("frac_w", fracW)
+        .put("unhint_w", unhintW)
         .put("chars", chars)
 }
 

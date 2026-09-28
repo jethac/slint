@@ -15,6 +15,12 @@
     "brand": "Roboto",
     "plain": "Roboto"
   },
+  "mask_decor": {
+    "button1": [
+      2000
+    ]
+  },
+  "mask_inner": {},
   "name": "button-hover",
   "params": {},
   "parity": "static",

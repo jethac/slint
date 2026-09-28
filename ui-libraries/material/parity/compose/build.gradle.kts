@@ -38,6 +38,8 @@ android {
             isReturnDefaultValues = true
         }
     }
+
+    sourceSets["main"].java.srcDir("vendor/mcu")
 }
 
 kotlin {
@@ -53,10 +55,12 @@ dependencies {
     // 1.11.0-beta02.
     testImplementation("androidx.compose.material3:material3:1.5.0-alpha18")
     testImplementation("app.cash.paparazzi:paparazzi:2.0.0-alpha05")
-    // Independent implementation of material-color-utilities (Kotlin port):
-    // re-derives the scene scheme so a bug in Slint's Rust port surfaces
-    // instead of agreeing with itself.
-    testImplementation("com.materialkolor:material-color-utilities-jvm:5.0.1")
+
+    // Annotation-only deps of the vendored material-color-utilities
+    // (vendor/mcu) — needed at compile time only.
+    compileOnly("androidx.annotation:annotation:1.9.1")
+    compileOnly("com.google.errorprone:error_prone_annotations:2.36.0")
+
     testImplementation("junit:junit:4.13.2")
     testImplementation(project(":harness"))
 }

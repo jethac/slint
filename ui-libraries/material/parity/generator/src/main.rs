@@ -43,6 +43,17 @@ struct Scene {
     trace_elements: Vec<String>,
     #[serde(default)]
     actions: Vec<Action>,
+    /// Timestamps (ms) at which an element's interior ink is excluded from
+    /// pixel comparison — for widgets whose overlay animation (the ripple)
+    /// is legitimately mid-flight at that frame; the element's boundary band
+    /// still compares strictly.
+    #[serde(default)]
+    mask_inner: std::collections::BTreeMap<String, Vec<u64>>,
+    /// Timestamps (ms) at which an element's decoration outside its
+    /// silhouette (a drop shadow, a blur) is not comparable on the
+    /// reference engine; the corner zones take the normal band.
+    #[serde(default)]
+    mask_decor: std::collections::BTreeMap<String, Vec<u64>>,
     #[serde(default)]
     params: serde_json::Map<String, serde_json::Value>,
     #[serde(default)]
@@ -199,6 +210,8 @@ fn resolved_scene(scene: &Scene, case_rel: &str) -> serde_json::Value {
         "trace_props": scene.trace_props,
         "trace_elements": scene.trace_elements,
         "actions": scene.actions.iter().chain(widget_actions(scene).iter()).collect::<Vec<_>>(),
+        "mask_inner": scene.mask_inner,
+        "mask_decor": scene.mask_decor,
         "params": scene.params,
         "widgets": scene.widgets,
         "scheme": scheme_argbs(&scene.theme),
@@ -324,6 +337,14 @@ fn slint_case(scene: &Scene) -> String {
             )
             .unwrap();
         }
+        "xfail" => {
+            writeln!(
+                s,
+                "//PARITY=xfail: {}",
+                scene.negative_note.as_deref().unwrap_or("(undocumented)")
+            )
+            .unwrap();
+        }
         kind => writeln!(s, "//PARITY={kind}").unwrap(),
     }
     writeln!(s, "//SIZE={}x{}", scene.size[0], scene.size[1]).unwrap();
@@ -347,6 +368,22 @@ fn slint_case(scene: &Scene) -> String {
         } else {
             writeln!(s, "//ACTION={}:{},{}", a.kind, a.x as i64, a.y as i64).unwrap();
         }
+    }
+    for (id, ts) in &scene.mask_inner {
+        writeln!(
+            s,
+            "//MASK_INNER={id}@{}",
+            ts.iter().map(u64::to_string).collect::<Vec<_>>().join(",")
+        )
+        .unwrap();
+    }
+    for (id, ts) in &scene.mask_decor {
+        writeln!(
+            s,
+            "//MASK_DECOR={id}@{}",
+            ts.iter().map(u64::to_string).collect::<Vec<_>>().join(",")
+        )
+        .unwrap();
     }
     writeln!(
         s,
@@ -486,9 +523,13 @@ fn slint_canvas(s: &mut String, scene: &Scene) {
                     } else {
                         String::new()
                     };
+                    let cover_radius = cover["radius"]
+                        .as_f64()
+                        .map(|r| format!("{r}px"))
+                        .unwrap_or_else(|| format!("button{i}.height / 2"));
                     writeln!(
                         s,
-                        "    // Deliberate defect (scene `slint_overrides.cover`).\n    Rectangle {{\n        x: button{i}.x;\n        y: button{i}.y;\n        width: button{i}.width;\n        height: button{i}.height;\n        border-radius: button{i}.height / 2;\n        background: {fill_expr};\n        opacity: {};\n{label}    }}\n",
+                        "    // Deliberate defect (scene `slint_overrides.cover`).\n    Rectangle {{\n        x: button{i}.x;\n        y: button{i}.y;\n        width: button{i}.width;\n        height: button{i}.height;\n        border-radius: {cover_radius};\n        background: {fill_expr};\n        opacity: {};\n{label}    }}\n",
                         cover["opacity"].as_f64().unwrap_or(1.0),
                     )
                     .unwrap();

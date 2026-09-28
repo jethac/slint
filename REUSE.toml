@@ -487,3 +487,9 @@ path = ["ui-libraries/material/parity/compose/src/test/resources/fonts/**.ttf"]
 precedence = "aggregate"
 SPDX-FileCopyrightText = "Roboto <https://fonts.google.com/specimen/Roboto/about>"
 SPDX-License-Identifier = "Apache-2.0"
+
+[[annotations]]
+path = ["ui-libraries/material/parity/compose/vendor/mcu/**"]
+precedence = "aggregate"
+SPDX-FileCopyrightText = "Copyright 2021 Google LLC"
+SPDX-License-Identifier = "Apache-2.0"

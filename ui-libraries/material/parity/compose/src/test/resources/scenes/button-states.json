@@ -25,6 +25,8 @@
     "brand": "Roboto",
     "plain": "Roboto"
   },
+  "mask_decor": {},
+  "mask_inner": {},
   "name": "button-states",
   "params": {},
   "parity": "static",

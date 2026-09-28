@@ -63,7 +63,7 @@ fun Modifier.track(tracer: Tracer, id: String): Modifier =
 fun Modifier.trackText(tracer: Tracer, id: String, density: Float): Modifier =
     testTag(id).onGloballyPositioned { coords: LayoutCoordinates ->
         val b = coords.boundsInRoot()
-        val old = tracer.textMetrics[id] ?: TextMetric(0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 0)
+        val old = tracer.textMetrics[id] ?: TextMetric(0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 0.0, 0)
         tracer.textMetrics[id] = old.copy(
             x = (b.left / density).toDouble(),
             y = (b.top / density).toDouble(),
@@ -73,14 +73,42 @@ fun Modifier.trackText(tracer: Tracer, id: String, density: Float): Modifier =
     }
 
 /** `onTextLayout` sink for `trackText` ids: fills in baseline, line count,
- * and `frac_w` — the fractional advance of the laid-out text. */
+ * `frac_w` — the fractional advance of the laid-out text — and `unhint_w`,
+ * an unhinted `Paint` measure of the same string at the same size and
+ * weight. The laid-out width is density-hinted (it differs between 1x and
+ * 2x); the unhinted measure is the quantity Slint's layout ceils into its
+ * element width, and is density-independent. */
 fun recordTextLayout(
     tracer: Tracer,
     id: String,
     density: androidx.compose.ui.unit.Density,
+    resolver: androidx.compose.ui.text.font.FontFamily.Resolver,
+    fontFamily: androidx.compose.ui.text.font.FontFamily?,
 ): (androidx.compose.ui.text.TextLayoutResult) -> Unit =
     { layout ->
-        val old = tracer.textMetrics[id] ?: TextMetric(0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 0)
+        val style = layout.layoutInput.style
+        val typeface = resolver.resolve(
+            style.fontFamily
+                ?: fontFamily
+                ?: androidx.compose.ui.text.font.FontFamily.Default,
+            style.fontWeight ?: androidx.compose.ui.text.font.FontWeight.Normal,
+            style.fontStyle ?: androidx.compose.ui.text.font.FontStyle.Normal,
+        ).value as? android.graphics.Typeface
+        // `measureText` is still pixel-quantized under layoutlib even with
+        // `HINTING_OFF` — a plain measure at 1x returns whole pixels. Measuring
+        // at 8x and scaling back shrinks the quantization error to ~0.1px,
+        // which is what the comparator's ceil-consistency check needs.
+        val paint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
+            this.typeface = typeface
+            textSize = with(density) { style.fontSize.toPx() } * 8f
+            if (style.letterSpacing.isSp) {
+                letterSpacing =
+                    (with(density) { style.letterSpacing.toPx() } / textSize * 8f).toFloat()
+            }
+            hinting = android.graphics.Paint.HINTING_OFF
+        }
+        val old =
+            tracer.textMetrics[id] ?: TextMetric(0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 0.0, 0)
         tracer.textMetrics[id] = old.copy(
             baseline = layout.firstBaseline.toDouble() / density.density,
             lines = layout.lineCount,
@@ -90,42 +118,45 @@ fun recordTextLayout(
             // line edges.
             fracW = (layout.getLineRight(0) - layout.getLineLeft(0)).toDouble() /
                 density.density,
+            unhintW = paint.measureText(layout.layoutInput.text.text).toDouble() /
+                (density.density * 8.0),
             chars = layout.layoutInput.text.text.length,
         )
     }
 
-/** Re-derives the scene's scheme through `material-color-utilities` (the
- * Kotlin port on Maven Central) — an implementation independent of Slint's
- * Rust port, so a bug in either shows up here. The generator's resolved
+/** Re-derives the scene's scheme through the vendored official
+ * `material-color-utilities` Java sources (pinned commit, see
+ * vendor/mcu/VERSION.md) — an implementation independent of Slint's Rust
+ * port, so a bug in either shows up here. The generator's resolved
  * `scheme` map (Slint's port output) is compared against it by
  * [assertSchemeMatches]. */
-fun mcuScheme(scene: Scene): com.materialkolor.scheme.DynamicScheme {
+fun mcuScheme(scene: Scene): dynamiccolor.DynamicScheme {
     val t = scene.theme
-    val seed = com.materialkolor.hct.Hct.fromInt(
+    val seed = hct.Hct.fromInt(
         (0xFF00_0000L or t.getString("seed").toLong(16)).toInt(),
     )
     val dark = t.optBoolean("dark", false)
     val contrast = t.optDouble("contrast", 0.0)
     val spec = when (val s = t.optString("spec", "spec2025")) {
-        "spec2021" -> com.materialkolor.dynamiccolor.ColorSpec.SpecVersion.SPEC_2021
-        "spec2025" -> com.materialkolor.dynamiccolor.ColorSpec.SpecVersion.SPEC_2025
+        "spec2021" -> dynamiccolor.ColorSpec.SpecVersion.SPEC_2021
+        "spec2025" -> dynamiccolor.ColorSpec.SpecVersion.SPEC_2025
         else -> error("unknown spec $s")
     }
     val platform = when (val p = t.optString("platform", "phone")) {
-        "phone" -> com.materialkolor.scheme.DynamicScheme.Platform.PHONE
-        "watch" -> com.materialkolor.scheme.DynamicScheme.Platform.WATCH
+        "phone" -> dynamiccolor.DynamicScheme.Platform.PHONE
+        "watch" -> dynamiccolor.DynamicScheme.Platform.WATCH
         else -> error("unknown platform $p")
     }
     return when (val v = t.getString("variant")) {
-        "tonal-spot" -> com.materialkolor.scheme.SchemeTonalSpot(seed, dark, contrast, spec, platform)
-        "expressive" -> com.materialkolor.scheme.SchemeExpressive(seed, dark, contrast, spec, platform)
+        "tonal-spot" -> scheme.SchemeTonalSpot(seed, dark, contrast, spec, platform)
+        "expressive" -> scheme.SchemeExpressive(seed, dark, contrast, spec, platform)
         else -> error("mcuScheme has no mapping for variant $v")
     }
 }
 
 /** Every `ColorScheme` role the generator resolves, read off the
- * materialkolor scheme. */
-private fun roleArgb(s: com.materialkolor.scheme.DynamicScheme, role: String): Int = when (role) {
+ * official DynamicScheme. */
+private fun roleArgb(s: dynamiccolor.DynamicScheme, role: String): Int = when (role) {
     "primary" -> s.primary
     "onPrimary" -> s.onPrimary
     "primaryContainer" -> s.primaryContainer
@@ -174,12 +205,13 @@ private fun roleArgb(s: com.materialkolor.scheme.DynamicScheme, role: String): I
     "tertiaryFixedDim" -> s.tertiaryFixedDim
     "onTertiaryFixed" -> s.onTertiaryFixed
     "onTertiaryFixedVariant" -> s.onTertiaryFixedVariant
-    else -> error("no materialkolor mapping for scheme role $role")
+    else -> error("no DynamicScheme mapping for scheme role $role")
 }
 
 /** The `ColorScheme` the scene renders: the independently derived scheme —
- * Slint's theme resolution runs its Rust port, this runs the Kotlin port on
- * the same seed/variant/spec/platform/dark/contrast inputs. */
+ * Slint's theme resolution runs its Rust port, this runs the official Java
+ * implementation on the same seed/variant/spec/platform/dark/contrast
+ * inputs. */
 fun sceneColorScheme(scene: Scene): androidx.compose.material3.ColorScheme {
     val s = mcuScheme(scene)
     return lightColorScheme(
@@ -353,8 +385,19 @@ private fun StateButton(widget: Widget, tracer: Tracer, textId: String, elementI
     }
     when (widget.state) {
         "pressed" -> LaunchedEffect(Unit) {
-            interactionSource.emit(HoverInteraction.Enter())
-            interactionSource.emit(PressInteraction.Press(pressPos))
+            // Emit on the first frame at t >= 1 ms: a press arriving at t = 0
+            // makes the ripple request a frame at t = 0, which aborts
+            // layoutlib natively under `gif()`.
+            var emitted = false
+            while (!emitted) {
+                withFrameNanos { nanos ->
+                    if (nanos >= 1_000_000 && !emitted) {
+                        interactionSource.tryEmit(HoverInteraction.Enter())
+                        interactionSource.tryEmit(PressInteraction.Press(pressPos))
+                        emitted = true
+                    }
+                }
+            }
         }
         "hovered" -> LaunchedEffect(Unit) {
             interactionSource.emit(HoverInteraction.Enter())
@@ -376,7 +419,13 @@ private fun StateButton(widget: Widget, tracer: Tracer, textId: String, elementI
         Text(
             widget.text ?: "",
             modifier = Modifier.trackText(tracer, textId, density),
-            onTextLayout = recordTextLayout(tracer, textId, LocalDensity.current),
+            onTextLayout = recordTextLayout(
+                tracer,
+                textId,
+                LocalDensity.current,
+                androidx.compose.ui.platform.LocalFontFamilyResolver.current,
+                androidx.compose.material3.LocalTextStyle.current.fontFamily,
+            ),
         )
     }
 }

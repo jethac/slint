@@ -42,5 +42,10 @@
         "button0",
         "button1"
     ],
+    "mask_decor": {
+        "button1": [
+            2000
+        ]
+    },
     "trace_props": []
 }

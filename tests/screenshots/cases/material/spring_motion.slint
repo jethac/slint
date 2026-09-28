@@ -3,7 +3,7 @@
 
 // Scene: spring-motion — generated from `ui-libraries/material/parity/scenes/spring-motion.json`
 // (edit the scene, regenerate with `cargo run -p material-parity-generator`).
-//PARITY=motion
+//PARITY=xfail: issue #27: the Compose frame clock starts the animation ~2ms after the Slint dispatch, so identical-timestamp comparison reports a systematic lead — a silent pass would mean the harness went blind
 //SIZE=400x120
 //TIMES=0,33,66,100,133,166,200,266,333,400,500,666,833,1000
 //TRACE_PROPS=thumb-x

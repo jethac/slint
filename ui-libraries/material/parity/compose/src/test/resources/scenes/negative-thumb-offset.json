@@ -20,6 +20,8 @@
     "brand": "Roboto",
     "plain": "Roboto"
   },
+  "mask_decor": {},
+  "mask_inner": {},
   "name": "negative-thumb-offset",
   "negative_note": "the thumb renders 2px ahead of its animated property — an offset element must fail the trace comparison",
   "params": {

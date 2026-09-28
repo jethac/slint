@@ -8,6 +8,8 @@
     "brand": "Roboto",
     "plain": "Roboto"
   },
+  "mask_decor": {},
+  "mask_inner": {},
   "name": "negative-radius",
   "negative_note": "the card renders border-radius 8px, the scene and its Compose reference specify 24px — a wrong corner radius must fail",
   "params": {},

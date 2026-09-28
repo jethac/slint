@@ -9,6 +9,8 @@
     "brand": "Roboto",
     "plain": "Roboto"
   },
+  "mask_decor": {},
+  "mask_inner": {},
   "name": "negative-recolor",
   "negative_note": "the covering rectangle fills the button with primary-fixed instead of primary — a wrong fill color must fail",
   "params": {},

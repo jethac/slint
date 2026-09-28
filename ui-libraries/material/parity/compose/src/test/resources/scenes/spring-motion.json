@@ -19,7 +19,10 @@
     "brand": "Roboto",
     "plain": "Roboto"
   },
+  "mask_decor": {},
+  "mask_inner": {},
   "name": "spring-motion",
+  "negative_note": "issue #27: the Compose frame clock starts the animation ~2ms after the Slint dispatch, so identical-timestamp comparison reports a systematic lead — a silent pass would mean the harness went blind",
   "params": {
     "bounce": 0.2,
     "color": "primary",
@@ -30,7 +33,7 @@
     "target": 300,
     "y": 40
   },
-  "parity": "motion",
+  "parity": "xfail",
   "scheme": {
     "background": "FFFDF7FE",
     "error": "FFA8364B",
