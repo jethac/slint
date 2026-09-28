@@ -1,0 +1,15 @@
+// Copyright © SixtyFPS GmbH <info@slint.dev>
+// SPDX-License-Identifier: MIT
+
+// Opt-in bundled font: importing this file registers Roboto Flex (a ~1.8 MB
+// variable font) for the whole compilation. The Material library doesn't
+// bundle it by default — only Google Sans Flex is registered by
+// `material.slint`. Import this file and point the theme's families at it:
+//
+//     import { MaterialWindow } from "material.slint";
+//     import "roboto_flex.slint";
+//
+//     export component App inherits MaterialWindow {
+//         init => { MaterialTheme.plain_family = "Roboto Flex"; }
+//     }
+import "fonts/roboto-flex/RobotoFlex[GRAD,XOPQ,XTRA,YOPQ,YTAS,YTDE,YTFI,YTLC,YTUC,opsz,slnt,wdth,wght].ttf";
