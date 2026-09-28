@@ -14,7 +14,7 @@
     },
     "fonts": { "plain": "Roboto", "brand": "Roboto" },
     "times": [0, 33, 66, 100, 133, 166, 200, 266, 333, 400, 500, 666, 833, 1000],
-    "trace_props": ["box-x"],
+    "trace_props": ["thumb-x"],
     "trace_elements": ["thumb"],
     "actions": [
         { "kind": "press", "x": 200, "y": 60 },

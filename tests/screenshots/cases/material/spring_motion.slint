@@ -6,11 +6,12 @@
 //PARITY=motion
 //SIZE=400x120
 //TIMES=0,33,66,100,133,166,200,266,333,400,500,666,833,1000
-//TRACE_PROPS=box-x
+//TRACE_PROPS=thumb-x
 //TRACE_ELEMENTS=thumb
 //ACTION=press:200,60
 //ACTION=release:200,60
 //DENSITIES=1
+import "../../fonts/Roboto-VariableFont.ttf";
 import { MaterialPalette, MaterialTheme, MaterialWindow } from "@material";
 
 export component TestCase inherits MaterialWindow {
@@ -24,26 +25,32 @@ export component TestCase inherits MaterialWindow {
         MaterialTheme.use-platform-color = false;
         MaterialTheme.plain-family = "Roboto";
         MaterialTheme.brand-family = "Roboto";
+        // Compose builds its scene scheme from the same seed — use the
+        // runtime-generated scheme, not the static expressive table.
+        MaterialPalette.dynamic = true;
     }
 
-    // The property the trace and the Compose side both watch. Pressing
-    // anywhere moves the thumb to `300px`; the spring settles it.
-    in-out property <length> box-x: 40px;
+    // The property the trace and the Compose side both watch — the
+    // spring's animated value itself. Animating the property (not `thumb.x`,
+    // which would jump the source and animate only the binding) keeps the
+    // `get_thumb-x()` trace the live value. Pressing anywhere moves the
+    // thumb to `300px`; the spring settles it.
+    in-out property <length> thumb-x: 40px;
+    animate thumb-x { duration: 400ms; easing: spring(0.2); }
 
     thumb := Rectangle {
-        x: root.box-x;
+        x: root.thumb-x;
         y: 40px;
         width: 40px;
         height: 40px;
         border-radius: 20px;
         background: MaterialPalette.primary;
-        animate x { duration: 400ms; easing: spring(0.2); }
     }
 
     TouchArea {
         pointer-event(event) => {
             if event.kind == PointerEventKind.down {
-                root.box-x = 300px;
+                root.thumb-x = 300px;
             }
         }
     }

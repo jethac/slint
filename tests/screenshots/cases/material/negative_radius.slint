@@ -6,6 +6,7 @@
 //PARITY=negative: the card renders border-radius 8px, the scene and its Compose reference specify 24px — a wrong corner radius must fail
 //SIZE=200x120
 //DENSITIES=1
+import "../../fonts/Roboto-VariableFont.ttf";
 import { MaterialPalette, MaterialTheme, MaterialWindow } from "@material";
 
 export component TestCase inherits MaterialWindow {
@@ -19,6 +20,9 @@ export component TestCase inherits MaterialWindow {
         MaterialTheme.use-platform-color = false;
         MaterialTheme.plain-family = "Roboto";
         MaterialTheme.brand-family = "Roboto";
+        // Compose builds its scene scheme from the same seed — use the
+        // runtime-generated scheme, not the static expressive table.
+        MaterialPalette.dynamic = true;
     }
 
     Rectangle {

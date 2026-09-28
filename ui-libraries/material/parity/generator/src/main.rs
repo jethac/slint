@@ -67,8 +67,11 @@ struct Fonts {
 
 #[derive(serde::Deserialize, serde::Serialize)]
 struct Action {
+    /// `move`, `press`, `release`, or `key:<name>` (a named key like `Tab`).
     kind: String,
+    #[serde(default)]
     x: f64,
+    #[serde(default)]
     y: f64,
 }
 
@@ -89,6 +92,12 @@ struct Widget {
     text: Option<String>,
     #[serde(default)]
     enabled: Option<bool>,
+    /// Interaction state the widget starts in: `enabled` (default),
+    /// `disabled`, `hovered`, `focused`, or `pressed`. The Compose side sets
+    /// the interaction source directly; the Slint side gets pointer actions
+    /// derived from it (see `widget_actions`).
+    #[serde(default)]
+    state: Option<String>,
     #[serde(default)]
     color: Option<String>,
     /// What this widget deliberately gets wrong on the Slint side
@@ -184,7 +193,7 @@ fn resolved_scene(scene: &Scene, case_rel: &str) -> serde_json::Value {
         "times": scene.times,
         "trace_props": scene.trace_props,
         "trace_elements": scene.trace_elements,
-        "actions": scene.actions,
+        "actions": scene.actions.iter().chain(widget_actions(scene).iter()).collect::<Vec<_>>(),
         "params": scene.params,
         "widgets": scene.widgets,
         "scheme": scheme_argbs(&scene.theme),
@@ -327,8 +336,12 @@ fn slint_case(scene: &Scene) -> String {
     if !scene.trace_elements.is_empty() {
         writeln!(s, "//TRACE_ELEMENTS={}", scene.trace_elements.join(",")).unwrap();
     }
-    for a in &scene.actions {
-        writeln!(s, "//ACTION={}:{},{}", a.kind, a.x as i64, a.y as i64).unwrap();
+    for a in scene.actions.iter().chain(widget_actions(scene).iter()) {
+        if let Some(key) = a.kind.strip_prefix("key:") {
+            writeln!(s, "//ACTION=key:{key}").unwrap();
+        } else {
+            writeln!(s, "//ACTION={}:{},{}", a.kind, a.x as i64, a.y as i64).unwrap();
+        }
     }
     writeln!(
         s,
@@ -342,11 +355,21 @@ fn slint_case(scene: &Scene) -> String {
         imports.push("FilledButton");
     }
     imports.sort();
-    writeln!(s, "import {{ {} }} from \"@material\";\n", imports.join(", ")).unwrap();
+    // The Compose side renders text in the variable Roboto under
+    // `compose/src/test/resources/fonts/roboto.ttf` — the same file, kept
+    // byte-identical by the staleness check above. Import the shared copy
+    // so the driver registers it under the `Roboto` family name the scene
+    // assigns to `MaterialTheme.{plain,brand}-family`.
+    writeln!(
+        s,
+        "import \"../../fonts/Roboto-VariableFont.ttf\";\nimport {{ {} }} from \"@material\";\n",
+        imports.join(", ")
+    )
+    .unwrap();
     writeln!(s, "export component TestCase inherits MaterialWindow {{").unwrap();
     writeln!(
         s,
-        "    init => {{\n        // The scene pins seed #{seed}, {variant}, {spec}, {lightdark}, contrast {contrast}\n        // (all the library defaults; restated here so a default change can't\n        // silently move the parity baseline).\n        MaterialTheme.seed-color = #{seed};\n        MaterialTheme.dark = {dark};\n        MaterialTheme.contrast-level = {contrast};\n        MaterialTheme.use-platform-color = false;\n        MaterialTheme.plain-family = \"{plain}\";\n        MaterialTheme.brand-family = \"{brand}\";\n    }}\n",
+        "    init => {{\n        // The scene pins seed #{seed}, {variant}, {spec}, {lightdark}, contrast {contrast}\n        // (all the library defaults; restated here so a default change can't\n        // silently move the parity baseline).\n        MaterialTheme.seed-color = #{seed};\n        MaterialTheme.dark = {dark};\n        MaterialTheme.contrast-level = {contrast};\n        MaterialTheme.use-platform-color = false;\n        MaterialTheme.plain-family = \"{plain}\";\n        MaterialTheme.brand-family = \"{brand}\";\n        // Compose builds its scene scheme from the same seed — use the\n        // runtime-generated scheme, not the static expressive table.\n        MaterialPalette.dynamic = true;\n    }}\n",
         seed = scene.theme.seed,
         variant = scene.theme.variant,
         spec = scene.theme.spec,
@@ -366,17 +389,64 @@ fn slint_case(scene: &Scene) -> String {
     s
 }
 
+/// Input actions that put each widget in its authored `state` on the Slint
+/// side. Emitted as `//ACTION=` markers plus passed through in the resolved
+/// scene's `actions` so both sides drive the same gesture.
+///
+/// Slint material buttons take keyboard focus only via Tab navigation —
+/// pointer presses don't steal focus (the FocusScope is size zero). The
+/// pointer determines hover and press: a `pressed` widget's pointer is over
+/// it, so it is necessarily also hovered (pressed wins visually on both
+/// sides); a `focused` widget gets `key:Tab` steps to reach it in the
+/// scene's declaration order. Keyboard actions come first since they don't
+/// move the pointer; the held `press` is emitted last — nothing after it may
+/// move the pointer or the press is cancelled.
+fn widget_actions(scene: &Scene) -> Vec<Action> {
+    let mut actions = Vec::new();
+    // Tab steps walk the focusable widgets in declaration order, starting
+    // from no focus: reaching the widget at focusable ordinal `o` takes
+    // `o + 1` Tabs. Later `focused` widgets continue from there.
+    let mut tabs_emitted = 0usize;
+    let mut ordinal = 0usize;
+    for w in &scene.widgets {
+        if w.enabled == Some(false) {
+            continue;
+        }
+        if w.state.as_deref() == Some("focused") {
+            for _ in tabs_emitted..=ordinal {
+                actions.push(Action { kind: "key:Tab".into(), x: 0.0, y: 0.0 });
+            }
+            tabs_emitted = ordinal + 1;
+        }
+        ordinal += 1;
+    }
+    for w in &scene.widgets {
+        let (x, y) = (w.x + 40.0, w.y + 20.0);
+        match w
+            .state
+            .as_deref()
+            .unwrap_or(if w.enabled == Some(false) { "disabled" } else { "enabled" })
+        {
+            "hovered" => actions.push(Action { kind: "move".into(), x, y }),
+            "pressed" => actions.push(Action { kind: "press".into(), x, y }),
+            "enabled" | "disabled" | "focused" => {}
+            other => panic!("unknown widget state {other:?}"),
+        }
+    }
+    actions
+}
+
 fn widget_num(v: &serde_json::Value) -> f64 {
     v.as_f64().unwrap_or_else(|| panic!("expected number, got {v}"))
 }
 
 fn slint_canvas(s: &mut String, scene: &Scene) {
-    for w in &scene.widgets {
+    for (i, w) in scene.widgets.iter().enumerate() {
         match w.kind.as_str() {
             "filled-button" => {
                 writeln!(
                     s,
-                    "    FilledButton {{\n        x: {}px;\n        y: {}px;\n        text: \"{}\";\n{}    }}\n",
+                    "    button{i} := FilledButton {{\n        x: {}px;\n        y: {}px;\n        text: \"{}\";\n{}    }}\n",
                     w.x as i64,
                     w.y as i64,
                     w.text.as_deref().unwrap_or_default(),
@@ -417,7 +487,7 @@ fn slint_spring_motion(s: &mut String, scene: &Scene) {
     let get = |k: &str| widget_num(&p[k]);
     writeln!(
         s,
-        "    // The property the trace and the Compose side both watch. Pressing\n    // anywhere moves the thumb to `{target}px`; the spring settles it.\n    in-out property <length> box-x: {start}px;\n\n    thumb := Rectangle {{\n        x: root.box-x;\n        y: {y}px;\n        width: {size}px;\n        height: {size}px;\n        border-radius: {radius}px;\n        background: MaterialPalette.{color};\n        animate x {{ duration: {dur}ms; easing: spring({bounce}); }}\n    }}\n\n    TouchArea {{\n        pointer-event(event) => {{\n            if event.kind == PointerEventKind.down {{\n                root.box-x = {target}px;\n            }}\n        }}\n    }}",
+        "    // The property the trace and the Compose side both watch — the\n    // spring's animated value itself. Animating the property (not `thumb.x`,\n    // which would jump the source and animate only the binding) keeps the\n    // `get_thumb-x()` trace the live value. Pressing anywhere moves the\n    // thumb to `{target}px`; the spring settles it.\n    in-out property <length> thumb-x: {start}px;\n    animate thumb-x {{ duration: {dur}ms; easing: spring({bounce}); }}\n\n    thumb := Rectangle {{\n        x: root.thumb-x;\n        y: {y}px;\n        width: {size}px;\n        height: {size}px;\n        border-radius: {radius}px;\n        background: MaterialPalette.{color};\n    }}\n\n    TouchArea {{\n        pointer-event(event) => {{\n            if event.kind == PointerEventKind.down {{\n                root.thumb-x = {target}px;\n            }}\n        }}\n    }}",
         start = get("start") as i64,
         target = get("target") as i64,
         y = get("y") as i64,
