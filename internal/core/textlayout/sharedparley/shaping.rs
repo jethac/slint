@@ -434,10 +434,16 @@ pub(super) fn location_settings(
 }
 
 /// The line-height ratio, relative to the font size, that every shaped line gets.
+/// An absolute `FontRequest::line_height` is expressed as a ratio over the
+/// requested font size: parley scales it back up with each span's physical size.
 pub(super) fn line_height_ratio(
     font_ctx: &mut parley::FontContext,
     font_request: &FontRequest,
 ) -> Option<f32> {
+    if let Some(line_height) = font_request.line_height {
+        let pixel_size = font_request.pixel_size.unwrap_or(DEFAULT_FONT_SIZE);
+        return (pixel_size.get() != 0.0).then(|| line_height.get() / pixel_size.get());
+    }
     let font = font_request.query_fontique(&mut font_ctx.collection, &mut font_ctx.source_cache)?;
     let face = skrifa::FontRef::from_index(font.blob.data(), font.index).ok()?;
     let location = face.axes().location(location_settings(&font.synthesis, font_request));

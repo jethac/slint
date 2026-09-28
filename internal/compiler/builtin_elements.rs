@@ -1150,6 +1150,21 @@ fn build(l: &mut Loader) {
         /// ```
         /// \default 1
         in property <float> line-height-factor: 1;
+        /// The absolute line height applied to each line, replacing the font's natural line
+        /// height (ascent + descent + line gap). It takes precedence over `line-height-factor`.
+        /// The default of `0` keeps the natural line height; a value smaller than the natural
+        /// line height can make the lines overlap.
+        ///
+        /// ```slint "line-height: 30px;" imageAlt="text with absolute line height" width="200" height="200" needsBackground
+        /// Text {
+        ///     text: "Two lines\nof text";
+        ///     color: black;
+        ///     font-size: 30pt;
+        ///     line-height: 30px;
+        /// }
+        /// ```
+        /// \default 0
+        in property <length> line-height;
         /// The brush used for the text outline.
         /// ```slint "stroke: darkblue;" imageAlt="text stroke" width="300" height="200" needsBackground
         /// Text {
@@ -2363,6 +2378,12 @@ fn build(l: &mut Loader) {
         /// not the font size, and keyword or length values aren't supported.
         /// \default 1
         in property <float> line-height-factor: 1;
+        /// The absolute line height applied to each line, replacing the font's natural line
+        /// height (ascent + descent + line gap). It takes precedence over `line-height-factor`.
+        /// The default of `0` keeps the natural line height; a value smaller than the natural
+        /// line height can make the lines overlap.
+        /// \default 0
+        in property <length> line-height;
         in property <length> width;
         in property <length> height;
         /// The height of the page used to compute how much to scroll when the user presses page up or page down.

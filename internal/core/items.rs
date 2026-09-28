@@ -1475,6 +1475,7 @@ impl WindowItem {
         local_font_size: LogicalLength,
         local_letter_spacing: LogicalLength,
         local_line_height_factor: f32,
+        local_line_height: LogicalLength,
         local_italic: bool,
         local_font_stretch: f32,
         local_font_optical_sizing: FontOpticalSizing,
@@ -1489,6 +1490,7 @@ impl WindowItem {
                     FontOpticalSizing::Inherit => None,
                 },
                 variations: local_font_variation_settings,
+                line_height: (local_line_height.get() > 0 as Coord).then_some(local_line_height),
                 ..Default::default()
             };
         };
@@ -1532,6 +1534,8 @@ impl WindowItem {
                 && local_line_height_factor >= 0.0
                 && local_line_height_factor != 1.0)
                 .then_some(local_line_height_factor),
+            // A non-positive length means unset; it maps to None rather than collapsing lines.
+            line_height: (local_line_height.get() > 0 as Coord).then_some(local_line_height),
             italic: local_italic,
             stretch: {
                 if local_font_stretch == 0.0 {

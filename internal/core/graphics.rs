@@ -119,6 +119,9 @@ pub struct FontRequest {
     /// The line height as a factor applied to the font's natural line height.
     /// `None` uses the natural line height unchanged (a factor of 1).
     pub line_height_factor: Option<f32>,
+    /// The absolute line height applied to each line. `Some` takes precedence
+    /// over `line_height_factor`.
+    pub line_height: Option<LogicalLength>,
     /// Whether to select an italic face of the font family.
     pub italic: bool,
     /// The font width as a CSS `font-stretch` percentage where 100 is the normal
@@ -223,8 +226,11 @@ pub fn merge_variation_pairs<'a>(
 impl FontRequest {
     /// Returns the configured line height given the font's natural line height
     /// (in any unit), or `None` when the natural line height applies unchanged.
+    /// An absolute `line_height` wins over `line_height_factor`.
     pub fn line_height_for_natural_height(&self, natural_line_height: f32) -> Option<f32> {
-        self.line_height_factor.map(|factor| natural_line_height * factor)
+        self.line_height
+            .map(|line_height| line_height.get())
+            .or_else(|| self.line_height_factor.map(|factor| natural_line_height * factor))
     }
 }
 
