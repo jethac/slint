@@ -1248,8 +1248,8 @@ pub struct PropertyAnimation {
     pub visibility_threshold: f32,
 }
 
-#[allow(clippy::derivable_impls)] // iteration_count and enabled differ from `Default::default()`
-
+// iteration_count and enabled differ from `Default::default()`
+#[allow(clippy::derivable_impls)]
 impl Default for PropertyAnimation {
     fn default() -> Self {
         // Defaults for PropertyAnimation are defined here (for internal Rust code doing programmatic animations)

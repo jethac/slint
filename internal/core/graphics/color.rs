@@ -472,7 +472,7 @@ impl InterpolatedPropertyValue for Color {
         out[..4].copy_from_slice(&[oklab.alpha, oklab.l, oklab.a, oklab.b]);
     }
 
-    fn from_channels(&self, _target_value: &Self, channels: &[f32]) -> Self {
+    fn rebuild_from_channels(&self, _target_value: &Self, channels: &[f32]) -> Self {
         Self::from_oklab_channels(channels)
     }
 }
@@ -785,6 +785,7 @@ mod compose_oklab {
     const SRGB_FROM_XYZ_D50: [f32; 9] = inverse3x3(&SRGB_TO_XYZ_D50);
 
     /// `Oklab.kt`'s `M1`: raw Oklab M1 times Bradford D50→D65.
+    #[allow(clippy::excessive_precision)]
     const OKLAB_M1: [f32; 9] = mul3x3(
         &[
             0.8189330101,
@@ -801,6 +802,7 @@ mod compose_oklab {
     );
     const OKLAB_INVERSE_M1: [f32; 9] = inverse3x3(&OKLAB_M1);
     /// `Oklab.kt`'s `M2` and `InverseM2`.
+    #[allow(clippy::excessive_precision)]
     const OKLAB_M2: [f32; 9] = [
         0.2104542553,
         1.9779984951,

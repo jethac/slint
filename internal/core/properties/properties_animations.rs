@@ -417,7 +417,7 @@ impl<T: InterpolatedPropertyValue + Clone> PropertyValueAnimationData<T> {
                         .zip(physical.to_channels.iter())
                         .map(|(regime, to)| to + regime.evaluate(elapsed_secs).0)
                         .collect();
-                    let val = self.from_value.from_channels(&to_value, &channels);
+                    let val = self.from_value.rebuild_from_channels(&to_value, &channels);
                     return (self.apply_map(val), false);
                 }
                 // A spring runs in real time and ends only once it settles.
@@ -736,7 +736,7 @@ pub trait InterpolatedPropertyValue: PartialEq + Default + 'static {
     /// `self` contributes what isn't animated (e.g. a gradient's variant) while
     /// `target_value` resolves pair-dependent details (e.g. the longer side's stop
     /// count).
-    fn from_channels(&self, target_value: &Self, channels: &[f32]) -> Self {
+    fn rebuild_from_channels(&self, target_value: &Self, channels: &[f32]) -> Self {
         debug_assert_eq!(channels.len(), self.channel_count(target_value));
         let _ = (self, target_value);
         let mut value = Self::default();
@@ -745,7 +745,7 @@ pub trait InterpolatedPropertyValue: PartialEq + Default + 'static {
     }
 
     /// For scalar single-channel types: rebuild `self` so that its one channel equals
-    /// `channel`. Kept internal; multi-channel types override [`from_channels`]
+    /// `channel`. Kept internal; multi-channel types override [`rebuild_from_channels`]
     /// instead.
     #[doc(hidden)]
     fn set_single_channel(&mut self, channel: f32) {
@@ -864,10 +864,10 @@ impl InterpolatedPropertyValue for LogicalLength {
     }
 }
 
-/// Binding installed by `Property::set_animated_value`.
-/// A type so a retarget can report the current velocity
-struct AnimatedValueBinding<T> {
-    animation_data: RefCell<PropertyValueAnimationData<T>>,
+/// Binding installed by `Property::set_animated_value` (and its C FFI
+/// equivalent), a named type so a retarget can report the current velocity.
+pub(crate) struct AnimatedValueBinding<T> {
+    pub(super) animation_data: RefCell<PropertyValueAnimationData<T>>,
 }
 
 impl<T: InterpolatedPropertyValue + Clone + 'static> BindingCallable<T>
@@ -2096,18 +2096,18 @@ mod animation_tests {
         compo.width.handle.access(|binding| assert!(binding.is_some()));
     }
 
-    /// `from_channels(write_channels(v)) == v` for every animatable type that
+    /// `rebuild_from_channels(write_channels(v)) == v` for every animatable type that
     /// decomposes a value pair into spring channels.
     #[test]
     fn channel_round_trips() {
         fn check<T: InterpolatedPropertyValue + core::fmt::Debug>(a: T, b: T) {
             let mut channels = alloc::vec![0.0; a.channel_count(&b)];
             a.write_channels(&b, &mut channels);
-            let rebuilt = a.from_channels(&b, &channels);
+            let rebuilt = a.rebuild_from_channels(&b, &channels);
             assert_eq!(rebuilt, a, "round-trip failed for {a:?} -> {b:?}");
             let mut channels_b = alloc::vec![0.0; b.channel_count(&a)];
             b.write_channels(&a, &mut channels_b);
-            let rebuilt_b = b.from_channels(&a, &channels_b);
+            let rebuilt_b = b.rebuild_from_channels(&a, &channels_b);
             assert_eq!(rebuilt_b, b, "reverse round-trip failed for {b:?} -> {a:?}");
         }
 
@@ -2128,7 +2128,7 @@ mod animation_tests {
             let (a, b) = pair;
             let mut channels = alloc::vec![0.0; a.channel_count(&b)];
             a.write_channels(&b, &mut channels);
-            let rebuilt = a.from_channels(&b, &channels);
+            let rebuilt = a.rebuild_from_channels(&b, &channels);
             let (ra, rr) = (
                 crate::graphics::RgbaColor::<u8>::from(a),
                 crate::graphics::RgbaColor::<u8>::from(rebuilt),

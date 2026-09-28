@@ -930,7 +930,7 @@ impl InterpolatedPropertyValue for Brush {
         BrushChannelLayout::of(self, target_value).write(self, target_value, out);
     }
 
-    fn from_channels(&self, target_value: &Self, channels: &[f32]) -> Self {
+    fn rebuild_from_channels(&self, target_value: &Self, channels: &[f32]) -> Self {
         BrushChannelLayout::of(self, target_value).build(self, channels)
     }
 }
@@ -1061,8 +1061,8 @@ impl BrushChannelLayout {
             out[..4].copy_from_slice(&Color::oklab_channels(&brush.color()));
             return;
         }
-        for i in 0..self.header_count() {
-            out[i] =
+        for (i, channel) in out.iter_mut().enumerate().take(self.header_count()) {
+            *channel =
                 self.header_value(brush, i).or_else(|| self.header_value(other, i)).unwrap_or(0.0);
         }
         let stops = self.stops(brush);
@@ -1139,10 +1139,12 @@ impl BrushChannelLayout {
             Self::Conic { stops } => {
                 let mut v = SharedVector::with_capacity(ConicGradientBrush::HEADER + stops);
                 v.push(GradientStop { color: Default::default(), position: channels[0] });
-                for i in 1..ConicGradientBrush::HEADER {
+                for (i, channel) in
+                    channels.iter().enumerate().take(ConicGradientBrush::HEADER).skip(1)
+                {
                     let value = match self.header_value(from, i) {
                         None => f32::NAN,
-                        _ => channels[i],
+                        _ => *channel,
                     };
                     v.push(GradientStop { color: Default::default(), position: value });
                 }

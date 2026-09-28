@@ -217,25 +217,24 @@ fn c_set_animated_value<T: InterpolatedPropertyValue + Clone>(
     to: T,
     animation_data: &PropertyAnimation,
 ) {
-    let d = RefCell::new(properties_animations::PropertyValueAnimationData::new(
-        from,
-        Some(to),
-        animation_data.clone(),
-    ));
+    // Carry over the outgoing binding's velocity like `set_animated_value` does.
+    // Installing `AnimatedValueBinding` (rather than a plain closure) also lets the
+    // next retarget read this animation's velocity back through `current_velocity`.
+    let carried_velocity = handle.0.current_velocity().unwrap_or_default();
+    let binding = properties_animations::AnimatedValueBinding {
+        animation_data: RefCell::new(
+            properties_animations::PropertyValueAnimationData::new_with_velocity(
+                from,
+                Some(to),
+                animation_data.clone(),
+                carried_velocity,
+            ),
+        ),
+    };
     // Safety: The BindingCallable is for type T
     unsafe {
-        handle.0.set_binding(move |val: &mut T| {
-            let (value, finished) = d.borrow_mut().compute_interpolated_value();
-            *val = value;
-            if finished {
-                BindingResult::RemoveBinding
-            } else {
-                crate::animations::CURRENT_ANIMATION_DRIVER
-                    .with(|driver| driver.set_has_active_animations());
-                BindingResult::KeepBinding
-            }
-        })
-    };
+        handle.0.set_binding(binding);
+    }
     handle.0.mark_dirty();
 }
 

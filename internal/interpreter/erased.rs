@@ -103,10 +103,12 @@ impl InterpolatedPropertyValue for Value {
         }
     }
 
-    fn from_channels(&self, target: &Self, channels: &[f32]) -> Self {
+    fn rebuild_from_channels(&self, target: &Self, channels: &[f32]) -> Self {
         match (self, target) {
             (Value::Number(_), Value::Number(_)) => Value::Number(channels[0] as f64),
-            (Value::Brush(a), Value::Brush(b)) => Value::Brush(a.from_channels(b, channels)),
+            (Value::Brush(a), Value::Brush(b)) => {
+                Value::Brush(a.rebuild_from_channels(b, channels))
+            }
             _ => self.clone(),
         }
     }
