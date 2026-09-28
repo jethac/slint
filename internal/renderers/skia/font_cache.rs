@@ -92,8 +92,7 @@ impl FontCache {
     ) -> Option<skia_safe::Typeface> {
         let mut variation_settings =
             i_slint_core::textlayout::sharedparley::merged_variation_settings(
-                synthesis,
-                variations,
+                synthesis, variations,
             );
         self.without_unsupported_opsz(font, &mut variation_settings);
         let variations_hash = variation_settings_hash(&variation_settings);
