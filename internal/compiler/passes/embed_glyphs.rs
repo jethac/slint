@@ -980,7 +980,7 @@ pub fn collect_font_sizes_used(
         .to_string()
         .as_str()
     {
-        "TextInput" | "Text" | "SimpleText" | "ComplexText" | "StyledTextItem" => {
+        "TextInput" | "Text" | "SimpleText" | "ComplexText" | "StyledText" | "StyledTextItem" => {
             if let Some(font_size) = try_extract_literal_from_element(elem, "font-size", Unit::Px) {
                 add_font_size(font_size)
             }
@@ -1010,7 +1010,7 @@ pub fn collect_font_weights_used(component: &Rc<Component>, weights_seen: &mut V
         .to_string()
         .as_str()
     {
-        "TextInput" | "Text" | "SimpleText" | "ComplexText" | "StyledTextItem" => {
+        "TextInput" | "Text" | "SimpleText" | "ComplexText" | "StyledText" | "StyledTextItem" => {
             if let Some(weight) = try_extract_literal_from_element(elem, "font-weight", Unit::None)
             {
                 add_weight(weight)
@@ -1148,7 +1148,7 @@ pub fn collect_font_axes_used(component: &Rc<Component>, seen: &mut FontAxesUsed
     recurse_elem_including_sub_components(component, &(), &mut |elem, _| {
         let base = elem.borrow().base_type.to_string();
         let (is_text, is_window) = match base.as_str() {
-            "TextInput" | "Text" | "SimpleText" | "ComplexText" | "StyledTextItem" => (true, false),
+            "TextInput" | "Text" | "SimpleText" | "ComplexText" | "StyledText" | "StyledTextItem" => (true, false),
             "Dialog" | "Window" | "WindowItem" | "PopupWindow" => (false, true),
             _ => (false, false),
         };
@@ -1186,8 +1186,8 @@ pub fn collect_font_axes_used(component: &Rc<Component>, seen: &mut FontAxesUsed
         // `<font>` tags in styled-text markup carry axis attributes of their
         // own; the markup source is a compile-time literal, so every value is
         // constant.
-        if is_text && base == "StyledTextItem" {
-            collect_markup_axes(elem, &mut tuple);
+        if is_text && (base == "StyledTextItem" || base == "StyledText") {
+            collect_markup_axes(elem, &mut tuple, &mut seen.dynamic);
         }
         if !tuple.is_empty() {
             tuple.sort_by_key(|(tag, _)| *tag);
@@ -1213,24 +1213,41 @@ pub fn collect_font_axes_used(component: &Rc<Component>, seen: &mut FontAxesUsed
     }
 }
 
-/// Reads the `<font>` tag attributes out of a `StyledTextItem`'s `text`
-/// markup and merges them into `tuple`. The markup binding compiles to
-/// `ParseMarkdown(format_string, args)` where `format_string` is a literal;
-/// attribute values inside it are always constant.
-fn collect_markup_axes(elem: &ElementRc, tuple: &mut CollectedAxisTuple) {
-    let elem = elem.borrow();
-    let Some(binding) = elem.binding("text") else { return };
-    let Expression::FunctionCall { function, arguments, .. } = binding.value_expression()
-    else {
+/// Reads the `<font>` tag attributes out of a styled-text `text` binding's
+/// markup and merges them into `tuple`. A literal markup string (or the format
+/// string of `ParseMarkdown` for `@markdown{}`) is fully known at compile time.
+/// Markup that isn't a literal can carry `<font>` axis attributes we can't see,
+/// so it is non-constant for collection purposes and takes the dynamic path
+/// like any other non-literal axis input.
+fn collect_markup_axes(
+    elem: &ElementRc,
+    tuple: &mut CollectedAxisTuple,
+    dynamic: &mut Vec<(smol_str::SmolStr, crate::diagnostics::SourceLocation)>,
+) {
+    let (markup, span) = {
+        let elem = elem.borrow();
+        let Some(binding) = elem.binding("text") else { return };
+        let markup = match binding.value_expression() {
+            Expression::StringLiteral(markup) => Some(markup.clone()),
+            Expression::FunctionCall { function, arguments, .. }
+                if matches!(
+                    function,
+                    crate::expression_tree::Callable::Builtin(BuiltinFunction::ParseMarkdown)
+                ) =>
+            {
+                match arguments.first() {
+                    Some(Expression::StringLiteral(markup)) => Some(markup.clone()),
+                    _ => None,
+                }
+            }
+            _ => None,
+        };
+        (markup, binding.span.clone().unwrap_or_default())
+    };
+    let Some(markup) = markup else {
+        dynamic.push(("text (styled markup)".into(), span));
         return;
     };
-    if !matches!(
-        function,
-        crate::expression_tree::Callable::Builtin(BuiltinFunction::ParseMarkdown)
-    ) {
-        return;
-    }
-    let Some(Expression::StringLiteral(markup)) = arguments.first() else { return };
     let (paragraphs, _errors) = i_slint_common::styled_text::parse_interpolated::<
         &[i_slint_common::styled_text::StyledTextParagraph],
     >(markup.as_str(), &[]);
