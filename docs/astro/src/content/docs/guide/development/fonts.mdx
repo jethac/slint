@@ -85,8 +85,8 @@ of the families those bindings can resolve to and registers it through
 `register_font_from_memory`, so a runtime with a vector rasterizer (the
 `software-renderer-systemfonts` cargo feature, or — without `std` — the software
 renderer's `embedded-vector-fonts` feature) rasterizes the exact instance each frame.
-That trades flash for flexibility: the raw file is 84 KiB for the subsetted test Noto
-Sans and about 4.2 MiB for the full Google Sans Flex — versus ~6 KiB for one
+That trades flash for flexibility: the raw file is 81.8 KiB for the subsetted test Noto
+Sans and 3.96 MiB for the full Google Sans Flex — versus ~6 KiB for one
 pre-rendered instance — plus RAM for rasterized glyphs (bounded by a cache that defaults
 to 1 MiB; set `SLINT_VECTOR_FONT_CACHE_BYTES` in the environment or in
 `.cargo/config.toml`'s `[env]` table to shrink it on small MCUs, and rebuild from clean

@@ -798,11 +798,14 @@ mod tests {
     /// The full pipeline — pin, then subset — must measurably shrink a real
     /// variable font: Roboto Flex pinned to {{wght, opsz}} and subset to ASCII
     /// printable drops most of its bytes. `GSF_FONT` overrides the input to
-    /// measure the Material sample font end to end.
+    /// measure the Material sample font end to end; a relative path resolves
+    /// against the crate directory.
     #[test]
     fn pin_then_subset_shrinks() {
         let (data, keep_tags): (std::borrow::Cow<[u8]>, &[&[u8; 4]]) =
-            match std::env::var("GSF_FONT").ok().map(|p| std::fs::read(p).unwrap()) {
+            match std::env::var("GSF_FONT").ok().map(|p| {
+                std::fs::read(std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(p)).unwrap()
+            }) {
                 Some(bytes) => (bytes.into(), &[b"wght", b"opsz"]),
                 None => (ROBOTO_FLEX.into(), &[b"wght", b"opsz"]),
             };
