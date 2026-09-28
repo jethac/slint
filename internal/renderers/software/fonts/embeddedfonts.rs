@@ -323,64 +323,100 @@ mod tests {
         (glyph.width.get(), glyph.height.get(), hash)
     }
 
-    /// A short string through the text path: `match_font` resolves the
-    /// embedded font, `shape_text` positions the glyphs and
-    /// `render_vector_glyph` rasterizes them — the same calls
-    /// `draw_text_paragraph`/`draw_glyph_run` make. Called from the single
-    /// test that owns the shared `EMBEDDED_FONTS`.
+    /// A short string through the renderer's real text path — the same
+    /// `SceneBuilder::draw_text_paragraph` a `Text` item calls: paragraph
+    /// layout, glyph rasterization, clipping and blending into a target
+    /// buffer. Called from the single test that owns the shared
+    /// `EMBEDDED_FONTS`.
     fn renders_text_string_end_to_end() {
-        let context = test_context();
+        use crate::{
+            PhysicalRegion, RenderToBuffer, RenderingRotation, RepaintBufferType, SceneBuilder,
+            TargetPixelSlice,
+        };
+        use i_slint_core::items::{
+            TextHorizontalAlignment, TextOverflow, TextVerticalAlignment, TextWrap,
+        };
+        use i_slint_core::lengths::LogicalLength;
+        use i_slint_core::window::{WindowAdapter as _, WindowInner};
 
-        fn render(
-            font: &VectorFont,
-            text: &str,
-            buffer: &mut [u8],
-            width: usize,
-            baseline: i32,
-            context: &i_slint_core::SlintContext,
-        ) -> usize {
-            let mut glyphs = Vec::new();
-            font.shape_text(text, &mut glyphs);
-            let mut pen_x = 0f32;
-            let mut rightmost_ink = 0usize;
-            for glyph in &glyphs {
-                let Some(id) = glyph.glyph_id else {
-                    pen_x += glyph.advance.get() as f32;
-                    continue;
-                };
-                let rendered = font.render_vector_glyph(id, 0, context).unwrap();
-                // Same blit origin as `draw_glyph_run`: the glyph box hangs
-                // `placement.top` above the baseline.
-                let dst_x = pen_x.round() as i32 + rendered.x.truncate() as i32;
-                let dst_y = baseline - rendered.y.truncate() as i32 - rendered.height.get() as i32;
-                for row in 0..rendered.height.get() as i32 {
-                    for col in 0..rendered.pixel_stride as i32 {
-                        let (x, y) = (dst_x + col, dst_y + row);
-                        let alpha =
-                            rendered.alpha_map[(row * rendered.pixel_stride as i32 + col) as usize];
-                        if alpha != 0 && (0..width as i32).contains(&x) && (0..32).contains(&y) {
-                            buffer[y as usize * width + x as usize] =
-                                buffer[y as usize * width + x as usize].max(alpha);
-                            rightmost_ink = rightmost_ink.max(x as usize);
-                        }
-                    }
-                }
-                pen_x += glyph.advance.get() as f32;
-            }
-            rightmost_ink
-        }
+        test_context();
+        let window = crate::MinimalSoftwareWindow::new(RepaintBufferType::NewBuffer);
+        let window_inner = WindowInner::from_pub(window.window());
 
         const W: usize = 64;
-        let mut narrow = [0u8; W * 32];
-        let mut wide = [0u8; W * 32];
+        const H: usize = 32;
+
+        fn render(font: &VectorFont, text: &str, window_inner: &WindowInner) -> (u64, usize) {
+            let font_request =
+                FontRequest { pixel_size: Some(LogicalLength::new(24.)), ..Default::default() };
+            let layout =
+                crate::fonts::text_layout_for_font(font, &font_request, ScaleFactor::new(1.));
+            let paragraph = i_slint_core::textlayout::TextParagraphLayout {
+                string: text,
+                layout,
+                max_width: crate::PhysicalLength::new(W as i16),
+                max_height: crate::PhysicalLength::new(H as i16),
+                horizontal_alignment: TextHorizontalAlignment::Left,
+                vertical_alignment: TextVerticalAlignment::Top,
+                wrap: TextWrap::NoWrap,
+                overflow: TextOverflow::Clip,
+                single_line: true,
+                max_lines: None,
+            };
+            let mut buffer = [crate::PremultipliedRgbaColor::default(); W * H];
+            {
+                let mut target = TargetPixelSlice { data: &mut buffer, pixel_stride: W };
+                let mut dirty = PhysicalRegion::default();
+                dirty.rectangles[0] = euclid::Box2D::from_origin_and_size(
+                    euclid::point2(0, 0),
+                    euclid::size2(W as i16, H as i16),
+                );
+                dirty.count = 1;
+                let mut scene = SceneBuilder::new(
+                    crate::PhysicalSize::new(W as i16, H as i16),
+                    ScaleFactor::new(1.),
+                    window_inner,
+                    RenderToBuffer {
+                        buffer: &mut target,
+                        dirty_range_cache: Vec::new(),
+                        dirty_region: dirty,
+                        scale_factor: ScaleFactor::new(1.),
+                    },
+                    RenderingRotation::NoRotation,
+                );
+                scene.draw_text_paragraph(
+                    &paragraph,
+                    euclid::rect(0., 0., W as f32, H as f32),
+                    euclid::Vector2D::zero(),
+                    i_slint_core::Color::from_rgb_u8(255, 255, 255),
+                    None,
+                );
+            }
+            // Signature over the rendered surface: checksum of the pixels and
+            // the rightmost column with ink on it.
+            let mut hash = 14695981039346656037u64;
+            let mut rightmost_ink = 0usize;
+            for (i, p) in buffer.iter().enumerate() {
+                hash = (hash ^ p.alpha as u64).wrapping_mul(1099511628211);
+                if p.alpha > 0 {
+                    rightmost_ink = rightmost_ink.max(i % W);
+                }
+            }
+            (hash, rightmost_ink)
+        }
+
         let narrow_font =
             match_font(&request("Noto Sans", &[axis("wdth", 62.5)]), ScaleFactor::new(1.)).unwrap();
         let wide_font =
             match_font(&request("Noto Sans", &[axis("wdth", 100.)]), ScaleFactor::new(1.)).unwrap();
-        let narrow_ink = render(&narrow_font, "AV", &mut narrow, W, 20, &context);
-        let wide_ink = render(&wide_font, "AV", &mut wide, W, 20, &context);
+        let (narrow_hash, narrow_ink) = render(&narrow_font, "AV", window_inner);
+        let (wide_hash, wide_ink) = render(&wide_font, "AV", window_inner);
 
-        assert!(narrow.iter().any(|&p| p > 200), "the string must put ink on the page");
+        // The full pipeline — request to normalized coordinates to layout to
+        // `draw_text_paragraph` — is pinned exactly: a change in any stage
+        // shifts the checksum. Recorded against the pinned font.
+        assert_eq!(narrow_hash, 12879847524702838058_u64);
+        assert_eq!(wide_hash, 7292127149992017019_u64);
         assert!(
             narrow_ink < wide_ink,
             "wdth 62.5 shapes tighter than wdth 100: rightmost ink {narrow_ink} vs {wide_ink}"
