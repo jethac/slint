@@ -90,20 +90,15 @@ struct ShapeFeature
 struct Shape
 {
     /// The cubic Bézier outline: 8 floats per cubic.
-    SharedVector<float> cubics;
+    const SharedVector<float> &cubics() const { return cubics_; }
     /// The feature segmentation of the outline.
-    SharedVector<ShapeFeature> features;
+    const SharedVector<ShapeFeature> &features() const { return features_; }
     /// The polygon's representative point (centroid).
-    ShapePoint center;
-    /// Content hash computed by the Rust side at construction (morph cache key).
-    /// Read and written by Rust only; always 0 for a C++-default Shape.
-    uint64_t content_hash = 0;
-    /// Interned construction id assigned by the Rust side; 0 when unset.
-    uint64_t id = 0;
+    ShapePoint center() const { return center_; }
     /// The fill rule a renderer applies when filling this shape's outline.
     /// Part of the value (equality and serialization preserve it); ignored by
     /// measuring, morphing and transforms.
-    cbindgen_private::FillRule fill_rule = cbindgen_private::FillRule::Nonzero;
+    cbindgen_private::FillRule fill_rule() const { return fill_rule_; }
 
     /// Returns a copy of this shape normalized so its bounding box fits the
     /// unit square centered on the origin.
@@ -151,6 +146,22 @@ struct Shape
         return cbindgen_private::slint_shape_compare_equal(&a, &b);
     }
     friend bool operator!=(const Shape &a, const Shape &b) { return !(a == b); }
+
+private:
+    // The payload is Rust-managed: `content_hash` and `id` are computed at
+    // construction and keyed to the outline, so mutating the fields behind
+    // them would let the morph cache return a stale match — the same hazard
+    // the Rust side seals off by keeping `Shape`'s fields private. Field order
+    // matches `#[repr(C)]` `Shape` in i-slint-core.
+    SharedVector<float> cubics_;
+    SharedVector<ShapeFeature> features_;
+    ShapePoint center_ = {};
+    /// Content hash computed by the Rust side at construction (morph cache
+    /// key). Read and written by Rust only; always 0 for a C++-default Shape.
+    uint64_t content_hash_ = 0;
+    /// Interned construction id assigned by the Rust side; 0 when unset.
+    uint64_t id_ = 0;
+    cbindgen_private::FillRule fill_rule_ = cbindgen_private::FillRule::Nonzero;
 };
 
 /// Construction and morphing functions for \ref Shape values. These are the

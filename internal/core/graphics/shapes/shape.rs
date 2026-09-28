@@ -210,6 +210,17 @@ impl Shape {
         self.id
     }
 
+    /// Drops the construction id and stored content hash, so the morph cache's
+    /// interned-id fast path can't fire and the hash is recomputed from the
+    /// payload. Called on values entering Rust across a boundary where the
+    /// fields could have been mutated behind the key (the C++ `repr(C)`
+    /// payload, `Default`, hand-built POD).
+    #[doc(hidden)]
+    pub fn unkey(&mut self) {
+        self.id = 0;
+        self.content_hash = 0;
+    }
+
     /// The [RoundedPolygon] for this shape. Returns an error if the payload is not
     /// a valid polygon (e.g. empty).
     pub fn polygon(&self) -> Result<RoundedPolygon, ShapeError> {

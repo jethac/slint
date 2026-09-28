@@ -67,19 +67,19 @@ crate::thread_local! {
     /// measured feature-mapping regardless of how often they are reconstructed.
     pub static MORPH_CACHE: core::cell::RefCell<MorphCache> =
         const { core::cell::RefCell::new(MorphCache::new()) };
-
-    /// The interned-id counter for [`Shape`]: every `Shape::new` takes the next
-    /// id; `0` means "no id" (`Default`, FFI). Wraps at u64::MAX — unreachable.
-    static SHAPE_ID_COUNTER: core::cell::Cell<u64> = const { core::cell::Cell::new(1) };
 }
+
+/// The interned-id counter for [`Shape`]: every `Shape::new` takes the next
+/// id; `0` means "no id" (`Default`, FFI). Global, not per-thread: `Shape` is
+/// `Send`, so per-thread counters would hand equal ids to different shapes on
+/// different threads and let a shared [`MorphCache`] alias their morphs.
+/// `portable_atomic` covers targets without 64-bit atomics. Wraps at u64::MAX
+/// — unreachable.
+static SHAPE_ID_COUNTER: portable_atomic::AtomicU64 = portable_atomic::AtomicU64::new(1);
 
 /// The next interned shape id. See [`Shape::id`].
 pub(crate) fn next_shape_id() -> u64 {
-    SHAPE_ID_COUNTER.with(|c| {
-        let id = c.get();
-        c.set(id.wrapping_add(1));
-        id
-    })
+    SHAPE_ID_COUNTER.fetch_add(1, portable_atomic::Ordering::Relaxed)
 }
 
 /// Morph between `from` and `to` at `progress` ∈ [0, 1] using the thread-local

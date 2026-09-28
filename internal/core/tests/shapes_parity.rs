@@ -893,3 +893,36 @@ fn shape_morph_cache_unkeyed_targets() {
     assert!(Rc::ptr_eq(&m_square, &cache.morph(&star, &square_unkeyed)));
     assert_eq!(cache.hits(), 2);
 }
+
+#[test]
+fn shape_morph_cache_cross_thread_ids() {
+    // Regression: construction ids come from a global counter. A per-thread
+    // counter let `Shape`s built on different threads share ids — a morph
+    // between cross-thread shapes then aliased an unrelated cached pair.
+    use i_slint_core::graphics::shapes::{MorphCache, Shape};
+    use std::rc::Rc;
+
+    let (star_t, circle_t) = std::thread::spawn(|| {
+        (
+            Shape::from_polygon(
+                &shapes::star(4, 1., 0.5, CornerRounding::UNROUNDED, None, None, Point::ZERO)
+                    .unwrap(),
+            ),
+            Shape::from_polygon(&shapes::circle(8, 1., Point::ZERO).unwrap()),
+        )
+    })
+    .join()
+    .unwrap();
+    let star = Shape::from_polygon(
+        &shapes::star(4, 1., 0.5, CornerRounding::UNROUNDED, None, None, Point::ZERO).unwrap(),
+    );
+    let square = Shape::from_polygon(
+        &shapes::rectangle(1., 1., CornerRounding::UNROUNDED, None, Point::ZERO).unwrap(),
+    );
+
+    let cache = MorphCache::new();
+    let m_sc = cache.morph(&star_t, &circle_t);
+    let m_ss = cache.morph(&star, &square);
+    assert!(!Rc::ptr_eq(&m_sc, &m_ss));
+    assert_ne!(m_sc.as_cubics(0.5), m_ss.as_cubics(0.5));
+}

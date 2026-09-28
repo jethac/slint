@@ -236,9 +236,14 @@ pub unsafe extern "C" fn slint_shape_morph(
     progress: f32,
     out: *mut c_void,
 ) {
-    let from = unsafe { &*(from as *const Shape) };
-    let to = unsafe { &*(to as *const Shape) };
-    unsafe { core::ptr::write(out as *mut Shape, from.morph(to, progress)) };
+    // Shapes arriving over FFI are `repr(C)` POD: a C++-side modified copy may
+    // carry an id that no longer keys its payload, so re-key on ingress and
+    // let the morph lookup take the content verify path.
+    let mut from = unsafe { (*(from as *const Shape)).clone() };
+    let mut to = unsafe { (*(to as *const Shape)).clone() };
+    from.unkey();
+    to.unkey();
+    unsafe { core::ptr::write(out as *mut Shape, from.morph(&to, progress)) };
 }
 
 #[unsafe(no_mangle)]

@@ -251,7 +251,11 @@ pub extern "C" fn slint_interpreter_value_to_styled_text(
 pub extern "C" fn slint_interpreter_value_new_shape(
     shape: &i_slint_core::graphics::Shape,
 ) -> Box<Value> {
-    Box::new(Value::Shape(shape.clone()))
+    // The `repr(C)` payload arriving over FFI may have been mutated behind its
+    // construction id; re-key so morph lookups take the content verify path.
+    let mut shape = shape.clone();
+    shape.unkey();
+    Box::new(Value::Shape(shape))
 }
 
 #[unsafe(no_mangle)]

@@ -44,6 +44,8 @@ fn morph_lookup_verify(c: &mut Criterion) {
     let cache = MorphCache::new();
     // Fresh `Shape`s with equal content but distinct interned ids: the lookup
     // pays the hash compare + full content verify, like a re-evaluated binding.
+    // The pool cycles back every 8 iterations, so ~1 in 8 lookups matches the
+    // stored entry's interned ids and takes the id fast path instead.
     let stars: Vec<shapes::Shape> = (0..8).map(|_| shapes::Shape::from_polygon(&star())).collect();
     let circles: Vec<shapes::Shape> =
         (0..8).map(|_| shapes::Shape::from_polygon(&circle())).collect();
