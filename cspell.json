@@ -394,7 +394,8 @@
     "**/*.pot",
     "**/*.svg",
     "target/**",
-    "**/node_modules/**"
+    "**/node_modules/**",
+    "ui-libraries/material/parity/compose/vendor/**"
   ],
   "overrides": [
     {
@@ -410,6 +411,8 @@
         "lightdark",
         "llvmpipe",
         "materialkolor",
+        "unhint",
+        "xfail",
         "mdpi",
         "Pparity",
         "robolectric",
@@ -434,7 +437,9 @@
         "rasterizers",
         "surfaceless",
         "Surfaceless",
-        "SURFACELESS"
+        "SURFACELESS",
+        "unhint",
+        "xfail"
       ]
     },
     {

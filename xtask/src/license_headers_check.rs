@@ -508,6 +508,7 @@ static LICENSE_LOCATION_FOR_FILE: LazyLock<Vec<(regex::Regex, LicenseLocation)>>
             ("(^|/)uv\\.lock$", LicenseLocation::NoLicense),
             ("^demos/.*/zephyr/VERSION$", LicenseLocation::NoLicense),
             ("^examples/mcu-board-support/pico2_st7789/rp_pico2.rs$", LicenseLocation::NoLicense), // third-party file
+            ("^ui-libraries/material/parity/compose/vendor/", LicenseLocation::NoLicense), // third-party: verbatim material-color-utilities
             // filename based matches:
             (
                 "(^|/)CMakeLists\\.txt$",

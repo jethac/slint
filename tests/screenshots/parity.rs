@@ -228,6 +228,16 @@ impl PxRect {
 /// boundary; a fill bleeding past it (the corner leak) lands on strict pixels.
 const CORNER_BAND: f64 = 2.0;
 
+/// Corner-zone classification for [`PixelMask::mark_element`]: `Band` sits
+/// within `CORNER_BAND + drift` of the silhouette, `Outside` lies beyond it
+/// outside the maximal shape the bounds admit (only a spill or a wrong
+/// radius paints there), `Inside` lies further in — the element interior.
+enum CornerCell {
+    Band,
+    Outside,
+    Inside,
+}
+
 /// Per-pixel comparison layers for [`layered_compare`].
 struct PixelMask {
     layer: Vec<PixelClass>,
@@ -287,7 +297,7 @@ impl PixelMask {
     /// and [`OUTLINE_INSET_DP`]). Inside a corner zone — the square that can
     /// hold any corner radius the bounds admit — the band collapses to
     /// `CORNER_BAND` around the true boundary: the sharp edge lines or the
-    /// maximal pill-endcap arc. Pixels further from that boundary stay
+    /// maximal pill end-cap arc. Pixels further from that boundary stay
     /// strict, so a fill spilling past a rounded corner is caught instead of
     /// absorbed by the decoration margin. `corners_strict` disables that
     /// carve-out (`//MASK_DECOR=`): when the element carries a decoration
@@ -300,6 +310,7 @@ impl PixelMask {
         margin: f64,
         inset: f64,
         corners_strict: bool,
+        inked: bool,
     ) {
         let (a, b) = (slint.dilated(1.0), compose.dilated(1.0));
         let (x0, y0) =
@@ -313,20 +324,22 @@ impl PixelMask {
                 }
             }
         }
-        // `Some(true)` when (px,py) sits within `CORNER_BAND` of a corner
-        // boundary of `r`, `Some(false)` when it is in a corner zone but off
-        // the boundary (strict — spill must land here), `None` when outside
-        // every corner zone (the normal margin/inset band applies). The band
-        // grows by the bounds' displacement: an edge or corner arc that moved
-        // by the drift the traced bounds report is still the same boundary,
-        // while a wrong radius or spill shows up strictly off it.
+        // `Some(Band)` when (px,py) sits within `CORNER_BAND` of a corner
+        // boundary of `r`, `Some(Outside)` when it lies in a corner zone
+        // outside the maximal silhouette the bounds admit — the region only
+        // a spill or a wrong radius can paint — `Some(Inside)` when it lies
+        // inside that silhouette, `None` when outside every corner zone (the
+        // normal margin/inset band applies). The band grows by the bounds'
+        // displacement: an edge or corner arc that moved by the drift the
+        // traced bounds report is still the same boundary, while a wrong
+        // radius or spill shows up strictly off it.
         let drift = (slint.x0 - compose.x0)
             .abs()
             .max((slint.x1 - compose.x1).abs())
             .max((slint.y0 - compose.y0).abs())
             .max((slint.y1 - compose.y1).abs());
         let band = CORNER_BAND + drift;
-        let corner_band = |r: PxRect, px: f64, py: f64| -> Option<bool> {
+        let corner_cell = |r: PxRect, px: f64, py: f64| -> Option<CornerCell> {
             if !corners_strict {
                 return None;
             }
@@ -346,9 +359,24 @@ impl PixelMask {
                         || (px - r.x1).abs() <= band
                         || (py - r.y0).abs() <= band
                         || (py - r.y1).abs() <= band;
-                    let arc_d =
-                        ((px - ax).powi(2) + (py - ay).powi(2)).sqrt() - r_pill;
-                    near_edge || arc_d.abs() <= band
+                    if near_edge {
+                        return CornerCell::Band;
+                    }
+                    let (u, v) = ((px - ax).abs(), (py - ay).abs());
+                    if u <= r_pill && v <= r_pill {
+                        let arc_d = (u * u + v * v).sqrt() - r_pill;
+                        if arc_d.abs() <= band {
+                            CornerCell::Band
+                        } else if arc_d > 0.0 {
+                            CornerCell::Outside
+                        } else {
+                            CornerCell::Inside
+                        }
+                    } else if r.contains(px, py) {
+                        CornerCell::Inside
+                    } else {
+                        CornerCell::Outside
+                    }
                 })
         };
         for r in [a, b] {
@@ -359,8 +387,27 @@ impl PixelMask {
                 for x in outer.x0.floor().max(0.0) as usize..(outer.x1.ceil() as usize).min(self.w)
                 {
                     let (px, py) = (x as f64 + 0.5, y as f64 + 0.5);
-                    match corner_band(r, px, py) {
-                        Some(in_band) if in_band => self.set(x, y, PixelClass::Skip),
+                    match corner_cell(r, px, py) {
+                        Some(CornerCell::Band) => self.set(x, y, PixelClass::Skip),
+                        // Outside the maximal silhouette but inside the
+                        // bounds: nothing that belongs to the shape paints
+                        // here, so the cell is strict — a fill spill past
+                        // the corner arc lands here. Restore it where an
+                        // earlier pass (`//MASK_INNER=`, the bounds xor, a
+                        // neighboring element's band) set Skip, so a spill
+                        // can't hide under a mask. Cells inside the
+                        // silhouette keep their class — under an ink mask
+                        // they may legitimately carry engine-divergent ink.
+                        // The same goes for the outside-silhouette cells of
+                        // an `inked` element: ripple ink is bounded by the
+                        // rect, not the pill, so it legitimately fills these
+                        // corners mid-press — `corner_silhouette_findings`
+                        // verifies that silhouette instead.
+                        Some(CornerCell::Outside) if !inked && r.contains(px, py) => {
+                            if self.layer[y * self.w + x] == PixelClass::Skip {
+                                self.set(x, y, PixelClass::Strict)
+                            }
+                        }
                         Some(_) => {}
                         None if !inner.contains(px, py) => {
                             self.set(x, y, PixelClass::Skip)
@@ -624,6 +671,9 @@ fn layered_compare(
         "{strict_failures} strict pixels differ (worst channel diff {worst}, eps {pixel_eps}); {} text cells checked",
         cells.len()
     );
+    if let Some((bx0, by0, bx1, by1)) = strict_bbox {
+        report.push_str(&format!("; strict region ({bx0},{by0})-({bx1},{by1})"));
+    }
     for f in &text_failures {
         report.push_str(&format!("; {f}"));
     }
@@ -1438,9 +1488,12 @@ fn build_frame_mask<C: i_slint_core::api::ComponentHandle>(
                 PxRect { x0: x * d, y0: y * d, x1: (x + w) * d, y1: (y + h) * d };
             if inner_masked.contains(id) {
                 // `//MASK_INNER=` — overlay ink (the ripple) is mid-animation
-                // at this timestamp: skip the element interior, then let
-                // mark_element restore the corner zones' strict cells — the
-                // shape morph is verified exactly where it moves pixels.
+                // at this timestamp: skip the element interior. Ripple ink
+                // is bounded by the rect, not the silhouette, so the
+                // outside-silhouette corner cells stay masked here too
+                // (mark_element's `inked` flag); the shape itself is still
+                // verified by `corner_silhouette_findings` comparing the
+                // boundary edge positions numerically.
                 mask.fill_rect(
                     PxRect {
                         x0: slint_rect.x0.min(compose_rect.x0),
@@ -1457,10 +1510,158 @@ fn build_frame_mask<C: i_slint_core::api::ComponentHandle>(
                 DECORATION_MARGIN_DP * d,
                 OUTLINE_INSET_DP * d,
                 !decor_masked.contains(id),
+                inner_masked.contains(id),
             );
         }
     }
     mask
+}
+
+/// For each `(slint, compose, id)` pair, compare the painted silhouette in
+/// every corner zone: scan each boundary row/column from outside the bounds
+/// inward and compare the position where each image first departs from the
+/// outside color. Interior ink — legitimately engine-divergent under
+/// `//MASK_INNER=` — never moves that edge, so the element's shape itself
+/// stays verified where the strict layer is masked: a morph radius tracking
+/// the reference stays within `CORNER_BAND + drift`, a dead morph or a
+/// square corner does not. Rows/columns whose outside sample differs
+/// between the images (a neighbor element or decoration) are skipped.
+///
+/// Returns `(message, x, y)` findings with device-px coordinates.
+fn corner_silhouette_findings(
+    actual: &SharedPixelBuffer<Rgba8Pixel>,
+    expected: &SharedPixelBuffer<Rgba8Pixel>,
+    pairs: &[(PxRect, PxRect, String)],
+    margin: f64,
+    eps: u8,
+) -> Vec<(String, f64, f64)> {
+    let mut out = Vec::new();
+    let (a, e) = (actual.as_slice(), expected.as_slice());
+    let (aw, ah) = (actual.width() as i64, actual.height() as i64);
+    let get = |img: &[Rgba8Pixel], x: i64, y: i64| -> Option<Rgba8Pixel> {
+        (x >= 0 && y >= 0 && x < aw && y < ah).then(|| img[(y * aw + x) as usize])
+    };
+    for (slint, compose, id) in pairs {
+        let drift = (slint.x0 - compose.x0)
+            .abs()
+            .max((slint.x1 - compose.x1).abs())
+            .max((slint.y0 - compose.y0).abs())
+            .max((slint.y1 - compose.y1).abs());
+        let band = CORNER_BAND + drift;
+        let u = PxRect {
+            x0: slint.x0.min(compose.x0),
+            y0: slint.y0.min(compose.y0),
+            x1: slint.x1.max(compose.x1),
+            y1: slint.y1.max(compose.y1),
+        };
+        let r_pill = u.width().min(u.height()) / 2.0;
+        let zone = r_pill + margin;
+        // (along_x, outside pos, scan end, spans on the other axis, name)
+        let scans = [
+            (true, u.x0 - margin - 1.0, u.x0 + zone, "left"),
+            (true, u.x1 + margin + 1.0, u.x1 - zone, "right"),
+            (false, u.y0 - margin - 1.0, u.y0 + zone, "top"),
+            (false, u.y1 + margin + 1.0, u.y1 - zone, "bottom"),
+        ];
+        for (along_x, outer, inner, side) in scans {
+            let (step, p_out) = if inner > outer {
+                (1i64, outer.floor() as i64)
+            } else {
+                (-1i64, outer.ceil() as i64)
+            };
+            let p_end = if step > 0 { inner.floor() as i64 } else { inner.ceil() as i64 };
+            let spans: [(f64, f64); 2] = if along_x {
+                [(u.y0, u.y0 + zone), (u.y1 - zone, u.y1)]
+            } else {
+                [(u.x0, u.x0 + zone), (u.x1 - zone, u.x1)]
+            };
+            for (s0, s1) in spans {
+                for f in (s0.floor() as i64)..(s1.ceil() as i64) {
+                    let (sa, se) = if along_x {
+                        (get(a, p_out, f), get(e, p_out, f))
+                    } else {
+                        (get(a, f, p_out), get(e, f, p_out))
+                    };
+                    let (Some(sa), Some(se)) = (sa, se) else { continue };
+                    if channel_diff(&sa, &se) > eps {
+                        continue;
+                    }
+                    let edge = |img: &[Rgba8Pixel], outside: &Rgba8Pixel| -> Option<i64> {
+                        let mut p = p_out + step;
+                        while (p - p_end) * step <= 0 {
+                            let cell =
+                                if along_x { get(img, p, f) } else { get(img, f, p) };
+                            match cell {
+                                Some(c) if channel_diff(&c, outside) > eps => {
+                                    return Some(p)
+                                }
+                                Some(_) => p += step,
+                                None => break,
+                            }
+                        }
+                        None
+                    };
+                    let (ea, ee) = (edge(a, &sa), edge(e, &se));
+                    // A side legitimately has no silhouette edge along a
+                    // scan line its own bounds don't claim: `button<N>`
+                    // widths differ by the text-hinting drift (bounded in
+                    // the trace layer), so columns past a narrower shape
+                    // are outside its silhouette, not missing from it.
+                    let claims = |r: &PxRect, f: i64| {
+                        let (lo, hi) = if along_x {
+                            (r.y0, r.y1)
+                        } else {
+                            (r.x0, r.x1)
+                        };
+                        f as f64 >= lo && (f as f64) < hi
+                    };
+                    let bad = match (ea, ee) {
+                        (Some(xa), Some(xe)) => (xa - xe).abs() as f64 > band,
+                        (Some(xa), None) => {
+                            claims(compose, f) && {
+                                let (x, y) =
+                                    if along_x { (xa, f) } else { (f, xa) };
+                                match (get(a, x, y), get(e, x, y)) {
+                                    (Some(ca), Some(ce)) => {
+                                        channel_diff(&ca, &ce) > eps
+                                    }
+                                    _ => false,
+                                }
+                            }
+                        }
+                        (None, Some(xe)) => {
+                            claims(slint, f) && {
+                                let (x, y) =
+                                    if along_x { (xe, f) } else { (f, xe) };
+                                match (get(a, x, y), get(e, x, y)) {
+                                    (Some(ca), Some(ce)) => {
+                                        channel_diff(&ca, &ce) > eps
+                                    }
+                                    _ => false,
+                                }
+                            }
+                        }
+                        (None, None) => false,
+                    };
+                    if bad {
+                        let (x, y) = if along_x {
+                            (ea.or(ee).unwrap() as f64, f as f64)
+                        } else {
+                            (f as f64, ea.or(ee).unwrap() as f64)
+                        };
+                        out.push((
+                            format!(
+                                "{id} {side} silhouette edge at {f}: slint {ea:?} vs compose {ee:?} (band {band:.1})"
+                            ),
+                            x,
+                            y,
+                        ));
+                    }
+                }
+            }
+        }
+    }
+    out
 }
 
 /// The shared body of every generated parity test: render the case at each
@@ -1644,7 +1845,63 @@ pub fn run_parity_case<C: i_slint_core::api::ComponentHandle>(
             {
                 caught_at_density[di] = true;
             }
-            if !result.ok {
+            // `//MASK_INNER=` masks the strict layer in the element interior,
+            // so verify the shape silhouette itself: ink never moves a
+            // boundary edge.
+            let mut silhouette_failed = false;
+            if !inner_masked.is_empty() {
+                if let Some(compose_elements) = compose
+                    .as_ref()
+                    .and_then(|c| compose_frame_at(c, t))
+                    .and_then(|cf| cf["elements"].as_object())
+                {
+                    let d = *density as f64;
+                    let slint_frame = frames.last().unwrap();
+                    let pairs: Vec<(PxRect, PxRect, String)> = inner_masked
+                        .iter()
+                        .filter_map(|id| {
+                            let geo = slint_frame.elements.get(id)?;
+                            let ce = compose_elements.get(id)?;
+                            let (x, y, w, h) = (
+                                ce["x"].as_f64()?,
+                                ce["y"].as_f64()?,
+                                ce["w"].as_f64()?,
+                                ce["h"].as_f64()?,
+                            );
+                            Some((
+                                PxRect {
+                                    x0: geo[0] * d,
+                                    y0: geo[1] * d,
+                                    x1: (geo[0] + geo[2]) * d,
+                                    y1: (geo[1] + geo[3]) * d,
+                                },
+                                PxRect {
+                                    x0: x * d,
+                                    y0: y * d,
+                                    x1: (x + w) * d,
+                                    y1: (y + h) * d,
+                                },
+                                id.clone(),
+                            ))
+                        })
+                        .collect();
+                    for (msg, sx, sy) in corner_silhouette_findings(
+                        &actual,
+                        &expected,
+                        &pairs,
+                        DECORATION_MARGIN_DP * d,
+                        pixel_eps,
+                    ) {
+                        strict_caught += 1;
+                        silhouette_failed = true;
+                        if negative && region.map_or(true, |r| r.contains(sx, sy)) {
+                            caught_at_density[di] = true;
+                        }
+                        failures.push(format!("d{density} t={tag}: {msg}"));
+                    }
+                }
+            }
+            if !result.ok || silhouette_failed {
                 let dir = artifacts_dir(driver, case_rel);
                 write_png(&dir.join(format!("actual_d{density}_{tag}.png")), &actual)?;
                 write_png(&dir.join(format!("expected_d{density}_{tag}.png")), &expected)?;

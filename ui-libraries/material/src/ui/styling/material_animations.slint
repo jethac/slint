@@ -26,6 +26,10 @@ export global MaterialAnimations {
     // where the easing is declared.
     out property <duration> default_spatial_duration: root.reduced_motion ? 0ms : 6.283185307 / Math.sqrt(root.motion_scheme.default_spatial.stiffness) * 1s;
     out property <float> default_spatial_bounce: 1 - root.motion_scheme.default_spatial.damping_ratio;
+    // The default effects spring (`MotionSchemeKeyTokens.DefaultEffects`):
+    // damping ratio 1 (bounce 0), stiffness 1600 in both schemes.
+    out property <duration> default_effects_duration: root.reduced_motion ? 0ms : 6.283185307 / Math.sqrt(root.motion_scheme.default_effects.stiffness) * 1s;
+    out property <float> default_effects_bounce: 1 - root.motion_scheme.default_effects.damping_ratio;
 
     out property <easing> emphasized_easing: root.expressive ? MotionTokens.easing_emphasized_decelerate_cubic_bezier : MotionTokens.easing_legacy_decelerate_cubic_bezier;
     out property <duration> emphasized_duration: root.reduced_motion ? 0ms : MotionTokens.duration_long2;
