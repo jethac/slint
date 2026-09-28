@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: MIT
 
 import { MaterialPalette } from "../styling/material_palette.slint";
+import { MaterialTheme } from "../styling/material_theme.slint";
 
 export global MaterialWindowAdapter {
     in property <bool> disable_hover;
@@ -11,6 +12,7 @@ export component MaterialWindow inherits Window {
     in property <bool> disable_hover;
 
     background: MaterialPalette.background;
+    default-font-family: MaterialTheme.plain_family;
 
     changed disable_hover => {
         MaterialWindowAdapter.disable_hover = root.disable_hover;

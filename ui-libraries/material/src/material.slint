@@ -1,6 +1,13 @@
 // Copyright © SixtyFPS GmbH <info@slint.dev>
 // SPDX-License-Identifier: MIT
 
+// Bundled variable fonts — imported here so every consumer of the Material
+// library registers them (see the collect_custom_fonts pass, which walks all
+// documents in the compilation). The theme's brand/plain families default to
+// "Google Sans Flex"; "Roboto Flex" is the bundled alternative.
+import "fonts/google-sans-flex/GoogleSansFlex[GRAD,ROND,opsz,slnt,wdth,wght].ttf";
+import "fonts/roboto-flex/RobotoFlex[GRAD,XOPQ,XTRA,YOPQ,YTAS,YTDE,YTFI,YTLC,YTUC,opsz,slnt,wdth,wght].ttf";
+
 // components
 export { AppBar, SmallAppBar, MediumAppBar, LargeAppBar }  from "./ui/components/app_bar.slint";
 export { Badge } from "./ui/components/badge.slint";
