@@ -90,6 +90,9 @@ impl<'py> IntoPyObject<'py> for SlintToPyValue {
             Value::DataTransfer(data) => {
                 crate::data_transfer::PyDataTransfer::from(data).into_bound_py_any(py)
             }
+            Value::EasingCurve(curve) => {
+                crate::easing::PyEasingCurve { curve }.into_bound_py_any(py)
+            }
             v @ _ => {
                 eprintln!(
                     "Python: conversion from slint to python needed for {v:#?} and not implemented yet"
@@ -404,6 +407,10 @@ impl TypeCollection {
             .or_else(|_| {
                 ob.extract::<PyRef<'_, crate::data_transfer::PyDataTransfer>>()
                     .map(|data| slint_interpreter::Value::DataTransfer(data.data_transfer.clone()))
+            })
+            .or_else(|_| {
+                ob.extract::<PyRef<'_, crate::easing::PyEasingCurve>>()
+                    .map(|curve| slint_interpreter::Value::EasingCurve(curve.curve))
             })
             .or_else(|_| {
                 ob.extract::<PyRef<'_, crate::brush::PyColor>>()

@@ -956,6 +956,30 @@ pub fn eval_expression(ctx: &mut EvalContext, expression: &Expression) -> Value 
                 EC::EaseInOutBounce => Core::EaseInOutBounce,
                 EC::CubicBezier(a, b, c, d) => Core::CubicBezier([*a, *b, *c, *d]),
                 EC::Spring(bounce) => Core::Spring(*bounce),
+                EC::PhysicalSpring(damping_ratio, stiffness, mass) => Core::PhysicalSpring {
+                    damping_ratio: *damping_ratio,
+                    stiffness: *stiffness,
+                    mass: *mass,
+                },
+            })
+        }
+        Expression::EasingCurveCtor { variant, args } => {
+            use i_slint_compiler::expression_tree::EasingCurveCtor as Ctor;
+            use i_slint_core::animations::EasingCurve as Core;
+            let mut args =
+                args.iter().map(|a| f32::try_from(eval_expression(ctx, a)).unwrap_or_default());
+            Value::EasingCurve(match variant {
+                Ctor::CubicBezier => Core::CubicBezier([
+                    args.next().unwrap_or_default(),
+                    args.next().unwrap_or_default(),
+                    args.next().unwrap_or_default(),
+                    args.next().unwrap_or_default(),
+                ]),
+                Ctor::PhysicalSpring => Core::PhysicalSpring {
+                    damping_ratio: args.next().unwrap_or_default(),
+                    stiffness: args.next().unwrap_or_default(),
+                    mass: args.next().unwrap_or(1.),
+                },
             })
         }
         Expression::MouseCursor(cursor) => {
@@ -2338,6 +2362,15 @@ fn call_builtin_function(
                 .map(|root| i_slint_core::window::accent_color(&root))
                 .unwrap_or_default();
             Value::Brush(i_slint_core::Brush::SolidColor(color))
+        }
+        BuiltinFunction::ReducedMotion => {
+            let reduced = root_instance(ctx)
+                .map(vtable::VRc::into_dyn)
+                .and_then(|root| {
+                    i_slint_core::window::context_for_root(&root).map(|ctx| ctx.reduced_motion())
+                })
+                .unwrap_or(false);
+            Value::Bool(reduced)
         }
         BuiltinFunction::MaterialColorScheme => {
             let seed_color: i_slint_core::Color =

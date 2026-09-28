@@ -6,6 +6,7 @@ use crate::{
     SlintStyledText, js_into_rust_model, rust_into_js_model,
 };
 use i_slint_compiler::langtype::Type;
+use i_slint_core::animations::EasingCurve;
 use i_slint_core::graphics::{Image, Rgba8Pixel, SharedPixelBuffer};
 use i_slint_core::model::{ModelRc, SharedVectorModel};
 use i_slint_core::{Brush, Color, SharedVector};
@@ -136,7 +137,107 @@ pub fn to_js_unknown<'a>(env: &'a Env, value: &Value) -> Result<Unknown<'a>> {
             .into_instance(env)?
             .as_object(env)
             .into_unknown(env),
+        Value::EasingCurve(curve) => easing_curve_to_js(env, curve)?.into_unknown(env),
         _ => ().into_unknown(env),
+    }
+}
+
+/// The JavaScript shape of an `easing` value:
+/// `{ type: "linear" }`, `{ type: "cubicBezier", p: [x1, y1, x2, y2] }`,
+/// `{ type: "spring", dampingRatio, stiffness, mass? }`,
+/// `{ type: "springBounce", bounce }` and `{ type: "named", name }`.
+fn easing_curve_to_js<'a>(env: &'a Env, curve: &EasingCurve) -> Result<Object<'a>> {
+    let mut o = Object::new(env)?;
+    o.set_named_property("type", env.create_string(easing_curve_type_name(curve))?)?;
+    match curve {
+        EasingCurve::CubicBezier([a, b, c, d]) => {
+            o.set_named_property("p", vec![*a as f64, *b as f64, *c as f64, *d as f64])?;
+        }
+        EasingCurve::Spring(bounce) => {
+            o.set_named_property("bounce", *bounce)?;
+        }
+        EasingCurve::PhysicalSpring { damping_ratio, stiffness, mass } => {
+            o.set_named_property("dampingRatio", *damping_ratio)?;
+            o.set_named_property("stiffness", *stiffness)?;
+            o.set_named_property("mass", *mass)?;
+        }
+        EasingCurve::Linear => {}
+        named => {
+            o.set_named_property("name", env.create_string(easing_curve_type_name(named))?)?;
+        }
+    }
+    Ok(o)
+}
+
+fn easing_curve_type_name(curve: &EasingCurve) -> &'static str {
+    match curve {
+        EasingCurve::Linear => "linear",
+        EasingCurve::CubicBezier(_) => "cubicBezier",
+        EasingCurve::Spring(_) => "springBounce",
+        EasingCurve::PhysicalSpring { .. } => "spring",
+        EasingCurve::EaseInElastic => "ease-in-elastic",
+        EasingCurve::EaseOutElastic => "ease-out-elastic",
+        EasingCurve::EaseInOutElastic => "ease-in-out-elastic",
+        EasingCurve::EaseInBounce => "ease-in-bounce",
+        EasingCurve::EaseOutBounce => "ease-out-bounce",
+        EasingCurve::EaseInOutBounce => "ease-in-out-bounce",
+    }
+}
+
+fn named_easing_curve(name: &str) -> Result<EasingCurve> {
+    Ok(match name {
+        "linear" => EasingCurve::Linear,
+        "ease-in-elastic" => EasingCurve::EaseInElastic,
+        "ease-out-elastic" => EasingCurve::EaseOutElastic,
+        "ease-in-out-elastic" => EasingCurve::EaseInOutElastic,
+        "ease-in-bounce" => EasingCurve::EaseInBounce,
+        "ease-out-bounce" => EasingCurve::EaseOutBounce,
+        "ease-in-out-bounce" => EasingCurve::EaseInOutBounce,
+        _ => return Err(napi::Error::from_reason(format!("'{name}' is not a named easing curve"))),
+    })
+}
+
+fn js_to_easing_curve(obj: Object) -> Result<EasingCurve> {
+    let ty: String = obj
+        .get("type")?
+        .ok_or_else(|| napi::Error::from_reason("easing object has no string 'type' property"))?;
+    match ty.as_str() {
+        "linear" => Ok(EasingCurve::Linear),
+        "cubicBezier" => {
+            let p = obj
+                .get::<Vec<f64>>("p")?
+                .ok_or_else(|| napi::Error::from_reason("cubicBezier easing needs a 'p' array"))?;
+            let [a, b, c, d]: [f64; 4] = p.try_into().map_err(|_| {
+                napi::Error::from_reason("cubicBezier easing's 'p' must have 4 numbers")
+            })?;
+            Ok(EasingCurve::CubicBezier([a as f32, b as f32, c as f32, d as f32]))
+        }
+        "spring" => {
+            let damping_ratio = obj
+                .get::<f64>("dampingRatio")?
+                .ok_or_else(|| napi::Error::from_reason("spring easing needs a 'dampingRatio'"))?
+                as f32;
+            let stiffness = obj
+                .get::<f64>("stiffness")?
+                .ok_or_else(|| napi::Error::from_reason("spring easing needs a 'stiffness'"))?
+                as f32;
+            let mass = obj.get::<f64>("mass")?.unwrap_or(1.0) as f32;
+            Ok(EasingCurve::PhysicalSpring { damping_ratio, stiffness, mass })
+        }
+        "springBounce" => {
+            let bounce = obj
+                .get::<f64>("bounce")?
+                .ok_or_else(|| napi::Error::from_reason("springBounce easing needs a 'bounce'"))?
+                as f32;
+            Ok(EasingCurve::Spring(bounce))
+        }
+        "named" => {
+            let name: String = obj.get("name")?.ok_or_else(|| {
+                napi::Error::from_reason("named easing needs a string 'name' property")
+            })?;
+            named_easing_curve(&name)
+        }
+        other => Err(napi::Error::from_reason(format!("Unknown easing type '{other}'"))),
     }
 }
 
@@ -374,6 +475,7 @@ pub fn to_value(
             instance.pin_user_data_on(env, anchor_owner)?;
             Ok(Value::DataTransfer(instance.inner.clone()))
         }
+        Type::Easing => Ok(Value::EasingCurve(js_to_easing_curve(unknown.coerce_to_object()?)?)),
         Type::Invalid
         | Type::Model
         | Type::Void
@@ -382,7 +484,6 @@ pub fn to_value(
         | Type::Function { .. }
         | Type::Callback { .. }
         | Type::ComponentFactory
-        | Type::Easing
         | Type::PathData
         | Type::LayoutCache
         | Type::ArrayOfU16

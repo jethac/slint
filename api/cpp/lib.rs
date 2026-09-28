@@ -95,6 +95,12 @@ pub extern "C" fn slint_context_color_scheme(
         .map_or(i_slint_core::items::ColorScheme::Unknown, |ctx| ctx.color_scheme(Some(root)))
 }
 
+/// Runtime entry point for `BuiltinFunction::ReducedMotion`.
+#[unsafe(no_mangle)]
+pub extern "C" fn slint_context_reduced_motion(root: &i_slint_core::item_tree::ItemTreeRc) -> bool {
+    i_slint_core::window::context_for_root(root).map_or(false, |ctx| ctx.reduced_motion())
+}
+
 /// Runtime entry point for `BuiltinFunction::PlatformContrastLevel`.
 #[unsafe(no_mangle)]
 pub extern "C" fn slint_context_contrast_preference(

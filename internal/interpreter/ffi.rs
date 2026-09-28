@@ -94,6 +94,14 @@ pub extern "C" fn slint_interpreter_value_new_image(img: &Image) -> Box<Value> {
     Box::new(Value::Image(img.clone()))
 }
 
+/// Construct a new Value in the given memory location as easing curve
+#[unsafe(no_mangle)]
+pub extern "C" fn slint_interpreter_value_new_easing_curve(
+    curve: &i_slint_core::animations::EasingCurve,
+) -> Box<Value> {
+    Box::new(Value::EasingCurve(*curve))
+}
+
 /// Construct a new Value containing a model in the given memory location
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn slint_interpreter_value_new_model(
@@ -190,6 +198,16 @@ pub extern "C" fn slint_interpreter_value_to_struct(val: &Value) -> *const Struc
 pub extern "C" fn slint_interpreter_value_to_image(val: &Value) -> Option<&Image> {
     match val {
         Value::Image(img) => Some(img),
+        _ => None,
+    }
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn slint_interpreter_value_to_easing_curve(
+    val: &Value,
+) -> Option<&i_slint_core::animations::EasingCurve> {
+    match val {
+        Value::EasingCurve(curve) => Some(curve),
         _ => None,
     }
 }

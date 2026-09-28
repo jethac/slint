@@ -16,6 +16,7 @@ use interpreter::{
 mod api_match;
 mod async_adapter;
 mod brush;
+mod easing;
 mod errors;
 mod keys;
 mod models;
@@ -218,6 +219,7 @@ fn register_module(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<geometry::PyLogicalSize>()?;
     m.add_class::<keys::PyKeys>()?;
     m.add_class::<data_transfer::PyDataTransfer>()?;
+    m.add_class::<easing::PyEasingCurve>()?;
     m.add_class::<styled_text::PyStyledText>()?;
     m.add_class::<models::PyModelBase>()?;
     m.add_class::<value::PyStruct>()?;

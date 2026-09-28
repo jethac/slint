@@ -84,4 +84,30 @@ impl InterpolatedPropertyValue for Value {
             _ => target.clone(),
         }
     }
+
+    /// A physical spring can't decompose values that don't share an animatable
+    /// variant, so `0` makes such a retarget snap.
+    fn channel_count(&self, target: &Self) -> usize {
+        match (self, target) {
+            (Value::Number(_), Value::Number(_)) => 1,
+            (Value::Brush(a), Value::Brush(b)) => a.channel_count(b),
+            _ => 0,
+        }
+    }
+
+    fn write_channels(&self, target: &Self, out: &mut [f32]) {
+        match (self, target) {
+            (Value::Number(a), Value::Number(_)) => out[0] = *a as f32,
+            (Value::Brush(a), Value::Brush(b)) => a.write_channels(b, out),
+            _ => debug_assert!(false, "no channels for this pair of Value"),
+        }
+    }
+
+    fn from_channels(&self, target: &Self, channels: &[f32]) -> Self {
+        match (self, target) {
+            (Value::Number(_), Value::Number(_)) => Value::Number(channels[0] as f64),
+            (Value::Brush(a), Value::Brush(b)) => Value::Brush(a.from_channels(b, channels)),
+            _ => self.clone(),
+        }
+    }
 }

@@ -510,6 +510,9 @@ pub(crate) fn value_to_property_animation(v: Value) -> PropertyAnimation {
     if let Some(Value::EasingCurve(curve)) = s.get_field("easing") {
         anim.easing = *curve;
     }
+    if let Some(Value::Number(n)) = s.get_field("initial-velocity") {
+        anim.initial_velocity = *n as f32;
+    }
     if let Some(direction) = s.get_field("direction")
         && let Ok(parsed) = direction.clone().try_into()
     {

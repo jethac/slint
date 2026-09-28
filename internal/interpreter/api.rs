@@ -118,8 +118,7 @@ pub enum Value {
     #[doc(hidden)]
     /// The elements of a path
     PathData(PathData) = 8,
-    #[doc(hidden)]
-    /// An easing curve
+    /// Correspond to the `easing` type in .slint
     EasingCurve(i_slint_core::animations::EasingCurve) = 9,
     #[doc(hidden)]
     /// An enumeration, like `TextHorizontalAlignment::align_center`, represented by `("TextHorizontalAlignment", "align_center")`.
