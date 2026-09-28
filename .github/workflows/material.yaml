@@ -118,8 +118,9 @@ jobs:
             # is not used: it runs `sdkmanager tools`, a package removed from
             # cmdline-tools 16.0, and fails on current runner images.
             run: |
-              yes | sdkmanager --licenses > /dev/null
-              sdkmanager "platforms;android-36" "build-tools;36.0.0"
+              SDKMANAGER="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
+              yes | "$SDKMANAGER" --licenses > /dev/null
+              "$SDKMANAGER" "platforms;android-36" "build-tools;36.0.0"
             shell: bash
           - uses: Swatinem/rust-cache@v2
             with:
