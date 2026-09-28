@@ -1,0 +1,7 @@
+# Copyright © SixtyFPS GmbH <info@slint.dev>
+# SPDX-License-Identifier: MIT
+
+.gradle/
+build/
+local.properties
+gradlew.bat

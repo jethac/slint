@@ -27,10 +27,10 @@ required-features = ["anyrender"]
 default = ["skia", "software", "software-embed-assets"]
 # The default software driver renders without pre-rendering resources at compile time: vector fonts
 # (parley) and runtime-decoded images. `configure_test_fonts()` makes that deterministic.
-software = ["slint/renderer-software", "dep:i-slint-compiler", "dep:i-slint-backend-testing"]
+software = ["slint/renderer-software", "dep:i-slint-compiler"]
 skia = ["dep:i-slint-renderer-skia", "dep:slint-interpreter"]
 # Offscreen GPU tests for the shared FemtoVG rendering path.
-femtovg = ["dep:i-slint-renderer-femtovg", "dep:wgpu-30", "dep:slint-interpreter", "dep:i-slint-backend-testing"]
+femtovg = ["dep:i-slint-renderer-femtovg", "dep:wgpu-30", "dep:slint-interpreter"]
 # Snapshot-tests the command stream recorded by i-slint-renderer-anyrender
 # against JSON goldens in `references/anyrender/`; renders mismatches to PNG
 # via the wgpu-free anyrender_vello_cpu backend.
@@ -41,9 +41,7 @@ anyrender = [
   "dep:anyrender_vello_cpu",
   "dep:kurbo",
   "dep:peniko",
-  "dep:serde_json",
   "dep:slint-interpreter",
-  "dep:i-slint-backend-testing",
 ]
 # Additionally render cases with everything pre-rendered at compile time: bitmap fonts and
 # pre-decoded textures (the MCU-style `EmbedTextures` path).
@@ -74,13 +72,14 @@ anyrender_serialize = { version = "0.8", optional = true }
 anyrender_vello_cpu = { version = "0.18", optional = true, features = ["filters"] }
 kurbo = { version = "0.13", optional = true }
 peniko = { version = "0.6", optional = true }
-serde_json = { version = "1", optional = true }
+serde_json = { version = "1" }
 slint-interpreter = { workspace = true, features = ["display-diagnostics", "compat-1-2"], optional = true }
 spin_on = { workspace = true, optional = true }
 i-slint-compiler = { workspace = true, optional = true }
 # Provides `configure_test_fonts()` to register the bundled test fonts at runtime so the default
-# software driver resolves fonts deterministically without importing a .ttf.
-i-slint-backend-testing = { workspace = true, features = ["internal"], optional = true }
+# software driver resolves fonts deterministically without importing a .ttf, plus the mocked
+# clock and `ElementQuery` the parity driver uses.
+i-slint-backend-testing = { workspace = true, features = ["internal"] }
 
 image = { workspace = true }
 crossterm = "0.29"

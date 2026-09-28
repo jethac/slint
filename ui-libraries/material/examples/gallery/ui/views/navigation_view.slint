@@ -3,6 +3,9 @@
 
 import {
     MaterialStyleMetrics,
+    MaterialPalette,
+    ListTile,
+    ListView,
     NavigationBar,
     BottomAppBar,
     NavigationDrawer,
@@ -550,6 +553,45 @@ export component NavigationView {
                         Slider {
                             stop_count: 5;
                         }
+                    }
+                }
+            }
+        }
+
+        Group {
+            title: "Lists";
+
+            ComponentCard {
+                title: "Lists";
+
+                Vertical {
+
+                    ListTile {
+                        text: "Inbox";
+                        supporting_text: "12 new messages";
+                        avatar_icon: FilledIcons.inbox;
+                        avatar_background: MaterialPalette.primary_container;
+                        avatar_foreground: MaterialPalette.on_primary_container;
+                    }
+
+                    ListTile {
+                        text: "Bookmarks";
+                        supporting_text: "Messages you marked";
+                        avatar_icon: FilledIcons.bookmark;
+                        avatar_background: MaterialPalette.secondary_container;
+                        avatar_foreground: MaterialPalette.on_secondary_container;
+                    }
+
+                    ListTile {
+                        text: "Outbox";
+                        avatar_icon: OutlinedIcons.outbox;
+                    }
+
+                    ListTile {
+                        text: "Trash";
+                        supporting_text: "Disabled";
+                        avatar_icon: OutlinedIcons.delete;
+                        enabled: false;
                     }
                 }
             }

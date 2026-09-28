@@ -5,6 +5,7 @@
 //!
 //! They run with the other screenshot tests when the `femtovg` feature is enabled, and pass without
 //! rendering on a machine without a WGPU adapter, unless `SLINT_TEST_REQUIRE_WGPU` is set.
+//! `//PARITY=` cases also run their checks against the Compose references, see [`crate::parity`].
 
 use std::cell::Cell;
 use std::rc::Rc;
@@ -157,6 +158,7 @@ const MIN_BASE_THRESHOLD: f32 = 4.5;
 
 pub struct TestCase {
     pub absolute_path: std::path::PathBuf,
+    pub relative_path: std::path::PathBuf,
     pub reference_path: std::path::PathBuf,
     pub base_threshold: f32,
     pub size: PhysicalSize,
@@ -173,32 +175,57 @@ pub fn run_test(testcase: TestCase) -> Result<(), Box<dyn std::error::Error>> {
         return Ok(());
     }
     let source = std::fs::read_to_string(&testcase.absolute_path)?;
-    let mut compiler = slint_interpreter::Compiler::default();
-    compiler.set_style("fluent".into());
-    compiler.set_edition(test_driver_lib::edition_version_or_current(&source));
-    let compiled = crate::testing::poll_once(
-        compiler.build_from_source(source, testcase.absolute_path.clone()),
-    )
-    .unwrap();
-    compiled.print_diagnostics();
-    assert!(!compiled.has_errors());
-    let component = compiled.components().last().unwrap().create()?;
+    let compiled = crate::interpreter::compile(&source, &testcase.absolute_path)?;
+    let def = compiled.components().last().expect("There must be at least one exported component");
+    let component = def.create()?;
     component.window().dispatch_event(i_slint_core::platform::WindowEvent::ScaleFactorChanged {
         scale_factor: testcase.scale_factor,
     });
     component.window().set_size(testcase.size);
     component.show()?;
     let screenshot = component.window().take_snapshot()?;
-    crate::testing::compare_images(
-        testcase.reference_path.to_str().unwrap(),
-        &screenshot,
-        Default::default(),
-        &crate::testing::TestCaseOptions {
-            base_threshold: testcase.base_threshold.max(MIN_BASE_THRESHOLD),
-            ..Default::default()
+    let spec = test_driver_lib::extract_parity(&source);
+    // `//PARITY=` cases have no FemtoVG golden of their own: the Compose references are their
+    // ground truth. One is still compared when a case provides it.
+    if spec.parity.is_none() || testcase.reference_path.exists() {
+        crate::testing::compare_images(
+            testcase.reference_path.to_str().unwrap(),
+            &screenshot,
+            Default::default(),
+            &crate::testing::TestCaseOptions {
+                base_threshold: testcase.base_threshold.max(MIN_BASE_THRESHOLD),
+                ..Default::default()
+            },
+        )?;
+    }
+    if spec.parity.is_none() {
+        return Ok(());
+    }
+
+    let (w, h) = crate::interpreter::case_size(&source).unwrap_or((64, 64));
+    let rel = testcase.relative_path.with_extension("").to_string_lossy().replace('\\', "/");
+    crate::parity::run_parity_case(
+        "femtovg",
+        &rel,
+        &spec,
+        &|component: &slint_interpreter::ComponentInstance, name: &str| {
+            component.get_property(name).ok().map(crate::interpreter::trace_value)
         },
-    )?;
-    Ok(())
+        |density| {
+            let component = def.create().unwrap();
+            component.window().dispatch_event(
+                i_slint_core::platform::WindowEvent::ScaleFactorChanged {
+                    scale_factor: density as f32,
+                },
+            );
+            component.window().set_size(i_slint_core::api::WindowSize::Physical(
+                PhysicalSize::new(w * density, h * density),
+            ));
+            component.show().unwrap();
+            component
+        },
+        |component| component.window().take_snapshot().unwrap(),
+    )
 }
 
 #[test]
