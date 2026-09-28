@@ -14,6 +14,8 @@ pub type BitmapGlyph = i_slint_common::bitmapfont::BitmapGlyph<OwnedStorage>;
 pub type BitmapGlyphs = i_slint_common::bitmapfont::BitmapGlyphs<OwnedStorage>;
 #[cfg(feature = "renderer-software")]
 pub type BitmapFont = i_slint_common::bitmapfont::BitmapFont<OwnedStorage>;
+#[cfg(feature = "renderer-software")]
+pub use i_slint_common::bitmapfont::BitmapFontVariation;
 
 /// The resources of `document` that the compiler pre-rendered, by [`EmbeddedResourcesIdx`].
 #[cfg(feature = "std")]

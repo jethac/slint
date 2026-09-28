@@ -24,3 +24,7 @@ pub type BitmapGlyphs<S = StaticStorage> = i_slint_common::bitmapfont::BitmapGly
 ///
 /// cbindgen:ignore
 pub type BitmapFont<S = StaticStorage> = i_slint_common::bitmapfont::BitmapFont<S>;
+/// One resolved axis setting of a pre-rendered [`BitmapFont`].
+///
+/// cbindgen:ignore
+pub type BitmapFontVariation = i_slint_common::bitmapfont::BitmapFontVariation;

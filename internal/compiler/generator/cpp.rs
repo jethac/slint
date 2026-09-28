@@ -1217,6 +1217,8 @@ fn embed_resource(
                 weight,
                 italic,
                 sdf,
+                variations,
+                auto_opsz,
             },
         ) => {
             let family_name_var =
@@ -1282,6 +1284,26 @@ fn embed_resource(
                 }));
             }
 
+            let variations_var =
+                format_smolstr!("slint_embedded_resource_{}_variations", resource_id);
+            let variations_size = variations.len();
+            declarations.push(Declaration::Var(Var {
+                ty: "const slint::cbindgen_private::BitmapFontVariation".into(),
+                name: variations_var.clone(),
+                array_size: Some(variations_size),
+                init: Some(format!(
+                    "{{ {} }}",
+                    variations
+                        .iter()
+                        .map(|v| format!(
+                            "{{ .tag = {}, .value = {}, .default_value = {} }}",
+                            v.tag, v.value, v.default_value
+                        ))
+                        .join(", ")
+                )),
+                ..Default::default()
+            }));
+
             let glyphsets_var =
                 format_smolstr!("slint_embedded_resource_{}_glyphsets", resource_id);
             let glyphsets_size = glyphs.len();
@@ -1316,6 +1338,8 @@ fn embed_resource(
                         .weight = {weight},
                         .italic = {italic},
                         .sdf = {sdf},
+                        .variations = slint::private_api::make_slice({variations_var}, {variations_size}),
+                        .auto_opsz = {auto_opsz},
                 }}"
             );
 
