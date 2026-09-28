@@ -18,6 +18,7 @@ Amoled
 analogclock
 androideabi
 androidx
+animatable
 anyrender
 APCA
 Appbar
@@ -372,6 +373,7 @@ langtype
 layoutinfo
 LBUTTONUP
 lerp
+lerping
 libasound
 libav
 libavcodec
@@ -484,6 +486,7 @@ nexp
 nixos
 nixpkgs
 nmagic
+nocapture
 nodelay
 noexcept
 noglib
@@ -511,6 +514,7 @@ Octa
 oklch
 oldsyspath
 Olguin's
+opsz
 optipng
 ospi
 othercomp
@@ -725,6 +729,7 @@ toctree
 tomllib
 tonalbutton
 toolkits
+toolong
 TOPLEVEL
 Torizon
 toucharea
@@ -781,6 +786,7 @@ wakeup
 walkdir
 wasmbind
 Waveshare
+wdth
 weakref
 weatherdemo
 weathericons
