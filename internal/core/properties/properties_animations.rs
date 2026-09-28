@@ -2207,7 +2207,54 @@ mod animation_tests {
             );
         }
 
-        // Brushes: solid, same-kind and cross-kind gradient pairs.
+        // Brushes: solid and gradient pairs. Their channels carry colors, so
+        // compare with the same visual tolerance as plain colors.
+        fn check_brush(a: crate::Brush, b: crate::Brush) {
+            use crate::graphics::GradientStop;
+            let mut channels = alloc::vec![0.0; a.channel_count(&b)];
+            a.write_channels(&b, &mut channels);
+            let rebuilt = a.rebuild_from_channels(&b, &channels);
+            fn same_stops(a: &[GradientStop], b: &[GradientStop]) -> bool {
+                a.len() == b.len()
+                    && a.iter().zip(b.iter()).all(|(x, y)| {
+                        let (xc, yc) = (
+                            crate::graphics::RgbaColor::<u8>::from(x.color),
+                            crate::graphics::RgbaColor::<u8>::from(y.color),
+                        );
+                        (xc.red as i16 - yc.red as i16).abs() <= 1
+                            && (xc.green as i16 - yc.green as i16).abs() <= 1
+                            && (xc.blue as i16 - yc.blue as i16).abs() <= 1
+                            && (xc.alpha as i16 - yc.alpha as i16).abs() <= 1
+                            && x.position == y.position
+                    })
+            }
+            let same = match (&a, &rebuilt) {
+                (crate::Brush::SolidColor(x), crate::Brush::SolidColor(y)) => {
+                    let (xc, yc) = (
+                        crate::graphics::RgbaColor::<u8>::from(*x),
+                        crate::graphics::RgbaColor::<u8>::from(*y),
+                    );
+                    (xc.red as i16 - yc.red as i16).abs() <= 1
+                        && (xc.green as i16 - yc.green as i16).abs() <= 1
+                        && (xc.blue as i16 - yc.blue as i16).abs() <= 1
+                        && (xc.alpha as i16 - yc.alpha as i16).abs() <= 1
+                }
+                (crate::Brush::LinearGradient(x), crate::Brush::LinearGradient(y)) => {
+                    x.angle() == y.angle()
+                        && same_stops(
+                            &x.stops().copied().collect::<alloc::vec::Vec<_>>(),
+                            &y.stops().copied().collect::<alloc::vec::Vec<_>>(),
+                        )
+                }
+                (crate::Brush::RadialGradient(x), crate::Brush::RadialGradient(y)) => same_stops(
+                    &x.stops().copied().collect::<alloc::vec::Vec<_>>(),
+                    &y.stops().copied().collect::<alloc::vec::Vec<_>>(),
+                ),
+                _ => a == rebuilt,
+            };
+            assert!(same, "brush round-trip failed for {a:?} -> {b:?}: got {rebuilt:?}");
+        }
+
         let solid = crate::Brush::SolidColor(crate::Color::from_rgb_u8(10, 20, 30));
         let stops: crate::SharedVector<crate::graphics::GradientStop> = [
             crate::graphics::GradientStop {
@@ -2227,7 +2274,7 @@ mod animation_tests {
         .collect();
         let linear =
             crate::Brush::LinearGradient(crate::graphics::LinearGradientBrush::new(90.0, stops));
-        check(solid.clone(), solid.clone());
-        check(linear.clone(), linear.clone());
+        check_brush(solid.clone(), solid.clone());
+        check_brush(linear.clone(), linear.clone());
     }
 }
