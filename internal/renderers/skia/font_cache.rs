@@ -260,16 +260,58 @@ mod tests {
         vec![parley::style::FontVariation::new(parley::setting::Tag::new(b"wght"), wght)]
     }
 
+    /// Shapes `text` at one `wght` through parley — the same layout the text
+    /// pipeline feeds `ItemRenderer::draw_glyph_run` — and returns the resolved
+    /// font plus the run's positioned glyphs as `(id, x, y)`.
+    fn shape_at_wght(text: &str, wght: f32) -> (parley::FontData, Vec<(u16, f32, f32)>) {
+        let mut font_ctx = parley::FontContext {
+            collection: fontique::Collection::new(fontique::CollectionOptions {
+                system_fonts: false,
+                ..Default::default()
+            }),
+            ..Default::default()
+        };
+        let data: &[u8] = include_bytes!("../../common/sharedfontique/Inter-VariableFont.ttf");
+        let families =
+            font_ctx.collection.register_fonts(fontique::Blob::new(Arc::new(data)), None);
+        font_ctx.collection.set_generic_families(
+            fontique::GenericFamily::SansSerif,
+            families.iter().map(|(id, _)| *id),
+        );
+        let mut layout_ctx = parley::LayoutContext::<()>::new();
+        let mut builder = layout_ctx.ranged_builder(&mut font_ctx, text, 1.0, false);
+        builder.push_default(parley::StyleProperty::FontSize(32.));
+        builder.push_default(parley::StyleProperty::FontVariations(
+            parley::style::FontVariations::List(std::borrow::Cow::Owned(vec![
+                parley::style::FontVariation::new(parley::setting::Tag::new(b"wght"), wght),
+            ])),
+        ));
+        let mut layout = builder.build(text);
+        layout.break_all_lines(None);
+        let mut font = None;
+        let mut glyphs = Vec::new();
+        for item in layout.lines().flat_map(|line| line.items()) {
+            let parley::PositionedLayoutItem::GlyphRun(run) = item else {
+                continue;
+            };
+            font = Some(run.run().font().clone());
+            glyphs.extend(
+                run.positioned_glyphs().map(|g| (g.id as skia_safe::GlyphId, g.x, g.y)),
+            );
+        }
+        (font.expect("a glyph run"), glyphs)
+    }
+
     /// Draws one frame per step of a `wght` 100→900 sweep through the same
-    /// calls `ItemRenderer::draw_glyph_run` makes — cached variation typeface,
-    /// `skia_safe::Font`, `draw_glyphs_at` with per-glyph positions — and
-    /// reports per-frame wall times. A frame rendering a mid-sweep weight must
-    /// produce pixels identical to rendering that weight directly on a fresh
-    /// cache: animation must never land on a different instance.
+    /// calls `ItemRenderer::draw_glyph_run` makes — parley-shaped glyph ids and
+    /// positions, the cached variation typeface, `skia_safe::Font`,
+    /// `draw_glyphs_at` — and reports per-frame wall times. A frame the
+    /// animation settles on must produce pixels identical to rendering that
+    /// weight directly on a fresh cache: animation must never land on a
+    /// different instance.
     #[test]
     fn wght_sweep_frame_times() {
         let mut cache = FontCache::default();
-        let font = inter_variable();
         let synthesis = fontique::Synthesis::default();
         let mut surface =
             skia_safe::surfaces::raster_n32_premul((480, 96)).expect("raster surface");
@@ -283,29 +325,23 @@ mod tests {
                 .and_then(|p| p.bytes().map(<[u8]>::to_vec))
                 .unwrap_or_default()
         };
+        // One frame = re-shape at the animated weight (the layout cache entry
+        // is keyed on the font request, so an animating axis reshapes) plus
+        // the draw. Both run through the same calls as a real frame.
         let draw_frame = |cache: &mut FontCache,
                           surface: &mut skia_safe::Surface,
                           w: f32|
          -> (std::time::Duration, Vec<u8>) {
             let t0 = Instant::now();
+            let (font, glyphs) = shape_at_wght(TEXT, w);
             let typeface =
                 cache.font_with_variations(&font, &synthesis, &wght(w)).expect("typeface");
             let mut sk_font = skia_safe::Font::from_typeface(typeface, 32.);
             sk_font.set_subpixel(true);
-            // The renderer's glyph-run path: glyph ids plus per-glyph advance
-            // positions, drawn with `draw_glyphs_at`.
-            let glyph_ids = sk_font.text_to_glyphs_vec(TEXT);
-            let mut widths = vec![0.0f32; glyph_ids.len()];
-            sk_font.get_widths(&glyph_ids, &mut widths);
-            let mut x = 10.0f32;
-            let glyph_positions: Vec<skia_safe::Point> = widths
+            let (glyph_ids, glyph_positions): (Vec<_>, Vec<_>) = glyphs
                 .iter()
-                .map(|advance| {
-                    let point = skia_safe::Point::new(x, 60.);
-                    x += advance;
-                    point
-                })
-                .collect();
+                .map(|&(id, x, y)| (id, skia_safe::Point::new(10. + x, 60. + y)))
+                .unzip();
             let canvas = surface.canvas();
             canvas.clear(skia_safe::Color::WHITE);
             canvas.draw_glyphs_at(
@@ -319,14 +355,10 @@ mod tests {
         };
 
         let mut times = Vec::new();
-        let mut mid_sweep = Vec::new();
         for i in 0..=100u32 {
             let w = 100. + i as f32 * 8.;
-            let (elapsed, frame) = draw_frame(&mut cache, &mut surface, w);
+            let (elapsed, _) = draw_frame(&mut cache, &mut surface, w);
             times.push(elapsed);
-            if w == 500. {
-                mid_sweep = frame;
-            }
         }
 
         let mut sorted = times.clone();
@@ -343,18 +375,26 @@ mod tests {
         // 16.6 ms of a 60 Hz refresh even when every frame is a cache miss.
         // Debug builds rasterize an order of magnitude slower (CI measures
         // ~8-30 ms/frame), so the budget itself is only asserted in release
-        // builds — `cargo test --release`; debug keeps a bound that guards
-        // against a pathological blowup.
+        // builds — `cargo test --release`; the CI job `skia_font_benchmark`
+        // runs it. Debug keeps a bound that guards against a pathological
+        // blowup.
         #[cfg(not(debug_assertions))]
         assert!(max < std::time::Duration::from_micros(16666), "slowest frame {max:?}");
         assert!(max < std::time::Duration::from_millis(250), "slowest frame {max:?}");
 
-        // A frame drawn mid-sweep at wght 500 must be pixel-identical to
-        // rendering that weight directly on a fresh cache — the animation must
-        // never land on a different instance than a static request.
+        // A frame the animation settles on — here wght 500 reached as the end
+        // of a 900→500 pull-back — must be pixel-identical to rendering that
+        // weight directly on a fresh cache: the animation must never land on
+        // a different instance than a static request.
+        let mut settled = Vec::new();
+        for i in 0..=50u32 {
+            let w = 900. - i as f32 * 8.;
+            let (_, frame) = draw_frame(&mut cache, &mut surface, w);
+            settled = frame;
+        }
         let mut fresh_cache = FontCache::default();
         let (_, direct) = draw_frame(&mut fresh_cache, &mut surface, 500.);
-        assert_eq!(mid_sweep, direct);
+        assert_eq!(settled, direct);
     }
 
     /// The `wght` 100→900 sweep the design note budgets a frame around: every

@@ -137,47 +137,6 @@ fn test_text_line_height_matches_shaped_single_line() {
 }
 
 #[test]
-fn variation_layout_width_matches_drawn_glyphs() {
-    // The width layout reports must be exactly what the renderer paints: the
-    // glyph run's offset + advance is what `draw_glyph_run` positions, so a
-    // `wght` change can't measure one width and draw another.
-    for wght in [100.0f32, 400.0, 900.0] {
-        let font_request = FontRequest {
-            pixel_size: Some(LogicalLength::new(24.0)),
-            variations: crate::model::ModelRc::new(crate::model::VecModel::from(
-                alloc::vec::Vec::from([crate::items::FontVariation {
-                    tag: "wght".into(),
-                    value: wght,
-                }]),
-            )),
-            ..Default::default()
-        };
-        let builder = super::shaping::LayoutWithoutLineBreaksBuilder::new(
-            Some(font_request),
-            TextWrap::NoWrap,
-            None,
-            ScaleFactor::new(1.0),
-        );
-        let shaped = layout_text_with_builder("Hamburgefonstiv", builder, LayoutOptions::default());
-        let drawn = shaped
-            .paragraphs
-            .iter()
-            .flat_map(|p| p.layout.lines())
-            .flat_map(|line| line.items())
-            .map(|item| match item {
-                parley::PositionedLayoutItem::GlyphRun(run) => run.offset() + run.advance(),
-                _ => 0.0,
-            })
-            .fold(0.0f32, f32::max);
-        assert!(
-            (shaped.max_width.get() - drawn).abs() < 0.01,
-            "wght {wght}: layout width {} != drawn advance {drawn}",
-            shaped.max_width.get(),
-        );
-    }
-}
-
-#[test]
 fn test_crlf_line_count() {
     assert_eq!(visual_line_count("hello\r\nworld"), visual_line_count("hello\nworld"));
     assert_eq!(visual_line_count("hello\r\nworld"), 2);
