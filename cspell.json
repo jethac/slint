@@ -409,11 +409,13 @@
     "tools/figma-inspector/fixtures/**",
     "tools/figma-inspector/src/ui/syntax-assets/**",
     "**/*.gltf",
+    "**/gradlew",
     "**/*.po",
     "**/*.pot",
     "**/*.svg",
     "target/**",
-    "**/node_modules/**"
+    "**/node_modules/**",
+    "ui-libraries/material/parity/compose/vendor/**"
   ],
   "overrides": [
     {
@@ -423,6 +425,59 @@
     {
       "filename": "demos/food-processor/ui/images/ingredients/generation.json",
       "words": ["imagegen"]
+    },
+    {
+      "filename": "ui-libraries/material/parity/**",
+      "words": [
+        "aliyun",
+        "argbs",
+        "Dparity",
+        "gradlew",
+        "JPMS",
+        "jvmargs",
+        "kotlinx",
+        "layoutlib",
+        "lightdark",
+        "llvmpipe",
+        "materialkolor",
+        "replayable",
+        "unhint",
+        "xfail",
+        "mdpi",
+        "Pparity",
+        "robolectric",
+        "Robolectric",
+        "FFFFCFEF",
+        "FFFFL",
+        "SIGABRT",
+        "surfaceless",
+        "xdpi",
+        "XHIGH",
+        "ydpi"
+      ]
+    },
+    {
+      "filename": "tests/screenshots/**",
+      "words": [
+        "attribs",
+        "cpath",
+        "dasharray",
+        "khronos",
+        "layoutlib",
+        "llvmpipe",
+        "rasterizers",
+        "surfaceless",
+        "Surfaceless",
+        "SURFACELESS",
+        "unhint",
+        "xfail"
+      ]
+    },
+    {
+      "filename": "tests/driver/**",
+      "words": [
+        "xfail"
+      ]
     },
     {
       "filename": "tools/figma-inspector/**",

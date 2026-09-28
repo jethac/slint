@@ -1,0 +1,73 @@
+{
+    "name": "negative-thumb-offset",
+    "type": "spring-motion",
+    "parity": "negative",
+    "negative_note": "the thumb renders 2px ahead of its animated property \u2014 an offset element must fail the trace comparison",
+    "size": [
+        400,
+        120
+    ],
+    "densities": [
+        1,
+        2
+    ],
+    "theme": {
+        "seed": "6750A4",
+        "variant": "tonal-spot",
+        "spec": "spec2025",
+        "platform": "phone",
+        "dark": false,
+        "contrast": 0.0
+    },
+    "fonts": {
+        "plain": "Roboto",
+        "brand": "Roboto"
+    },
+    "times": [
+        0,
+        33,
+        66,
+        100,
+        133,
+        166,
+        200,
+        266,
+        333,
+        400,
+        500,
+        666,
+        833,
+        1000
+    ],
+    "trace_props": [
+        "thumb-x"
+    ],
+    "trace_elements": [
+        "thumb"
+    ],
+    "actions": [
+        {
+            "kind": "press",
+            "x": 200,
+            "y": 60
+        },
+        {
+            "kind": "release",
+            "x": 200,
+            "y": 60
+        }
+    ],
+    "params": {
+        "start": 40,
+        "target": 300,
+        "y": 40,
+        "size": 40,
+        "radius": 20,
+        "color": "primary",
+        "duration_ms": 400,
+        "bounce": 0.2
+    },
+    "slint_overrides": {
+        "x_offset": 2
+    }
+}

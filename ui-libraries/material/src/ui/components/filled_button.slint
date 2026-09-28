@@ -5,6 +5,8 @@ import { Elevation } from "./elevation.slint";
 import { BaseButton } from "./base_button.slint";
 import { MaterialTypography } from "../styling/material_typography.slint";
 import { MaterialPalette } from "../styling/material_palette.slint";
+import { MaterialAnimations } from "../styling/material_animations.slint";
+import { BaselineButtonTokens } from "../styling/generated/material_component_tokens.slint";
 
 export component FilledButton {
     in property <image> icon <=> base.icon;
@@ -20,10 +22,24 @@ export component FilledButton {
     accessible-action-default => { base.clicked(); }
 
     elevation := Elevation {
-        border_radius: root.height / 2;
+        // M3 Expressive button shape morph: pill (`container_shape_round`) at
+        // rest, `pressed_container_shape` while pressed — the morph Compose
+        // performs via `ButtonDefaults.shapes()` on the
+        // `MotionSchemeKeyTokens.DefaultEffects` spring.
+        border_radius: base.pressed || base.enter_pressed
+            ? BaselineButtonTokens.pressed_container_shape.top_left
+            : root.height / 2;
         background: MaterialPalette.primary;
         width: 100%;
         height: 100%;
+
+        animate border_radius {
+            duration: MaterialAnimations.default_effects_duration;
+            // spring() takes a literal: bounce = 1 - damping ratio of the
+            // default effects spec — 1 - 1 = 0 in both schemes (see
+            // MaterialAnimations.default_effects_bounce).
+            easing: spring(0);
+        }
     }
 
     base := BaseButton {
