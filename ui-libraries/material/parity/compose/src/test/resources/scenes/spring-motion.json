@@ -112,7 +112,7 @@
     "thumb"
   ],
   "trace_props": [
-    "box-x"
+    "thumb-x"
   ],
   "type": "spring-motion",
   "widgets": []

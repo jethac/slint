@@ -1,5 +1,21 @@
 {
-  "actions": [],
+  "actions": [
+    {
+      "kind": "key:Tab",
+      "x": 0.0,
+      "y": 0.0
+    },
+    {
+      "kind": "key:Tab",
+      "x": 0.0,
+      "y": 0.0
+    },
+    {
+      "kind": "press",
+      "x": 288.0,
+      "y": 48.0
+    }
+  ],
   "case_rel": "material/button_states",
   "densities": [
     1,
@@ -62,7 +78,7 @@
     "tertiaryFixedDim": "FFE5B2D5"
   },
   "size": [
-    340,
+    480,
     96
   ],
   "theme": {
@@ -74,20 +90,52 @@
     "variant": "tonal-spot"
   },
   "times": [],
-  "trace_elements": [],
+  "trace_elements": [
+    "button0",
+    "button1",
+    "button2",
+    "button3"
+  ],
   "trace_props": [],
   "type": "canvas",
   "widgets": [
     {
       "color": null,
-      "enabled": true,
+      "enabled": null,
       "height": null,
       "kind": "filled-button",
       "radius": null,
       "slint_overrides": {},
+      "state": "enabled",
       "text": "Enabled",
       "width": null,
       "x": 16.0,
+      "y": 28.0
+    },
+    {
+      "color": null,
+      "enabled": null,
+      "height": null,
+      "kind": "filled-button",
+      "radius": null,
+      "slint_overrides": {},
+      "state": "focused",
+      "text": "Focused",
+      "width": null,
+      "x": 132.0,
+      "y": 28.0
+    },
+    {
+      "color": null,
+      "enabled": null,
+      "height": null,
+      "kind": "filled-button",
+      "radius": null,
+      "slint_overrides": {},
+      "state": "pressed",
+      "text": "Pressed",
+      "width": null,
+      "x": 248.0,
       "y": 28.0
     },
     {
@@ -97,9 +145,10 @@
       "kind": "filled-button",
       "radius": null,
       "slint_overrides": {},
+      "state": null,
       "text": "Disabled",
       "width": null,
-      "x": 140.0,
+      "x": 364.0,
       "y": 28.0
     }
   ]

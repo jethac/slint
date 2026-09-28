@@ -6,129 +6,308 @@ package org.slint.material.parity
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
-import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.interaction.FocusInteraction
+import androidx.compose.foundation.interaction.HoverInteraction
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Button
-import androidx.compose.material3.ColorScheme
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.LocalMinimumInteractiveComponentSize
+import androidx.compose.material3.MaterialExpressiveTheme
+import androidx.compose.material3.MotionScheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.Typography
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.Shape
-import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.boundsInRoot
 import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import kotlin.math.PI
 
-/** Every traced element reports its bounds here; ids prefixed `text:` are the
- * text nodes the mask PNG is built from. */
+/** Every traced element reports its bounds here; ids prefixed `text:` also
+ * record text metrics through `trackText`. `track` reads `boundsInRoot`, so
+ * it sees the position after `offset()` regardless of modifier order — it is
+ * placed last anyway to keep that dependency obvious. */
 fun Modifier.track(tracer: Tracer, id: String): Modifier =
-    onGloballyPositioned { coords: LayoutCoordinates ->
+    testTag(id).onGloballyPositioned { coords: LayoutCoordinates ->
         tracer.elementBounds[id] = coords.boundsInRoot()
-    }.testTag(id)
+        tracer.backfill(id, coords.boundsInRoot())
+    }
 
-/** The scene's color scheme: `lightColorScheme` built from the generator's
- * resolved ARGB roles. */
-fun colorScheme(scheme: Map<String, Long>): ColorScheme =
-    lightColorScheme(
-        primary = color(scheme, "primary"),
-        onPrimary = color(scheme, "onPrimary"),
-        primaryContainer = color(scheme, "primaryContainer"),
-        onPrimaryContainer = color(scheme, "onPrimaryContainer"),
-        inversePrimary = color(scheme, "inversePrimary"),
-        secondary = color(scheme, "secondary"),
-        onSecondary = color(scheme, "onSecondary"),
-        secondaryContainer = color(scheme, "secondaryContainer"),
-        onSecondaryContainer = color(scheme, "onSecondaryContainer"),
-        tertiary = color(scheme, "tertiary"),
-        onTertiary = color(scheme, "onTertiary"),
-        tertiaryContainer = color(scheme, "tertiaryContainer"),
-        onTertiaryContainer = color(scheme, "onTertiaryContainer"),
-        background = color(scheme, "background"),
-        onBackground = color(scheme, "onBackground"),
-        surface = color(scheme, "surface"),
-        onSurface = color(scheme, "onSurface"),
-        surfaceVariant = color(scheme, "surfaceVariant"),
-        surfaceTint = color(scheme, "surfaceTint"),
-        inverseSurface = color(scheme, "inverseSurface"),
-        inverseOnSurface = color(scheme, "inverseOnSurface"),
-        error = color(scheme, "error"),
-        onError = color(scheme, "onError"),
-        errorContainer = color(scheme, "errorContainer"),
-        onErrorContainer = color(scheme, "onErrorContainer"),
-        outline = color(scheme, "outline"),
-        outlineVariant = color(scheme, "outlineVariant"),
-        scrim = color(scheme, "scrim"),
-        surfaceBright = color(scheme, "surfaceBright"),
-        surfaceContainer = color(scheme, "surfaceContainer"),
-        surfaceContainerHigh = color(scheme, "surfaceContainerHigh"),
-        surfaceContainerHighest = color(scheme, "surfaceContainerHighest"),
-        surfaceContainerLow = color(scheme, "surfaceContainerLow"),
-        surfaceContainerLowest = color(scheme, "surfaceContainerLowest"),
-        surfaceDim = color(scheme, "surfaceDim"),
-        primaryFixed = color(scheme, "primaryFixed"),
-        primaryFixedDim = color(scheme, "primaryFixedDim"),
-        onPrimaryFixed = color(scheme, "onPrimaryFixed"),
-        onPrimaryFixedVariant = color(scheme, "onPrimaryFixedVariant"),
-        secondaryFixed = color(scheme, "secondaryFixed"),
-        secondaryFixedDim = color(scheme, "secondaryFixedDim"),
-        onSecondaryFixed = color(scheme, "onSecondaryFixed"),
-        onSecondaryFixedVariant = color(scheme, "onSecondaryFixedVariant"),
-        tertiaryFixed = color(scheme, "tertiaryFixed"),
-        tertiaryFixedDim = color(scheme, "tertiaryFixedDim"),
-        onTertiaryFixed = color(scheme, "onTertiaryFixed"),
-        onTertiaryFixedVariant = color(scheme, "onTertiaryFixedVariant"),
+/** Text node: track bounds (mask + numeric compare) and text-layout metrics
+ * (baseline, line count — the metric layer the comparator checks). */
+fun Modifier.trackText(tracer: Tracer, id: String, density: Float): Modifier =
+    testTag(id).onGloballyPositioned { coords: LayoutCoordinates ->
+        val b = coords.boundsInRoot()
+        val old = tracer.textMetrics[id] ?: TextMetric(0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 0)
+        tracer.textMetrics[id] = old.copy(
+            x = (b.left / density).toDouble(),
+            y = (b.top / density).toDouble(),
+            w = (b.width / density).toDouble(),
+            h = (b.height / density).toDouble(),
+        )
+    }
+
+/** `onTextLayout` sink for `trackText` ids: fills in baseline, line count,
+ * and `frac_w` — the unhinted font-metric width of the same string. */
+fun recordTextLayout(
+    tracer: Tracer,
+    id: String,
+    density: androidx.compose.ui.unit.Density,
+): (androidx.compose.ui.text.TextLayoutResult) -> Unit =
+    { layout ->
+        val old = tracer.textMetrics[id] ?: TextMetric(0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 0)
+        tracer.textMetrics[id] = old.copy(
+            baseline = layout.firstBaseline.toDouble(),
+            lines = layout.lineCount,
+            fracW = tracer.fracWidth(
+                layout.layoutInput.text.text,
+                layout.layoutInput.style,
+                density,
+            ),
+            chars = layout.layoutInput.text.text.length,
+        )
+    }
+
+/** Re-derives the scene's scheme through `material-color-utilities` (the
+ * Kotlin port on Maven Central) — an implementation independent of Slint's
+ * Rust port, so a bug in either shows up here. The generator's resolved
+ * `scheme` map (Slint's port output) is compared against it by
+ * [assertSchemeMatches]. */
+fun mcuScheme(scene: Scene): com.materialkolor.scheme.DynamicScheme {
+    val t = scene.theme
+    val seed = com.materialkolor.hct.Hct.fromInt(
+        (0xFF00_0000L or t.getString("seed").toLong(16)).toInt(),
     )
+    val dark = t.optBoolean("dark", false)
+    val contrast = t.optDouble("contrast", 0.0)
+    val spec = when (val s = t.optString("spec", "spec2025")) {
+        "spec2021" -> com.materialkolor.dynamiccolor.ColorSpec.SpecVersion.SPEC_2021
+        "spec2025" -> com.materialkolor.dynamiccolor.ColorSpec.SpecVersion.SPEC_2025
+        else -> error("unknown spec $s")
+    }
+    val platform = when (val p = t.optString("platform", "phone")) {
+        "phone" -> com.materialkolor.scheme.DynamicScheme.Platform.PHONE
+        "watch" -> com.materialkolor.scheme.DynamicScheme.Platform.WATCH
+        else -> error("unknown platform $p")
+    }
+    return when (val v = t.getString("variant")) {
+        "tonal-spot" -> com.materialkolor.scheme.SchemeTonalSpot(seed, dark, contrast, spec, platform)
+        "expressive" -> com.materialkolor.scheme.SchemeExpressive(seed, dark, contrast, spec, platform)
+        else -> error("mcuScheme has no mapping for variant $v")
+    }
+}
 
-private fun color(scheme: Map<String, Long>, role: String): Color =
-    Color((scheme[role] ?: error("scheme is missing role $role")).toULong())
+/** Every `ColorScheme` role the generator resolves, read off the
+ * materialkolor scheme. */
+private fun roleArgb(s: com.materialkolor.scheme.DynamicScheme, role: String): Int = when (role) {
+    "primary" -> s.primary
+    "onPrimary" -> s.onPrimary
+    "primaryContainer" -> s.primaryContainer
+    "onPrimaryContainer" -> s.onPrimaryContainer
+    "inversePrimary" -> s.inversePrimary
+    "secondary" -> s.secondary
+    "onSecondary" -> s.onSecondary
+    "secondaryContainer" -> s.secondaryContainer
+    "onSecondaryContainer" -> s.onSecondaryContainer
+    "tertiary" -> s.tertiary
+    "onTertiary" -> s.onTertiary
+    "tertiaryContainer" -> s.tertiaryContainer
+    "onTertiaryContainer" -> s.onTertiaryContainer
+    "background" -> s.background
+    "onBackground" -> s.onBackground
+    "surface" -> s.surface
+    "onSurface" -> s.onSurface
+    "surfaceVariant" -> s.surfaceVariant
+    "onSurfaceVariant" -> s.onSurfaceVariant
+    "surfaceTint" -> s.surfaceTint
+    "inverseSurface" -> s.inverseSurface
+    "inverseOnSurface" -> s.inverseOnSurface
+    "error" -> s.error
+    "onError" -> s.onError
+    "errorContainer" -> s.errorContainer
+    "onErrorContainer" -> s.onErrorContainer
+    "outline" -> s.outline
+    "outlineVariant" -> s.outlineVariant
+    "scrim" -> s.scrim
+    "surfaceBright" -> s.surfaceBright
+    "surfaceDim" -> s.surfaceDim
+    "surfaceContainer" -> s.surfaceContainer
+    "surfaceContainerHigh" -> s.surfaceContainerHigh
+    "surfaceContainerHighest" -> s.surfaceContainerHighest
+    "surfaceContainerLow" -> s.surfaceContainerLow
+    "surfaceContainerLowest" -> s.surfaceContainerLowest
+    "primaryFixed" -> s.primaryFixed
+    "primaryFixedDim" -> s.primaryFixedDim
+    "onPrimaryFixed" -> s.onPrimaryFixed
+    "onPrimaryFixedVariant" -> s.onPrimaryFixedVariant
+    "secondaryFixed" -> s.secondaryFixed
+    "secondaryFixedDim" -> s.secondaryFixedDim
+    "onSecondaryFixed" -> s.onSecondaryFixed
+    "onSecondaryFixedVariant" -> s.onSecondaryFixedVariant
+    "tertiaryFixed" -> s.tertiaryFixed
+    "tertiaryFixedDim" -> s.tertiaryFixedDim
+    "onTertiaryFixed" -> s.onTertiaryFixed
+    "onTertiaryFixedVariant" -> s.onTertiaryFixedVariant
+    else -> error("no materialkolor mapping for scheme role $role")
+}
 
-/** Material typography with the scene's font family on every level. */
-fun typography(font: FontFamily): Typography =
-    Typography(
-        displayLarge = TextStyle(fontFamily = font),
-        displayMedium = TextStyle(fontFamily = font),
-        displaySmall = TextStyle(fontFamily = font),
-        headlineLarge = TextStyle(fontFamily = font),
-        headlineMedium = TextStyle(fontFamily = font),
-        headlineSmall = TextStyle(fontFamily = font),
-        titleLarge = TextStyle(fontFamily = font),
-        titleMedium = TextStyle(fontFamily = font),
-        titleSmall = TextStyle(fontFamily = font),
-        bodyLarge = TextStyle(fontFamily = font),
-        bodyMedium = TextStyle(fontFamily = font),
-        bodySmall = TextStyle(fontFamily = font),
-        labelLarge = TextStyle(fontFamily = font),
-        labelMedium = TextStyle(fontFamily = font),
-        labelSmall = TextStyle(fontFamily = font),
+/** The `ColorScheme` the scene renders: the independently derived scheme —
+ * Slint's theme resolution runs its Rust port, this runs the Kotlin port on
+ * the same seed/variant/spec/platform/dark/contrast inputs. */
+fun sceneColorScheme(scene: Scene): androidx.compose.material3.ColorScheme {
+    val s = mcuScheme(scene)
+    return lightColorScheme(
+        primary = Color(roleArgb(s, "primary")),
+        onPrimary = Color(roleArgb(s, "onPrimary")),
+        primaryContainer = Color(roleArgb(s, "primaryContainer")),
+        onPrimaryContainer = Color(roleArgb(s, "onPrimaryContainer")),
+        inversePrimary = Color(roleArgb(s, "inversePrimary")),
+        secondary = Color(roleArgb(s, "secondary")),
+        onSecondary = Color(roleArgb(s, "onSecondary")),
+        secondaryContainer = Color(roleArgb(s, "secondaryContainer")),
+        onSecondaryContainer = Color(roleArgb(s, "onSecondaryContainer")),
+        tertiary = Color(roleArgb(s, "tertiary")),
+        onTertiary = Color(roleArgb(s, "onTertiary")),
+        tertiaryContainer = Color(roleArgb(s, "tertiaryContainer")),
+        onTertiaryContainer = Color(roleArgb(s, "onTertiaryContainer")),
+        background = Color(roleArgb(s, "background")),
+        onBackground = Color(roleArgb(s, "onBackground")),
+        surface = Color(roleArgb(s, "surface")),
+        onSurface = Color(roleArgb(s, "onSurface")),
+        surfaceVariant = Color(roleArgb(s, "surfaceVariant")),
+        onSurfaceVariant = Color(roleArgb(s, "onSurfaceVariant")),
+        surfaceTint = Color(roleArgb(s, "surfaceTint")),
+        inverseSurface = Color(roleArgb(s, "inverseSurface")),
+        inverseOnSurface = Color(roleArgb(s, "inverseOnSurface")),
+        error = Color(roleArgb(s, "error")),
+        onError = Color(roleArgb(s, "onError")),
+        errorContainer = Color(roleArgb(s, "errorContainer")),
+        onErrorContainer = Color(roleArgb(s, "onErrorContainer")),
+        outline = Color(roleArgb(s, "outline")),
+        outlineVariant = Color(roleArgb(s, "outlineVariant")),
+        scrim = Color(roleArgb(s, "scrim")),
+        surfaceBright = Color(roleArgb(s, "surfaceBright")),
+        surfaceDim = Color(roleArgb(s, "surfaceDim")),
+        surfaceContainer = Color(roleArgb(s, "surfaceContainer")),
+        surfaceContainerHigh = Color(roleArgb(s, "surfaceContainerHigh")),
+        surfaceContainerHighest = Color(roleArgb(s, "surfaceContainerHighest")),
+        surfaceContainerLow = Color(roleArgb(s, "surfaceContainerLow")),
+        surfaceContainerLowest = Color(roleArgb(s, "surfaceContainerLowest")),
+        primaryFixed = Color(roleArgb(s, "primaryFixed")),
+        primaryFixedDim = Color(roleArgb(s, "primaryFixedDim")),
+        onPrimaryFixed = Color(roleArgb(s, "onPrimaryFixed")),
+        onPrimaryFixedVariant = Color(roleArgb(s, "onPrimaryFixedVariant")),
+        secondaryFixed = Color(roleArgb(s, "secondaryFixed")),
+        secondaryFixedDim = Color(roleArgb(s, "secondaryFixedDim")),
+        onSecondaryFixed = Color(roleArgb(s, "onSecondaryFixed")),
+        onSecondaryFixedVariant = Color(roleArgb(s, "onSecondaryFixedVariant")),
+        tertiaryFixed = Color(roleArgb(s, "tertiaryFixed")),
+        tertiaryFixedDim = Color(roleArgb(s, "tertiaryFixedDim")),
+        onTertiaryFixed = Color(roleArgb(s, "onTertiaryFixed")),
+        onTertiaryFixedVariant = Color(roleArgb(s, "onTertiaryFixedVariant")),
     )
+}
+
+/** Fails when the generator's resolved scheme (Slint's `material-color-utils`
+ * port, applied on the Slint side) disagrees with the materialkolor port —
+ * the cross-implementation check that keeps the reference independent of the
+ * code under test. */
+fun assertSchemeMatches(scene: Scene) {
+    val s = mcuScheme(scene)
+    val mismatches = scene.scheme.mapNotNull { (role, expected) ->
+        val actual = roleArgb(s, role.kebabToCamel())
+        when {
+            expected != (actual.toLong() and 0xFFFF_FFFFL) ->
+                "$role: scene ${expected.toString(16)} vs compose ${(actual.toLong() and 0xFFFF_FFFFL).toString(16)}"
+            else -> null
+        }
+    }
+    check(mismatches.isEmpty()) {
+        "Slint-generated scheme differs from the materialkolor scheme:\n${mismatches.joinToString("\n")}"
+    }
+}
+
+/** Material typography: the default `Typography()` with only the font family
+ * replaced, so sizes, weights, line heights and tracking stay upstream. */
+fun typography(font: FontFamily?): Typography =
+    Typography().let { t ->
+        t.copy(
+            displayLarge = t.displayLarge.copy(fontFamily = font),
+            displayMedium = t.displayMedium.copy(fontFamily = font),
+            displaySmall = t.displaySmall.copy(fontFamily = font),
+            headlineLarge = t.headlineLarge.copy(fontFamily = font),
+            headlineMedium = t.headlineMedium.copy(fontFamily = font),
+            headlineSmall = t.headlineSmall.copy(fontFamily = font),
+            titleLarge = t.titleLarge.copy(fontFamily = font),
+            titleMedium = t.titleMedium.copy(fontFamily = font),
+            titleSmall = t.titleSmall.copy(fontFamily = font),
+            bodyLarge = t.bodyLarge.copy(fontFamily = font),
+            bodyMedium = t.bodyMedium.copy(fontFamily = font),
+            bodySmall = t.bodySmall.copy(fontFamily = font),
+            labelLarge = t.labelLarge.copy(fontFamily = font),
+            labelMedium = t.labelMedium.copy(fontFamily = font),
+            labelSmall = t.labelSmall.copy(fontFamily = font),
+        )
+    }
 
 /** The composable a scene renders, keyed on its `type`. */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalMaterial3Api::class)
 @Composable
-fun SceneContent(scene: Scene, font: FontFamily, tracer: Tracer) {
-    MaterialTheme(colorScheme = colorScheme(scene.scheme), typography = typography(font)) {
-        when (scene.type) {
-            "canvas" -> CanvasScene(scene, tracer)
-            "spring-motion" -> SpringMotionScene(scene, tracer)
-            else -> error("unknown scene type ${scene.type}")
+fun SceneContent(scene: Scene, font: FontFamily?, tracer: Tracer) {
+    MaterialExpressiveTheme(
+        colorScheme = sceneColorScheme(scene),
+        motionScheme = MotionScheme.expressive(),
+        typography = typography(font),
+    ) {
+        // Upstream pads components out to a 48dp touch-target slot and centers
+        // the visual in it; the scene coordinates place the drawn component,
+        // so that padding is off here — the Slint library draws the same
+        // visual at the same declared bounds.
+        CompositionLocalProvider(LocalMinimumInteractiveComponentSize provides 0.dp) {
+            FrameRecorder(scene, tracer)
+            when (scene.type) {
+                "canvas" -> CanvasScene(scene, tracer)
+                "spring-motion" -> SpringMotionScene(scene, tracer)
+                else -> error("unknown scene type ${scene.type}")
+            }
+        }
+    }
+}
+
+/** Records one trace frame per Composable frame tick — under Paparazzi the
+ * frame clock advances in exact `1/fps` steps, so `tNanos` indexes frames. */
+@Composable
+private fun FrameRecorder(scene: Scene, tracer: Tracer) {
+    val density = androidx.compose.ui.platform.LocalDensity.current.density
+    LaunchedEffect(scene.name) {
+        while (true) {
+            withFrameNanos { nanos ->
+                tracer.recordFrame(nanos / 1_000_000, scene.traceProps, scene.traceElements, density)
+            }
         }
     }
 }
@@ -136,20 +315,14 @@ fun SceneContent(scene: Scene, font: FontFamily, tracer: Tracer) {
 @Composable
 private fun CanvasScene(scene: Scene, tracer: Tracer) {
     val (w, h) = scene.sizeDp
-    val scheme = MaterialTheme.colorScheme
+    val density = androidx.compose.ui.platform.LocalDensity.current.density
+    val scheme = androidx.compose.material3.MaterialTheme.colorScheme
     Box(
         Modifier.testTag("scene-root").size(w.dp, h.dp).background(scheme.background),
     ) {
         scene.widgets.forEachIndexed { i, widget ->
             when (widget.kind) {
-                "filled-button" ->
-                    Button(
-                        onClick = {},
-                        enabled = widget.enabled,
-                        modifier = Modifier.offset(widget.x.dp, widget.y.dp),
-                    ) {
-                        Text(widget.text ?: "", modifier = Modifier.track(tracer, "text:$i"))
-                    }
+                "filled-button" -> StateButton(widget, tracer, "text:$i", "button$i", density)
                 "rect" ->
                     Box(
                         Modifier.offset(widget.x.dp, widget.y.dp)
@@ -163,12 +336,50 @@ private fun CanvasScene(scene: Scene, tracer: Tracer) {
     }
 }
 
+/** A filled button in the interaction state the scene asks for. `state`
+ * comes from the scene's `widgets[].state` — the Slint side drives the same
+ * state through real pointer events on the mocked backend. */
+@Composable
+private fun StateButton(widget: Widget, tracer: Tracer, textId: String, elementId: String, density: Float) {
+    val interactionSource = remember { MutableInteractionSource() }
+    // Mirrors the Slint driver's event stream: a held pointer produces
+    // hover AND press, so "pressed" emits Enter then Press. The press
+    // position matches the driver's press point (40,20)dp into the widget.
+    val pressPos = with(androidx.compose.ui.platform.LocalDensity.current) {
+        Offset(40.dp.toPx(), 20.dp.toPx())
+    }
+    when (widget.state) {
+        "pressed" -> LaunchedEffect(Unit) {
+            interactionSource.emit(HoverInteraction.Enter())
+            interactionSource.emit(PressInteraction.Press(pressPos))
+        }
+        "hovered" -> LaunchedEffect(Unit) {
+            interactionSource.emit(HoverInteraction.Enter())
+        }
+        "focused" -> LaunchedEffect(Unit) {
+            interactionSource.emit(FocusInteraction.Focus())
+        }
+    }
+    Button(
+        onClick = {},
+        enabled = widget.enabled,
+        modifier = Modifier.offset(widget.x.dp, widget.y.dp).track(tracer, elementId),
+        interactionSource = interactionSource,
+    ) {
+        Text(
+            widget.text ?: "",
+            modifier = Modifier.trackText(tracer, textId, density),
+            onTextLayout = recordTextLayout(tracer, textId, LocalDensity.current),
+        )
+    }
+}
+
 private fun RoundedCornerShapeOrRect(radius: Dp): Shape =
     if (radius <= 0.dp) RectangleShape else androidx.compose.foundation.shape.RoundedCornerShape(radius)
 
 @Composable
 private fun schemeColor(role: String): Color =
-    MaterialTheme.colorScheme.let { scheme ->
+    androidx.compose.material3.MaterialTheme.colorScheme.let { scheme ->
         when (role.kebabToCamel()) {
             "primary" -> scheme.primary
             "primaryContainer" -> scheme.primaryContainer
@@ -209,27 +420,30 @@ private fun SpringMotionScene(scene: Scene, tracer: Tracer) {
             dampingRatio = (1.0 - bounce).toFloat(),
             stiffness = (wn * wn).toFloat(),
         ),
-        label = "box-x",
+        label = "thumb-x",
     )
 
-    tracer.propGetters["box-x"] = { x.value.toDouble() }
+    tracer.propGetters["thumb-x"] = { x.value.toDouble() }
     tracer.elementOpacity["thumb"] = 1f
 
-    val scheme = MaterialTheme.colorScheme
+    // The scene's `actions` describe user input at t=0; under Paparazzi there
+    // is no input injection, so a `press`/`release` pair becomes "the gesture
+    // fires when composition starts". The Slint side delivers real pointer
+    // events on the mocked backend.
+    if (scene.actions.isNotEmpty()) {
+        LaunchedEffect(Unit) { goal = target }
+    }
+
+    val scheme = androidx.compose.material3.MaterialTheme.colorScheme
     Box(
         Modifier.testTag("scene-root").size(w.dp, h.dp).background(scheme.background),
     ) {
         Box(
-            Modifier.track(tracer, "thumb")
-                .offset(x, y.dp)
+            Modifier.offset(x, y.dp)
                 .size(size.dp)
                 .clip(RoundedCornerShapeOrRect(radius.dp))
-                .background(schemeColor(p.getString("color"))),
-        )
-        Box(
-            Modifier.fillMaxSize().pointerInput(target) {
-                detectTapGestures(onPress = { goal = target })
-            },
+                .background(schemeColor(p.getString("color")))
+                .track(tracer, "thumb"),
         )
     }
 }

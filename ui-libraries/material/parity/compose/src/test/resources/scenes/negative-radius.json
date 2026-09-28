@@ -87,6 +87,7 @@
       "slint_overrides": {
         "radius": 8
       },
+      "state": null,
       "text": null,
       "width": 120.0,
       "x": 40.0,

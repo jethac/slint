@@ -2,24 +2,28 @@
 // SPDX-License-Identifier: MIT
 
 plugins {
-    // AGP 9.1 embeds Kotlin support; no org.jetbrains.kotlin.android plugin.
-    id("com.android.library") version "9.2.1"
-    kotlin("plugin.compose") version "2.4.20"
+    // Paparazzi 2.x supports pre-AGP-9 consumers; the compose plugin supplies
+    // the Compose compiler for Kotlin Android.
+    id("com.android.library") version "8.13.2"
+    id("org.jetbrains.kotlin.android") version "2.3.0"
+    id("org.jetbrains.kotlin.plugin.compose") version "2.3.0"
+    id("app.cash.paparazzi") version "2.0.0-alpha05"
 }
 
-// Rendering choice, recorded for #4: Robolectric with
-// `graphicsMode = NATIVE` (real rasterization through the Android native
-// graphics stack) instead of Paparazzi/layoutlib, because the harness needs
-// the test-runtime clock (`mainClock.autoAdvance = false` plus
-// `advanceTimeBy`) and pointer input injection, which the compose-ui-test
-// rule provides under Robolectric. Paparazzi renders one composed frame per
-// invocation and has no manual-clock animation stepping or
-// `performTouchInput`, so it cannot produce the motion frames and traces this
-// harness needs.
+// Rendering choice, recorded for #4: Paparazzi (layoutlib — the same
+// rasterizer Android Studio previews run) instead of Robolectric.
+// Robolectric's native-graphics path can't initialize the font map on many
+// hosts (robolectric/robolectric#9039), while Paparazzi runs fully on the
+// JVM, drives the Compose frame clock in exact 1/fps steps (frame index ==
+// milliseconds at fps = 1000, so scene TIMES map exactly), and its public
+// SnapshotHandler hook writes each rendered frame straight into
+// `references/`. Interaction states come from the scene definitions
+// (MutableInteractionSource emissions at composition) instead of injected
+// pointer events.
 
 android {
     namespace = "org.slint.material.parity"
-    compileSdk = 37
+    compileSdk = 36
     defaultConfig {
         minSdk = 26
     }
@@ -28,8 +32,8 @@ android {
     }
     testOptions {
         unitTests {
-            // Scenes, fonts and robolectric.properties live under
-            // src/test/resources and must reach the unit test classpath.
+            // Scenes and fonts live under src/test/resources and must reach
+            // the unit test classpath.
             isIncludeAndroidResources = true
             isReturnDefaultValues = true
         }
@@ -37,41 +41,44 @@ android {
 }
 
 kotlin {
-    jvmToolchain(17)
+    // Paparazzi 2.x requires a Java 21 toolchain.
+    jvmToolchain(21)
 }
 
 dependencies {
-    testImplementation("androidx.compose.material3:material3:1.5.0-alpha29")
-    // Compose 1.13.0-alpha01 is what material3:1.5.0-alpha29 resolves to;
-    // keep the test rule on the same line.
-    testImplementation("androidx.compose.ui:ui-test-junit4:1.13.0-alpha01")
-    testImplementation("androidx.activity:activity-compose:1.11.0")
-    testImplementation("org.robolectric:robolectric:4.17")
+    // The newest material3 alpha compatible with pre-AGP-9 builds: alpha19+
+    // pull Compose 1.12 alphas that require AGP 9.1 and compileSdk 37, which
+    // Paparazzi 2.x can't consume. 1.5.0-alpha18 carries all the Expressive
+    // APIs (MaterialExpressiveTheme, MotionScheme.expressive()) on Compose
+    // 1.11.0-beta02.
+    testImplementation("androidx.compose.material3:material3:1.5.0-alpha18")
+    testImplementation("app.cash.paparazzi:paparazzi:2.0.0-alpha05")
+    // Independent implementation of material-color-utilities (Kotlin port):
+    // re-derives the scene scheme so a bug in Slint's Rust port surfaces
+    // instead of agreeing with itself.
+    testImplementation("com.materialkolor:material-color-utilities-jvm:5.0.1")
     testImplementation("junit:junit:4.13.2")
+    testImplementation(project(":harness"))
 }
 
 tasks.withType<Test>().configureEach {
-    // Robolectric on JDK 17 needs the JPMS opens it documents; and its runtime
-    // dependency resolver (the android-all jars) talks to Maven Central
-    // directly, so point it at the mirror the Gradle repositories use.
+    testLogging.showStandardStreams = true
+    providers.systemProperty("parity.scene").orNull?.let { systemProperty("parity.scene", it) }
+    // Paparazzi decompresses layoutlib natives at runtime.
     jvmArgs = (jvmArgs ?: emptyList()) + listOf(
         "--add-opens=java.base/java.lang=ALL-UNNAMED",
         "--add-opens=java.base/java.lang.reflect=ALL-UNNAMED",
         "--add-opens=java.base/java.util=ALL-UNNAMED",
-        "--add-opens=java.base/java.util.concurrent=ALL-UNNAMED",
         "--add-opens=java.base/java.io=ALL-UNNAMED",
-        "--add-opens=java.base/java.nio=ALL-UNNAMED",
-        "--add-opens=java.base/sun.nio.ch=ALL-UNNAMED",
-        "--add-opens=java.base/java.net=ALL-UNNAMED",
         "--add-opens=java.desktop/java.awt=ALL-UNNAMED",
         "--add-opens=java.desktop/java.awt.font=ALL-UNNAMED",
     )
-    systemProperty("robolectric.dependency.repo.url", "https://maven.aliyun.com/repository/central")
-    systemProperty("robolectric.dependency.repo.id", "aliyun-central")
     // Where the harness writes renders: `references/` to regenerate the
     // committed references, `build/parity-out` otherwise.
     systemProperty(
         "parity.out.dir",
-        findProperty("parity.record")?.let { "references" } ?: "build/parity-out",
+        findProperty("parity.record")?.let {
+            File(rootDir, "references").absolutePath
+        } ?: File(rootDir, "build/parity-out").absolutePath,
     )
 }

@@ -29,6 +29,9 @@ class Scene(json: JSONObject) {
         json.optJSONArray("widgets")?.let { a -> (0 until a.length()).map { Widget(a.getJSONObject(it)) } }
             ?: emptyList()
     val params: JSONObject = json.optJSONObject("params") ?: JSONObject()
+    /** Authored theme inputs (seed/variant/spec/platform/dark/contrast) that
+     * both scheme derivations consume. */
+    val theme: JSONObject = json.optJSONObject("theme") ?: JSONObject()
     val scheme: Map<String, Long> =
         json.getJSONObject("scheme").let { s ->
             s.keys().asSequence().associateWith { s.getString(it).toLong(16) }
@@ -66,6 +69,9 @@ class Widget(json: JSONObject) {
     val radius: Float = json.optDouble("radius", 0.0).toFloat()
     val text: String? = json.optString("text").takeIf { it.isNotEmpty() }
     val enabled: Boolean = json.optBoolean("enabled", true)
+    /** Interaction state the widget starts in: `enabled` (default),
+     * `disabled`, `pressed` (pointer held), `hovered`, or `focused`. */
+    val state: String = json.optString("state", if (json.optBoolean("enabled", true)) "enabled" else "disabled")
     val color: String? = json.optString("color").takeIf { it.isNotEmpty() }
 }
 
