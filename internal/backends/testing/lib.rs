@@ -39,7 +39,8 @@ pub fn init_no_event_loop() {
         testing_backend::TestingBackendOptions {
             mock_time: true,
             threading: false,
-            ..Default::default()
+            #[cfg(supports_headless)]
+            renderer_name: None,
         },
     )))
     .expect("platform already initialized");
@@ -58,7 +59,8 @@ pub fn init_integration_test_with_mock_time() {
         testing_backend::TestingBackendOptions {
             mock_time: true,
             threading: true,
-            ..Default::default()
+            #[cfg(supports_headless)]
+            renderer_name: None,
         },
     )))
     .expect("platform already initialized");
@@ -74,7 +76,8 @@ pub fn init_integration_test_with_system_time() {
         testing_backend::TestingBackendOptions {
             mock_time: false,
             threading: true,
-            ..Default::default()
+            #[cfg(supports_headless)]
+            renderer_name: None,
         },
     )))
     .expect("platform already initialized");

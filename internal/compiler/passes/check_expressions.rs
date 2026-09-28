@@ -31,11 +31,11 @@ fn check_animation_elements(elem: &ElementRc, diag: &mut BuildDiagnostics) {
             return;
         };
         let easing = easing.borrow();
-        let physical = match &easing.expression {
+        let physical = matches!(
+            &easing.expression,
             Expression::EasingCurve(EasingCurve::PhysicalSpring(..))
-            | Expression::EasingCurveCtor { variant: EasingCurveCtor::PhysicalSpring, .. } => true,
-            _ => false,
-        };
+                | Expression::EasingCurveCtor { variant: EasingCurveCtor::PhysicalSpring, .. }
+        );
         if !physical {
             return;
         }
