@@ -2467,6 +2467,7 @@ dependencies = [
  "fontcull-klippa",
  "fontcull-write-fonts",
  "i-slint-common",
+ "i-slint-core",
  "icu_normalizer",
  "icu_properties",
  "image",

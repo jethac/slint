@@ -573,6 +573,7 @@ impl CppType for Type {
                 }
             }
             Type::Brush => Some("slint::Brush".into()),
+            Type::Shape => Some("slint::Shape".into()),
             Type::LayoutCache => Some("slint::SharedVector<float>".into()),
             Type::ArrayOfU16 => Some("slint::SharedVector<uint16_t>".into()),
             Type::Easing => Some("slint::cbindgen_private::EasingCurve".into()),
@@ -5736,6 +5737,81 @@ fn compile_builtin_function_call(
             } else {
                 panic!("internal error: invalid args to PathAngleAt {arguments:?}")
             }
+        }
+        BuiltinFunction::ShapesEmpty => "slint::Shape()".into(),
+        BuiltinFunction::ShapesPolygon => {
+            let [v, r] = [a.next().unwrap(), a.next().unwrap()];
+            format!("slint::shapes::polygon({v}, {r})")
+        }
+        BuiltinFunction::ShapesPolygonPerVertex => {
+            let [v, r] = [a.next().unwrap(), a.next().unwrap()];
+            format!("slint::shapes::polygon_per_vertex({v}, {r})")
+        }
+        BuiltinFunction::ShapesRegularPolygon => {
+            let [n, r] = [a.next().unwrap(), a.next().unwrap()];
+            format!("slint::shapes::regular_polygon(static_cast<int>({n}), {r})")
+        }
+        BuiltinFunction::ShapesRegularPolygonPerVertex => {
+            let [n, r] = [a.next().unwrap(), a.next().unwrap()];
+            format!("slint::shapes::regular_polygon_per_vertex(static_cast<int>({n}), {r})")
+        }
+        BuiltinFunction::ShapesRectangle => {
+            let [w, h, r] = [a.next().unwrap(), a.next().unwrap(), a.next().unwrap()];
+            format!("slint::shapes::rectangle({w}, {h}, {r})")
+        }
+        BuiltinFunction::ShapesCircle => {
+            let n = a.next().unwrap();
+            format!("slint::shapes::circle(static_cast<int>({n}))")
+        }
+        BuiltinFunction::ShapesStar => {
+            let [n, ir, r, irnd] =
+                [a.next().unwrap(), a.next().unwrap(), a.next().unwrap(), a.next().unwrap()];
+            format!("slint::shapes::star(static_cast<int>({n}), {ir}, {r}, {irnd})")
+        }
+        BuiltinFunction::ShapesPill => {
+            let [w, h, sm] = [a.next().unwrap(), a.next().unwrap(), a.next().unwrap()];
+            format!("slint::shapes::pill({w}, {h}, {sm})")
+        }
+        BuiltinFunction::ShapesPillStar => {
+            let [n, w, h, ir, r] = [
+                a.next().unwrap(),
+                a.next().unwrap(),
+                a.next().unwrap(),
+                a.next().unwrap(),
+                a.next().unwrap(),
+            ];
+            format!(
+                "slint::shapes::pill_star(static_cast<int>({n}), {w}, {h}, {ir}, {r})"
+            )
+        }
+        BuiltinFunction::ShapesCustom => {
+            let [v, r, reps, mirror] =
+                [a.next().unwrap(), a.next().unwrap(), a.next().unwrap(), a.next().unwrap()];
+            format!("slint::shapes::custom({v}, {r}, static_cast<int>({reps}), {mirror})")
+        }
+        BuiltinFunction::ShapesNormalized => {
+            let s = a.next().unwrap();
+            format!("({s}).normalized()")
+        }
+        BuiltinFunction::ShapesRotated => {
+            let [s, ang] = [a.next().unwrap(), a.next().unwrap()];
+            format!("({s}).rotated({ang})")
+        }
+        BuiltinFunction::ShapesScaled => {
+            let [s, sx, sy] = [a.next().unwrap(), a.next().unwrap(), a.next().unwrap()];
+            format!("({s}).scaled({sx}, {sy})")
+        }
+        BuiltinFunction::ShapesTranslated => {
+            let [s, dx, dy] = [a.next().unwrap(), a.next().unwrap(), a.next().unwrap()];
+            format!("({s}).translated({dx}, {dy})")
+        }
+        BuiltinFunction::ShapesMorph => {
+            let [from, to, p] = [a.next().unwrap(), a.next().unwrap(), a.next().unwrap()];
+            format!("slint::shapes::morph({from}, {to}, {p})")
+        }
+        BuiltinFunction::ShapesFromPath => {
+            let [d, fr] = [a.next().unwrap(), a.next().unwrap()];
+            format!("slint::shapes::path({d}, {fr})")
         }
         BuiltinFunction::ArrayAny => {
             format!("slint::private_api::model_any({}, {})", a.next().unwrap(), a.next().unwrap())
