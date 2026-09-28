@@ -187,7 +187,6 @@ impl i_slint_core::platform::Platform for Backend {
         // there are multiple windows and outright broken when there are zero windows.
         update_palette_state();
         update_font_state();
-        update_motion_state();
         install_app_state_observer();
     }
 
@@ -445,28 +444,6 @@ fn update_font_state() {
     });
 }
 
-/// Qt proxies the OS animation toggle through the style hint `Qt::UI_GeneralAnimate`
-/// (off means reduced motion), which follows the active platform theme (e.g. KDE's
-/// kinetic settings). The hint is read once at startup and again on
-/// `QEvent::StyleChange` — i.e. after a style/theme switch. Qt delivers no event
-/// for the OS-level toggle itself, so a runtime toggle only reaches Slint if the
-/// platform theme switches with it.
-/// (`slint_qt_ui_general_animate` is defined in `install_app_state_observer`'s
-/// `cpp!` block so the `QStyleHints` header is included at namespace scope.)
-#[cfg(not(no_qt))]
-fn update_motion_state() {
-    use cpp::cpp;
-    let enabled = cpp! {unsafe [] -> bool as "bool" {
-        bool slint_qt_ui_general_animate();
-        return slint_qt_ui_general_animate();
-    }};
-    QT_CONTEXT.with(|cell| {
-        if let Some(ctx) = cell.get().and_then(|w| w.upgrade()) {
-            ctx.set_reduced_motion(!enabled);
-        }
-    });
-}
-
 #[cfg(not(no_qt))]
 fn install_app_state_observer() {
     use cpp::cpp;
@@ -476,10 +453,6 @@ fn install_app_state_observer() {
         #include <QtGui/QFontInfo>
         #include <QtGui/QStyleHints>
         #include <QtWidgets/QApplication>
-
-        static bool slint_qt_ui_general_animate() {
-            return (qApp->styleHints()->uiEffects() & Qt::UI_GeneralAnimate) != 0;
-        }
 
         struct SlintAppStateObserver : QObject {
             using QObject::QObject;
@@ -493,10 +466,6 @@ fn install_app_state_observer() {
                     } else if (event->type() == QEvent::ApplicationFontChange) {
                         rust!(Slint_qt_font_changed [] {
                             crate::update_font_state();
-                        });
-                    } else if (event->type() == QEvent::StyleChange) {
-                        rust!(Slint_qt_style_changed [] {
-                            crate::update_motion_state();
                         });
                     }
                 }

@@ -106,8 +106,9 @@ force the scale. Platform accessibility settings feed it: the XDG
 `SPI_GETCLIENTAREAANIMATION` (plus a `WM_SETTINGCHANGE` window subclass for
 live changes), `prefers-reduced-motion` on the web, macOS
 `accessibilityDisplayShouldReduceMotion`, iOS
-`UIAccessibilityIsReduceMotionEnabled`, Qt's animate-UI setting, and Android
-when `animator_duration_scale` is 0. `.slint` reads it through
+`UIAccessibilityIsReduceMotionEnabled`, and Android
+when `animator_duration_scale` is 0. (The Qt backend has no source: Qt 6
+removed `QStyleHints::uiEffects` and offers no replacement.) `.slint` reads it through
 `SlintInternal.reduced-motion` / `Palette.reduced-motion`, and the widget
 styles gate their `animate` blocks on it (`ReducedMotionSelector` allows an
 app override). The testing backend exposes `set_reduced_motion()` /
