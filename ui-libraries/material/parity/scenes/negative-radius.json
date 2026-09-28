@@ -1,0 +1,29 @@
+{
+    "name": "negative-radius",
+    "type": "canvas",
+    "parity": "negative",
+    "negative_note": "the card renders border-radius 8px, the scene and its Compose reference specify 24px — a wrong corner radius must fail",
+    "size": [200, 120],
+    "densities": [1],
+    "theme": {
+        "seed": "6750A4",
+        "variant": "tonal-spot",
+        "spec": "spec2025",
+        "platform": "phone",
+        "dark": false,
+        "contrast": 0.0
+    },
+    "fonts": { "plain": "Roboto", "brand": "Roboto" },
+    "widgets": [
+        {
+            "kind": "rect",
+            "x": 40,
+            "y": 24,
+            "width": 120,
+            "height": 72,
+            "radius": 24,
+            "color": "primary-container",
+            "slint_overrides": { "radius": 8 }
+        }
+    ]
+}
