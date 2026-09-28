@@ -73,16 +73,30 @@ A parity case is a normal `.slint` file with marker comments:
 | Geometry/color | per-pixel RGBA on flat regions | `PARITY_EPS` (8) per channel |
 | Outlines | pixels near a detected image edge: AA drift is a fraction of the edge's contrast | `min(EDGE_EPS 56, contrast/2)` |
 | Traced elements | the outline-disagreement zone between the Slint and Compose bounds (dilated for decorations like focus ring and elevation shadow) is skipped; geometry is compared numerically instead | `GEOM_EPS` 0.5px, drift-aware |
-| Text | pixels in the union of both sides' text bounds: per-cell mean/outlier bound, plus numeric position/width — width validates against the font's own unhinted metrics (`frac_w`), not the hinted layout width | `TEXT_CELL_EPS` 40, ≤25% outliers at >96, `w` ±1px, `cx` drift-bounded |
-| Motion | trace values per timestamp, plus settle time | `TRACE_EPS` 1.0px, settle within 25% |
+| Text | pixels in the union of both sides' text bounds: per-cell mean/outlier bound, plus numeric metrics — width validates against the font's own fractional advance (`frac_w`), placement compares the label's offset inside its container | `TEXT_CELL_EPS` 48, ≤35% outliers at >96, `w` bound 0.5 + 0.25px/glyph, offset ±0.5px |
+| Motion | trace values at identical timestamps after measuring the fixed phase offset between the engines' animation clocks, plus settle time | `TRACE_EPS` 1.0px, settle within 25% |
 | Negative | must fail the comparator | — |
 
 Why text tolerances look loose: layoutlib's hinted, integer-advance text
-layout renders measurably bolder and ~0.5px/glyph wider than unhinted font
-metrics; Slint's text is closer to the font's own numbers. The trace layer
-validates Slint's text width against `frac_w` (a hinting-off `Paint`
-measure of the same string/font/size, emitted by the Compose harness) at
-1px, so the cross-engine drift is bounded, not pixel-compared.
+layout renders measurably bolder and up to ~1.6px/label wider than
+unhinted font metrics; Slint's text is closer to the font's own numbers.
+The trace layer validates Slint's text width against `frac_w` (the
+engine's own fractional line advance, emitted by the Compose harness) with
+a per-glyph bound, so the cross-engine drift is bounded, not
+pixel-compared. A negative case asserting a wrong label would fail well
+above these bounds.
+
+## Version mapping
+
+`androidx.compose.material3:material3:1.5.0-alpha18` is the Maven Central
+name for androidx.dev main build **23327507** (released 2026-04-22). It is
+the newest material3 alpha whose transitive Compose version Paparazzi's
+layoutlib can consume: alpha19+ pull `compose-ui:1.12.0-alpha*` which
+requires AGP 9.1 and compileSdk 37, while Paparazzi 2.0.0-alpha05 supports
+at most AGP 8.13.x. alpha18 carries every Expressive API used here:
+`MaterialExpressiveTheme`, `MotionScheme.expressive()`, the `shapes()`
+button overload with `contentPaddingFor` (16dp), and spec2025
+dynamiccolor defaults.
 
 Diffs, masks and trace plots land in `target/parity-artifacts/<driver>/<case>/`
 (`$PARITY_ARTIFACT_DIR` overrides).
@@ -90,7 +104,7 @@ Diffs, masks and trace plots land in `target/parity-artifacts/<driver>/<case>/`
 ## Regenerating Compose references
 
 Needs an Android SDK (`ANDROID_HOME`, `platforms;android-36`, build-tools 36)
-and JDK 17:
+and JDK 21 (Paparazzi 2.x requires a Java 21 toolchain):
 
 ```sh
 cd ui-libraries/material/parity/compose
@@ -116,6 +130,9 @@ instead of Robolectric's `graphicsMode=NATIVE`. Two reasons:
   `HoverInteraction`, `FocusInteraction`) rather than pointer injection —
   the state under test is the same, only the input path differs.
 
-Regenerating references needs JDK 17+ and an Android SDK with
+Regenerating references needs JDK 21 and an Android SDK with
 `platforms;android-36` and `build-tools` (`ANDROID_HOME` or
 `sdk.dir` in `local.properties`).
+
+CI verifies the committed references are reproducible: the `material_parity`
+job re-records every scene and fails if `references/` differs.
