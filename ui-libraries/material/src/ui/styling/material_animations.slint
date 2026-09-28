@@ -1,9 +1,31 @@
 // Copyright © SixtyFPS GmbH <info@slint.dev>
 // SPDX-License-Identifier: MIT
 
-import { MotionTokens } from "generated/material_motion_tokens.slint";
+import { MaterialMotion, MaterialMotionSchemeSpec, MaterialSpringSpec, MotionTokens } from "generated/material_motion_tokens.slint";
+
+/// The M3 motion scheme: `standard` mirrors `MotionScheme.standard()` and
+/// `expressive` mirrors `MotionScheme.expressive()` in the pinned androidx
+/// sources. Assign to `MaterialAnimations.motion-scheme` to switch schemes
+/// at runtime; all spring tokens re-evaluate through the same binding.
+export enum MaterialMotionScheme { standard, expressive }
 
 export global MaterialAnimations {
+    in-out property <MaterialMotionScheme> motion-scheme: MaterialMotionScheme.expressive;
+    property <MaterialMotionSchemeSpec> scheme:
+        motion-scheme == MaterialMotionScheme.standard ? MaterialMotion.standard : MaterialMotion.expressive;
+
+    function spring-of(spec: MaterialSpringSpec) -> easing {
+        spring(spec.damping-ratio, spec.stiffness)
+    }
+
+    // The six springs of the active scheme, as runtime `easing` values.
+    out property <easing> default-spatial-spring: spring-of(scheme.default_spatial);
+    out property <easing> fast-spatial-spring: spring-of(scheme.fast_spatial);
+    out property <easing> slow-spatial-spring: spring-of(scheme.slow_spatial);
+    out property <easing> default-effects-spring: spring-of(scheme.default_effects);
+    out property <easing> fast-effects-spring: spring-of(scheme.fast_effects);
+    out property <easing> slow-effects-spring: spring-of(scheme.slow_effects);
+
     out property <easing> emphasized_easing: MotionTokens.easing_emphasized_decelerate_cubic_bezier;
     out property <duration> emphasized_duration: MotionTokens.duration_long2;
     out property <duration> emphasized_decelerate_duration: MotionTokens.duration_medium4;
