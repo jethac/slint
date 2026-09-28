@@ -1187,6 +1187,23 @@ pub fn collect_font_axes_used(component: &Rc<Component>, seen: &mut FontAxesUsed
             }
         }
 
+        // A bound `font-family` can name a family that no bitmap instance was
+        // rasterized for — the request would silently match the fallback. The
+        // dynamic path embeds every used variable font so the vector rasterizer
+        // resolves it at run time (or the binding errors out when vector fonts
+        // are excluded).
+        let family_property = format!("{prefix}font-family");
+        if let Some(binding) = elem.borrow().binding(family_property.as_str()) {
+            let is_literal =
+                matches!(binding.value_expression(), Expression::StringLiteral(_));
+            if !is_literal {
+                seen.dynamic.push((
+                    family_property.into(),
+                    binding.span.clone().unwrap_or_default(),
+                ));
+            }
+        }
+
         // `<font>` tags in styled-text markup carry axis attributes of their
         // own; the markup source is a compile-time literal, so every value is
         // constant.

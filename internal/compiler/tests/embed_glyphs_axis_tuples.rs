@@ -59,6 +59,45 @@ fn embedded_vector_fonts(doc: &Document) -> usize {
 
 const WDTX: u32 = u32::from_be_bytes(*b"wdth");
 
+/// A bound `default-font-family` can't be pinned to a bitmap instance: const-
+/// propagated literals still resolve, genuinely dynamic bindings take the
+/// vector path (or error when vector fonts are excluded).
+const SOURCE_BOUND_FAMILY: &str = r#"
+export component Main inherits Window {
+    in property <string> family;
+    default-font-family: family;
+    Text { text: "x"; }
+}
+"#;
+
+#[test]
+fn bound_default_font_family_embeds_vector_font() {
+    let (doc, diags) = compile(SOURCE_BOUND_FAMILY, false);
+    assert!(diags.iter().all(|d| !d.starts_with("error")), "{diags:?}");
+    assert!(embedded_vector_fonts(&doc) > 0, "the font bytes must be embedded");
+}
+
+#[test]
+fn bound_default_font_family_errors_when_vector_fonts_excluded() {
+    let (_doc, diags) = compile(SOURCE_BOUND_FAMILY, true);
+    assert!(diags.iter().any(|d| d.contains("'default-font-family'")), "{diags:?}");
+}
+
+#[test]
+fn const_propagated_family_stays_bitmap() {
+    let (doc, diags) = compile(
+        r#"export component Main inherits Window {
+            out property <string> family: "Noto Sans";
+            default-font-family: family;
+            Text { text: "x"; }
+        }"#,
+        true,
+    );
+    assert!(diags.iter().all(|d| !d.starts_with("error")), "{diags:?}");
+    assert_eq!(embedded_vector_fonts(&doc), 0);
+}
+
+
 /// The test fonts have wght 100-900 and wdth 62.5-100 (no opsz).
 const SOURCE_CONSTANT: &str = r#"
 export component Main inherits Window {
