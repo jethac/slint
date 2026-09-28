@@ -467,6 +467,143 @@ module.exports = grammar({
           $.unary_expression,
           $.binary_expression,
           $.ternary_expression,
+          $.font_variation_settings,
+        ),
+      ),
+
+    // The `font-variation-settings` shorthand: `"wght" 700, "wdth" 75`.
+    // The Slint parser only accepts it in bindings of `[FontVariation]`
+    // properties; the grammar accepts it wherever an expression is valid.
+    font_variation_settings: ($) =>
+      prec.right(
+        20,
+        seq(
+          field("tag", $.string_value),
+          field("value", $._font_variation_value),
+          repeat(
+            seq(
+              ",",
+              field("tag", $.string_value),
+              field("value", $._font_variation_value),
+            ),
+          ),
+        ),
+      ),
+
+    // The axis value in the shorthand. Like the Slint parser, it must start
+    // with a number, an identifier, or `-` directly before one: strings
+    // (adjacent string literals concatenate) and every other leading token
+    // keep their usual meaning. Member access, indexing, unary, binary and
+    // ternary operators on such a value are covered by the alias rules below
+    // so the resulting node names match ordinary expressions. `"wght" -50`
+    // is ambiguous with a subtraction of 50 from a string; the higher
+    // precedence on `font_variation_settings` resolves it toward the
+    // shorthand. `+` and `!` are not value prefixes, as in the Slint parser.
+    _font_variation_value: ($) =>
+      choice(
+        $.simple_identifier,
+        $.reference_identifier,
+        $.function_call,
+        $.int_value,
+        $.float_value,
+        $.bool_value,
+        $.color_value,
+        $.physical_length_value,
+        $.length_value,
+        $.duration_value,
+        $.angle_value,
+        $.percent_value,
+        $.relative_font_size_value,
+        alias($._font_variation_unary_expression, $.unary_expression),
+        alias($._font_variation_member_access, $.member_access),
+        alias($._font_variation_index_op, $.index_op),
+        alias($._font_variation_binary_expression, $.binary_expression),
+        alias($._font_variation_ternary_expression, $.ternary_expression),
+      ),
+
+    _font_variation_unary_expression: ($) =>
+      prec.left(
+        14,
+        seq(field("op", "-"), field("expr", $._font_variation_value)),
+      ),
+
+    _font_variation_member_access: ($) =>
+      prec.left(
+        17,
+        seq(
+          field("base", $._font_variation_value),
+          ".",
+          field("member", $.expression),
+        ),
+      ),
+
+    _font_variation_index_op: ($) =>
+      prec(
+        18,
+        seq(
+          field("left", $._font_variation_value),
+          "[",
+          field("index", $.expression),
+          "]",
+        ),
+      ),
+
+    _font_variation_binary_expression: ($) =>
+      prec.left(
+        1,
+        choice(
+          prec.left(
+            11,
+            seq(
+              field("left", $._font_variation_value),
+              field("op", $.add_prec_operator),
+              field("right", $.expression),
+            ),
+          ),
+          prec.left(
+            9,
+            seq(
+              field("left", $._font_variation_value),
+              field("op", $.comparison_operator),
+              field("right", $.expression),
+            ),
+          ),
+          prec.left(
+            4,
+            seq(
+              field("left", $._font_variation_value),
+              field("op", $.logical_and),
+              field("right", $.expression),
+            ),
+          ),
+          prec.left(
+            3,
+            seq(
+              field("left", $._font_variation_value),
+              field("op", $.logical_or),
+              field("right", $.expression),
+            ),
+          ),
+          prec.left(
+            12,
+            seq(
+              field("left", $._font_variation_value),
+              field("op", $.mult_prec_operator),
+              field("right", $.expression),
+            ),
+          ),
+        ),
+      ),
+
+    _font_variation_ternary_expression: ($) =>
+      prec.left(
+        3,
+        seq(
+          field("condition", $._font_variation_value),
+          "?",
+          field("left", $.expression),
+          ":",
+          field("right", $.expression),
         ),
       ),
 

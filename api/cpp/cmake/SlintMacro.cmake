@@ -28,6 +28,11 @@ function(SLINT_TARGET_SOURCES target)
     if ("SYSTEM_TESTING" IN_LIST enabled_features)
         list(APPEND SLINT_COMPILER_ENV_VARS SLINT_EMIT_DEBUG_INFO=1)
     endif()
+    # Freestanding builds have no vector font rasterizer: non-constant font
+    # axis bindings must become a compile error instead of embedding font data.
+    if (SLINT_FEATURE_FREESTANDING)
+        list(APPEND SLINT_COMPILER_ENV_VARS SLINT_EXCLUDE_VECTOR_FONTS=1)
+    endif()
     if (SLINT_COMPILER_ENV_VARS)
         set(SLINT_COMPILER_ENV ${CMAKE_COMMAND} -E env ${SLINT_COMPILER_ENV_VARS})
     endif()

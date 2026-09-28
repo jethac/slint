@@ -18,6 +18,7 @@ Amoled
 analogclock
 androideabi
 androidx
+animatable
 anyrender
 APCA
 Appbar
@@ -39,6 +40,7 @@ astrowind
 asyncio
 auri
 Aurindam
+autohint
 autorelease
 autoremove
 AUTOSAR
@@ -195,6 +197,7 @@ dynamiccolor
 eabi
 eabihf
 Eeprom
+embeddedfonts
 eiusmod
 ELCDIF
 elems
@@ -290,11 +293,13 @@ glutin
 glyphclusters
 gnueabihf
 goldens
+GRAD
 grcov
 Grimme
 Grotesk
 gstreamer
 GWLP
+Hamburgefonstiv
 Hani
 hcts
 hdmipi
@@ -372,6 +377,7 @@ langtype
 layoutinfo
 LBUTTONUP
 lerp
+lerping
 libasound
 libav
 libavcodec
@@ -484,6 +490,7 @@ nexp
 nixos
 nixpkgs
 nmagic
+nocapture
 nodelay
 noexcept
 noglib
@@ -511,6 +518,7 @@ Octa
 oklch
 oldsyspath
 Olguin's
+opsz
 optipng
 ospi
 othercomp
@@ -602,6 +610,7 @@ rlib
 rlibs
 Roboto
 RODATA
+ROND
 rowcol
 rsplit
 rspolib
@@ -725,6 +734,7 @@ toctree
 tomllib
 tonalbutton
 toolkits
+toolong
 TOPLEVEL
 Torizon
 toucharea
@@ -781,6 +791,7 @@ wakeup
 walkdir
 wasmbind
 Waveshare
+wdth
 weakref
 weatherdemo
 weathericons
@@ -804,6 +815,8 @@ writeback
 WRONLY
 Wsmeans
 wsmeans
+XOPQ
+XTRA
 xbuild
 xcarchive
 xcassets
@@ -818,6 +831,12 @@ xmark
 Xrgb
 xshell
 xxaaxx
+YOPQ
+YTAS
+YTDE
+YTFI
+YTLC
+YTUC
 yoyo
 zaimoku
 Zbuild

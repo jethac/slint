@@ -1342,12 +1342,13 @@ impl GlyphRenderer for QtItemRenderer<'_> {
         font_size: sharedparley::PhysicalLength,
         _normalized_coords: &[i16],
         synthesis: &fontique::Synthesis,
+        variations: &[sharedparley::parley::style::FontVariation],
         brush: Self::PlatformBrush,
         y_offset: sharedparley::PhysicalLength,
         glyphs_it: &mut dyn Iterator<Item = sharedparley::parley::layout::Glyph>,
     ) {
         let Some(mut raw_font) = FONT_CACHE.with(|cache| {
-            cache.borrow_mut().font_with_variations(font, font_size.get(), synthesis)
+            cache.borrow_mut().font_with_variations(font, font_size.get(), synthesis, variations)
         }) else {
             return;
         };
@@ -1529,6 +1530,18 @@ fn font_family_for_registration(id: i32) -> String {
     qstring.to_string()
 }
 
+/// Whether this build's Qt version can apply variable font axes
+/// (`QFont::setVariableAxis` needs Qt 6.7).
+fn qt_supports_variable_axes() -> bool {
+    cpp!(unsafe [] -> bool as "bool" {
+        #if QT_VERSION >= QT_VERSION_CHECK(6, 7, 0)
+        return true;
+        #else
+        return false;
+        #endif
+    })
+}
+
 /// Create a QRawFont with variable font axes applied via QFont (Qt 6.7+).
 /// `tags` and `values` are parallel arrays of OpenType axis tags (as big-endian u32) and
 /// design-space values. Returns a default (invalid) QRawFont if Qt < 6.7 or on failure.
@@ -1602,25 +1615,44 @@ impl FontCache {
     }
 
     /// Create a QRawFont with variable font axes applied.
-    /// Falls back to the base font if Qt < 6.7 or registration fails.
+    /// `variations` is the `FontVariations` axis list pushed to the shaper for
+    /// the run's text range: `synthesis` followed by `variations` (later
+    /// entries win per axis tag) is the user-space axis list the run was
+    /// shaped with. Falls back to the base font if Qt < 6.7 or registration
+    /// fails.
     pub fn font_with_variations(
         &mut self,
         font: &parley::FontData,
         pixel_size: f32,
         synthesis: &fontique::Synthesis,
+        variations: &[parley::style::FontVariation],
     ) -> Option<QRawFont> {
-        let variation_settings = synthesis.variation_settings();
+        let variation_settings = sharedparley::merged_variation_settings(synthesis, variations);
         if variation_settings.is_empty() {
             return self.font(font);
         }
+        if !qt_supports_variable_axes() {
+            // Qt < 6.7 can't apply axes: warn once when the user actually
+            // requested some -- a literal axis in the pushed list, or a `wdth`
+            // delta in the synthesis, which only `font-stretch` produces. The
+            // implicit `opsz` entry every text gets doesn't warn on its own.
+            static WARNED: std::sync::atomic::AtomicBool =
+                std::sync::atomic::AtomicBool::new(false);
+            let requested = variations.iter().any(|v| v.tag.to_bytes() != *b"opsz")
+                || synthesis
+                    .variation_settings()
+                    .iter()
+                    .any(|(tag, _)| &tag.to_be_bytes() == b"wdth");
+            if requested && !WARNED.swap(true, std::sync::atomic::Ordering::SeqCst) {
+                i_slint_core::debug_log!(
+                    "Variable font axes were requested, but this build's Qt is older than 6.7 \
+                     and cannot apply them; text renders at the font's default instance"
+                );
+            }
+            return self.font(font);
+        }
         let family = self.ensure_registered(font)?;
-        let (tags, values): (Vec<u32>, Vec<f32>) = variation_settings
-            .iter()
-            .map(|&(tag, value)| {
-                let bytes = tag.to_be_bytes();
-                (u32::from_be_bytes(bytes), value)
-            })
-            .unzip();
+        let (tags, values): (Vec<u32>, Vec<f32>) = variation_settings.iter().copied().unzip();
         let raw_font = raw_font_with_variations(&family, pixel_size, &tags, &values);
         if raw_font.is_valid() { Some(raw_font) } else { self.font(font) }
     }

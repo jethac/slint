@@ -283,30 +283,29 @@ pub trait RendererSealed {
     /// Example: when a PopupWindow disappears, the region under the popup needs to be redrawn
     fn mark_dirty_region(&self, _region: crate::partial_renderer::DirtyRegion) {}
 
-    #[cfg(all(feature = "std", not(feature = "shared-parley")))] // FIXME: just because of the Error
-    /// This function can be used to register a custom TrueType font with Slint,
-    /// for use with the `font-family` property. The provided slice must be a valid TrueType
-    /// font.
-    fn register_font_from_memory(
-        &self,
-        _data: &'static [u8],
-    ) -> Result<(), Box<dyn std::error::Error>> {
-        Err("This renderer does not support registering custom fonts.".into())
-    }
-
-    #[cfg(all(feature = "std", feature = "shared-parley"))]
     /// This function can be used to register a custom TrueType font with Slint,
     /// for use with the `font-family` property. The provided slice must be a valid TrueType
     /// font.
     ///
-    /// The default implementation registers the font with the shared fontique collection.
+    /// The default implementation registers the font with the shared fontique
+    /// collection (with `shared-parley`); without it, registration is refused.
+    /// `core::error::Error` keeps the method available to `no_std` renderers.
     fn register_font_from_memory(
         &self,
         data: &'static [u8],
-    ) -> Result<(), Box<dyn std::error::Error>> {
-        let ctx = self.slint_context().ok_or("slint platform not initialized")?;
-        ctx.font_context().borrow_mut().register_static_font(data);
-        Ok(())
+    ) -> Result<(), Box<dyn core::error::Error>> {
+        #[cfg(feature = "shared-parley")]
+        let result = {
+            let ctx = self.slint_context().ok_or("slint platform not initialized")?;
+            ctx.font_context().borrow_mut().register_static_font(data);
+            Ok(())
+        };
+        #[cfg(not(feature = "shared-parley"))]
+        let result = {
+            let _ = data;
+            Err("This renderer does not support registering custom fonts.".into())
+        };
+        result
     }
 
     #[cfg(all(feature = "std", not(feature = "shared-parley")))]

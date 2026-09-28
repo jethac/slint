@@ -194,6 +194,30 @@ impl CompilerConfiguration {
         self
     }
 
+    /// Set this when the target has no vector font rasterizer — for example a
+    /// `#![no_std]` MCU binary built without the `std` feature of Slint.
+    ///
+    /// Only takes effect with [`EmbedResourcesKind::EmbedForSoftwareRenderer`].
+    /// By default, a font that is addressed with non-constant axis bindings
+    /// (animated or computed `font-variation-settings`, `font-stretch`,
+    /// `font-optical-sizing` or `font-weight`) is embedded as vector data so
+    /// the runtime can rasterize any axis position. When this is set, such
+    /// bindings are a compile error instead.
+    ///
+    /// The default is auto-detected: builds for bare-metal targets
+    /// (`*-none-*`, `*-uefi`, Zephyr triples) exclude vector fonts unless the
+    /// software renderer's `embedded-vector-fonts` feature is enabled
+    /// (detected through `DEP_SLINT_EMBEDDED_VECTOR_FONTS` from the `slint`
+    /// crate's build script, or a same-named passthrough feature on the
+    /// application crate) or `SLINT_EXCLUDE_VECTOR_FONTS` is set to a falsy
+    /// value. The `slint!` macro cannot see the target, so generated code
+    /// asserts the rasterizer feature at compile time instead.
+    #[must_use]
+    pub fn exclude_vector_fonts(mut self, exclude: bool) -> Self {
+        self.config.exclude_vector_fonts = exclude;
+        self
+    }
+
     /// Configures the compiler to bundle translations when compiling Slint code.
     ///
     /// It expects the path to be the root directory of the translation files.

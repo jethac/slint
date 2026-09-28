@@ -96,6 +96,13 @@ fn default(ty: &Type, text: &str) -> Option<ConstantExpression> {
     if text.is_empty() {
         return None;
     }
+    // Parenthesized defaults allow token sequences that aren't a single `tt`,
+    // such as the percentage literal `0%`.
+    let text = if let Some(stripped) = text.strip_prefix('(').and_then(|t| t.strip_suffix(')')) {
+        stripped
+    } else {
+        text
+    };
     if text.starts_with('"') {
         return Some(ConstantExpression::StringLiteral(
             crate::literals::unescape_string(text).unwrap(),
@@ -1080,6 +1087,31 @@ fn build(l: &mut Loader) {
         /// ```
         /// \default false
         in property <bool> font-italic;
+        /// The width of the font, like the CSS `font-stretch` property, expressed as a
+        /// percentage where `100%` is the normal width. Smaller percentages select a
+        /// condensed face, larger ones an expanded face. When the selected font is a
+        /// variable font, the value maps onto its `wdth` axis and is clamped to the
+        /// axis' range. `0%` means unset and falls back to the enclosing `Window`'s
+        /// `default-font-stretch`. Use the <Link type="FontStretch" /> namespace for
+        /// predefined constants.
+        /// \default 0%
+        in property <percent> font-stretch: (0%);
+        /// Whether the font's optical-size axis (`opsz`) follows the used font size,
+        /// like the CSS `font-optical-sizing` property.
+        /// \default FontOpticalSizing.inherit
+        in property <FontOpticalSizing> font-optical-sizing;
+        /// Settings for the axes of a variable font, like the CSS
+        /// `font-variation-settings` property. The shorthand syntax is a
+        /// comma-separated list of a four-character axis tag string followed by a
+        /// value, for example `font-variation-settings: "wght" 700, "GRAD" -200;`.
+        /// A general `[FontVariation]` value such as `[{ tag: "wght", value: 700 }]`
+        /// works too. Each setting overrides the axis that `font-weight`,
+        /// `font-stretch` or `font-optical-sizing` would provide for the same tag,
+        /// and values are clamped to the font's axis ranges. An empty list means
+        /// unset and falls back to the enclosing `Window`'s
+        /// `default-font-variation-settings`.
+        /// \default []
+        in property <[FontVariation]> font-variation-settings;
         /// How the text should behave when it exceeds the available space.
         in property <TextOverflow> overflow;
         /// ```slint "wrap: word-wrap;" imageAlt="wrap" width="200" height="200" needsBackground
@@ -1118,6 +1150,21 @@ fn build(l: &mut Loader) {
         /// ```
         /// \default 1
         in property <float> line-height-factor: 1;
+        /// The absolute line height applied to each line, replacing the font's natural line
+        /// height (ascent + descent + line gap). It takes precedence over `line-height-factor`.
+        /// The default of `0` keeps the natural line height; a value smaller than the natural
+        /// line height can make the lines overlap.
+        ///
+        /// ```slint "line-height: 30px;" imageAlt="text with absolute line height" width="200" height="200" needsBackground
+        /// Text {
+        ///     text: "Two lines\nof text";
+        ///     color: black;
+        ///     font-size: 30pt;
+        ///     line-height: 30px;
+        /// }
+        /// ```
+        /// \default 0
+        in property <length> line-height;
         /// The brush used for the text outline.
         /// ```slint "stroke: darkblue;" imageAlt="text stroke" width="300" height="200" needsBackground
         /// Text {
@@ -1200,6 +1247,22 @@ fn build(l: &mut Loader) {
         in property <string> default-font-family;
         /// The default font size used to render the text, when no size is specified via markup. If unset (or zero), the value falls back to the enclosing `Window`'s `default-font-size`.
         in property <length> default-font-size;
+        /// The default font width used to render the text, when no `<font>` tag in the markup
+        /// specifies one. It's a percentage like the CSS `font-stretch` property and maps onto
+        /// a variable font's `wdth` axis. `0%` means unset and falls back to the enclosing
+        /// `Window`'s `default-font-stretch`.
+        /// \default 0%
+        in property <percent> default-font-stretch: (0%);
+        /// The default optical-size behavior used to render the text, when no `<font>` tag in
+        /// the markup specifies one, like the CSS `font-optical-sizing` property.
+        /// \default FontOpticalSizing.inherit
+        in property <FontOpticalSizing> default-font-optical-sizing;
+        /// The default variable font axes used to render the text, when no `<font>` tag in the
+        /// markup specifies one, like the CSS `font-variation-settings` property. An empty list
+        /// means unset and falls back to the enclosing `Window`'s
+        /// `default-font-variation-settings`.
+        /// \default []
+        in property <[FontVariation]> default-font-variation-settings;
         /// The horizontal alignment of the text.
         in property <TextHorizontalAlignment> horizontal-alignment;
         /// The color used for rendering links in the text.
@@ -2128,6 +2191,15 @@ fn build(l: &mut Loader) {
         in property <length> default-font-size;
         /// The font weight to use as default in text elements inside this window, that don't have their `font-weight` property set. The values range from 100 (lightest) to 900 (thickest). 400 is the normal weight. Use the <Link type="FontWeight" /> namespace for predefined constants.
         in property <int> default-font-weight;
+        /// The font width to use as default in text elements inside this window, that don't have their `font-stretch` property set, like the CSS `font-stretch` property. Maps onto a variable font's `wdth` axis.
+        /// \default 0%
+        in property <percent> default-font-stretch: (0%);
+        /// The optical-size behavior to use as default in text elements inside this window, that don't have their `font-optical-sizing` property set, like the CSS `font-optical-sizing` property.
+        /// \default FontOpticalSizing.inherit
+        in property <FontOpticalSizing> default-font-optical-sizing;
+        /// The variable font axes to use as default in text elements inside this window, that don't have their `font-variation-settings` property set, like the CSS `font-variation-settings` property.
+        /// \default []
+        in property <[FontVariation]> default-font-variation-settings;
         /// The window icon shown in the title bar or the task bar on window managers supporting it.
         in property <image> icon;
         /// Whether the window should be borderless/frameless or not.
@@ -2258,6 +2330,29 @@ fn build(l: &mut Loader) {
         in property <bool> font-italic;
         /// The weight of the font. The values range from 100 (lightest) to 900 (thickest). 400 is the normal weight.
         in property <int> font-weight;
+        /// The width of the font as a percentage, like the CSS `font-stretch` property:
+        /// `100%` is the normal width, smaller percentages select a condensed face and
+        /// larger ones an expanded face. When the selected font is a variable font the
+        /// value maps onto its `wdth` axis and is clamped to the axis' range. `0%`
+        /// means unset and falls back to the enclosing `Window`'s `default-font-stretch`.
+        /// Use the <Link type="FontStretch" /> namespace for predefined constants.
+        /// \default 0%
+        in property <percent> font-stretch: (0%);
+        /// Whether the font's optical-size axis (`opsz`) follows the used font size,
+        /// like the CSS `font-optical-sizing` property.
+        /// \default FontOpticalSizing.inherit
+        in property <FontOpticalSizing> font-optical-sizing;
+        /// Settings for the axes of a variable font, like the CSS
+        /// `font-variation-settings` property: a comma-separated list of a
+        /// four-character axis tag string followed by a value, for example
+        /// `font-variation-settings: "wght" 700, "GRAD" -200;`, or a general
+        /// `[FontVariation]` value. Each setting overrides the axis that
+        /// `font-weight`, `font-stretch` or `font-optical-sizing` would provide for
+        /// the same tag, and values are clamped to the font's axis ranges. An empty
+        /// list means unset and falls back to the enclosing `Window`'s
+        /// `default-font-variation-settings`.
+        /// \default []
+        in property <[FontVariation]> font-variation-settings;
         /// The color of the text.
         /// \default depends on the style
         in property <brush> color; // StyleMetrics.default-text-color  set in apply_default_properties_from_style
@@ -2283,6 +2378,12 @@ fn build(l: &mut Loader) {
         /// not the font size, and keyword or length values aren't supported.
         /// \default 1
         in property <float> line-height-factor: 1;
+        /// The absolute line height applied to each line, replacing the font's natural line
+        /// height (ascent + descent + line gap). It takes precedence over `line-height-factor`.
+        /// The default of `0` keeps the natural line height; a value smaller than the natural
+        /// line height can make the lines overlap.
+        /// \default 0
+        in property <length> line-height;
         in property <length> width;
         in property <length> height;
         /// The height of the page used to compute how much to scroll when the user presses page up or page down.

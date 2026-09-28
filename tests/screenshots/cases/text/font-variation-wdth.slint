@@ -1,0 +1,25 @@
+// Copyright © SixtyFPS GmbH <info@slint.dev>
+// SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0
+
+// Skia rasterizes variable-font instances differently per
+// platform (macOS vs Linux references differ by up to ~200/255 per pixel).
+//ignore:skia
+// SIZE=120x120
+
+// The wdth axis through `font-variation-settings`, `font-stretch` as the
+// CSS-mapped equivalent, and both on Roboto Flex (wdth 25-151).
+export component TestCase inherits Window {
+    width: 120px;
+    height: 120px;
+    background: white;
+    default-font-family: "Noto Sans";
+    default-font-size: 13px;
+    VerticalLayout {
+        Text { text: "width 62.5"; font-variation-settings: "wdth" 62.5; }
+        Text { text: "width 100"; }
+        Text { text: "stretch 62.5"; font-stretch: 62.5%; }
+        Text { text: "stretch 100"; font-stretch: 100%; }
+        Text { text: "RF wdth 40"; font-family: "Roboto Flex"; font-variation-settings: "wdth" 40; }
+        Text { text: "RF wdth 120"; font-family: "Roboto Flex"; font-variation-settings: "wdth" 120; }
+    }
+}

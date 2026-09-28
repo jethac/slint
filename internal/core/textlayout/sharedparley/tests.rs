@@ -311,3 +311,59 @@ fn test_max_lines_caps_height() {
     );
     assert_eq!(limited.height, first_line_bottom);
 }
+
+#[test]
+fn variable_font_axes_change_shaping() {
+    // Inter's wght axis changes glyph advances, so the same text laid out at
+    // different `font-variation-settings` must produce different metrics.
+    let layout_with_wght = |wght: f32| {
+        let font_request = FontRequest {
+            pixel_size: Some(LogicalLength::new(40.)),
+            variations: crate::model::ModelRc::new(crate::model::VecModel::from(alloc::vec![
+                crate::items::FontVariation { tag: "wght".into(), value: wght },
+            ])),
+            ..Default::default()
+        };
+        let builder = super::shaping::LayoutWithoutLineBreaksBuilder::new(
+            Some(font_request),
+            TextWrap::NoWrap,
+            None,
+            ScaleFactor::new(1.0),
+        );
+        layout_text_with_builder("Hello world", builder, LayoutOptions::default())
+    };
+    assert_ne!(
+        layout_with_wght(100.).paragraphs[0].layout.width(),
+        layout_with_wght(900.).paragraphs[0].layout.width()
+    );
+}
+
+#[test]
+fn merged_variation_settings_are_last_wins() {
+    use parley::style::FontVariation;
+    let wght = |v: f32| FontVariation::new(parley::setting::Tag::new(b"wght"), v);
+    let opsz = |v: f32| FontVariation::new(parley::setting::Tag::new(b"opsz"), v);
+    let tag = |s: &[u8; 4]| u32::from_be_bytes(*s);
+    let mut font_ctx = test_font_context();
+    // A weight request above Inter's default instance gives a wght synthesis entry.
+    let font_request = FontRequest { weight: Some(700), ..Default::default() };
+    let synthesis = font_request
+        .query_fontique(&mut font_ctx.collection, &mut font_ctx.source_cache)
+        .unwrap()
+        .synthesis;
+    assert_eq!(
+        synthesis
+            .variation_settings()
+            .iter()
+            .map(|(t, v)| (t.to_be_bytes(), *v))
+            .collect::<Vec<_>>(),
+        alloc::vec![(*b"wght", 700.)]
+    );
+    // The pushed list wins over synthesis; within the pushed list the last entry wins.
+    let pushed = [wght(600.), opsz(14.), wght(300.)];
+    let merged = super::shaping::merged_variation_settings(&synthesis, &pushed);
+    let get = |t: &[u8; 4]| merged.iter().find(|v| v.0 == tag(t)).map(|v| v.1);
+    assert_eq!(get(b"wght"), Some(300.));
+    assert_eq!(get(b"opsz"), Some(14.));
+    assert_eq!(merged.len(), 2);
+}

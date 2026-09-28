@@ -117,6 +117,7 @@ path = [
   "examples/Cargo.lock",
   "demos/Cargo.lock",
   "tests/Cargo.lock",
+  "tests/vector_font_build_check/Cargo.lock",
   "**/uv.lock",
   "REUSE.toml",
   "biome.json",
