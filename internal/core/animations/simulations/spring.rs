@@ -87,12 +87,10 @@ pub enum SpringRegime {
 }
 
 impl SpringRegime {
-    /// `zeta` values within this distance of `1.0` are treated as critically damped, to avoid
-    /// `w_d` (underdamped) or `sqrt(zeta^2 - 1)` (overdamped) blowing up near the boundary.
-    const CRITICAL_ZETA_EPSILON: f32 = 1e-3;
-
     pub(crate) fn new(x0: f32, v0: f32, w_n: f32, zeta: f32) -> Self {
-        if (zeta - 1.).abs() < Self::CRITICAL_ZETA_EPSILON {
+        // Compose branches on `dampingRatio == 1f` exactly (SpringSimulation.kt
+        // `updateValues`), so only a damping ratio of exactly 1 is critical.
+        if zeta == 1. {
             Self::Critical { w_n, c1: x0, c2: v0 + w_n * x0 }
         } else if zeta < 1. {
             let w_d = w_n * f32::sqrt(1. - zeta * zeta);
@@ -378,39 +376,54 @@ mod spring_regime_tests {
         }
     }
 
+    /// The 12 `MaterialMotion` spring specs — `(damping_ratio, stiffness)` for
+    /// `{default, fast, slow} × {spatial, effects}` in both the `standard` and
+    /// `expressive` schemes, from `MotionScheme.kt`/`MotionTokens` at the
+    /// pinned androidx commit (mirrored in
+    /// `ui-libraries/material/src/ui/styling/generated/material_motion_tokens.slint`).
+    const M3_TOKEN_SPECS: [(f32, f32); 12] = [
+        // standard scheme
+        (0.9, 700.),  // default spatial
+        (1.0, 1600.), // default effects
+        (0.9, 1400.), // fast spatial
+        (1.0, 3800.), // fast effects
+        (0.9, 300.),  // slow spatial
+        (1.0, 800.),  // slow effects
+        // expressive scheme
+        (0.8, 380.),  // default spatial
+        (1.0, 1600.), // default effects
+        (0.6, 800.),  // fast spatial
+        (1.0, 3800.), // fast effects
+        (0.8, 200.),  // slow spatial
+        (1.0, 800.),  // slow effects
+    ];
+
     /// Every regime matches the f64 reference trajectory, position and
-    /// velocity, for all 12 `MaterialMotion` spring specs plus edge cases.
+    /// velocity, for all 12 `MaterialMotion` spring tokens plus damping edge
+    /// cases, sampled at integer-millisecond times like Compose evaluates its
+    /// `SpringSimulation` at frame boundaries.
+    ///
+    /// Tolerance: `SpringRegime` computes in f32 while the reference is f64.
+    /// The f32 `sin`/`cos`/`exp` round-off relative to f64 stays under ~1e-6
+    /// per operation; over w_n·t up to ~60 the absolute error stays within
+    /// 1e-3 of the amplitude, so position asserts `1e-3` absolute plus `1e-3`
+    /// relative to the reference, and velocity — which scales by w_n — gets a
+    /// `1e-2` absolute term.
     #[test]
     fn regime_matches_compose_reference() {
-        // (damping_ratio, stiffness) for each of the 6 MaterialMotion springs,
-        // in both standard and expressive schemes, plus undamped, barely
-        // damped and heavily overdamped edges.
-        let specs = [
-            // standard: spatial fast/medium/slow, effects fast/medium/slow
-            (1.1, 1400.),
-            (0.9, 700.),
-            (0.9, 300.),
-            (1.0, 380.),
-            (1.0, 1600.),
-            (1.0, 3800.),
-            // expressive
-            (0.6, 800.),
-            (0.8, 380.),
-            (0.8, 200.),
-            // edges
-            (0.0, 380.),
-            (0.01, 700.),
-            (5.0, 300.),
-            (1.0, 1200.),
-        ];
-        for &(zeta, stiffness) in &specs {
-            for &(mass, x0, v0) in
-                &[(1.0f32, -100.0f32, 0.0f32), (1.0, 42.0, -350.0), (0.5, 5.0, 1000.0)]
+        let specs = M3_TOKEN_SPECS
+            .iter()
+            .copied()
+            // undamped, barely damped, and heavily overdamped edges
+            .chain([(0.0, 380.), (0.01, 700.), (5.0, 300.), (1.0, 1200.)]);
+        for (zeta, stiffness) in specs {
+            for (mass, x0, v0) in
+                [(1.0f32, -100.0f32, 0.0f32), (1.0, 42.0, -350.0), (0.5, 5.0, 1000.0)]
             {
                 let w_n = f32::sqrt(stiffness / mass);
                 let regime = SpringRegime::new(x0, v0, w_n, zeta);
-                for i in 0..50 {
-                    let t = i as f32 * 0.02; // 0..1 s
+                for i in 0..=1000 {
+                    let t = i as f32 * 0.001; // integer milliseconds, 0..1 s
                     let (pos, vel) = regime.evaluate(t);
                     let (ref_pos, ref_vel) =
                         reference(t as f64, x0 as f64, v0 as f64, zeta as f64, w_n as f64);
@@ -427,42 +440,66 @@ mod spring_regime_tests {
         }
     }
 
-    /// A re-anchored spring (retarget) keeps position and velocity continuous
-    /// and lands within the estimate ±1 ms.
+    /// Re-anchoring (retargeting) a spring keeps position and velocity
+    /// continuous and settles within the `SpringEstimation`-ported estimate —
+    /// for every one of the 12 `MaterialMotion` tokens, retargeted both from
+    /// rest and mid-flight.
     #[test]
     fn retarget_preserves_velocity_and_settles() {
-        let w_n = f32::sqrt(380.0); // ζ=1, k=380, m=1
-        let mut regime = SpringRegime::new(-100.0, 0.0, w_n, 1.0);
-        // 400 ms in: mid-flight toward the old anchor.
-        let (rel_pos, rel_vel) = regime.evaluate(0.4);
-        assert!(rel_vel > 0.0, "still moving toward the target");
-        // Retarget from limit 100 → 200: re-anchor like PhysicalSpringToLimit does.
-        regime = SpringRegime::new(rel_pos - 100.0, rel_vel, w_n, 1.0);
-        let (pos, vel) = regime.evaluate(0.0);
-        assert_approx_eq!(pos, rel_pos - 100.0);
-        assert_approx_eq!(vel, rel_vel);
+        let delta = crate::animations::SPRING_DEFAULT_DISPLACEMENT_THRESHOLD;
+        for &(zeta, k) in &M3_TOKEN_SPECS {
+            let mass = 1.0f32;
+            let w_n = f32::sqrt(k / mass);
+            for from_rest in [true, false] {
+                // Spring at rest at limit 100 (x0=0, v0=0) or 400 ms into a
+                // −100 → 0 approach.
+                let mut regime = SpringRegime::new(-100.0, 0.0, w_n, zeta);
+                let (rel_pos, rel_vel) = if from_rest { (0.0, 0.0) } else { regime.evaluate(0.4) };
+                // The limit moves 100 → 200: re-anchor like `PhysicalSpringToLimit`.
+                regime = SpringRegime::new(rel_pos - 100.0, rel_vel, w_n, zeta);
+                let (pos, vel) = regime.evaluate(0.0);
+                assert!(
+                    (pos - (rel_pos - 100.0)).abs() < 1e-4
+                        && (vel - rel_vel).abs() < 1e-2 + 1e-3 * rel_vel.abs(),
+                    "retarget lost continuity: ζ={zeta} k={k} from_rest={from_rest}"
+                );
 
-        let estimated = super::super::spring_estimation::estimate_animation_duration_ms_with_mass(
-            380.0,
-            2.0 * f64::sqrt(380.0),
-            1.0,
-            vel as f64,
-            pos as f64,
-            crate::animations::SPRING_DEFAULT_DISPLACEMENT_THRESHOLD as f64,
-        );
-        let (pos_at_estimate, vel_at_estimate) = regime.evaluate(estimated as f32 / 1000.);
-        assert!(
-            pos_at_estimate.abs() < crate::animations::SPRING_DEFAULT_DISPLACEMENT_THRESHOLD + 0.05,
-            "position {pos_at_estimate} not at rest after {estimated} ms"
-        );
-        assert!(
-            vel_at_estimate.abs() < 0.5,
-            "velocity {vel_at_estimate} not at rest after {estimated} ms"
-        );
-        // One millisecond short of the estimate must not yet be flagged settled —
-        // the estimate must not overshoot by more than 1 ms.
-        let before = regime.evaluate((estimated.max(1) - 1) as f32 / 1000.);
-        let _ = before; // settle-time is within 1 ms by construction of the estimator
+                let estimated =
+                    super::super::spring_estimation::estimate_animation_duration_ms_with_mass(
+                        k as f64,
+                        2.0 * zeta as f64 * f64::sqrt(k as f64 * mass as f64),
+                        mass as f64,
+                        vel as f64,
+                        pos as f64,
+                        delta as f64,
+                    );
+                if pos == 0.0 && vel == 0.0 {
+                    // At rest the estimate is 0 and the spring is done.
+                    assert_eq!(estimated, 0, "ζ={zeta} k={k} from_rest={from_rest}");
+                    continue;
+                }
+                // `SpringEstimation` bounds the last |x| = δ crossing only —
+                // velocity is unconstrained (a stiff spring still moves at
+                // |x| = δ). At the integer-ms floor, |x| can exceed δ by one
+                // ms of drift: `delta + |v|·1ms`, covered by delta·2.
+                let (pos_at, vel_at) = regime.evaluate(estimated as f32 / 1000.);
+                assert!(
+                    pos_at.abs() < delta * 2.0 && vel_at.is_finite(),
+                    "not at rest after {estimated} ms: ζ={zeta} k={k} from_rest={from_rest} \
+                     pos={pos_at} vel={vel_at}"
+                );
+                // The estimate must not be grossly padded: one millisecond
+                // earlier the spring is still approaching — outside half the
+                // settle threshold (the estimate is the last |x| = δ crossing,
+                // tight within roughly a millisecond of decay).
+                let (pos_before, _) = regime.evaluate((estimated - 1) as f32 / 1000.);
+                assert!(
+                    pos_before.abs() > delta * 0.5,
+                    "estimate padded: ζ={zeta} k={k} from_rest={from_rest} \
+                     pos(et−1ms)={pos_before}"
+                );
+            }
+        }
     }
 
     /// `PhysicalSpringToLimit` itself: follows the reference trajectory from
