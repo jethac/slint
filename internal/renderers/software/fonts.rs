@@ -451,14 +451,8 @@ mod tests {
         let default = bitmap(400, &[(WDTH, 100., 100.)], false);
         let narrow = bitmap(400, &[(WDTH, 75., 100.)], false);
         let none = variations(&[]);
-        assert_eq!(
-            axis_score(default, 400, &none, false, ScaleFactor::new(1.)),
-            0.
-        );
-        assert_eq!(
-            axis_score(narrow, 400, &none, false, ScaleFactor::new(1.)),
-            25.
-        );
+        assert_eq!(axis_score(default, 400, &none, false, ScaleFactor::new(1.)), 0.);
+        assert_eq!(axis_score(narrow, 400, &none, false, ScaleFactor::new(1.)), 25.);
     }
 
     #[test]
@@ -466,10 +460,7 @@ mod tests {
         // wght lives in `weight`, never in `variations`.
         let font = bitmap(400, &[(WDTH, 100., 100.)], false);
         let w = variations(&[("wght", 700.)]);
-        assert_eq!(
-            axis_score(font, 700, &w, false, ScaleFactor::new(1.)),
-            300.
-        );
+        assert_eq!(axis_score(font, 700, &w, false, ScaleFactor::new(1.)), 300.);
     }
 
     #[test]
@@ -477,10 +468,7 @@ mod tests {
         // An axis the font doesn't declare can't be satisfied by anyone.
         let font = bitmap(400, &[(WDTH, 100., 100.)], false);
         let g = variations(&[("GRAD", 50.)]);
-        assert_eq!(
-            axis_score(font, 400, &g, false, ScaleFactor::new(1.)),
-            0.
-        );
+        assert_eq!(axis_score(font, 400, &g, false, ScaleFactor::new(1.)), 0.);
         let _ = GRAD;
     }
 }
