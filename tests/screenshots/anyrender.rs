@@ -111,6 +111,13 @@ fn compile_and_show(
     let source = std::fs::read_to_string(absolute_path)?;
     let mut compiler = slint_interpreter::Compiler::default();
     compiler.set_style("fluent".into());
+    compiler.set_library_paths(crate::parity::library_paths_for(
+        &source,
+        absolute_path.parent().unwrap_or_default(),
+    ));
+    compiler.set_include_paths(
+        test_driver_lib::extract_include_paths(&source).map(Into::into).collect(),
+    );
     let compiled =
         poll_once(compiler.build_from_source(source, absolute_path.to_path_buf())).unwrap();
 
@@ -432,10 +439,5 @@ fn line_diff(expected: &str, actual: &str) -> String {
 }
 
 fn poll_once<F: std::future::Future>(future: F) -> Option<F::Output> {
-    let mut ctx = std::task::Context::from_waker(std::task::Waker::noop());
-    let future = std::pin::pin!(future);
-    match future.poll(&mut ctx) {
-        std::task::Poll::Ready(result) => Some(result),
-        std::task::Poll::Pending => None,
-    }
+    crate::interpreter::poll_once(future)
 }

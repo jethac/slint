@@ -79,51 +79,74 @@ pub fn run_test(testcase: TestCase) -> Result<(), Box<dyn std::error::Error>> {
     init_skia();
 
     let source = std::fs::read_to_string(&testcase.absolute_path)?;
-    let mut compiler = slint_interpreter::Compiler::default();
-    compiler.set_style("fluent".into());
-    let compiled =
-        poll_once(compiler.build_from_source(source, testcase.absolute_path.clone())).unwrap();
-
-    if compiled.has_errors() {
-        compiled.print_diagnostics();
-        return Err(format!(
-            "build error in {:?} \n {:?}",
-            testcase.absolute_path,
-            compiled.diagnostics().collect::<Vec<_>>()
-        )
-        .into());
-    }
+    let compiled = crate::interpreter::compile(&source, &testcase.absolute_path)?;
 
     let def = compiled.components().last().expect("There must be at least one exported component");
     let component = def.create().unwrap();
+    if let Some((w, h)) = crate::interpreter::case_size(&source) {
+        component
+            .window()
+            .set_size(i_slint_core::api::WindowSize::Physical(PhysicalSize::new(w, h)));
+    }
     component.show().unwrap();
 
     let screenshot = component.window().take_snapshot().unwrap();
 
-    // Images are rendered a bit differently on macOs.
-    // Elsewhere the tolerance covers a last-bit difference of 2 per channel: tagging the raster
-    // target as sRGB puts Skia on its color managed pipeline, whose float math rounds slightly
-    // differently between the Linux and the Windows build even though every conversion is sRGB to
-    // sRGB and therefore a no-op.
-    let base_threshold = if cfg!(target_os = "macos") { 33. } else { 4. };
+    // `//PARITY=` cases have no driver golden: the Compose references are
+    // their ground truth, compared inside `run_parity`.
+    if testcase.reference_path.exists() {
+        // Images are rendered a bit differently on macOs.
+        // Elsewhere the tolerance covers a last-bit difference of 2 per channel: tagging the raster
+        // target as sRGB puts Skia on its color managed pipeline, whose float math rounds slightly
+        // differently between the Linux and the Windows build even though every conversion is sRGB to
+        // sRGB and therefore a no-op.
+        let base_threshold = if cfg!(target_os = "macos") { 33. } else { 4. };
 
-    crate::testing::compare_images(
-        testcase.reference_path.to_str().unwrap(),
-        &screenshot,
-        Default::default(),
-        &crate::testing::TestCaseOptions { base_threshold, ..Default::default() },
-    )?;
+        crate::testing::compare_images(
+            testcase.reference_path.to_str().unwrap(),
+            &screenshot,
+            Default::default(),
+            &crate::testing::TestCaseOptions { base_threshold, ..Default::default() },
+        )?;
+    }
 
-    Ok(())
+    run_parity(&testcase, &source, &def)
 }
 
-fn poll_once<F: std::future::Future>(future: F) -> Option<F::Output> {
-    let mut ctx = std::task::Context::from_waker(std::task::Waker::noop());
-    let future = std::pin::pin!(future);
-    match future.poll(&mut ctx) {
-        std::task::Poll::Ready(result) => Some(result),
-        std::task::Poll::Pending => None,
+/// Runs the `//PARITY=` checks on the Skia renderer, re-instantiating the
+/// component definition per density.
+fn run_parity(
+    testcase: &TestCase,
+    source: &str,
+    def: &slint_interpreter::ComponentDefinition,
+) -> Result<(), Box<dyn std::error::Error>> {
+    let spec = test_driver_lib::extract_parity(source);
+    if spec.parity.is_none() {
+        return Ok(());
     }
+    let (w, h) = crate::interpreter::case_size(source).unwrap_or((64, 64));
+
+    let rel = testcase.relative_path.with_extension("").to_string_lossy().replace('\\', "/");
+    crate::parity::run_parity_case(
+        "skia",
+        &rel,
+        &spec,
+        &|component: &slint_interpreter::ComponentInstance, name: &str| {
+            component.get_property(name).ok().map(crate::interpreter::trace_value)
+        },
+        |density| {
+            let component = def.create().unwrap();
+            component.window().dispatch_event(i_slint_core::platform::WindowEvent::ScaleFactorChanged {
+                scale_factor: density as f32,
+            });
+            component.window().set_size(i_slint_core::api::WindowSize::Physical(
+                PhysicalSize::new(w * density, h * density),
+            ));
+            component.show().unwrap();
+            component
+        },
+        |component| component.window().take_snapshot().unwrap(),
+    )
 }
 
 // Compare renders within one run so font rasterization differences between platforms don't need golden images.
@@ -168,8 +191,10 @@ fn text_alignment_anchor_stays_fixed() {
                 );
                 let mut compiler = slint_interpreter::Compiler::default();
                 compiler.set_style("fluent".into());
-                let result =
-                    poll_once(compiler.build_from_source(source, Default::default())).unwrap();
+                let result = crate::interpreter::poll_once(
+                    compiler.build_from_source(source, Default::default()),
+                )
+                .unwrap();
                 assert!(!result.has_errors(), "{:?}", result.diagnostics().collect::<Vec<_>>());
                 let definition = result.components().last().unwrap();
                 for scale_factor in [1.0, 1.25, 1.5, 2.0] {

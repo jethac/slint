@@ -1,0 +1,33 @@
+// Copyright © SixtyFPS GmbH <info@slint.dev>
+// SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0
+
+// Scene: negative-radius — generated from `ui-libraries/material/parity/scenes/negative-radius.json`
+// (edit the scene, regenerate with `cargo run -p material-parity-generator`).
+//PARITY=negative: the card renders border-radius 8px, the scene and its Compose reference specify 24px — a wrong corner radius must fail
+//SIZE=200x120
+//DENSITIES=1
+import { MaterialPalette, MaterialTheme, MaterialWindow } from "@material";
+
+export component TestCase inherits MaterialWindow {
+    init => {
+        // The scene pins seed #6750A4, tonal-spot, spec2025, light, contrast 0
+        // (all the library defaults; restated here so a default change can't
+        // silently move the parity baseline).
+        MaterialTheme.seed-color = #6750A4;
+        MaterialTheme.dark = false;
+        MaterialTheme.contrast-level = 0;
+        MaterialTheme.use-platform-color = false;
+        MaterialTheme.plain-family = "Roboto";
+        MaterialTheme.brand-family = "Roboto";
+    }
+
+    Rectangle {
+        x: 40px;
+        y: 24px;
+        width: 120px;
+        height: 72px;
+        border-radius: 8px;
+        background: MaterialPalette.primary_container;
+    }
+
+}

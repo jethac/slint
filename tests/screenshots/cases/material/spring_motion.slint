@@ -1,0 +1,50 @@
+// Copyright © SixtyFPS GmbH <info@slint.dev>
+// SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0
+
+// Scene: spring-motion — generated from `ui-libraries/material/parity/scenes/spring-motion.json`
+// (edit the scene, regenerate with `cargo run -p material-parity-generator`).
+//PARITY=motion
+//SIZE=400x120
+//TIMES=0,33,66,100,133,166,200,266,333,400,500,666,833,1000
+//TRACE_PROPS=box-x
+//TRACE_ELEMENTS=thumb
+//ACTION=press:200,60
+//ACTION=release:200,60
+//DENSITIES=1
+import { MaterialPalette, MaterialTheme, MaterialWindow } from "@material";
+
+export component TestCase inherits MaterialWindow {
+    init => {
+        // The scene pins seed #6750A4, tonal-spot, spec2025, light, contrast 0
+        // (all the library defaults; restated here so a default change can't
+        // silently move the parity baseline).
+        MaterialTheme.seed-color = #6750A4;
+        MaterialTheme.dark = false;
+        MaterialTheme.contrast-level = 0;
+        MaterialTheme.use-platform-color = false;
+        MaterialTheme.plain-family = "Roboto";
+        MaterialTheme.brand-family = "Roboto";
+    }
+
+    // The property the trace and the Compose side both watch. Pressing
+    // anywhere moves the thumb to `300px`; the spring settles it.
+    in-out property <length> box-x: 40px;
+
+    thumb := Rectangle {
+        x: root.box-x;
+        y: 40px;
+        width: 40px;
+        height: 40px;
+        border-radius: 20px;
+        background: MaterialPalette.primary;
+        animate x { duration: 400ms; easing: spring(0.2); }
+    }
+
+    TouchArea {
+        pointer-event(event) => {
+            if event.kind == PointerEventKind.down {
+                root.box-x = 300px;
+            }
+        }
+    }
+}
