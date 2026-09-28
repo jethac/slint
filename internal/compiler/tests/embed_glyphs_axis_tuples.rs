@@ -35,12 +35,13 @@ fn compile(source: &str, exclude_vector_fonts: bool) -> (Document, Vec<String>) 
     (doc, diag.to_string_vec())
 }
 
-fn bitmap_variations(doc: &Document) -> Vec<(u16, Vec<(u32, f32)>)> {
+fn bitmap_variations(doc: &Document) -> Vec<(String, u16, Vec<(u32, f32)>)> {
     doc.embedded_file_resources
         .borrow()
         .iter()
         .filter_map(|r| match &r.kind {
             EmbeddedResourcesKind::BitmapFontData(font) => Some((
+                font.family_name.clone(),
                 font.weight,
                 font.variations.iter().map(|v| (v.tag, v.value)).collect::<Vec<_>>(),
             )),
@@ -49,12 +50,23 @@ fn bitmap_variations(doc: &Document) -> Vec<(u16, Vec<(u32, f32)>)> {
         .collect()
 }
 
-fn embedded_vector_fonts(doc: &Document) -> usize {
-    doc.embedded_file_resources
+fn embedded_vector_font_paths(doc: &Document) -> Vec<String> {
+    let mut paths: Vec<String> = doc
+        .embedded_file_resources
         .borrow()
         .iter()
-        .filter(|r| matches!(&r.kind, EmbeddedResourcesKind::FileData))
-        .count()
+        .filter_map(|r| {
+            matches!(&r.kind, EmbeddedResourcesKind::FileData)
+                .then(|| r.path.as_ref().map(|p| p.to_string()))?
+        })
+        .collect();
+    paths.sort();
+    paths.dedup();
+    paths
+}
+
+fn embedded_vector_fonts(doc: &Document) -> usize {
+    embedded_vector_font_paths(doc).len()
 }
 
 const WDTX: u32 = u32::from_be_bytes(*b"wdth");
@@ -115,14 +127,14 @@ fn constant_tuples_become_dedicated_bitmap_instances() {
     let (doc, diags) = compile(SOURCE_CONSTANT, false);
     assert!(diags.iter().all(|d| !d.starts_with("error")), "{diags:?}");
     let tuples = bitmap_variations(&doc);
-    assert!(tuples.iter().any(|(_, t)| t.contains(&(WDTX, 75.0))), "{tuples:?}");
+    assert!(tuples.iter().any(|(_, _, t)| t.contains(&(WDTX, 75.0))), "{tuples:?}");
     assert!(
-        tuples.iter().any(|(weight, t)| *weight == 700 && t.contains(&(WDTX, 62.5))),
+        tuples.iter().any(|(_, weight, t)| *weight == 700 && t.contains(&(WDTX, 62.5))),
         "the 700/62.5 text must produce its own tuple: {tuples:?}"
     );
     // font-stretch: 75% is the wdth value as written — not 0.75 and not ×100
     assert!(
-        tuples.iter().all(|(_, t)| t.iter().all(|&(tag, v)| tag != WDTX || v <= 100.0)),
+        tuples.iter().all(|(_, _, t)| t.iter().all(|&(tag, v)| tag != WDTX || v <= 100.0)),
         "{tuples:?}"
     );
 }
@@ -141,7 +153,7 @@ fn font_stretch_zero_means_default_not_narrowest() {
     assert!(
         bitmap_variations(&doc)
             .iter()
-            .flat_map(|(_, t)| t.iter())
+            .flat_map(|(_, _, t)| t.iter())
             .all(|&(t, v)| t != WDTX || v == 100.0)
     );
 }
@@ -177,19 +189,87 @@ fn non_constant_binding_errors_only_when_vector_fonts_excluded() {
     assert_eq!(errors.len(), 2, "the bound and the animated bindings must both error: {diags:?}");
 }
 
+/// Each `<font>` span must produce its own bitmap instance: the span's axes
+/// merge over the element's, they never leak into one shared tuple.
 #[test]
-fn markup_font_attributes_are_collected() {
+fn markup_font_attributes_produce_one_tuple_per_span() {
     let (doc, diags) = compile(
         r#"export component Main inherits Window {
+            default-font-stretch: 50%;
             StyledText {
-                text: "normal <font font-stretch=\"75%\">narrow</font> <font font-variation-settings=\"'GRAD' 50\">graded</font>";
+                text: @markdown("normal <font font-stretch=\"75%\">narrow</font> <font font-variation-settings=\"'GRAD' 50\">graded</font>");
             }
         }"#,
         false,
     );
     assert!(diags.iter().all(|d| !d.starts_with("error")), "{diags:?}");
-    let tuples = bitmap_variations(&doc);
-    // font-stretch="75%" in a <font> tag collects wdth 75 (the test font has
-    // no GRAD axis, so unknown axes don't reach the rasterized variations).
-    assert!(tuples.iter().any(|(_, t)| t.contains(&(WDTX, 75.0))), "{tuples:?}");
+    // The recorded variations of every embedded Noto Sans instance,
+    // deduplicated:
+    // - wdth 62.5: the window's `default-font-stretch: 50%` clamped to the
+    //   axis minimum — plain runs, the window tuple, and the GRAD-only span
+    //   (GRAD is no fvar axis of Noto Sans) all rasterize to this instance,
+    // - wdth 75: the `font-stretch="75%"` span's own tuple,
+    // - wdth 100: the always-embedded default instance at the axis defaults.
+    let mut seen: Vec<Vec<(u32, f32)>> = bitmap_variations(&doc)
+        .into_iter()
+        .filter(|(family, _, _)| family == "Noto Sans")
+        .map(|(_, _, variations)| variations)
+        .collect();
+    seen.sort_by(|a, b| {
+        a.iter().map(|(t, v)| (*t, v.to_bits())).cmp(b.iter().map(|(t, v)| (*t, v.to_bits())))
+    });
+    seen.dedup();
+    assert_eq!(
+        seen,
+        vec![vec![(WDTX, 62.5)], vec![(WDTX, 75.0)], vec![(WDTX, 100.0)]],
+        "one tuple per span (window wdth 50→62.5 / span wdth 75 / default wdth 100)"
+    );
+    // Roboto Flex declares GRAD: the `font-variation-settings` span must
+    // rasterize its own instance with GRAD at 50 — proof the span isn't folded
+    // into the element tuple.
+    const GRAD: u32 = u32::from_be_bytes(*b"GRAD");
+    assert!(
+        bitmap_variations(&doc)
+            .iter()
+            .any(|(f, _, v)| f == "Roboto Flex" && v.contains(&(GRAD, 50.0))),
+        "the GRAD-only span must rasterize its own Roboto Flex instance"
+    );
+}
+
+/// Dynamic axis bindings embed the vector font data, but only for the families
+/// the bindings can actually resolve to — flash on the MCU target is scarce.
+#[test]
+fn dynamic_binding_embeds_only_the_named_family() {
+    let (doc, diags) = compile(
+        r#"export component Main inherits Window {
+            in property <float> w;
+            Text {
+                font-family: "Roboto Flex";
+                font-variation-settings: [{ tag: "wght", value: w }];
+                text: "flex";
+            }
+            Text { font-family: "Noto Sans"; text: "static"; }
+        }"#,
+        false,
+    );
+    assert!(diags.iter().all(|d| !d.starts_with("error")), "{diags:?}");
+    let paths = embedded_vector_font_paths(&doc);
+    assert_eq!(paths.len(), 1, "only Roboto Flex can be reached: {paths:?}");
+    assert!(paths[0].ends_with("RobotoFlex.ttf"), "{paths:?}");
+}
+
+#[test]
+fn dynamic_binding_without_family_embeds_the_default_set() {
+    let (doc, diags) = compile(
+        r#"export component Main inherits Window {
+            in property <float> w;
+            Text { font-variation-settings: [{ tag: "wght", value: w }]; text: "flex"; }
+        }"#,
+        false,
+    );
+    assert!(diags.iter().all(|d| !d.starts_with("error")), "{diags:?}");
+    // No `font-family` binding: the default font set covers the request. The
+    // named-family element from the previous test is absent, so nothing beyond
+    // the default set may appear.
+    assert!(embedded_vector_fonts(&doc) > 0, "default fonts must be embedded");
 }

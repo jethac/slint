@@ -338,7 +338,23 @@ impl CompilerConfiguration {
             components_to_generate: ComponentSelection::ExportedWindows,
             #[cfg(all(feature = "renderer-software", feature = "sdf-fonts"))]
             use_sdf_fonts: false,
-            exclude_vector_fonts: std::env::var_os("SLINT_EXCLUDE_VECTOR_FONTS").is_some(),
+            exclude_vector_fonts: match std::env::var("SLINT_EXCLUDE_VECTOR_FONTS") {
+                // An explicitly falsy value opts out — for a `no_std` target
+                // that does have the software renderer's `embedded-vector-fonts`
+                // feature enabled.
+                Ok(v) => !matches!(v.to_ascii_lowercase().as_str(), "0" | "false" | "no" | "off"),
+                // `TARGET` is only set for build-script-driven compiles. On
+                // bare-metal (`*-none-*`), UEFI and Zephyr triples there is no
+                // `std` runtime for the fontique-based rasterizer, so unless
+                // the build opted in, dynamic font axes must be a compile
+                // error — the same diagnostic C++ freestanding builds get from
+                // `SLINT_EXCLUDE_VECTOR_FONTS`.
+                Err(_) => std::env::var("TARGET").is_ok_and(|t| {
+                    let t = t.to_ascii_lowercase();
+                    t.split('-').any(|field| field == "none" || field == "zephyr")
+                        || t.ends_with("-uefi")
+                }),
+            },
             #[cfg(feature = "bundle-translations")]
             bundled_translations_path: std::env::var("SLINT_BUNDLE_TRANSLATIONS")
                 .ok()

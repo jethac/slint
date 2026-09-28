@@ -52,6 +52,24 @@ pub struct FontAxesUsed {
     pub window_tuples: Vec<CollectedAxisTuple>,
     /// `(property name, binding location)` of the non-constant axis bindings.
     pub dynamic: Vec<(smol_str::SmolStr, crate::diagnostics::SourceLocation)>,
+    /// The families a dynamic axis or `font-family` binding can resolve to, so
+    /// vector embedding covers only fonts actually used: the element's constant
+    /// family, [`DynamicFamily::Default`] when none is set, or
+    /// [`DynamicFamily::Any`] when `font-family` itself is non-constant.
+    pub dynamic_families: HashSet<DynamicFamily>,
+}
+
+/// Which family a dynamically-bound axis request can come from at run time.
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
+pub enum DynamicFamily {
+    /// The element names no family, so the run-time default applies: only the
+    /// fonts in the default set need embedding.
+    Default,
+    /// `font-family` is bound dynamically — any used family can appear, so all
+    /// variable fonts in the default and custom sets are embedded.
+    Any,
+    /// The element's `font-family` is this constant family name.
+    Named(String),
 }
 
 impl FontAxesUsed {
@@ -201,11 +219,13 @@ pub fn embed_glyphs(
         for (property_name, span) in &font_axes.dynamic {
             diag.push_error_with_span(
                 format!(
-                    "'{property_name}' is not constant, but the bitmap font embedding \
-                     for this build rasterizes glyphs at fixed axis values and vector \
-                     fonts are excluded — give the property a constant value, or disable \
-                     glyph embedding (SLINT_EMBED_RESOURCES) so the variable font data \
-                     is used directly"
+                    "'{property_name}' is not constant, but this build rasterizes glyphs \
+                     at fixed axis values and vector fonts are excluded — give the \
+                     property a constant value, enable the software renderer's \
+                     `embedded-vector-fonts` feature (Rust builds; clear \
+                     `SLINT_EXCLUDE_VECTOR_FONTS` if it was set automatically for a \
+                     no-std target), or disable glyph embedding (SLINT_EMBED_RESOURCES) \
+                     so the variable font data is used directly"
                 ),
                 span.clone(),
             );
@@ -533,12 +553,24 @@ pub fn embed_glyphs(
     // above.)
     if !font_axes.dynamic.is_empty() && !compiler_config.exclude_vector_fonts {
         let mut embedded_paths: HashSet<std::path::PathBuf> = HashSet::new();
+        let is_default_set = |path: &std::path::Path| default_fonts.iter().any(|(p, _)| p == path);
         for (path, font) in default_fonts
             .iter()
             .map(|(p, f)| (p, f))
             .chain(custom_fonts.iter().map(|(p, f)| (p, f)))
         {
             if !embedded_paths.insert(path.clone()) {
+                continue;
+            }
+            // Embed only fonts a dynamic binding can resolve to — every
+            // embedded vector font costs flash on the MCU target.
+            let family_name = collection.family_name(font.family.0);
+            let used = font_axes.dynamic_families.iter().any(|family| match family {
+                DynamicFamily::Any => true,
+                DynamicFamily::Default => is_default_set(path),
+                DynamicFamily::Named(name) => family_name.is_some_and(|f| f == name.as_str()),
+            });
+            if !used {
                 continue;
             }
             let Ok(font_ref) = skrifa::FontRef::from_index(font.blob.data(), font.index) else {
@@ -1156,6 +1188,11 @@ pub fn collect_font_axes_used(component: &Rc<Component>, seen: &mut FontAxesUsed
         if !is_text && !is_window {
             return;
         }
+        // Dynamic bindings found on this element; merged into `seen.dynamic`
+        // after the loop, together with the element's family for
+        // `dynamic_families`.
+        let mut element_dynamic: Vec<(smol_str::SmolStr, crate::diagnostics::SourceLocation)> =
+            Vec::new();
         let prefix = if is_window { "default-" } else { "" };
         let mut tuple: CollectedAxisTuple = Vec::new();
         for suffix in ["font-stretch", "font-optical-sizing", "font-variation-settings"] {
@@ -1163,7 +1200,7 @@ pub fn collect_font_axes_used(component: &Rc<Component>, seen: &mut FontAxesUsed
                 elem,
                 format!("{prefix}{suffix}").as_str(),
                 &mut tuple,
-                &mut seen.dynamic,
+                &mut element_dynamic,
             );
         }
 
@@ -1180,7 +1217,7 @@ pub fn collect_font_axes_used(component: &Rc<Component>, seen: &mut FontAxesUsed
                 )
                 .is_none()
             {
-                seen.dynamic.push((
+                element_dynamic.push((
                     format!("{prefix}font-weight").into(),
                     binding.span.clone().unwrap_or_default(),
                 ));
@@ -1193,19 +1230,38 @@ pub fn collect_font_axes_used(component: &Rc<Component>, seen: &mut FontAxesUsed
         // resolves it at run time (or the binding errors out when vector fonts
         // are excluded).
         let family_property = format!("{prefix}font-family");
-        if let Some(binding) = elem.borrow().binding(family_property.as_str()) {
-            let is_literal = matches!(binding.value_expression(), Expression::StringLiteral(_));
-            if !is_literal {
-                seen.dynamic
-                    .push((family_property.into(), binding.span.clone().unwrap_or_default()));
+        // The family this element's dynamic bindings resolve to at run time,
+        // used to embed only the vector fonts that can actually be requested.
+        let (dynamic_family, dynamic_family_span) = {
+            let element = elem.borrow();
+            match element.binding(family_property.as_str()) {
+                Some(binding) => match binding.value_expression() {
+                    Expression::StringLiteral(family) => {
+                        (DynamicFamily::Named(family.to_string()), None)
+                    }
+                    _ => (DynamicFamily::Any, Some(binding.span.clone().unwrap_or_default())),
+                },
+                None => (DynamicFamily::Default, None),
             }
+        };
+        if let Some(span) = dynamic_family_span {
+            element_dynamic.push((family_property.into(), span));
         }
 
         // `<font>` tags in styled-text markup carry axis attributes of their
         // own; the markup source is a compile-time literal, so every value is
-        // constant.
+        // constant. Each span's attributes merge over the element's own axes,
+        // producing one tuple per distinct span configuration.
         if is_text && (base == "StyledTextItem" || base == "StyledText") {
-            collect_markup_axes(elem, &mut tuple, &mut seen.dynamic);
+            for span_tuple in collect_markup_axes(elem, &tuple, &mut element_dynamic) {
+                if !element_tuples.contains(&span_tuple) {
+                    element_tuples.push(span_tuple);
+                }
+            }
+        }
+        if !element_dynamic.is_empty() {
+            seen.dynamic_families.insert(dynamic_family);
+            seen.dynamic.extend(element_dynamic);
         }
         if !tuple.is_empty() {
             tuple.sort_by_key(|(tag, _)| *tag);
@@ -1237,14 +1293,25 @@ pub fn collect_font_axes_used(component: &Rc<Component>, seen: &mut FontAxesUsed
 /// Markup that isn't a literal can carry `<font>` axis attributes we can't see,
 /// so it is non-constant for collection purposes and takes the dynamic path
 /// like any other non-literal axis input.
+/// Reads the `<font>` tag attributes out of a styled-text `text` binding's
+/// markup. Each span that declares axis attributes produces one tuple — the
+/// element's own axes (`element_tuple`) overridden by the span's, matching how
+/// the run's font request merges them. Spans without axis attributes inherit
+/// the element settings and need no tuple of their own.
+///
+/// A literal markup string (or the format string of `ParseMarkdown` for
+/// `@markdown{}`) is fully known at compile time. Markup that isn't a literal
+/// can carry `<font>` axis attributes we can't see, so it is non-constant for
+/// collection purposes and takes the dynamic path like any other non-literal
+/// axis input.
 fn collect_markup_axes(
     elem: &ElementRc,
-    tuple: &mut CollectedAxisTuple,
+    element_tuple: &CollectedAxisTuple,
     dynamic: &mut Vec<(smol_str::SmolStr, crate::diagnostics::SourceLocation)>,
-) {
+) -> Vec<CollectedAxisTuple> {
     let (markup, span) = {
         let elem = elem.borrow();
-        let Some(binding) = elem.binding("text") else { return };
+        let Some(binding) = elem.binding("text") else { return Vec::new() };
         let markup = match binding.value_expression() {
             Expression::StringLiteral(markup) => Some(markup.clone()),
             Expression::FunctionCall { function, arguments, .. }
@@ -1264,39 +1331,50 @@ fn collect_markup_axes(
     };
     let Some(markup) = markup else {
         dynamic.push(("text (styled markup)".into(), span));
-        return;
+        return Vec::new();
     };
     let (paragraphs, _errors) = i_slint_common::styled_text::parse_interpolated::<
         &[i_slint_common::styled_text::StyledTextParagraph],
     >(markup.as_str(), &[]);
 
+    let mut span_tuples = Vec::new();
     for paragraph in &paragraphs {
         for span in &paragraph.formatting {
             let i_slint_common::styled_text::Style::FontTag(font_tag) = &span.style else {
                 continue;
             };
+            let mut span_axes: CollectedAxisTuple = Vec::new();
             if let Some(stretch) = font_tag.font_stretch {
-                if let Some(existing) = tuple.iter_mut().find(|(t, _)| *t == WDTH_TAG) {
-                    *existing = (WDTH_TAG, CollectedAxisValue::Value(stretch));
-                } else {
-                    tuple.push((WDTH_TAG, CollectedAxisValue::Value(stretch)));
-                }
+                span_axes.push((WDTH_TAG, CollectedAxisValue::Value(stretch)));
             }
-            if font_tag.font_optical_sizing == Some(false)
-                && !tuple.iter().any(|(t, _)| *t == OPSZ_TAG)
-            {
-                tuple.push((OPSZ_TAG, CollectedAxisValue::FontDefault));
+            if font_tag.font_optical_sizing == Some(false) {
+                span_axes.push((OPSZ_TAG, CollectedAxisValue::FontDefault));
             }
             for (tag, value) in font_tag.font_variation_settings.iter().flatten() {
                 if tag.len() == 4 && tag.bytes().all(|b| (0x20..=0x7e).contains(&b)) {
-                    let tag = u32::from_be_bytes(tag.as_bytes().try_into().unwrap());
-                    if let Some(existing) = tuple.iter_mut().find(|(t, _)| *t == tag) {
-                        *existing = (tag, CollectedAxisValue::Value(*value));
+                    span_axes.push((
+                        u32::from_be_bytes(tag.as_bytes().try_into().unwrap()),
+                        CollectedAxisValue::Value(*value),
+                    ));
+                }
+            }
+            if !span_axes.is_empty() {
+                // The span inherits the element's axes and overrides the tags
+                // it declares — the same merge the runtime applies per run.
+                let mut merged = element_tuple.clone();
+                for entry in span_axes {
+                    if let Some(existing) = merged.iter_mut().find(|(t, _)| *t == entry.0) {
+                        *existing = entry;
                     } else {
-                        tuple.push((tag, CollectedAxisValue::Value(*value)));
+                        merged.push(entry);
                     }
+                }
+                merged.sort_by_key(|(tag, _)| *tag);
+                if !span_tuples.contains(&merged) {
+                    span_tuples.push(merged);
                 }
             }
         }
     }
+    span_tuples
 }
