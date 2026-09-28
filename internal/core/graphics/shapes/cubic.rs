@@ -357,22 +357,32 @@ impl Cubic {
     /// arcs around the entire 360-degree circle. Arcs of greater than 180 degrees should
     /// use more than one arc together. Note that p0 and p1 should be equidistant from the
     /// center.
-    pub fn circular_arc(center_x: f32, center_y: f32, x0: f32, y0: f32, x1: f32, y1: f32) -> Cubic {
-        let p0d = direction_vector(x0 - center_x, y0 - center_y);
-        let p1d = direction_vector(x1 - center_x, y1 - center_y);
+    ///
+    /// Returns `None` when p0 or p1 coincides with the center (the Kotlin
+    /// `require`s in `directionVector`, surfaced by the constructors as `ShapeError`).
+    pub fn circular_arc(
+        center_x: f32,
+        center_y: f32,
+        x0: f32,
+        y0: f32,
+        x1: f32,
+        y1: f32,
+    ) -> Option<Cubic> {
+        let p0d = direction_vector(x0 - center_x, y0 - center_y)?;
+        let p1d = direction_vector(x1 - center_x, y1 - center_y)?;
         let rotated_p0 = p0d.rotate90();
         let rotated_p1 = p1d.rotate90();
         let clockwise = rotated_p0.dot_product_xy(x1 - center_x, y1 - center_y) >= 0.;
         let cosa = p0d.dot_product(p1d);
         if cosa > 0.999 {
             // p0 ~= p1
-            return Self::straight_line(x0, y0, x1, y1);
+            return Some(Self::straight_line(x0, y0, x1, y1));
         }
         let k = distance(x0 - center_x, y0 - center_y) * 4. / 3.
             * (k_sqrt(2. * (1. - cosa)) - k_sqrt(1. - cosa * cosa))
             / (1. - cosa)
             * if clockwise { 1. } else { -1. };
-        Cubic::from_floats(
+        Some(Cubic::from_floats(
             x0,
             y0,
             x0 + rotated_p0.x * k,
@@ -381,7 +391,7 @@ impl Cubic {
             y1 - rotated_p1.y * k,
             x1,
             y1,
-        )
+        ))
     }
 
     /// An empty cubic defined at (x0, y0).
@@ -394,8 +404,8 @@ impl core::ops::Add for Cubic {
     type Output = Cubic;
     fn add(self, o: Cubic) -> Cubic {
         let mut points = [0.; 8];
-        for it in 0..8 {
-            points[it] = self.points[it] + o.points[it];
+        for (p, (&a, &b)) in points.iter_mut().zip(self.points.iter().zip(o.points.iter())) {
+            *p = a + b;
         }
         Cubic { points }
     }
@@ -404,9 +414,9 @@ impl core::ops::Add for Cubic {
 impl core::ops::Mul<f32> for Cubic {
     type Output = Cubic;
     fn mul(self, x: f32) -> Cubic {
-        let mut points = [0.; 8];
-        for it in 0..8 {
-            points[it] = self.points[it] * x;
+        let mut points = self.points;
+        for p in points.iter_mut() {
+            *p *= x;
         }
         Cubic { points }
     }

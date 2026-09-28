@@ -105,7 +105,7 @@ impl MeasuredCubic {
         start_outline_progress: f32,
         end_outline_progress: f32,
     ) -> Self {
-        assert!(
+        debug_assert!(
             end_outline_progress >= start_outline_progress,
             "endOutlineProgress is expected to be equal or greater than startOutlineProgress"
         );
@@ -118,12 +118,14 @@ impl MeasuredCubic {
     }
 
     /// Cut this measured cubic into two at `cut_outline_progress` (in the polygon's
-    /// progress space) and return the pair `(before, after)` the cut.
+    /// progress space) and return the pair `(before, after)` the cut, or `None` if
+    /// the measurer can't find a cut point on this cubic (a degenerate or non-finite
+    /// outline, where Kotlin's `require`s throw).
     pub(crate) fn cut_at_progress(
         &self,
         measurer: &dyn Measurer,
         cut_outline_progress: f32,
-    ) -> (MeasuredCubic, MeasuredCubic) {
+    ) -> Option<(MeasuredCubic, MeasuredCubic)> {
         // Floating point errors further up can cause cutOutlineProgress to land just
         // slightly outside of the start/end progress for this cubic, so we limit it
         // to those bounds to avoid further errors later
@@ -137,12 +139,14 @@ impl MeasuredCubic {
         // this method is called.
         let relative_progress = progress_from_start / outline_progress_size;
         let t = measurer.find_cubic_cut_point(&self.cubic, relative_progress * self.measured_size);
-        assert!((0. ..=1.).contains(&t), "Cubic cut point is expected to be between 0 and 1");
+        if !(0. ..=1.).contains(&t) {
+            return None;
+        }
 
         // c1/c2 are the two new cubics, then we return MeasuredCubics created from
         // them
         let (c1, c2) = self.cubic.split(t);
-        (
+        Some((
             MeasuredCubic::new(
                 c1,
                 measurer,
@@ -155,11 +159,11 @@ impl MeasuredCubic {
                 bounded_cut_outline_progress,
                 self.end_outline_progress,
             ),
-        )
+        ))
     }
 
     fn update_progress_range(&mut self, start_outline_progress: f32, end_outline_progress: f32) {
-        assert!(
+        debug_assert!(
             end_outline_progress >= start_outline_progress,
             "endOutlineProgress is expected to be equal or greater than startOutlineProgress"
         );
@@ -188,13 +192,16 @@ impl MeasuredPolygon {
         cubics: Vec<Cubic>,
         outline_progress: &[f32],
     ) -> MeasuredPolygon {
-        assert_eq!(
+        debug_assert_eq!(
             outline_progress.len(),
             cubics.len() + 1,
             "Outline progress size is expected to be the cubics size + 1"
         );
-        assert_eq!(outline_progress[0], 0., "First outline progress value is expected to be zero");
-        assert_eq!(
+        debug_assert_eq!(
+            outline_progress[0], 0.,
+            "First outline progress value is expected to be zero"
+        );
+        debug_assert_eq!(
             *outline_progress.last().unwrap(),
             1.,
             "Last outline progress value is expected to be one"
@@ -243,29 +250,27 @@ impl MeasuredPolygon {
     /// Finds the point in the input list of measured cubics that passes the given
     /// outline progress, and generates a new MeasuredPolygon (equivalent to this),
     /// that starts at that point. Port of `cutAndShift`.
-    pub fn cut_and_shift(&self, cutting_point: f32) -> MeasuredPolygon {
-        assert!(
-            (0. ..=1.).contains(&cutting_point),
-            "Cutting point is expected to be between 0 and 1"
-        );
+    ///
+    /// Returns `None` for a cutting point outside [0, 1] or a cubic that can't be
+    /// cut there (the Kotlin `require`s, surfaced by [Morph](super::morph::Morph)
+    /// as a degenerate morph).
+    pub fn cut_and_shift(&self, cutting_point: f32) -> Option<MeasuredPolygon> {
+        if !(0. ..=1.).contains(&cutting_point) {
+            return None;
+        }
         if cutting_point < DISTANCE_EPSILON {
-            return self.clone();
+            return Some(self.clone());
         }
 
         // Find the index of cubic we want to cut
-        let target_index = self
-            .cubics
-            .iter()
-            .position(|mc| {
-                cutting_point >= mc.start_outline_progress
-                    && cutting_point <= mc.end_outline_progress
-            })
-            .expect("indexOfFirst is expected to find a target cubic");
+        let target_index = self.cubics.iter().position(|mc| {
+            cutting_point >= mc.start_outline_progress && cutting_point <= mc.end_outline_progress
+        })?;
         let target = &self.cubics[target_index];
 
         // Cut the target cubic.
         // b1, b2 are two resulting cubics after cut
-        let (b1, b2) = target.cut_at_progress(self.measurer.as_ref(), cutting_point);
+        let (b1, b2) = target.cut_at_progress(self.measurer.as_ref(), cutting_point)?;
 
         // Construct the list of the cubics we need:
         // * The second part of the target cubic (after the cut)
@@ -305,20 +310,26 @@ impl MeasuredPolygon {
 
         // Filter out all empty cubics (i.e. start and end anchor are (almost) the
         // same point.)
-        MeasuredPolygon::new(
+        Some(MeasuredPolygon::new(
             Rc::clone(&self.measurer),
             new_features,
             ret_cubics,
             &ret_outline_progress,
-        )
+        ))
     }
 
     /// A [MeasuredPolygon] for `polygon`, measured with `measurer`.
     /// Port of `MeasuredPolygon.measurePolygon`.
+    ///
+    /// Returns `None` when the polygon's outline can't be measured: a cubic whose
+    /// measured size is negative or non-finite, or a total outline size that is
+    /// zero or non-finite (e.g. a zero-scaled shape or a NaN vertex). Kotlin's
+    /// `require`s throw in those cases; callers here degrade to a defined result
+    /// instead.
     pub fn measure_polygon(
         measurer: Rc<dyn Measurer>,
         polygon: &RoundedPolygon,
-    ) -> MeasuredPolygon {
+    ) -> Option<MeasuredPolygon> {
         let mut cubics = Vec::new();
         let mut feature_to_cubic: Vec<(Feature, usize)> = Vec::new();
 
@@ -339,10 +350,18 @@ impl MeasuredPolygon {
         measures.push(0f32);
         for cubic in &cubics {
             let measured = measurer.measure_cubic(cubic);
-            assert!(measured >= 0., "Measured cubic is expected to be greater or equal to zero");
+            if !(measured >= 0. && measured.is_finite()) {
+                return None;
+            }
             measures.push(measures.last().unwrap() + measured);
         }
         let total_measure = *measures.last().unwrap();
+        if !(total_measure > DISTANCE_EPSILON && total_measure.is_finite()) {
+            // A zero-length outline produces NaN outline progress values, which the
+            // Kotlin implementation rejects with a `require` in the MeasuredPolygon
+            // constructor.
+            return None;
+        }
 
         let outline_progress: Vec<f32> = measures.iter().map(|m| m / total_measure).collect();
 
@@ -356,12 +375,15 @@ impl MeasuredPolygon {
             })
             .collect();
 
-        MeasuredPolygon::new(measurer, features, cubics, &outline_progress)
+        Some(MeasuredPolygon::new(measurer, features, cubics, &outline_progress))
     }
 }
 
 /// `MeasuredPolygon.measurePolygon` convenience wrapper.
 #[allow(dead_code)]
-pub fn measure_polygon(measurer: Rc<dyn Measurer>, polygon: &RoundedPolygon) -> MeasuredPolygon {
+pub fn measure_polygon(
+    measurer: Rc<dyn Measurer>,
+    polygon: &RoundedPolygon,
+) -> Option<MeasuredPolygon> {
     MeasuredPolygon::measure_polygon(measurer, polygon)
 }

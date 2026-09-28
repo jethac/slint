@@ -40,6 +40,10 @@ pub struct Morph {
     /// The measured perimeter of `start`, used by [Morph::scalar_delta] to
     /// normalize displacement into morph-progress units.
     start_perimeter: f32,
+    /// Whether the endpoints couldn't be measured (zero-sized or non-finite
+    /// outlines, where the Kotlin `require`s throw): the morph degenerates to
+    /// the target outline at every progress value.
+    degenerate: bool,
 }
 
 impl Morph {
@@ -47,9 +51,27 @@ impl Morph {
     /// The technique is to match geometry (curves) between the shapes when and where
     /// possible, and to create new/placeholder curves when necessary (when one of the
     /// shapes has more curves than the other).
+    /// When either polygon's outline can't be measured (a zero-sized or non-finite
+    /// shape, where the Kotlin `require`s throw), the morph degenerates to the
+    /// target shape: every progress value produces `end`'s outline.
     pub fn new(start: RoundedPolygon, end: RoundedPolygon) -> Self {
-        let (morph_match, start_perimeter) = match_shapes(&start, &end);
-        Self { start, end, morph_match, start_perimeter }
+        let (morph_match, start_perimeter, degenerate) = match match_shapes(&start, &end) {
+            Some((m, p)) => (m, p, false),
+            None => {
+                crate::debug_log!(
+                    "Shapes: morphing a shape whose outline can't be measured; \
+                     the morph stays at the target"
+                );
+                (end.cubics().iter().map(|c| (*c, *c)).collect(), 0., true)
+            }
+        };
+        Self { start, end, morph_match, start_perimeter, degenerate }
+    }
+
+    /// Whether this morph degenerated to the target outline because an endpoint
+    /// couldn't be measured (see [Morph::new]).
+    pub fn is_degenerate(&self) -> bool {
+        self.degenerate
     }
 
     /// The matched cubic pairs: the first of each pair holds the geometry of the
@@ -104,12 +126,11 @@ impl Morph {
         let mut last_cubic: Option<Cubic> = None;
         for i in 0..self.morph_match.len() {
             let mut points = [0f32; 8];
-            for it in 0..8 {
-                points[it] = interpolate(
-                    self.morph_match[i].0.points[it],
-                    self.morph_match[i].1.points[it],
-                    progress,
-                );
+            for (p, (&a, &b)) in points
+                .iter_mut()
+                .zip(self.morph_match[i].0.points.iter().zip(self.morph_match[i].1.points.iter()))
+            {
+                *p = interpolate(a, b, progress);
             }
             let cubic = Cubic { points };
             if first_cubic.is_none() {
@@ -179,17 +200,17 @@ impl Morph {
 /// to determine where the points are in each shape (proportionally, along the
 /// outline), and then running [feature_mapper] which decides how to map (match) all
 /// of the curves with each other.
-fn match_shapes(p1: &RoundedPolygon, p2: &RoundedPolygon) -> (Vec<(Cubic, Cubic)>, f32) {
+fn match_shapes(p1: &RoundedPolygon, p2: &RoundedPolygon) -> Option<(Vec<(Cubic, Cubic)>, f32)> {
     // Measure polygons, returns lists of measured cubics for each polygon, which
     // we then use to match start/end curves
     let measured_polygon1 = MeasuredPolygon::measure_polygon(
         Rc::new(LengthMeasurer::default()) as Rc<dyn super::measure::Measurer>,
         p1,
-    );
+    )?;
     let measured_polygon2 = MeasuredPolygon::measure_polygon(
         Rc::new(LengthMeasurer::default()) as Rc<dyn super::measure::Measurer>,
         p2,
-    );
+    )?;
 
     // features1 and 2 will contain the list of corners (just the inner circular
     // curve) along with the progress at the middle of those corners. These
@@ -201,10 +222,10 @@ fn match_shapes(p1: &RoundedPolygon, p2: &RoundedPolygon) -> (Vec<(Cubic, Cubic)
     // shape to the closest feature in the other shape.
     // Given a progress in one of the shapes it can be used to find the corresponding
     // progress in the other shape (in both directions)
-    let double_mapper = feature_mapper(features1, features2);
+    let double_mapper = feature_mapper(features1, features2)?;
 
     // cut point on poly2 is the mapping of the 0 point on poly1
-    let polygon2_cut_point = double_mapper.map(0.);
+    let polygon2_cut_point = double_mapper.map(0.)?;
 
     // Cut and rotate.
     // Polygons start at progress 0, and the featureMapper has decided that we want
@@ -221,7 +242,7 @@ fn match_shapes(p1: &RoundedPolygon, p2: &RoundedPolygon) -> (Vec<(Cubic, Cubic)
         .sum();
 
     let bs1 = &measured_polygon1;
-    let bs2 = measured_polygon2.cut_and_shift(polygon2_cut_point);
+    let bs2 = measured_polygon2.cut_and_shift(polygon2_cut_point)?;
 
     // Match
     // Now we can compare the two lists of measured cubics and create a list of
@@ -247,7 +268,7 @@ fn match_shapes(p1: &RoundedPolygon, p2: &RoundedPolygon) -> (Vec<(Cubic, Cubic)
             1.
         } else {
             double_mapper
-                .map_back(positive_modulo(cur_b2.end_outline_progress + polygon2_cut_point, 1.))
+                .map_back(positive_modulo(cur_b2.end_outline_progress + polygon2_cut_point, 1.))?
         };
         let minb = k_min(b1a, b2a);
 
@@ -255,7 +276,7 @@ fn match_shapes(p1: &RoundedPolygon, p2: &RoundedPolygon) -> (Vec<(Cubic, Cubic)
         // If both curves ends roughly there, no cutting is needed, we have a match.
         // If one curve extends beyond, we need to cut it.
         let (seg1, new_b1) = if b1a > minb + ANGLE_EPSILON {
-            let (s, rest) = cur_b1.cut_at_progress(bs1.measurer().as_ref(), minb);
+            let (s, rest) = cur_b1.cut_at_progress(bs1.measurer().as_ref(), minb)?;
             (s, Some(rest))
         } else {
             let nb = bs1.get(i1);
@@ -263,8 +284,8 @@ fn match_shapes(p1: &RoundedPolygon, p2: &RoundedPolygon) -> (Vec<(Cubic, Cubic)
             (cur_b1.clone(), nb)
         };
         let (seg2, new_b2) = if b2a > minb + ANGLE_EPSILON {
-            let cut = positive_modulo(double_mapper.map(minb) - polygon2_cut_point, 1.);
-            let (s, rest) = cur_b2.cut_at_progress(bs2.measurer().as_ref(), cut);
+            let cut = positive_modulo(double_mapper.map(minb)? - polygon2_cut_point, 1.);
+            let (s, rest) = cur_b2.cut_at_progress(bs2.measurer().as_ref(), cut)?;
             (s, Some(rest))
         } else {
             let nb = bs2.get(i2);
@@ -275,6 +296,9 @@ fn match_shapes(p1: &RoundedPolygon, p2: &RoundedPolygon) -> (Vec<(Cubic, Cubic)
         b1 = new_b1;
         b2 = new_b2;
     }
-    assert!(b1.is_none() && b2.is_none(), "Expected both Polygon's Cubic to be fully matched");
-    (ret, start_perimeter)
+    debug_assert!(
+        b1.is_none() && b2.is_none(),
+        "Expected both Polygon's Cubic to be fully matched"
+    );
+    Some((ret, start_perimeter))
 }

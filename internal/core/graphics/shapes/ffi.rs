@@ -24,7 +24,7 @@ unsafe fn flat_to_points(coords: *const f32, len: usize) -> ModelRc<LogicalPosit
     }
     let flat = unsafe { core::slice::from_raw_parts(coords, len) };
     let points: alloc::vec::Vec<LogicalPosition> =
-        flat.chunks_exact(2).map(|c| LogicalPosition::new(c[0], c[1])).collect();
+        flat.as_chunks::<2>().0.iter().map(|c| LogicalPosition::new(c[0], c[1])).collect();
     ModelRc::from(points.as_slice())
 }
 
@@ -34,7 +34,7 @@ unsafe fn flat_to_roundings(roundings: *const f32, len: usize) -> ModelRc<Corner
     }
     let flat = unsafe { core::slice::from_raw_parts(roundings, len) };
     let roundings: alloc::vec::Vec<CornerRounding> =
-        flat.chunks_exact(2).map(|c| CornerRounding::new(c[0], c[1])).collect();
+        flat.as_chunks::<2>().0.iter().map(|c| CornerRounding::new(c[0], c[1])).collect();
     ModelRc::from(roundings.as_slice())
 }
 

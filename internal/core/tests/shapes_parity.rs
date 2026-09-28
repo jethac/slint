@@ -80,7 +80,7 @@ mod material {
     const CR100: CornerRounding = CornerRounding::new(1.0, 0.);
 
     fn n(p: RoundedPolygon) -> RoundedPolygon {
-        p.normalized()
+        p.normalized().unwrap()
     }
 
     fn circle() -> RoundedPolygon {
@@ -109,7 +109,8 @@ mod material {
             Some(&[CR100, CR100, CR20, CR20]),
         )
         .unwrap()
-        .transformed(&rotate_z(-135.)))
+        .transformed(&rotate_z(-135.))
+        .unwrap())
     }
 
     fn fan() -> RoundedPolygon {
@@ -145,7 +146,9 @@ mod material {
         n(shapes::circle(8, 1., Point::ZERO)
             .unwrap()
             .transformed(&scale(1., 0.64))
-            .transformed(&rotate_z(-45.)))
+            .unwrap()
+            .transformed(&rotate_z(-45.))
+            .unwrap())
     }
 
     fn pill() -> RoundedPolygon {
@@ -160,7 +163,8 @@ mod material {
     fn triangle() -> RoundedPolygon {
         n(RoundedPolygon::regular(3, 1., Point::ZERO, CR20, None)
             .unwrap()
-            .transformed(&rotate_z(-90.)))
+            .transformed(&rotate_z(-90.))
+            .unwrap())
     }
 
     fn diamond() -> RoundedPolygon {
@@ -211,15 +215,15 @@ mod material {
     }
 
     fn cookie_7_sided() -> RoundedPolygon {
-        n(star(7, 1., 0.75, CR50, None).transformed(&rotate_z(-90.)))
+        n(star(7, 1., 0.75, CR50, None).transformed(&rotate_z(-90.)).unwrap())
     }
 
     fn cookie_9_sided() -> RoundedPolygon {
-        n(star(9, 1., 0.8, CR50, None).transformed(&rotate_z(-90.)))
+        n(star(9, 1., 0.8, CR50, None).transformed(&rotate_z(-90.)).unwrap())
     }
 
     fn cookie_12_sided() -> RoundedPolygon {
-        n(star(12, 1., 0.8, CR50, None).transformed(&rotate_z(-90.)))
+        n(star(12, 1., 0.8, CR50, None).transformed(&rotate_z(-90.)).unwrap())
     }
 
     fn ghostish() -> RoundedPolygon {
@@ -310,7 +314,8 @@ mod material {
             2,
             true,
         )
-        .transformed(&scale(1., 0.742)))
+        .transformed(&scale(1., 0.742))
+        .unwrap())
     }
 
     fn puffy_diamond() -> RoundedPolygon {
@@ -630,4 +635,115 @@ fn morph_parity() {
             );
         }
     }
+}
+
+// ---------------------------------------------------------------------------
+// Degenerate inputs and the morph cache
+// ---------------------------------------------------------------------------
+
+/// Invalid constructor input must not panic and must produce a defined (empty)
+/// result through the same path the `Shapes.*` builtins use.
+#[test]
+fn degenerate_inputs_do_not_panic() {
+    use i_slint_core::graphics::Shape;
+
+    // Stars reject inner_radius <= 0 or >= radius (Kotlin's IllegalArgumentException).
+    assert!(
+        shapes::star_shape(4, 0., CornerRounding::UNROUNDED, CornerRounding::UNROUNDED).is_empty()
+    );
+    assert!(
+        shapes::star_shape(4, 1., CornerRounding::UNROUNDED, CornerRounding::UNROUNDED).is_empty()
+    );
+
+    // Zero/negative/NaN pills and circles.
+    assert!(shapes::pill_shape(0., 1., 0.).is_empty());
+    assert!(shapes::pill_shape(f32::NAN, 1., 0.).is_empty());
+    assert!(shapes::circle_shape(2).is_empty());
+
+    // NaN vertex data through the polygon constructor: the outline is built but
+    // unmeasurable — a morph degenerates to the target instead of panicking.
+    let vertices: i_slint_core::model::ModelRc<i_slint_core::api::LogicalPosition> = vec![
+        i_slint_core::api::LogicalPosition::new(f32::NAN, 0.),
+        i_slint_core::api::LogicalPosition::new(1., 0.),
+        i_slint_core::api::LogicalPosition::new(0., 1.),
+    ]
+    .as_slice()
+    .into();
+    let nan_shape = shapes::rounded_polygon_polygon(&vertices, CornerRounding::UNROUNDED);
+    let target = shapes::regular_polygon(4, CornerRounding::UNROUNDED);
+    // The degenerate morph returns the target's outline at every progress.
+    assert_eq!(nan_shape.morph(&target, 0.5), target);
+    let _ = target.morph(&nan_shape, 0.5);
+
+    // Morphing the empty shape is defined.
+    let empty = Shape::empty();
+    let _ = empty.morph(&target, 0.5);
+    let _ = target.morph(&empty, 0.5);
+}
+
+/// A shape scaled to zero (Kotlin `require` failure at measure time) morphs
+/// without panicking.
+#[test]
+fn zero_scaled_shape_morphs_without_panic() {
+    let target = shapes::regular_polygon(4, CornerRounding::UNROUNDED);
+    let zero = target.scaled(0., 0.);
+    // Zero-sized: unmeasurable — the morph degenerates to the target.
+    assert_eq!(zero.morph(&target, 0.5), target);
+}
+
+/// The morph cache: interned-id fast path, content-hash hits for fresh
+/// constructions, 64-entry LRU bound, and no caching of non-finite shapes.
+#[test]
+fn morph_cache() {
+    use i_slint_core::graphics::shapes::{MorphCache, Shape};
+    use std::rc::Rc;
+
+    let cache = MorphCache::new();
+    let star = Shape::from_polygon(
+        &shapes::star(4, 1., 0.5, CornerRounding::UNROUNDED, None, None, Point::ZERO).unwrap(),
+    );
+    let circle = Shape::from_polygon(&shapes::circle(8, 1., Point::ZERO).unwrap());
+
+    let m1 = cache.morph(&star, &circle);
+    assert_eq!(cache.len(), 1);
+    assert_eq!(cache.hits(), 0);
+
+    // Same values (interned-id fast path).
+    let m2 = cache.morph(&star, &circle);
+    assert!(Rc::ptr_eq(&m1, &m2));
+    assert_eq!(cache.hits(), 1);
+
+    // Freshly constructed equal content hits via the content hash.
+    let star2 = Shape::from_polygon(
+        &shapes::star(4, 1., 0.5, CornerRounding::UNROUNDED, None, None, Point::ZERO).unwrap(),
+    );
+    let circle2 = Shape::from_polygon(&shapes::circle(8, 1., Point::ZERO).unwrap());
+    assert_ne!(star.id, star2.id);
+    let m3 = cache.morph(&star2, &circle2);
+    assert!(Rc::ptr_eq(&m1, &m3));
+
+    // Different pairs insert new entries.
+    let square = Shape::from_polygon(
+        &shapes::rectangle(1., 1., CornerRounding::UNROUNDED, None, Point::ZERO).unwrap(),
+    );
+    let _ = cache.morph(&star, &square);
+    assert_eq!(cache.len(), 2);
+
+    // NaN content is never cached.
+    let nan =
+        Shape::new(vec![f32::NAN; 8].as_slice().into(), Default::default(), Default::default())
+            .unwrap();
+    let _ = cache.morph(&nan, &circle);
+    let _ = cache.morph(&nan, &circle);
+    assert_eq!(cache.len(), 2);
+
+    // LRU bound: pushing 100 distinct pairs caps at 64.
+    for i in 0..100usize {
+        let p = Shape::from_polygon(
+            &shapes::star(3 + i, 1., 0.5, CornerRounding::UNROUNDED, None, None, Point::ZERO)
+                .unwrap(),
+        );
+        let _ = cache.morph(&p, &circle);
+    }
+    assert!(cache.len() <= 64);
 }

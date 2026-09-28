@@ -27,6 +27,12 @@ pub struct RoundedPolygon {
 }
 
 impl RoundedPolygon {
+    /// A single-point polygon at `center`. Used where an invalid outline must be
+    /// replaced by a defined result.
+    pub(crate) fn degenerate(center: Point) -> Self {
+        Self { features: Vec::new(), center, cubics: alloc::vec![Cubic::empty(center.x, center.y)] }
+    }
+
     /// Creates a polygon from its [Feature] list and center. The [Feature]s describe
     /// the characteristics of each outline segment of the polygon.
     ///
@@ -185,25 +191,32 @@ impl RoundedPolygon {
     /// more idiomatic ways to transform a polygon are provided as methods on the
     /// `shape` values.
     ///
-    /// Transforming cannot introduce discontinuities, so the constructor's contiguity
-    /// requirement is still satisfied; the check is kept, matching the Kotlin
-    /// `init`/`require` behavior.
-    pub fn transformed(&self, f: &dyn PointTransformer) -> RoundedPolygon {
+    /// Transforming cannot introduce discontinuities for a well-behaved
+    /// transformer, so the constructor's contiguity requirement is still satisfied;
+    /// the check is kept, matching the Kotlin `init`/`require` behavior, and
+    /// surfaces as an error for a transform that does break it.
+    pub fn transformed(&self, f: &dyn PointTransformer) -> Result<RoundedPolygon, ShapeError> {
         let center = self.center.transformed(f);
         RoundedPolygon::from_features_center_unchecked(
             self.features.iter().map(|feat| feat.transformed(f)).collect(),
             center,
         )
-        .expect("transformed RoundedPolygon must stay contiguous")
     }
 
     /// A new [RoundedPolygon], moved and resized so it is completely inside the
     /// (0, 0) -> (1, 1) square, centered if there is extra space in one direction.
-    pub fn normalized(&self) -> RoundedPolygon {
+    ///
+    /// Returns an error for a zero-sized polygon (side of 0 divides the
+    /// coordinates into non-finite values).
+    pub fn normalized(&self) -> Result<RoundedPolygon, ShapeError> {
         let bounds = self.calculate_bounds(true);
         let width = bounds[2] - bounds[0];
         let height = bounds[3] - bounds[1];
         let side = k_max(width, height);
+        // `>` (not `<=`-rejection) matches Kotlin's `require`, which also fails on NaN.
+        if !matches!(side.partial_cmp(&DISTANCE_EPSILON), Some(core::cmp::Ordering::Greater)) {
+            return Err(ShapeError::new("Can't normalize a zero-sized shape"));
+        }
         // Center the shape if bounds are not a square
         let offset_x = (side - width) / 2. - bounds[0]; /* left */
         let offset_y = (side - height) / 2. - bounds[1]; /* top */
@@ -318,13 +331,11 @@ impl RoundedPolygon {
         if vertices.len() % 2 == 1 {
             return Err(ShapeError::new("The vertices array should have even size"));
         }
-        if let Some(pvr) = per_vertex_rounding {
-            if pvr.len() * 2 != vertices.len() {
-                return Err(ShapeError::new(
-                    "perVertexRounding list should be either empty or \
-                     the same size as the number of vertices (vertices.len / 2)",
-                ));
-            }
+        if per_vertex_rounding.is_some_and(|pvr| pvr.len() * 2 != vertices.len()) {
+            return Err(ShapeError::new(
+                "perVertexRounding list should be either empty or \
+                 the same size as the number of vertices (vertices.len / 2)",
+            ));
         }
         let n = vertices.len() / 2;
         let mut rounded_corners: Vec<RoundedCorner> = Vec::with_capacity(n);
@@ -385,7 +396,13 @@ impl RoundedPolygon {
                     + (rounded_corner.expected_cut() - rounded_corner.expected_round_cut())
                         * cut_ratio;
             }
-            corners.push(rounded_corner.cubics(allowed_cuts[0], allowed_cuts[1]));
+            let corner_cubics =
+                rounded_corner.cubics(allowed_cuts[0], allowed_cuts[1]).ok_or_else(|| {
+                    ShapeError::new(
+                        "Can't compute the rounded corner on a degenerate polygon vertex",
+                    )
+                })?;
+            corners.push(corner_cubics);
         }
         // Finally, store the calculated cubics. This includes all of the rounded
         // corners from above, along with new cubics representing the edges between
@@ -465,8 +482,10 @@ fn vertices_from_num_verts(
 ///
 /// Correct input means: closed geometry, clockwise orientation of points, no
 /// self-intersections, no holes, single polygon.
-pub(crate) fn fix_polygon_orientation(polygon: &RoundedPolygon) -> RoundedPolygon {
-    if is_cw_oriented(polygon) { polygon.clone() } else { fix_cw_orientation(polygon) }
+pub(crate) fn fix_polygon_orientation(
+    polygon: &RoundedPolygon,
+) -> Result<RoundedPolygon, ShapeError> {
+    if is_cw_oriented(polygon) { Ok(polygon.clone()) } else { fix_cw_orientation(polygon) }
 }
 
 fn is_cw_oriented(polygon: &RoundedPolygon) -> bool {
@@ -478,7 +497,7 @@ fn is_cw_oriented(polygon: &RoundedPolygon) -> bool {
     signed_area < 0.
 }
 
-fn fix_cw_orientation(polygon: &RoundedPolygon) -> RoundedPolygon {
+fn fix_cw_orientation(polygon: &RoundedPolygon) -> Result<RoundedPolygon, ShapeError> {
     let mut reversed_features = Vec::with_capacity(polygon.features.len());
     // Persist first feature to stay a Corner
     reversed_features.push(polygon.features[0].reversed());
@@ -487,5 +506,4 @@ fn fix_cw_orientation(polygon: &RoundedPolygon) -> RoundedPolygon {
     }
     // The center does not change with orientation flips.
     RoundedPolygon::from_features_center_unchecked(reversed_features, polygon.center)
-        .expect("reversed RoundedPolygon must stay contiguous")
 }

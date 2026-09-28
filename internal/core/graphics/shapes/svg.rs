@@ -56,7 +56,7 @@ impl SvgPathParser {
 
         let parsed_polygon =
             RoundedPolygon::from_features(detect_features(first_shape_cubics), None)?;
-        let fixed_polygon = fix_polygon_orientation(&parsed_polygon);
+        let fixed_polygon = fix_polygon_orientation(&parsed_polygon)?;
 
         Ok(fixed_polygon.features().to_vec())
     }
@@ -85,6 +85,12 @@ impl SvgPathParser {
             // Paths start with move commands that define the starting position
             // Subsequent pairs are equal to line commands
             let move_to_command = Command::parse(&command_strings[0], current)?;
+            // Kotlin indexes the move's parameters directly and throws when the
+            // first command isn't a move with two coordinates; here it's a parse
+            // error instead of a panic.
+            if move_to_command.letter != 'm' || move_to_command.parameters.len() < 2 {
+                return Err(ShapeError::new("SVG path data must start with a move command"));
+            }
             current = move_to_command.start
                 + Point { x: move_to_command.get(0), y: move_to_command.get(1) };
 
@@ -139,10 +145,12 @@ impl ParserState {
             .unwrap_or(self.start)
     }
 
-    fn reflected_previous_control_point(&self) -> Point {
+    /// Kotlin reads `cubics.last()` here, which throws when a smooth command (`s`,
+    /// `t`, and their absolute forms) opens a path; that is a parse error for us.
+    fn reflected_previous_control_point(&self) -> Option<Point> {
         let position = self.position();
-        let last = self.cubics.last().unwrap();
-        position + (position - Point { x: last.control1_x(), y: last.control1_y() })
+        let last = self.cubics.last()?;
+        Some(position + (position - Point { x: last.control1_x(), y: last.control1_y() }))
     }
 
     fn parse_command(&mut self, command: &Command) -> Result<(), ShapeError> {
@@ -175,7 +183,7 @@ impl ParserState {
         if atomic_command.is_line_command() {
             self.parse_line(atomic_command);
         } else if atomic_command.is_curve_command() {
-            self.parse_curve(atomic_command);
+            self.parse_curve(atomic_command)?;
         } else if atomic_command.is_arc_command() {
             self.parse_arc(atomic_command)?;
         }
@@ -196,7 +204,7 @@ impl ParserState {
         self.cubics.push(Cubic::straight_line(position.x, position.y, end_point.x, end_point.y));
     }
 
-    fn parse_curve(&mut self, command: &Command) {
+    fn parse_curve(&mut self, command: &Command) -> Result<(), ShapeError> {
         let position = self.position();
         match command.letter {
             'c' => self.cubics.push(Cubic::from_floats(
@@ -211,9 +219,9 @@ impl ParserState {
             )),
             's' => {
                 let c0 = match &self.previous_command {
-                    Some(prev) if prev.is_bezier_command() => {
-                        self.reflected_previous_control_point()
-                    }
+                    Some(prev) if prev.is_bezier_command() => self
+                        .reflected_previous_control_point()
+                        .ok_or_else(|| ShapeError::new("Missing previous bezier curve"))?,
                     _ => position,
                 };
                 let c1 = command.xy(0, 1);
@@ -227,9 +235,9 @@ impl ParserState {
             }
             't' => {
                 let c0 = match &self.previous_command {
-                    Some(prev) if prev.is_quadratic_curve_command() => {
-                        self.reflected_previous_control_point()
-                    }
+                    Some(prev) if prev.is_quadratic_curve_command() => self
+                        .reflected_previous_control_point()
+                        .ok_or_else(|| ShapeError::new("Missing previous quadratic curve"))?,
                     _ => position,
                 };
                 let a1 = command.xy(0, 1);
@@ -237,6 +245,7 @@ impl ParserState {
             }
             _ => {}
         }
+        Ok(())
     }
 
     fn parse_arc(&mut self, command: &Command) -> Result<(), ShapeError> {
@@ -546,9 +555,8 @@ impl FeatureSerializer {
         // Regex ^\s*V(\d+): find a version prefix.
         let mut tags_search_start = 0;
         let trimmed_start = serialized_features.trim_start();
-        if trimmed_start.starts_with('V') {
-            let digits: String =
-                trimmed_start[1..].chars().take_while(|c| c.is_ascii_digit()).collect();
+        if let Some(after_v) = trimmed_start.strip_prefix('V') {
+            let digits: String = after_v.chars().take_while(|c| c.is_ascii_digit()).collect();
             if !digits.is_empty() {
                 tags_search_start =
                     serialized_features.len() - trimmed_start.len() + 1 + digits.len();
@@ -624,7 +632,7 @@ fn serialize_cubics(cubics: &[Cubic]) -> String {
         // first 6 points, so subsequent cubics start after one separator.
         result.push(SEPARATOR);
     }
-    let last = cubics.last().unwrap();
+    let Some(last) = cubics.last() else { return result };
     result.push_str(&float_to_kotlin_string(last.anchor1_x()));
     result.push(SEPARATOR);
     result.push_str(&float_to_kotlin_string(last.anchor1_y()));

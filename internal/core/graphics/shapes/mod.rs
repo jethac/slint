@@ -64,6 +64,19 @@ crate::thread_local! {
     /// measured feature-mapping regardless of how often they are reconstructed.
     pub static MORPH_CACHE: core::cell::RefCell<MorphCache> =
         const { core::cell::RefCell::new(MorphCache::new()) };
+
+    /// The interned-id counter for [`Shape`]: every `Shape::new` takes the next
+    /// id; `0` means "no id" (`Default`, FFI). Wraps at u64::MAX — unreachable.
+    static SHAPE_ID_COUNTER: core::cell::Cell<u64> = const { core::cell::Cell::new(1) };
+}
+
+/// The next interned shape id. See [`Shape::id`].
+pub(crate) fn next_shape_id() -> u64 {
+    SHAPE_ID_COUNTER.with(|c| {
+        let id = c.get();
+        c.set(id.wrapping_add(1));
+        id
+    })
 }
 
 /// Morph between `from` and `to` at `progress` ∈ [0, 1] using the thread-local

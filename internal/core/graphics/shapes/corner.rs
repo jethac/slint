@@ -137,7 +137,11 @@ impl RoundedCorner {
     /// The list of [Cubic] curves for this corner. `allowed_cut0` is the amount we are
     /// able to cut on the side from the previous corner to this one, `allowed_cut1` on
     /// the side from this corner to the next one.
-    pub fn cubics(&mut self, allowed_cut0: f32, allowed_cut1: f32) -> Vec<Cubic> {
+    ///
+    /// Returns `None` on degenerate geometry (the Kotlin `require`s in
+    /// `Point.getDirection`/`directionVector`, surfaced by the constructors as
+    /// `ShapeError`).
+    pub fn cubics(&mut self, allowed_cut0: f32, allowed_cut1: f32) -> Option<Vec<Cubic>> {
         // We use the minimum of both cuts to determine the radius, but if there is more
         // space in one side we can use it for smoothing.
         let allowed_cut = k_min(allowed_cut0, allowed_cut1);
@@ -147,7 +151,9 @@ impl RoundedCorner {
             || self.corner_radius < DISTANCE_EPSILON
         {
             self.center = self.p1;
-            return alloc::vec![Cubic::straight_line(self.p1.x, self.p1.y, self.p1.x, self.p1.y)];
+            return Some(alloc::vec![Cubic::straight_line(
+                self.p1.x, self.p1.y, self.p1.x, self.p1.y,
+            )]);
         }
         // How much of the cut is required for the rounding part.
         let actual_round_cut = k_min(allowed_cut, self.expected_round_cut);
@@ -161,7 +167,7 @@ impl RoundedCorner {
         // Distance from the corner (p1) to the center
         let center_distance = k_sqrt(square(actual_r) + square(actual_round_cut));
         // Center of the arc we will use for rounding
-        self.center = self.p1 + ((self.d1 + self.d2) / 2.).direction() * center_distance;
+        self.center = self.p1 + ((self.d1 + self.d2) / 2.).direction()? * center_distance;
         let circle_intersection0 = self.p1 + self.d1 * actual_round_cut;
         let circle_intersection2 = self.p1 + self.d2 * actual_round_cut;
         let flanking0 = Self::compute_flanking_curve(
@@ -173,7 +179,7 @@ impl RoundedCorner {
             circle_intersection2,
             self.center,
             actual_r,
-        );
+        )?;
         let flanking2 = Self::compute_flanking_curve(
             actual_round_cut,
             actual_smoothing1,
@@ -183,9 +189,9 @@ impl RoundedCorner {
             circle_intersection0,
             self.center,
             actual_r,
-        )
+        )?
         .reverse();
-        alloc::vec![
+        Some(alloc::vec![
             flanking0,
             Cubic::circular_arc(
                 self.center.x,
@@ -194,9 +200,9 @@ impl RoundedCorner {
                 flanking0.anchor1_y(),
                 flanking2.anchor0_x(),
                 flanking2.anchor0_y(),
-            ),
+            )?,
             flanking2,
-        ]
+        ])
     }
 
     /// If `allowed_cut` (the amount we are able to cut) is greater than the expected cut
@@ -240,9 +246,9 @@ impl RoundedCorner {
         other_circle_segment_intersection: Point,
         circle_center: Point,
         actual_r: f32,
-    ) -> Cubic {
+    ) -> Option<Cubic> {
         // side_start is the anchor, 'anchor' is actual control point
-        let side_direction = (side_start - corner).direction();
+        let side_direction = (side_start - corner).direction()?;
         let curve_start = corner + side_direction * actual_round_cut * (1. + actual_smoothing);
         // We use an approximation to cut a part of the circle section proportional to
         // 1 - smooth. When smooth = 0, we take the full section, when smooth = 1, we
@@ -255,7 +261,7 @@ impl RoundedCorner {
         );
         // The flanking curve ends on the circle
         let curve_end = circle_center
-            + direction_vector(p.x - circle_center.x, p.y - circle_center.y) * actual_r;
+            + direction_vector(p.x - circle_center.x, p.y - circle_center.y)? * actual_r;
         // The anchor on the circle segment side is in the intersection between the
         // tangent to the circle in the circle/flanking curve boundary and the linear
         // segment.
@@ -266,7 +272,7 @@ impl RoundedCorner {
         // From what remains, we pick a point for the start anchor.
         // 2/3 seems to come from design tools?
         let anchor_start = (curve_start + anchor_end * 2.) / 3.;
-        Cubic::new(curve_start, anchor_start, anchor_end, curve_end)
+        Some(Cubic::new(curve_start, anchor_start, anchor_end, curve_end))
     }
 
     /// The intersection point of the two lines d0->d1 and p0->p1, or None if the lines

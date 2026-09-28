@@ -1236,6 +1236,8 @@ fn gen_interpreter(
         // itself, and the interpreter's `Instance` fields must not leak.
         "Instance",
         "ComponentInstanceInner",
+        // Hand-written as `slint::Shape` in private/slint_shape.h
+        "Shape",
     ])
     .map(String::from)
     .collect();
@@ -1296,7 +1298,8 @@ fn gen_interpreter(
                 struct LiveReloadingComponentInner;
                 struct Instance;
                 template <typename T> using Box = T*;
-            }",
+            }
+            namespace slint { struct Shape; }",
         )
         .generate()
         .context("Unable to generate bindings for slint_interpreter_internal.h")?

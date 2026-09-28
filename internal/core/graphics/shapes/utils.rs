@@ -54,13 +54,12 @@ impl Point {
         self.x * other.y - self.y * other.x > 0.
     }
 
-    /// Unit vector representing the direction to this point from (0, 0).
-    ///
-    /// Panics on a zero-length vector, like the Kotlin `require` in `Point.getDirection`.
-    pub(crate) fn direction(self) -> Point {
+    /// Unit vector representing the direction to this point from (0, 0), or `None`
+    /// on a zero-length vector (the Kotlin `require` in `Point.getDirection`, which
+    /// the shape constructors surface as `ShapeError`).
+    pub(crate) fn direction(self) -> Option<Point> {
         let d = self.distance();
-        assert!(d > 0., "Can't get the direction of a 0-length vector");
-        self / d
+        if d > 0. { Some(self / d) } else { None }
     }
 
     /// The point rotated by 90 degrees counter-clockwise.
@@ -130,13 +129,11 @@ pub(crate) fn distance_squared(x: f32, y: f32) -> f32 {
     x * x + y * y
 }
 
-/// Unit vector representing the direction to the point (x, y) from (0, 0).
-///
-/// Panics on a zero-length vector, like the Kotlin `require` in `directionVector`.
-pub(crate) fn direction_vector(x: f32, y: f32) -> Point {
+/// Unit vector representing the direction to the point (x, y) from (0, 0), or
+/// `None` on a zero-length vector (the Kotlin `require` in `directionVector`).
+pub(crate) fn direction_vector(x: f32, y: f32) -> Option<Point> {
     let d = distance(x, y);
-    assert!(d > 0., "Required distance greater than zero");
-    Point { x: x / d, y: y / d }
+    if d > 0. { Some(Point { x: x / d, y: y / d }) } else { None }
 }
 
 /// Unit vector at the given angle.

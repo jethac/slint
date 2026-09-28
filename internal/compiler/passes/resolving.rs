@@ -3495,7 +3495,7 @@ fn check_shape_call(e: &Expression, node: &dyn Spanned, ctx: &mut LookupCtx) {
             if num(0).is_some_and(|n| n < 1.) {
                 err("stars must have at least 1 vertex per radius");
             }
-            if num(1).is_some_and(|ir| !(0. ..1.).contains(&ir)) {
+            if num(1).is_some_and(|ir| !(ir > 0. && ir < 1.)) {
                 err("inner-radius must be in the (0, 1) range");
             }
         }

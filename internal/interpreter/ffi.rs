@@ -246,6 +246,24 @@ pub extern "C" fn slint_interpreter_value_to_styled_text(
     }
 }
 
+/// Construct a new Value containing a Shape
+#[unsafe(no_mangle)]
+pub extern "C" fn slint_interpreter_value_new_shape(
+    shape: &i_slint_core::graphics::Shape,
+) -> Box<Value> {
+    Box::new(Value::Shape(shape.clone()))
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn slint_interpreter_value_to_shape(
+    val: &Value,
+) -> Option<&i_slint_core::graphics::Shape> {
+    match val {
+        Value::Shape(shape) => Some(shape),
+        _ => None,
+    }
+}
+
 /// Construct a new Value containing a MouseCursorInner
 #[unsafe(no_mangle)]
 pub extern "C" fn slint_interpreter_value_new_mouse_cursor_inner(

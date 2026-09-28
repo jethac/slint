@@ -12,11 +12,12 @@ use super::ShapeError;
 use super::cubic::Cubic;
 use super::feature::{Feature, detect_features};
 use super::morph::Morph;
+use super::next_shape_id;
 use super::rounded_polygon::RoundedPolygon;
 use super::svg::SvgPathParser;
 use super::utils::{Point, PointTransformer, interpolate, k_cos, k_sin};
 use crate::SharedVector;
-use alloc::collections::BTreeMap;
+use alloc::collections::VecDeque;
 use alloc::rc::Rc;
 use alloc::string::String;
 use alloc::vec::Vec;
@@ -71,7 +72,7 @@ pub struct ShapeFeature {
 /// `Shape` is cheap to clone (its vectors are reference counted) and compares by
 /// content. Construction functions live in the `Shapes` builtin namespace
 /// (`.slint`) and in `slint::shapes` (Rust); see [`crate::graphics::shapes`].
-#[derive(Clone, Default, PartialEq)]
+#[derive(Clone, Default)]
 #[repr(C)]
 pub struct Shape {
     /// The cubic Bézier outline: 8 floats per cubic
@@ -81,6 +82,26 @@ pub struct Shape {
     pub features: SharedVector<ShapeFeature>,
     /// The shape's center (used for max-bounds and as the morphing anchor).
     pub center: ShapePoint,
+    /// FNV-1a hash over the canonical content (cubic `to_bits`, feature ranges
+    /// and kinds, center), computed once at construction — the morph cache's
+    /// content key. `0` when built outside `Shape::new` (`Default`, FFI).
+    #[doc(hidden)]
+    pub content_hash: u64,
+    /// Interned construction id from a thread-local counter — `0` means "no id"
+    /// (`Default`, FFI, deserialization). Equal ids imply the same construction,
+    /// so the morph cache compares them without touching the outline data.
+    #[doc(hidden)]
+    pub id: u64,
+}
+
+impl PartialEq for Shape {
+    /// Content equality: the morph-cache metadata (`content_hash`, `id`) is not
+    /// part of the value.
+    fn eq(&self, other: &Self) -> bool {
+        self.cubics == other.cubics
+            && self.features == other.features
+            && self.center == other.center
+    }
 }
 
 impl Shape {
@@ -92,7 +113,7 @@ impl Shape {
         features: SharedVector<ShapeFeature>,
         center: ShapePoint,
     ) -> Result<Shape, ShapeError> {
-        if cubics.len() % 8 != 0 {
+        if !cubics.len().is_multiple_of(8) {
             return Err(ShapeError::new("Shape cubics length is not a multiple of 8"));
         }
         let cubic_count = cubics.len() / 8;
@@ -101,7 +122,8 @@ impl Shape {
                 return Err(ShapeError::new("Shape feature range out of bounds"));
             }
         }
-        Ok(Shape { cubics, features, center })
+        let content_hash = hash_parts(&cubics, &features, &center);
+        Ok(Shape { cubics, features, center, content_hash, id: next_shape_id() })
     }
 
     /// A shape from a [RoundedPolygon].
@@ -127,8 +149,19 @@ impl Shape {
 
     /// An FNV-1a hash over the full content (cubic bits, feature kinds, center).
     /// This is the morph cache's key: equal content hashes imply a shared morph.
+    /// For values built through `Shape::new` this is the field computed at
+    /// construction; for `Default`/FFI-built values it is computed on demand.
     pub fn content_hash(&self) -> u64 {
-        content_hash(self)
+        if self.content_hash != 0 { self.content_hash } else { content_hash(self) }
+    }
+
+    /// Whether every coordinate in the outline is finite. Shapes containing NaN
+    /// or infinite coordinates are never cached: their morphs are computed fresh
+    /// each time (and degenerate to the target when unmeasurable).
+    pub(crate) fn is_finite(&self) -> bool {
+        self.cubics.iter().all(|v| v.is_finite())
+            && self.center.x.is_finite()
+            && self.center.y.is_finite()
     }
 
     /// The axis-aligned bounds `[left, top, right, bottom]`; empty for an invalid
@@ -144,10 +177,16 @@ impl Shape {
     }
 
     /// This shape transformed by `f` (see [RoundedPolygon::transformed]).
+    ///
+    /// A transform that produces an invalid outline (e.g. non-finite coordinates)
+    /// logs a warning and returns the empty shape.
     pub fn transformed(&self, f: impl PointTransformer) -> Shape {
-        match self.polygon() {
-            Ok(p) => Shape::from_polygon(&p.transformed(&f)),
-            Err(_) => Shape::empty(),
+        match self.polygon().and_then(|p| p.transformed(&f)) {
+            Ok(p) => Shape::from_polygon(&p),
+            Err(e) => {
+                crate::debug_log!("Shapes: {e}");
+                Shape::empty()
+            }
         }
     }
 
@@ -189,10 +228,15 @@ impl Shape {
     }
 
     /// This shape scaled to fit the (0,0)-(1,1) square ([RoundedPolygon::normalized]).
+    /// A zero-sized shape can't be normalized: logs a warning and returns the
+    /// empty shape.
     pub fn normalized(&self) -> Shape {
-        match self.polygon() {
-            Ok(p) => Shape::from_polygon(&p.normalized()),
-            Err(_) => Shape::empty(),
+        match self.polygon().and_then(|p| p.normalized()) {
+            Ok(p) => Shape::from_polygon(&p),
+            Err(e) => {
+                crate::debug_log!("Shapes: {e}");
+                Shape::empty()
+            }
         }
     }
 
@@ -211,7 +255,16 @@ impl Shape {
 
     /// Like [`Shape::morph`] but using an explicit cache.
     pub fn morph_with(&self, other: &Shape, progress: f32, cache: &MorphCache) -> Shape {
+        // Non-finite endpoints can't be measured (Kotlin throws): the morph
+        // degenerates to the finite endpoint.
+        if !self.is_finite() || !other.is_finite() {
+            return if other.is_finite() { other.clone() } else { self.clone() };
+        }
         let morph = cache.morph(self, other);
+        // An unmeasurable (e.g. zero-sized) endpoint degenerates to the target.
+        if morph.is_degenerate() {
+            return other.clone();
+        }
         morph_to_shape(&morph, progress, Some((self, other)))
     }
 
@@ -219,7 +272,7 @@ impl Shape {
     pub fn to_svg_path(&self) -> String {
         let mut out = String::from("M ");
         let mut first = true;
-        for p in self.cubics.chunks_exact(8) {
+        for p in self.cubics.as_slice().as_chunks::<8>().0 {
             if first {
                 first = false;
             } else {
@@ -280,43 +333,89 @@ impl crate::properties::InterpolatedPropertyValue for Shape {
 
 /// A content-keyed cache of [Morph] instances between pairs of shapes.
 ///
-/// The cache is keyed by the *content* of the endpoint shapes (`content_hash` plus
-/// full data equality), not object identity — two `Shape` values with identical
-/// content share the same morph, and a recreated-but-equal endpoint reuses it.
+/// The cache is keyed by the *content* of the endpoint shapes — two `Shape`
+/// values with identical content share the same morph, and a recreated-but-equal
+/// endpoint reuses it. Lookup order: the interned construction ids
+/// ([`Shape::id`]) are a zero-cost fast path when the same two `Shape` values
+/// persist; otherwise the content hashes narrow to a bucket and a full content
+/// comparison guards against hash collisions.
+///
+/// The cache is a bounded LRU (64 entries): each hit moves the entry to the
+/// back, and a miss evicts the oldest entry once the cap is reached. Shapes
+/// with non-finite coordinates are never cached.
+///
 /// The default instance is the thread-local [`super::MORPH_CACHE`]; it is not
 /// thread-safe and does not need to be: properties are only evaluated on the UI
 /// thread.
 #[derive(Default)]
 pub struct MorphCache {
-    /// Maps `(hash_a, hash_b)` → `Vec<(a, b, Rc<Morph>)>` — the outer key narrows
-    /// collisions; entries verify full content equality.
-    morphs: RefCell<BTreeMap<(u64, u64), Vec<(Shape, Shape, Rc<Morph>)>>>,
+    /// Most-recently-used last.
+    morphs: RefCell<VecDeque<MorphCacheEntry>>,
+    /// Number of lookups served from the cache (for benchmarks and tests).
+    hits: core::cell::Cell<usize>,
 }
+
+struct MorphCacheEntry {
+    /// `(a.id, b.id)` — the interned construction ids, compared first.
+    ids: (u64, u64),
+    /// `(a.content_hash(), b.content_hash())` — content-keyed bucket.
+    hashes: (u64, u64),
+    /// The endpoint payloads, kept for the full-content verify on a hash hit.
+    a: Shape,
+    b: Shape,
+    morph: Rc<Morph>,
+}
+
+/// Maximum number of cached morphs (bounded LRU).
+const MORPH_CACHE_CAP: usize = 64;
 
 impl MorphCache {
     /// A new, empty cache.
     pub const fn new() -> Self {
-        Self { morphs: RefCell::new(BTreeMap::new()) }
+        Self { morphs: RefCell::new(VecDeque::new()), hits: core::cell::Cell::new(0) }
     }
 
     /// The [Morph] between the two given shapes, computing and caching it on first
     /// use and reusing it while both endpoints' content is unchanged.
     ///
     /// Falls back to morphing degenerate empty polygons when an endpoint is invalid.
+    /// Non-finite endpoint shapes are computed fresh each call and never cached.
     pub fn morph(&self, a: &Shape, b: &Shape) -> Rc<Morph> {
-        let key = (a.content_hash(), b.content_hash());
-        let mut map = self.morphs.borrow_mut();
-        let entries = map.entry(key).or_default();
-        for (data_a, data_b, morph) in entries.iter() {
-            if data_a == a && data_b == b {
-                return Rc::clone(morph);
-            }
+        let compute = || {
+            Rc::new(Morph::new(
+                a.polygon().unwrap_or_else(|_| empty_polygon()),
+                b.polygon().unwrap_or_else(|_| empty_polygon()),
+            ))
+        };
+        if !a.is_finite() || !b.is_finite() {
+            return compute();
         }
-        let morph = Rc::new(Morph::new(
-            a.polygon().unwrap_or_else(|_| empty_polygon()),
-            b.polygon().unwrap_or_else(|_| empty_polygon()),
-        ));
-        entries.push((a.clone(), b.clone(), Rc::clone(&morph)));
+        let ids = (a.id, b.id);
+        let hashes = (a.content_hash(), b.content_hash());
+        let mut morphs = self.morphs.borrow_mut();
+        if let Some(entry) = morphs
+            .iter()
+            .position(|e| {
+                (ids.0 != 0 && e.ids == ids) || (e.hashes == hashes && e.a == *a && e.b == *b)
+            })
+            .and_then(|index| morphs.remove(index))
+        {
+            let morph = Rc::clone(&entry.morph);
+            morphs.push_back(entry);
+            self.hits.set(self.hits.get() + 1);
+            return morph;
+        }
+        let morph = compute();
+        if morphs.len() >= MORPH_CACHE_CAP {
+            morphs.pop_front();
+        }
+        morphs.push_back(MorphCacheEntry {
+            ids,
+            hashes,
+            a: a.clone(),
+            b: b.clone(),
+            morph: Rc::clone(&morph),
+        });
         morph
     }
 
@@ -324,19 +423,30 @@ impl MorphCache {
     pub fn clear(&self) {
         self.morphs.borrow_mut().clear();
     }
+
+    /// The number of cached morphs (testing).
+    #[doc(hidden)]
+    pub fn len(&self) -> usize {
+        self.morphs.borrow().len()
+    }
+
+    /// Whether the cache is empty (testing).
+    #[doc(hidden)]
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
+
+    /// The number of lookups that were served from the cache so far (testing).
+    #[doc(hidden)]
+    pub fn hits(&self) -> usize {
+        self.hits.get()
+    }
 }
 
 /// A degenerate single-point polygon used when an invalid [`Shape`] must be morphed
 /// anyway (mirrors `RoundedPolygon`'s handling of empty input).
 fn empty_polygon() -> RoundedPolygon {
-    RoundedPolygon::from_features_center_unchecked(
-        alloc::vec![
-            Feature::Edge(alloc::vec![Cubic::empty(0., 0.)]),
-            Feature::Edge(alloc::vec![Cubic::empty(0., 0.)]),
-        ],
-        Point::ZERO,
-    )
-    .expect("empty polygon always validates")
+    RoundedPolygon::degenerate(Point::ZERO)
 }
 
 /// Builds a [Shape] from a morph's interpolated cubics at `progress`.
@@ -379,21 +489,18 @@ fn polygon_to_shape(polygon: &RoundedPolygon) -> Shape {
         });
         cubic_index += feature.cubics().len() as u32;
     }
-    Shape {
-        cubics: SharedVector::from(cubics_vec.as_slice()),
-        features: SharedVector::from(features_vec.as_slice()),
-        center: ShapePoint { x: polygon.center().x, y: polygon.center().y },
-    }
+    Shape::new(
+        SharedVector::from(cubics_vec.as_slice()),
+        SharedVector::from(features_vec.as_slice()),
+        ShapePoint { x: polygon.center().x, y: polygon.center().y },
+    )
+    .unwrap_or_else(|_| Shape::default())
 }
 
 /// Reconstruct a [RoundedPolygon] from a flattened [Shape].
 pub(crate) fn data_to_polygon(data: &Shape) -> Result<RoundedPolygon, ShapeError> {
-    let cubics: Vec<Cubic> = data
-        .cubics
-        .as_slice()
-        .chunks_exact(8)
-        .map(|p| Cubic { points: [p[0], p[1], p[2], p[3], p[4], p[5], p[6], p[7]] })
-        .collect();
+    let cubics: Vec<Cubic> =
+        data.cubics.as_slice().as_chunks::<8>().0.iter().map(|p| Cubic { points: *p }).collect();
     let mut features: Vec<Feature> = Vec::with_capacity(data.features.len());
     for f in data.features.iter() {
         let range = f.cubic_start as usize..(f.cubic_start as usize + f.cubic_len as usize);
@@ -420,20 +527,30 @@ pub(crate) fn data_to_polygon(data: &Shape) -> Result<RoundedPolygon, ShapeError
 
 /// FNV-1a over the payload (f32 bit patterns and feature kinds).
 fn content_hash(data: &Shape) -> u64 {
+    hash_parts(&data.cubics, &data.features, &data.center)
+}
+
+/// `content_hash` over the unassembled parts (used inside `Shape::new`, where the
+/// parts are computed before the `Shape` exists).
+fn hash_parts(
+    cubics: &SharedVector<f32>,
+    features: &SharedVector<ShapeFeature>,
+    center: &ShapePoint,
+) -> u64 {
     let mut h: u64 = 0xcbf29ce484222325;
     let mut mix = |b: u64| {
         h ^= b;
         h = h.wrapping_mul(0x100000001b3);
     };
-    for v in data.cubics.iter() {
+    for v in cubics.iter() {
         mix(v.to_bits() as u64);
     }
-    for f in data.features.iter() {
+    for f in features.iter() {
         mix(f.cubic_start as u64);
         mix(f.cubic_len as u64);
         mix(f.kind as u64);
     }
-    mix(data.center.x.to_bits() as u64);
-    mix(data.center.y.to_bits() as u64);
+    mix(center.x.to_bits() as u64);
+    mix(center.y.to_bits() as u64);
     h
 }

@@ -95,6 +95,11 @@ struct Shape
     SharedVector<ShapeFeature> features;
     /// The polygon's representative point (centroid).
     ShapePoint center;
+    /// Content hash computed by the Rust side at construction (morph cache key).
+    /// Read and written by Rust only; always 0 for a C++-default Shape.
+    uint64_t content_hash = 0;
+    /// Interned construction id assigned by the Rust side; 0 when unset.
+    uint64_t id = 0;
 
     /// Returns a copy of this shape normalized so its bounding box fits the
     /// unit square centered on the origin.

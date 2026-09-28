@@ -24,17 +24,18 @@ pub(crate) fn progress_in_range(progress: f32, progress_from: f32, progress_to: 
 
 /// Maps from one set of progress values to another. This is used by [DoubleMapper] to
 /// retrieve the value on one shape that maps to the appropriate value on the other.
-pub(crate) fn linear_map(x_values: &[f32], y_values: &[f32], x: f32) -> f32 {
-    assert!((0. ..=1.).contains(&x), "Invalid progress");
-    let segment_start_index = x_values
-        .iter()
-        .enumerate()
-        .find_map(|(i, _)| {
-            let from = x_values[i];
-            let to = x_values[(i + 1) % x_values.len()];
-            if progress_in_range(x, from, to) { Some(i) } else { None }
-        })
-        .expect("No segment found for progress");
+///
+/// Returns `None` for a progress outside [0, 1] or when no segment contains it
+/// (the Kotlin `require`s, surfaced as a degenerate morph).
+pub(crate) fn linear_map(x_values: &[f32], y_values: &[f32], x: f32) -> Option<f32> {
+    if !(0. ..=1.).contains(&x) {
+        return None;
+    }
+    let segment_start_index = x_values.iter().enumerate().find_map(|(i, _)| {
+        let from = x_values[i];
+        let to = x_values[(i + 1) % x_values.len()];
+        if progress_in_range(x, from, to) { Some(i) } else { None }
+    })?;
     let segment_end_index = (segment_start_index + 1) % x_values.len();
     let segment_size_x =
         positive_modulo(x_values[segment_end_index] - x_values[segment_start_index], 1.);
@@ -45,7 +46,7 @@ pub(crate) fn linear_map(x_values: &[f32], y_values: &[f32], x: f32) -> f32 {
     } else {
         positive_modulo(x - x_values[segment_start_index], 1.) / segment_size_x
     };
-    positive_modulo(y_values[segment_start_index] + segment_size_y * position_in_segment, 1.)
+    Some(positive_modulo(y_values[segment_start_index] + segment_size_y * position_in_segment, 1.))
 }
 
 /// Distance between two progress values. Since progress wraps around, a difference of
@@ -68,25 +69,25 @@ pub struct DoubleMapper {
 }
 
 impl DoubleMapper {
-    /// A mapper from the given `(source, target)` progress pairs.
-    ///
-    /// Panics if the progress values are not valid (each in [0, 1), no repeats, at
-    /// most one wrap) — matching Kotlin's `require`s.
-    pub fn new(mappings: &[(f32, f32)]) -> DoubleMapper {
+    /// A mapper from the given `(source, target)` progress pairs, or `None` if the
+    /// progress values are not valid (each in [0, 1), no repeats, at most one wrap) —
+    /// matching Kotlin's `require`s.
+    pub fn new(mappings: &[(f32, f32)]) -> Option<DoubleMapper> {
         let source_values: Vec<f32> = mappings.iter().map(|m| m.0).collect();
         let target_values: Vec<f32> = mappings.iter().map(|m| m.1).collect();
-        validate_progress(&source_values);
-        validate_progress(&target_values);
-        DoubleMapper { source_values, target_values }
+        if !validate_progress(&source_values) || !validate_progress(&target_values) {
+            return None;
+        }
+        Some(DoubleMapper { source_values, target_values })
     }
 
-    /// Maps `x` from source space to target space.
-    pub fn map(&self, x: f32) -> f32 {
+    /// Maps `x` from source space to target space, or `None` for an invalid `x`.
+    pub fn map(&self, x: f32) -> Option<f32> {
         linear_map(&self.source_values, &self.target_values, x)
     }
 
-    /// Maps `x` back from target space to source space.
-    pub fn map_back(&self, x: f32) -> f32 {
+    /// Maps `x` back from target space to source space, or `None` for an invalid `x`.
+    pub fn map_back(&self, x: f32) -> Option<f32> {
         linear_map(&self.target_values, &self.source_values, x)
     }
 }
@@ -121,7 +122,7 @@ impl ProgressableFeature {
 pub(crate) fn feature_mapper(
     features1: &[ProgressableFeature],
     features2: &[ProgressableFeature],
-) -> DoubleMapper {
+) -> Option<DoubleMapper> {
     // We only use corners for this mapping.
     let filtered_features1: Vec<usize> = (0..features1.len())
         .filter(|&i| matches!(features1[i].feature(), Feature::Corner { .. }))
@@ -133,7 +134,7 @@ pub(crate) fn feature_mapper(
     let feature_progress_mapping = do_mapping(
         &filtered_features1.iter().map(|&i| features1[i].clone()).collect::<Vec<_>>(),
         &filtered_features2.iter().map(|&i| features2[i].clone()).collect::<Vec<_>>(),
-    );
+    )?;
 
     DoubleMapper::new(&feature_progress_mapping)
 }
@@ -149,7 +150,7 @@ struct DistanceVertex {
 fn do_mapping(
     features1: &[ProgressableFeature],
     features2: &[ProgressableFeature],
-) -> Vec<(f32, f32)> {
+) -> Option<Vec<(f32, f32)>> {
     let mut distance_vertex_list: Vec<DistanceVertex> = Vec::new();
     for (i1, f1) in features1.iter().enumerate() {
         for (i2, f2) in features2.iter().enumerate() {
@@ -163,20 +164,20 @@ fn do_mapping(
 
     // Special cases.
     if distance_vertex_list.is_empty() {
-        return alloc::vec![(0., 0.), (0.5, 0.5)];
+        return Some(alloc::vec![(0., 0.), (0.5, 0.5)]);
     }
     if distance_vertex_list.len() == 1 {
         let it = &distance_vertex_list[0];
         let f1 = features1[it.f1].progress();
         let f2 = features2[it.f2].progress();
-        return alloc::vec![(f1, f2), ((f1 + 0.5) % 1., (f2 + 0.5) % 1.),];
+        return Some(alloc::vec![(f1, f2), ((f1 + 0.5) % 1., (f2 + 0.5) % 1.),]);
     }
 
     let mut helper = MappingHelper::default();
     for dv in &distance_vertex_list {
-        helper.add_mapping(&features1[dv.f1], dv.f1, &features2[dv.f2], dv.f2);
+        helper.add_mapping(&features1[dv.f1], dv.f1, &features2[dv.f2], dv.f2)?;
     }
-    helper.mapping
+    Some(helper.mapping)
 }
 
 #[derive(Default)]
@@ -193,23 +194,26 @@ struct MappingHelper {
 }
 
 impl MappingHelper {
+    /// Returns `None` when a feature repeats a progress value, which Kotlin's
+    /// `require` rejects (surfaced as a degenerate morph).
     fn add_mapping(
         &mut self,
         f1: &ProgressableFeature,
         f1_index: usize,
         f2: &ProgressableFeature,
         f2_index: usize,
-    ) {
+    ) -> Option<()> {
         // We don't want to map the same feature twice.
         if self.used_f1.contains(&f1_index) || self.used_f2.contains(&f2_index) {
-            return;
+            return Some(());
         }
 
         // Ret is sorted, find where we need to insert this new mapping.
         let index = self.mapping.binary_search_by(|p| p.0.total_cmp(&f1.progress()));
-        assert!(index.is_err(), "There can't be two features with the same progress");
-
-        let insertion_index = index.unwrap_err();
+        let insertion_index = match index {
+            Ok(_) => return None,
+            Err(i) => i,
+        };
         let n = self.mapping.len();
 
         // We can always add the first 1 element
@@ -224,13 +228,13 @@ impl MappingHelper {
                 || progress_distance(f2.progress(), before2) < DISTANCE_EPSILON
                 || progress_distance(f2.progress(), after2) < DISTANCE_EPSILON
             {
-                return;
+                return Some(());
             }
 
             // When we have 2 or more elements, we need to ensure we are not adding
             // extra crossings.
             if n > 1 && !progress_in_range(f2.progress(), before2, after2) {
-                return;
+                return Some(());
             }
         }
 
@@ -238,6 +242,7 @@ impl MappingHelper {
         self.mapping.insert(insertion_index, (f1.progress(), f2.progress()));
         self.used_f1.insert(f1_index);
         self.used_f2.insert(f2_index);
+        Some(())
     }
 }
 
@@ -253,37 +258,48 @@ pub(crate) fn feature_dist_squared(f1: &Feature, f2: &Feature) -> f32 {
             // concavity, by returning an infinitely large distance in that case
             f32::MAX
         }
-        _ => distance_squared(
-            feature_representative_point(f1).x - feature_representative_point(f2).x,
-            feature_representative_point(f1).y - feature_representative_point(f2).y,
-        ),
+        _ => {
+            let Some(p1) = feature_representative_point(f1) else { return f32::MAX };
+            let Some(p2) = feature_representative_point(f2) else { return f32::MAX };
+            distance_squared(p1.x - p2.x, p1.y - p2.y)
+        }
     }
 }
 
-fn feature_representative_point(feature: &Feature) -> Point {
+fn feature_representative_point(feature: &Feature) -> Option<Point> {
     let cubics = feature.cubics();
-    let x = (cubics.first().unwrap().anchor0_x() + cubics.last().unwrap().anchor1_x()) / 2.;
-    let y = (cubics.first().unwrap().anchor0_y() + cubics.last().unwrap().anchor1_y()) / 2.;
-    Point { x, y }
+    let (first, last) = cubics.first().zip(cubics.last())?;
+    Some(Point {
+        x: (first.anchor0_x() + last.anchor1_x()) / 2.,
+        y: (first.anchor0_y() + last.anchor1_y()) / 2.,
+    })
 }
 
 /// Verify that a list of progress values are all in the range [0.0, 1.0) and is
 /// monotonically increasing, with the exception of maybe one time in which the
 /// progress wraps around. This check includes all pairs of consecutive elements in
 /// the list plus the last-to-first element pair.
-pub(crate) fn validate_progress(p: &[f32]) {
-    let mut prev = *p.last().unwrap();
+pub(crate) fn validate_progress(p: &[f32]) -> bool {
+    let Some(&last) = p.last() else { return false };
+    let mut prev = last;
     let mut wraps = 0;
     for &curr in p {
-        assert!(curr >= 0. && curr < 1., "FloatMapping - Progress outside of range");
-        assert!(
-            progress_distance(curr, prev) > DISTANCE_EPSILON,
-            "FloatMapping - Progress repeats a value"
-        );
+        // FloatMapping - Progress outside of range
+        if !(0. ..1.).contains(&curr) {
+            return false;
+        }
+        // FloatMapping - Progress repeats a value
+        if progress_distance(curr, prev) <= DISTANCE_EPSILON {
+            return false;
+        }
         if curr < prev {
             wraps += 1;
-            assert!(wraps <= 1, "FloatMapping - Progress wraps more than once");
+            // FloatMapping - Progress wraps more than once
+            if wraps > 1 {
+                return false;
+            }
         }
         prev = curr;
     }
+    true
 }

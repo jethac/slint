@@ -101,11 +101,9 @@ pub fn star(
     // If no per-vertex rounding supplied and caller asked for inner rounding,
     // create per-vertex rounding list based on supplied outer/inner rounding parameters
     if pv_rounding.is_none() {
-        if let Some(inner_rounding) = inner_rounding {
-            pv_rounding = Some(
-                (0..num_vertices_per_radius).flat_map(|_| [rounding, inner_rounding]).collect(),
-            );
-        }
+        pv_rounding = inner_rounding.map(|inner_rounding| {
+            (0..num_vertices_per_radius).flat_map(|_| [rounding, inner_rounding]).collect()
+        });
     }
 
     // Star polygon is just a polygon with all vertices supplied (where we generate
@@ -225,11 +223,9 @@ pub fn pill_star(
     // If no per-vertex rounding supplied and caller asked for inner rounding,
     // create per-vertex rounding list based on supplied outer/inner rounding parameters
     if pv_rounding.is_none() {
-        if let Some(inner_rounding) = inner_rounding {
-            pv_rounding = Some(
-                (0..num_vertices_per_radius).flat_map(|_| [rounding, inner_rounding]).collect(),
-            );
-        }
+        pv_rounding = inner_rounding.map(|inner_rounding| {
+            (0..num_vertices_per_radius).flat_map(|_| [rounding, inner_rounding]).collect()
+        });
     }
 
     RoundedPolygon::from_vertices(

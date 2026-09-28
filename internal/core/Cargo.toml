@@ -223,3 +223,7 @@ rustdoc-args = ["--generate-link-to-definition"]
 [[bench]]
 name = "string"
 harness = false
+
+[[bench]]
+name = "shape_morph"
+harness = false
