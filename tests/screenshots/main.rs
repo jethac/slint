@@ -14,7 +14,7 @@ pub mod parity;
     test,
     any(
         feature = "skia",
-        all(feature = "femtovg", target_family = "unix"),
+        all(feature = "femtovg", target_os = "linux"),
         feature = "anyrender"
     )
 ))]
@@ -26,7 +26,7 @@ pub mod software;
 #[cfg(all(test, feature = "skia"))]
 pub mod skia;
 
-#[cfg(all(test, feature = "femtovg", target_family = "unix"))]
+#[cfg(all(test, feature = "femtovg", target_os = "linux"))]
 pub mod femtovg;
 
 #[cfg(all(test, feature = "anyrender"))]

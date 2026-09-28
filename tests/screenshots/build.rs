@@ -27,7 +27,7 @@ fn main() -> std::io::Result<()> {
     #[cfg(feature = "skia")]
     gen_skia(&mut generated_file)?;
 
-    #[cfg(all(feature = "femtovg", target_family = "unix"))]
+    #[cfg(all(feature = "femtovg", target_os = "linux"))]
     gen_femtovg(&mut generated_file)?;
 
     #[cfg(feature = "software-embed-assets")]
@@ -432,7 +432,7 @@ fn skia_{identifier}() -> Result<(), Box<dyn std::error::Error>> {{
 // path, and it compares against `references/femtovg/` when a case provides one.
 // Unix only: the driver renders through a surfaceless EGL context, and
 // khronos-egl's build script requires pkg-config.
-#[cfg(all(feature = "femtovg", target_family = "unix"))]
+#[cfg(all(feature = "femtovg", target_os = "linux"))]
 fn gen_femtovg(generated_file: &mut impl Write) -> Result<(), std::io::Error> {
     let references_root_dir: std::path::PathBuf =
         [env!("CARGO_MANIFEST_DIR"), "references", "femtovg"].iter().collect();
