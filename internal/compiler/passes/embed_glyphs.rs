@@ -1194,13 +1194,10 @@ pub fn collect_font_axes_used(component: &Rc<Component>, seen: &mut FontAxesUsed
         // are excluded).
         let family_property = format!("{prefix}font-family");
         if let Some(binding) = elem.borrow().binding(family_property.as_str()) {
-            let is_literal =
-                matches!(binding.value_expression(), Expression::StringLiteral(_));
+            let is_literal = matches!(binding.value_expression(), Expression::StringLiteral(_));
             if !is_literal {
-                seen.dynamic.push((
-                    family_property.into(),
-                    binding.span.clone().unwrap_or_default(),
-                ));
+                seen.dynamic
+                    .push((family_property.into(), binding.span.clone().unwrap_or_default()));
             }
         }
 

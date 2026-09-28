@@ -97,7 +97,6 @@ fn const_propagated_family_stays_bitmap() {
     assert_eq!(embedded_vector_fonts(&doc), 0);
 }
 
-
 /// The test fonts have wght 100-900 and wdth 62.5-100 (no opsz).
 const SOURCE_CONSTANT: &str = r#"
 export component Main inherits Window {
