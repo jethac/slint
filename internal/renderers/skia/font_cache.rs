@@ -260,10 +260,11 @@ mod tests {
         vec![parley::style::FontVariation::new(parley::setting::Tag::new(b"wght"), wght)]
     }
 
-    /// Shapes `text` at one `wght` through parley — the same layout the text
-    /// pipeline feeds `ItemRenderer::draw_glyph_run` — and returns the resolved
-    /// font plus the run's positioned glyphs as `(id, x, y)`.
-    fn shape_at_wght(text: &str, wght: f32) -> (parley::FontData, Vec<(u16, f32, f32)>) {
+    /// One shared `FontContext` with the variable font registered once. The
+    /// typeface cache keys on the font blob's id, so the blob — and therefore
+    /// the context holding it — must outlive the frames: re-registering per
+    /// frame would make every frame a cache miss.
+    fn shared_font_ctx() -> parley::FontContext {
         let mut font_ctx = parley::FontContext {
             collection: fontique::Collection::new(fontique::CollectionOptions {
                 system_fonts: false,
@@ -278,8 +279,19 @@ mod tests {
             fontique::GenericFamily::SansSerif,
             families.iter().map(|(id, _)| *id),
         );
+        font_ctx
+    }
+
+    /// Shapes `text` at one `wght` through parley — the same layout the text
+    /// pipeline feeds `ItemRenderer::draw_glyph_run` — and returns the resolved
+    /// font plus the run's positioned glyphs as `(id, x, y)`.
+    fn shape_at_wght(
+        font_ctx: &mut parley::FontContext,
+        text: &str,
+        wght: f32,
+    ) -> (parley::FontData, Vec<(u16, f32, f32)>) {
         let mut layout_ctx = parley::LayoutContext::<()>::new();
-        let mut builder = layout_ctx.ranged_builder(&mut font_ctx, text, 1.0, false);
+        let mut builder = layout_ctx.ranged_builder(font_ctx, text, 1.0, false);
         builder.push_default(parley::StyleProperty::FontSize(32.));
         builder.push_default(parley::StyleProperty::FontVariations(
             parley::style::FontVariations::List(std::borrow::Cow::Owned(vec![
@@ -303,12 +315,15 @@ mod tests {
     /// Draws one frame per step of a `wght` 100→900 sweep through the same
     /// calls `ItemRenderer::draw_glyph_run` makes — parley-shaped glyph ids and
     /// positions, the cached variation typeface, `skia_safe::Font`,
-    /// `draw_glyphs_at` — and reports per-frame wall times. A frame the
+    /// `draw_glyphs_at` — and reports per-frame wall times for the cold pass
+    /// (every weight misses the typeface cache once) and the warm pass
+    /// (repeating the same weights, so every frame hits). A frame the
     /// animation settles on must produce pixels identical to rendering that
     /// weight directly on a fresh cache: animation must never land on a
     /// different instance.
     #[test]
     fn wght_sweep_frame_times() {
+        let mut font_ctx = shared_font_ctx();
         let mut cache = FontCache::default();
         let synthesis = fontique::Synthesis::default();
         let mut surface =
@@ -326,12 +341,13 @@ mod tests {
         // One frame = re-shape at the animated weight (the layout cache entry
         // is keyed on the font request, so an animating axis reshapes) plus
         // the draw. Both run through the same calls as a real frame.
-        let draw_frame = |cache: &mut FontCache,
+        let draw_frame = |font_ctx: &mut parley::FontContext,
+                          cache: &mut FontCache,
                           surface: &mut skia_safe::Surface,
                           w: f32|
          -> (std::time::Duration, Vec<u8>) {
             let t0 = Instant::now();
-            let (font, glyphs) = shape_at_wght(TEXT, w);
+            let (font, glyphs) = shape_at_wght(font_ctx, TEXT, w);
             let typeface =
                 cache.font_with_variations(&font, &synthesis, &wght(w)).expect("typeface");
             let mut sk_font = skia_safe::Font::from_typeface(typeface, 32.);
@@ -352,46 +368,63 @@ mod tests {
             (t0.elapsed(), pixels(surface))
         };
 
-        let mut times = Vec::new();
-        for i in 0..=100u32 {
-            let w = 100. + i as f32 * 8.;
-            let (elapsed, _) = draw_frame(&mut cache, &mut surface, w);
-            times.push(elapsed);
-        }
+        let weights: Vec<f32> = (0..=100u32).map(|i| 100. + i as f32 * 8.).collect();
+        let stats = |times: &[std::time::Duration]| {
+            let mut sorted = times.to_vec();
+            sorted.sort();
+            (sorted[sorted.len() / 2], sorted[sorted.len() * 95 / 100], *sorted.last().unwrap())
+        };
 
-        let mut sorted = times.clone();
-        sorted.sort();
-        let median = sorted[sorted.len() / 2];
-        let p95 = sorted[sorted.len() * 95 / 100];
-        let max = *sorted.last().unwrap();
+        // Cold pass: each weight misses the typeface cache once.
+        let mut miss_times = Vec::new();
+        for &w in &weights {
+            let (elapsed, _) = draw_frame(&mut font_ctx, &mut cache, &mut surface, w);
+            miss_times.push(elapsed);
+        }
+        let (miss_median, miss_p95, miss_max) = stats(&miss_times);
+
+        // Warm pass: the same weights are all cache hits — the animation
+        // hot path once every instance was seen.
+        let mut hit_times = Vec::new();
+        for &w in &weights {
+            let (elapsed, _) = draw_frame(&mut font_ctx, &mut cache, &mut surface, w);
+            hit_times.push(elapsed);
+        }
+        let (hit_median, hit_p95, hit_max) = stats(&hit_times);
+
         eprintln!(
             "skia wght 100->900 sweep, 101 frames of {:?} at 32px: \
-             median {:?}, p95 {:?}, max {:?} (first frame {:?})",
-            TEXT, median, p95, max, times[0],
+             miss path median {:?}, p95 {:?}, max {:?}; \
+             hit path median {:?}, p95 {:?}, max {:?}",
+            TEXT, miss_median, miss_p95, miss_max, hit_median, hit_p95, hit_max,
         );
         // Design budget: a frame of text animation must stay under the
-        // 16.6 ms of a 60 Hz refresh even when every frame is a cache miss.
-        // Debug builds rasterize an order of magnitude slower (CI measures
-        // ~8-30 ms/frame), so the budget itself is only asserted in release
-        // builds — `cargo test --release`; the CI job `skia_font_benchmark`
-        // runs it. Debug keeps a bound that guards against a pathological
-        // blowup.
+        // 16.6 ms of a 60 Hz refresh even on a cache miss. Debug builds
+        // rasterize an order of magnitude slower (CI measures ~8-30 ms/frame),
+        // so the budget itself is only asserted in release builds —
+        // `cargo test --release`; the CI job `skia_font_benchmark` runs it.
+        // Debug keeps a bound that guards against a pathological blowup.
         #[cfg(not(debug_assertions))]
-        assert!(max < std::time::Duration::from_micros(16666), "slowest frame {max:?}");
-        assert!(max < std::time::Duration::from_millis(250), "slowest frame {max:?}");
+        {
+            assert!(miss_max < std::time::Duration::from_micros(16666), "miss {miss_max:?}");
+            assert!(hit_max < std::time::Duration::from_micros(16666), "hit {hit_max:?}");
+        }
+        assert!(miss_max < std::time::Duration::from_millis(250), "miss {miss_max:?}");
+        assert!(hit_max < std::time::Duration::from_millis(250), "hit {hit_max:?}");
 
         // A frame the animation settles on — here wght 500 reached as the end
-        // of a 900→500 pull-back — must be pixel-identical to rendering that
-        // weight directly on a fresh cache: the animation must never land on
-        // a different instance than a static request.
+        // of a 900→500 pull-back through the now-warm cache — must be
+        // pixel-identical to rendering that weight directly on a fresh cache:
+        // the animation must never land on a different instance than a static
+        // request.
         let mut settled = Vec::new();
         for i in 0..=50u32 {
             let w = 900. - i as f32 * 8.;
-            let (_, frame) = draw_frame(&mut cache, &mut surface, w);
+            let (_, frame) = draw_frame(&mut font_ctx, &mut cache, &mut surface, w);
             settled = frame;
         }
         let mut fresh_cache = FontCache::default();
-        let (_, direct) = draw_frame(&mut fresh_cache, &mut surface, 500.);
+        let (_, direct) = draw_frame(&mut font_ctx, &mut fresh_cache, &mut surface, 500.);
         assert_eq!(settled, direct);
     }
 
