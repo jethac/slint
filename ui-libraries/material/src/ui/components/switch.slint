@@ -75,18 +75,18 @@ export component Switch {
                     source: root.checked ? root.on_icon : root.off_icon;
                     colorize: root.foreground;
 
-                    animate colorize {
+                    animate colorize { enabled: !MaterialPalette.reduced-motion;
                         duration: MaterialAnimations.opacity_duration;
                         easing: MaterialAnimations.opacity_easing;
                     }
                 }
 
-                animate height {
+                animate height { enabled: !MaterialPalette.reduced-motion;
                     duration: MaterialAnimations.emphasized_accelerate_duration;
                     easing: MaterialAnimations.emphasized_easing;
                 }
 
-                animate background {
+                animate background { enabled: !MaterialPalette.reduced-motion;
                     duration: MaterialAnimations.opacity_duration;
                     easing: MaterialAnimations.opacity_easing;
                 }
@@ -96,14 +96,14 @@ export component Switch {
                         x: background_layer.width - self.indicator-padding - self.width;
 
                         in {
-                            animate x {
+                            animate x { enabled: !MaterialPalette.reduced-motion;
                                 duration: MaterialAnimations.emphasized_accelerate_duration;
                                 easing: MaterialAnimations.emphasized_easing;
                             }
                         }
 
                         out {
-                            animate x {
+                            animate x { enabled: !MaterialPalette.reduced-motion;
                                 duration: MaterialAnimations.emphasized_accelerate_duration;
                                 easing: MaterialAnimations.emphasized_easing;
                             }
@@ -112,7 +112,7 @@ export component Switch {
                 ]
             }
 
-            animate background, border_color {
+            animate background, border_color { enabled: !MaterialPalette.reduced-motion;
                 duration: MaterialAnimations.opacity_duration;
                 easing: MaterialAnimations.opacity_easing;
             }

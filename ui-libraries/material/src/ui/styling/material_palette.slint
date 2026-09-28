@@ -183,6 +183,11 @@ export global MaterialPalette {
     // color role comes from `MaterialTheme` instead of `schemes`.
     in property <bool> dynamic: false;
 
+    /// The platform reduce-motion preference (`SlintInternal.reduced-motion`)
+    /// as an in-out override, like `Palette.reduced-motion`. Material
+    /// components finish their animations immediately when this is set.
+    in-out property <bool> reduced-motion: Palette.reduced-motion;
+
     property <MaterialScheme> scheme: root.dynamic ? MaterialTheme.material-scheme
         : Palette.color_scheme == ColorScheme.dark ? root.schemes.dark : root.schemes.light;
 }

@@ -190,7 +190,7 @@ export component BaseDialog {
                 }
             }
 
-            animate opacity { duration: MaterialAnimations.opacity_duration; easing: MaterialAnimations.opacity_easing; }
+            animate opacity { enabled: !MaterialPalette.reduced-motion; duration: MaterialAnimations.opacity_duration; easing: MaterialAnimations.opacity_easing; }
         }
 
         clicked => {

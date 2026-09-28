@@ -103,7 +103,7 @@ export component ModalBottomSheet inherits PopupWindow {
                 self.y = self.y_drag_start;
             }
 
-            animate y, height {
+            animate y, height { enabled: !MaterialPalette.reduced-motion;
                 duration: self.y_duration;
                 easing: MaterialAnimations.standard_easing;
             }

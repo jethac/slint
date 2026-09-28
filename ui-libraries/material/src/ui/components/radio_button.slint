@@ -43,13 +43,13 @@ export component RadioButton {
                 background: MaterialPalette.primary;
                 opacity: !root.checked ? 0 : 1;
 
-                animate opacity {
+                animate opacity { enabled: !MaterialPalette.reduced-motion;
                     duration: MaterialAnimations.opacity_duration;
                     easing: MaterialAnimations.opacity_easing;
                 }
             }
 
-            animate border_color {
+            animate border_color { enabled: !MaterialPalette.reduced-motion;
                 duration: MaterialAnimations.opacity_duration;
                 easing: MaterialAnimations.opacity_easing;
             }
