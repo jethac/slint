@@ -13,22 +13,51 @@ export component Ripple {
     in property <color> color;
     in property <bool> clip_ripple: true;
 
-    Rectangle {
+    // Unbounded ink for inline surfaces (e.g. icon buttons): the circle is
+    // meant to paint past the element bounds.
+    if !root.clip_ripple : Rectangle {
+        x: root.pressed_x  - self.width / 2;
+        y: root.pressed_y  - self.height / 2;
+        height: self.width;
+        border_radius: self.width / 2;
+        opacity: MaterialPalette.state_layer_opacity_press;
+        background: root.color;
+        width: 0px;
+
+        init => {
+            self.width =  root.width * 2 * 1.4142;
+        }
+
+        animate width { duration: MaterialAnimations.ripple_duration; easing: MaterialAnimations.ripple_easing; }
+    }
+
+    // Bounded overlay: a circle expanding from the press point until it
+    // covers the whole element, clipped to the component's shape. Renderers
+    // that don't honor border-radius in `clip` (the software renderer,
+    // issue #6) clip the circle to the rect instead — the corner ink
+    // overshoot is that documented divergence, not a substituted shape.
+    if root.clip_ripple : Rectangle {
         width: 100%;
         height: 100%;
+        clip: true;
         border_radius: root.border_radius;
-        clip: root.clip_ripple;
 
-        ripple := Rectangle {
-            x: root.pressed_x  - self.width / 2;
-            y: root.pressed_y  - self.height / 2;
+        ink := Rectangle {
+            x: root.pressed_x - self.width / 2;
+            y: root.pressed_y - self.height / 2;
             height: self.width;
             border_radius: self.width / 2;
             opacity: MaterialPalette.state_layer_opacity_press;
             background: root.color;
+            width: 0px;
+
+            // The settled circle covers the element: diameter = twice the
+            // distance from the press point to the farthest corner.
+            property <float> dx: Math.max(root.pressed_x / 1px, (root.width - root.pressed_x) / 1px);
+            property <float> dy: Math.max(root.pressed_y / 1px, (root.height - root.pressed_y) / 1px);
 
             init => {
-                self.width =  root.width * 2 * 1.4142;
+                self.width = Math.sqrt(dx * dx + dy * dy) * 2px;
             }
 
             animate width { enabled: !MaterialPalette.reduced-motion; duration: MaterialAnimations.ripple_duration; easing: MaterialAnimations.ripple_easing; }
@@ -64,15 +93,19 @@ export component StateLayer {
         @children
     }
 
+    // First matching state wins: `pressed` is deliberately first so an active
+    // press suppresses the focus/hover overlay — the Ripple already paints
+    // the pressed overlay, so the state layer contributes nothing while
+    // pressed (matching Compose, where the ripple *is* the pressed layer).
     states [
+        pressed when root.enabled && root.pressed : {
+            root.state_layer_opacity: 0;
+        }
         disabled when !root.enabled && root.display_background : {
             root.state_layer_opacity: MaterialPalette.state_layer_opacity_focus;
         }
         focus when root.enabled && root.has_focus : {
             root.state_layer_opacity: MaterialPalette.state_layer_opacity_focus;
-        }
-        pressed when root.enabled && root.pressed : {
-            root.state_layer_opacity: MaterialPalette.state_layer_opacity_press;
         }
         hover when root.enabled && root.has_hover && !MaterialWindowAdapter.disable_hover : {
             root.state_layer_opacity: MaterialPalette.state_layer_opacity_hover;

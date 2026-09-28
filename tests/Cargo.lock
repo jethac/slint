@@ -3202,6 +3202,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "khronos-egl"
+version = "6.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6aae1df220ece3c0ada96b8153459b67eebe9ae9212258bb0134ae60416fdf76"
+dependencies = [
+ "libc",
+ "pkg-config",
+]
+
+[[package]]
 name = "khronos_api"
 version = "3.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5807,8 +5817,10 @@ dependencies = [
  "i-slint-compiler",
  "i-slint-core",
  "i-slint-renderer-anyrender",
+ "i-slint-renderer-femtovg",
  "i-slint-renderer-skia",
  "image",
+ "khronos-egl",
  "kurbo 0.13.1",
  "peniko",
  "serde_json",

@@ -83,6 +83,91 @@ jobs:
             run: cargo run -p material-token-generator -- check
           - name: Build & run tests
             run: cargo test -p material-gallery
+          - name: Check generated parity scenes are up to date
+            run: cargo run -p material-parity-generator -- --check
+
+  material_parity:
+      # Slint-side parity harness on all renderers + Compose harness build.
+      # The committed Paparazzi/layoutlib references under
+      # ui-libraries/material/parity/compose/references are required:
+      # PARITY_REQUIRE_REFS=1 makes the Slint comparisons fail when a
+      # reference is missing, stale, or differs.
+      if: ${{ github.event_name != 'pull_request' || github.repository != 'slint-ui/slint' }}
+      env:
+          CARGO_PROFILE_RELEASE_OPT_LEVEL: s
+          CARGO_INCREMENTAL: false
+          PARITY_REQUIRE_REFS: "1"
+          PARITY_ARTIFACT_DIR: target/parity-artifacts
+      runs-on: ubuntu-latest
+      steps:
+          - uses: actions/checkout@v7
+          - name: Install Linux dependencies
+            run: |
+              sudo timeout 600 apt-get update
+              sudo timeout 600 apt-get install libxcb-shape0-dev libxcb-xfixes0-dev libxkbcommon-dev libxkbcommon-x11-dev libfontconfig-dev libegl1-mesa-dev libgl1-mesa-dri mesa-utils xvfb
+            shell: bash
+          - name: Install Rust
+            uses: dtolnay/rust-toolchain@stable
+          - uses: actions/setup-java@v4
+            with:
+                distribution: temurin
+                java-version: "21"
+          - name: Install Android SDK platform 36
+            # The runner image ships an Android SDK (ANDROID_HOME is set) but
+            # its cmdline-tools/latest sdkmanager is too old for JDK 21 and
+            # exits silently, and setup-android@v3 fails on `sdkmanager tools`
+            # (a package removed from cmdline-tools 16.0). Fetch a known-good
+            # cmdline-tools build and drive that instead.
+            run: |
+              SDK_ROOT="${ANDROID_HOME:-$ANDROID_SDK_ROOT}"
+              curl -sSfLo /tmp/cmdtools.zip https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip
+              unzip -q -o /tmp/cmdtools.zip -d /tmp/cmdtools
+              mkdir -p "$SDK_ROOT/cmdline-tools/ci"
+              mv /tmp/cmdtools/cmdline-tools/* "$SDK_ROOT/cmdline-tools/ci/"
+              SDKMANAGER="$SDK_ROOT/cmdline-tools/ci/bin/sdkmanager"
+              yes | "$SDKMANAGER" --sdk_root="$SDK_ROOT" --licenses > /dev/null || true
+              "$SDKMANAGER" --sdk_root="$SDK_ROOT" "platforms;android-36" "build-tools;36.0.0"
+            shell: bash
+          - uses: Swatinem/rust-cache@v2
+            with:
+                key: parity
+                save-if: ${{ github.ref == 'refs/heads/master' }}
+          - name: Check headless EGL (FemtoVG renders through surfaceless Mesa)
+            run: |
+              ls /usr/share/glvnd/egl_vendor.d/
+              eglinfo -p surfaceless 2>&1 | head -20 || true
+            shell: bash
+          - name: Run material parity cases on all renderers
+            # xvfb gives the EGL default display an X server to land on when
+            # Mesa's surfaceless platform can't initialize headless (no
+            # /dev/dri on the runner); the driver falls back to it.
+            run: xvfb-run -a env SLINT_TEST_FILTER=material cargo test --manifest-path tests/Cargo.toml -p test-driver-screenshots --features femtovg
+          - name: Build the Compose parity harness
+            run: ./gradlew compileDebugUnitTestKotlin --no-daemon
+            working-directory: ui-libraries/material/parity/compose
+          - name: Verify committed Compose references are reproducible
+            # Re-record every scene, then require a clean tree under
+            # references/ — proves the committed PNGs/masks/traces are what
+            # the harness produces, not a stale local render.
+            run: |
+              ./gradlew testDebugUnitTest -Pparity.record=1 --no-daemon
+              if ! git diff --exit-code -- references || \
+                 [ -n "$(git status --porcelain -- references)" ]; then
+                echo "::error::Compose parity references drifted — re-record locally: cd ui-libraries/material/parity/compose && ./gradlew testDebugUnitTest -Pparity.record=1, then commit the result."
+                mkdir -p "$GITHUB_WORKSPACE/target/parity-artifacts"
+                cp -r references "$GITHUB_WORKSPACE/target/parity-artifacts/re-recorded-references"
+                git status --porcelain -- references > "$GITHUB_WORKSPACE/target/parity-artifacts/reference-drift.txt"
+                exit 1
+              fi
+            working-directory: ui-libraries/material/parity/compose
+            shell: bash
+          - name: Upload parity artifacts
+            if: failure()
+            uses: actions/upload-artifact@v7
+            with:
+                name: material-parity-artifacts
+                path: target/parity-artifacts/
+                retention-days: 30
 
   deploy:
     # Builds the docs site and deploys it to Cloudflare: upstream only.

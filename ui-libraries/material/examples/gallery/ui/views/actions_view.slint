@@ -32,8 +32,15 @@ import {
     MaterialText,
     MaterialStyleMetrics,
     HorizontalDivider,
+    VerticalDivider,
+    Badge,
     Dialog,
-    FullscreenDialog
+    FullscreenDialog,
+    MaterialAnimations,
+    MaterialMotionScheme,
+    MaterialTheme,
+    Slider,
+    Switch
 } from "../../../../src/material.slint";
 
 import { Group } from "../components/group.slint";
@@ -322,6 +329,20 @@ export component ActionsView {
             ComponentCard {
                 title: "Badges";
 
+                HorizontalLayout {
+                    alignment: start;
+                    spacing: MaterialStyleMetrics.spacing_8;
+                    padding-bottom: MaterialStyleMetrics.spacing_8;
+
+                    Badge {
+                        text: "3";
+                    }
+
+                    Badge {
+                        text: "999+";
+                    }
+                }
+
                 NavigationBar {
                     items: [
                           {
@@ -516,6 +537,14 @@ export component ActionsView {
 
                 Horizontal {
                     HorizontalDivider {}
+
+                    HorizontalLayout {
+                        spacing: MaterialStyleMetrics.spacing_8;
+                        height: 40px;
+
+                        VerticalDivider {}
+                        VerticalDivider {}
+                    }
                 }
             }
         }
@@ -553,6 +582,66 @@ export component ActionsView {
         TextIconButton {
             icon: OutlinedIcons.settings;
             text: "Settings";
+        }
+
+        Group {
+            title: "Theme";
+
+            ComponentCard {
+                title: "Motion & contrast";
+
+                Horizontal {
+                    alignment: center;
+
+                    SegmentedButton {
+                        items: [
+                            { text: "Expressive" },
+                            { text: "Standard" },
+                        ];
+                        current_index: MaterialAnimations.motion-scheme == MaterialMotionScheme.expressive ? 0 : 1;
+
+                        index_changed(index) => {
+                            MaterialAnimations.motion-scheme = index == 0 ? MaterialMotionScheme.expressive : MaterialMotionScheme.standard;
+                        }
+                    }
+                }
+
+                Horizontal {
+                    alignment: center;
+                    spacing: MaterialStyleMetrics.spacing_8;
+
+                    MaterialText {
+                        text: "Reduced motion";
+                        vertical_alignment: center;
+                    }
+
+                    Switch {
+                        checked <=> MaterialPalette.reduced-motion;
+                    }
+                }
+
+                Horizontal {
+                    alignment: center;
+                    spacing: MaterialStyleMetrics.spacing_8;
+
+                    MaterialText {
+                        text: "Contrast";
+                        vertical_alignment: center;
+                    }
+
+                    Slider {
+                        minimum: -1;
+                        maximum: 1;
+                        value <=> MaterialTheme.contrast-level;
+                        width: 220px;
+                    }
+
+                    MaterialText {
+                        text: MaterialTheme.contrast-level.to-fixed(2);
+                        vertical_alignment: center;
+                    }
+                }
+            }
         }
     }
 

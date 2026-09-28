@@ -27,6 +27,9 @@ fn main() -> std::io::Result<()> {
     #[cfg(feature = "skia")]
     gen_skia(&mut generated_file)?;
 
+    #[cfg(all(feature = "femtovg", target_os = "linux"))]
+    gen_femtovg(&mut generated_file)?;
+
     #[cfg(feature = "software-embed-assets")]
     gen_software_embed_assets(&mut generated_file)?;
 
@@ -85,7 +88,7 @@ fn gen_software_embed_assets(generated_file: &mut impl Write) -> std::io::Result
         generate_source(
             source.as_str(),
             &mut output,
-            testcase,
+            &testcase,
             markers.scale_factor.unwrap_or(1.),
             i_slint_compiler::EmbedResourcesKind::EmbedTextures,
         )
@@ -107,7 +110,7 @@ fn gen_software_embed_assets(generated_file: &mut impl Write) -> std::io::Result
 fn generate_source(
     source: &str,
     output: &mut impl Write,
-    testcase: test_driver_lib::TestCase,
+    testcase: &test_driver_lib::TestCase,
     scale_factor: f32,
     embed_resources: i_slint_compiler::EmbedResourcesKind,
 ) -> Result<(), std::io::Error> {
@@ -116,17 +119,34 @@ fn generate_source(
     let include_paths = test_driver_lib::extract_include_paths(source)
         .map(std::path::PathBuf::from)
         .collect::<Vec<_>>();
+    let library_paths = library_paths_for(source);
 
     let mut diag = BuildDiagnostics::default();
     let syntax_node = parser::parse(source.to_owned(), Some(&testcase.absolute_path), &mut diag);
     let mut compiler_config = CompilerConfiguration::new(generator::OutputFormat::Rust);
     compiler_config.include_paths = include_paths;
+    compiler_config.library_paths = library_paths;
     compiler_config.embed_resources = embed_resources;
     compiler_config.enable_experimental = true;
     compiler_config.style = Some("fluent".to_string());
-    compiler_config.const_scale_factor = scale_factor.into();
+    // A `//PARITY=` case renders at each of its densities by dispatching
+    // `ScaleFactorChanged` per render — a compile-time constant would lock
+    // the window at 1.0 and silently drop those events.
+    compiler_config.const_scale_factor = (!source.contains("//PARITY=")).then_some(scale_factor);
+    // Parity cases query elements by id (`//TRACE_ELEMENTS=`, text metrics),
+    // which needs element debug info in the generated code.
+    compiler_config.debug_info = source.contains("//PARITY=");
     let (root_component, diag, loader) =
         spin_on::spin_on(compile_syntax_node(syntax_node, diag, compiler_config));
+
+    // Every source the component was built from (imports, library files like
+    // `@material`) must invalidate the generated code — otherwise library
+    // edits would leave tests comparing stale components.
+    for path in &diag.all_loaded_files {
+        if path.is_absolute() {
+            println!("cargo:rerun-if-changed={}", path.display());
+        }
+    }
 
     if diag.has_errors() {
         diag.print_warnings_and_exit_on_error();
@@ -145,6 +165,30 @@ fn generate_source(
     Ok(())
 }
 
+/// `//library_path` markers plus the `material` library, registered for every
+/// case so `import { ... } from "@material"` works in `cases/material/`.
+#[cfg(feature = "software")]
+fn library_paths_for(source: &str) -> std::collections::HashMap<String, std::path::PathBuf> {
+    let mut paths: std::collections::HashMap<String, std::path::PathBuf> =
+        test_driver_lib::extract_library_paths(source)
+            .map(|(k, v)| (k.to_string(), std::path::PathBuf::from(v)))
+            .collect();
+    paths.entry("material".to_string()).or_insert(
+        [
+            env!("CARGO_MANIFEST_DIR"),
+            "..",
+            "..",
+            "ui-libraries",
+            "material",
+            "src",
+            "material.slint",
+        ]
+        .iter()
+        .collect(),
+    );
+    paths
+}
+
 // Test parameters parsed from `KEY=value` / `KEY` markers in a case's source comments.
 #[cfg(feature = "software")]
 struct ScreenshotMarkers {
@@ -154,6 +198,7 @@ struct ScreenshotMarkers {
     size: (u32, u32),
     skip_clipping: bool,
     skip_line_by_line: bool,
+    parity: test_driver_lib::ParityMarkers,
 }
 
 #[cfg(feature = "software")]
@@ -186,6 +231,7 @@ fn parse_markers(source: &str, testcase: &test_driver_lib::TestCase) -> Screensh
         size,
         skip_clipping: source.contains("SKIP_CLIPPING"),
         skip_line_by_line: source.contains("SKIP_LINE_BY_LINE"),
+        parity: test_driver_lib::extract_parity(source),
     }
 }
 
@@ -239,6 +285,14 @@ fn write_software_test(
         ),
     };
 
+    // `//PARITY=` cases carry no driver golden: the Compose references are
+    // their ground truth. When a golden does exist it is still compared.
+    let asserts = if markers.parity.parity.is_some() {
+        format!("    if std::path::Path::new(&screenshot).exists() {{\n{asserts}\n    }}")
+    } else {
+        asserts
+    };
+
     write!(
         output,
         r"
@@ -257,6 +311,85 @@ fn write_software_test(
 
     Ok(())
     }}",
+    )
+}
+
+// For cases carrying `//PARITY=` markers: emits `slint_parity_prop` (a
+// `TRACE_PROPS` accessor on the generated component) and the `parity` test,
+// which drives the layered comparison against the Compose references and, for
+// `//PARITY=motion`, captures the property/geometry trace at each `//TIMES=`
+// timestamp on the mocked clock.
+#[cfg(feature = "software")]
+fn write_parity_test(
+    output: &mut impl Write,
+    markers: &ScreenshotMarkers,
+    ignored: &str,
+    testcase: &test_driver_lib::TestCase,
+) -> std::io::Result<()> {
+    if markers.parity.parity.is_none() {
+        return Ok(());
+    }
+    let (size_w, size_h) = markers.size;
+    let rel = testcase
+        .relative_path
+        .with_extension("")
+        .to_string_lossy()
+        .replace(std::path::MAIN_SEPARATOR, "/");
+    let abs = testcase.absolute_path.to_string_lossy();
+
+    if markers.parity.trace_props.is_empty() {
+        writeln!(
+            output,
+            "impl TestCase {{ fn slint_parity_prop(&self, _name: &str) -> Option<crate::parity::TraceValue> {{ None }} }}"
+        )?;
+    } else {
+        writeln!(
+            output,
+            "impl TestCase {{ fn slint_parity_prop(&self, name: &str) -> Option<crate::parity::TraceValue> {{ match name {{"
+        )?;
+        for prop in &markers.parity.trace_props {
+            let snake = prop.replace('-', "_");
+            writeln!(output, "        \"{prop}\" => Some(self.get_{snake}().into()),")?;
+        }
+        writeln!(output, "        _ => None, }} }} }}")?;
+    }
+
+    write!(
+        output,
+        r##"
+    #[test] {ignored} fn parity() -> Result<(), Box<dyn std::error::Error>> {{
+        let window = crate::software::init_swr();
+        i_slint_backend_testing::configure_test_fonts();
+        let spec = test_driver_lib::extract_parity(include_str!(r#"{abs}"#));
+        let render_window = window.clone();
+        crate::parity::run_parity_case(
+            "software",
+            "{rel}",
+            &spec,
+            &|component: &TestCase, name: &str| component.slint_parity_prop(name),
+            |density| {{
+                let instance = TestCase::new().unwrap();
+                instance.window().dispatch_event(
+                    i_slint_core::platform::WindowEvent::ScaleFactorChanged {{
+                        scale_factor: density as f32,
+                    }},
+                );
+                window.set_size(slint::PhysicalSize::new(
+                    {size_w} * density,
+                    {size_h} * density,
+                ));
+                instance.show().unwrap();
+                instance
+            }},
+            move |_instance| {{
+                let rendered = crate::software::screenshot(
+                    render_window.clone(),
+                    slint::platform::software_renderer::RenderingRotation::NoRotation,
+                );
+                i_slint_core::graphics::Image::from_rgb8(rendered).to_rgba8().unwrap()
+            }},
+        )
+    }}"##,
     )
 }
 
@@ -283,6 +416,48 @@ fn gen_skia(generated_file: &mut impl Write) -> Result<(), std::io::Error> {
 #[test] {ignored}
 fn skia_{identifier}() -> Result<(), Box<dyn std::error::Error>> {{
     crate::skia::run_test(crate::skia::TestCase {{
+        absolute_path: std::path::PathBuf::from(r#"{absolute_path}"#),
+        relative_path: std::path::PathBuf::from(r#"{relative_path}"#),
+        reference_path: std::path::PathBuf::from(r#"{reference_path}"#),
+    }})
+}}"##,
+        )?;
+    }
+
+    Ok(())
+}
+
+// The headless FemtoVG driver: only `cases/material/` gets generated tests —
+// the driver's purpose is running the material parity cases on the real GL
+// path, and it compares against `references/femtovg/` when a case provides one.
+// Unix only: the driver renders through a surfaceless EGL context, and
+// khronos-egl's build script requires pkg-config.
+#[cfg(all(feature = "femtovg", target_os = "linux"))]
+fn gen_femtovg(generated_file: &mut impl Write) -> Result<(), std::io::Error> {
+    let references_root_dir: std::path::PathBuf =
+        [env!("CARGO_MANIFEST_DIR"), "references", "femtovg"].iter().collect();
+
+    for testcase in test_driver_lib::collect_test_cases("screenshots/cases")? {
+        if !testcase.relative_path.starts_with("material") {
+            continue;
+        }
+        let reference_path = references_root_dir
+            .join(testcase.relative_path.clone())
+            .with_extension("png")
+            .to_string_lossy()
+            .into_owned();
+        let absolute_path = testcase.absolute_path.to_string_lossy();
+        let relative_path = testcase.relative_path.to_string_lossy();
+
+        let identifier = testcase.identifier();
+        let ignored = if testcase.is_ignored("femtovg") { "#[ignore]" } else { "" };
+
+        write!(
+            generated_file,
+            r##"
+#[test] {ignored}
+fn femtovg_{identifier}() -> Result<(), Box<dyn std::error::Error>> {{
+    crate::femtovg::run_test(crate::femtovg::TestCase {{
         absolute_path: std::path::PathBuf::from(r#"{absolute_path}"#),
         relative_path: std::path::PathBuf::from(r#"{relative_path}"#),
         reference_path: std::path::PathBuf::from(r#"{reference_path}"#),
@@ -413,7 +588,7 @@ fn gen_software(generated_file: &mut impl Write) -> std::io::Result<()> {
         generate_source(
             source.as_str(),
             &mut output,
-            testcase,
+            &testcase,
             markers.scale_factor.unwrap_or(1.),
             i_slint_compiler::EmbedResourcesKind::EmbedAllResources,
         )
@@ -425,6 +600,9 @@ fn gen_software(generated_file: &mut impl Write) -> std::io::Result<()> {
             "",
             SoftwareDriver::RuntimeAssets { primary, fallback },
         )?;
+
+        let parity_ignored = if testcase.is_ignored("parity") { "#[ignore]" } else { "" };
+        write_parity_test(&mut output, &markers, parity_ignored, &testcase)?;
 
         output.flush()?;
     }

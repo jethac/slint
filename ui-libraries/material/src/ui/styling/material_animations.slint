@@ -11,6 +11,7 @@ export enum MaterialMotionScheme { standard, expressive }
 
 export global MaterialAnimations {
     in-out property <MaterialMotionScheme> motion-scheme: MaterialMotionScheme.expressive;
+    property <bool> expressive: motion-scheme == MaterialMotionScheme.expressive;
     property <MaterialMotionSchemeSpec> scheme:
         motion-scheme == MaterialMotionScheme.standard ? MaterialMotion.standard : MaterialMotion.expressive;
 
@@ -26,11 +27,13 @@ export global MaterialAnimations {
     out property <easing> fast-effects-spring: spring-of(scheme.fast_effects);
     out property <easing> slow-effects-spring: spring-of(scheme.slow_effects);
 
-    out property <easing> emphasized_easing: MotionTokens.easing_emphasized_decelerate_cubic_bezier;
+    // Emphasized and standard easings switch between the emphasized and
+    // legacy token sets with the motion scheme.
+    out property <easing> emphasized_easing: root.expressive ? MotionTokens.easing_emphasized_decelerate_cubic_bezier : MotionTokens.easing_legacy_decelerate_cubic_bezier;
     out property <duration> emphasized_duration: MotionTokens.duration_long2;
     out property <duration> emphasized_decelerate_duration: MotionTokens.duration_medium4;
     out property <duration> emphasized_accelerate_duration: MotionTokens.duration_short4;
-    out property <easing> standard_easing: MotionTokens.easing_standard_cubic_bezier;
+    out property <easing> standard_easing: root.expressive ? MotionTokens.easing_standard_cubic_bezier : MotionTokens.easing_legacy_cubic_bezier;
     out property <duration> standard_decelerate_duration: MotionTokens.duration_medium1;
     out property <duration> standard_accelerate_duration: MotionTokens.duration_short4;
     out property <duration> standard_fast_duration: MotionTokens.duration_short3;
