@@ -36,4 +36,12 @@ export component TestCase inherits Window {
     // covered in font_variation_settings.slint.)
     property <int> still-not-variations: "a" - 4;
 //                                       >  <error{Cannot convert string to float}
+
+    // The shorthand also parses on user-declared `[FontVariation]` properties.
+    property <[FontVariation]> user-variations: "wght" 700, "wdth" 85;
+    in property <[FontVariation]> user-in-variations: "slnt" -5;
+
+    Text {
+        font-variation-settings: user-variations;
+    }
 }

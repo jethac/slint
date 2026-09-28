@@ -714,13 +714,14 @@ fn parse_property_declaration<P: Parser>(p: &mut P, checkpoint: Option<P::Checkp
     }
     let mut p = p.start_node_at(checkpoint, SyntaxKind::PropertyDeclaration);
     // `property<[FontVariation]> x: "wght" 700` gets the same shorthand as the
-    // builtin font-variation-settings properties.
-    let variation_shorthand = p.nth(0).kind() == SyntaxKind::LAngle
-        && p.nth(1).kind() == SyntaxKind::LBracket
-        && p.nth(2).kind() == SyntaxKind::Identifier
-        && p.nth(2).as_str() == "FontVariation"
-        && p.nth(3).kind() == SyntaxKind::RBracket
-        && p.nth(4).kind() == SyntaxKind::RAngle;
+    // builtin font-variation-settings properties. The parser is still on the
+    // `property` keyword, so the lookahead starts at nth(1).
+    let variation_shorthand = p.nth(1).kind() == SyntaxKind::LAngle
+        && p.nth(2).kind() == SyntaxKind::LBracket
+        && p.nth(3).kind() == SyntaxKind::Identifier
+        && p.nth(3).as_str() == "FontVariation"
+        && p.nth(4).kind() == SyntaxKind::RBracket
+        && p.nth(5).kind() == SyntaxKind::RAngle;
     p.consume(); // property
 
     if p.test(SyntaxKind::LAngle) {
