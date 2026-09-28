@@ -1241,6 +1241,11 @@ pub struct PropertyAnimation {
     /// over from an interrupted animation takes precedence. `0` starts from rest.
     #[rtti_field]
     pub initial_velocity: f32,
+    /// Internal spring settle threshold override (channel units): `<= 0` uses the
+    /// animated type's [`InterpolatedPropertyValue::visibility_threshold`]. Not part
+    /// of the `.slint` `animate` surface — the interpreter sets it for integer-typed
+    /// properties so their springs settle like compiled `int`/`duration` ones.
+    pub visibility_threshold: f32,
 }
 
 #[allow(clippy::derivable_impls)] // iteration_count and enabled differ from `Default::default()`
@@ -1257,6 +1262,7 @@ impl Default for PropertyAnimation {
             easing: Default::default(),
             enabled: true,
             initial_velocity: 0.,
+            visibility_threshold: 0.,
         }
     }
 }

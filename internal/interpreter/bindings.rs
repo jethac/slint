@@ -300,8 +300,10 @@ fn install_property_init(
                         let mut ctx = EvalContext::new(Pin::new(owner));
                         eval_expression(&mut ctx, &expr)
                     });
+                    // Native items own typed properties; their animation already runs
+                    // on the real `InterpolatedPropertyValue`, so no override needed.
                     let animation_kind =
-                        animation_for_binding(binding.animation.as_ref(), weak_sub.clone());
+                        animation_for_binding(binding.animation.as_ref(), weak_sub.clone(), false);
                     let _ = item.set_property_binding(prop_name, closure, animation_kind);
                 }
                 i_slint_compiler::llr::NativeMemberKind::Function => {
@@ -418,8 +420,12 @@ fn install_property_binding(
         eval_expression(&mut ctx, &expr)
     });
 
+    let integer_typed = matches!(
+        ty,
+        i_slint_compiler::langtype::Type::Int32 | i_slint_compiler::langtype::Type::Duration
+    );
     match (
-        animation_for_binding(binding.animation.as_ref(), weak_sub.clone()),
+        animation_for_binding(binding.animation.as_ref(), weak_sub.clone(), integer_typed),
         animated_value_map(ty),
     ) {
         (AnimatedBindingKind::NotAnimated, _) => prop.set_binding(binding_fn),
@@ -448,9 +454,13 @@ fn install_property_binding(
     }
 }
 
+/// `integer_typed` marks bindings on `int`/`duration` properties: their springs
+/// must settle with the integer `visibility_threshold` (`1`), like compiled
+/// code, which `Value::Number` alone can't recover.
 fn animation_for_binding(
     animation: Option<&Animation>,
     weak_sub: Weak<SubComponentInstance>,
+    integer_typed: bool,
 ) -> AnimatedBindingKind {
     match animation {
         None => AnimatedBindingKind::NotAnimated,
@@ -459,7 +469,11 @@ fn animation_for_binding(
             AnimatedBindingKind::Animation(Box::new(move || -> PropertyAnimation {
                 let Some(owner) = weak_sub.upgrade() else { return Default::default() };
                 let mut ctx = EvalContext::new(Pin::new(owner));
-                value_to_property_animation(eval_expression(&mut ctx, &expr))
+                let mut anim = value_to_property_animation(eval_expression(&mut ctx, &expr));
+                if integer_typed {
+                    anim.visibility_threshold = 1.;
+                }
+                anim
             }))
         }
         Some(Animation::Transition(expr)) => {
@@ -475,11 +489,14 @@ fn animation_for_binding(
                     let Value::Struct(s) = v else {
                         return (Default::default(), Default::default());
                     };
-                    let anim = s
+                    let mut anim = s
                         .get_field("0")
                         .cloned()
                         .map(value_to_property_animation)
                         .unwrap_or_default();
+                    if integer_typed {
+                        anim.visibility_threshold = 1.;
+                    }
                     let change_time = s
                         .get_field("1")
                         .cloned()
