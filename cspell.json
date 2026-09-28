@@ -386,6 +386,8 @@
     "ui-libraries/material/docs/public/fonts/Inter-LICENSE.txt",
     ".cspell/slint-project-words.txt",
     ".cspell/slint-project-words-audit.tsv",
+    "tests/shapes/src/androidx/**",
+    "tests/shapes/golden/**",
     "tools/figma-inspector/fixtures/**",
     "tools/figma-inspector/src/ui/syntax-assets/**",
     "**/*.gltf",

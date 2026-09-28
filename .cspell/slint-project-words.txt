@@ -51,6 +51,7 @@ Baselining
 baudrate
 bdata
 Belappetit
+beziers
 bezpath
 BGRA
 BGRX
@@ -110,6 +111,7 @@ codingame
 coeff
 coeffs
 coldict
+collinearity
 colorspace
 colour
 colprop
@@ -126,6 +128,7 @@ Conv
 corelib
 coro
 cortexa
+cosa
 coterminal
 CPACK
 Cpolygon
@@ -203,6 +206,8 @@ elit
 emcmake
 Emre
 emscripten
+endcap
+endcaps
 endforeach
 endfunction
 endrst
@@ -282,6 +287,8 @@ gethighcontrast
 getifs
 getpid
 getrandom
+ghostish
+Ghostish
 globalfun
 globallogic
 Globus
@@ -340,6 +347,7 @@ intval
 invf
 iocp
 IRAM
+irnd
 Irqs
 isinstance
 isize
@@ -350,8 +358,8 @@ itertools
 ivars
 javac
 Jemalloc
-Jetpack
 jemallocator
+Jetpack
 jstar
 kateversion
 Kconfig
@@ -363,6 +371,8 @@ Keymap
 keyrings
 kitware
 Klarälvdalens
+kmath
+kotlinc
 kqueue
 ksni
 kurbo
@@ -450,6 +460,7 @@ Meteo
 midgray
 millihertz
 mimxrt
+minb
 minmax
 MIPI
 mipidsi
@@ -496,6 +507,7 @@ noseat
 nostrud
 notexist
 noto
+nowarn
 nsview
 ntranslate
 nullopt
@@ -531,6 +543,7 @@ pixabay
 pixelcolor
 pkgs
 poly
+polygonalization
 popupwindow
 prec
 prediv
@@ -544,6 +557,7 @@ println
 profdata
 profraw
 Programiv
+Progressable
 progressindicator
 propref
 prost
@@ -602,6 +616,8 @@ rlib
 rlibs
 Roboto
 RODATA
+roundings
+roundoff
 rowcol
 rsplit
 rspolib
@@ -646,6 +662,7 @@ slintlib
 slnt
 Smartwin
 smol
+smoothes
 Snackbars
 Softbuffer
 Somers
@@ -664,6 +681,7 @@ standardbutton
 startswith
 staticlib
 staticmethod
+stdlib
 stdset
 stext
 stockticker
@@ -730,8 +748,10 @@ Torizon
 toucharea
 toupper
 transcendentals
+trippable
 trunc
 tungstenite
+typealias
 typedoc
 typeregister
 Tzimabazafi
@@ -746,6 +766,7 @@ unfocusable
 unhinted
 unicodes
 uninit
+unioning
 Unitless
 unittests
 unmaximize
@@ -769,6 +790,7 @@ venv
 VercodeOperation
 verticalbox
 verticallayout
+verts
 VGWGPU
 viewports
 vlayout
