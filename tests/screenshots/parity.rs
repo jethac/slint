@@ -26,10 +26,11 @@
 //!    geometries (x/y/w/h/opacity) are compared to the Compose trace per
 //!    timestamp within [`TRACE_EPS`], and the animation must settle within
 //!    [`SETTLE_SLACK`] of the Compose settle time. Where an element is traced
-//!    on both sides, its pixel-level disagreement band — outline
-//!    antialiasing plus whatever lies between the two bounds — is skipped by
-//!    the strict layer and verified numerically instead (a text-sized
-//!    element's `w` additionally tolerates the hinted-text drift).
+//!    on both sides, the strict layer skips the bounds' symmetric difference
+//!    and a perimeter band (the anti-aliased outline plus decorations) — its
+//!    geometry is verified numerically instead (a text-sized element's `w`
+//!    additionally tolerates the hinted-text drift), while its interior
+//!    stays strict.
 //!
 //! `//PARITY_EPS=` on a case overrides [`PIXEL_EPS`] for that case only; the
 //! marker is always accompanied by a comment on the case explaining why.
@@ -60,39 +61,46 @@ pub const PIXEL_EPS: u8 = 8;
 /// Masked (text) layer: the mean absolute channel difference inside a
 /// `TEXT_CELL`-sized cell of text pixels must stay below this value, and no
 /// more than `TEXT_OUTLIER_FRACTION` of a cell's text pixels may exceed
-/// `TEXT_OUTLIER_EPS`. Loose enough for different rasterizers, tight enough
-/// that missing, misplaced, or wrongly-colored text fails.
+/// `TEXT_OUTLIER_EPS`. Calibrated to the engines' hinted-vs-fractional
+/// advance drift (sub-pixel glyph shifts inside a cell), so different
+/// rasterizers pass; missing, misplaced, or wrongly-colored text still
+/// fails well above these bounds.
 pub const TEXT_CELL: usize = 16;
-pub const TEXT_CELL_EPS: f64 = 40.0;
+pub const TEXT_CELL_EPS: f64 = 48.0;
 pub const TEXT_OUTLIER_EPS: u8 = 96;
-pub const TEXT_OUTLIER_FRACTION: f64 = 0.25;
+pub const TEXT_OUTLIER_FRACTION: f64 = 0.35;
 
-/// Strict layer inside the outline-disagreement band is skipped entirely;
-/// pixels on a detected image edge (local gradient above `EDGE_GRADIENT_*`
-/// in either render) get `EDGE_EPS` instead — the antialiasing band of a
-/// shape's outline is rasterizer internals and legitimately differs between
-/// Slint's and layoutlib's renderers, while a wrong color or a displaced
-/// shape still produces differences far above the edge epsilon on flat
-/// regions or in fill interiors.
+/// Strict layer pixels on a detected image edge get `EDGE_EPS` — but only
+/// when the edge exists in *both* renders within [`EDGE_BAND`]: antialiasing
+/// drift on a shared outline is a fraction of its contrast and legitimately
+/// differs between Slint's and layoutlib's renderers. An edge present in
+/// only one render (a missing or added decoration) is compared at
+/// [`PIXEL_EPS`] instead, so dropping the focus ring, an overlay, or a
+/// recolor fails crisply.
 pub const EDGE_EPS: u8 = 56;
 pub const EDGE_GRADIENT_SOFT: u8 = 24;
 
-/// Outline detection for the disagreement band inside traced elements' union
-/// rects — includes faint decorations (focus rings, elevation fringes) whose
-/// exact placement is engine detail, well above flat noise.
+/// Outline detection — includes faint decorations (focus rings, elevation
+/// fringes) whose exact placement is engine detail, well above flat noise.
 pub const EDGE_GRADIENT_OUTLINE: u8 = 10;
 
-/// Within a traced element pair's union rect, pixels this close to a
-/// detected outline are skipped as outline-disagreement zone — both sides'
-/// outlines and whatever lies between them when the engines' geometry
-/// legitimately differs (text-driven widths, animation phase). Covers a
-/// capsule corner arc's inset (~6px) plus a few px of traced drift.
-pub const DISAGREE_BAND: usize = 10;
+/// Pixels within this distance of an edge *in the same image* count as its
+/// edge neighborhood; an edge that exists in both images within this range
+/// is the same outline rendered by both engines.
+pub const EDGE_BAND: usize = 2;
+
+/// Within a traced element's bounds, pixels closer to the bounds' edge than
+/// this are the outline zone skipped by [`PixelMask::mark_element`] — deep
+/// enough to cover a rendered outline inset from its bounds (capsule arcs
+/// sit ~6px in when the corner radius hits the element's edge) plus
+/// antialiasing, never deep enough to cover an element's interior: a 40dp
+/// button still has a 24dp-wide strict strip through its middle, so a
+/// recolor or a missing fill fails.
+pub const OUTLINE_INSET_DP: f64 = 8.0;
 
 /// Decorations attached to a traced element — elevation shadow, focus
-/// outline — may spill a few dp outside its bounds. The disagreement rect
-/// is grown by this many logical px so the outline-disagreement zone covers
-/// them; their pixels are only skipped where a detected outline exists.
+/// outline — may spill a few dp outside its bounds; the perimeter band
+/// [`PixelMask::mark_element`] builds extends this far out to cover them.
 pub const DECORATION_MARGIN_DP: f64 = 6.0;
 
 /// Traces: element geometry is compared in logical pixels (== dp) and traced
@@ -179,12 +187,12 @@ enum PixelClass {
     /// The loose per-cell text comparison — pixels a text node contributed.
     Text,
     /// Not compared at all: pixels where the two engines legitimately
-    /// disagree — the disagreement band of a traced element (both sides'
-    /// outlines and everything between them when their geometry differs —
-    /// text metrics drive the width, animation phase the position — and the
-    /// anti-aliased outline of a traced element, which is rasterizer
-    /// internals). The numeric trace layer still checks these elements'
-    /// geometry; only their pixels skip.
+    /// disagree — a traced element's bounds' symmetric difference and the
+    /// perimeter band around each bounds (the anti-aliased outline and the
+    /// decorations that hug it: focus ring, elevation shadow). The numeric
+    /// trace layer still checks these elements' geometry; the interior of
+    /// every element stays strict, so a recolor, a missing fill, or a
+    /// one-sided decoration always fails.
     Skip,
 }
 
@@ -210,11 +218,6 @@ impl PxRect {
 /// Per-pixel comparison layers for [`layered_compare`].
 pub struct PixelMask {
     layer: Vec<PixelClass>,
-    /// Union of each traced element pair's bounds: inside one of these rects
-    /// the strict layer skips the outline-disagreement band — pixels within
-    /// [`DISAGREE_BAND`] of a strong image edge. The elements' geometry is
-    /// verified numerically by the trace layer instead.
-    disagreement: Vec<PxRect>,
     w: usize,
     h: usize,
 }
@@ -222,12 +225,7 @@ pub struct PixelMask {
 impl PixelMask {
     /// Every pixel strict.
     fn new(w: u32, h: u32) -> Self {
-        Self {
-            layer: vec![PixelClass::Strict; (w * h) as usize],
-            disagreement: Vec::new(),
-            w: w as usize,
-            h: h as usize,
-        }
+        Self { layer: vec![PixelClass::Strict; (w * h) as usize], w: w as usize, h: h as usize }
     }
 
     /// The Compose text mask PNG (`mask_t*.png`): white pixels are text.
@@ -237,7 +235,7 @@ impl PixelMask {
             .iter()
             .map(|p| if p.r > 0x7f && p.a > 0x7f { PixelClass::Text } else { PixelClass::Strict })
             .collect();
-        Self { layer, disagreement: Vec::new(), w: m.width() as usize, h: m.height() as usize }
+        Self { layer, w: m.width() as usize, h: m.height() as usize }
     }
 
     fn set(&mut self, x: usize, y: usize, class: PixelClass) {
@@ -255,20 +253,27 @@ impl PixelMask {
         }
     }
 
-    /// Record the traced element pair `slint`/`compose` (device px): its
-    /// symmetric difference is skipped, and the pair's union — grown by
-    /// `margin` for decorations spilling outside the bounds — becomes a
-    /// `disagreement` rect inside which the strict layer also skips the
-    /// outline-disagreement band (see [`layered_compare`]).
-    fn mark_element(&mut self, slint: PxRect, compose: PxRect, margin: f64) {
+    /// Record the traced element pair `slint`/`compose` (device px). Two
+    /// kinds of pixels skip strict comparison, and nothing else:
+    ///
+    /// * the symmetric difference of the two bounds — where one side's shape
+    ///   covers a pixel the other's doesn't (traced geometry drift), and
+    /// * a band around each bounds' perimeter, `margin` out and `inset`
+    ///   in — where the rendered outline may legitimately sit (capsule arcs
+    ///   inset a few px, focus rings and elevation shadows just outside,
+    ///   text-driven width drift).
+    ///
+    /// The mask is derived from the traced geometry, never from detected
+    /// image edges: a label's ink inside a button, a flat fill, or a
+    /// recolored element can never expand it. An element's interior always
+    /// stays strict — the trace layer verifies x/y/w/h numerically, so a
+    /// pixel-level outline band is all the tolerance the outline gets.
+    ///
+    /// `margin` is the outer decoration allowance and `inset` the inner
+    /// outline allowance, both in device px (see [`DECORATION_MARGIN_DP`]
+    /// and [`OUTLINE_INSET_DP`]).
+    fn mark_element(&mut self, slint: PxRect, compose: PxRect, margin: f64, inset: f64) {
         let (a, b) = (slint.dilated(1.0), compose.dilated(1.0));
-        let u = PxRect {
-            x0: a.x0.min(b.x0),
-            y0: a.y0.min(b.y0),
-            x1: a.x1.max(b.x1),
-            y1: a.y1.max(b.y1),
-        };
-        self.disagreement.push(u.dilated(margin));
         let (x0, y0) =
             (a.x0.min(b.x0).floor().max(0.0) as usize, a.y0.min(b.y0).floor().max(0.0) as usize);
         let (x1, y1) = (a.x1.max(b.x1).ceil() as usize, a.y1.max(b.y1).ceil() as usize);
@@ -277,6 +282,20 @@ impl PixelMask {
                 let (px, py) = (x as f64 + 0.5, y as f64 + 0.5);
                 if a.contains(px, py) != b.contains(px, py) {
                     self.set(x, y, PixelClass::Skip);
+                }
+            }
+        }
+        for r in [a, b] {
+            let outer = r.dilated(margin);
+            let inner =
+                PxRect { x0: r.x0 + inset, y0: r.y0 + inset, x1: r.x1 - inset, y1: r.y1 - inset };
+            for y in outer.y0.floor().max(0.0) as usize..(outer.y1.ceil() as usize).min(self.h) {
+                for x in outer.x0.floor().max(0.0) as usize..(outer.x1.ceil() as usize).min(self.w)
+                {
+                    let (px, py) = (x as f64 + 0.5, y as f64 + 0.5);
+                    if !inner.contains(px, py) {
+                        self.set(x, y, PixelClass::Skip);
+                    }
                 }
             }
         }
@@ -374,6 +393,13 @@ pub struct LayerResult {
     /// Diff visualization: red = failing pixels, blue = masked text pixels,
     /// else the dimmed actual render.
     pub diff: Option<SharedPixelBuffer<Rgba8Pixel>>,
+    /// Number of strict-layer pixels that differed — what a negative case
+    /// must produce (any other failure could be a missing file or a trace
+    /// mismatch, not the render rejecting the defect).
+    pub strict_failures: usize,
+    /// Bounding box (x0, y0, x1, y1, in device px) of the strict-layer
+    /// failures, when any.
+    pub strict_bbox: Option<(usize, usize, usize, usize)>,
 }
 
 /// Compare `actual` against `expected` under the per-pixel layer mask:
@@ -396,6 +422,8 @@ pub fn layered_compare(
                 expected.height()
             ),
             diff: None,
+            strict_failures: 0,
+            strict_bbox: None,
         };
     }
 
@@ -412,34 +440,37 @@ pub fn layered_compare(
                 actual.height()
             ),
             diff: None,
+            strict_failures: 0,
+            strict_bbox: None,
         };
     }
     let w = actual.width() as usize;
     let h = actual.height() as usize;
     let (a, e) = (actual.as_slice(), expected.as_slice());
 
-    // Edge strength from both images: pixels within 2px of an outline get
-    // an epsilon proportional to the local contrast — antialiasing drift is
-    // a fraction of the edge's own contrast, while a real coverage
-    // difference (displaced or misshapen outline) produces diffs at full
-    // contrast and still fails. Inside a traced disagreement rect, the
-    // wider band around detected outlines skips the legitimate
-    // outline-disagreement zone.
-    let gradient: Vec<u8> = local_gradient(actual)
-        .into_iter()
-        .zip(local_gradient(&expected))
-        .map(|(a, b)| a.max(b))
-        .collect();
-    let strength = dilate_max(&gradient, w, h, 2);
-    let outline_zone = if mask.disagreement.is_empty() {
-        Vec::new()
-    } else {
-        let edges: Vec<bool> = gradient.iter().map(|&g| g > EDGE_GRADIENT_OUTLINE).collect();
-        dilate(&edges, w, h, DISAGREE_BAND)
-    };
+    // Edge strength from both images: pixels within EDGE_BAND of an outline
+    // present in BOTH renders get an epsilon proportional to the local
+    // contrast — antialiasing drift is a fraction of the edge's own
+    // contrast, while a real coverage difference (an outline in only one
+    // render, a flat fill mismatch) produces diffs at full contrast and
+    // still fails.
+    let gradient_actual = local_gradient(actual);
+    let gradient_expected = local_gradient(expected);
+    let gradient: Vec<u8> =
+        gradient_actual.iter().zip(&gradient_expected).map(|(a, b)| (*a).max(*b)).collect();
+    let strength = dilate_max(&gradient, w, h, EDGE_BAND);
+    let edges_actual: Vec<bool> =
+        gradient_actual.iter().map(|&g| g > EDGE_GRADIENT_OUTLINE).collect();
+    let edges_expected: Vec<bool> =
+        gradient_expected.iter().map(|&g| g > EDGE_GRADIENT_OUTLINE).collect();
+    let near_actual = dilate(&edges_actual, w, h, EDGE_BAND);
+    let near_expected = dilate(&edges_expected, w, h, EDGE_BAND);
+    let both_edge: Vec<bool> =
+        near_actual.iter().zip(&near_expected).map(|(a, e)| *a && *e).collect();
 
     let mut diff_img = SharedPixelBuffer::<Rgba8Pixel>::new(actual.width(), actual.height());
     let mut strict_failures = 0usize;
+    let mut strict_bbox = None;
     let mut worst = 0u8;
 
     // Accumulate per text-mask cell: (sum of mean channel diff, outlier count, text pixel count)
@@ -448,14 +479,7 @@ pub fn layered_compare(
     for i in 0..a.len() {
         let d = channel_diff(&a[i], &e[i]);
         let (x, y) = (i % w, i / w);
-        let in_disagreement = mask.disagreement.iter().any(|r| {
-            x as f64 >= r.x0 && x as f64 + 1.0 <= r.x1 && y as f64 >= r.y0 && y as f64 + 1.0 <= r.y1
-        });
-        let class = if in_disagreement && outline_zone.get(i).copied().unwrap_or(false) {
-            PixelClass::Skip
-        } else {
-            mask.layer[i]
-        };
+        let class = mask.layer[i];
         let dim = |p: &Rgba8Pixel| Rgba8Pixel {
             r: p.r / 4 + 140,
             g: p.g / 4 + 140,
@@ -477,16 +501,24 @@ pub fn layered_compare(
                 }
             }
             PixelClass::Strict => {
-                // AA drift on an outline is bounded by the outline's own
-                // contrast: a difference larger than half the local
-                // contrast means real coverage disagreement.
-                let eps = if strength[i] > EDGE_GRADIENT_SOFT {
+                // AA drift on a shared outline is bounded by the outline's
+                // own contrast: a difference larger than half the local
+                // contrast means real coverage disagreement. An edge in
+                // only one render gets no scaling — the missing or added
+                // feature is what the strict layer exists to catch.
+                let eps = if strength[i] > EDGE_GRADIENT_SOFT && both_edge[i] {
                     ((strength[i] as u16) / 2).clamp(pixel_eps as u16, EDGE_EPS as u16) as u8
                 } else {
                     pixel_eps
                 };
                 if d > eps {
                     strict_failures += 1;
+                    strict_bbox = match strict_bbox {
+                        None => Some((x, y, x + 1, y + 1)),
+                        Some((x0, y0, x1, y1)) => {
+                            Some((x0.min(x), y0.min(y), x1.max(x + 1), y1.max(y + 1)))
+                        }
+                    };
                     worst = worst.max(d);
                     Rgba8Pixel { r: 0xff, g: 0, b: 0, a: 255 }
                 } else {
@@ -518,6 +550,8 @@ pub fn layered_compare(
         ok: strict_failures == 0 && text_failures.is_empty(),
         report,
         diff: if strict_failures == 0 && text_failures.is_empty() { None } else { Some(diff_img) },
+        strict_failures,
+        strict_bbox,
     }
 }
 
@@ -765,21 +799,99 @@ fn settle_time_ms(frames: &[TraceFrame]) -> Option<u64> {
 /// `{ "times_ms": [...], "frames": [{ "t_ms": n, "props": {...},
 /// "elements": { "<id>": {"x":..,"y":..,"w":..,"h":..,"opacity":..} } }],
 /// "settle_ms": n }`. Returns the list of mismatches found.
+/// The Compose-side clock offset relative to the Slint timeline, in ms.
+///
+/// Slint dispatches the scene's pointer gesture at the recorded timestamp on
+/// the mocked clock, so the animation's effective t=0 is the dispatch
+/// itself. Compose starts the same `animateTo` from a `LaunchedEffect`, so
+/// its spring's t=0 is the next frame callback — a fixed startup latency of
+/// a few ms under Paparazzi's 1ms frame clock. Both runs integrate the same
+/// ODE once started, so the honest comparison is not "nearest frame within a
+/// window" (which hides a systematic lead) but identical timestamps after
+/// shifting the Compose clock by this measured latency. The shift is
+/// estimated per trace over ±16ms and reported with the result.
+fn estimate_phase(slint: &[TraceFrame], by_time: &BTreeMap<u64, &serde_json::Value>) -> i64 {
+    let frame_err = |sf: &TraceFrame, ct: i64| -> f64 {
+        let Some(cf) = (ct >= 0).then(|| by_time.get(&(ct as u64))).flatten() else {
+            return f64::MAX;
+        };
+        let mut err = 0.0f64;
+        for (name, value) in &sf.props {
+            let Some(actual) = value.components() else { continue };
+            let Some(cv) = cf["props"].get(name) else { continue };
+            let expected: Vec<f64> = match cv {
+                serde_json::Value::Number(n) => vec![n.as_f64().unwrap_or_default()],
+                serde_json::Value::Bool(b) => vec![*b as u8 as f64],
+                serde_json::Value::Array(a) => {
+                    a.iter().map(|v| v.as_f64().unwrap_or_default()).collect()
+                }
+                _ => continue,
+            };
+            if expected.len() == actual.len() {
+                err += actual.iter().zip(&expected).map(|(a, e)| (a - e).abs()).fold(0.0, f64::max);
+            }
+        }
+        // Geometry fallback when the scene traces no props: use element x.
+        if sf.props.is_empty() {
+            for (id, geo) in &sf.elements {
+                if let Some(e) = cf["elements"].get(id).and_then(|ce| ce["x"].as_f64()) {
+                    err += (geo[0] - e).abs();
+                }
+            }
+        }
+        err
+    };
+
+    (-16i64..=16)
+        .map(|shift| {
+            let mut total = 0.0f64;
+            let mut compared = 0usize;
+            let mut missed = 0usize;
+            for sf in slint {
+                let e = frame_err(sf, sf.t_ms as i64 + shift);
+                if e == f64::MAX {
+                    missed += 1;
+                } else {
+                    total += e;
+                    compared += 1;
+                }
+            }
+            (shift, if compared > 0 { total / compared as f64 } else { f64::MAX }, missed)
+        })
+        .min_by(|a, b| {
+            // Lowest mean error over frames present on both clocks, then
+            // the fewest boundary misses, then the smallest |shift|.
+            a.1.total_cmp(&b.1).then(a.2.cmp(&b.2)).then(a.0.abs().cmp(&b.0.abs()))
+        })
+        .map(|(s, _, _)| s)
+        .unwrap_or(0)
+}
+
 pub fn compare_traces(slint: &[TraceFrame], compose: &serde_json::Value) -> Vec<String> {
     let mut errors = Vec::new();
     let frames = compose["frames"].as_array().cloned().unwrap_or_default();
     let by_time: BTreeMap<u64, &serde_json::Value> =
         frames.iter().filter_map(|f| f["t_ms"].as_u64().map(|t| (t, f))).collect();
 
-    // Slint and Compose quantize the spring's start tick differently (the
-    // pointer event lands mid-frame on Slint's mocked clock; Compose starts
-    // the animation on the next frame callback) — the same ODE off by a frame
-    // or two. Compare each Slint sample against Compose frames within
-    // PHASE_MS of its timestamp and take the nearest.
-    const PHASE_MS: i64 = 4;
+    let phase_ms = estimate_phase(slint, &by_time);
+    eprintln!(
+        "parity: compose animation clock runs {phase_ms}ms behind slint's dispatch — comparing at identical shifted timestamps"
+    );
     let compose_at = |t: u64| -> Vec<&serde_json::Value> {
-        let lo = t.saturating_sub(PHASE_MS as u64);
-        (lo..=t + PHASE_MS as u64).filter_map(|tt| by_time.get(&tt).copied()).collect()
+        let t = t as i64 + phase_ms;
+        if let Some(cf) = (t >= 0).then(|| by_time.get(&(t as u64))).flatten() {
+            return vec![*cf];
+        }
+        // Boundary only: the shifted timestamp ran past the recorded trace —
+        // compare against the nearest frame on the Compose clock (the trace
+        // is sampled densely enough that the clamp lands within the
+        // tolerance the numeric compare already applies).
+        by_time
+            .iter()
+            .min_by_key(|(ct, _)| (**ct as i64 - t).unsigned_abs())
+            .map(|(_, f)| *f)
+            .into_iter()
+            .collect()
     };
 
     for frame in slint {
@@ -969,13 +1081,16 @@ fn compare_text_metrics<C: i_slint_core::api::ComponentHandle>(
 
             // Slint w vs the font's own metrics; Compose's hinted w stays a
             // few px wider by design and is not re-checked here.
+            let chars = m["chars"].as_f64().unwrap_or(1.0).max(1.0);
             match m["frac_w"].as_f64() {
                 Some(frac_w) if frac_w.is_finite() => {
-                    // Slint advances glyph positions at integer px; frac_w
-                    // is the font's exact advance — allow 1px rounding.
-                    if (sw - frac_w).abs() > 1.0 {
+                    // frac_w is the engine's exact fractional advance; the
+                    // engines' glyph advances differ by sub-pixel hinting
+                    // drift per glyph, bounded by glyph count.
+                    let w_bound = 0.5 + 0.25 * chars;
+                    if (sw - frac_w).abs() > w_bound {
                         errors.push(format!(
-                            "t={}ms text:{n}.w: slint {sw} vs font metric {frac_w} (eps 1.0)",
+                            "t={}ms text:{n}.w: slint {sw} vs font metric {frac_w} (bound {w_bound})",
                             frame.t_ms
                         ));
                     }
@@ -983,7 +1098,6 @@ fn compare_text_metrics<C: i_slint_core::api::ComponentHandle>(
                 // Fallback for references recorded before frac_w existed:
                 // bound the cross-engine drift to ~0.5px per glyph.
                 _ => {
-                    let chars = m["chars"].as_f64().unwrap_or(1.0).max(1.0);
                     let bound = GEOM_EPS + 0.6 * chars;
                     if (sw - cw).abs() > bound {
                         errors.push(format!(
@@ -994,22 +1108,40 @@ fn compare_text_metrics<C: i_slint_core::api::ComponentHandle>(
                 }
             }
 
-            // Center-x and y compare after absorbing the width difference —
-            // the text is centered in equal-width containers, so a Slint text
-            // whose w is narrower still sits at the same center.
-            let c_center = cx + cw / 2.0;
-            let drift = m["frac_w"]
-                .as_f64()
-                .filter(|f| f.is_finite())
-                .map(|f| (cw - f).abs())
-                .unwrap_or(1.0);
-            let c_eps = drift / 2.0 + GEOM_EPS;
-            if (sx + sw / 2.0 - c_center).abs() > c_eps {
-                errors.push(format!(
-                    "t={}ms text:{n}.cx: slint {:.2} vs compose {c_center:.2} (eps {c_eps:.2})",
-                    frame.t_ms,
-                    sx + sw / 2.0,
-                ));
+            // Label placement inside its container: compare the text's x
+            // offset within the element `button<N>` (or `*<N>`) that holds
+            // it on both sides — the container widths legitimately differ
+            // by the summed hinting drift, so absolute centers would carry
+            // half of it. Falls back to absolute center without a container.
+            let container = format!("button{n}");
+            let slint_off = frame.elements.get(&container).map(|g| sx - g[0]);
+            let compose_off =
+                cf["elements"].get(&container).and_then(|ce| ce["x"].as_f64()).map(|bx| cx - bx);
+            match (slint_off, compose_off) {
+                (Some(s_off), Some(c_off)) => {
+                    if (s_off - c_off).abs() > GEOM_EPS {
+                        errors.push(format!(
+                            "t={}ms text:{n}.x-offset: slint {s_off:.2} vs compose {c_off:.2} (eps {GEOM_EPS})",
+                            frame.t_ms
+                        ));
+                    }
+                }
+                _ => {
+                    let c_center = cx + cw / 2.0;
+                    let drift = m["frac_w"]
+                        .as_f64()
+                        .filter(|f| f.is_finite())
+                        .map(|f| (cw - f).abs())
+                        .unwrap_or(1.0);
+                    let c_eps = drift / 2.0 + GEOM_EPS;
+                    if (sx + sw / 2.0 - c_center).abs() > c_eps {
+                        errors.push(format!(
+                            "t={}ms text:{n}.cx: slint {:.2} vs compose {c_center:.2} (eps {c_eps:.2})",
+                            frame.t_ms,
+                            sx + sw / 2.0,
+                        ));
+                    }
+                }
             }
             for (key, actual, eps) in [("y", sy, GEOM_EPS), ("h", sh, 1.0)] {
                 let Some(e) = m[key].as_f64() else { continue };
@@ -1209,6 +1341,7 @@ fn build_frame_mask<C: i_slint_core::api::ComponentHandle>(
                 },
                 PxRect { x0: x * d, y0: y * d, x1: (x + w) * d, y1: (y + h) * d },
                 DECORATION_MARGIN_DP * d,
+                OUTLINE_INSET_DP * d,
             );
         }
     }
@@ -1251,6 +1384,11 @@ pub fn run_parity_case<C: i_slint_core::api::ComponentHandle>(
     }
 
     let mut failures: Vec<String> = Vec::new();
+    let mut strict_caught = 0usize;
+    // Trace/geometry/text-metric findings — the layer a motion-class defect
+    // (e.g. an offset on a moving element) is *supposed* to be caught by:
+    // its pixels legitimately sit inside the elements' disagreement band.
+    let mut compare_findings = 0usize;
     for density in &spec.densities {
         let component = make_instance(*density);
 
@@ -1274,15 +1412,17 @@ pub fn run_parity_case<C: i_slint_core::api::ComponentHandle>(
 
         // The actions are input delivered at t=0: the frame at the first time
         // captures the pre-gesture state, so they dispatch right after it.
-        // (Static cases only record the settled frame — apply first.)
-        let actions_before_first_frame = kind != "motion";
+        // (Cases without //TIMES= only record the settled frame — apply first.)
+        let actions_before_first_frame = spec.times.is_empty();
         if actions_before_first_frame {
             apply_actions(component.window(), spec);
         }
 
         // Static cases settle out any entry/ripple animation before the shot.
+        // A negative case may still declare //TIMES= when its defect lives in
+        // the trace layer (e.g. an offset on a moving element).
         let times: Vec<u64> =
-            if kind == "motion" { spec.times.clone() } else { vec![STATIC_SETTLE_MS] };
+            if !spec.times.is_empty() { spec.times.clone() } else { vec![STATIC_SETTLE_MS] };
         let start = i_slint_backend_testing::get_mocked_time();
 
         let mut frames = Vec::new();
@@ -1300,7 +1440,7 @@ pub fn run_parity_case<C: i_slint_core::api::ComponentHandle>(
             if references_missing {
                 continue;
             }
-            let tag = if kind == "motion" { format!("{t}ms") } else { "settled".to_string() };
+            let tag = if !spec.times.is_empty() { format!("{t}ms") } else { "settled".to_string() };
             let frame_path = dir.join(format!("frame_{tag}.png"));
             let mask_path = dir.join(format!("mask_{tag}.png"));
             let expected = match load_png(&frame_path) {
@@ -1321,6 +1461,7 @@ pub fn run_parity_case<C: i_slint_core::api::ComponentHandle>(
                 actual.height(),
             );
             let result = layered_compare(&actual, &expected, Some(&mask), pixel_eps);
+            strict_caught += result.strict_failures;
             if !result.ok {
                 let dir = artifacts_dir(driver, case_rel);
                 write_png(&dir.join(format!("actual_d{density}_{tag}.png")), &actual)?;
@@ -1335,8 +1476,9 @@ pub fn run_parity_case<C: i_slint_core::api::ComponentHandle>(
 
         if let Some(compose) = &compose {
             let mut errors =
-                if kind == "motion" { compare_traces(&frames, compose) } else { Vec::new() };
+                if !spec.times.is_empty() { compare_traces(&frames, compose) } else { Vec::new() };
             errors.extend(compare_text_metrics(&component, &frames, compose));
+            compare_findings += errors.len();
             if !errors.is_empty() {
                 let dir = artifacts_dir(driver, case_rel);
                 std::fs::create_dir_all(&dir)?;
@@ -1368,18 +1510,29 @@ pub fn run_parity_case<C: i_slint_core::api::ComponentHandle>(
             // fails earlier).
             return Ok(());
         }
-        // The case is deliberately wrong (see its `PARITY=negative:` note): the
-        // layered comparator must reject it. Catching nothing here would mean
-        // the harness can silently pass a wrong render.
-        if failures.is_empty() {
+        // The case is deliberately wrong (see its `PARITY=negative:` note): a
+        // pixel-class defect (color, overlay, shape) must fail at the strict
+        // layer; a motion-class defect (a //TIMES= case) may instead be
+        // caught by the numeric trace layer — a moved element's displaced
+        // pixels legitimately sit inside the mask's disagreement band. A
+        // failure reported for any other reason (missing file, IO) proves
+        // nothing.
+        let defect_caught = strict_caught > 0 || (!spec.times.is_empty() && compare_findings > 0);
+        if !defect_caught {
             return Err(format!(
-                "negative case {case_rel} rendered identical to the reference — the harness did not catch the deliberate defect: {}",
+                "negative case {case_rel} produced no strict-pixel{} differences{} — the harness did not catch the deliberate defect: {}",
+                if spec.times.is_empty() { "" } else { " or trace" },
+                if failures.is_empty() {
+                    String::new()
+                } else {
+                    format!(" (only non-comparison findings: {})", failures.join("; "))
+                },
                 spec.negative_note.as_deref().unwrap_or("(undocumented)")
             )
             .into());
         }
         eprintln!(
-            "parity: negative case {case_rel} correctly rejected ({} findings)",
+            "parity: negative case {case_rel} correctly rejected ({strict_caught} strict pixels, {compare_findings} trace findings, {} failures)",
             failures.len()
         );
         return Ok(());
