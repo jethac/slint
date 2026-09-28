@@ -557,7 +557,7 @@ pub fn embed_glyphs(
         for (path, font) in default_fonts
             .iter()
             .map(|(p, f)| (p, f))
-            .chain(custom_fonts.iter().map(|(p, f)| (p, f)))
+            .chain(custom_fonts.iter())
         {
             if !embedded_paths.insert(path.clone()) {
                 continue;
@@ -617,6 +617,7 @@ fn get_fallback_fonts() -> Vec<Font> {
 }
 
 #[cfg(not(target_arch = "wasm32"))]
+#[allow(clippy::too_many_arguments)]
 fn embed_font(
     family_name: String,
     font: Font,
@@ -1111,7 +1112,7 @@ pub fn collect_font_axes_used(component: &Rc<Component>, seen: &mut FontAxesUsed
                     let constant_entry = match entry {
                         Expression::Struct { values, .. } => match (
                             values.get("tag"),
-                            values.get("value").and_then(|e| number_value(e)),
+                            values.get("value").and_then(number_value),
                         ) {
                             (Some(Expression::StringLiteral(tag)), Some(value))
                                 if tag.len() == 4
@@ -1210,16 +1211,15 @@ pub fn collect_font_axes_used(component: &Rc<Component>, seen: &mut FontAxesUsed
         // snap to the nearest embedded instance, so it takes the same route as
         // other non-constant axis inputs.
         for (suffix, unit) in [("font-weight", Unit::None), ("font-size", Unit::Px)] {
-            if let Some(binding) = elem.borrow().binding(format!("{prefix}{suffix}").as_str()) {
-                if binding.animation.is_some()
+            if let Some(binding) = elem.borrow().binding(format!("{prefix}{suffix}").as_str())
+                && (binding.animation.is_some()
                     || try_extract_literal_from_element(elem, &format!("{prefix}{suffix}"), unit)
-                        .is_none()
-                {
-                    element_dynamic.push((
-                        format!("{prefix}{suffix}").into(),
-                        binding.span.clone().unwrap_or_default(),
-                    ));
-                }
+                        .is_none())
+            {
+                element_dynamic.push((
+                    format!("{prefix}{suffix}").into(),
+                    binding.span.clone().unwrap_or_default(),
+                ));
             }
         }
 
@@ -1313,11 +1313,13 @@ fn collect_markup_axes(
         let Some(binding) = elem.binding("text") else { return Vec::new() };
         let markup = match binding.value_expression() {
             Expression::StringLiteral(markup) => Some(markup.clone()),
-            Expression::FunctionCall { function, arguments, .. }
-                if matches!(
-                    function,
-                    crate::expression_tree::Callable::Builtin(BuiltinFunction::ParseMarkdown)
-                ) =>
+            Expression::FunctionCall {
+                function: crate::expression_tree::Callable::Builtin(
+                    BuiltinFunction::ParseMarkdown,
+                ),
+                arguments,
+                ..
+            } =>
             {
                 match arguments.first() {
                     Some(Expression::StringLiteral(markup)) => Some(markup.clone()),
