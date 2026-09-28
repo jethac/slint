@@ -1148,7 +1148,8 @@ pub fn collect_font_axes_used(component: &Rc<Component>, seen: &mut FontAxesUsed
     recurse_elem_including_sub_components(component, &(), &mut |elem, _| {
         let base = elem.borrow().base_type.to_string();
         let (is_text, is_window) = match base.as_str() {
-            "TextInput" | "Text" | "SimpleText" | "ComplexText" | "StyledText" | "StyledTextItem" => (true, false),
+            "TextInput" | "Text" | "SimpleText" | "ComplexText" | "StyledText"
+            | "StyledTextItem" => (true, false),
             "Dialog" | "Window" | "WindowItem" | "PopupWindow" => (false, true),
             _ => (false, false),
         };
@@ -1170,11 +1171,14 @@ pub fn collect_font_axes_used(component: &Rc<Component>, seen: &mut FontAxesUsed
         // collection, which only understands literals. A bound or animated
         // weight would silently snap to the nearest embedded instance, so it
         // takes the same route as other non-constant axis inputs.
-        if let Some(binding) = elem.borrow().binding(format!("{prefix}font-weight").as_str())
-        {
+        if let Some(binding) = elem.borrow().binding(format!("{prefix}font-weight").as_str()) {
             if binding.animation.is_some()
-                || try_extract_literal_from_element(elem, &format!("{prefix}font-weight"), Unit::None)
-                    .is_none()
+                || try_extract_literal_from_element(
+                    elem,
+                    &format!("{prefix}font-weight"),
+                    Unit::None,
+                )
+                .is_none()
             {
                 seen.dynamic.push((
                     format!("{prefix}font-weight").into(),
