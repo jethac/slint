@@ -85,6 +85,7 @@ type PointArg = (LogicalPosition,);
 type MenuEntryArg = (MenuEntry,);
 type StringArg = (SharedString,);
 type MenuEntryModel = crate::model::ModelRc<MenuEntry>;
+type FontVariationModel = crate::model::ModelRc<FontVariation>;
 
 #[cfg(all(feature = "ffi", windows))]
 #[macro_export]
@@ -1278,7 +1279,7 @@ pub struct WindowItem {
     pub default_font_weight: Property<i32>,
     pub default_font_stretch: Property<f32>,
     pub default_font_optical_sizing: Property<FontOpticalSizing>,
-    pub default_font_variation_settings: Property<crate::model::ModelRc<FontVariation>>,
+    pub default_font_variation_settings: Property<FontVariationModel>,
     pub cached_rendering_data: CachedRenderingData,
 }
 
@@ -1423,9 +1424,7 @@ impl WindowItem {
         }
     }
 
-    pub fn font_variation_settings(
-        self: Pin<&Self>,
-    ) -> Option<crate::model::ModelRc<FontVariation>> {
+    pub fn font_variation_settings(self: Pin<&Self>) -> Option<FontVariationModel> {
         let settings = self.default_font_variation_settings();
         if settings.row_count() == 0 { None } else { Some(settings) }
     }
@@ -1479,7 +1478,7 @@ impl WindowItem {
         local_italic: bool,
         local_font_stretch: f32,
         local_font_optical_sizing: FontOpticalSizing,
-        local_font_variation_settings: crate::model::ModelRc<FontVariation>,
+        local_font_variation_settings: FontVariationModel,
     ) -> FontRequest {
         let Some(window_item_rc) = next_window_item(self_rc) else {
             return FontRequest {

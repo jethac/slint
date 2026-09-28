@@ -7,15 +7,16 @@
 
 namespace slint::cbindgen_private {
 struct PropertyAnimation;
-struct FontVariation;
 }
 namespace slint {
 template<typename T>
 class Model;
 }
 
-#include "private/slint_properties_internal.h"
+// builtin_structs_internal.h first: it brings `using slint::language::FontVariation`
+// into scope for the signatures in slint_properties_internal.h.
 #include "private/slint_builtin_structs_internal.h"
+#include "private/slint_properties_internal.h"
 
 namespace slint::private_api {
 

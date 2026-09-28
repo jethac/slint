@@ -570,6 +570,7 @@ fn gen_corelib(
         "PointArg",
         "Point",
         "MenuEntryModel",
+        "FontVariationModel",
         "MenuEntryArg",
         "Coord",
         "Channel",

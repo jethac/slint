@@ -8,11 +8,12 @@ This module contains the builtin text related items.
 When adding an item or a property, it needs to be kept in sync with different place.
 Lookup the [`crate::items`] module documentation.
 */
+use super::FontVariationModel;
 use super::{
-    EventResult, FontMetrics, FontOpticalSizing, FontVariation, InputMethodHints, InputType, Item,
-    ItemConsts, ItemRc, ItemRef, KeyEventArg, KeyEventResult, KeyEventType, PointArg,
-    PointerEventButton, RenderingResult, StringArg, TextHorizontalAlignment, TextOverflow,
-    TextStrokeStyle, TextVerticalAlignment, TextWrap, VoidArg,
+    EventResult, FontMetrics, FontOpticalSizing, InputMethodHints, InputType, Item, ItemConsts,
+    ItemRc, ItemRef, KeyEventArg, KeyEventResult, KeyEventType, PointArg, PointerEventButton,
+    RenderingResult, StringArg, TextHorizontalAlignment, TextOverflow, TextStrokeStyle,
+    TextVerticalAlignment, TextWrap, VoidArg,
 };
 use crate::graphics::{Brush, Color, FontRequest};
 use crate::input::{
@@ -59,7 +60,7 @@ pub struct ComplexText {
     pub font_italic: Property<bool>,
     pub font_stretch: Property<f32>,
     pub font_optical_sizing: Property<FontOpticalSizing>,
-    pub font_variation_settings: Property<ModelRc<FontVariation>>,
+    pub font_variation_settings: Property<FontVariationModel>,
     pub wrap: Property<TextWrap>,
     pub overflow: Property<TextOverflow>,
     pub letter_spacing: Property<LogicalLength>,
@@ -253,7 +254,7 @@ pub struct StyledTextItem {
     pub default_font_family: Property<SharedString>,
     pub default_font_stretch: Property<f32>,
     pub default_font_optical_sizing: Property<FontOpticalSizing>,
-    pub default_font_variation_settings: Property<ModelRc<FontVariation>>,
+    pub default_font_variation_settings: Property<FontVariationModel>,
     pub horizontal_alignment: Property<TextHorizontalAlignment>,
     pub vertical_alignment: Property<TextVerticalAlignment>,
     pub max_lines: Property<i32>,
@@ -784,7 +785,7 @@ pub struct TextInput {
     pub font_italic: Property<bool>,
     pub font_stretch: Property<f32>,
     pub font_optical_sizing: Property<FontOpticalSizing>,
-    pub font_variation_settings: Property<ModelRc<FontVariation>>,
+    pub font_variation_settings: Property<FontVariationModel>,
     pub color: Property<Brush>,
     pub selection_foreground_color: Property<Color>,
     pub selection_background_color: Property<Color>,
