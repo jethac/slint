@@ -158,9 +158,9 @@ private:
     ShapePoint center_ = {};
     /// Content hash computed by the Rust side at construction (morph cache
     /// key). Read and written by Rust only; always 0 for a C++-default Shape.
-    uint64_t content_hash_ = 0;
+    [[maybe_unused]] uint64_t content_hash_ = 0;
     /// Interned construction id assigned by the Rust side; 0 when unset.
-    uint64_t id_ = 0;
+    [[maybe_unused]] uint64_t id_ = 0;
     cbindgen_private::FillRule fill_rule_ = cbindgen_private::FillRule::Nonzero;
 };
 
