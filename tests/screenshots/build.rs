@@ -132,8 +132,7 @@ fn generate_source(
     // A `//PARITY=` case renders at each of its densities by dispatching
     // `ScaleFactorChanged` per render — a compile-time constant would lock
     // the window at 1.0 and silently drop those events.
-    compiler_config.const_scale_factor =
-        (!source.contains("//PARITY=")).then_some(scale_factor);
+    compiler_config.const_scale_factor = (!source.contains("//PARITY=")).then_some(scale_factor);
     // Parity cases query elements by id (`//TRACE_ELEMENTS=`, text metrics),
     // which needs element debug info in the generated code.
     compiler_config.debug_info = source.contains("//PARITY=");
@@ -166,9 +165,17 @@ fn library_paths_for(source: &str) -> std::collections::HashMap<String, std::pat
             .map(|(k, v)| (k.to_string(), std::path::PathBuf::from(v)))
             .collect();
     paths.entry("material".to_string()).or_insert(
-        [env!("CARGO_MANIFEST_DIR"), "..", "..", "ui-libraries", "material", "src", "material.slint"]
-            .iter()
-            .collect(),
+        [
+            env!("CARGO_MANIFEST_DIR"),
+            "..",
+            "..",
+            "ui-libraries",
+            "material",
+            "src",
+            "material.slint",
+        ]
+        .iter()
+        .collect(),
     );
     paths
 }
@@ -272,9 +279,7 @@ fn write_software_test(
     // `//PARITY=` cases carry no driver golden: the Compose references are
     // their ground truth. When a golden does exist it is still compared.
     let asserts = if markers.parity.parity.is_some() {
-        format!(
-            "    if std::path::Path::new(&screenshot).exists() {{\n{asserts}\n    }}"
-        )
+        format!("    if std::path::Path::new(&screenshot).exists() {{\n{asserts}\n    }}")
     } else {
         asserts
     };

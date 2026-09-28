@@ -42,9 +42,9 @@
 //! trace plot are written to `$PARITY_ARTIFACT_DIR/<driver>/<case>/`
 //! (default `target/parity-artifacts/`), which CI uploads.
 
+use i_slint_core::SharedString;
 use i_slint_core::graphics::{Rgba8Pixel, SharedPixelBuffer};
 use i_slint_core::platform::WindowEvent;
-use i_slint_core::SharedString;
 use std::collections::BTreeMap;
 use std::io::Write;
 use std::path::{Path, PathBuf};
@@ -117,7 +117,10 @@ pub fn repo_root() -> PathBuf {
 /// `material` registered to `ui-libraries/material/src/material.slint` unless
 /// the case overrides it. Marker paths are relative to the case file itself —
 /// pass the case's directory so they resolve.
-pub fn library_paths_for(source: &str, case_dir: &Path) -> std::collections::HashMap<String, PathBuf> {
+pub fn library_paths_for(
+    source: &str,
+    case_dir: &Path,
+) -> std::collections::HashMap<String, PathBuf> {
     let mut paths: std::collections::HashMap<String, PathBuf> =
         test_driver_lib::extract_library_paths(source)
             .map(|(k, v)| (k.to_string(), case_dir.join(v)))
@@ -132,9 +135,7 @@ pub fn library_paths_for(source: &str, case_dir: &Path) -> std::collections::Has
 /// (`<case>` is the case path relative to `cases/`, without extension, e.g.
 /// `material/filled_button_states`).
 pub fn refs_dir(case_rel: &str) -> PathBuf {
-    repo_root()
-        .join("ui-libraries/material/parity/compose/references")
-        .join(case_rel)
+    repo_root().join("ui-libraries/material/parity/compose/references").join(case_rel)
 }
 
 /// Where comparison artifacts land on failure.
@@ -234,9 +235,7 @@ impl PixelMask {
         let layer = m
             .as_slice()
             .iter()
-            .map(|p| {
-                if p.r > 0x7f && p.a > 0x7f { PixelClass::Text } else { PixelClass::Strict }
-            })
+            .map(|p| if p.r > 0x7f && p.a > 0x7f { PixelClass::Text } else { PixelClass::Strict })
             .collect();
         Self { layer, disagreement: Vec::new(), w: m.width() as usize, h: m.height() as usize }
     }
@@ -518,11 +517,7 @@ pub fn layered_compare(
     LayerResult {
         ok: strict_failures == 0 && text_failures.is_empty(),
         report,
-        diff: if strict_failures == 0 && text_failures.is_empty() {
-            None
-        } else {
-            Some(diff_img)
-        },
+        diff: if strict_failures == 0 && text_failures.is_empty() { None } else { Some(diff_img) },
     }
 }
 
@@ -552,7 +547,7 @@ impl TraceValue {
         }
     }
 
-        /// Serializes to the same JSON shape the Compose harness emits
+    /// Serializes to the same JSON shape the Compose harness emits
     /// (number, bool, string, or `[r,g,b,a]`).
     fn to_json(&self) -> String {
         match self {
@@ -784,21 +779,19 @@ pub fn compare_traces(slint: &[TraceFrame], compose: &serde_json::Value) -> Vec<
     const PHASE_MS: i64 = 4;
     let compose_at = |t: u64| -> Vec<&serde_json::Value> {
         let lo = t.saturating_sub(PHASE_MS as u64);
-        (lo..=t + PHASE_MS as u64)
-            .filter_map(|tt| by_time.get(&tt).copied())
-            .collect()
+        (lo..=t + PHASE_MS as u64).filter_map(|tt| by_time.get(&tt).copied()).collect()
     };
 
     for frame in slint {
-        let cands = compose_at(frame.t_ms);
-        if cands.is_empty() {
+        let candidates = compose_at(frame.t_ms);
+        if candidates.is_empty() {
             errors.push(format!("t={}ms has no Compose trace frame", frame.t_ms));
             continue;
         }
         for (name, value) in &frame.props {
             let Some(actual) = value.components() else { continue };
             let mut best: Option<(Vec<f64>, f64)> = None;
-            for cf in &cands {
+            for cf in &candidates {
                 let Some(cv) = cf["props"].get(name) else { continue };
                 let expected: Vec<f64> = match cv {
                     serde_json::Value::Number(n) => vec![n.as_f64().unwrap_or_default()],
@@ -815,20 +808,15 @@ pub fn compare_traces(slint: &[TraceFrame], compose: &serde_json::Value) -> Vec<
                     ));
                     continue;
                 }
-                let err: f64 = actual
-                    .iter()
-                    .zip(&expected)
-                    .map(|(a, e)| (a - e).abs())
-                    .fold(0.0, f64::max);
+                let err: f64 =
+                    actual.iter().zip(&expected).map(|(a, e)| (a - e).abs()).fold(0.0, f64::max);
                 if best.as_ref().is_none_or(|(_, e)| err < *e) {
                     best = Some((expected, err));
                 }
             }
             match best {
-                None => errors.push(format!(
-                    "t={}ms prop '{name}' missing from Compose trace",
-                    frame.t_ms
-                )),
+                None => errors
+                    .push(format!("t={}ms prop '{name}' missing from Compose trace", frame.t_ms)),
                 Some((expected, err)) if err > TRACE_EPS => {
                     for (i, (a, e)) in actual.iter().zip(&expected).enumerate() {
                         if (a - e).abs() > TRACE_EPS {
@@ -864,7 +852,7 @@ pub fn compare_traces(slint: &[TraceFrame], compose: &serde_json::Value) -> Vec<
                     + 1.0
             };
             let mut best: Option<(&serde_json::Value, f64, u64)> = None;
-            for cf in &cands {
+            for cf in &candidates {
                 let Some(ce) = cf["elements"].get(id) else { continue };
                 let w_eps = if drift.is_empty() { GEOM_EPS } else { drift_eps(cf) };
                 let err: f64 = ["x", "y", "w", "h", "opacity"]
@@ -880,14 +868,11 @@ pub fn compare_traces(slint: &[TraceFrame], compose: &serde_json::Value) -> Vec<
                 }
             }
             match best {
-                None => errors.push(format!(
-                    "t={}ms element '{id}' missing from Compose trace",
-                    frame.t_ms
-                )),
+                None => errors
+                    .push(format!("t={}ms element '{id}' missing from Compose trace", frame.t_ms)),
                 Some((cf, err, ct)) if err > 1.0 => {
                     let ce = &cf["elements"][id];
-                    let w_eps =
-                        if drift.is_empty() { GEOM_EPS } else { drift_eps(cf) };
+                    let w_eps = if drift.is_empty() { GEOM_EPS } else { drift_eps(cf) };
                     for (i, key) in ["x", "y", "w", "h", "opacity"].iter().enumerate() {
                         let Some(e) = ce[key].as_f64() else { continue };
                         let eps = if *key == "w" { w_eps } else { GEOM_EPS };
@@ -950,10 +935,7 @@ fn compare_text_metrics<C: i_slint_core::api::ComponentHandle>(
         // Same ±PHASE_MS matching as compare_traces: the Compose harness
         // labels the settled frame one tick after the requested time.
         let lo = frame.t_ms.saturating_sub(4);
-        let Some(cf) = (lo..=frame.t_ms + 4)
-            .filter_map(|t| by_time.get(&t))
-            .next_back()
-        else {
+        let Some(cf) = (lo..=frame.t_ms + 4).filter_map(|t| by_time.get(&t)).next_back() else {
             continue;
         };
         let Some(texts) = cf["text"].as_object() else { continue };
@@ -1100,9 +1082,8 @@ fn trace_svg(slint: &[TraceFrame], compose: Option<&serde_json::Value>) -> Strin
                 f.props.get(name).and_then(TraceValue::components).map(|c| (f.t_ms, c[0]))
             })
             .collect();
-        let (v_min, v_max) = vals
-            .iter()
-            .fold((f64::MAX, f64::MIN), |(lo, hi), (_, v)| (lo.min(*v), hi.max(*v)));
+        let (v_min, v_max) =
+            vals.iter().fold((f64::MAX, f64::MIN), |(lo, hi), (_, v)| (lo.min(*v), hi.max(*v)));
         let span = (v_max - v_min).max(1e-6);
         let y0 = 20.0 + si as f64 * row_h;
         let path: String = vals
@@ -1162,7 +1143,7 @@ fn compose_frame_at(compose: &serde_json::Value, t: u64) -> Option<&serde_json::
 }
 
 /// Build the layered mask for one rendered frame: the Compose text mask,
-/// unioned with the Slint text rects and the Compose text rects (each
+/// merged with the Slint text rects and the Compose text rects (each
 /// dilated 1px — the engines place a label's ink a pixel apart), plus a
 /// `Skip` disagreement band around every element both sides trace.
 fn build_frame_mask<C: i_slint_core::api::ComponentHandle>(
@@ -1180,8 +1161,9 @@ fn build_frame_mask<C: i_slint_core::api::ComponentHandle>(
         .unwrap_or_else(|| PixelMask::new(width, height));
     let d = density;
     // Text regions from both sides — a label's ink lives inside its bounds.
-    for handle in
-        i_slint_backend_testing::ElementQuery::from_root(component).match_inherits("Text").find_all()
+    for handle in i_slint_backend_testing::ElementQuery::from_root(component)
+        .match_inherits("Text")
+        .find_all()
     {
         let p = handle.absolute_position();
         let s = handle.size();
@@ -1210,9 +1192,9 @@ fn build_frame_mask<C: i_slint_core::api::ComponentHandle>(
             );
         }
     }
-    if let Some(celements) = cf["elements"].as_object() {
+    if let Some(compose_elements) = cf["elements"].as_object() {
         for (id, geo) in &slint_frame.elements {
-            let Some(ce) = celements.get(id) else { continue };
+            let Some(ce) = compose_elements.get(id) else { continue };
             let (Some(x), Some(y), Some(w), Some(h)) =
                 (ce["x"].as_f64(), ce["y"].as_f64(), ce["w"].as_f64(), ce["h"].as_f64())
             else {
@@ -1280,9 +1262,8 @@ pub fn run_parity_case<C: i_slint_core::api::ComponentHandle>(
         } else {
             match std::fs::read_to_string(dir.join("trace.json"))
                 .map_err(|e| format!("{e}"))
-                .and_then(|json| {
-                    serde_json::from_str(&json).map_err(|e| format!("{e}"))
-                }) {
+                .and_then(|json| serde_json::from_str(&json).map_err(|e| format!("{e}")))
+            {
                 Ok(v) => Some(v),
                 Err(e) => {
                     failures.push(format!("d{density} trace.json: {e}"));
@@ -1300,11 +1281,8 @@ pub fn run_parity_case<C: i_slint_core::api::ComponentHandle>(
         }
 
         // Static cases settle out any entry/ripple animation before the shot.
-        let times: Vec<u64> = if kind == "motion" {
-            spec.times.clone()
-        } else {
-            vec![STATIC_SETTLE_MS]
-        };
+        let times: Vec<u64> =
+            if kind == "motion" { spec.times.clone() } else { vec![STATIC_SETTLE_MS] };
         let start = i_slint_backend_testing::get_mocked_time();
 
         let mut frames = Vec::new();
@@ -1356,11 +1334,8 @@ pub fn run_parity_case<C: i_slint_core::api::ComponentHandle>(
         }
 
         if let Some(compose) = &compose {
-            let mut errors = if kind == "motion" {
-                compare_traces(&frames, compose)
-            } else {
-                Vec::new()
-            };
+            let mut errors =
+                if kind == "motion" { compare_traces(&frames, compose) } else { Vec::new() };
             errors.extend(compare_text_metrics(&component, &frames, compose));
             if !errors.is_empty() {
                 let dir = artifacts_dir(driver, case_rel);
@@ -1403,7 +1378,10 @@ pub fn run_parity_case<C: i_slint_core::api::ComponentHandle>(
             )
             .into());
         }
-        eprintln!("parity: negative case {case_rel} correctly rejected ({} findings)", failures.len());
+        eprintln!(
+            "parity: negative case {case_rel} correctly rejected ({} findings)",
+            failures.len()
+        );
         return Ok(());
     }
 
@@ -1422,10 +1400,8 @@ fn comparator_catches_subtle_differences() {
     let a = SharedPixelBuffer::<Rgba8Pixel>::new(size, size);
     let mut b = a.clone();
     let mut all_text = PixelMask::new(size, size);
-    all_text.fill_rect(
-        PxRect { x0: 0.0, y0: 0.0, x1: size as f64, y1: size as f64 },
-        PixelClass::Text,
-    );
+    all_text
+        .fill_rect(PxRect { x0: 0.0, y0: 0.0, x1: size as f64, y1: size as f64 }, PixelClass::Text);
     assert!(layered_compare(&a, &b, Some(&all_text), PIXEL_EPS).ok, "identical images must pass");
 
     // 1px color nudge outside text → strict layer fails.

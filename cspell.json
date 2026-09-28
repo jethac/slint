@@ -408,10 +408,18 @@
         "jvmargs",
         "layoutlib",
         "lightdark",
+        "llvmpipe",
+        "materialkolor",
         "mdpi",
         "Pparity",
         "robolectric",
-        "Robolectric"
+        "Robolectric",
+        "FFFFL",
+        "SIGABRT",
+        "surfaceless",
+        "xdpi",
+        "XHIGH",
+        "ydpi"
       ]
     },
     {
@@ -421,6 +429,7 @@
         "cpath",
         "dasharray",
         "khronos",
+        "layoutlib",
         "llvmpipe",
         "rasterizers",
         "surfaceless",
