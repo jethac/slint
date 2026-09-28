@@ -516,6 +516,8 @@ fn gen_corelib(
         "ImageInner",
         "ImageCacheKey",
         "Image",
+        // Rust-internal constant; cbindgen would emit it into several private headers
+        "SPRING_DEFAULT_DISPLACEMENT_THRESHOLD",
         "Color",
         "PathData",
         "PathElement",
