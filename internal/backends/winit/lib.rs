@@ -406,6 +406,11 @@ impl BackendBuilder {
         // Watch WM_SETTINGCHANGE so the "Animation effects" accessibility toggle is
         // reflected live. The hook is only installed on a builder we created: an
         // application-supplied builder may already carry its own message hook.
+        // `with_msg_hook` only sees messages that go through the event loop's
+        // `GetMessage`/`DispatchMessage`, so each created window is additionally
+        // subclassed (`install_setting_change_subclass`) to catch
+        // `SendMessageTimeout(HWND_BROADCAST, …)` deliveries straight to the
+        // window procedure.
         #[cfg(target_os = "windows")]
         if !user_supplied_builder {
             use winit::platform::windows::EventLoopBuilderExtWindows;
@@ -916,6 +921,50 @@ fn windows_client_area_animation_disabled() -> Option<bool> {
             );
             None
         }
+    }
+}
+
+/// Subclasses the window's Win32 procedure so `WM_SETTINGCHANGE` is observed
+/// even when it is delivered straight to the procedure — the "Animation
+/// effects" toggle broadcasts it via `SendMessageTimeout(HWND_BROADCAST, …)`,
+/// which bypasses the thread's message queue (and therefore winit's
+/// `with_msg_hook`). The subclass is removed automatically when the window is
+/// destroyed.
+#[cfg(target_os = "windows")]
+pub(crate) fn install_setting_change_subclass(winit_window: &winit::window::Window) {
+    use raw_window_handle::{HasWindowHandle, RawWindowHandle};
+    use windows::Win32::Foundation::{HWND, LPARAM, LRESULT, WPARAM};
+    use windows::Win32::UI::Shell::{DefSubclassProc, SetWindowSubclass};
+    use windows::Win32::UI::WindowsAndMessaging::WM_SETTINGCHANGE;
+
+    let Ok(RawWindowHandle::Win32(handle)) = winit_window.window_handle().map(|h| h.as_raw())
+    else {
+        return;
+    };
+    let hwnd = HWND(handle.hwnd.get() as *mut core::ffi::c_void);
+    const SUBCLASS_ID: usize = 0x534C4E54; // "SLNT"
+
+    unsafe extern "system" fn subclass_proc(
+        hwnd: HWND,
+        msg: u32,
+        wparam: WPARAM,
+        lparam: LPARAM,
+        _subclass_id: usize,
+        _ref_data: usize,
+    ) -> LRESULT {
+        if msg == WM_SETTINGCHANGE
+            && let Some(reduced) = windows_client_area_animation_disabled()
+        {
+            let _ = i_slint_core::with_global_context(
+                || Err(i_slint_core::platform::PlatformError::NoPlatform),
+                |ctx| ctx.set_reduced_motion(reduced),
+            );
+        }
+        unsafe { DefSubclassProc(hwnd, msg, wparam, lparam) }
+    }
+
+    unsafe {
+        let _ = SetWindowSubclass(hwnd, Some(subclass_proc), SUBCLASS_ID, 0);
     }
 }
 
