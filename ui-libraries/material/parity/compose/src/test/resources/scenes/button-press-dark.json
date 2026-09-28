@@ -6,7 +6,7 @@
       "y": 48.0
     }
   ],
-  "case_rel": "material/negative_corner_leak_dark",
+  "case_rel": "material/button_press_dark",
   "densities": [
     1,
     2
@@ -16,11 +16,19 @@
     "plain": "Roboto"
   },
   "mask_decor": {},
-  "mask_inner": {},
-  "name": "negative-corner-leak-dark",
-  "negative_note": "dark theme: the light covering rectangle paints square corners over the pressed button's rounded shape — ink outside the corner arc is visibly light-on-dark and must fail the strict layer at both densities",
+  "mask_inner": {
+    "button0": [
+      60,
+      120,
+      200,
+      333,
+      500,
+      1500
+    ]
+  },
+  "name": "button-press-dark",
   "params": {},
-  "parity": "negative",
+  "parity": "motion",
   "scheme": {
     "background": "FF0F0D12",
     "error": "FFF97386",
@@ -82,7 +90,16 @@
     "spec": "spec2025",
     "variant": "tonal-spot"
   },
-  "times": [],
+  "times": [
+    0,
+    60,
+    120,
+    200,
+    333,
+    500,
+    1500,
+    2500
+  ],
   "trace_elements": [
     "button0"
   ],
@@ -95,13 +112,7 @@
       "height": null,
       "kind": "filled-button",
       "radius": null,
-      "slint_overrides": {
-        "cover": {
-          "fill": "inverse-surface",
-          "opacity": 0.2,
-          "radius": 0
-        }
-      },
+      "slint_overrides": {},
       "state": "pressed",
       "text": "Label",
       "width": null,

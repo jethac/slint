@@ -350,6 +350,17 @@ fn slint_case(scene: &Scene) -> String {
             )
             .unwrap();
         }
+        scoped if scoped.starts_with("xfail:") => {
+            // `xfail:<driver>` expects the divergence only on the named
+            // driver; the note follows the scope in the emitted marker.
+            writeln!(
+                s,
+                "//PARITY={}: {}",
+                scoped,
+                scene.negative_note.as_deref().unwrap_or("(undocumented)")
+            )
+            .unwrap();
+        }
         kind => writeln!(s, "//PARITY={kind}").unwrap(),
     }
     writeln!(s, "//SIZE={}x{}", scene.size[0], scene.size[1]).unwrap();

@@ -1,8 +1,7 @@
 {
-    "name": "negative-recolor",
+    "name": "button-press-dark",
     "type": "canvas",
-    "parity": "negative",
-    "negative_note": "the covering rectangle fills the button with primary-fixed instead of primary \u2014 a wrong fill color must fail",
+    "parity": "motion",
     "size": [
         240,
         96
@@ -16,12 +15,32 @@
         "variant": "tonal-spot",
         "spec": "spec2025",
         "platform": "phone",
-        "dark": false,
+        "dark": true,
         "contrast": 0.0
     },
     "fonts": {
         "plain": "Roboto",
         "brand": "Roboto"
+    },
+    "times": [
+        0,
+        60,
+        120,
+        200,
+        333,
+        500,
+        1500,
+        2500
+    ],
+    "mask_inner": {
+        "button0": [
+            60,
+            120,
+            200,
+            333,
+            500,
+            1500
+        ]
     },
     "widgets": [
         {
@@ -29,12 +48,7 @@
             "x": 16,
             "y": 28,
             "text": "Label",
-            "state": "enabled",
-            "slint_overrides": {
-                "cover": {
-                    "fill": "primary-fixed"
-                }
-            }
+            "state": "pressed"
         }
     ],
     "trace_elements": [

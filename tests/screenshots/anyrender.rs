@@ -113,7 +113,7 @@ fn compile_and_show(
     compiler.set_style("fluent".into());
     compiler.set_library_paths(crate::parity::library_paths_for(
         &source,
-        absolute_path.parent().unwrap_or_default(),
+        absolute_path.parent().unwrap_or_else(|| absolute_path),
     ));
     compiler.set_include_paths(
         test_driver_lib::extract_include_paths(&source).map(Into::into).collect(),

@@ -2,9 +2,15 @@
     "name": "negative-corner-leak",
     "type": "canvas",
     "parity": "negative",
-    "negative_note": "the covering rectangle paints square corners over the pressed button's rounded shape — ink outside the corner arc must fail the strict layer",
-    "size": [240, 96],
-    "densities": [1, 2],
+    "negative_note": "the covering rectangle paints square corners over the pressed button's rounded shape \u2014 ink outside the corner arc must fail the strict layer",
+    "size": [
+        240,
+        96
+    ],
+    "densities": [
+        1,
+        2
+    ],
     "theme": {
         "seed": "6750A4",
         "variant": "tonal-spot",
@@ -13,7 +19,10 @@
         "dark": false,
         "contrast": 0.0
     },
-    "fonts": { "plain": "Roboto", "brand": "Roboto" },
+    "fonts": {
+        "plain": "Roboto",
+        "brand": "Roboto"
+    },
     "widgets": [
         {
             "kind": "filled-button",
@@ -30,7 +39,8 @@
             }
         }
     ],
-    "trace_elements": ["button0"],
-    "trace_props": [],
-    "xfail_text": "issue #28: Slint ceils text layout widths where Compose keeps fractional advances"
+    "trace_elements": [
+        "button0"
+    ],
+    "trace_props": []
 }

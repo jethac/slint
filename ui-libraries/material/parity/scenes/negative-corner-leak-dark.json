@@ -33,7 +33,7 @@
             "slint_overrides": {
                 "cover": {
                     "fill": "inverse-surface",
-                    "opacity": 0.1,
+                    "opacity": 0.2,
                     "radius": 0
                 }
             }

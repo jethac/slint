@@ -1175,6 +1175,7 @@ fn compare_text_metrics<C: i_slint_core::api::ComponentHandle>(
     xfail_text: Option<&str>,
 ) -> Vec<String> {
     let mut errors = Vec::new();
+    let mut saw_drift = false;
     let frames = compose["frames"].as_array().cloned().unwrap_or_default();
     let by_time: BTreeMap<u64, &serde_json::Value> =
         frames.iter().filter_map(|f| f["t_ms"].as_u64().map(|t| (t, f))).collect();
@@ -1222,10 +1223,12 @@ fn compare_text_metrics<C: i_slint_core::api::ComponentHandle>(
             // layout ceils min/preferred — see issue #28) while Compose
             // keeps fractional advances: `sw − unhint_w` legitimately lands
             // in `(0, 1]`, so text is not within the 0.5px bound by design.
-            // The strict bound is `(−0.15, 0.65]`; a case marked
+            // The strict bound is `(−0.15, 0.5]`; a case marked
             // `//XFAIL_TEXT=` accepts the whole ceil window `(−0.15, 1.15]`
-            // as the tracked divergence and reports the drift for the
-            // record. A drift past a whole pixel fails either way.
+            // as the tracked divergence, reports the measured drift — and
+            // re-arms when #28 lands: if no entry drifts past 0.5px the
+            // marker is stale and the case fails so it gets unmarked. A
+            // drift past a whole pixel fails either way.
             // `unhint_w` is measured at 8x and scaled down, which leaves
             // ~0.125dp of residual quantization on both sides. Compose's
             // hinted `w`/`frac_w` stay a few px wider by design and are not
@@ -1233,16 +1236,17 @@ fn compare_text_metrics<C: i_slint_core::api::ComponentHandle>(
             match m["unhint_w"].as_f64() {
                 Some(unhint_w) if unhint_w.is_finite() => {
                     let slack = sw - unhint_w;
-                    let bound = if xfail_text.is_some() { 1.15 } else { 0.65 };
-                    if !(-0.15..bound).contains(&slack) {
+                    let bound = if xfail_text.is_some() { 1.15 } else { 0.5 };
+                    if !(-0.15..=bound).contains(&slack) {
                         errors.push(format!(
                             "t={}ms text:{n}.w: slint {sw} vs unhinted compose {unhint_w} (bound {bound:.2})",
                             frame.t_ms
                         ));
-                    } else if slack > 0.65 {
+                    } else if slack > 0.5 {
+                        saw_drift = true;
                         if let Some(reason) = xfail_text {
                             eprintln!(
-                                "parity: xfail-text t={}ms text:{n}.w: slint {sw} vs unhinted compose {unhint_w} — expected ceil-quantization drift ({reason})",
+                                "parity: xfail-text t={}ms text:{n}.w: slint {sw} vs unhinted compose {unhint_w} — expected ceil-quantization drift {slack:+.2}px ({reason})",
                                 frame.t_ms
                             );
                         }
@@ -1306,6 +1310,13 @@ fn compare_text_metrics<C: i_slint_core::api::ComponentHandle>(
                     ));
                 }
             }
+        }
+    }
+    if let Some(reason) = xfail_text {
+        if !saw_drift {
+            errors.push(format!(
+                "text widths all within the strict 0.5px bound but the case is marked XFAIL_TEXT ({reason}) — the #28 divergence is gone; remove the marker"
+            ));
         }
     }
     errors
@@ -1860,15 +1871,18 @@ pub fn run_parity_case<C: i_slint_core::api::ComponentHandle>(
             // so verify the shape silhouette itself: ink never moves a
             // boundary edge.
             let mut silhouette_failed = false;
+            let mut silhouette_xfail = 0usize;
             // The software renderer can't clip to a rounded shape (#6): its
             // `clip` is axis-aligned, so bounded ripple ink legitimately
             // fills the corner-outside cells inside the element rect and the
-            // silhouette edge can't be measured under it. Skia/femtovg keep
-            // the check — they clip the ink to the shape. Negative cases run
-            // it everywhere: a defect finding inside the mutated region
-            // counts wherever it fires.
-            let silhouette_runnable = driver != "software" || negative;
-            if !inner_masked.is_empty() && silhouette_runnable {
+            // silhouette edge can't be measured under it. The check still
+            // runs there, but a positive case's findings are an expected
+            // failure citing #6 — counted and reported, not added to
+            // errors. Skia/femtovg keep it strict — they clip the ink to
+            // the shape. Negative cases run it strictly everywhere: a
+            // defect finding inside the mutated region counts wherever it
+            // fires.
+            if !inner_masked.is_empty() {
                 if let Some(compose_elements) = compose
                     .as_ref()
                     .and_then(|c| compose_frame_at(c, t))
@@ -1912,6 +1926,10 @@ pub fn run_parity_case<C: i_slint_core::api::ComponentHandle>(
                         pixel_eps,
                     ) {
                         strict_caught += 1;
+                        if driver == "software" && !negative {
+                            silhouette_xfail += 1;
+                            continue;
+                        }
                         silhouette_failed = true;
                         if negative && region.map_or(true, |r| r.contains(sx, sy)) {
                             caught_at_density[di] = true;
@@ -1919,6 +1937,11 @@ pub fn run_parity_case<C: i_slint_core::api::ComponentHandle>(
                         failures.push(format!("d{density} t={tag}: {msg}"));
                     }
                 }
+            }
+            if silhouette_xfail > 0 {
+                eprintln!(
+                    "parity: xfail-silhouette {case_rel} d{density} t={tag}: {silhouette_xfail} findings on software (issue #6: software clip is axis-aligned, bounded ripple ink fills the corner cells — silhouette edge unverifiable)"
+                );
             }
             if !result.ok || silhouette_failed {
                 let dir = artifacts_dir(driver, case_rel);
