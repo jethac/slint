@@ -55,9 +55,11 @@ It has no `duration`: the animation runs until it settles, so `duration`,
 The simulation lives in `internal/core/animations/simulations/spring.rs`:
 
 - `PhysicalSpringParameters` holds ζ, stiffness, mass, and the initial velocity.
-- `SpringRegime` evaluates the closed-form mass-spring-damper ODE in `f64` — the
-  same formulas as `androidx.compose.animation.core.SpringSimulation`
-  (underdamped / critically damped / overdamped branches).
+- `SpringRegime` evaluates the closed-form mass-spring-damper ODE in `f32` —
+  the same formulas as `androidx.compose.animation.core.SpringSimulation`
+  (underdamped / critically damped / overdamped branches). Its tests compare
+  every regime against an `f64` transcription of `SpringSimulation.updateValues`
+  (`reference()` in `spring.rs`) sampled at integer-millisecond times.
 - `PhysicalSpringToLimit` drives one scalar channel toward a limit, re-anchoring
   on retarget so position and velocity stay continuous, and ends at the
   estimated settle time from `simulations/spring_estimation.rs` — a port of
@@ -79,19 +81,37 @@ time (`BindingCallable::declared_animation`); on release it flings with a
 `PhysicalSpringToLimit` seeded by `release-velocity` when that animation was a
 physical spring, else the constant-deceleration glide.
 
+`PropertyAnimation` (`internal/core/items.rs`) is `#[repr(C)]` and exported to
+C++ through cbindgen, so its fields are ABI — adding one changes the generated
+header's layout. Every field must then be emitted by `animation_fields()` in
+`internal/compiler/llr/lower_expression.rs` (which lists them all, including
+the internal-only `visibility-threshold` settle-threshold override the
+interpreter uses for integer-typed properties — `0` means the animated type's
+own threshold). Internal fields go on `PropertyAnimation` only, not in the
+`animate` property surface (`builtin_elements.rs`).
+
 ### Duration scale and reduced motion
 
-`SlintContext::animation_duration_scale` multiplies every animation duration
-(`animations::duration_scale()`); `SlintContext::reduced_motion` forces it to 0,
-so every animation completes immediately. Platform sources feed it: Android's
-`animator_duration_scale`, `prefers-reduced-motion` on the web, the XDG
-`org.freedesktop.appearance` `reduce-motion` key, Windows'
-`SPI_GETCLIENTAREAANIMATION`, macOS `accessibilityDisplayShouldReduceMotion`,
-and iOS `UIAccessibilityIsReduceMotionEnabled`. `.slint` reads it through
-`SlintInternal.reduced-motion`, and the widget styles can override it through
-their `ReducedMotionSelector` global. The testing backend exposes
-`set_reduced_motion()` / `set_animation_duration_scale()` (also over FFI and
-`slint_testing::` in C++).
+`SlintContext::animation_duration_scale` multiplies every animation's progress
+(`animations::duration_scale()`); at `0` a finite animation completes
+immediately and an infinite one suspends at its end value until the scale
+returns — Compose's `MotionDurationScale` / `InfiniteTransition` behavior. It
+is fed by Android's `animator_duration_scale` (the only platform scale) and
+`SLINT_SLOW_ANIMATIONS`.
+
+`SlintContext::reduced_motion` is a separate *semantic* flag — it does not
+force the scale. Platform accessibility settings feed it: the XDG
+`org.freedesktop.appearance` `reduce-motion` portal key combined with GNOME's
+`enable-animations` (reduced if either says so), Windows'
+`SPI_GETCLIENTAREAANIMATION` (plus a `WM_SETTINGCHANGE` window subclass for
+live changes), `prefers-reduced-motion` on the web, macOS
+`accessibilityDisplayShouldReduceMotion`, iOS
+`UIAccessibilityIsReduceMotionEnabled`, Qt's animate-UI setting, and Android
+when `animator_duration_scale` is 0. `.slint` reads it through
+`SlintInternal.reduced-motion` / `Palette.reduced-motion`, and the widget
+styles gate their `animate` blocks on it (`ReducedMotionSelector` allows an
+app override). The testing backend exposes `set_reduced_motion()` /
+`set_animation_duration_scale()` (also over FFI and `slint_testing::` in C++).
 
 ## Animation Performance
 
