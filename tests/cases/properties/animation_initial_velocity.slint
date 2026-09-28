@@ -80,20 +80,7 @@ assert(Math.abs(instance.thrown - 100.0) < 0.5);
 ```
 
 ```python
-instance = TestCase()
-instance.launch_velocity = -800.0
-instance.thrown = 100.0
-
-slint.testing.mock_elapsed_time(5)
-assert instance.thrown < -0.5
-
-slint.testing.mock_elapsed_time(45)
-assert abs(instance.thrown - 53.99) < 0.5
-
-slint.testing.mock_elapsed_time(100)
-assert abs(instance.thrown - 97.97) < 0.5
-
-slint.testing.mock_elapsed_time(200)
-assert abs(instance.thrown - 100.0) < 0.5
+# slint-python has no mock-time API (no `slint.testing` module); the
+# initial-velocity assertions live in the rust/cpp/js blocks.
 ```
 */
