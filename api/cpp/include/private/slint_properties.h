@@ -59,8 +59,7 @@ inline void slint_property_set_animated_binding_helper(
 
 inline void slint_property_set_animated_binding_helper(
         const cbindgen_private::PropertyHandleOpaque *handle,
-        void (*binding)(void *,
-                        std::shared_ptr<slint::Model<cbindgen_private::FontVariation>> *),
+        void (*binding)(void *, std::shared_ptr<slint::Model<cbindgen_private::FontVariation>> *),
         void *user_data, void (*drop_user_data)(void *),
         cbindgen_private::PropertyAnimation (*transition_data)(void *, uint64_t **))
 {

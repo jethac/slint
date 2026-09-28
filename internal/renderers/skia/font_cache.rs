@@ -87,11 +87,9 @@ impl FontCache {
         synthesis: &fontique::Synthesis,
         variations: &[parley::style::FontVariation],
     ) -> Option<skia_safe::Typeface> {
-        let variation_settings =
-            i_slint_core::textlayout::sharedparley::merged_variation_settings(
-                synthesis,
-                variations,
-            );
+        let variation_settings = i_slint_core::textlayout::sharedparley::merged_variation_settings(
+            synthesis, variations,
+        );
         let variations_hash = variation_settings_hash(&variation_settings);
 
         let key = (font.data.clone().into(), font.index, variations_hash);
@@ -218,16 +216,12 @@ mod tests {
     use std::time::Instant;
 
     fn inter_variable() -> parley::FontData {
-        let data: &[u8] =
-            include_bytes!("../../common/sharedfontique/Inter-VariableFont.ttf");
+        let data: &[u8] = include_bytes!("../../common/sharedfontique/Inter-VariableFont.ttf");
         parley::FontData::new(fontique::Blob::new(Arc::new(data)), 0)
     }
 
     fn wght(wght: f32) -> Vec<parley::style::FontVariation> {
-        vec![parley::style::FontVariation::new(
-            parley::setting::Tag::new(b"wght"),
-            wght,
-        )]
+        vec![parley::style::FontVariation::new(parley::setting::Tag::new(b"wght"), wght)]
     }
 
     /// The `wght` 100→900 sweep the design note budgets a frame around: every
@@ -251,11 +245,8 @@ mod tests {
 
         // An animation bouncing between a handful of axis settings is the hot
         // path: once seen, every frame must be a cache hit.
-        let bounce: Vec<f32> = [100., 300., 500., 700., 900.]
-            .into_iter()
-            .cycle()
-            .take(200)
-            .collect();
+        let bounce: Vec<f32> =
+            [100., 300., 500., 700., 900.].into_iter().cycle().take(200).collect();
         let warm = {
             let t0 = Instant::now();
             for &w in &bounce {

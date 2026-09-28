@@ -1348,9 +1348,7 @@ impl GlyphRenderer for QtItemRenderer<'_> {
         glyphs_it: &mut dyn Iterator<Item = sharedparley::parley::layout::Glyph>,
     ) {
         let Some(mut raw_font) = FONT_CACHE.with(|cache| {
-            cache
-                .borrow_mut()
-                .font_with_variations(font, font_size.get(), synthesis, variations)
+            cache.borrow_mut().font_with_variations(font, font_size.get(), synthesis, variations)
         }) else {
             return;
         };
@@ -1629,8 +1627,7 @@ impl FontCache {
         synthesis: &fontique::Synthesis,
         variations: &[parley::style::FontVariation],
     ) -> Option<QRawFont> {
-        let variation_settings =
-            sharedparley::merged_variation_settings(synthesis, variations);
+        let variation_settings = sharedparley::merged_variation_settings(synthesis, variations);
         if variation_settings.is_empty() {
             return self.font(font);
         }
@@ -1641,16 +1638,12 @@ impl FontCache {
             // implicit `opsz` entry every text gets doesn't warn on its own.
             static WARNED: std::sync::atomic::AtomicBool =
                 std::sync::atomic::AtomicBool::new(false);
-            let requested = variations
-                .iter()
-                .any(|v| v.tag.to_bytes() != *b"opsz")
+            let requested = variations.iter().any(|v| v.tag.to_bytes() != *b"opsz")
                 || synthesis
                     .variation_settings()
                     .iter()
                     .any(|(tag, _)| &tag.to_be_bytes() == b"wdth");
-            if requested
-                && !WARNED.swap(true, std::sync::atomic::Ordering::SeqCst)
-            {
+            if requested && !WARNED.swap(true, std::sync::atomic::Ordering::SeqCst) {
                 i_slint_core::debug_log!(
                     "Variable font axes were requested, but this build's Qt is older than 6.7 \
                      and cannot apply them; text renders at the font's default instance"

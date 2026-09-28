@@ -647,26 +647,22 @@ pub fn parse_interpolated<S: AsRef<[StyledTextParagraph]>>(
                                 span,
                                 ..
                             }) => {
-                                let value_str = if value
-                                    .contains(MARKDOWN_INTERPOLATION_PLACEHOLDER)
-                                {
-                                    substitute_in_string(
-                                        &value,
-                                        args,
-                                        &mut arg_index,
-                                        &mut errors,
-                                        &event_range,
-                                    )
-                                } else {
-                                    String::from(&*value)
-                                };
+                                let value_str =
+                                    if value.contains(MARKDOWN_INTERPOLATION_PLACEHOLDER) {
+                                        substitute_in_string(
+                                            &value,
+                                            args,
+                                            &mut arg_index,
+                                            &mut errors,
+                                            &event_range,
+                                        )
+                                    } else {
+                                        String::from(&*value)
+                                    };
                                 let invalid = |key: &str, value_str: &str| {
                                     let r = base + span.start()..base + span.end();
                                     StyledTextParseError::new(
-                                        E::InvalidFontAttribute(
-                                            key.into(),
-                                            value_str.into(),
-                                        ),
+                                        E::InvalidFontAttribute(key.into(), value_str.into()),
                                         r,
                                     )
                                 };
@@ -699,17 +695,11 @@ pub fn parse_interpolated<S: AsRef<[StyledTextParagraph]>>(
                                             }
                                         }
                                     }
-                                    ("font-optical-sizing", Some(font_tag)) => {
-                                        match &*value_str {
-                                            "auto" => {
-                                                font_tag.font_optical_sizing = Some(true)
-                                            }
-                                            "none" => {
-                                                font_tag.font_optical_sizing = Some(false)
-                                            }
-                                            _ => errors.push(invalid(&key, &value_str)),
-                                        }
-                                    }
+                                    ("font-optical-sizing", Some(font_tag)) => match &*value_str {
+                                        "auto" => font_tag.font_optical_sizing = Some(true),
+                                        "none" => font_tag.font_optical_sizing = Some(false),
+                                        _ => errors.push(invalid(&key, &value_str)),
+                                    },
                                     ("font-variation-settings", Some(font_tag)) => {
                                         match parse_font_variation_settings(&value_str) {
                                             Some(settings) => {
@@ -809,7 +799,6 @@ pub fn parse_interpolated<S: AsRef<[StyledTextParagraph]>>(
                 }
             }
             pulldown_cmark::Event::Rule
-
             | pulldown_cmark::Event::TaskListMarker(_)
             | pulldown_cmark::Event::FootnoteReference(_)
             | pulldown_cmark::Event::InlineMath(_)

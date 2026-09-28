@@ -1119,8 +1119,7 @@ impl GlyphRenderer for SkiaItemRenderer<'_> {
             // The typeface can't take the run's variation arguments (or failed
             // to load): rasterize glyph outlines at the exact coordinates the
             // shaper used rather than silently dropping the requested axes.
-            let variation_settings =
-                sharedparley::merged_variation_settings(synthesis, variations);
+            let variation_settings = sharedparley::merged_variation_settings(synthesis, variations);
             let glyph_paths: Vec<_> = glyphs_it
                 .map(|g| {
                     (
@@ -1128,12 +1127,7 @@ impl GlyphRenderer for SkiaItemRenderer<'_> {
                         g.x,
                         g.y + y_offset.get(),
                         crate::font_cache::FONT_CACHE.with_borrow_mut(|font_cache| {
-                            font_cache.glyph_path(
-                                font,
-                                g.id,
-                                font_size.get(),
-                                &variation_settings,
-                            )
+                            font_cache.glyph_path(font, g.id, font_size.get(), &variation_settings)
                         }),
                     )
                 })
