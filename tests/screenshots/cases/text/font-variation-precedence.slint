@@ -3,6 +3,9 @@
 
 // The embed-assets driver embeds glyphs at compile time without axis collection on
 // this branch; the mcu branch collects the tuples and removes this ignore.
+// Skia rasterizes variable-font instances differently per
+// platform (macOS vs Linux references differ by up to ~200/255 per pixel).
+//ignore:skia
 //ignore: software-embed-assets
 // SIZE=140x120
 
