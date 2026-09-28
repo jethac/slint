@@ -1,0 +1,77 @@
+// Copyright © SixtyFPS GmbH <info@slint.dev>
+// SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0
+
+// The platform reduced-motion preference makes every `animate` finish
+// immediately, and `ANIMATOR_DURATION_SCALE`-style duration scaling stretches
+// or collapses the timeline.
+
+export component TestCase inherits Rectangle {
+    in-out property <float> value: 0;
+    animate value { duration: 1000ms; }
+
+    in-out property <float> sprung: 0;
+    animate sprung { easing: spring(1.0, 380); }
+}
+
+/*
+```rust
+let instance = TestCase::new().unwrap();
+
+// Baseline: an eased animation is mid-flight after half its duration.
+instance.set_value(100.0);
+slint_testing::mock_elapsed_time(500);
+assert!(instance.get_value() > 0.0 && instance.get_value() < 100.0);
+slint_testing::mock_elapsed_time(500);
+assert_eq!(instance.get_value(), 100.0);
+
+// Reduced motion: every animation lands on the target immediately.
+slint_testing::set_reduced_motion(true);
+instance.set_value(0.0);
+assert_eq!(instance.get_value(), 0.0);
+instance.set_sprung(50.0);
+assert_eq!(instance.get_sprung(), 50.0);
+slint_testing::set_reduced_motion(false);
+
+// A duration scale of 0 has the same effect.
+slint_testing::set_animation_duration_scale(0.0);
+instance.set_value(100.0);
+assert_eq!(instance.get_value(), 100.0);
+
+// A scale of 2 stretches the timeline: half the duration covers a quarter.
+slint_testing::set_animation_duration_scale(2.0);
+instance.set_value(0.0);
+slint_testing::mock_elapsed_time(500);
+let quarter = instance.get_value();
+slint_testing::set_animation_duration_scale(1.0);
+assert!(quarter > 0.0 && quarter < 60.0);
+```
+
+```cpp
+auto handle = TestCase::create();
+const TestCase &instance = *handle;
+
+instance.set_value(100.0);
+slint_testing::mock_elapsed_time(500);
+assert(instance.get_value() > 0.0 && instance.get_value() < 100.0);
+slint_testing::mock_elapsed_time(500);
+assert_eq(instance.get_value(), 100.0);
+
+slint_testing::set_reduced_motion(true);
+instance.set_value(0.0);
+assert_eq(instance.get_value(), 0.0);
+instance.set_sprung(50.0);
+assert_eq(instance.get_sprung(), 50.0);
+slint_testing::set_reduced_motion(false);
+
+slint_testing::set_animation_duration_scale(0.0);
+instance.set_value(100.0);
+assert_eq(instance.get_value(), 100.0);
+
+slint_testing::set_animation_duration_scale(2.0);
+instance.set_value(0.0);
+slint_testing::mock_elapsed_time(500);
+auto quarter = instance.get_value();
+slint_testing::set_animation_duration_scale(1.0);
+assert(quarter > 0.0 && quarter < 60.0);
+```
+*/

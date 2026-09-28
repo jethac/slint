@@ -42,6 +42,57 @@ For `cubic-bezier(a, b, c, d)`, Slint uses a binary search algorithm to find the
 
 Standard easings (`ease-in`, `ease-out`, `ease-in-out`, etc.) are pre-defined cubic bezier curves.
 
+`easing` is a runtime value: `Value::EasingCurve` in the interpreter, `EasingCurve`
+in Rust, `slint::EasingCurve` in C++, `{ type: "spring", ... }` objects in Node.js,
+and the `slint.EasingCurve` classmethods in Python all carry the same enum.
+
+## Physical Springs
+
+`spring(damping-ratio, stiffness[, mass])` produces `EasingCurve::PhysicalSpring`.
+It has no `duration`: the animation runs until it settles, so `duration`,
+`iteration-count`, and `direction` are ignored (with a compile-time warning).
+
+The simulation lives in `internal/core/animations/simulations/spring.rs`:
+
+- `PhysicalSpringParameters` holds ζ, stiffness, mass, and the initial velocity.
+- `SpringRegime` evaluates the closed-form mass-spring-damper ODE in `f64` — the
+  same formulas as `androidx.compose.animation.core.SpringSimulation`
+  (underdamped / critically damped / overdamped branches).
+- `PhysicalSpringToLimit` drives one scalar channel toward a limit, re-anchoring
+  on retarget so position and velocity stay continuous, and ends at the
+  estimated settle time from `simulations/spring_estimation.rs` — a port of
+  Compose's `estimateAnimationDurationMillis`.
+
+### Channels and velocity carry-over
+
+`InterpolatedPropertyValue` decomposes a value into scalar channels:
+`channel_count` / `write_channels` / `from_channels` on the `(from, to)` pair.
+Scalars are one channel; `Color` is four Oklab channels `(alpha, l, a, b)`; a
+`Brush` is its gradient layout's headers plus five channels per stop. A physical
+spring animates each channel with its own `PhysicalSpringToLimit`, and a
+retarget hands the outgoing animation's per-channel velocities to the new one
+(`carried_velocity`), falling back to the `initial-velocity` field per channel
+when there was none.
+
+`Flickable` captures the declared animation of `content-x`/`content-y` at press
+time (`BindingCallable::declared_animation`); on release it flings with a
+`PhysicalSpringToLimit` seeded by `release-velocity` when that animation was a
+physical spring, else the constant-deceleration glide.
+
+### Duration scale and reduced motion
+
+`SlintContext::animation_duration_scale` multiplies every animation duration
+(`animations::duration_scale()`); `SlintContext::reduced_motion` forces it to 0,
+so every animation completes immediately. Platform sources feed it: Android's
+`animator_duration_scale`, `prefers-reduced-motion` on the web, the XDG
+`org.freedesktop.appearance` `reduce-motion` key, Windows'
+`SPI_GETCLIENTAREAANIMATION`, macOS `accessibilityDisplayShouldReduceMotion`,
+and iOS `UIAccessibilityIsReduceMotionEnabled`. `.slint` reads it through
+`SlintInternal.reduced-motion`, and the widget styles can override it through
+their `ReducedMotionSelector` global. The testing backend exposes
+`set_reduced_motion()` / `set_animation_duration_scale()` (also over FFI and
+`slint_testing::` in C++).
+
 ## Animation Performance
 
 Each animated property:

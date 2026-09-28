@@ -1,0 +1,81 @@
+// Copyright © SixtyFPS GmbH <info@slint.dev>
+// SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0
+
+// Coordinated springs: two properties of one element animate on different
+// spring specs in the same state change — a spatial spring (ζ = 0.6, k = 800)
+// driving size and an effects spring (ζ = 1, k = 380) driving opacity. Each
+// must track its own ODE; the underdamped spatial spring overshoots while the
+// effects spring converges monotonically.
+
+export component TestCase inherits Rectangle {
+    in-out property <length> btn-width: 0px;
+    animate btn-width { easing: spring(0.6, 800); }
+
+    in-out property <float> btn-opacity: 0.0;
+    animate btn-opacity { easing: spring(1.0, 380); }
+}
+
+/*
+```rust
+fn assert_approx(value: f32, expected: f32) {
+    assert!((value - expected).abs() < 0.05, "Expected {value} to be close to {expected}");
+}
+
+let instance = TestCase::new().unwrap();
+instance.set_btn_width(56.0);
+instance.set_btn_opacity(1.0);
+
+slint_testing::mock_elapsed_time(150);
+// Spatial spring overshoots past 56; effects spring is at ~0.79.
+assert_approx(instance.get_btn_width(), 61.08);
+assert_approx(instance.get_btn_opacity(), 0.79);
+assert!(instance.get_btn_opacity() < 1.0);
+
+slint_testing::mock_elapsed_time(100);
+// Spatial spring swings back below the target.
+assert_approx(instance.get_btn_width(), 55.70);
+assert!(instance.get_btn_width() < 56.0);
+assert_approx(instance.get_btn_opacity(), 0.96);
+
+slint_testing::mock_elapsed_time(950);
+assert_approx(instance.get_btn_width(), 56.0);
+assert_approx(instance.get_btn_opacity(), 1.0);
+```
+
+```cpp
+auto handle = TestCase::create();
+const TestCase &instance = *handle;
+instance.set_btn_width(56.0);
+instance.set_btn_opacity(1.0);
+
+slint_testing::mock_elapsed_time(150);
+assert(std::abs(instance.get_btn_width() - 61.08) < 0.05);
+assert(std::abs(instance.get_btn_opacity() - 0.79) < 0.05);
+
+slint_testing::mock_elapsed_time(100);
+assert(std::abs(instance.get_btn_width() - 55.70) < 0.05);
+assert(std::abs(instance.get_btn_opacity() - 0.96) < 0.05);
+
+slint_testing::mock_elapsed_time(950);
+assert(std::abs(instance.get_btn_width() - 56.0) < 0.05);
+assert(std::abs(instance.get_btn_opacity() - 1.0) < 0.05);
+```
+
+```js
+var instance = new slint.TestCase({});
+instance.btn_width = 56.0;
+instance.btn_opacity = 1.0;
+
+slintlib.private_api.mock_elapsed_time(150);
+assert(Math.abs(instance.btn_width - 61.08) < 0.05);
+assert(Math.abs(instance.btn_opacity - 0.79) < 0.05);
+
+slintlib.private_api.mock_elapsed_time(100);
+assert(Math.abs(instance.btn_width - 55.70) < 0.05);
+assert(Math.abs(instance.btn_opacity - 0.96) < 0.05);
+
+slintlib.private_api.mock_elapsed_time(950);
+assert(Math.abs(instance.btn_width - 56.0) < 0.05);
+assert(Math.abs(instance.btn_opacity - 1.0) < 0.05);
+```
+*/

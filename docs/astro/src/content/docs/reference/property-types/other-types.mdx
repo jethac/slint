@@ -98,8 +98,15 @@ To specify an easing curve, use the values from the `Easing` namespace. For exam
     -   `ease-in-out-bounce`
     -   `cubic-bezier(a, b, c, d)` as in CSS
     -   `spring(bounce)` as defined in <Link type="Spring Animation" label="Spring Animations" />
+    -   `spring(damping-ratio, stiffness[, mass])`: a physical spring as defined
+        in <Link type="Spring Animation" label="Spring Animations" />, with no
+        duration — it runs until it settles
 
 Additionally, in expressions of type `easing`, those names are available directly.
+
+An `easing` is a runtime value like any other: it can be stored in a property,
+passed to a callback, and set from Rust, C++, Node.js, or Python, so a component
+can swap the curve an `animate` block uses while the app is running.
 
 ```slint
 struct AnimationData {

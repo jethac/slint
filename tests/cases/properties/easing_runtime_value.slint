@@ -1,0 +1,93 @@
+// Copyright © SixtyFPS GmbH <info@slint.dev>
+// SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0
+
+// `easing` is a first-class runtime value: a property of type `easing` can be
+// assigned `spring(...)`, `cubic-bezier(...)` or a named easing and an
+// `animate` block picks it up at animation start.
+
+export component TestCase inherits Rectangle {
+    in-out property <easing> curve: spring(0.6, 800);
+
+    in-out property <float> value: 0;
+    animate value {
+        easing: root.curve;
+        duration: 1000ms;
+    }
+
+    // Velocity carry-over: retargeting a running physical spring keeps the
+    // current velocity instead of restarting from rest.
+    in-out property <float> retargeted: 0;
+    animate retargeted { easing: spring(1.0, 380); }
+}
+
+/*
+```rust
+fn assert_approx(value: f32, expected: f32) {
+    assert!((value - expected).abs() < 0.05, "Expected {value} to be close to {expected}");
+}
+
+let instance = TestCase::new().unwrap();
+instance.set_value(100.0);
+slint_testing::mock_elapsed_time(150);
+// spring(0.6, 800) overshoots 100 around 150 ms.
+assert_approx(instance.get_value(), 108.95);
+
+// Swap in a different spring and the same `animate` uses it for the next animation.
+instance.set_curve(slint::EasingCurve::PhysicalSpring { damping_ratio: 1.0, stiffness: 380.0, mass: 1.0 });
+instance.set_value(0.0);
+slint_testing::mock_elapsed_time(100);
+assert!(instance.get_value() < 108.95); // critically damped: no overshoot
+
+// Velocity carry-over: ζ=1 k=380 launched 0→100 is still moving at 300 ms;
+// retargeting to 200 continues from ~98 with v ≈ 33 px/s.
+instance.set_retargeted(100.0);
+slint_testing::mock_elapsed_time(150);
+instance.set_retargeted(200.0);
+slint_testing::mock_elapsed_time(100);
+assert!(instance.get_retargeted() > 120.0);
+slint_testing::mock_elapsed_time(150);
+assert_approx(instance.get_retargeted(), 195.48);
+```
+
+```cpp
+auto handle = TestCase::create();
+const TestCase &instance = *handle;
+instance.set_value(100.0);
+slint_testing::mock_elapsed_time(150);
+assert(std::abs(instance.get_value() - 108.95) < 0.05);
+
+instance.set_curve(slint::cbindgen_private::EasingCurve(
+        slint::cbindgen_private::EasingCurve::Tag::PhysicalSpring, 1.0, 380.0, 1.0));
+instance.set_value(0.0);
+slint_testing::mock_elapsed_time(100);
+assert(instance.get_value() < 108.95);
+
+instance.set_retargeted(100.0);
+slint_testing::mock_elapsed_time(150);
+instance.set_retargeted(200.0);
+slint_testing::mock_elapsed_time(100);
+assert(instance.get_retargeted() > 120.0);
+slint_testing::mock_elapsed_time(150);
+assert(std::abs(instance.get_retargeted() - 195.48) < 0.05);
+```
+
+```js
+var instance = new slint.TestCase({});
+instance.value = 100.0;
+slintlib.private_api.mock_elapsed_time(150);
+assert(Math.abs(instance.value - 108.95) < 0.05);
+
+instance.curve = { type: "spring", dampingRatio: 1.0, stiffness: 380.0 };
+instance.value = 0.0;
+slintlib.private_api.mock_elapsed_time(100);
+assert(instance.value < 108.95);
+
+instance.retargeted = 100.0;
+slintlib.private_api.mock_elapsed_time(150);
+instance.retargeted = 200.0;
+slintlib.private_api.mock_elapsed_time(100);
+assert(instance.retargeted > 120.0);
+slintlib.private_api.mock_elapsed_time(150);
+assert(Math.abs(instance.retargeted - 195.48) < 0.05);
+```
+*/
