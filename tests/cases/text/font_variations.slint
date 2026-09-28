@@ -90,11 +90,17 @@ slint_testing::mock_elapsed_time(600);
 assert_eq!(instance.get_anim().row_data(0).unwrap().value, 900.);
 assert_eq!(instance.get_anim().row_data(1).unwrap().value, -100.);
 
-// A target list whose tags don't match the previous one snaps instead of lerping.
+// A target list whose tags don't match the previous one snaps instead of lerping:
+// the old list stays until the midpoint and the target applies from there.
 instance.set_anim(Rc::new(VecModel::from_slice(&[
     FontVariation { tag: "opsz".into(), value: 72. },
 ])).into());
-slint_testing::mock_elapsed_time(600);
+slint_testing::mock_elapsed_time(599);
+let anim = instance.get_anim();
+assert_eq!(anim.row_count(), 2, "before the midpoint the old list is still in effect");
+assert_eq!(anim.row_data(0).unwrap().tag, "wght");
+assert_eq!(anim.row_data(0).unwrap().value, 900.);
+slint_testing::mock_elapsed_time(1);
 let anim = instance.get_anim();
 assert_eq!(anim.row_count(), 1);
 assert_eq!(anim.row_data(0).unwrap().tag, "opsz");

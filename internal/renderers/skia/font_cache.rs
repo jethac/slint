@@ -260,11 +260,12 @@ mod tests {
         vec![parley::style::FontVariation::new(parley::setting::Tag::new(b"wght"), wght)]
     }
 
-    /// Draws one frame per step of a `wght` 100→900 sweep through the real
-    /// text path — cached typeface, `skia_safe::Font`, `draw_str` onto a
-    /// raster surface — and reports per-frame wall times. A frame rendering
-    /// a mid-sweep weight must produce pixels identical to rendering that
-    /// weight on its own: animation must never land on a different instance.
+    /// Draws one frame per step of a `wght` 100→900 sweep through the same
+    /// calls `ItemRenderer::draw_glyph_run` makes — cached variation typeface,
+    /// `skia_safe::Font`, `draw_glyphs_at` with per-glyph positions — and
+    /// reports per-frame wall times. A frame rendering a mid-sweep weight must
+    /// produce pixels identical to rendering that weight directly on a fresh
+    /// cache: animation must never land on a different instance.
     #[test]
     fn wght_sweep_frame_times() {
         let mut cache = FontCache::default();
@@ -291,9 +292,29 @@ mod tests {
                 cache.font_with_variations(&font, &synthesis, &wght(w)).expect("typeface");
             let mut sk_font = skia_safe::Font::from_typeface(typeface, 32.);
             sk_font.set_subpixel(true);
+            // The renderer's glyph-run path: glyph ids plus per-glyph advance
+            // positions, drawn with `draw_glyphs_at`.
+            let glyph_ids = sk_font.text_to_glyphs_vec(TEXT);
+            let mut widths = vec![0.0f32; glyph_ids.len()];
+            sk_font.get_widths(&glyph_ids, &mut widths);
+            let mut x = 10.0f32;
+            let glyph_positions: Vec<skia_safe::Point> = widths
+                .iter()
+                .map(|advance| {
+                    let point = skia_safe::Point::new(x, 60.);
+                    x += advance;
+                    point
+                })
+                .collect();
             let canvas = surface.canvas();
             canvas.clear(skia_safe::Color::WHITE);
-            canvas.draw_str(TEXT, (10., 60.), &sk_font, &paint);
+            canvas.draw_glyphs_at(
+                &glyph_ids,
+                skia_safe::canvas::GlyphPositions::Points(&glyph_positions),
+                skia_safe::Point::default(),
+                &sk_font,
+                &paint,
+            );
             (t0.elapsed(), pixels(surface))
         };
 
@@ -318,17 +339,22 @@ mod tests {
              median {:?}, p95 {:?}, max {:?} (first frame {:?})",
             TEXT, median, p95, max, times[0],
         );
-        // Design budget: a frame of text animation must stay well under the
+        // Design budget: a frame of text animation must stay under the
         // 16.6 ms of a 60 Hz refresh even when every frame is a cache miss.
         // Debug builds rasterize an order of magnitude slower (CI measures
-        // ~8-30 ms/frame on Windows), so the bound only guards against a
-        // pathological blowup, not the 60 Hz target itself.
+        // ~8-30 ms/frame), so the budget itself is only asserted in release
+        // builds — `cargo test --release`; debug keeps a bound that guards
+        // against a pathological blowup.
+        #[cfg(not(debug_assertions))]
+        assert!(max < std::time::Duration::from_micros(16666), "slowest frame {max:?}");
         assert!(max < std::time::Duration::from_millis(250), "slowest frame {max:?}");
 
-        // The settled frame must be pixel-identical to the animating frame
-        // for the same weight — no jump when the animation completes.
-        let (_, settled) = draw_frame(&mut cache, &mut surface, 500.);
-        assert_eq!(mid_sweep, settled);
+        // A frame drawn mid-sweep at wght 500 must be pixel-identical to
+        // rendering that weight directly on a fresh cache — the animation must
+        // never land on a different instance than a static request.
+        let mut fresh_cache = FontCache::default();
+        let (_, direct) = draw_frame(&mut fresh_cache, &mut surface, 500.);
+        assert_eq!(mid_sweep, direct);
     }
 
     /// The `wght` 100→900 sweep the design note budgets a frame around: every
