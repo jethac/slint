@@ -253,7 +253,8 @@ class SlintInputView extends View {
         int currentNightMode = newConfig.uiMode & Configuration.UI_MODE_NIGHT_MASK;
         SlintAndroidJavaHelper.setNightMode(currentNightMode);
         SlintAndroidJavaHelper.setFontScale(newConfig.fontScale);
-        SlintAndroidJavaHelper.setAnimatorDurationScale(animator_duration_scale());
+        SlintAndroidJavaHelper.setAnimatorDurationScale(Settings.Global.getFloat(
+                getContext().getContentResolver(), Settings.Global.ANIMATOR_DURATION_SCALE, 1f));
     }
 
     private InputHandle mCursorHandle;
