@@ -989,7 +989,12 @@ fn estimate_phase(slint: &[TraceFrame], by_time: &BTreeMap<u64, &serde_json::Val
         .unwrap_or(0)
 }
 
-pub fn compare_traces(slint: &[TraceFrame], compose: &serde_json::Value) -> Vec<String> {
+/// `(findings, measured compose clock offset)` — the offset is reported for
+/// the record but never applied to the comparison (#27).
+pub fn compare_traces(
+    slint: &[TraceFrame],
+    compose: &serde_json::Value,
+) -> (Vec<String>, Option<i64>) {
     let mut errors = Vec::new();
     let frames = compose["frames"].as_array().cloned().unwrap_or_default();
     let by_time: BTreeMap<u64, &serde_json::Value> =
@@ -1139,12 +1144,12 @@ pub fn compare_traces(slint: &[TraceFrame], compose: &serde_json::Value) -> Vec<
 
     // Report the measured clock offset for the record (the comparison itself
     // stays at identical timestamps — see #27).
-    if !slint.is_empty() && !by_time.is_empty() {
-        let phase = estimate_phase(slint, &by_time);
+    let phase = (!slint.is_empty() && !by_time.is_empty()).then(|| estimate_phase(slint, &by_time));
+    if let Some(phase) = phase {
         eprintln!("parity: measured compose clock offset {phase:+}ms (Slint leads while >0)");
     }
 
-    errors
+    (errors, phase)
 }
 
 /// Compare laid-out text geometry against the Compose trace's `text` entries.
@@ -1167,6 +1172,7 @@ fn compare_text_metrics<C: i_slint_core::api::ComponentHandle>(
     component: &C,
     slint: &[TraceFrame],
     compose: &serde_json::Value,
+    xfail_text: Option<&str>,
 ) -> Vec<String> {
     let mut errors = Vec::new();
     let frames = compose["frames"].as_array().cloned().unwrap_or_default();
@@ -1212,24 +1218,34 @@ fn compare_text_metrics<C: i_slint_core::api::ComponentHandle>(
             let Some(cw) = m["w"].as_f64() else { continue };
             let Some(cx) = m["x"].as_f64() else { continue };
 
-            // Slint's Text element width is `ceil(unhinted advance)` — so
-            // the unhinted Compose advance of the same string, same face,
-            // size and letter-spacing must land in `(sw - 1, sw]`. Any
-            // cross-engine advance difference that moves a whole pixel is
-            // caught exactly; sub-pixel drift is bounded by the 1px
-            // quantization window. `unhint_w` is measured at 8x and scaled
-            // down, which leaves ~0.125dp of residual quantization — the
-            // window widens by that much on both sides. Compose's hinted
-            // `w`/`frac_w` stay a few px wider by design and are not
+            // Slint's Text element width is `ceil(unhinted advance)` (the
+            // layout ceils min/preferred — see issue #28) while Compose
+            // keeps fractional advances: `sw − unhint_w` legitimately lands
+            // in `(0, 1]`, so text is not within the 0.5px bound by design.
+            // The strict bound is `(−0.15, 0.65]`; a case marked
+            // `//XFAIL_TEXT=` accepts the whole ceil window `(−0.15, 1.15]`
+            // as the tracked divergence and reports the drift for the
+            // record. A drift past a whole pixel fails either way.
+            // `unhint_w` is measured at 8x and scaled down, which leaves
+            // ~0.125dp of residual quantization on both sides. Compose's
+            // hinted `w`/`frac_w` stay a few px wider by design and are not
             // re-checked here.
             match m["unhint_w"].as_f64() {
                 Some(unhint_w) if unhint_w.is_finite() => {
                     let slack = sw - unhint_w;
-                    if !(-0.15..1.15).contains(&slack) {
+                    let bound = if xfail_text.is_some() { 1.15 } else { 0.65 };
+                    if !(-0.15..bound).contains(&slack) {
                         errors.push(format!(
-                            "t={}ms text:{n}.w: slint {sw} vs unhinted compose {unhint_w} (must satisfy sw = ceil(metric))",
+                            "t={}ms text:{n}.w: slint {sw} vs unhinted compose {unhint_w} (bound {bound:.2})",
                             frame.t_ms
                         ));
+                    } else if slack > 0.65 {
+                        if let Some(reason) = xfail_text {
+                            eprintln!(
+                                "parity: xfail-text t={}ms text:{n}.w: slint {sw} vs unhinted compose {unhint_w} — expected ceil-quantization drift ({reason})",
+                                frame.t_ms
+                            );
+                        }
                     }
                 }
                 // Fallback for references recorded before unhint_w existed:
@@ -1705,6 +1721,7 @@ pub fn run_parity_case<C: i_slint_core::api::ComponentHandle>(
     // traced elements' bounds union at the settle frame, dilated to cover
     // decorations and corner spill. (`None` = whole frame.)
     let mut caught_at_density = vec![false; spec.densities.len()];
+    let mut measured_phase: Option<i64> = None;
     for (di, density) in spec.densities.iter().enumerate() {
         let component = make_instance(*density);
 
@@ -1843,7 +1860,15 @@ pub fn run_parity_case<C: i_slint_core::api::ComponentHandle>(
             // so verify the shape silhouette itself: ink never moves a
             // boundary edge.
             let mut silhouette_failed = false;
-            if !inner_masked.is_empty() {
+            // The software renderer can't clip to a rounded shape (#6): its
+            // `clip` is axis-aligned, so bounded ripple ink legitimately
+            // fills the corner-outside cells inside the element rect and the
+            // silhouette edge can't be measured under it. Skia/femtovg keep
+            // the check — they clip the ink to the shape. Negative cases run
+            // it everywhere: a defect finding inside the mutated region
+            // counts wherever it fires.
+            let silhouette_runnable = driver != "software" || negative;
+            if !inner_masked.is_empty() && silhouette_runnable {
                 if let Some(compose_elements) = compose
                     .as_ref()
                     .and_then(|c| compose_frame_at(c, t))
@@ -1908,9 +1933,18 @@ pub fn run_parity_case<C: i_slint_core::api::ComponentHandle>(
         }
 
         if let Some(compose) = &compose {
-            let mut errors =
-                if !spec.times.is_empty() { compare_traces(&frames, compose) } else { Vec::new() };
-            errors.extend(compare_text_metrics(&component, &frames, compose));
+            let (mut errors, phase) = if !spec.times.is_empty() {
+                compare_traces(&frames, compose)
+            } else {
+                (Vec::new(), None)
+            };
+            measured_phase = measured_phase.or(phase);
+            errors.extend(compare_text_metrics(
+                &component,
+                &frames,
+                compose,
+                spec.xfail_text.as_deref(),
+            ));
             compare_findings += errors.len();
             // A motion-class defect is caught by the trace layer; record the
             // density as caught when any trace/geometry/text finding fired.
@@ -1986,7 +2020,13 @@ pub fn run_parity_case<C: i_slint_core::api::ComponentHandle>(
         return Ok(());
     }
 
-    if xfail {
+    // `xfail:<driver>:` expects the divergence only on the named drivers;
+    // everywhere else the case is a positive and must pass clean.
+    let xfail_here = xfail
+        && (spec.xfail_renderers.is_empty()
+            || spec.xfail_renderers.iter().any(|d| d == driver));
+
+    if xfail_here {
         if references_missing {
             // Same rule as negative: without references there is nothing
             // real to diverge from — skip, don't count IO errors as the
@@ -1997,6 +2037,8 @@ pub fn run_parity_case<C: i_slint_core::api::ComponentHandle>(
         // one finding — if it stops finding any, either the divergence was
         // fixed (retire the marker, the case graduates to a positive) or the
         // comparator went blind.
+        let phase =
+            measured_phase.map(|p| format!("; measured offset {p:+}ms")).unwrap_or_default();
         return if failures.is_empty() {
             Err(format!(
                 "xfail case {case_rel} passed — expected a failure for: {} (remove the marker or reinstate the defect)",
@@ -2005,7 +2047,7 @@ pub fn run_parity_case<C: i_slint_core::api::ComponentHandle>(
             .into())
         } else {
             eprintln!(
-                "parity: xfail {case_rel} diverges as expected ({}): {} findings",
+                "parity: xfail {case_rel} diverges as expected ({}{phase}): {} findings",
                 spec.xfail_note.as_deref().unwrap_or("(undocumented)"),
                 failures.len()
             );

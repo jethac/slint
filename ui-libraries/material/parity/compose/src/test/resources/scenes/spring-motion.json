@@ -13,7 +13,8 @@
   ],
   "case_rel": "material/spring_motion",
   "densities": [
-    1
+    1,
+    2
   ],
   "fonts": {
     "brand": "Roboto",

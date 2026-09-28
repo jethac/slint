@@ -63,6 +63,11 @@ struct Scene {
     /// property).
     #[serde(default)]
     slint_overrides: serde_json::Map<String, serde_json::Value>,
+    /// `//XFAIL_TEXT=<reason>` — the case expects Slint's ceil-quantized
+    /// text widths (issue #28); without it the width check bounds text to
+    /// 0.5 px of the unhinted Compose advance.
+    #[serde(default)]
+    xfail_text: Option<String>,
 }
 
 #[derive(serde::Deserialize, serde::Serialize)]
@@ -384,6 +389,9 @@ fn slint_case(scene: &Scene) -> String {
             ts.iter().map(u64::to_string).collect::<Vec<_>>().join(",")
         )
         .unwrap();
+    }
+    if let Some(reason) = &scene.xfail_text {
+        writeln!(s, "//XFAIL_TEXT={reason}").unwrap();
     }
     writeln!(
         s,

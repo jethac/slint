@@ -2,7 +2,8 @@
   "actions": [],
   "case_rel": "material/negative_radius",
   "densities": [
-    1
+    1,
+    2
   ],
   "fonts": {
     "brand": "Roboto",

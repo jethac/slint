@@ -58,5 +58,6 @@
         "button2",
         "button3"
     ],
-    "trace_props": []
+    "trace_props": [],
+    "xfail_text": "issue #28: Slint ceils text layout widths where Compose keeps fractional advances"
 }

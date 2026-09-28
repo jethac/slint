@@ -1,9 +1,9 @@
 // Copyright © SixtyFPS GmbH <info@slint.dev>
 // SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0
 
-// Scene: negative-corner-leak — generated from `ui-libraries/material/parity/scenes/negative-corner-leak.json`
+// Scene: negative-corner-leak-dark — generated from `ui-libraries/material/parity/scenes/negative-corner-leak-dark.json`
 // (edit the scene, regenerate with `cargo run -p material-parity-generator`).
-//PARITY=negative: the covering rectangle paints square corners over the pressed button's rounded shape — ink outside the corner arc must fail the strict layer
+//PARITY=negative: dark theme: the light covering rectangle paints square corners over the pressed button's rounded shape — ink outside the corner arc is visibly light-on-dark and must fail the strict layer at both densities
 //SIZE=240x96
 //TRACE_ELEMENTS=button0
 //ACTION=press:56,48
@@ -14,11 +14,11 @@ import { FilledButton, MaterialPalette, MaterialTheme, MaterialWindow } from "@m
 
 export component TestCase inherits MaterialWindow {
     init => {
-        // The scene pins seed #6750A4, tonal-spot, spec2025, light, contrast 0
+        // The scene pins seed #6750A4, tonal-spot, spec2025, dark, contrast 0
         // (all the library defaults; restated here so a default change can't
         // silently move the parity baseline).
         MaterialTheme.seed-color = #6750A4;
-        MaterialTheme.dark = false;
+        MaterialTheme.dark = true;
         MaterialTheme.contrast-level = 0;
         MaterialTheme.use-platform-color = false;
         MaterialTheme.plain-family = "Roboto";
@@ -41,7 +41,7 @@ export component TestCase inherits MaterialWindow {
         width: button0.width;
         height: button0.height;
         border-radius: 0px;
-        background: MaterialPalette.on_primary;
+        background: MaterialPalette.inverse_surface;
         opacity: 0.1;
         Text {
             text: "Label";

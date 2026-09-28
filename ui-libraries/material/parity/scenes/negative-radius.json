@@ -4,7 +4,7 @@
     "parity": "negative",
     "negative_note": "the card renders border-radius 8px, the scene and its Compose reference specify 24px — a wrong corner radius must fail",
     "size": [200, 120],
-    "densities": [1],
+    "densities": [1, 2],
     "theme": {
         "seed": "6750A4",
         "variant": "tonal-spot",

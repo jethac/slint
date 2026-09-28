@@ -221,7 +221,10 @@ fn test_extract_library_paths() {
 /// - `//PARITY=xfail:<reason>` — a known divergence the harness must report,
 ///   not absorb: the test passes only while the comparison finds at least one
 ///   difference (an unexpected pass fails, so the marker can't outlive the
-///   divergence it names).
+///   divergence it names). Prefixed with a driver scope —
+///   `//PARITY=xfail:software:<reason>` — the divergence is expected only on
+///   that driver (e.g. a clip mode a renderer lacks); on every other driver
+///   the case must pass clean.
 ///
 /// Optional markers:
 /// - `//TIMES=0,64,128` — motion capture timestamps (required for `motion`).
@@ -247,6 +250,11 @@ fn test_extract_library_paths() {
 ///   decoration outside its silhouette (a drop shadow, a blur) is not
 ///   comparable on the reference engine; the corner zones fall back to
 ///   the normal decoration band. One line per element, may repeat.
+/// - `//XFAIL_TEXT=<reason>` — the text-width layer accepts Slint's
+///   ceil-quantized text widths (the tracked divergence the reason names,
+///   e.g. `issue #28`): `sw − unhinted advance` may land anywhere in
+///   `(−0.15, 1.15]`. Without the marker the bound is 0.5 px —
+///   `(−0.15, 0.65]`. A drift past a whole pixel fails either way.
 #[derive(Debug, Default, Clone, PartialEq)]
 pub struct ParityMarkers {
     /// `Some("static"|"motion"|"negative")` when a `//PARITY=` marker is present.
@@ -261,6 +269,12 @@ pub struct ParityMarkers {
     pub negative_note: Option<String>,
     /// `PARITY=xfail` cases name the tracked divergence after a `:`.
     pub xfail_note: Option<String>,
+    /// Non-empty when `PARITY=xfail` was scoped to specific drivers —
+    /// `xfail:software:<reason>` expects the divergence only on `software`.
+    pub xfail_renderers: Vec<String>,
+    /// `//XFAIL_TEXT=<reason>` marks the text-width layer's ceil-quantization
+    /// window an expected divergence rather than a failure.
+    pub xfail_text: Option<String>,
     /// `(element-id, t_ms)` pairs from `//MASK_INNER=` markers.
     pub mask_inner: Vec<(String, u64)>,
     /// `(element-id, t_ms)` pairs from `//MASK_DECOR=` markers.
@@ -298,19 +312,46 @@ pub fn extract_parity(source: &str) -> ParityMarkers {
 
     let parity = source.find("//PARITY=").map(|p| {
         let rest = &source[p + "//PARITY=".len()..];
-        let end = rest.find(char::is_whitespace).unwrap_or(rest.len());
-        rest[..end].to_string()
+        let end = rest.find('\n').unwrap_or(rest.len());
+        rest[..end].trim().to_string()
     });
-    let (parity, negative_note, xfail_note) = match parity.as_deref().map(str::trim) {
-        Some(v) if v.starts_with("negative") => {
-            (Some("negative".to_string()), v.split_once(':').map(|(_, n)| n.trim().to_string()), None)
-        }
-        Some(v) if v.starts_with("xfail") => {
-            (Some("xfail".to_string()), None, v.split_once(':').map(|(_, n)| n.trim().to_string()))
-        }
-        Some(v) => (Some(v.to_string()), None, None),
-        None => (None, None, None),
-    };
+    let (parity, negative_note, xfail_note, xfail_renderers) =
+        match parity.as_deref().map(str::trim) {
+            Some(v) if v.starts_with("negative") => (
+                Some("negative".to_string()),
+                v.split_once(':').map(|(_, n)| n.trim().to_string()),
+                None,
+                Vec::new(),
+            ),
+            Some(v) if v.starts_with("xfail") => {
+            // `xfail[:<driver>[,<driver>…]]: <reason>` — an optional scope of
+            // known driver names limits where the divergence is expected.
+            const DRIVERS: &[&str] = &["software", "skia", "femtovg", "interpreter"];
+            let note = v.split_once(':').map(|(_, n)| n.trim()).unwrap_or("");
+            let (renderers, reason) = match note.split_once(':') {
+                Some((scope, reason))
+                    if !scope.is_empty()
+                        && scope
+                            .split(',')
+                            .all(|d| DRIVERS.contains(&d.trim())) =>
+                {
+                    (
+                        scope.split(',').map(|d| d.trim().to_string()).collect(),
+                        reason.trim().to_string(),
+                    )
+                }
+                _ => (Vec::new(), note.to_string()),
+            };
+                (
+                    Some("xfail".to_string()),
+                    None,
+                    (!reason.is_empty()).then_some(reason),
+                    renderers,
+                )
+            }
+            Some(v) => (Some(v.to_string()), None, None, Vec::new()),
+            None => (None, None, None, Vec::new()),
+        };
 
     let mut actions = Vec::new();
     static ACTION_RX: LazyLock<Regex> = LazyLock::new(|| {
@@ -379,6 +420,12 @@ pub fn extract_parity(source: &str) -> ParityMarkers {
         eps,
         negative_note,
         xfail_note,
+        xfail_renderers,
+        xfail_text: source.find("//XFAIL_TEXT=").map(|p| {
+            let rest = &source[p + "//XFAIL_TEXT=".len()..];
+            let end = rest.find('\n').unwrap_or(rest.len());
+            rest[..end].trim().to_string()
+        }),
         mask_inner,
         mask_decor,
     }

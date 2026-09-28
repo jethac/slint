@@ -1,6 +1,7 @@
 button-hover
 button-press
 button-states
+negative-corner-leak-dark
 negative-corner-leak
 negative-focus-layer
 negative-hover-layer
