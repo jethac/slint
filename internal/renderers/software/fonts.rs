@@ -40,7 +40,7 @@ impl RenderableGlyph {
 }
 
 // Subset of `RenderableGlyph`, specifically for VectorFonts.
-#[cfg(feature = "systemfonts")]
+#[cfg(any(feature = "systemfonts", feature = "embedded-vector-fonts"))]
 #[derive(Clone)]
 pub struct RenderableVectorGlyph {
     pub x: Fixed<i32, 8>,
@@ -49,11 +49,15 @@ pub struct RenderableVectorGlyph {
     pub height: PhysicalLength,
     pub alpha_map: Rc<[u8]>,
     pub pixel_stride: u16,
+    /// Only the parley glyph-run path (`systemfonts`) positions glyphs at
+    /// sub-pixel offsets; the embedded path renders the offset into the bitmap.
+    #[cfg_attr(all(feature = "embedded-vector-fonts", not(feature = "systemfonts")), allow(dead_code))]
     pub glyph_origin_x: f32,
 }
 
-#[cfg(feature = "systemfonts")]
+#[cfg(any(feature = "systemfonts", feature = "embedded-vector-fonts"))]
 impl RenderableVectorGlyph {
+    #[cfg_attr(all(feature = "embedded-vector-fonts", not(feature = "systemfonts")), allow(dead_code))]
     pub fn size(&self) -> PhysicalSize {
         PhysicalSize::from_lengths(self.width, self.height)
     }
@@ -72,16 +76,19 @@ pub trait GlyphRenderer {
 pub(super) use i_slint_core::textlayout::DEFAULT_FONT_SIZE;
 
 mod pixelfont;
-#[cfg(feature = "systemfonts")]
+#[cfg(any(feature = "systemfonts", feature = "embedded-vector-fonts"))]
 pub mod vectorfont;
 
 #[cfg(feature = "systemfonts")]
 pub mod systemfonts;
 
+#[cfg(all(feature = "embedded-vector-fonts", not(feature = "systemfonts")))]
+pub mod embeddedfonts;
+
 #[derive(derive_more::From)]
 pub enum Font {
     PixelFont(pixelfont::PixelFont),
-    #[cfg(feature = "systemfonts")]
+    #[cfg(any(feature = "systemfonts", feature = "embedded-vector-fonts"))]
     VectorFont(vectorfont::VectorFont),
 }
 
@@ -100,7 +107,7 @@ macro_rules! with_font {
     ($font:expr, |$bound:ident| $body:block) => {
         match $font {
             $crate::fonts::Font::PixelFont($bound) => $body,
-            #[cfg(feature = "systemfonts")]
+            #[cfg(any(feature = "systemfonts", feature = "embedded-vector-fonts"))]
             $crate::fonts::Font::VectorFont($bound) => $body,
         }
     };
@@ -241,6 +248,10 @@ pub fn match_font(
             ) {
                 return vectorfont.into();
             }
+            #[cfg(all(feature = "embedded-vector-fonts", not(feature = "systemfonts")))]
+            if let Some(vectorfont) = embeddedfonts::match_font(request, scale_factor) {
+                return vectorfont.into();
+            }
             bitmap_font
         }
         None => {
@@ -251,6 +262,10 @@ pub fn match_font(
                 &mut font_context.collection,
                 &mut font_context.source_cache,
             ) {
+                return vectorfont.into();
+            }
+            #[cfg(all(feature = "embedded-vector-fonts", not(feature = "systemfonts")))]
+            if let Some(vectorfont) = embeddedfonts::match_font(request, scale_factor) {
                 return vectorfont.into();
             }
             if let Some(fallback_bitmap_font) = BITMAP_FONTS.with(|fonts| {
@@ -272,6 +287,12 @@ pub fn match_font(
                     &mut font_context.source_cache,
                 )
                 .into();
+                #[cfg(all(feature = "embedded-vector-fonts", not(feature = "systemfonts")))]
+                if let Some(vectorfont) =
+                    embeddedfonts::fallback_font(request, scale_factor)
+                {
+                    return vectorfont.into();
+                }
                 #[cfg(not(feature = "systemfonts"))]
                 panic!(
                     "No font fallback found. The software renderer requires enabling the `EmbedForSoftwareRenderer` option when compiling slint files."
