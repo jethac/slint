@@ -295,9 +295,7 @@ mod tests {
                 continue;
             };
             font = Some(run.run().font().clone());
-            glyphs.extend(
-                run.positioned_glyphs().map(|g| (g.id as skia_safe::GlyphId, g.x, g.y)),
-            );
+            glyphs.extend(run.positioned_glyphs().map(|g| (g.id as skia_safe::GlyphId, g.x, g.y)));
         }
         (font.expect("a glyph run"), glyphs)
     }
