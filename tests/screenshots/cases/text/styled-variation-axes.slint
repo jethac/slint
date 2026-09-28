@@ -1,0 +1,24 @@
+// Copyright © SixtyFPS GmbH <info@slint.dev>
+// SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0
+
+// Skia font rendering is not consistent across platforms
+//ignore:skia
+// The embed-assets driver embeds glyphs at compile time without axis collection on
+// this branch; the mcu branch collects the tuples and removes this ignore.
+//ignore: software-embed-assets
+// SIZE=160x90
+
+// Axis ranges inside styled markup: `<font>` attributes apply per span and mix
+// with the element-level defaults.
+export component TestCase inherits Window {
+    width: 160px;
+    height: 90px;
+    background: white;
+    default-font-family: "Noto Sans";
+    StyledText {
+        width: 100%;
+        height: 100%;
+        default-font-size: 13px;
+        text: @markdown("plain <font font-variation-settings='\"wght\" 900'>w900 span</font> base\n<font font-stretch='62.5%'>condensed span</font> base\n<font font-variation-settings='\"opsz\" 8'>flex opsz</font>");
+    }
+}

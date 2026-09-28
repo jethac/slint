@@ -1,0 +1,27 @@
+// Copyright © SixtyFPS GmbH <info@slint.dev>
+// SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0
+
+// Skia font rendering is not consistent across platforms
+//ignore:skia
+// The embed-assets driver embeds glyphs at compile time without axis collection on
+// this branch; the mcu branch collects the tuples and removes this ignore.
+//ignore: software-embed-assets
+// SIZE=120x120
+
+// The wdth axis through `font-variation-settings`, `font-stretch` as the
+// CSS-mapped equivalent, and both on Roboto Flex (wdth 25-151).
+export component TestCase inherits Window {
+    width: 120px;
+    height: 120px;
+    background: white;
+    default-font-family: "Noto Sans";
+    default-font-size: 13px;
+    VerticalLayout {
+        Text { text: "width 62.5"; font-variation-settings: "wdth" 62.5; }
+        Text { text: "width 100"; }
+        Text { text: "stretch 62.5"; font-stretch: 62.5%; }
+        Text { text: "stretch 100"; font-stretch: 100%; }
+        Text { text: "RF wdth 40"; font-family: "Roboto Flex"; font-variation-settings: "wdth" 40; }
+        Text { text: "RF wdth 120"; font-family: "Roboto Flex"; font-variation-settings: "wdth" 120; }
+    }
+}

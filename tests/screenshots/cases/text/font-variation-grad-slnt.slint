@@ -1,0 +1,30 @@
+// Copyright © SixtyFPS GmbH <info@slint.dev>
+// SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0
+
+// Skia font rendering is not consistent across platforms
+//ignore:skia
+// The embed-assets driver embeds glyphs at compile time without axis collection on
+// this branch; the mcu branch collects the tuples and removes this ignore.
+//ignore: software-embed-assets
+// SIZE=140x120
+
+// Non-CSS axes on Roboto Flex: GRAD (grade without width change) and slnt
+// (slant), plus axis values bound to a property rather than written inline.
+export component TestCase inherits Window {
+    width: 140px;
+    height: 120px;
+    background: white;
+    default-font-family: "Roboto Flex";
+    default-font-size: 14px;
+
+    in property <[FontVariation]> bound-axes: [{ tag: "GRAD", value: 150 }, { tag: "slnt", value: -8 }];
+
+    VerticalLayout {
+        Text { text: "GRAD -200"; font-variation-settings: "GRAD" -200; }
+        Text { text: "GRAD 0"; }
+        Text { text: "GRAD 150"; font-variation-settings: "GRAD" 150; }
+        Text { text: "slnt -10"; font-variation-settings: "slnt" -10; }
+        Text { text: "slnt 0"; }
+        Text { text: "bound axes"; font-variation-settings: root.bound-axes; }
+    }
+}

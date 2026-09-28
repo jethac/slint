@@ -1,0 +1,26 @@
+// Copyright © SixtyFPS GmbH <info@slint.dev>
+// SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0
+
+// Skia font rendering is not consistent across platforms
+//ignore:skia
+// The embed-assets driver embeds glyphs at compile time without axis collection on
+// this branch; the mcu branch collects the tuples and removes this ignore.
+//ignore: software-embed-assets
+// SIZE=140x120
+
+// The opsz axis on Roboto Flex: explicit `opsz` values through
+// `font-variation-settings`, and `font-optical-sizing: auto` picking opsz from
+// the used pixel size (18px text at auto looks different from opsz pinned to 8).
+export component TestCase inherits Window {
+    width: 140px;
+    height: 120px;
+    background: white;
+    default-font-family: "Roboto Flex";
+    default-font-size: 18px;
+    VerticalLayout {
+        Text { text: "opsz 8"; font-variation-settings: "opsz" 8; }
+        Text { text: "opsz 144"; font-variation-settings: "opsz" 144; }
+        Text { text: "opsz auto"; font-optical-sizing: auto; }
+        Text { text: "opsz none"; font-optical-sizing: none; }
+    }
+}
