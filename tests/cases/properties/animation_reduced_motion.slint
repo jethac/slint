@@ -1,9 +1,13 @@
 // Copyright © SixtyFPS GmbH <info@slint.dev>
 // SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0
 
-// The platform reduced-motion preference makes every `animate` finish
-// immediately, and `ANIMATOR_DURATION_SCALE`-style duration scaling stretches
-// or collapses the timeline.
+// `reduced-motion` is a semantic flag the style gates `enabled:` on; the
+// engine-level instant behavior comes from the animation duration scale, which
+// follows Compose's `MotionDurationScale`: at scale 0 a finite animation
+// reports its end value and finishes, while an infinite one reports its end
+// value and keeps running.
+
+import { Palette } from "std-widgets.slint";
 
 export component TestCase inherits Rectangle {
     in-out property <float> value: 0;
@@ -11,6 +15,18 @@ export component TestCase inherits Rectangle {
 
     in-out property <float> sprung: 0;
     animate sprung { easing: spring(1.0, 380); }
+
+    in-out property <float> delayed: 0;
+    animate delayed { duration: 1000ms; delay: 500ms; }
+
+    in-out property <float> legacy: 0;
+    animate legacy { duration: 1000ms; easing: spring(0.5); }
+
+    in-out property <float> infinite: 0;
+    animate infinite { duration: 1000ms; iteration-count: -1; }
+
+    in-out property <bool> reduced: Palette.reduced-motion;
+    out property <float> test-out: value;
 }
 
 /*
@@ -24,18 +40,40 @@ assert!(instance.get_value() > 0.0 && instance.get_value() < 100.0);
 slint_testing::mock_elapsed_time(500);
 assert_eq!(instance.get_value(), 100.0);
 
-// Reduced motion: every animation lands on the target immediately.
+// The reduced-motion flag is semantic only: it is observable through
+// `Palette.reduced-motion` but does not force animations to finish.
 slint_testing::set_reduced_motion(true);
+assert_eq!(instance.get_reduced(), true);
 instance.set_value(0.0);
+slint_testing::mock_elapsed_time(500);
+assert!(instance.get_value() > 0.0 && instance.get_value() < 100.0);
+slint_testing::mock_elapsed_time(500);
 assert_eq!(instance.get_value(), 0.0);
-instance.set_sprung(50.0);
-assert_eq!(instance.get_sprung(), 50.0);
 slint_testing::set_reduced_motion(false);
+assert_eq!(instance.get_reduced(), false);
 
-// A duration scale of 0 has the same effect.
+// A duration scale of 0 snaps every finite animation shape to its target.
 slint_testing::set_animation_duration_scale(0.0);
 instance.set_value(100.0);
 assert_eq!(instance.get_value(), 100.0);
+instance.set_sprung(50.0);
+assert_eq!(instance.get_sprung(), 50.0);
+instance.set_delayed(33.0);
+assert_eq!(instance.get_delayed(), 33.0);
+instance.set_legacy(42.0);
+assert_eq!(instance.get_legacy(), 42.0);
+
+// An infinite animation reports its end value and keeps running: it must not
+// wedge the animation driver (a second finite animation still animates).
+instance.set_infinite(80.0);
+assert_eq!(instance.get_infinite(), 80.0);
+slint_testing::mock_elapsed_time(500);
+instance.set_value(55.0);
+slint_testing::mock_elapsed_time(500);
+assert!(instance.get_value() > 0.0 && instance.get_value() < 55.0);
+slint_testing::mock_elapsed_time(500);
+assert_eq!(instance.get_value(), 55.0);
+assert_eq!(instance.get_infinite(), 80.0);
 
 // A scale of 2 stretches the timeline: half the duration covers a quarter.
 slint_testing::set_animation_duration_scale(2.0);
@@ -57,15 +95,34 @@ slint_testing::mock_elapsed_time(500);
 assert_eq(instance.get_value(), 100.0);
 
 slint_testing::set_reduced_motion(true);
+assert_eq(instance.get_reduced(), true);
 instance.set_value(0.0);
+slint_testing::mock_elapsed_time(500);
+assert(instance.get_value() > 0.0 && instance.get_value() < 100.0);
+slint_testing::mock_elapsed_time(500);
 assert_eq(instance.get_value(), 0.0);
-instance.set_sprung(50.0);
-assert_eq(instance.get_sprung(), 50.0);
 slint_testing::set_reduced_motion(false);
+assert_eq(instance.get_reduced(), false);
 
 slint_testing::set_animation_duration_scale(0.0);
 instance.set_value(100.0);
 assert_eq(instance.get_value(), 100.0);
+instance.set_sprung(50.0);
+assert_eq(instance.get_sprung(), 50.0);
+instance.set_delayed(33.0);
+assert_eq(instance.get_delayed(), 33.0);
+instance.set_legacy(42.0);
+assert_eq(instance.get_legacy(), 42.0);
+
+instance.set_infinite(80.0);
+assert_eq(instance.get_infinite(), 80.0);
+slint_testing::mock_elapsed_time(500);
+instance.set_value(55.0);
+slint_testing::mock_elapsed_time(500);
+assert(instance.get_value() > 0.0 && instance.get_value() < 55.0);
+slint_testing::mock_elapsed_time(500);
+assert_eq(instance.get_value(), 55.0);
+assert_eq(instance.get_infinite(), 80.0);
 
 slint_testing::set_animation_duration_scale(2.0);
 instance.set_value(0.0);

@@ -189,29 +189,47 @@ impl<T: InterpolatedPropertyValue + Clone> PropertyValueAnimationData<T> {
                     return None;
                 }
                 // Invalid parameters can't be simulated: the compiler diagnoses
-                // literals, so clamp what only a runtime value can produce.
-                let mass = f64::from(mass.max(0.0001));
-                let stiffness = f64::from(stiffness.max(0.0));
-                let damping_ratio = damping_ratio.max(0.0);
+                // literals, so clamp what only a runtime value can produce — the
+                // same minimums as `PhysicalSpringParameters::new` (the Flickable
+                // fling path).
+                let params = crate::animations::simulations::spring::PhysicalSpringParameters::new(
+                    damping_ratio,
+                    stiffness,
+                    mass,
+                    0.,
+                );
+                let mass = f64::from(params.mass);
+                let stiffness = f64::from(params.stiffness);
+                let damping_ratio = params.damping_ratio;
                 // `SpringSimulation` fixes the mass at 1, so `w_n = sqrt(k / m)`
                 // covers the optional mass parameter.
                 let w_n = f32::sqrt(stiffness as f32 / mass as f32);
                 let damping_coefficient =
                     2.0 * f64::from(damping_ratio) * f64::sqrt(stiffness * mass);
-                let threshold = f64::from(from_value.visibility_threshold(to_value));
+                // An explicit override (the interpreter sets it for integer-typed
+                // properties, where `Value::Number` erases the declared type)
+                // wins over the animated type's default.
+                let threshold = if details.visibility_threshold > 0.0 {
+                    f64::from(details.visibility_threshold)
+                } else {
+                    f64::from(from_value.visibility_threshold(to_value))
+                };
 
                 let mut from_channels = alloc::vec![0.0; channel_count];
                 from_value.write_channels(to_value, &mut from_channels);
                 let mut to_channels = alloc::vec![0.0; channel_count];
                 to_value.write_channels(from_value, &mut to_channels);
                 // A velocity carried over from an animation with a different channel
-                // count doesn't map onto this one, so it falls back to
-                // `initial_velocity` on every channel.
-                let carried = if carried_velocity.len() == channel_count {
-                    Some(carried_velocity)
-                } else {
+                // count keeps the channels that line up; the rest start at 0.
+                let carried = if carried_velocity.is_empty() {
                     None
+                } else {
+                    let mut v = alloc::vec![0.0f32; channel_count];
+                    let n = carried_velocity.len().min(channel_count);
+                    v[..n].copy_from_slice(&carried_velocity[..n]);
+                    Some(v)
                 };
+                let carried = carried.as_deref();
 
                 // `estimate_animation_duration_ms_with_mass` takes the
                 // under-damped branch for `damping_ratio == 0` and yields an
@@ -316,7 +334,10 @@ impl<T: InterpolatedPropertyValue + Clone> PropertyValueAnimationData<T> {
 
         match self.state {
             AnimationState::Delaying => {
-                if self.details.delay <= 0 {
+                // At duration scale 0 the delay has already elapsed: like Compose
+                // (`SuspendAnimation.kt`, `playTimeNanos = durationNanos` when
+                // `scaleFactor == 0`), the animation proceeds straight to its end.
+                if self.details.delay <= 0 || scale <= 0.0 {
                     self.state = AnimationState::Animating { current_iteration: 0 };
                     return self.compute_interpolated_value();
                 }
@@ -330,8 +351,9 @@ impl<T: InterpolatedPropertyValue + Clone> PropertyValueAnimationData<T> {
                         (self.apply_map(self.from_value.clone()), false)
                     }
                 } else {
-                    self.start_time =
-                        new_tick - core::time::Duration::from_millis(time_progress - delay);
+                    self.start_time = crate::animations::Instant(
+                        new_tick.0.saturating_sub(time_progress - delay),
+                    );
 
                     // Decide on next state:
                     self.state = AnimationState::Animating { current_iteration: 0 };
@@ -344,8 +366,10 @@ impl<T: InterpolatedPropertyValue + Clone> PropertyValueAnimationData<T> {
                 // `iteration_count` don't apply to it.
                 if let Some(PropertySpring::Physical(physical)) = self.spring.as_ref() {
                     if self.details.iteration_count == 0. || time_progress >= physical.duration_ms {
+                        // Springs ignore `direction`, so the end state is always the
+                        // target value rather than `reversed()`-mapped back to `from`.
                         self.state = AnimationState::Done { iteration_count: 0 };
-                        return self.compute_interpolated_value();
+                        return (self.apply_map(to_value), true);
                     }
                     let elapsed_secs = time_progress as f32 / 1000.0;
                     let channels: Vec<f32> = physical
@@ -366,6 +390,21 @@ impl<T: InterpolatedPropertyValue + Clone> PropertyValueAnimationData<T> {
                     return if let Some(PropertySpring::DurationBounce(spring)) =
                         self.spring.as_ref()
                     {
+                        if scale <= 0.0 {
+                            // Duration scale 0: report the end-of-iteration (settled)
+                            // value directly instead of advancing iterations, which
+                            // would recurse without bound for `iteration-count: -1`.
+                            if self.details.iteration_count >= 0. {
+                                self.state = AnimationState::Done {
+                                    iteration_count: (self.details.iteration_count.ceil() as u64)
+                                        .saturating_sub(1),
+                                };
+                                return self.compute_interpolated_value();
+                            }
+                            let progress = if reversed(current_iteration) { 0. } else { 1. };
+                            let val = self.from_value.interpolate(&to_value, progress);
+                            return (self.apply_map(val), false);
+                        }
                         let next_iteration = current_iteration + 1;
                         let has_more_iterations = self.details.iteration_count < 0.
                             || (next_iteration as f64) < self.details.iteration_count as f64;
@@ -450,15 +489,36 @@ impl<T: InterpolatedPropertyValue + Clone> PropertyValueAnimationData<T> {
 
                 let duration = self.details.duration as u64;
                 if time_progress >= duration {
-                    // wrap around
-                    current_iteration += time_progress / duration;
-                    time_progress %= duration;
-                    self.start_time = new_tick - core::time::Duration::from_millis(time_progress);
+                    if scale <= 0.0 {
+                        if self.details.iteration_count >= 0. {
+                            // Finite animations snap to and finish at the end of
+                            // their last iteration, like Compose's
+                            // `playTimeNanos = durationNanos` at scale 0 in
+                            // `SuspendAnimation.kt`.
+                            self.state = AnimationState::Done {
+                                iteration_count: (self.details.iteration_count.ceil() as u64)
+                                    .saturating_sub(1),
+                            };
+                            return self.compute_interpolated_value();
+                        }
+                        // Infinite animations pin at their end value and keep
+                        // running (`getValueFromNanos(durationNanos)`).
+                        current_iteration = 0;
+                        time_progress = duration;
+                        self.start_time = crate::animations::Instant(new_tick.0);
+                    } else {
+                        // wrap around
+                        current_iteration =
+                            current_iteration.saturating_add(time_progress / duration);
+                        time_progress %= duration;
+                        self.start_time =
+                            crate::animations::Instant(new_tick.0.saturating_sub(time_progress));
+                    }
                 }
 
                 if (self.details.iteration_count < 0.)
-                    || (((current_iteration * duration) + time_progress) as f64)
-                        < ((self.details.iteration_count as f64) * (duration as f64))
+                    || ((current_iteration as f64 * duration as f64) + time_progress as f64)
+                        < (self.details.iteration_count as f64 * duration as f64)
                 {
                     self.state = AnimationState::Animating { current_iteration };
 
