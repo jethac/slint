@@ -516,6 +516,8 @@ static LICENSE_LOCATION_FOR_FILE: LazyLock<Vec<(regex::Regex, LicenseLocation)>>
             ("(^|/)Cargo\\.toml$", LicenseLocation::Crate),
             ("(^|/)Dockerfile", LicenseLocation::Tag(LicenseTagStyle::shell_comment_style())),
             ("(^|/)Doxyfile$", LicenseLocation::Tag(LicenseTagStyle::shell_comment_style())),
+            ("(^|/)gradlew$", LicenseLocation::NoLicense), // third-party Gradle launcher script
+            ("(^|/)gradlew\\.bat$", LicenseLocation::NoLicense), // third-party Gradle launcher script
             ("(^|/)LICENSE$", LicenseLocation::NoLicense),
             ("(^|/)LICENSE\\.QT$", LicenseLocation::NoLicense),
             ("(^|/)README$", LicenseLocation::NoLicense),
@@ -569,11 +571,13 @@ static LICENSE_LOCATION_FOR_FILE: LazyLock<Vec<(regex::Regex, LicenseLocation)>>
             ("\\.npmignore$", LicenseLocation::NoLicense),
             ("\\.h$", LicenseLocation::Tag(LicenseTagStyle::cpp_style_comment_style())),
             ("\\.html$", LicenseLocation::NoLicense),
+            ("\\.jar$", LicenseLocation::NoLicense),
             ("\\.java$", LicenseLocation::Tag(LicenseTagStyle::cpp_style_comment_style())),
             ("\\.jpg$", LicenseLocation::NoLicense),
             ("\\.js$", LicenseLocation::Tag(LicenseTagStyle::cpp_style_comment_style())),
             ("\\.cjs$", LicenseLocation::Tag(LicenseTagStyle::cpp_style_comment_style())),
             ("\\.json$", LicenseLocation::NoLicense),
+            ("\\.kt$", LicenseLocation::Tag(LicenseTagStyle::cpp_style_comment_style())),
             ("\\.kts$", LicenseLocation::Tag(LicenseTagStyle::cpp_style_comment_style())),
             ("\\.jsonc$", LicenseLocation::NoLicense),
             ("\\.license$", LicenseLocation::NoLicense),

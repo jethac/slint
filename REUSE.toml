@@ -458,3 +458,20 @@ path = [
 ]
 SPDX-FileCopyrightText = "Copyright © SixtyFPS GmbH <info@slint.dev>"
 SPDX-License-Identifier = "MIT"
+[[annotations]]
+path = [
+  "ui-libraries/material/parity/scenes/**.json",
+  "ui-libraries/material/parity/compose/src/test/resources/scenes/**",
+]
+precedence = "aggregate"
+SPDX-FileCopyrightText = "Copyright © SixtyFPS GmbH <info@slint.dev>"
+SPDX-License-Identifier = "MIT"
+
+[[annotations]]
+path = [
+  "ui-libraries/material/parity/compose/gradle/wrapper/gradle-wrapper.jar",
+  "ui-libraries/material/parity/compose/gradle/wrapper/gradle-wrapper.properties",
+]
+precedence = "aggregate"
+SPDX-FileCopyrightText = "Copyright Gradle Inc."
+SPDX-License-Identifier = "Apache-2.0"
