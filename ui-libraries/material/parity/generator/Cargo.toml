@@ -1,0 +1,19 @@
+# Copyright © SixtyFPS GmbH <info@slint.dev>
+# SPDX-License-Identifier: MIT
+
+[package]
+name = "material-parity-generator"
+description = "Generates Slint screenshot-driver cases and resolved Compose scene files from the shared parity scene definitions"
+authors.workspace = true
+edition.workspace = true
+homepage.workspace = true
+license = "MIT"
+repository.workspace = true
+rust-version.workspace = true
+version.workspace = true
+publish = false
+
+[dependencies]
+material-color-utils = { path = "../../../../helper_crates/material-color-utils" }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"

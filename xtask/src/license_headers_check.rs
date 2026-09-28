@@ -509,6 +509,7 @@ static LICENSE_LOCATION_FOR_FILE: LazyLock<Vec<(regex::Regex, LicenseLocation)>>
             ("^demos/.*/zephyr/VERSION$", LicenseLocation::NoLicense),
             ("^examples/mcu-board-support/pico2_st7789/rp_pico2.rs$", LicenseLocation::NoLicense), // third-party file
             ("^tests/shapes/src/androidx/", LicenseLocation::NoLicense), // vendored third-party sources (Apache-2.0, annotated in REUSE.toml)
+            ("^ui-libraries/material/parity/compose/vendor/", LicenseLocation::NoLicense), // third-party: verbatim material-color-utilities
             // filename based matches:
             (
                 "(^|/)CMakeLists\\.txt$",
@@ -517,6 +518,8 @@ static LICENSE_LOCATION_FOR_FILE: LazyLock<Vec<(regex::Regex, LicenseLocation)>>
             ("(^|/)Cargo\\.toml$", LicenseLocation::Crate),
             ("(^|/)Dockerfile", LicenseLocation::Tag(LicenseTagStyle::shell_comment_style())),
             ("(^|/)Doxyfile$", LicenseLocation::Tag(LicenseTagStyle::shell_comment_style())),
+            ("(^|/)gradlew$", LicenseLocation::NoLicense), // third-party Gradle launcher script
+            ("(^|/)gradlew\\.bat$", LicenseLocation::NoLicense), // third-party Gradle launcher script
             ("(^|/)LICENSE$", LicenseLocation::NoLicense),
             ("(^|/)LICENSE\\.QT$", LicenseLocation::NoLicense),
             ("(^|/)README$", LicenseLocation::NoLicense),
@@ -571,6 +574,7 @@ static LICENSE_LOCATION_FOR_FILE: LazyLock<Vec<(regex::Regex, LicenseLocation)>>
             ("\\.npmignore$", LicenseLocation::NoLicense),
             ("\\.h$", LicenseLocation::Tag(LicenseTagStyle::cpp_style_comment_style())),
             ("\\.html$", LicenseLocation::NoLicense),
+            ("\\.jar$", LicenseLocation::NoLicense),
             ("\\.java$", LicenseLocation::Tag(LicenseTagStyle::cpp_style_comment_style())),
             ("\\.jpg$", LicenseLocation::NoLicense),
             ("\\.js$", LicenseLocation::Tag(LicenseTagStyle::cpp_style_comment_style())),

@@ -1,0 +1,57 @@
+// Copyright © SixtyFPS GmbH <info@slint.dev>
+// SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0
+
+// Scene: spring-motion — generated from `ui-libraries/material/parity/scenes/spring-motion.json`
+// (edit the scene, regenerate with `cargo run -p material-parity-generator`).
+//PARITY=xfail: issue #27: the Compose frame clock starts the animation ~2ms after the Slint dispatch, so identical-timestamp comparison reports a systematic lead — a silent pass would mean the harness went blind
+//SIZE=400x120
+//TIMES=0,33,66,100,133,166,200,266,333,400,500,666,833,1000
+//TRACE_PROPS=thumb-x
+//TRACE_ELEMENTS=thumb
+//ACTION=press:200,60
+//ACTION=release:200,60
+//DENSITIES=1,2
+import "../../fonts/Roboto-VariableFont.ttf";
+import { MaterialPalette, MaterialTheme, MaterialWindow } from "@material";
+
+export component TestCase inherits MaterialWindow {
+    init => {
+        // The scene pins seed #6750A4, tonal-spot, spec2025, light, contrast 0
+        // (all the library defaults; restated here so a default change can't
+        // silently move the parity baseline).
+        MaterialTheme.seed-color = #6750A4;
+        MaterialTheme.dark = false;
+        MaterialTheme.contrast-level = 0;
+        MaterialTheme.use-platform-color = false;
+        MaterialTheme.plain-family = "Roboto";
+        MaterialTheme.brand-family = "Roboto";
+        // Compose builds its scene scheme from the same seed — use the
+        // runtime-generated scheme, not the static expressive table.
+        MaterialPalette.dynamic = true;
+    }
+
+    // The property the trace and the Compose side both watch — the
+    // spring's animated value itself. Animating the property (not `thumb.x`,
+    // which would jump the source and animate only the binding) keeps the
+    // `get_thumb-x()` trace the live value. Pressing anywhere moves the
+    // thumb to `300px`; the spring settles it.
+    in-out property <length> thumb-x: 40px;
+    animate thumb-x { duration: 400ms; easing: spring(0.2); }
+
+    thumb := Rectangle {
+        x: root.thumb-x;
+        y: 40px;
+        width: 40px;
+        height: 40px;
+        border-radius: 20px;
+        background: MaterialPalette.primary;
+    }
+
+    TouchArea {
+        pointer-event(event) => {
+            if event.kind == PointerEventKind.down {
+                root.thumb-x = 300px;
+            }
+        }
+    }
+}
