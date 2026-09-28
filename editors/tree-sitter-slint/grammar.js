@@ -366,7 +366,15 @@ module.exports = grammar({
       seq("animate", choice("*", commaSep1($.expression)), $.animate_body),
 
     animate_option_identifier: (_) =>
-      choice("delay", "duration", "iteration-count", "direction", "easing", "enabled"),
+      choice(
+        "delay",
+        "duration",
+        "iteration-count",
+        "direction",
+        "easing",
+        "enabled",
+        "initial-velocity",
+      ),
 
     animate_option: ($) =>
       seq(
