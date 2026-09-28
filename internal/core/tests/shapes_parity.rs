@@ -826,7 +826,7 @@ fn morph_cache() {
         &shapes::star(4, 1., 0.5, CornerRounding::UNROUNDED, None, None, Point::ZERO).unwrap(),
     );
     let circle2 = Shape::from_polygon(&shapes::circle(8, 1., Point::ZERO).unwrap());
-    assert_ne!(star.id, star2.id);
+    assert_ne!(star.id(), star2.id());
     let m3 = cache.morph(&star2, &circle2);
     assert!(Rc::ptr_eq(&m1, &m3));
 
@@ -854,4 +854,42 @@ fn morph_cache() {
         let _ = cache.morph(&p, &circle);
     }
     assert!(cache.len() <= 64);
+}
+
+#[test]
+fn shape_morph_cache_unkeyed_targets() {
+    // Regression: an id-0 endpoint (built by FFI, `Default`, or `new_unkeyed`)
+    // must not make the interned-id fast path fire — a later morph from the
+    // same `a` to a different id-0 target used to return the stale first morph.
+    use i_slint_core::graphics::shapes::{MorphCache, Shape};
+    use std::rc::Rc;
+
+    let cache = MorphCache::new();
+    let star = Shape::from_polygon(
+        &shapes::star(4, 1., 0.5, CornerRounding::UNROUNDED, None, None, Point::ZERO).unwrap(),
+    );
+    let circle = Shape::from_polygon(&shapes::circle(8, 1., Point::ZERO).unwrap());
+    let square = Shape::from_polygon(
+        &shapes::rectangle(1., 1., CornerRounding::UNROUNDED, None, Point::ZERO).unwrap(),
+    );
+    // Unkeyed copies of the keyed endpoints (id 0, hash on demand).
+    let circle_unkeyed =
+        Shape::new_unkeyed(circle.cubics().clone(), circle.features().clone(), circle.center());
+    let square_unkeyed =
+        Shape::new_unkeyed(square.cubics().clone(), square.features().clone(), square.center());
+    assert_eq!(circle_unkeyed.id(), 0);
+    assert_eq!(square_unkeyed.id(), 0);
+    assert_ne!(star.id(), 0);
+
+    let m_circle = cache.morph(&star, &circle_unkeyed);
+    let m_square = cache.morph(&star, &square_unkeyed);
+    // The second lookup must not return the star→circle morph.
+    assert!(!Rc::ptr_eq(&m_circle, &m_square));
+    assert_ne!(m_circle.as_cubics(0.5), m_square.as_cubics(0.5));
+    assert_eq!(cache.len(), 2);
+
+    // Both pairs hit again through the hash + content verify.
+    assert!(Rc::ptr_eq(&m_circle, &cache.morph(&star, &circle_unkeyed)));
+    assert!(Rc::ptr_eq(&m_square, &cache.morph(&star, &square_unkeyed)));
+    assert_eq!(cache.hits(), 2);
 }

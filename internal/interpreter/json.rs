@@ -210,9 +210,10 @@ fn shape_to_json(shape: &i_slint_core::graphics::Shape) -> serde_json::Value {
     use i_slint_core::graphics::ShapeFeatureKind;
     let cubics = serde_json::Value::Array(
         shape
-            .cubics
-            .as_slice()
-            .chunks_exact(8)
+            .cubics()
+            .as_chunks::<8>()
+            .0
+            .iter()
             .map(|c| {
                 serde_json::Value::Array(
                     c.iter().map(|f| serde_json::Value::from(*f as f64)).collect(),
@@ -222,8 +223,7 @@ fn shape_to_json(shape: &i_slint_core::graphics::Shape) -> serde_json::Value {
     );
     let features = serde_json::Value::Array(
         shape
-            .features
-            .as_slice()
+            .features()
             .iter()
             .map(|f| {
                 let mut o = serde_json::Map::new();
@@ -243,8 +243,8 @@ fn shape_to_json(shape: &i_slint_core::graphics::Shape) -> serde_json::Value {
             .collect(),
     );
     let center = serde_json::Value::Array(vec![
-        serde_json::Value::from(shape.center.x as f64),
-        serde_json::Value::from(shape.center.y as f64),
+        serde_json::Value::from(shape.center().x as f64),
+        serde_json::Value::from(shape.center().y as f64),
     ]);
     let mut o = serde_json::Map::new();
     o.insert("type".into(), "shape".into());
@@ -253,7 +253,7 @@ fn shape_to_json(shape: &i_slint_core::graphics::Shape) -> serde_json::Value {
     o.insert("center".into(), center);
     o.insert(
         "fill_rule".into(),
-        match shape.fill_rule {
+        match shape.fill_rule() {
             i_slint_core::items::FillRule::Evenodd => "evenodd",
             _ => "nonzero",
         }
@@ -320,12 +320,14 @@ fn shape_from_json(obj: &serde_json::Map<String, serde_json::Value>) -> Result<V
         Some("evenodd") => i_slint_core::items::FillRule::Evenodd,
         _ => return err("'fill_rule' must be 'nonzero' or 'evenodd'"),
     };
-    i_slint_core::graphics::Shape::new(cubics, features, ShapePoint { x: x as f32, y: y as f32 })
-        .map(|mut shape| {
-            shape.fill_rule = fill_rule;
-            Value::Shape(shape)
-        })
-        .map_err(|e| format!("Invalid shape JSON: {e}"))
+    i_slint_core::graphics::Shape::new_with_fill_rule(
+        cubics,
+        features,
+        ShapePoint { x: x as f32, y: y as f32 },
+        fill_rule,
+    )
+    .map(Value::Shape)
+    .map_err(|e| format!("Invalid shape JSON: {e}"))
 }
 
 /// Create a `Value` from a JSON string

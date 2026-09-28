@@ -3543,6 +3543,7 @@ dependencies = [
  "fdsm-ttf-parser",
  "flate2",
  "i-slint-common",
+ "i-slint-core",
  "i-slint-parser-test-macro",
  "icu_normalizer",
  "icu_properties",

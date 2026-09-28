@@ -296,9 +296,9 @@ fn match_shapes(p1: &RoundedPolygon, p2: &RoundedPolygon) -> Option<(Vec<(Cubic,
         b1 = new_b1;
         b2 = new_b2;
     }
-    debug_assert!(
-        b1.is_none() && b2.is_none(),
-        "Expected both Polygon's Cubic to be fully matched"
-    );
+    if b1.is_some() || b2.is_some() {
+        crate::debug_log!("Shapes: expected both polygons' cubics to be fully matched");
+        return None;
+    }
     Some((ret, start_perimeter))
 }

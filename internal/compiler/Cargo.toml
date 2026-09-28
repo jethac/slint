@@ -65,6 +65,9 @@ default = []
 
 [dependencies]
 i-slint-common = { workspace = true, features = ["default", "color-parsing", "markdown"] }
+# For validating `Shapes.path` literals at compile time with the same ported
+# SVG parser that runs at runtime.
+i-slint-core = { workspace = true, features = ["std"] }
 
 num_enum = "0.7"
 icu_normalizer = { workspace = true }

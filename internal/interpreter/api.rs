@@ -236,7 +236,7 @@ impl std::fmt::Debug for Value {
             Value::Keys(ks) => write!(f, "Value::Keys({ks:?})"),
             Value::DataTransfer(cd) => write!(f, "Value::DataTransfer({cd:?})"),
             Value::MouseCursorInner(m) => write!(f, "Value::MouseCursor({m:?})"),
-            Value::Shape(s) => write!(f, "Value::Shape({:?})", s.cubics.len()),
+            Value::Shape(s) => write!(f, "Value::Shape({:?})", s.cubics().len()),
         }
     }
 }

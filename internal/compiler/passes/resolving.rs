@@ -3511,7 +3511,7 @@ fn check_shape_call(e: &Expression, node: &dyn Spanned, ctx: &mut LookupCtx) {
             if num(1).is_some_and(|w| w <= 0.) || num(2).is_some_and(|h| h <= 0.) {
                 err("pill-stars must have positive width and height");
             }
-            if num(3).is_some_and(|r| !(0. ..=1.).contains(&r)) {
+            if num(3).is_some_and(|r| !(r > 0. && r <= 1.)) {
                 err("inner-radius-ratio must be in the (0, 1] range");
             }
         }

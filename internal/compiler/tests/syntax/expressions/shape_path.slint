@@ -22,9 +22,9 @@ export component Foo {
 //                                     >  <error{SVG path data must start with a move command}
 
     property<shape> empty: Shapes.path("");
-//                                >  <error{SVG path data must start with a move command}
+//                                >  <error{Polygons must have at least 2 features}
 
-    property<shape> bad_fill_rule: Shapes.path(bogus, "M0 0Z");
+    property<shape> bad_fill_rule: Shapes.path(bogus, "M0 0L40 0L40 40Z");
 //                                             >   <error{Unknown unqualified identifier 'bogus'}
 //                                             >   <^error{Shapes.path() fill rule must be nonzero or evenodd}
 }

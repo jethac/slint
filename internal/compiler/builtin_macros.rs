@@ -209,18 +209,21 @@ fn shape_path_macro(
         };
         (fill, args.remove(0))
     };
+    if matches!(fill_rule, Expression::Invalid) {
+        return Expression::Invalid;
+    }
     let (path_expr, _path_node) = path;
     if path_expr.ty() == Type::Percent {
         diag.push_error("percentages are not supported in shape paths".into(), node);
         return Expression::Invalid;
     }
     let path_expr = path_expr.maybe_convert_to(Type::String, node, diag, symbol_counters);
-    // Mirrors `Shape::from_svg_path`: a literal failing the checks the runtime
-    // performs is a compile error instead of a warning + empty shape.
+    // A literal failing `Shape::from_svg_path` (the real ported SVG path
+    // parser) is a compile error instead of a warning + empty shape at runtime.
     if let Expression::StringLiteral(d) = &path_expr
         && let Some(msg) = shape_path_literal_error(d)
     {
-        diag.push_error(msg.into(), node);
+        diag.push_error(msg, node);
         return Expression::Invalid;
     }
     Expression::FunctionCall {
@@ -230,32 +233,14 @@ fn shape_path_macro(
     }
 }
 
-/// The checks `Shapes.path` applies to a literal `d` string at compile time —
-/// `Shape::from_svg_path` runs the same checks at runtime. Returns the error
-/// message, or `None` when the literal passes.
-fn shape_path_literal_error(d: &str) -> Option<&'static str> {
-    if d.contains('%') {
-        return Some("percentages are not supported in shape paths");
-    }
-    // Count the outlines: SVG path data splits before each `m`/`M` (a move
-    // command always starts a new outline), dropping all-empty pieces.
-    let mut outlines = 0usize;
-    let mut piece = String::new();
-    for c in d.chars() {
-        if (c == 'm' || c == 'M') && !piece.is_empty() {
-            outlines += usize::from(!piece.trim().is_empty());
-            piece.clear();
-        }
-        piece.push(c);
-    }
-    outlines += usize::from(!piece.trim().is_empty());
-    if outlines == 0 || !d.trim_start().starts_with(['m', 'M']) {
-        return Some("SVG path data must start with a move command");
-    }
-    if outlines > 1 {
-        return Some("a shape path must describe a single outline");
-    }
-    None
+/// Runs the real ported `SvgPathParser` (via `Shape::from_svg_path`) on a
+/// literal `d` string, so every literal that would fail at runtime is a compile
+/// error instead of a warning + empty shape. Returns the error message, or
+/// `None` when the literal parses.
+fn shape_path_literal_error(d: &str) -> Option<String> {
+    i_slint_core::graphics::Shape::from_svg_path(d, i_slint_core::items::FillRule::Nonzero)
+        .err()
+        .map(|e| e.to_string())
 }
 
 fn spring_macro(

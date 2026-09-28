@@ -105,10 +105,14 @@ impl MeasuredCubic {
         start_outline_progress: f32,
         end_outline_progress: f32,
     ) -> Self {
-        debug_assert!(
-            end_outline_progress >= start_outline_progress,
-            "endOutlineProgress is expected to be equal or greater than startOutlineProgress"
-        );
+        let end_outline_progress = if end_outline_progress >= start_outline_progress {
+            end_outline_progress
+        } else {
+            crate::debug_log!(
+                "Shapes: endOutlineProgress is expected to be equal or greater than startOutlineProgress"
+            );
+            start_outline_progress
+        };
         Self {
             cubic,
             start_outline_progress,
@@ -163,12 +167,16 @@ impl MeasuredCubic {
     }
 
     fn update_progress_range(&mut self, start_outline_progress: f32, end_outline_progress: f32) {
-        debug_assert!(
-            end_outline_progress >= start_outline_progress,
-            "endOutlineProgress is expected to be equal or greater than startOutlineProgress"
-        );
-        self.start_outline_progress = start_outline_progress;
-        self.end_outline_progress = end_outline_progress;
+        if end_outline_progress >= start_outline_progress {
+            self.start_outline_progress = start_outline_progress;
+            self.end_outline_progress = end_outline_progress;
+        } else {
+            crate::debug_log!(
+                "Shapes: endOutlineProgress is expected to be equal or greater than startOutlineProgress"
+            );
+            self.start_outline_progress = start_outline_progress;
+            self.end_outline_progress = start_outline_progress;
+        }
     }
 }
 
@@ -186,26 +194,24 @@ impl MeasuredPolygon {
     /// The private Kotlin constructor: `cubics`/`outline_progress` describe the same
     /// outline; `outline_progress` must have `cubics.len() + 1` entries starting at 0
     /// and ending at 1.
+    /// Returns `None` when `outline_progress` doesn't describe a complete
+    /// outline (one more entry than `cubics`, starting at 0, ending at 1) —
+    /// the Kotlin implementation rejects that with a `require`.
     fn new(
         measurer: Rc<dyn Measurer>,
         features: Vec<ProgressableFeature>,
         cubics: Vec<Cubic>,
         outline_progress: &[f32],
-    ) -> MeasuredPolygon {
-        debug_assert_eq!(
-            outline_progress.len(),
-            cubics.len() + 1,
-            "Outline progress size is expected to be the cubics size + 1"
-        );
-        debug_assert_eq!(
-            outline_progress[0], 0.,
-            "First outline progress value is expected to be zero"
-        );
-        debug_assert_eq!(
-            *outline_progress.last().unwrap(),
-            1.,
-            "Last outline progress value is expected to be one"
-        );
+    ) -> Option<MeasuredPolygon> {
+        if outline_progress.len() != cubics.len() + 1
+            || outline_progress.first() != Some(&0.)
+            || outline_progress.last() != Some(&1.)
+        {
+            crate::debug_log!(
+                "Shapes: outline progress is expected to have one more entry than cubics, starting at 0 and ending at 1"
+            );
+            return None;
+        }
 
         let mut measured_cubics = Vec::new();
         let mut start_outline_progress = 0f32;
@@ -229,7 +235,7 @@ impl MeasuredPolygon {
             last.update_progress_range(s, 1.);
         }
 
-        MeasuredPolygon { measurer, cubics: measured_cubics, features }
+        Some(MeasuredPolygon { measurer, cubics: measured_cubics, features })
     }
 
     /// The number of measured cubics.
@@ -310,12 +316,12 @@ impl MeasuredPolygon {
 
         // Filter out all empty cubics (i.e. start and end anchor are (almost) the
         // same point.)
-        Some(MeasuredPolygon::new(
+        MeasuredPolygon::new(
             Rc::clone(&self.measurer),
             new_features,
             ret_cubics,
             &ret_outline_progress,
-        ))
+        )
     }
 
     /// A [MeasuredPolygon] for `polygon`, measured with `measurer`.
@@ -375,7 +381,7 @@ impl MeasuredPolygon {
             })
             .collect();
 
-        Some(MeasuredPolygon::new(measurer, features, cubics, &outline_progress))
+        MeasuredPolygon::new(measurer, features, cubics, &outline_progress)
     }
 }
 

@@ -76,28 +76,29 @@ pub struct ShapeFeature {
 #[derive(Clone, Default)]
 #[repr(C)]
 pub struct Shape {
+    // The fields are read-only from outside the module: `content_hash`/`id` are
+    // computed at construction and keyed to the payload, so mutating them (or
+    // the payload behind them) would let the morph cache return a stale match.
     /// The cubic Bézier outline: 8 floats per cubic
     /// (`anchor0x, anchor0y, control0x, control0y, control1x, control1y, anchor1x, anchor1y`).
-    pub cubics: SharedVector<f32>,
+    cubics: SharedVector<f32>,
     /// The feature segmentation of the outline.
-    pub features: SharedVector<ShapeFeature>,
+    features: SharedVector<ShapeFeature>,
     /// The shape's center (used for max-bounds and as the morphing anchor).
-    pub center: ShapePoint,
+    center: ShapePoint,
     /// FNV-1a hash over the canonical content (cubic `to_bits`, feature ranges
     /// and kinds, center), computed once at construction — the morph cache's
     /// content key. `0` when built outside `Shape::new` (`Default`, FFI).
-    #[doc(hidden)]
-    pub content_hash: u64,
+    content_hash: u64,
     /// Interned construction id from a thread-local counter — `0` means "no id"
     /// (`Default`, FFI, deserialization). Equal ids imply the same construction,
     /// so the morph cache compares them without touching the outline data.
-    #[doc(hidden)]
-    pub id: u64,
+    id: u64,
     /// The fill rule a renderer applies when filling this shape's outline
     /// (`nonzero` unless the shape was built by `Shapes.path(evenodd, …)`).
     /// It is part of the value — equality and serialization preserve it — but
     /// not of the geometry, so it is excluded from `content_hash`.
-    pub fill_rule: FillRule,
+    fill_rule: FillRule,
 }
 
 impl PartialEq for Shape {
@@ -153,6 +154,60 @@ impl Shape {
     /// Whether this shape has an empty outline.
     pub fn is_empty(&self) -> bool {
         self.cubics.is_empty()
+    }
+
+    /// A shape from its flattened parts plus fill rule. See [`Shape::new`] and
+    /// [`Shape::fill_rule`].
+    pub fn new_with_fill_rule(
+        cubics: SharedVector<f32>,
+        features: SharedVector<ShapeFeature>,
+        center: ShapePoint,
+        fill_rule: FillRule,
+    ) -> Result<Shape, ShapeError> {
+        let mut shape = Self::new(cubics, features, center)?;
+        shape.fill_rule = fill_rule;
+        Ok(shape)
+    }
+
+    /// A shape from its flattened parts, without a content hash or construction
+    /// id — the value an FFI/deserialization path produces when it fills the
+    /// `repr(C)` payload by hand. The hash is then computed on demand and the
+    /// id fast path of the morph cache is skipped.
+    #[doc(hidden)]
+    pub fn new_unkeyed(
+        cubics: SharedVector<f32>,
+        features: SharedVector<ShapeFeature>,
+        center: ShapePoint,
+    ) -> Shape {
+        Shape { cubics, features, center, ..Shape::default() }
+    }
+
+    /// The cubic Bézier outline: 8 floats per cubic
+    /// (`anchor0x, anchor0y, control0x, control0y, control1x, control1y, anchor1x, anchor1y`).
+    pub fn cubics(&self) -> &SharedVector<f32> {
+        &self.cubics
+    }
+
+    /// The feature segmentation of the outline.
+    pub fn features(&self) -> &SharedVector<ShapeFeature> {
+        &self.features
+    }
+
+    /// The shape's center (used for max-bounds and as the morphing anchor).
+    pub fn center(&self) -> ShapePoint {
+        self.center
+    }
+
+    /// The fill rule a renderer applies when filling this shape's outline
+    /// (`nonzero` unless the shape was built by `Shapes.path(evenodd, …)`).
+    pub fn fill_rule(&self) -> FillRule {
+        self.fill_rule
+    }
+
+    /// The interned construction id, `0` for unkeyed values. See [`Shape::id`].
+    #[doc(hidden)]
+    pub fn id(&self) -> u64 {
+        self.id
     }
 
     /// The [RoundedPolygon] for this shape. Returns an error if the payload is not
@@ -444,7 +499,11 @@ impl MorphCache {
         if let Some(entry) = morphs
             .iter()
             .position(|e| {
-                (ids.0 != 0 && e.ids == ids) || (e.hashes == hashes && e.a == *a && e.b == *b)
+                // The id fast path requires *both* ids: an id-0 endpoint can be
+                // built by hand (FFI POD, `Default`), so `e.ids == ids` alone
+                // would alias any other morph to another id-0 shape.
+                (ids.0 != 0 && ids.1 != 0 && e.ids == ids)
+                    || (e.hashes == hashes && e.a == *a && e.b == *b)
             })
             .and_then(|index| morphs.remove(index))
         {
