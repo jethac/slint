@@ -83,6 +83,47 @@ jobs:
             run: cargo run -p material-token-generator -- check
           - name: Build & run tests
             run: cargo test -p material-gallery
+          - name: Check generated parity scenes are up to date
+            run: cargo run -p material-parity-generator -- --check
+
+  material_parity:
+      # Slint-side parity harness + Compose harness build. The Compose
+      # reference render itself is not part of CI yet — Robolectric's native
+      # graphics stack fails to initialize fonts on some hosts
+      # (robolectric/robolectric#9039), so until the first committed
+      # references exist the Slint comparisons warn-skip (set
+      # PARITY_REQUIRE_REFS=1 locally to make missing references fail).
+      if: ${{ github.event_name != 'pull_request' || github.repository != 'slint-ui/slint' }}
+      env:
+          CARGO_PROFILE_RELEASE_OPT_LEVEL: s
+          CARGO_INCREMENTAL: false
+          PARITY_ARTIFACT_DIR: target/parity-artifacts
+      runs-on: ubuntu-latest
+      steps:
+          - uses: actions/checkout@v7
+          - name: Install Linux dependencies
+            run: |
+              sudo timeout 600 apt-get update
+              sudo timeout 600 apt-get install libxcb-shape0-dev libxcb-xfixes0-dev libxkbcommon-dev libxkbcommon-x11-dev libfontconfig-dev
+            shell: bash
+          - name: Install Rust
+            uses: dtolnay/rust-toolchain@stable
+          - uses: Swatinem/rust-cache@v2
+            with:
+                key: parity
+                save-if: ${{ github.ref == 'refs/heads/master' }}
+          - name: Run material parity cases on all renderers
+            run: SLINT_TEST_FILTER=material cargo test --manifest-path tests/Cargo.toml -p test-driver-screenshots --features femtovg
+          - name: Build the Compose parity harness
+            run: ./gradlew compileDebugUnitTestKotlin --no-daemon
+            working-directory: ui-libraries/material/parity/compose
+          - name: Upload parity artifacts
+            if: failure()
+            uses: actions/upload-artifact@v7
+            with:
+                name: material-parity-artifacts
+                path: target/parity-artifacts/
+                retention-days: 30
 
   deploy:
     # Builds the docs site and deploys it to Cloudflare: upstream only.
