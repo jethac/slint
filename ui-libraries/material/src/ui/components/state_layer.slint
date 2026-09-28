@@ -31,23 +31,37 @@ export component Ripple {
         animate width { duration: MaterialAnimations.ripple_duration; easing: MaterialAnimations.ripple_easing; }
     }
 
-    // Bounded overlay: a capsule that grows from the press point until it
-    // fills the element exactly. Painting the shape itself instead of a
-    // shape-clipped circle keeps the corners correct on renderers that don't
-    // honor border-radius in `clip` (the software renderer).
+    // Bounded overlay: a circle expanding from the press point until it
+    // covers the whole element, clipped to the component's shape. Renderers
+    // that don't honor border-radius in `clip` (the software renderer,
+    // issue #6) clip the circle to the rect instead — the corner ink
+    // overshoot is that documented divergence, not a substituted shape.
     if root.clip_ripple : Rectangle {
-        x: Math.clamp(root.pressed_x - self.width / 2, 0px, root.width - self.width);
-        width: 0px;
+        width: 100%;
         height: 100%;
+        clip: true;
         border_radius: root.border_radius;
-        opacity: MaterialPalette.state_layer_opacity_press;
-        background: root.color;
 
-        init => {
-            self.width = root.width;
+        ink := Rectangle {
+            x: root.pressed_x - self.width / 2;
+            y: root.pressed_y - self.height / 2;
+            height: self.width;
+            border_radius: self.width / 2;
+            opacity: MaterialPalette.state_layer_opacity_press;
+            background: root.color;
+            width: 0px;
+
+            // The settled circle covers the element: diameter = twice the
+            // distance from the press point to the farthest corner.
+            property <float> dx: Math.max(root.pressed_x / 1px, (root.width - root.pressed_x) / 1px);
+            property <float> dy: Math.max(root.pressed_y / 1px, (root.height - root.pressed_y) / 1px);
+
+            init => {
+                self.width = Math.sqrt(dx * dx + dy * dy) * 2px;
+            }
+
+            animate width { duration: MaterialAnimations.ripple_duration; easing: MaterialAnimations.ripple_easing; }
         }
-
-        animate width { duration: MaterialAnimations.ripple_duration; easing: MaterialAnimations.ripple_easing; }
     }
 }
 
