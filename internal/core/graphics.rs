@@ -229,7 +229,7 @@ impl FontRequest {
     /// An absolute `line_height` wins over `line_height_factor`.
     pub fn line_height_for_natural_height(&self, natural_line_height: f32) -> Option<f32> {
         self.line_height
-            .map(|line_height| line_height.get())
+            .map(|line_height| line_height.get() as f32)
             .or_else(|| self.line_height_factor.map(|factor| natural_line_height * factor))
     }
 }

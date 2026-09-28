@@ -91,15 +91,15 @@ pub trait GlyphRenderer: crate::item_rendering::ItemRenderer {
 pub(super) fn visible_band(item_renderer: &impl GlyphRenderer) -> Range<PhysicalLength> {
     let scale_factor = item_renderer.scale_factor();
     let clip = item_renderer.get_current_clip();
-    let top = clip.origin.y_length() * scale_factor;
-    top..(top + clip.height_length() * scale_factor)
+    let top = clip.origin.y_length().cast() * scale_factor;
+    top..(top + clip.height_length().cast() * scale_factor)
 }
 
 /// The horizontal counterpart of [`visible_band`].
 pub(super) fn visible_x_range(item_renderer: &impl GlyphRenderer) -> Range<PhysicalLength> {
     let scale_factor = item_renderer.scale_factor();
     let x_range = item_renderer.get_current_clip().x_length_range();
-    (x_range.start * scale_factor)..(x_range.end * scale_factor)
+    (x_range.start.cast() * scale_factor)..(x_range.end.cast() * scale_factor)
 }
 
 impl TextParagraph {
