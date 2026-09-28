@@ -260,6 +260,74 @@ mod tests {
         vec![parley::style::FontVariation::new(parley::setting::Tag::new(b"wght"), wght)]
     }
 
+    /// Draws one frame per step of a `wght` 100→900 sweep through the real
+    /// text path — cached typeface, `skia_safe::Font`, `draw_str` onto a
+    /// raster surface — and reports per-frame wall times. A frame rendering
+    /// a mid-sweep weight must produce pixels identical to rendering that
+    /// weight on its own: animation must never land on a different instance.
+    #[test]
+    fn wght_sweep_frame_times() {
+        let mut cache = FontCache::default();
+        let font = inter_variable();
+        let synthesis = fontique::Synthesis::default();
+        let mut surface =
+            skia_safe::surfaces::raster_n32_premul((480, 96)).expect("raster surface");
+        let paint = skia_safe::Paint::default();
+        const TEXT: &str = "Variable axes Wght";
+
+        let pixels = |surface: &mut skia_safe::Surface| -> Vec<u8> {
+            surface
+                .image_snapshot()
+                .peek_pixels()
+                .and_then(|p| p.bytes().map(<[u8]>::to_vec))
+                .unwrap_or_default()
+        };
+        let draw_frame = |cache: &mut FontCache,
+                          surface: &mut skia_safe::Surface,
+                          w: f32|
+         -> (std::time::Duration, Vec<u8>) {
+            let t0 = Instant::now();
+            let typeface =
+                cache.font_with_variations(&font, &synthesis, &wght(w)).expect("typeface");
+            let mut sk_font = skia_safe::Font::from_typeface(typeface, 32.);
+            sk_font.set_subpixel(true);
+            let canvas = surface.canvas();
+            canvas.clear(skia_safe::Color::WHITE);
+            canvas.draw_str(TEXT, (10., 60.), &sk_font, &paint);
+            (t0.elapsed(), pixels(surface))
+        };
+
+        let mut times = Vec::new();
+        let mut mid_sweep = Vec::new();
+        for i in 0..=100u32 {
+            let w = 100. + i as f32 * 8.;
+            let (elapsed, frame) = draw_frame(&mut cache, &mut surface, w);
+            times.push(elapsed);
+            if w == 500. {
+                mid_sweep = frame;
+            }
+        }
+
+        let mut sorted = times.clone();
+        sorted.sort();
+        let median = sorted[sorted.len() / 2];
+        let p95 = sorted[sorted.len() * 95 / 100];
+        let max = *sorted.last().unwrap();
+        eprintln!(
+            "skia wght 100->900 sweep, 101 frames of {:?} at 32px: \
+             median {:?}, p95 {:?}, max {:?} (first frame {:?})",
+            TEXT, median, p95, max, times[0],
+        );
+        // Design budget: a frame of text animation must stay well under the
+        // 16.6 ms of a 60 Hz refresh even when every frame is a cache miss.
+        assert!(max < std::time::Duration::from_millis(16), "slowest frame {max:?}");
+
+        // The settled frame must be pixel-identical to the animating frame
+        // for the same weight — no jump when the animation completes.
+        let (_, settled) = draw_frame(&mut cache, &mut surface, 500.);
+        assert_eq!(mid_sweep, settled);
+    }
+
     /// The `wght` 100→900 sweep the design note budgets a frame around: every
     /// distinct axis combination misses the typeface cache once, then hits.
     /// Prints timings so `cargo test -- --nocapture` shows them.
@@ -301,6 +369,22 @@ mod tests {
         );
         // Cache hits must be far cheaper than a typeface clone.
         assert!(warm < cold / 2 || warm < std::time::Duration::from_millis(10));
+    }
+
+    /// `font-optical-sizing: auto` must not split the typeface cache for a
+    /// face that has no `opsz` axis: the injected pair is dropped before the
+    /// cache key, so every pixel size of a static font shares one typeface.
+    #[test]
+    fn opsz_not_injected_into_fonts_without_the_axis() {
+        let mut cache = FontCache::default();
+        let data: &[u8] = include_bytes!("../../../tests/screenshots/fonts/NotoSans-Italic.ttf");
+        let font = parley::FontData::new(fontique::Blob::new(Arc::new(data)), 0);
+        let synthesis = fontique::Synthesis::default();
+        let opsz = vec![parley::style::FontVariation::new(parley::setting::Tag::new(b"opsz"), 16.)];
+
+        let with_opsz = cache.font_with_variations(&font, &synthesis, &opsz).expect("typeface");
+        let without = cache.font_with_variations(&font, &synthesis, &[]).expect("typeface");
+        assert_eq!(with_opsz.unique_id(), without.unique_id());
     }
 
     #[test]
