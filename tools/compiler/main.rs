@@ -108,6 +108,13 @@ struct Cli {
     #[arg(long, name = "value", value_enum)]
     embed_resources: Option<Embedding>,
 
+    /// Do not embed vector font data for font axis bindings that aren't
+    /// compile-time constant. Use this for targets that have no vector font
+    /// rasterizer (e.g. freestanding builds): non-constant axis bindings then
+    /// become a compile error instead of embedding the font.
+    #[arg(long = "exclude-vector-fonts")]
+    exclude_vector_fonts: bool,
+
     /// Set the output file for the generated code.
     /// Use '-' to output to stdout.
     #[arg(short = 'o', name = "output file", default_value = "-")]
@@ -265,6 +272,10 @@ fn main() -> std::io::Result<()> {
                 EmbedResourcesKind::EmbedTextures
             }
         };
+    }
+
+    if args.exclude_vector_fonts {
+        compiler_config.exclude_vector_fonts = true;
     }
 
     compiler_config.include_paths = args.include_paths;

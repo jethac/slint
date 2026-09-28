@@ -193,22 +193,26 @@ pub fn embed_glyphs(
 
     // Embedded bitmap glyphs are rasterized at a fixed axis tuple, so any
     // axis property that can change at runtime (animated or computed binding)
-    // has nothing to rasterize against — vector font data is excluded by
-    // `EmbedTextures`. Report the offending bindings rather than silently
-    // rendering the font's default instance.
-    for (property_name, span) in &font_axes.dynamic {
-        diag.push_error_with_span(
-            format!(
-                "'{property_name}' is not constant, but the bitmap font embedding \
-                 for this build rasterizes glyphs at fixed axis values. Give the \
-                 property a constant value, or disable glyph embedding \
-                 (SLINT_EMBED_RESOURCES) so the variable font data is used directly."
-            ),
-            span.clone(),
-        );
-    }
-    if diag.has_errors() {
-        return;
+    // has nothing to rasterize against. When the build configuration excludes
+    // vector fonts, report the offending bindings rather than silently
+    // rendering the font's default instance; otherwise the font's vector data
+    // is embedded below so the runtime rasterizes the requested instance.
+    if compiler_config.exclude_vector_fonts {
+        for (property_name, span) in &font_axes.dynamic {
+            diag.push_error_with_span(
+                format!(
+                    "'{property_name}' is not constant, but the bitmap font embedding \
+                     for this build rasterizes glyphs at fixed axis values and vector \
+                     fonts are excluded — give the property a constant value, or disable \
+                     glyph embedding (SLINT_EMBED_RESOURCES) so the variable font data \
+                     is used directly"
+                ),
+                span.clone(),
+            );
+        }
+        if diag.has_errors() {
+            return;
+        }
     }
 
     let tuples_to_embed = font_axes.tuples_to_embed();
@@ -518,6 +522,45 @@ pub fn embed_glyphs(
 
     for (path, font) in custom_fonts.iter() {
         embed_font_by_path(path, font);
+    }
+
+    // Non-constant axis bindings (animated or computed) rasterize through the
+    // vector path: embed the raw font data and register it at run time, like
+    // `collect_custom_fonts` does for non-`EmbedTextures` builds. Only
+    // variable fonts can produce distinct instances; a static font satisfies
+    // every axis request with its default instance. (This branch is only
+    // reached when `exclude_vector_fonts` is unset — see the error loop
+    // above.)
+    if !font_axes.dynamic.is_empty() && !compiler_config.exclude_vector_fonts {
+        let mut embedded_paths: HashSet<std::path::PathBuf> = HashSet::new();
+        for (path, font) in default_fonts
+            .iter()
+            .map(|(p, f)| (p, f))
+            .chain(custom_fonts.iter().map(|(p, f)| (p, f)))
+        {
+            if !embedded_paths.insert(path.clone()) {
+                continue;
+            }
+            let Ok(font_ref) = skrifa::FontRef::from_index(font.blob.data(), font.index) else {
+                continue;
+            };
+            if font_ref.axes().iter().next().is_none() {
+                continue;
+            }
+            let resource_id = doc.embedded_file_resources.borrow_mut().push_and_get_key(
+                crate::embedded_resources::EmbeddedResources {
+                    path: Some(path.to_string_lossy().as_ref().into()),
+                    kind: crate::embedded_resources::EmbeddedResourcesKind::FileData,
+                },
+            );
+            for c in doc.exported_roots() {
+                c.init_code.borrow_mut().font_registration_code.push(Expression::FunctionCall {
+                    function: BuiltinFunction::RegisterCustomFontByMemory.into(),
+                    arguments: vec![Expression::NumberLiteral(resource_id.0 as _, Unit::None)],
+                    source_location: None,
+                });
+            }
+        }
     }
 }
 
@@ -1122,6 +1165,30 @@ pub fn collect_font_axes_used(component: &Rc<Component>, seen: &mut FontAxesUsed
                 &mut seen.dynamic,
             );
         }
+
+        // `font-weight` feeds the `wght` axis through the `font_weights`
+        // collection, which only understands literals. A bound or animated
+        // weight would silently snap to the nearest embedded instance, so it
+        // takes the same route as other non-constant axis inputs.
+        if let Some(binding) = elem.borrow().binding(format!("{prefix}font-weight").as_str())
+        {
+            if binding.animation.is_some()
+                || try_extract_literal_from_element(elem, &format!("{prefix}font-weight"), Unit::None)
+                    .is_none()
+            {
+                seen.dynamic.push((
+                    format!("{prefix}font-weight").into(),
+                    binding.span.clone().unwrap_or_default(),
+                ));
+            }
+        }
+
+        // `<font>` tags in styled-text markup carry axis attributes of their
+        // own; the markup source is a compile-time literal, so every value is
+        // constant.
+        if is_text && base == "StyledTextItem" {
+            collect_markup_axes(elem, &mut tuple);
+        }
         if !tuple.is_empty() {
             tuple.sort_by_key(|(tag, _)| *tag);
             if is_window {
@@ -1142,6 +1209,59 @@ pub fn collect_font_axes_used(component: &Rc<Component>, seen: &mut FontAxesUsed
     for tuple in window_tuples {
         if !seen.window_tuples.contains(&tuple) {
             seen.window_tuples.push(tuple);
+        }
+    }
+}
+
+/// Reads the `<font>` tag attributes out of a `StyledTextItem`'s `text`
+/// markup and merges them into `tuple`. The markup binding compiles to
+/// `ParseMarkdown(format_string, args)` where `format_string` is a literal;
+/// attribute values inside it are always constant.
+fn collect_markup_axes(elem: &ElementRc, tuple: &mut CollectedAxisTuple) {
+    let elem = elem.borrow();
+    let Some(binding) = elem.binding("text") else { return };
+    let Expression::FunctionCall { function, arguments, .. } = binding.value_expression()
+    else {
+        return;
+    };
+    if !matches!(
+        function,
+        crate::expression_tree::Callable::Builtin(BuiltinFunction::ParseMarkdown)
+    ) {
+        return;
+    }
+    let Some(Expression::StringLiteral(markup)) = arguments.first() else { return };
+    let (paragraphs, _errors) = i_slint_common::styled_text::parse_interpolated::<
+        &[i_slint_common::styled_text::StyledTextParagraph],
+    >(markup.as_str(), &[]);
+
+    for paragraph in &paragraphs {
+        for span in &paragraph.formatting {
+            let i_slint_common::styled_text::Style::FontTag(font_tag) = &span.style else {
+                continue;
+            };
+            if let Some(stretch) = font_tag.font_stretch {
+                if let Some(existing) = tuple.iter_mut().find(|(t, _)| *t == WDTH_TAG) {
+                    *existing = (WDTH_TAG, CollectedAxisValue::Value(stretch));
+                } else {
+                    tuple.push((WDTH_TAG, CollectedAxisValue::Value(stretch)));
+                }
+            }
+            if font_tag.font_optical_sizing == Some(false)
+                && !tuple.iter().any(|(t, _)| *t == OPSZ_TAG)
+            {
+                tuple.push((OPSZ_TAG, CollectedAxisValue::FontDefault));
+            }
+            for (tag, value) in font_tag.font_variation_settings.iter().flatten() {
+                if tag.len() == 4 && tag.bytes().all(|b| (0x20..=0x7e).contains(&b)) {
+                    let tag = u32::from_be_bytes(tag.as_bytes().try_into().unwrap());
+                    if let Some(existing) = tuple.iter_mut().find(|(t, _)| *t == tag) {
+                        *existing = (tag, CollectedAxisValue::Value(*value));
+                    } else {
+                        tuple.push((tag, CollectedAxisValue::Value(*value)));
+                    }
+                }
+            }
         }
     }
 }

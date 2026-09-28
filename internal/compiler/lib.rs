@@ -131,6 +131,13 @@ pub struct CompilerConfiguration {
     /// Whether to use SDF when pre-rendering fonts.
     #[cfg(all(feature = "renderer-software", feature = "sdf-fonts"))]
     pub use_sdf_fonts: bool,
+    /// Whether the build target has no vector font rasterizer (e.g. freestanding
+    /// C++ or a `no_std` Rust binary without the software renderer's `systemfonts`
+    /// feature). Only meaningful with [`EmbedResourcesKind::EmbedTextures`]: when
+    /// false, a font that text elements address with non-constant axis bindings
+    /// is embedded as vector data so the runtime can rasterize any axis position;
+    /// when true, such bindings are a compile error.
+    pub exclude_vector_fonts: bool,
     /// The compiler will look in these paths for components used in the file to compile.
     pub include_paths: Vec<std::path::PathBuf>,
     /// The compiler will look in these paths for library imports.
@@ -331,6 +338,7 @@ impl CompilerConfiguration {
             components_to_generate: ComponentSelection::ExportedWindows,
             #[cfg(all(feature = "renderer-software", feature = "sdf-fonts"))]
             use_sdf_fonts: false,
+            exclude_vector_fonts: std::env::var_os("SLINT_EXCLUDE_VECTOR_FONTS").is_some(),
             #[cfg(feature = "bundle-translations")]
             bundled_translations_path: std::env::var("SLINT_BUNDLE_TRANSLATIONS")
                 .ok()
