@@ -475,3 +475,15 @@ path = [
 precedence = "aggregate"
 SPDX-FileCopyrightText = "Copyright Gradle Inc."
 SPDX-License-Identifier = "Apache-2.0"
+
+[[annotations]]
+path = ["ui-libraries/material/parity/compose/references/**"]
+precedence = "aggregate"
+SPDX-FileCopyrightText = "Copyright © SixtyFPS GmbH <info@slint.dev>"
+SPDX-License-Identifier = "MIT"
+
+[[annotations]]
+path = ["ui-libraries/material/parity/compose/src/test/resources/fonts/**.ttf"]
+precedence = "aggregate"
+SPDX-FileCopyrightText = "Roboto <https://fonts.google.com/specimen/Roboto/about>"
+SPDX-License-Identifier = "Apache-2.0"
