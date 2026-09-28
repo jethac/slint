@@ -8,12 +8,11 @@ import org.json.JSONObject
 
 /** Layout bounds plus text-layout metrics of one tracked node, captured at a
  * frame boundary. `baseline` is the distance from the top edge to the first
- * text baseline, `lines` the laid-out line count, `fracW` the unhinted
- * `Paint.measureText` width of the same string — the font's own advance
- * metrics. Layoutlib's `Text` measures hinted integer advances, so `w` runs
- * roughly a pixel wider per glyph than `fracW`; Slint's fractional text
- * layout matches `fracW`, and the comparator validates each side against it.
- * `chars` is the laid-out string length, used to bound the expected drift. */
+ * text baseline, `lines` the laid-out line count, `fracW` the real
+ * fractional advance of the laid-out text (`TextLayoutResult`'s line
+ * right/left edges) — what the font's own advance metrics produce before
+ * the layout rounds the node's width to an integer for `w`. `chars` is the
+ * laid-out string length, used to bound the expected drift. */
 data class TextMetric(
     val x: Double,
     val y: Double,
@@ -41,11 +40,7 @@ data class TextMetric(
  * `trace.json` comparison reads. Frames are recorded at every Composable
  * frame tick (the Paparazzi-driven clock), then downsampled to the scene's
  * `times`. */
-class Tracer(
-    /** Font-weight (400/500/600/700) → static Roboto instance file, for
-     * [fracWidth]. */
-    private val fontFiles: Map<Int, java.io.File> = emptyMap(),
-) {
+class Tracer {
     /** Element id → bounds (px, root-relative), refreshed by layout each frame. */
     val elementBounds = mutableMapOf<String, Rect>()
 
@@ -70,35 +65,6 @@ class Tracer(
 
     fun noteDensity(d: Float) {
         density = d
-    }
-
-    /** Unhinted width of `text` rendered with `style` — the font's own
-     * advance metrics, independent of layoutlib's hinted layout.
-     * `fracW` is in dp like every metric the comparator reads. */
-    fun fracWidth(
-        text: String,
-        style: androidx.compose.ui.text.TextStyle,
-        density: androidx.compose.ui.unit.Density,
-    ): Double {
-        val weight = style.fontWeight?.weight ?: 500
-        val file = fontFiles[weight] ?: fontFiles.entries.minByOrNull { kotlin.math.abs(it.key - weight) }?.value
-            ?: return Double.NaN
-        if (!style.fontSize.isSp) return Double.NaN
-        with(density) {
-            val sizePx = style.fontSize.toPx()
-            val spacingEm = when {
-                style.letterSpacing.isEm -> style.letterSpacing.value
-                style.letterSpacing.isSp -> style.letterSpacing.toPx() / sizePx
-                else -> 0f
-            }
-            val paint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
-                typeface = android.graphics.Typeface.createFromFile(file)
-                textSize = sizePx
-                hinting = android.graphics.Paint.HINTING_OFF
-                letterSpacing = spacingEm
-            }
-            return paint.measureText(text) / density.density.toDouble()
-        }
     }
 
     /** Called by `track` once the first layout of `id` has run: earlier

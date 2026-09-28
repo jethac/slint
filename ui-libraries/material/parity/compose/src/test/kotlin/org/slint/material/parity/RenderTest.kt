@@ -74,8 +74,10 @@ class RenderTest {
         paparazzi.unsafeUpdateConfig(deviceConfig = deviceFor(w, h, density))
         val outDir = outDir(scene, density)
         outDir.deleteRecursively()
-        val motion = scene.parity == "motion"
-        val tracer = Tracer(robotoFontFiles())
+        // `times` marks a timed scene (motion or a motion-class negative):
+        // record each wanted frame; an empty `times` means a settled shot.
+        val motion = scene.times.isNotEmpty()
+        val tracer = Tracer()
         tracer.noteDensity(density.toFloat())
 
         val host = ComposeView(paparazzi.context)

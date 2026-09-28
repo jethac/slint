@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.LocalMinimumInteractiveComponentSize
@@ -72,7 +73,7 @@ fun Modifier.trackText(tracer: Tracer, id: String, density: Float): Modifier =
     }
 
 /** `onTextLayout` sink for `trackText` ids: fills in baseline, line count,
- * and `frac_w` — the unhinted font-metric width of the same string. */
+ * and `frac_w` — the fractional advance of the laid-out text. */
 fun recordTextLayout(
     tracer: Tracer,
     id: String,
@@ -81,13 +82,14 @@ fun recordTextLayout(
     { layout ->
         val old = tracer.textMetrics[id] ?: TextMetric(0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 0)
         tracer.textMetrics[id] = old.copy(
-            baseline = layout.firstBaseline.toDouble(),
+            baseline = layout.firstBaseline.toDouble() / density.density,
             lines = layout.lineCount,
-            fracW = tracer.fracWidth(
-                layout.layoutInput.text.text,
-                layout.layoutInput.style,
-                density,
-            ),
+            // The real fractional advance of the laid-out text, in dp like
+            // every other metric — `boundsInRoot`'s `w` is the layout
+            // node's rounded width, these are the engine's own subpixel
+            // line edges.
+            fracW = (layout.getLineRight(0) - layout.getLineLeft(0)).toDouble() /
+                density.density,
             chars = layout.layoutInput.text.text.length,
         )
     }
@@ -339,6 +341,7 @@ private fun CanvasScene(scene: Scene, tracer: Tracer) {
 /** A filled button in the interaction state the scene asks for. `state`
  * comes from the scene's `widgets[].state` — the Slint side drives the same
  * state through real pointer events on the mocked backend. */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun StateButton(widget: Widget, tracer: Tracer, textId: String, elementId: String, density: Float) {
     val interactionSource = remember { MutableInteractionSource() }
@@ -364,6 +367,10 @@ private fun StateButton(widget: Widget, tracer: Tracer, textId: String, elementI
         onClick = {},
         enabled = widget.enabled,
         modifier = Modifier.offset(widget.x.dp, widget.y.dp).track(tracer, elementId),
+        // The Expressive button API: the base shape morphs into
+        // `ButtonShapes.pressedShape` while pressed, matching the Slint
+        // side's pressed-state shape.
+        shapes = ButtonDefaults.shapes(),
         interactionSource = interactionSource,
     ) {
         Text(
