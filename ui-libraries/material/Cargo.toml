@@ -12,6 +12,7 @@
 # both workspaces at once via `rust-analyzer.linkedProjects`.
 [workspace]
 members = ['examples/gallery', 'examples/mcu', 'parity/generator', 'scripts/token-generator']
+
 resolver = "3"
 
 [workspace.package]
