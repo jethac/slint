@@ -120,6 +120,21 @@ Only a <Link type="Spring Animation" label="physical spring" /> (`spring(damping
 on any other easing it is ignored.
 When a new animation replaces one that is still in flight, the outgoing animation's
 velocity is carried over instead, so a gesture that flings into a spring keeps its momentum.
+
+To drive the velocity from native code, bind it to an `in property` and set that
+property from Rust, C++, JavaScript, or Python — for example a native gesture
+recognizer or game loop that knows how fast a pointer was moving:
+
+```slint
+export component Thumb {
+    in property <float> launch-velocity;
+    in-out property <length> thrown: 0px;
+    animate thrown {
+        easing: spring(1.0, 1600);
+        initial-velocity: root.launch-velocity;
+    }
+}
+```
 </SlintProperty>
 
 ## Transitions
