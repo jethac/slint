@@ -255,6 +255,11 @@ fn test_extract_library_paths() {
 ///   e.g. `issue #28`): `sw − unhinted advance` may land anywhere in
 ///   `(−0.15, 1.15]`. Without the marker the bound is 0.5 px —
 ///   `(−0.15, 0.65]`. A drift past a whole pixel fails either way.
+/// - `//XFAIL_SILHOUETTE=<reason>` — on the software driver the
+///   `//MASK_INNER=` silhouette findings are an expected divergence (the
+///   reason names the tracked gap, e.g. `issue #6` for the axis-aligned
+///   clip). A marked case that comes back with zero findings fails — the
+///   divergence is gone and the marker must be removed.
 #[derive(Debug, Default, Clone, PartialEq)]
 pub struct ParityMarkers {
     /// `Some("static"|"motion"|"negative")` when a `//PARITY=` marker is present.
@@ -275,6 +280,10 @@ pub struct ParityMarkers {
     /// `//XFAIL_TEXT=<reason>` marks the text-width layer's ceil-quantization
     /// window an expected divergence rather than a failure.
     pub xfail_text: Option<String>,
+    /// `//XFAIL_SILHOUETTE=<reason>` marks the software driver's
+    /// `//MASK_INNER=` silhouette findings an expected divergence rather
+    /// than a failure; zero findings re-arms the check.
+    pub xfail_silhouette: Option<String>,
     /// `(element-id, t_ms)` pairs from `//MASK_INNER=` markers.
     pub mask_inner: Vec<(String, u64)>,
     /// `(element-id, t_ms)` pairs from `//MASK_DECOR=` markers.
@@ -423,6 +432,11 @@ pub fn extract_parity(source: &str) -> ParityMarkers {
         xfail_renderers,
         xfail_text: source.find("//XFAIL_TEXT=").map(|p| {
             let rest = &source[p + "//XFAIL_TEXT=".len()..];
+            let end = rest.find('\n').unwrap_or(rest.len());
+            rest[..end].trim().to_string()
+        }),
+        xfail_silhouette: source.find("//XFAIL_SILHOUETTE=").map(|p| {
+            let rest = &source[p + "//XFAIL_SILHOUETTE=".len()..];
             let end = rest.find('\n').unwrap_or(rest.len());
             rest[..end].trim().to_string()
         }),

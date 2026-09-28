@@ -44,6 +44,7 @@
       2500
     ]
   },
+  "xfail_silhouette": "issue #6: the software renderer's clip is axis-aligned, so bounded ripple ink fills the corner cells — the silhouette edge is unverifiable on software",
   "widgets": [
     {
       "kind": "rect",

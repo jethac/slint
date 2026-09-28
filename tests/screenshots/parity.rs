@@ -1812,6 +1812,10 @@ pub fn run_parity_case<C: i_slint_core::api::ComponentHandle>(
     // decorations and corner spill. (`None` = whole frame.)
     let mut caught_at_density = vec![false; spec.densities.len()];
     let mut measured_phase: Option<i64> = None;
+    // Software-driver silhouette findings waived by `//XFAIL_SILHOUETTE=` —
+    // counted across every density and timestamp so a marked case that
+    // stops producing any fails "unexpectedly passing" below.
+    let mut silhouette_xfail_total = 0usize;
     for (di, density) in spec.densities.iter().enumerate() {
         let component = make_instance(*density);
 
@@ -1965,13 +1969,12 @@ pub fn run_parity_case<C: i_slint_core::api::ComponentHandle>(
             // The software renderer can't clip to a rounded shape (#6): its
             // `clip` is axis-aligned, so bounded ripple ink legitimately
             // fills the corner-outside cells inside the element rect and the
-            // silhouette edge can't be measured under it. The check still
-            // runs there, but a positive case's findings are an expected
-            // failure citing #6 — counted and reported, not added to
-            // errors. Skia/femtovg keep it strict — they clip the ink to
-            // the shape. Negative cases run it strictly everywhere: a
-            // defect finding inside the mutated region counts wherever it
-            // fires.
+            // silhouette edge can't be measured under it. Cases that
+            // genuinely diverge there carry `//XFAIL_SILHOUETTE=` — their
+            // findings are counted and reported, not added to errors —
+            // while every unmarked case runs the check strictly on all
+            // drivers. Negative cases run it strictly regardless: a defect
+            // finding inside the mutated region counts wherever it fires.
             if !inner_masked.is_empty() {
                 if let Some(compose_elements) = compose
                     .as_ref()
@@ -2016,8 +2019,9 @@ pub fn run_parity_case<C: i_slint_core::api::ComponentHandle>(
                         pixel_eps,
                     ) {
                         strict_caught += 1;
-                        if driver == "software" && !negative {
+                        if driver == "software" && !negative && spec.xfail_silhouette.is_some() {
                             silhouette_xfail += 1;
+                            silhouette_xfail_total += 1;
                             continue;
                         }
                         silhouette_failed = true;
@@ -2058,7 +2062,8 @@ pub fn run_parity_case<C: i_slint_core::api::ComponentHandle>(
                                         strict_caught += 1;
                                         silhouette_failed = true;
                                         failures.push(format!(
-                                            "d{density} t={tag}: {id} {img_name} ink coverage already {early:.2} one frame after the action; settled {cov:.2} — expected a growing ripple"
+                                            "d{density} t={tag}: {id} {img_name} ink coverage already {early:.2} at t={}ms, the first post-action frame; settled {cov:.2} — expected a growing ripple",
+                                            times[1]
                                         ));
                                         if negative
                                             && region.map_or(true, |r| {
@@ -2215,6 +2220,18 @@ pub fn run_parity_case<C: i_slint_core::api::ComponentHandle>(
             );
             Ok(())
         };
+    }
+
+    // `//XFAIL_SILHOUETTE=` waives the software driver's silhouette
+    // findings for the tracked axis-aligned-clip gap (#6). When the gap
+    // closes — or the scene stops diverging for any other reason — the
+    // waiver outlives it silently unless the case re-arms: a marked case
+    // with zero findings must fail so the marker gets removed.
+    if driver == "software" && spec.xfail_silhouette.is_some() && silhouette_xfail_total == 0 {
+        return Err(format!(
+            "parity: {case_rel} silhouette check unexpectedly passing on software — the #6 divergence is gone; remove the //XFAIL_SILHOUETTE= marker"
+        )
+        .into());
     }
 
     if failures.is_empty() {

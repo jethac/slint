@@ -68,6 +68,11 @@ struct Scene {
     /// 0.5 px of the unhinted Compose advance.
     #[serde(default)]
     xfail_text: Option<String>,
+    /// `//XFAIL_SILHOUETTE=<reason>` — on the software driver (axis-aligned
+    /// clip, issue #6) the silhouette findings are an expected divergence;
+    /// the case fails when they stop occurring.
+    #[serde(default)]
+    xfail_silhouette: Option<String>,
 }
 
 #[derive(serde::Deserialize, serde::Serialize)]
@@ -403,6 +408,9 @@ fn slint_case(scene: &Scene) -> String {
     }
     if let Some(reason) = &scene.xfail_text {
         writeln!(s, "//XFAIL_TEXT={reason}").unwrap();
+    }
+    if let Some(reason) = &scene.xfail_silhouette {
+        writeln!(s, "//XFAIL_SILHOUETTE={reason}").unwrap();
     }
     writeln!(
         s,
