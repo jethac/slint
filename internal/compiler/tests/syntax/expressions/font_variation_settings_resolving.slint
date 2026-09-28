@@ -1,0 +1,47 @@
+// Copyright © SixtyFPS GmbH <info@slint.dev>
+// SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0
+
+// `font-variation-settings` shorthand: resolving/type errors.
+
+export component TestCase inherits Window {
+    in property <float> axis-value;
+
+    Text {
+        font-variation-settings: "wght" 700, "wdth" 85;
+    }
+
+    Text {
+        // Values are arbitrary float expressions.
+        font-variation-settings: "wght" axis-value, "slnt" -5;
+    }
+
+    Text {
+        font-variation-settings: "wgh" 700;
+//                               >    <error{Invalid axis tag 'wgh': expected exactly 4 printable ASCII characters}
+    }
+
+    Text {
+        font-variation-settings: "toolong" 5;
+//                               >        <error{Invalid axis tag 'toolong': expected exactly 4 printable ASCII characters}
+    }
+
+    Text {
+        // A single string is not a settings list.
+        font-variation-settings: "wght";
+//                               >     <error{Cannot convert string to [FontVariation]}
+    }
+
+    // Outside `font-variation-settings` bindings a string is just a string:
+    // `"a" - 4` is a string-minus-number error again. (The parse-error side is
+    // covered in font_variation_settings.slint.)
+    property <int> still-not-variations: "a" - 4;
+//                                       >  <error{Cannot convert string to float}
+
+    // The shorthand also parses on user-declared `[FontVariation]` properties.
+    property <[FontVariation]> user-variations: "wght" 700, "wdth" 85;
+    in property <[FontVariation]> user-in-variations: "slnt" -5;
+
+    Text {
+        font-variation-settings: user-variations;
+    }
+}

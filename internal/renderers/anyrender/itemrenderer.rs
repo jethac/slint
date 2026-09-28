@@ -763,6 +763,7 @@ impl<'a, S: PaintScene> GlyphRenderer for AnyrenderItemRenderer<'a, S> {
         font_size: PhysicalLength,
         normalized_coords: &[i16],
         synthesis: &fontique::Synthesis,
+        _variations: &[parley::style::FontVariation],
         brush: Self::PlatformBrush,
         y_offset: sharedparley::PhysicalLength,
         glyphs_it: &mut dyn Iterator<Item = parley::layout::Glyph>,

@@ -131,6 +131,13 @@ pub struct CompilerConfiguration {
     /// Whether to use SDF when pre-rendering fonts.
     #[cfg(all(feature = "renderer-software", feature = "sdf-fonts"))]
     pub use_sdf_fonts: bool,
+    /// Whether the build target has no vector font rasterizer (e.g. freestanding
+    /// C++ or a `no_std` Rust binary without the software renderer's `systemfonts`
+    /// feature). Only meaningful with [`EmbedResourcesKind::EmbedTextures`]: when
+    /// false, a font that text elements address with non-constant axis bindings
+    /// is embedded as vector data so the runtime can rasterize any axis position;
+    /// when true, such bindings are a compile error.
+    pub exclude_vector_fonts: bool,
     /// The compiler will look in these paths for components used in the file to compile.
     pub include_paths: Vec<std::path::PathBuf>,
     /// The compiler will look in these paths for library imports.
@@ -331,6 +338,7 @@ impl CompilerConfiguration {
             components_to_generate: ComponentSelection::ExportedWindows,
             #[cfg(all(feature = "renderer-software", feature = "sdf-fonts"))]
             use_sdf_fonts: false,
+            exclude_vector_fonts: auto_exclude_vector_fonts(|k| std::env::var(k).ok()),
             #[cfg(feature = "bundle-translations")]
             bundled_translations_path: std::env::var("SLINT_BUNDLE_TRANSLATIONS")
                 .ok()
@@ -462,5 +470,100 @@ fn reject_experimental_feature(
         true
     } else {
         false
+    }
+}
+
+/// Returns whether vector fonts should be excluded from embedded resources.
+///
+/// `var` reads a build-time environment variable. An explicit
+/// `SLINT_EXCLUDE_VECTOR_FONTS` wins; a falsy value opts out (a `no_std`
+/// target that does have the software renderer's `embedded-vector-fonts`
+/// feature enabled). Otherwise the target is inspected: an enabled
+/// `embedded-vector-fonts` feature means a `no_std` rasterizer is compiled in
+/// — `DEP_SLINT_EMBEDDED_VECTOR_FONTS` is exported by the `slint` crate's
+/// build script into dependent build scripts (slint-build), and the
+/// `embedded-vector-fonts` passthrough feature convention covers crates that
+/// re-expose it under the same name. `TARGET` is only set for
+/// build-script-driven compiles: on bare-metal (`*-none-*`), UEFI and Zephyr
+/// triples there is no `std` runtime for the fontique-based rasterizer, so
+/// unless the build opted in, dynamic font axes become a compile error — the
+/// same diagnostic C++ freestanding builds get from
+/// `SLINT_EXCLUDE_VECTOR_FONTS`. The `slint!` macro can't see the target:
+/// generated code asserts on the rasterizer feature instead.
+fn auto_exclude_vector_fonts(mut var: impl FnMut(&str) -> Option<String>) -> bool {
+    match var("SLINT_EXCLUDE_VECTOR_FONTS") {
+        Some(v) => !matches!(v.to_ascii_lowercase().as_str(), "0" | "false" | "no" | "off"),
+        None => {
+            let has_rasterizer = var("DEP_SLINT_EMBEDDED_VECTOR_FONTS").is_some_and(|v| v != "0")
+                || var("CARGO_FEATURE_EMBEDDED_VECTOR_FONTS").is_some();
+            !has_rasterizer
+                && var("TARGET").is_some_and(|t| {
+                    let t = t.to_ascii_lowercase();
+                    t.split('-').any(|field| field == "none" || field == "zephyr")
+                        || t.ends_with("-uefi")
+                })
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::auto_exclude_vector_fonts;
+
+    fn env(vars: &[(&'static str, &'static str)]) -> impl FnMut(&str) -> Option<String> {
+        move |k| vars.iter().find(|(name, _)| *name == k).map(|(_, v)| v.to_string())
+    }
+
+    #[test]
+    fn explicit_exclude_wins() {
+        assert!(auto_exclude_vector_fonts(env(&[
+            ("SLINT_EXCLUDE_VECTOR_FONTS", "1"),
+            ("TARGET", "x86_64-unknown-linux-gnu"),
+        ])));
+        // Falsy values opt out even on bare-metal triples.
+        for falsy in ["0", "false", "no", "off", "OFF"] {
+            assert!(!auto_exclude_vector_fonts(env(&[
+                ("SLINT_EXCLUDE_VECTOR_FONTS", falsy),
+                ("TARGET", "thumbv7em-none-eabihf"),
+            ])));
+        }
+    }
+
+    #[test]
+    fn bare_metal_target_excludes() {
+        for target in
+            ["thumbv7em-none-eabihf", "riscv32imac-unknown-none-elf", "x86_64-unknown-uefi"]
+        {
+            assert!(auto_exclude_vector_fonts(env(&[("TARGET", target)])), "{target}");
+        }
+        assert!(auto_exclude_vector_fonts(env(&[("TARGET", "aarch64-zephyr-elf")])));
+    }
+
+    #[test]
+    fn hosted_targets_do_not_exclude() {
+        for target in ["x86_64-unknown-linux-gnu", "wasm32-unknown-unknown"] {
+            assert!(!auto_exclude_vector_fonts(env(&[("TARGET", target)])), "{target}");
+        }
+        // No TARGET at all: not a build-script compile, keep vector fonts.
+        assert!(!auto_exclude_vector_fonts(env(&[])));
+    }
+
+    #[test]
+    fn rasterizer_feature_overrides_target() {
+        // `DEP_SLINT_EMBEDDED_VECTOR_FONTS` (slint crate build script export)
+        // and the `CARGO_FEATURE_*` passthrough both mean a rasterizer exists.
+        assert!(!auto_exclude_vector_fonts(env(&[
+            ("TARGET", "thumbv7em-none-eabihf"),
+            ("DEP_SLINT_EMBEDDED_VECTOR_FONTS", "1"),
+        ])));
+        assert!(!auto_exclude_vector_fonts(env(&[
+            ("TARGET", "thumbv7em-none-eabihf"),
+            ("CARGO_FEATURE_EMBEDDED_VECTOR_FONTS", "1"),
+        ])));
+        // A "0" dep export does not count as enabled.
+        assert!(auto_exclude_vector_fonts(env(&[
+            ("TARGET", "thumbv7em-none-eabihf"),
+            ("DEP_SLINT_EMBEDDED_VECTOR_FONTS", "0"),
+        ])));
     }
 }

@@ -495,6 +495,7 @@ pub fn to_value(
         | Type::Callback { .. }
         | Type::ComponentFactory
         | Type::PathData
+        | Type::Shape
         | Type::LayoutCache
         | Type::ArrayOfU16
         | Type::ElementReference

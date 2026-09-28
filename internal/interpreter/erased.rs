@@ -81,6 +81,8 @@ impl InterpolatedPropertyValue for Value {
                 Value::Number((a + (b - a) * t) as f64)
             }
             (Value::Brush(a), Value::Brush(b)) => Value::Brush(Brush::interpolate(a, b, t)),
+            (Value::Shape(a), Value::Shape(b)) => Value::Shape(a.interpolate(b, t)),
+            (Value::Model(from), Value::Model(to)) => interpolate_font_variations(from, to, t),
             _ => target.clone(),
         }
     }
@@ -112,4 +114,38 @@ impl InterpolatedPropertyValue for Value {
             _ => self.clone(),
         }
     }
+}
+
+/// A `[FontVariation]`-typed model animates like CSS `font-variation-settings`:
+/// rows pair up by position and rows whose `tag` fields match interpolate
+/// their `value`. Any other model, or a shape mismatch, animates discretely,
+/// switching to the target halfway through the progress like a CSS discrete
+/// animation.
+fn interpolate_font_variations(
+    from: &i_slint_core::model::ModelRc<Value>,
+    to: &i_slint_core::model::ModelRc<Value>,
+    t: f32,
+) -> Value {
+    use i_slint_core::model::Model as _;
+    if from.row_count() != to.row_count() {
+        return Value::Model(if t < 0.5 { from.clone() } else { to.clone() });
+    }
+    let mut rows = std::vec::Vec::with_capacity(from.row_count());
+    for (from_row, to_row) in from.iter().zip(to.iter()) {
+        let (Value::Struct(from_row), Value::Struct(to_row)) = (&from_row, &to_row) else {
+            return Value::Model(if t < 0.5 { from.clone() } else { to.clone() });
+        };
+        if from_row.get_field("tag") != to_row.get_field("tag") {
+            return Value::Model(if t < 0.5 { from.clone() } else { to.clone() });
+        }
+        let mut row = to_row.clone();
+        if let (Some(Value::Number(a)), Some(Value::Number(b))) =
+            (from_row.get_field("value"), to_row.get_field("value"))
+        {
+            let (a, b) = (*a as f32, *b as f32);
+            row.set_field("value".into(), Value::Number((a + (b - a) * t) as f64));
+        }
+        rows.push(Value::Struct(row));
+    }
+    Value::Model(i_slint_core::model::ModelRc::new(i_slint_core::model::VecModel::from(rows)))
 }

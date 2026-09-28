@@ -315,7 +315,7 @@ version = "1.1.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "40c48f72fd53cd289104fc64099abca73db4166ad86ea0b4341abe65af83dadc"
 dependencies = [
- "windows-sys 0.60.2",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -326,7 +326,7 @@ checksum = "291e6a250ff86cd4a820112fb8898808a366d8f9f58ce16d1f538353ad55747d"
 dependencies = [
  "anstyle",
  "once_cell_polyfill",
- "windows-sys 0.60.2",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -341,7 +341,7 @@ version = "0.13.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e00e1af5c6ac9b1e8ed8e431529a1024b7386d5385dce2a83494da3d39a6bab5"
 dependencies = [
- "kurbo",
+ "kurbo 0.13.1",
  "peniko",
  "raw-window-handle",
  "smallvec",
@@ -356,7 +356,7 @@ dependencies = [
  "anyrender",
  "debug_timer",
  "futures-channel",
- "kurbo",
+ "kurbo 0.13.1",
  "peniko",
  "pollster",
  "rustc-hash 2.1.3",
@@ -1939,7 +1939,7 @@ dependencies = [
  "libc",
  "option-ext",
  "redox_users",
- "windows-sys 0.59.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -2198,7 +2198,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "39cab71617ae0d63f51a36d69f866391735b51691dbda63cf6f96d042b63efeb"
 dependencies = [
  "libc",
- "windows-sys 0.52.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -2485,6 +2485,63 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b8eb065f3251655b3c90e22e5e363f310fc5332fb3402e37bbc94752283248f6"
 dependencies = [
  "bytemuck",
+]
+
+[[package]]
+name = "fontcull-font-types"
+version = "0.10.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b7187211f698d3144c4278d99cede5f6d67814cd676bbf1d2b8607049b3d76b2"
+dependencies = [
+ "bytemuck",
+]
+
+[[package]]
+name = "fontcull-klippa"
+version = "0.1.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0ceb68d1b34e3c675e78f1cabbc49e19c5962d6c6173b7c77d77392431b99840"
+dependencies = [
+ "clap",
+ "fnv",
+ "fontcull-skrifa",
+ "fontcull-write-fonts",
+ "hashbrown 0.15.5",
+ "regex",
+ "thiserror 1.0.69",
+]
+
+[[package]]
+name = "fontcull-read-fonts"
+version = "0.38.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "170928e2d36f9605167b8480acd6e9fc5ef5daaf64fac43d178af9c563adba29"
+dependencies = [
+ "bytemuck",
+ "fontcull-font-types",
+]
+
+[[package]]
+name = "fontcull-skrifa"
+version = "0.39.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3c39120d1806ed11baf0559537bd601c6c60d7bf84ddcc385adea8fb8ff62d35"
+dependencies = [
+ "bytemuck",
+ "fontcull-read-fonts",
+]
+
+[[package]]
+name = "fontcull-write-fonts"
+version = "0.44.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "47b506b0883cf5f8998391cbffa92024143cedcbd0f344fc3f1507dec12956cf"
+dependencies = [
+ "fontcull-font-types",
+ "fontcull-read-fonts",
+ "indexmap",
+ "kurbo 0.12.0",
+ "log",
 ]
 
 [[package]]
@@ -3147,6 +3204,8 @@ version = "0.15.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9229cfe53dfd69f0609a49f65461bd93001ea1ef889cd5529dd176593f5338a1"
 dependencies = [
+ "allocator-api2",
+ "equivalent",
  "foldhash 0.1.5",
 ]
 
@@ -3542,7 +3601,10 @@ dependencies = [
  "fdsm",
  "fdsm-ttf-parser",
  "flate2",
+ "fontcull-klippa",
+ "fontcull-write-fonts",
  "i-slint-common",
+ "i-slint-core",
  "i-slint-parser-test-macro",
  "icu_normalizer",
  "icu_properties",
@@ -3726,7 +3788,7 @@ dependencies = [
  "anyrender",
  "anyrender_vello",
  "i-slint-core",
- "kurbo",
+ "kurbo 0.13.1",
  "lyon_path",
  "peniko",
  "rgb",
@@ -3778,6 +3840,7 @@ dependencies = [
  "read-fonts",
  "scoped-tls-hkt",
  "skia-safe",
+ "skrifa",
  "softbuffer",
  "spin_on",
  "unicode-segmentation",
@@ -4424,6 +4487,17 @@ dependencies = [
 
 [[package]]
 name = "kurbo"
+version = "0.12.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ce9729cc38c18d86123ab736fd2e7151763ba226ac2490ec092d1dd148825e32"
+dependencies = [
+ "arrayvec",
+ "euclid",
+ "smallvec",
+]
+
+[[package]]
+name = "kurbo"
 version = "0.13.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4b60dfc32f652b926df6192e55525b16d186c69d47876c3ead4da5cc9f8450e2"
@@ -4929,7 +5003,7 @@ dependencies = [
  "once_cell",
  "png",
  "thiserror 2.0.20",
- "windows-sys 0.60.2",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -5302,7 +5376,7 @@ version = "0.50.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7957b9740744892f114936ab4a57b3f487491bbeafaf8083688b16841a4240e5"
 dependencies = [
- "windows-sys 0.59.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -5827,7 +5901,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7d8fae84b431384b68627d0f9b3b1245fcf9f46f6c0e3dc902e9dce64edd1967"
 dependencies = [
  "libc",
- "windows-sys 0.45.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -5965,7 +6039,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "839c8299360d2e998bdb106dc0a6cd71dcc5f4df51df1b620361bf50e283cca6"
 dependencies = [
  "color",
- "kurbo",
+ "kurbo 0.13.1",
  "linebender_resource_handle",
  "smallvec",
 ]
@@ -6579,7 +6653,7 @@ dependencies = [
  "once_cell",
  "socket2",
  "tracing",
- "windows-sys 0.52.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -7141,7 +7215,7 @@ dependencies = [
  "errno",
  "libc",
  "linux-raw-sys 0.12.1",
- "windows-sys 0.52.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -7200,7 +7274,7 @@ dependencies = [
  "security-framework",
  "security-framework-sys",
  "webpki-root-certs",
- "windows-sys 0.52.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -8109,7 +8183,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c3d1e2c7f27f8d4cb10542a02c49005dbd6e93095799d6f3be745fae9f8fedd4"
 dependencies = [
  "libc",
- "windows-sys 0.60.2",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -8289,7 +8363,7 @@ version = "0.16.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "695b5790b3131dafa99b3bbfd25a216edb3d216dad9ca208d4657bfb8f2abc3d"
 dependencies = [
- "kurbo",
+ "kurbo 0.13.1",
  "siphasher",
 ]
 
@@ -8445,7 +8519,7 @@ dependencies = [
  "getrandom 0.4.3",
  "once_cell",
  "rustix 1.1.4",
- "windows-sys 0.52.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -8464,7 +8538,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "230a1b821ccbd75b185820a1f1ff7b14d21da1e442e22c0863ea5f08771a8874"
 dependencies = [
  "rustix 1.1.4",
- "windows-sys 0.59.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -9042,7 +9116,7 @@ checksum = "f2f6fb2847f6742cd76af783a2a2c49e9375d0a111c7bef6f71cd9e738c72d6e"
 dependencies = [
  "memoffset",
  "tempfile",
- "windows-sys 0.60.2",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -9176,7 +9250,7 @@ dependencies = [
  "fontdb",
  "harfrust",
  "imagesize",
- "kurbo",
+ "kurbo 0.13.1",
  "log",
  "pico-args",
  "roxmltree",
@@ -10033,7 +10107,7 @@ version = "0.1.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c2a7b1c03c876122aa43f3020e6c3c3ee5c05081c9a00739faf7503aeba10d22"
 dependencies = [
- "windows-sys 0.48.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -10659,7 +10733,7 @@ checksum = "cae90d1d9f6d1d36ef116b0b1e651a6d7c12ba925439d4d06ff9adc94662a3d8"
 dependencies = [
  "font-types",
  "indexmap",
- "kurbo",
+ "kurbo 0.13.1",
  "log",
  "read-fonts",
 ]

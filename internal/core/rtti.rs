@@ -59,6 +59,7 @@ macro_rules! declare_ValueType_2 {
             crate::items::MenuEntry,
             crate::items::DropEvent,
             crate::model::ModelRc<crate::items::MenuEntry>,
+            crate::model::ModelRc<crate::items::FontVariation>,
             crate::styled_text::StyledText,
             crate::input::Keys,
             crate::data_transfer::DataTransfer,

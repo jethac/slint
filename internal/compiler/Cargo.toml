@@ -1,7 +1,7 @@
 # Copyright © SixtyFPS GmbH <info@slint.dev>
 # SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0
 
-# cSpell:ignore nalge fdsm nalgebra pathdiff flate
+# cSpell:ignore nalge fdsm nalgebra pathdiff flate fontcull klippa fontations
 
 [package]
 name = "i-slint-compiler"
@@ -44,6 +44,8 @@ renderer-software = [
   "dep:resvg",
   "dep:swash",
   "dep:skrifa",
+  "dep:fontcull-klippa",
+  "dep:fontcull-write-fonts",
   "i-slint-common/shared-fontique",
   "i-slint-common/svg-text",
   "dep:rayon",
@@ -65,6 +67,9 @@ default = []
 
 [dependencies]
 i-slint-common = { workspace = true, features = ["default", "color-parsing", "markdown"] }
+# For validating `Shapes.path` literals at compile time with the same ported
+# SVG parser that runs at runtime.
+i-slint-core = { workspace = true, features = ["std"] }
 
 num_enum = "0.7"
 icu_normalizer = { workspace = true }
@@ -90,7 +95,11 @@ image = { workspace = true, optional = true }
 resvg = { workspace = true, optional = true }
 # font embedding
 swash = { workspace = true, optional = true, features = ["scale", "render", "std"] }
-skrifa = { workspace = true, optional = true }
+skrifa = { workspace = true, optional = true, features = ["std", "autohint_shaping"] }
+# `fontcull-*` are vendored fontations forks — deliberately a different
+# version line than the workspace's fontations crates.
+fontcull-klippa = { version = "0.1.2", optional = true }
+fontcull-write-fonts = { version = "0.44.3", optional = true, features = ["read"] }
 fdsm = { version = "0.8.0", optional = true }
 fdsm-ttf-parser = { version = "0.2", optional = true }
 # Keep in sync with the nalgebra version used by fdsm

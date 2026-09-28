@@ -786,6 +786,11 @@ impl Expression {
                         ctx.diag.slint_sc_error("Array expressions are", &node);
                         return Self::from_array_node(node.into(), ctx);
                     }
+                    SyntaxKind::FontVariationList => {
+                        #[cfg(feature = "slint-sc")]
+                        ctx.diag.slint_sc_error("Font variation settings expressions are", &node);
+                        return Self::from_font_variation_list_node(node.into(), ctx);
+                    }
                     SyntaxKind::CodeBlock => {
                         #[cfg(feature = "slint-sc")]
                         ctx.diag.slint_sc_error("Code blocks are", &node);
@@ -2003,7 +2008,13 @@ impl Expression {
             }
         };
 
-        Expression::FunctionCall { function, arguments, source_location: Some(source_location) }
+        let e = Expression::FunctionCall {
+            function,
+            arguments,
+            source_location: Some(source_location),
+        };
+        check_shape_call(&e, &node, ctx);
+        e
     }
 
     fn from_member_access_node(
@@ -2347,6 +2358,69 @@ impl Expression {
             );
         }
 
+        Expression::Array { element_ty, values }
+    }
+
+    /// Resolve the `font-variation-settings` shorthand syntax
+    /// (`"wght" 700, "wdth" 75`) into an array of `FontVariation` structs. The
+    /// shorthand is only valid where the property type is `[FontVariation]`.
+    fn from_font_variation_list_node(
+        node: syntax_nodes::FontVariationList,
+        ctx: &mut LookupCtx,
+    ) -> Expression {
+        let element_ty = Type::Struct(crate::typeregister::builtin_structs::FontVariation());
+        let array_ty = Type::Array(element_ty.clone().into());
+        if ctx.property_type != array_ty {
+            ctx.diag.push_error(
+                "A list of axis settings is only valid for 'font-variation-settings'".into(),
+                &node,
+            );
+            return Self::Invalid;
+        }
+        let mut values = Vec::new();
+        let mut entries = node.Expression();
+        loop {
+            let (tag_node, value_node) = match (entries.next(), entries.next()) {
+                (Some(tag_node), Some(value_node)) => (tag_node, value_node),
+                (Some(tag_node), None) => {
+                    ctx.diag.push_error("Expected a value after the axis tag".into(), &tag_node);
+                    return Self::Invalid;
+                }
+                _ => break,
+            };
+            let tag_expression = Self::from_expression_node(tag_node.clone(), ctx);
+            let tag = match &tag_expression {
+                Expression::StringLiteral(tag) => tag.clone(),
+                _ => {
+                    ctx.diag
+                        .push_error("Expected a four-character axis tag string".into(), &tag_node);
+                    return Self::Invalid;
+                }
+            };
+            if tag.len() != 4 || !tag.bytes().all(|b| (0x20..=0x7e).contains(&b)) {
+                ctx.diag.push_error(
+                    format!(
+                        "Invalid axis tag '{tag}': expected exactly 4 printable ASCII characters"
+                    ),
+                    &tag_node,
+                );
+                return Self::Invalid;
+            }
+            let value_expression = ctx
+                .with_expected_type(Type::Float32, |ctx| {
+                    Self::from_expression_node(value_node.clone(), ctx)
+                })
+                .maybe_convert_to(Type::Float32, &value_node, ctx.diag, &ctx.symbol_counters);
+            values.push(Expression::Struct {
+                ty: match &element_ty {
+                    Type::Struct(s) => s.clone(),
+                    _ => unreachable!(),
+                },
+                values: [("tag".into(), tag_expression), ("value".into(), value_expression)]
+                    .into_iter()
+                    .collect(),
+            });
+        }
         Expression::Array { element_ty, values }
     }
 
@@ -3418,5 +3492,110 @@ fn check_slint_sc_handler_body(
             "A callback handler body that isn't a callback invocation is",
             name.as_ref().map_or(&**node as &dyn Spanned, |name| name),
         );
+    }
+}
+
+/// Validates `Shapes.*` builtin calls whose arguments are constant: a constant
+/// argument violating a constructor's precondition is a compile error, matching
+/// the runtime `ShapeError` the core constructors would produce.
+fn check_shape_call(e: &Expression, node: &dyn Spanned, ctx: &mut LookupCtx) {
+    let Expression::FunctionCall { function: Callable::Builtin(f), arguments, .. } = e else {
+        return;
+    };
+    let num = |i: usize| -> Option<f64> {
+        match arguments.get(i) {
+            Some(Expression::NumberLiteral(v, Unit::None)) => Some(*v),
+            _ => None,
+        }
+    };
+    let len = |i: usize| -> Option<usize> {
+        match arguments.get(i) {
+            Some(Expression::Array { values, .. }) => Some(values.len()),
+            _ => None,
+        }
+    };
+    let mut err = |msg: &str| ctx.diag.push_error(msg.into(), node);
+    match f {
+        BuiltinFunction::ShapesPolygon => {
+            if len(0).is_some_and(|n| n < 3) {
+                err("polygons must have at least 3 vertices");
+            }
+        }
+        BuiltinFunction::ShapesPolygonPerVertex => {
+            if len(0).is_some_and(|n| n < 3) {
+                err("polygons must have at least 3 vertices");
+            }
+            if let (Some(v), Some(r)) = (len(0), len(1))
+                && v != r
+            {
+                err("roundings must have the same size as vertices");
+            }
+        }
+        BuiltinFunction::ShapesRegularPolygon => {
+            if num(0).is_some_and(|n| n < 3.) {
+                err("regular polygons must have at least 3 vertices");
+            }
+        }
+        BuiltinFunction::ShapesRegularPolygonPerVertex => {
+            if num(0).is_some_and(|n| n < 3.) {
+                err("regular polygons must have at least 3 vertices");
+            }
+            if let (Some(n), Some(r)) = (num(0), len(1))
+                && n as usize != r
+            {
+                err("roundings must have the same size as vertices");
+            }
+        }
+        BuiltinFunction::ShapesRectangle => {
+            if len(2).is_some_and(|n| ![0, 1, 4].contains(&n)) {
+                err("rectangle takes 0, 1 or 4 corner roundings");
+            }
+            if num(0).is_some_and(|w| w <= 0.) || num(1).is_some_and(|h| h <= 0.) {
+                err("rectangle must have positive width and height");
+            }
+        }
+        BuiltinFunction::ShapesCircle => {
+            if num(0).is_some_and(|n| n < 3.) {
+                err("circles must have at least 3 vertices");
+            }
+        }
+        BuiltinFunction::ShapesStar => {
+            if num(0).is_some_and(|n| n < 1.) {
+                err("stars must have at least 1 vertex per radius");
+            }
+            if num(1).is_some_and(|ir| !(ir > 0. && ir < 1.)) {
+                err("inner-radius must be in the (0, 1) range");
+            }
+        }
+        BuiltinFunction::ShapesPill => {
+            if num(0).is_some_and(|w| w <= 0.) || num(1).is_some_and(|h| h <= 0.) {
+                err("pills must have positive width and height");
+            }
+        }
+        BuiltinFunction::ShapesPillStar => {
+            if num(0).is_some_and(|n| n < 1.) {
+                err("pill-stars must have at least 1 vertex per radius");
+            }
+            if num(1).is_some_and(|w| w <= 0.) || num(2).is_some_and(|h| h <= 0.) {
+                err("pill-stars must have positive width and height");
+            }
+            if num(3).is_some_and(|r| !(r > 0. && r <= 1.)) {
+                err("inner-radius-ratio must be in the (0, 1] range");
+            }
+        }
+        BuiltinFunction::ShapesCustom => {
+            if len(0).is_some_and(|n| n < 1) {
+                err("custom shapes must have at least 1 vertex");
+            }
+            if let (Some(v), Some(r)) = (len(0), len(1))
+                && v != r
+            {
+                err("roundings must have the same size as vertices");
+            }
+            if num(2).is_some_and(|n| n < 1.) {
+                err("reps must be >= 1");
+            }
+        }
+        _ => {}
     }
 }

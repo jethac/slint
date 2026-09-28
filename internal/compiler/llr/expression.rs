@@ -438,7 +438,7 @@ impl Expression {
             },
             Type::Bool => Expression::BoolLiteral(false),
             Type::Model => return None,
-            Type::PathData => return None,
+            Type::PathData | Type::Shape => return None,
             Type::Array(element_ty) => Expression::Array {
                 element_ty: (**element_ty).clone(),
                 values: Vec::new(),

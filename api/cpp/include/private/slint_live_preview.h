@@ -281,6 +281,18 @@ public:
         }
         return {};
     }
+    static slint::interpreter::Value value_from_shape(const slint::Shape &shape)
+    {
+        return slint::interpreter::Value(
+                cbindgen_private::slint_interpreter_value_new_shape(&shape));
+    }
+    static slint::Shape shape_from_value(const slint::interpreter::Value &value)
+    {
+        if (auto *p = cbindgen_private::slint_interpreter_value_to_shape(value.inner)) {
+            return *p;
+        }
+        return {};
+    }
     static slint::interpreter::Value value_from_styled_text(const slint::StyledText &text)
     {
         return slint::interpreter::Value(
@@ -549,6 +561,14 @@ inline slint::StyledText from_slint_value(const slint::interpreter::Value &val,
                                           const slint::StyledText *)
 {
     return private_api::live_preview::LiveReloadingComponent::styled_text_from_value(val);
+}
+inline slint::interpreter::Value into_slint_value(const slint::Shape &val)
+{
+    return private_api::live_preview::LiveReloadingComponent::value_from_shape(val);
+}
+inline slint::Shape from_slint_value(const slint::interpreter::Value &val, const slint::Shape *)
+{
+    return private_api::live_preview::LiveReloadingComponent::shape_from_value(val);
 }
 } // namespace slint
 

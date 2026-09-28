@@ -161,6 +161,41 @@ pub enum BuiltinFunction {
     DefaultWindowTitle,
     PathPointAt,
     PathAngleAt,
+    /// The default value of a `shape` property: the empty shape.
+    /// Not exposed in the `Shapes` namespace.
+    ShapesEmpty,
+    /// `Shapes.polygon(vertices, rounding)`
+    ShapesPolygon,
+    /// `Shapes.polygon-per-vertex(vertices, roundings)`
+    ShapesPolygonPerVertex,
+    /// `Shapes.regular-polygon(num-vertices, rounding)`
+    ShapesRegularPolygon,
+    /// `Shapes.regular-polygon-per-vertex(num-vertices, roundings)`
+    ShapesRegularPolygonPerVertex,
+    /// `Shapes.rectangle(width, height, roundings)`
+    ShapesRectangle,
+    /// `Shapes.circle(num-vertices)`
+    ShapesCircle,
+    /// `Shapes.star(num-vertices-per-radius, inner-radius, rounding, inner-rounding)`
+    ShapesStar,
+    /// `Shapes.pill(width, height, smoothing)`
+    ShapesPill,
+    /// `Shapes.pill-star(num-vertices-per-radius, width, height, inner-radius-ratio, rounding)`
+    ShapesPillStar,
+    /// `Shapes.custom(vertices, roundings, reps, mirror)`
+    ShapesCustom,
+    /// `Shapes.normalized(shape)`
+    ShapesNormalized,
+    /// `Shapes.rotated(shape, angle)`
+    ShapesRotated,
+    /// `Shapes.scaled(shape, scale-x, scale-y)`
+    ShapesScaled,
+    /// `Shapes.translated(shape, dx, dy)`
+    ShapesTranslated,
+    /// `Shapes.morph(from, to, progress)`
+    ShapesMorph,
+    /// `Shapes.path(fill-rule, svg-path-data)` — lowered by the `path` builtin macro.
+    ShapesFromPath,
 }
 
 #[derive(Debug, Clone)]
@@ -197,6 +232,9 @@ pub enum BuiltinMacroFunction {
     ArrayIndexOf,
     CustomMouseCursor,
     Spring,
+    /// `Shapes.path("…")` / `Shapes.path(evenodd, "…")` — parses the fill-rule
+    /// argument and lowers to `BuiltinFunction::ShapesFromPath`.
+    ShapePath,
 }
 
 macro_rules! declare_builtin_function_types {
@@ -371,6 +409,23 @@ declare_builtin_function_types!(
     MacosBringAllWindowsToFront: () -> Type::Void,
     PathPointAt: (Type::ElementReference, Type::Float32) -> typeregister::logical_point_type().into(),
     PathAngleAt: (Type::ElementReference, Type::Float32) -> Type::Angle,
+    ShapesEmpty: () -> Type::Shape,
+    ShapesPolygon: (Type::Array(Arc::new(Type::Struct(crate::typeregister::logical_point_type()))), Type::Struct(crate::typeregister::builtin_structs::CornerRounding())) -> Type::Shape,
+    ShapesPolygonPerVertex: (Type::Array(Arc::new(Type::Struct(crate::typeregister::logical_point_type()))), Type::Array(Arc::new(Type::Struct(crate::typeregister::builtin_structs::CornerRounding())))) -> Type::Shape,
+    ShapesRegularPolygon: (Type::Int32, Type::Struct(crate::typeregister::builtin_structs::CornerRounding())) -> Type::Shape,
+    ShapesRegularPolygonPerVertex: (Type::Int32, Type::Array(Arc::new(Type::Struct(crate::typeregister::builtin_structs::CornerRounding())))) -> Type::Shape,
+    ShapesRectangle: (Type::Float32, Type::Float32, Type::Array(Arc::new(Type::Struct(crate::typeregister::builtin_structs::CornerRounding())))) -> Type::Shape,
+    ShapesCircle: (Type::Int32) -> Type::Shape,
+    ShapesStar: (Type::Int32, Type::Float32, Type::Struct(crate::typeregister::builtin_structs::CornerRounding()), Type::Struct(crate::typeregister::builtin_structs::CornerRounding())) -> Type::Shape,
+    ShapesPill: (Type::Float32, Type::Float32, Type::Float32) -> Type::Shape,
+    ShapesPillStar: (Type::Int32, Type::Float32, Type::Float32, Type::Float32, Type::Struct(crate::typeregister::builtin_structs::CornerRounding())) -> Type::Shape,
+    ShapesCustom: (Type::Array(Arc::new(Type::Struct(crate::typeregister::logical_point_type()))), Type::Array(Arc::new(Type::Struct(crate::typeregister::builtin_structs::CornerRounding()))), Type::Int32, Type::Bool) -> Type::Shape,
+    ShapesNormalized: (Type::Shape) -> Type::Shape,
+    ShapesRotated: (Type::Shape, Type::Angle) -> Type::Shape,
+    ShapesScaled: (Type::Shape, Type::Float32, Type::Float32) -> Type::Shape,
+    ShapesTranslated: (Type::Shape, Type::Float32, Type::Float32) -> Type::Shape,
+    ShapesMorph: (Type::Shape, Type::Shape, Type::Float32) -> Type::Shape,
+    ShapesFromPath: (Type::String, Type::Enumeration(crate::typeregister::BUILTIN.enums.FillRule.clone())) -> Type::Shape,
 );
 
 impl Default for BuiltinFunctionTypes {
@@ -433,7 +488,24 @@ impl BuiltinFunction {
             | BuiltinFunction::Exp
             | BuiltinFunction::ATan
             | BuiltinFunction::ATan2
-            | BuiltinFunction::ToStringUnlocalized => true,
+            | BuiltinFunction::ToStringUnlocalized
+            | BuiltinFunction::ShapesEmpty
+            | BuiltinFunction::ShapesPolygon
+            | BuiltinFunction::ShapesPolygonPerVertex
+            | BuiltinFunction::ShapesRegularPolygon
+            | BuiltinFunction::ShapesRegularPolygonPerVertex
+            | BuiltinFunction::ShapesRectangle
+            | BuiltinFunction::ShapesCircle
+            | BuiltinFunction::ShapesStar
+            | BuiltinFunction::ShapesPill
+            | BuiltinFunction::ShapesPillStar
+            | BuiltinFunction::ShapesCustom
+            | BuiltinFunction::ShapesNormalized
+            | BuiltinFunction::ShapesRotated
+            | BuiltinFunction::ShapesScaled
+            | BuiltinFunction::ShapesTranslated
+            | BuiltinFunction::ShapesMorph
+            | BuiltinFunction::ShapesFromPath => true,
             // The result depends on the locale's decimal separator, like DecimalSeparator.
             // The constant propagation folds the locale-independent cases and promotes
             // their binding back to constant.
@@ -547,7 +619,24 @@ impl BuiltinFunction {
             | BuiltinFunction::ATan2
             | BuiltinFunction::ToFixed
             | BuiltinFunction::ToPrecision
-            | BuiltinFunction::ToStringUnlocalized => true,
+            | BuiltinFunction::ToStringUnlocalized
+            | BuiltinFunction::ShapesEmpty
+            | BuiltinFunction::ShapesPolygon
+            | BuiltinFunction::ShapesPolygonPerVertex
+            | BuiltinFunction::ShapesRegularPolygon
+            | BuiltinFunction::ShapesRegularPolygonPerVertex
+            | BuiltinFunction::ShapesRectangle
+            | BuiltinFunction::ShapesCircle
+            | BuiltinFunction::ShapesStar
+            | BuiltinFunction::ShapesPill
+            | BuiltinFunction::ShapesPillStar
+            | BuiltinFunction::ShapesCustom
+            | BuiltinFunction::ShapesNormalized
+            | BuiltinFunction::ShapesRotated
+            | BuiltinFunction::ShapesScaled
+            | BuiltinFunction::ShapesTranslated
+            | BuiltinFunction::ShapesMorph
+            | BuiltinFunction::ShapesFromPath => true,
             BuiltinFunction::SetFocusItem | BuiltinFunction::ClearFocusItem => false,
             BuiltinFunction::ShowPopupWindow
             | BuiltinFunction::ClosePopupWindow
@@ -1967,6 +2056,11 @@ impl Expression {
             Type::Bool => Expression::BoolLiteral(false),
             Type::Model => Expression::Invalid,
             Type::PathData => Expression::PathData(Path::Elements(Vec::new())),
+            Type::Shape => Expression::FunctionCall {
+                function: Callable::Builtin(BuiltinFunction::ShapesEmpty),
+                arguments: Vec::new(),
+                source_location: None,
+            },
             Type::Array(element_ty) => {
                 Expression::Array { element_ty: (**element_ty).clone(), values: Vec::new() }
             }

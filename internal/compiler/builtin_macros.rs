@@ -115,7 +115,98 @@ pub fn lower_macro(
             expr
         }
         BuiltinMacroFunction::Spring => spring_macro(n, sub_expr.collect(), diag, symbol_counters),
+        BuiltinMacroFunction::ShapePath => {
+            shape_path_macro(n, sub_expr.collect(), diag, symbol_counters)
+        }
     }
+}
+
+/// Lowers `Shapes.path("…")` and `Shapes.path(evenodd, "…")` into a
+/// `BuiltinFunction::ShapesFromPath` call whose second argument is a `FillRule`
+/// enumeration value.
+fn shape_path_macro(
+    node: &dyn Spanned,
+    mut args: Vec<(Expression, Option<NodeOrToken>)>,
+    diag: &mut BuildDiagnostics,
+    symbol_counters: &SymbolCounters,
+) -> Expression {
+    let fill_rule_enum = crate::typeregister::BUILTIN.enums.FillRule.clone();
+    let nonzero = Expression::EnumerationValue(
+        fill_rule_enum
+            .clone()
+            .try_value_from_string("nonzero")
+            .unwrap_or_else(|| fill_rule_enum.clone().default_value()),
+    );
+    if args.is_empty() || args.len() > 2 {
+        diag.push_error(
+            "Shapes.path() expects a path string and optionally a fill rule".into(),
+            node,
+        );
+        return Expression::Invalid;
+    }
+    let (fill_rule, path) = if args.len() == 1 {
+        (nonzero, args.pop().unwrap())
+    } else {
+        let (fr, fr_node) = args.remove(0);
+        let fill = match &fr {
+            Expression::StringLiteral(s) => match fill_rule_enum.try_value_from_string(s) {
+                Some(v) => Expression::EnumerationValue(v),
+                None => {
+                    let sl = fr_node
+                        .map(|n| n.to_source_location())
+                        .unwrap_or_else(|| node.to_source_location());
+                    diag.push_error(
+                        format!("Invalid fill rule '{s}'; expected 'nonzero' or 'evenodd'"),
+                        &sl,
+                    );
+                    Expression::Invalid
+                }
+            },
+            Expression::EnumerationValue(v) if v.enumeration.name == fill_rule_enum.name => {
+                fr.clone()
+            }
+            _ => {
+                let sl = fr_node
+                    .map(|n| n.to_source_location())
+                    .unwrap_or_else(|| node.to_source_location());
+                diag.push_error("Shapes.path() fill rule must be nonzero or evenodd".into(), &sl);
+                Expression::Invalid
+            }
+        };
+        (fill, args.remove(0))
+    };
+    if matches!(fill_rule, Expression::Invalid) {
+        return Expression::Invalid;
+    }
+    let (path_expr, _path_node) = path;
+    if path_expr.ty() == Type::Percent {
+        diag.push_error("percentages are not supported in shape paths".into(), node);
+        return Expression::Invalid;
+    }
+    let path_expr = path_expr.maybe_convert_to(Type::String, node, diag, symbol_counters);
+    // A literal failing `Shape::from_svg_path` (the real ported SVG path
+    // parser) is a compile error instead of a warning + empty shape at runtime.
+    if let Expression::StringLiteral(d) = &path_expr
+        && let Some(msg) = shape_path_literal_error(d)
+    {
+        diag.push_error(msg, node);
+        return Expression::Invalid;
+    }
+    Expression::FunctionCall {
+        function: Callable::Builtin(BuiltinFunction::ShapesFromPath),
+        arguments: vec![path_expr, fill_rule],
+        source_location: Some(node.to_source_location()),
+    }
+}
+
+/// Runs the real ported `SvgPathParser` (via `Shape::from_svg_path`) on a
+/// literal `d` string, so every literal that would fail at runtime is a compile
+/// error instead of a warning + empty shape. Returns the error message, or
+/// `None` when the literal parses.
+fn shape_path_literal_error(d: &str) -> Option<String> {
+    i_slint_core::graphics::Shape::from_svg_path(d, i_slint_core::items::FillRule::Nonzero)
+        .err()
+        .map(|e| e.to_string())
 }
 
 /// The unit-less number an argument of `cubic-bezier`/`spring` wrote, including a
@@ -727,6 +818,7 @@ fn to_debug_string(
         | Type::ArrayOfU16
         | Type::Model
         | Type::PathData
+        | Type::Shape
         | Type::Closure => {
             diag.push_error("Cannot debug this expression".into(), node);
             Expression::Invalid

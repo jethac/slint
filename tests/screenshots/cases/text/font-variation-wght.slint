@@ -1,0 +1,25 @@
+// Copyright © SixtyFPS GmbH <info@slint.dev>
+// SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0
+
+// Skia rasterizes variable-font instances differently per
+// platform (macOS vs Linux references differ by up to ~200/255 per pixel).
+//ignore:skia
+// SIZE=120x120
+
+// The wght axis through `font-variation-settings`, and `font-weight` as the
+// CSS-mapped equivalent. NotoSans declares wght 100-900.
+export component TestCase inherits Window {
+    width: 120px;
+    height: 120px;
+    background: white;
+    default-font-family: "Noto Sans";
+    default-font-size: 13px;
+    VerticalLayout {
+        Text { text: "wght 100"; font-variation-settings: "wght" 100; }
+        Text { text: "wght 400"; font-variation-settings: "wght" 400; }
+        Text { text: "wght 900"; font-variation-settings: "wght" 900; }
+        // CSS font-weight maps onto the same axis.
+        Text { text: "weight 100"; font-weight: 100; }
+        Text { text: "weight 900"; font-weight: FontWeight.bold; }
+    }
+}

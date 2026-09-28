@@ -508,6 +508,7 @@ impl TypeRegister {
         register.insert_type(Type::Easing);
         register.insert_type(Type::Angle);
         register.insert_type(Type::Brush);
+        register.insert_type(Type::Shape);
         register.insert_type(Type::Rem);
         register.insert_type(Type::StyledText);
         register.insert_type(Type::Keys);
@@ -525,6 +526,10 @@ impl TypeRegister {
         register.supported_property_animation_types.insert(Type::LogicalLength.to_string());
         register.supported_property_animation_types.insert(Type::Brush.to_string());
         register.supported_property_animation_types.insert(Type::Angle.to_string());
+        register.supported_property_animation_types.insert(Type::Percent.to_string());
+        register
+            .supported_property_animation_types
+            .insert(Type::Array(Type::Struct(builtin_structs::FontVariation()).into()).to_string());
 
         macro_rules! register_builtin_structs {
             ($(

@@ -50,6 +50,9 @@ pub enum Type {
     /// Fake type that can represent anything that can be converted into a model.
     Model,
     PathData, // Either a vector of path elements or a two vectors of events and coordinates
+    /// A shape value (a rounded polygon with feature segmentation for morphing),
+    /// created by the functions in the `Shapes` builtin namespace.
+    Shape,
     Easing,
     Brush,
     /// This is usually a model
@@ -106,6 +109,7 @@ impl core::cmp::PartialEq for Type {
             Type::Bool => matches!(other, Type::Bool),
             Type::Model => matches!(other, Type::Model),
             Type::PathData => matches!(other, Type::PathData),
+            Type::Shape => matches!(other, Type::Shape),
             Type::Easing => matches!(other, Type::Easing),
             Type::MouseCursor => matches!(other, Type::MouseCursor),
             Type::Brush => matches!(other, Type::Brush),
@@ -156,6 +160,7 @@ impl Display for Type {
             Type::Array(t) => write!(f, "[{t}]"),
             Type::Struct(t) => write!(f, "{t}"),
             Type::PathData => write!(f, "pathdata"),
+            Type::Shape => write!(f, "shape"),
             Type::Easing => write!(f, "easing"),
             Type::MouseCursor => write!(f, "MouseCursor"),
             Type::Brush => write!(f, "brush"),
@@ -239,6 +244,7 @@ impl Type {
                 | Self::Brush
                 | Self::InferredProperty
                 | Self::StyledText
+                | Self::Shape
         )
     }
 
@@ -339,6 +345,7 @@ impl Type {
             Type::Bool => None,
             Type::Model => None,
             Type::PathData => None,
+            Type::Shape => None,
             Type::Easing => None,
             Type::MouseCursor => None,
             Type::Brush => None,

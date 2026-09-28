@@ -40,6 +40,7 @@ astrowind
 asyncio
 auri
 Aurindam
+autohint
 autorelease
 autoremove
 AUTOSAR
@@ -52,6 +53,7 @@ Baselining
 baudrate
 bdata
 Belappetit
+beziers
 bezpath
 BGRA
 BGRX
@@ -111,6 +113,7 @@ codingame
 coeff
 coeffs
 coldict
+collinearity
 colorspace
 colour
 colprop
@@ -127,6 +130,7 @@ Conv
 corelib
 coro
 cortexa
+cosa
 coterminal
 CPACK
 Cpolygon
@@ -196,6 +200,7 @@ dynamiccolor
 eabi
 eabihf
 Eeprom
+embeddedfonts
 eiusmod
 ELCDIF
 elems
@@ -204,6 +209,8 @@ elit
 emcmake
 Emre
 emscripten
+endcap
+endcaps
 endforeach
 endfunction
 endrst
@@ -284,6 +291,8 @@ gethighcontrast
 getifs
 getpid
 getrandom
+ghostish
+Ghostish
 globalfun
 globallogic
 Globus
@@ -292,11 +301,13 @@ glutin
 glyphclusters
 gnueabihf
 goldens
+GRAD
 grcov
 Grimme
 Grotesk
 gstreamer
 GWLP
+Hamburgefonstiv
 Hani
 hcts
 hdmipi
@@ -342,6 +353,7 @@ intval
 invf
 iocp
 IRAM
+irnd
 Irqs
 isinstance
 isize
@@ -365,6 +377,8 @@ Keymap
 keyrings
 kitware
 Klarälvdalens
+kmath
+kotlinc
 kqueue
 ksni
 kurbo
@@ -374,6 +388,7 @@ langtype
 layoutinfo
 LBUTTONUP
 lerp
+lerping
 libasound
 libav
 libavcodec
@@ -451,6 +466,7 @@ Meteo
 midgray
 millihertz
 mimxrt
+minb
 minmax
 MIPI
 mipidsi
@@ -485,6 +501,7 @@ nexp
 nixos
 nixpkgs
 nmagic
+nocapture
 nodelay
 noexcept
 noglib
@@ -497,6 +514,7 @@ noseat
 nostrud
 notexist
 noto
+nowarn
 nsview
 ntranslate
 nullopt
@@ -512,6 +530,7 @@ oklab
 oklch
 oldsyspath
 Olguin's
+opsz
 optipng
 ospi
 othercomp
@@ -533,6 +552,7 @@ pixabay
 pixelcolor
 pkgs
 poly
+polygonalization
 popupwindow
 prec
 prediv
@@ -546,6 +566,7 @@ println
 profdata
 profraw
 Programiv
+Progressable
 progressindicator
 propref
 prost
@@ -606,6 +627,9 @@ rlib
 rlibs
 Roboto
 RODATA
+roundings
+roundoff
+ROND
 rowcol
 rsplit
 rspolib
@@ -650,6 +674,7 @@ slintlib
 slnt
 Smartwin
 smol
+smoothes
 Snackbars
 Softbuffer
 Somers
@@ -668,6 +693,7 @@ standardbutton
 startswith
 staticlib
 staticmethod
+stdlib
 stdset
 stext
 stockticker
@@ -729,13 +755,16 @@ toctree
 tomllib
 tonalbutton
 toolkits
+toolong
 TOPLEVEL
 Torizon
 toucharea
 toupper
 transcendentals
+trippable
 trunc
 tungstenite
+typealias
 typedoc
 typeregister
 Tzimabazafi
@@ -750,6 +779,7 @@ unfocusable
 unhinted
 unicodes
 uninit
+unioning
 Unitless
 unittests
 unmaximize
@@ -773,6 +803,7 @@ venv
 VercodeOperation
 verticalbox
 verticallayout
+verts
 VGWGPU
 viewports
 vlayout
@@ -785,6 +816,7 @@ wakeup
 walkdir
 wasmbind
 Waveshare
+wdth
 weakref
 weatherdemo
 weathericons
@@ -807,6 +839,9 @@ WQXGA
 writeback
 WRONLY
 Wsmeans
+wsmeans
+XOPQ
+XTRA
 xbuild
 xcarchive
 xcassets
@@ -821,6 +856,12 @@ xmark
 Xrgb
 xshell
 xxaaxx
+YOPQ
+YTAS
+YTDE
+YTFI
+YTLC
+YTUC
 yoyo
 zaimoku
 Zbuild

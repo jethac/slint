@@ -608,6 +608,159 @@ fn path_element_from_expression(
     })
 }
 
+fn shape_arg(ctx: &mut EvalContext, e: &Expression) -> i_slint_core::graphics::Shape {
+    match eval_expression(ctx, e) {
+        Value::Shape(s) => s,
+        _ => Default::default(),
+    }
+}
+
+fn point_array_arg(
+    ctx: &mut EvalContext,
+    e: &Expression,
+) -> ModelRc<i_slint_core::api::LogicalPosition> {
+    let model: ModelRc<Value> = eval_expression(ctx, e).try_into().unwrap_or_default();
+    let points: Vec<i_slint_core::api::LogicalPosition> = (0..model.row_count())
+        .filter_map(|i| match model.row_data(i)? {
+            Value::Struct(st) => {
+                let x = st.get_field("x").cloned().unwrap_or_default();
+                let y = st.get_field("y").cloned().unwrap_or_default();
+                Some(i_slint_core::api::LogicalPosition::new(
+                    f32::try_from(x).ok()?,
+                    f32::try_from(y).ok()?,
+                ))
+            }
+            _ => None,
+        })
+        .collect();
+    ModelRc::from(points.as_slice())
+}
+
+fn rounding_arg(ctx: &mut EvalContext, e: &Expression) -> i_slint_core::items::CornerRounding {
+    match eval_expression(ctx, e) {
+        Value::Struct(st) => i_slint_core::items::CornerRounding::new(
+            st.get_field("radius").cloned().and_then(|v| f32::try_from(v).ok()).unwrap_or_default(),
+            st.get_field("smoothing")
+                .cloned()
+                .and_then(|v| f32::try_from(v).ok())
+                .unwrap_or_default(),
+        ),
+        _ => Default::default(),
+    }
+}
+
+fn rounding_array_arg(
+    ctx: &mut EvalContext,
+    e: &Expression,
+) -> ModelRc<i_slint_core::items::CornerRounding> {
+    let model: ModelRc<Value> = eval_expression(ctx, e).try_into().unwrap_or_default();
+    let roundings: Vec<i_slint_core::items::CornerRounding> = (0..model.row_count())
+        .filter_map(|i| match model.row_data(i)? {
+            Value::Struct(st) => Some(i_slint_core::items::CornerRounding::new(
+                st.get_field("radius")
+                    .cloned()
+                    .and_then(|v| f32::try_from(v).ok())
+                    .unwrap_or_default(),
+                st.get_field("smoothing")
+                    .cloned()
+                    .and_then(|v| f32::try_from(v).ok())
+                    .unwrap_or_default(),
+            )),
+            _ => None,
+        })
+        .collect();
+    ModelRc::from(roundings.as_slice())
+}
+
+fn fill_rule_arg(ctx: &mut EvalContext, e: &Expression) -> i_slint_core::items::FillRule {
+    match eval_expression(ctx, e) {
+        Value::EnumerationValue(_, v) if v == "evenodd" => i_slint_core::items::FillRule::Evenodd,
+        _ => i_slint_core::items::FillRule::Nonzero,
+    }
+}
+
+/// Evaluate one of the `Shapes.*` builtin functions. All of them are infallible
+/// at this level: invalid arguments produce an empty shape.
+fn eval_shape_builtin(
+    f: &BuiltinFunction,
+    ctx: &mut EvalContext,
+    arguments: &[Expression],
+) -> Value {
+    use i_slint_core::graphics::shapes;
+    let to_num = |ctx: &mut EvalContext, e: &Expression| -> f64 {
+        eval_expression(ctx, e).try_into().unwrap_or_default()
+    };
+    let shape = match f {
+        BuiltinFunction::ShapesPolygon => shapes::rounded_polygon_polygon(
+            &point_array_arg(ctx, &arguments[0]),
+            rounding_arg(ctx, &arguments[1]),
+        ),
+        BuiltinFunction::ShapesPolygonPerVertex => shapes::rounded_polygon_per_vertex(
+            &point_array_arg(ctx, &arguments[0]),
+            &rounding_array_arg(ctx, &arguments[1]),
+        ),
+        BuiltinFunction::ShapesRegularPolygon => shapes::regular_polygon(
+            to_num(ctx, &arguments[0]) as usize,
+            rounding_arg(ctx, &arguments[1]),
+        ),
+        BuiltinFunction::ShapesRegularPolygonPerVertex => shapes::regular_polygon_per_vertex(
+            to_num(ctx, &arguments[0]) as usize,
+            &rounding_array_arg(ctx, &arguments[1]),
+        ),
+        BuiltinFunction::ShapesRectangle => shapes::rectangle_shape(
+            to_num(ctx, &arguments[0]) as f32,
+            to_num(ctx, &arguments[1]) as f32,
+            &rounding_array_arg(ctx, &arguments[2]),
+        ),
+        BuiltinFunction::ShapesCircle => shapes::circle_shape(to_num(ctx, &arguments[0]) as usize),
+        BuiltinFunction::ShapesStar => shapes::star_shape(
+            to_num(ctx, &arguments[0]) as usize,
+            to_num(ctx, &arguments[1]) as f32,
+            rounding_arg(ctx, &arguments[2]),
+            rounding_arg(ctx, &arguments[3]),
+        ),
+        BuiltinFunction::ShapesPill => shapes::pill_shape(
+            to_num(ctx, &arguments[0]) as f32,
+            to_num(ctx, &arguments[1]) as f32,
+            to_num(ctx, &arguments[2]) as f32,
+        ),
+        BuiltinFunction::ShapesPillStar => shapes::pill_star_shape(
+            to_num(ctx, &arguments[0]) as usize,
+            to_num(ctx, &arguments[1]) as f32,
+            to_num(ctx, &arguments[2]) as f32,
+            to_num(ctx, &arguments[3]) as f32,
+            rounding_arg(ctx, &arguments[4]),
+        ),
+        BuiltinFunction::ShapesCustom => shapes::custom_shape(
+            &point_array_arg(ctx, &arguments[0]),
+            &rounding_array_arg(ctx, &arguments[1]),
+            to_num(ctx, &arguments[2]) as i32,
+            matches!(eval_expression(ctx, &arguments[3]), Value::Bool(true)),
+        ),
+        BuiltinFunction::ShapesNormalized => shape_arg(ctx, &arguments[0]).normalized(),
+        BuiltinFunction::ShapesRotated => {
+            shape_arg(ctx, &arguments[0]).rotated(to_num(ctx, &arguments[1]) as f32)
+        }
+        BuiltinFunction::ShapesScaled => shape_arg(ctx, &arguments[0])
+            .scaled(to_num(ctx, &arguments[1]) as f32, to_num(ctx, &arguments[2]) as f32),
+        BuiltinFunction::ShapesTranslated => shape_arg(ctx, &arguments[0])
+            .translated(to_num(ctx, &arguments[1]) as f32, to_num(ctx, &arguments[2]) as f32),
+        BuiltinFunction::ShapesMorph => shape_arg(ctx, &arguments[0])
+            .morph(&shape_arg(ctx, &arguments[1]), to_num(ctx, &arguments[2]) as f32),
+        BuiltinFunction::ShapesFromPath => {
+            let d = eval_expression(ctx, &arguments[0])
+                .try_into()
+                .unwrap_or_else(|_| SharedString::new());
+            i_slint_core::graphics::shapes::Shape::from_svg_path_lossy(
+                d.as_str(),
+                fill_rule_arg(ctx, &arguments[1]),
+            )
+        }
+        _ => Default::default(),
+    };
+    Value::Shape(shape)
+}
+
 /// Default `Value` for a type, used when a callback or model access yields
 /// nothing but the caller expects a typed value.
 pub fn default_value_for_type(ty: &Type) -> Value {
@@ -641,6 +794,7 @@ pub fn default_value_for_type(ty: &Type) -> Value {
         }
         Type::ComponentFactory => Value::ComponentFactory(Default::default()),
         Type::MouseCursor => Value::MouseCursorInner(Default::default()),
+        Type::Shape => Value::Shape(Default::default()),
         Type::Void => Value::Void,
         // Types that should never appear in this situation (e.g. are not expressible
         // by users, so cannot be returned from an unset callback or model property)
@@ -2606,6 +2760,23 @@ fn call_builtin_function(
             }
             panic!("internal error: argument to PathAngleAt must be an element")
         }
+        BuiltinFunction::ShapesEmpty => Value::Shape(Default::default()),
+        BuiltinFunction::ShapesPolygon
+        | BuiltinFunction::ShapesPolygonPerVertex
+        | BuiltinFunction::ShapesRegularPolygon
+        | BuiltinFunction::ShapesRegularPolygonPerVertex
+        | BuiltinFunction::ShapesRectangle
+        | BuiltinFunction::ShapesCircle
+        | BuiltinFunction::ShapesStar
+        | BuiltinFunction::ShapesPill
+        | BuiltinFunction::ShapesPillStar
+        | BuiltinFunction::ShapesCustom
+        | BuiltinFunction::ShapesNormalized
+        | BuiltinFunction::ShapesRotated
+        | BuiltinFunction::ShapesScaled
+        | BuiltinFunction::ShapesTranslated
+        | BuiltinFunction::ShapesMorph
+        | BuiltinFunction::ShapesFromPath => eval_shape_builtin(&f, ctx, arguments),
         BuiltinFunction::ArrayAny | BuiltinFunction::ArrayAll => {
             let is_all = matches!(f, BuiltinFunction::ArrayAll);
             let model: i_slint_core::model::ModelRc<Value> =

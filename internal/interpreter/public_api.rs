@@ -90,6 +90,7 @@ pub(crate) fn check_and_coerce(value: &mut Value, ty: &Type) -> bool {
         Type::Bool => matches!(value, Value::Bool(_)),
         Type::Model => matches!(value, Value::Model(_) | Value::Bool(_) | Value::Number(_)),
         Type::PathData => matches!(value, Value::PathData(_)),
+        Type::Shape => matches!(value, Value::Shape(_)),
         Type::DataTransfer => matches!(value, Value::DataTransfer(_)),
         Type::Easing => matches!(value, Value::EasingCurve(_)),
         Type::MouseCursor => matches!(value, Value::MouseCursorInner(_)),

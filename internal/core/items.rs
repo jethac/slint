@@ -37,6 +37,7 @@ use crate::lengths::{
     RectLengths,
 };
 pub use crate::menus::MenuItem;
+use crate::model::Model;
 #[cfg(feature = "rtti")]
 use crate::rtti::*;
 use crate::window::{WindowAdapter, WindowAdapterRc, WindowInner};
@@ -84,6 +85,7 @@ type PointArg = (LogicalPosition,);
 type MenuEntryArg = (MenuEntry,);
 type StringArg = (SharedString,);
 type MenuEntryModel = crate::model::ModelRc<MenuEntry>;
+type FontVariationModel = crate::model::ModelRc<FontVariation>;
 
 #[cfg(all(feature = "ffi", windows))]
 #[macro_export]
@@ -1289,6 +1291,9 @@ pub struct WindowItem {
     pub default_font_family: Property<SharedString>,
     pub default_font_size: Property<LogicalLength>,
     pub default_font_weight: Property<i32>,
+    pub default_font_stretch: Property<f32>,
+    pub default_font_optical_sizing: Property<FontOpticalSizing>,
+    pub default_font_variation_settings: Property<FontVariationModel>,
     pub cached_rendering_data: CachedRenderingData,
 }
 
@@ -1420,6 +1425,24 @@ impl WindowItem {
         if font_weight == 0 { None } else { Some(font_weight) }
     }
 
+    pub fn font_stretch(self: Pin<&Self>) -> Option<f32> {
+        let stretch = self.default_font_stretch();
+        if stretch == 0.0 { None } else { Some(stretch) }
+    }
+
+    pub fn font_optical_sizing(self: Pin<&Self>) -> Option<bool> {
+        match self.default_font_optical_sizing() {
+            FontOpticalSizing::Auto => Some(true),
+            FontOpticalSizing::None => Some(false),
+            FontOpticalSizing::Inherit => None,
+        }
+    }
+
+    pub fn font_variation_settings(self: Pin<&Self>) -> Option<FontVariationModel> {
+        let settings = self.default_font_variation_settings();
+        if settings.row_count() == 0 { None } else { Some(settings) }
+    }
+
     pub fn resolved_default_font_size(item_tree: ItemTreeRc) -> LogicalLength {
         let first_item = ItemRc::new_root(item_tree);
         let window_item = next_window_item(&first_item).unwrap();
@@ -1458,6 +1481,7 @@ impl WindowItem {
     /// Creates a new FontRequest that uses the provide local font properties. If they're not set, i.e.
     /// the family is an empty string, or the weight is zero, the corresponding properties are fetched
     /// from the next parent WindowItem.
+    #[allow(clippy::too_many_arguments)]
     pub fn resolved_font_request(
         self_rc: &crate::items::ItemRc,
         local_font_family: SharedString,
@@ -1465,10 +1489,24 @@ impl WindowItem {
         local_font_size: LogicalLength,
         local_letter_spacing: LogicalLength,
         local_line_height_factor: f32,
+        local_line_height: LogicalLength,
         local_italic: bool,
+        local_font_stretch: f32,
+        local_font_optical_sizing: FontOpticalSizing,
+        local_font_variation_settings: FontVariationModel,
     ) -> FontRequest {
         let Some(window_item_rc) = next_window_item(self_rc) else {
-            return FontRequest::default();
+            return FontRequest {
+                stretch: if local_font_stretch != 0.0 { Some(local_font_stretch) } else { None },
+                optical_sizing: match local_font_optical_sizing {
+                    FontOpticalSizing::Auto => Some(true),
+                    FontOpticalSizing::None => Some(false),
+                    FontOpticalSizing::Inherit => None,
+                },
+                variations: local_font_variation_settings,
+                line_height: (local_line_height.get() > 0 as Coord).then_some(local_line_height),
+                ..Default::default()
+            };
         };
 
         FontRequest {
@@ -1510,7 +1548,38 @@ impl WindowItem {
                 && local_line_height_factor >= 0.0
                 && local_line_height_factor != 1.0)
                 .then_some(local_line_height_factor),
+            // A non-positive length means unset; it maps to None rather than collapsing lines.
+            line_height: (local_line_height.get() > 0 as Coord).then_some(local_line_height),
             italic: local_italic,
+            stretch: {
+                if local_font_stretch == 0.0 {
+                    Self::resolve_font_property(
+                        &window_item_rc,
+                        crate::items::WindowItem::font_stretch,
+                    )
+                } else {
+                    Some(local_font_stretch)
+                }
+            },
+            optical_sizing: match local_font_optical_sizing {
+                FontOpticalSizing::Inherit => Self::resolve_font_property(
+                    &window_item_rc,
+                    crate::items::WindowItem::font_optical_sizing,
+                ),
+                FontOpticalSizing::Auto => Some(true),
+                FontOpticalSizing::None => Some(false),
+            },
+            variations: {
+                if local_font_variation_settings.row_count() == 0 {
+                    Self::resolve_font_property(
+                        &window_item_rc,
+                        crate::items::WindowItem::font_variation_settings,
+                    )
+                    .unwrap_or_default()
+                } else {
+                    local_font_variation_settings
+                }
+            },
         }
     }
 

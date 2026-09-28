@@ -6,7 +6,7 @@
 
 use super::layout::ElisionCut;
 use super::selection::{RunCoverage, SelectionSpan, run_coverage};
-use super::shaping::{Brush, TextParagraph};
+use super::shaping::{Brush, ParagraphVariations, TextParagraph};
 use super::*;
 
 /// Outline drawn around a rectangle filled via [`GlyphRenderer::fill_rectangle`].
@@ -49,13 +49,16 @@ pub trait GlyphRenderer: crate::item_rendering::ItemRenderer {
     /// Draws the glyphs provided by glyphs_it with the specified font, font_size, and brush at the
     /// given y offset. The `normalized_coords` are F2Dot14 values in fvar axis order for variable
     /// font rendering. The `synthesis` contains design-space variation settings and faux
-    /// bold/italic hints from fontique.
+    /// bold/italic hints from fontique, and `variations` the `FontVariations` axis list pushed to
+    /// the shaper for the run's text range: `synthesis`'s settings followed by `variations` (later
+    /// entries win per axis tag) is the user-space axis list the run was shaped with.
     fn draw_glyph_run(
         &mut self,
         font: &parley::FontData,
         font_size: PhysicalLength,
         normalized_coords: &[i16],
         synthesis: &fontique::Synthesis,
+        variations: &[parley::style::FontVariation],
         brush: Self::PlatformBrush,
         y_offset: PhysicalLength,
         glyphs_it: &mut dyn Iterator<Item = parley::layout::Glyph>,
@@ -88,15 +91,15 @@ pub trait GlyphRenderer: crate::item_rendering::ItemRenderer {
 pub(super) fn visible_band(item_renderer: &impl GlyphRenderer) -> Range<PhysicalLength> {
     let scale_factor = item_renderer.scale_factor();
     let clip = item_renderer.get_current_clip();
-    let top = clip.origin.y_length() * scale_factor;
-    top..(top + clip.height_length() * scale_factor)
+    let top = clip.origin.y_length().cast() * scale_factor;
+    top..(top + clip.height_length().cast() * scale_factor)
 }
 
 /// The horizontal counterpart of [`visible_band`].
 pub(super) fn visible_x_range(item_renderer: &impl GlyphRenderer) -> Range<PhysicalLength> {
     let scale_factor = item_renderer.scale_factor();
     let x_range = item_renderer.get_current_clip().x_length_range();
-    (x_range.start * scale_factor)..(x_range.end * scale_factor)
+    (x_range.start.cast() * scale_factor)..(x_range.end.cast() * scale_factor)
 }
 
 impl TextParagraph {
@@ -210,6 +213,7 @@ impl TextParagraph {
 
                             Self::draw_glyph_run_with_selection(
                                 &glyph_run,
+                                &self.variations,
                                 item_renderer,
                                 default_fill_brush,
                                 default_stroke_brush,
@@ -223,6 +227,7 @@ impl TextParagraph {
                         } else {
                             Self::draw_glyph_run_with_selection(
                                 &glyph_run,
+                                &self.variations,
                                 item_renderer,
                                 default_fill_brush,
                                 default_stroke_brush,
@@ -248,6 +253,7 @@ impl TextParagraph {
                                 // "…" layout, so it always renders upright regardless of the
                                 // elided run's style.
                                 &fontique::Synthesis::default(),
+                                self.variations.for_range(&run.text_range()),
                                 default_fill_brush.clone(),
                                 para_y,
                                 &mut core::iter::once(ellipsis_glyph),
@@ -383,6 +389,7 @@ impl TextParagraph {
     #[allow(clippy::too_many_arguments)]
     fn draw_glyph_run_with_selection<R: GlyphRenderer>(
         glyph_run: &parley::layout::GlyphRun<Brush>,
+        paragraph_variations: &ParagraphVariations,
         item_renderer: &mut R,
         default_fill_brush: &<R as GlyphRenderer>::PlatformBrush,
         default_stroke_brush: &Option<<R as GlyphRenderer>::PlatformBrush>,
@@ -411,6 +418,7 @@ impl TextParagraph {
         match run_coverage(&run_x, line_spans) {
             RunCoverage::Unselected => Self::draw_glyph_run(
                 glyph_run,
+                paragraph_variations,
                 item_renderer,
                 default_fill_brush,
                 default_stroke_brush,
@@ -420,6 +428,7 @@ impl TextParagraph {
             ),
             RunCoverage::Full => Self::draw_glyph_run(
                 glyph_run,
+                paragraph_variations,
                 item_renderer,
                 default_fill_brush,
                 default_stroke_brush,
@@ -448,6 +457,7 @@ impl TextParagraph {
                     for (segment, brush) in [(x..start, None), (start..end, selection_brush)] {
                         Self::draw_glyph_run_segment(
                             glyph_run,
+                            paragraph_variations,
                             item_renderer,
                             default_fill_brush,
                             default_stroke_brush,
@@ -461,6 +471,7 @@ impl TextParagraph {
                 }
                 Self::draw_glyph_run_segment(
                     glyph_run,
+                    paragraph_variations,
                     item_renderer,
                     default_fill_brush,
                     default_stroke_brush,
@@ -477,6 +488,7 @@ impl TextParagraph {
     /// edge is cut rather than recolored as a whole.
     fn draw_glyph_run_segment<R: GlyphRenderer>(
         glyph_run: &parley::layout::GlyphRun<Brush>,
+        paragraph_variations: &ParagraphVariations,
         item_renderer: &mut R,
         default_fill_brush: &<R as GlyphRenderer>::PlatformBrush,
         default_stroke_brush: &Option<<R as GlyphRenderer>::PlatformBrush>,
@@ -512,6 +524,7 @@ impl TextParagraph {
         if render {
             Self::draw_glyph_run(
                 glyph_run,
+                paragraph_variations,
                 item_renderer,
                 default_fill_brush,
                 default_stroke_brush,
@@ -526,6 +539,7 @@ impl TextParagraph {
 
     fn draw_glyph_run<R: GlyphRenderer>(
         glyph_run: &parley::layout::GlyphRun<Brush>,
+        paragraph_variations: &ParagraphVariations,
         item_renderer: &mut R,
         default_fill_brush: &<R as GlyphRenderer>::PlatformBrush,
         default_stroke_brush: &Option<<R as GlyphRenderer>::PlatformBrush>,
@@ -537,6 +551,7 @@ impl TextParagraph {
         let run = glyph_run.run();
         let normalized_coords = run.normalized_coords();
         let synthesis = run.synthesis();
+        let variations = paragraph_variations.for_range(&run.text_range());
         let brush = &glyph_run.style().brush;
 
         let (fill_brush, stroke_style) = match override_fill_brush {
@@ -570,6 +585,7 @@ impl TextParagraph {
                         PhysicalLength::new(run.font_size()),
                         normalized_coords,
                         &synthesis,
+                        variations,
                         stroke_brush,
                         para_y,
                         &mut glyphs.iter().cloned(),
@@ -581,6 +597,7 @@ impl TextParagraph {
                     PhysicalLength::new(run.font_size()),
                     normalized_coords,
                     &synthesis,
+                    variations,
                     fill_brush.clone(),
                     para_y,
                     &mut glyphs.into_iter(),
@@ -594,6 +611,7 @@ impl TextParagraph {
                     PhysicalLength::new(run.font_size()),
                     normalized_coords,
                     &synthesis,
+                    variations,
                     fill_brush.clone(),
                     para_y,
                     &mut glyphs.iter().cloned(),
@@ -605,6 +623,7 @@ impl TextParagraph {
                         PhysicalLength::new(run.font_size()),
                         normalized_coords,
                         &synthesis,
+                        variations,
                         stroke_brush,
                         para_y,
                         &mut glyphs.into_iter(),
@@ -617,6 +636,7 @@ impl TextParagraph {
                     PhysicalLength::new(run.font_size()),
                     normalized_coords,
                     &synthesis,
+                    variations,
                     fill_brush.clone(),
                     para_y,
                     glyphs_it,

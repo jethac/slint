@@ -691,6 +691,8 @@ fn python_type_name(ty: &Type) -> SmolStr {
         Type::Easing => SmolStr::new_static("slint.EasingCurve"),
         Type::DataTransfer => SmolStr::new_static("slint.DataTransfer"),
         Type::MouseCursor => SmolStr::new_static("None"),
+        // No Python-side class yet; like MouseCursor, annotate as None.
+        Type::Shape => SmolStr::new_static("None"),
         ty => unimplemented!("implemented type conversion {:#?}", ty),
     }
 }

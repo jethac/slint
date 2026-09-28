@@ -129,7 +129,7 @@ fn builtin_structs(path: &Path) -> anyhow::Result<()> {
         ($(
             $(#[doc = $struct_doc:literal])*
             $(#[non_exhaustive])?
-            $(#[derive(Copy, Eq)])?
+            $(#[derive(Copy $(, Eq)?)])?
             $vis:vis struct $Name:ident {
                 $( $(#[doc = $field_doc:literal])* $field:ident : $field_type:ty $(= $field_default:expr)?, )*
             }
@@ -363,6 +363,7 @@ fn default_config() -> cbindgen::Config {
             // Note: these types are not the same, but they are only used in callback return types that are only used in C++ (set and called)
             // therefore it is ok to reinterpret_cast
             ("MenuEntryModel".into(), "std::shared_ptr<slint::Model<MenuEntry>>".into()),
+            ("FontVariationModel".into(), "std::shared_ptr<slint::Model<FontVariation>>".into()),
             ("Coord".into(), "float".into()),
             ("Channel".into(), "uint8_t".into()),
             ("Instant".into(), "uint64_t".into()),
@@ -482,6 +483,7 @@ fn gen_corelib(
         "PointerScrollEvent",
         "Rect",
         "BitmapFont",
+        "BitmapFontVariation",
         "DataTransferOpaque",
         // Return type of the ItemTree vtable's flexbox_layout_item_info* methods.
         // cbindgen can't see those (not extern "C"), and it is no longer reachable
@@ -510,6 +512,10 @@ fn gen_corelib(
     ];
 
     config.export.exclude = [
+        // `FontVariationModel` only exists to give `ModelRc<FontVariation>` a
+        // name that the rename map can rewrite in signatures; the typedef
+        // itself must not be emitted.
+        "FontVariationModel",
         "SharedString",
         "StyledText",
         "SharedVector",
@@ -567,6 +573,7 @@ fn gen_corelib(
         "PointArg",
         "Point",
         "MenuEntryModel",
+        "FontVariationModel",
         "MenuEntryArg",
         "Coord",
         "Channel",
@@ -611,6 +618,10 @@ fn gen_corelib(
 
     let mut properties_config = config.clone();
     properties_config.export.exclude.clear();
+    // `FontVariationModel` only exists to give `ModelRc<FontVariation>` a name
+    // that the rename map can rewrite in signatures; the typedef itself is not
+    // valid C++ and must not be emitted.
+    properties_config.export.exclude.push("FontVariationModel".into());
     properties_config.structure.derive_eq = true;
     properties_config.structure.derive_neq = true;
     properties_config.export.include.push("StateInfo".into());
@@ -1238,6 +1249,8 @@ fn gen_interpreter(
         // itself, and the interpreter's `Instance` fields must not leak.
         "Instance",
         "ComponentInstanceInner",
+        // Hand-written as `slint::Shape` in private/slint_shape.h
+        "Shape",
     ])
     .map(String::from)
     .collect();
@@ -1298,7 +1311,8 @@ fn gen_interpreter(
                 struct LiveReloadingComponentInner;
                 struct Instance;
                 template <typename T> using Box = T*;
-            }",
+            }
+            namespace slint { struct Shape; }",
         )
         .generate()
         .context("Unable to generate bindings for slint_interpreter_internal.h")?
