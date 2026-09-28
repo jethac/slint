@@ -1,0 +1,29 @@
+// Copyright © SixtyFPS GmbH <info@slint.dev>
+// SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0
+
+// Skia font rendering is not consistent across platforms
+//ignore:skia
+// SIZE=160x120
+
+// Google Sans Flex axes through `font-variation-settings`: `GRAD` (grade)
+// emboldens without changing advance widths, `ROND` (roundness) swaps to the
+// rounded glyph forms, and `opsz` reshapes outlines for the rendered size.
+// GSF declares GRAD 0-100, ROND 0-100, opsz 6-144.
+import "../../../../ui-libraries/material/src/fonts/google-sans-flex/GoogleSansFlex[GRAD,ROND,opsz,slnt,wdth,wght].ttf";
+
+export component TestCase inherits Window {
+    width: 160px;
+    height: 120px;
+    background: white;
+    default-font-family: "Google Sans Flex";
+    default-font-size: 20px;
+    VerticalLayout {
+        Text { text: "grade 0"; font-variation-settings: "GRAD" 0; }
+        Text { text: "grade 100"; font-variation-settings: "GRAD" 100; }
+        Text { text: "round 100"; font-variation-settings: "ROND" 100; }
+        // opsz pinned far from the default: 6 is the small-size master
+        // (tall x-height, open apertures), 144 the display master.
+        Text { text: "opsz 6"; font-variation-settings: "opsz" 6; }
+        Text { text: "opsz 144"; font-variation-settings: "opsz" 144; }
+    }
+}

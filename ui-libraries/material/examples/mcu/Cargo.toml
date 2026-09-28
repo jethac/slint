@@ -1,0 +1,24 @@
+# Copyright © SixtyFPS GmbH <info@slint.dev>
+# SPDX-License-Identifier: MIT
+
+# A `cargo check` target proving the Material library compiles for bare-metal
+# MCU targets: its theme-bound font family/weight/size bindings route through
+# the embedded-vector-fonts rasterizer instead of failing as non-constant.
+[package]
+name = "material-mcu"
+version.workspace = true
+authors.workspace = true
+edition.workspace = true
+publish = false
+license.workspace = true
+build = "build.rs"
+
+[lib]
+path = "src/lib.rs"
+crate-type = ["lib"]
+
+[dependencies]
+slint = { path = "../../../../api/rs/slint", default-features = false, features = ["compat-1-2", "renderer-software", "unsafe-single-threaded", "libm", "embedded-vector-fonts"] }
+
+[build-dependencies]
+slint-build = { path = "../../../../api/rs/build" }

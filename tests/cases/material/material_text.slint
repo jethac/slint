@@ -1,0 +1,45 @@
+// Copyright © SixtyFPS GmbH <info@slint.dev>
+// SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0
+
+// Only the interpreter can compile the material library cheaply; the native
+// drivers would embed the variable fonts into generated code.
+//ignore: rust,cpp,js,pyi
+
+import {
+    MaterialText,
+    MaterialTheme,
+    MaterialTypography,
+    MaterialWindow,
+} from "../../../ui-libraries/material/src/material.slint";
+
+export component TestCase inherits MaterialWindow {
+    width: 300phx;
+    height: 200phx;
+
+    VerticalLayout {
+        alignment: start;
+
+        // Inherits the window's default-font-family, which MaterialWindow
+        // binds to MaterialTheme.plain_family.
+        themed := Text { text: "abc"; }
+
+        explicit-gsf := Text { text: "abc"; font-family: "Google Sans Flex"; }
+
+        // body_medium: font_size 14px, line_height 20px (MaterialTextScale.factor = 1).
+        material-text := MaterialText {
+            style: MaterialTypography.body_medium;
+            text: "abc";
+        }
+
+        explicit-gsf-14 := Text { text: "abc"; font-family: "Google Sans Flex"; font-size: 14px; }
+    }
+
+    out property <bool> fam: MaterialTheme.plain_family == "Google Sans Flex"
+        && MaterialTheme.brand_family == "Google Sans Flex";
+    out property <bool> themed-fam: themed.font-metrics.ascent == explicit-gsf.font-metrics.ascent
+        && themed.font-metrics.descent == explicit-gsf.font-metrics.descent;
+    out property <bool> mt-fam: material-text.font-metrics.ascent == explicit-gsf-14.font-metrics.ascent;
+    out property <length> mt-height: material-text.height;
+    // MaterialText forwards the style's absolute line height.
+    out property <bool> test: fam && themed-fam && mt-fam && material-text.height == 20phx;
+}

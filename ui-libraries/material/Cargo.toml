@@ -11,7 +11,7 @@
 # artifacts are reused. Developers working on the material library can load
 # both workspaces at once via `rust-analyzer.linkedProjects`.
 [workspace]
-members = ['examples/gallery', 'scripts/token-generator']
+members = ['examples/gallery', 'examples/mcu', 'scripts/token-generator']
 
 resolver = "3"
 

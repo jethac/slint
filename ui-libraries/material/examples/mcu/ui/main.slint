@@ -1,0 +1,44 @@
+// Copyright © SixtyFPS GmbH <info@slint.dev>
+// SPDX-License-Identifier: MIT
+
+import {
+    ElevatedButton,
+    MaterialText,
+    MaterialTypography,
+    MaterialWindow,
+} from "../../../src/material.slint";
+
+// Exercises the MCU-relevant font paths in the Material library: the theme's
+// bound `default-font-family`, style-bound weight/size on MaterialText, and an
+// animated `font-weight` — all non-constant bindings take the vector path.
+export component MainWindow inherits MaterialWindow {
+    preferred-width: 320px;
+    preferred-height: 240px;
+
+    in property <int> emphasis;
+
+    VerticalLayout {
+        padding: 16px;
+        spacing: 8px;
+
+        MaterialText {
+            style: MaterialTypography.headline_medium;
+            text: "Material on MCU";
+        }
+
+        MaterialText {
+            style: MaterialTypography.body_medium;
+            text: "Type scale text";
+        }
+
+        Text {
+            text: "animated weight";
+            font-weight: emphasis;
+            animate font-weight { duration: 300ms; }
+        }
+
+        ElevatedButton {
+            text: "Button";
+        }
+    }
+}
