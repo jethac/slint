@@ -686,16 +686,54 @@ impl FlickableDataInner {
 
                 let [limit_x, limit_y] = Self::flick_limits(flick_rc, mean_velocity);
 
-                for (content, limit, velocity, spring) in [
+                for (axis, (content, limit, velocity, spring)) in [
                     (content_x, limit_x, mean_velocity.x as f32, self.declared_spring[0]),
                     (content_y, limit_y, mean_velocity.y as f32, self.declared_spring[1]),
-                ] {
+                ]
+                .into_iter()
+                .enumerate()
+                {
                     // When the viewport's declared animation is a physical spring, feed the
                     // release velocity into it instead of losing it; otherwise keep the
                     // constant-deceleration flick.
                     if let Some((damping_ratio, stiffness, mass)) = spring {
+                        // Target where the fling would naturally stop —
+                        // v² = 2·a·d — clamped into the scroll bounds, rather
+                        // than always the content edge.
+                        let stop =
+                            content.get().0 + velocity * velocity.abs() / (2.0 * DECELERATION);
+                        let calculate_target = {
+                            let flick_weak = flick_rc.downgrade();
+                            move || {
+                                let limit = flick_weak
+                                    .upgrade()
+                                    .and_then(|flick_rc| {
+                                        flick_rc
+                                            .downcast::<Flickable>()
+                                            .map(move |flick| (flick_rc, flick))
+                                    })
+                                    .map(|(flick_rc, flick)| {
+                                        ensure_in_bound(
+                                            flick.as_pin_ref(),
+                                            LogicalPoint::from_lengths(
+                                                -flick.as_pin_ref().content_width(),
+                                                -flick.as_pin_ref().content_height(),
+                                            ),
+                                            &flick_rc,
+                                        )
+                                    });
+                                let edge = limit
+                                    .map(|limit| {
+                                        [limit.x_length(), limit.y_length()][axis].get() as f32
+                                    })
+                                    .unwrap_or(0.0);
+                                stop.clamp(edge.min(0.0), edge.max(0.0))
+                            }
+                        };
+                        let target = Box::pin(Property::new(0.0));
+                        target.set_binding(calculate_target);
                         content.set_physic_animation_value(
-                            limit,
+                            target,
                             crate::animations::simulations::spring::PhysicalSpringParameters::new(
                                 damping_ratio,
                                 stiffness,
@@ -765,11 +803,15 @@ impl FlickableData {
                 inner.last_mouse_position = *position;
                 let content_x = (Flickable::FIELD_OFFSETS.content_x()).apply_pin(flick);
                 let content_y = (Flickable::FIELD_OFFSETS.content_y()).apply_pin(flick);
-                // Capture a declared physical spring before removing the declared bindings,
-                // so `animate` can feed the release velocity into it.
-                inner.declared_spring = [content_x, content_y].map(|prop| {
-                    prop.declared_animation().and_then(|anim| {
-                        if let crate::animations::EasingCurve::PhysicalSpring {
+                // Capture a declared physical spring before removing the declared
+                // bindings, so `animate` can feed the release velocity into it.
+                // `declared_animation()` is `None` once a previous gesture removed
+                // the binding — keep the previously captured spring in that case.
+                for (prop, slot) in
+                    [content_x, content_y].into_iter().zip(inner.declared_spring.iter_mut())
+                {
+                    if let Some(anim) = prop.declared_animation() {
+                        *slot = if let crate::animations::EasingCurve::PhysicalSpring {
                             damping_ratio,
                             stiffness,
                             mass,
@@ -778,9 +820,9 @@ impl FlickableData {
                             Some((damping_ratio, stiffness, mass))
                         } else {
                             None
-                        }
-                    })
-                });
+                        };
+                    }
+                }
                 content_x.remove_binding(); // Stop animation by removing the binding
                 content_y.remove_binding(); // Stop animation by removing the binding
 
