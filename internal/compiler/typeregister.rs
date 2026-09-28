@@ -508,6 +508,7 @@ impl TypeRegister {
         register.insert_type(Type::Easing);
         register.insert_type(Type::Angle);
         register.insert_type(Type::Brush);
+        register.insert_type(Type::Shape);
         register.insert_type(Type::Rem);
         register.insert_type(Type::StyledText);
         register.insert_type(Type::Keys);

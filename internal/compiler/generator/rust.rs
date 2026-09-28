@@ -125,6 +125,7 @@ pub fn rust_primitive_type(ty: &Type) -> Option<proc_macro2::TokenStream> {
         }
         Type::Keys => Some(quote!(sp::Keys)),
         Type::Brush => Some(quote!(slint::Brush)),
+        Type::Shape => Some(quote!(slint::Shape)),
         Type::LayoutCache => Some(quote!(
             sp::SharedVector<
                 sp::Coord,
@@ -5464,6 +5465,80 @@ fn compile_builtin_function_call(
             } else {
                 panic!("internal error: invalid args to PathAngleAt {arguments:?}")
             }
+        }
+        BuiltinFunction::ShapesEmpty => quote!(slint::Shape::default()),
+        BuiltinFunction::ShapesPolygon => {
+            let [v, r] = [a.next().unwrap(), a.next().unwrap()];
+            quote!(slint::shapes::polygon(&#v, #r))
+        }
+        BuiltinFunction::ShapesPolygonPerVertex => {
+            let [v, r] = [a.next().unwrap(), a.next().unwrap()];
+            quote!(slint::shapes::polygon_per_vertex(&#v, &#r))
+        }
+        BuiltinFunction::ShapesRegularPolygon => {
+            let [n, r] = [a.next().unwrap(), a.next().unwrap()];
+            quote!(slint::shapes::regular_polygon(#n as usize, #r))
+        }
+        BuiltinFunction::ShapesRegularPolygonPerVertex => {
+            let [n, r] = [a.next().unwrap(), a.next().unwrap()];
+            quote!(slint::shapes::regular_polygon_per_vertex(#n as usize, &#r))
+        }
+        BuiltinFunction::ShapesRectangle => {
+            let [w, h, r] = [a.next().unwrap(), a.next().unwrap(), a.next().unwrap()];
+            quote!(slint::shapes::rectangle(#w as f32, #h as f32, &#r))
+        }
+        BuiltinFunction::ShapesCircle => {
+            let n = a.next().unwrap();
+            quote!(slint::shapes::circle(#n as usize))
+        }
+        BuiltinFunction::ShapesStar => {
+            let [n, ir, r, irnd] =
+                [a.next().unwrap(), a.next().unwrap(), a.next().unwrap(), a.next().unwrap()];
+            quote!(slint::shapes::star(#n as usize, #ir as f32, #r, #irnd))
+        }
+        BuiltinFunction::ShapesPill => {
+            let [w, h, sm] = [a.next().unwrap(), a.next().unwrap(), a.next().unwrap()];
+            quote!(slint::shapes::pill(#w as f32, #h as f32, #sm as f32))
+        }
+        BuiltinFunction::ShapesPillStar => {
+            let [n, w, h, ir, r] = [
+                a.next().unwrap(),
+                a.next().unwrap(),
+                a.next().unwrap(),
+                a.next().unwrap(),
+                a.next().unwrap(),
+            ];
+            quote!(slint::shapes::pill_star(#n as usize, #w as f32, #h as f32, #ir as f32, #r))
+        }
+        BuiltinFunction::ShapesCustom => {
+            let [v, r, reps, mirror] =
+                [a.next().unwrap(), a.next().unwrap(), a.next().unwrap(), a.next().unwrap()];
+            quote!(slint::shapes::custom(&#v, &#r, #reps as i32, #mirror))
+        }
+        BuiltinFunction::ShapesNormalized => {
+            let s = a.next().unwrap();
+            quote!((#s).normalized())
+        }
+        BuiltinFunction::ShapesRotated => {
+            let [s, ang] = [a.next().unwrap(), a.next().unwrap()];
+            quote!((#s).rotated(#ang as f32))
+        }
+        BuiltinFunction::ShapesScaled => {
+            let [s, sx, sy] = [a.next().unwrap(), a.next().unwrap(), a.next().unwrap()];
+            quote!((#s).scaled(#sx as f32, #sy as f32))
+        }
+        BuiltinFunction::ShapesTranslated => {
+            let [s, dx, dy] = [a.next().unwrap(), a.next().unwrap(), a.next().unwrap()];
+            quote!((#s).translated(#dx as f32, #dy as f32))
+        }
+        BuiltinFunction::ShapesMorph => {
+            let [from, to, p] = [a.next().unwrap(), a.next().unwrap(), a.next().unwrap()];
+            quote!((#from).morph(&(#to), #p as f32))
+        }
+        BuiltinFunction::ShapesFromPath => {
+            let [d, fr] = [a.next().unwrap(), a.next().unwrap()];
+            let _ = fr;
+            quote!(slint::Shape::from_svg_path(&#d).unwrap_or_default())
         }
         BuiltinFunction::ArrayAny => {
             let model = a.next().unwrap();

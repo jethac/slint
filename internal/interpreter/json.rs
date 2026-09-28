@@ -182,6 +182,7 @@ pub fn value_from_json(t: &langtype::Type, v: &serde_json::Value) -> Result<Valu
             _ => Err("Got an array where none was expected".into()),
         },
         serde_json::Value::Object(obj) => match t {
+            langtype::Type::Shape => shape_from_json(obj),
             langtype::Type::Struct(s) => {
                 let mut value = crate::Struct(
                     obj.iter()
@@ -200,6 +201,114 @@ pub fn value_from_json(t: &langtype::Type, v: &serde_json::Value) -> Result<Valu
             _ => Err("Got a struct where none was expected".into()),
         },
     }
+}
+
+/// Serialize a `shape` value to the JSON interchange format
+/// `{"type": "shape", "cubics": [[8 floats]...], "features": [{start, len, kind, convex}...], "center": [x, y]}`.
+fn shape_to_json(shape: &i_slint_core::graphics::Shape) -> serde_json::Value {
+    use i_slint_core::graphics::ShapeFeatureKind;
+    let cubics = serde_json::Value::Array(
+        shape
+            .cubics
+            .as_slice()
+            .chunks_exact(8)
+            .map(|c| {
+                serde_json::Value::Array(
+                    c.iter().map(|f| serde_json::Value::from(*f as f64)).collect(),
+                )
+            })
+            .collect(),
+    );
+    let features = serde_json::Value::Array(
+        shape
+            .features
+            .as_slice()
+            .iter()
+            .map(|f| {
+                let mut o = serde_json::Map::new();
+                o.insert("start".into(), f.cubic_start.into());
+                o.insert("len".into(), f.cubic_len.into());
+                let (kind, convex) = match f.kind {
+                    ShapeFeatureKind::Edge => ("edge", serde_json::Value::Null),
+                    ShapeFeatureKind::ConvexCorner => ("corner", true.into()),
+                    ShapeFeatureKind::ConcaveCorner => ("corner", false.into()),
+                };
+                o.insert("kind".into(), kind.into());
+                if !convex.is_null() {
+                    o.insert("convex".into(), convex);
+                }
+                serde_json::Value::Object(o)
+            })
+            .collect(),
+    );
+    let center = serde_json::Value::Array(vec![
+        serde_json::Value::from(shape.center.x as f64),
+        serde_json::Value::from(shape.center.y as f64),
+    ]);
+    let mut o = serde_json::Map::new();
+    o.insert("type".into(), "shape".into());
+    o.insert("cubics".into(), cubics);
+    o.insert("features".into(), features);
+    o.insert("center".into(), center);
+    serde_json::Value::Object(o)
+}
+
+/// Parse the `shape` JSON format emitted by [`shape_to_json`].
+fn shape_from_json(obj: &serde_json::Map<String, serde_json::Value>) -> Result<Value, String> {
+    use i_slint_core::graphics::{ShapeFeature, ShapeFeatureKind, ShapePoint};
+    let err = |msg: &str| Err(format!("Invalid shape JSON: {msg}"));
+    let cubics_json = obj.get("cubics").and_then(|c| c.as_array());
+    let features_json = obj.get("features").and_then(|f| f.as_array());
+    let center_json = obj.get("center").and_then(|c| c.as_array());
+    let (Some(cubics_json), Some(features_json), Some(center_json)) =
+        (cubics_json, features_json, center_json)
+    else {
+        return err("expected keys 'cubics', 'features' and 'center'");
+    };
+    let mut cubics = SharedVector::<f32>::default();
+    for c in cubics_json {
+        let Some(c) = c.as_array() else {
+            return err("'cubics' entries must be arrays of 8 numbers");
+        };
+        if c.len() != 8 {
+            return err("'cubics' entries must be arrays of 8 numbers");
+        }
+        for f in c {
+            let Some(f) = f.as_f64() else {
+                return err("'cubics' entries must be numbers");
+            };
+            cubics.push(f as f32);
+        }
+    }
+    let mut features = SharedVector::<ShapeFeature>::default();
+    for f in features_json {
+        let Some(f) = f.as_object() else {
+            return err("'features' entries must be objects");
+        };
+        let (Some(start), Some(len)) =
+            (f.get("start").and_then(|v| v.as_u64()), f.get("len").and_then(|v| v.as_u64()))
+        else {
+            return err("'features' entries need numeric 'start' and 'len'");
+        };
+        let kind = match f.get("kind").and_then(|v| v.as_str()) {
+            Some("edge") => ShapeFeatureKind::Edge,
+            Some("corner") => match f.get("convex").and_then(|v| v.as_bool()) {
+                Some(true) => ShapeFeatureKind::ConvexCorner,
+                Some(false) => ShapeFeatureKind::ConcaveCorner,
+                _ => return err("'corner' features need a boolean 'convex'"),
+            },
+            _ => return err("'features[].kind' must be 'edge' or 'corner'"),
+        };
+        features.push(ShapeFeature { cubic_start: start as u32, cubic_len: len as u32, kind });
+    }
+    let (Some(x), Some(y)) =
+        (center_json.first().and_then(|v| v.as_f64()), center_json.get(1).and_then(|v| v.as_f64()))
+    else {
+        return err("'center' must be [x, y]");
+    };
+    i_slint_core::graphics::Shape::new(cubics, features, ShapePoint { x: x as f32, y: y as f32 })
+        .map(Value::Shape)
+        .map_err(|e| format!("Invalid shape JSON: {e}"))
 }
 
 /// Create a `Value` from a JSON string
@@ -286,6 +395,7 @@ pub fn value_to_json(value: &Value) -> Result<serde_json::Value, String> {
             _ => Err("Cannot serialize an unknown brush type".into()),
         },
         Value::PathData(_) => Err("Cannot serialize path data".into()),
+        Value::Shape(shape) => Ok(shape_to_json(shape)),
         Value::EasingCurve(_) => Err("Cannot serialize a easing curve".into()),
         _ => Err("Cannot serialize an unknown value type".into()),
     }

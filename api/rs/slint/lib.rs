@@ -219,6 +219,8 @@ pub use i_slint_core::api::*;
 #[doc(hidden)]
 #[deprecated(note = "Experimental type was made public by mistake")]
 pub use i_slint_core::component_factory::ComponentFactory;
+#[cfg(feature = "std")]
+pub use i_slint_core::graphics::Shape;
 #[cfg(not(target_arch = "wasm32"))]
 pub use i_slint_core::graphics::{BorrowedOpenGLTextureBuilder, BorrowedOpenGLTextureOrigin};
 pub use i_slint_core::input::{Keys, KeysParseError};
@@ -228,6 +230,8 @@ pub use i_slint_core::items::StandardListViewItem;
 #[doc(hidden)]
 #[deprecated(note = "Use slint::language::TableColumn instead")]
 pub use i_slint_core::items::TableColumn;
+#[cfg(feature = "std")]
+pub use i_slint_core::items::{CornerRounding, FillRule};
 pub use i_slint_core::model::{
     FilterModel, MapModel, Model, ModelError, ModelExt, ModelNotify, ModelPeer, ModelRc,
     ModelTracker, ReverseModel, SortModel, VecModel,
@@ -454,6 +458,39 @@ pub mod material {
             is_dark,
             contrast_level,
         )
+    }
+}
+
+/// Rounded-polygon shape construction, the Rust counterpart of the `.slint`
+/// `Shapes` namespace.
+///
+/// The free functions here mirror the `Shapes.*` builtin functions available in
+/// `.slint` code; they build [`Shape`] values that can be assigned to `shape`
+/// properties. `normalized`, `rotated`, `scaled`, `translated` and `morph` are
+/// methods on [`Shape`] itself.
+#[cfg(feature = "std")]
+pub mod shapes {
+    pub use i_slint_core::graphics::shapes::{
+        circle_shape as circle, custom_shape as custom, pill_shape as pill,
+        pill_star_shape as pill_star, rectangle_shape as rectangle, regular_polygon,
+        regular_polygon_per_vertex, rounded_polygon_per_vertex as polygon_per_vertex,
+        rounded_polygon_polygon as polygon, star_shape as star,
+    };
+
+    /// `Shapes.morph(from, to, progress)`: a shape morphing between `from` and
+    /// `to` at `progress` ∈ [0, 1] — equivalent to `from.morph(to, progress)`.
+    pub fn morph(from: &crate::Shape, to: &crate::Shape, progress: f32) -> crate::Shape {
+        from.morph(to, progress)
+    }
+
+    /// `Shapes.path(d)` / `Shapes.path(fill_rule, d)`: parse an SVG path data
+    /// string into a [`crate::Shape`].
+    pub fn path(
+        d: &str,
+        fill_rule: crate::FillRule,
+    ) -> Result<crate::Shape, i_slint_core::graphics::shapes::ShapeError> {
+        let _ = fill_rule;
+        crate::Shape::from_svg_path(d)
     }
 }
 

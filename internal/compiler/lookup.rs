@@ -194,6 +194,7 @@ pub enum BuiltinNamespace {
     FontWeight,
     MouseCursor,
     MaterialColors,
+    Shapes,
     SlintInternal,
 }
 
@@ -284,6 +285,9 @@ impl LookupObject for LookupResult {
             LookupResult::Namespace(BuiltinNamespace::MaterialColors) => {
                 MaterialColorsFunctions.for_each_entry(ctx, f)
             }
+            LookupResult::Namespace(BuiltinNamespace::Shapes) => {
+                ShapesFunctions.for_each_entry(ctx, f)
+            }
             LookupResult::Namespace(BuiltinNamespace::SlintInternal) => {
                 SlintInternal.for_each_entry(ctx, f)
             }
@@ -310,6 +314,7 @@ impl LookupObject for LookupResult {
             LookupResult::Namespace(BuiltinNamespace::MaterialColors) => {
                 MaterialColorsFunctions.lookup(ctx, name)
             }
+            LookupResult::Namespace(BuiltinNamespace::Shapes) => ShapesFunctions.lookup(ctx, name),
             LookupResult::Namespace(BuiltinNamespace::SlintInternal) => {
                 SlintInternal.lookup(ctx, name)
             }
@@ -1087,6 +1092,49 @@ impl LookupObject for ColorFunctions {
     }
 }
 
+/// The `Shapes` global namespace: constructors and transforms producing `shape`
+/// values, mirroring `Shapes.*` in the design and `RoundedPolygon`'s Kotlin API.
+struct ShapesFunctions;
+impl LookupObject for ShapesFunctions {
+    fn for_each_entry<R>(
+        &self,
+        _ctx: &LookupCtx,
+        f: &mut impl FnMut(&SmolStr, LookupResult) -> Option<R>,
+    ) -> Option<R> {
+        let b = |e: BuiltinFunction| LookupResult::from(e);
+        None.or_else(|| f(&SmolStr::new_static("polygon"), b(BuiltinFunction::ShapesPolygon)))
+            .or_else(|| {
+                f(
+                    &SmolStr::new_static("polygon-per-vertex"),
+                    b(BuiltinFunction::ShapesPolygonPerVertex),
+                )
+            })
+            .or_else(|| {
+                f(&SmolStr::new_static("regular-polygon"), b(BuiltinFunction::ShapesRegularPolygon))
+            })
+            .or_else(|| {
+                f(
+                    &SmolStr::new_static("regular-polygon-per-vertex"),
+                    b(BuiltinFunction::ShapesRegularPolygonPerVertex),
+                )
+            })
+            .or_else(|| f(&SmolStr::new_static("rectangle"), b(BuiltinFunction::ShapesRectangle)))
+            .or_else(|| f(&SmolStr::new_static("circle"), b(BuiltinFunction::ShapesCircle)))
+            .or_else(|| f(&SmolStr::new_static("star"), b(BuiltinFunction::ShapesStar)))
+            .or_else(|| f(&SmolStr::new_static("pill"), b(BuiltinFunction::ShapesPill)))
+            .or_else(|| f(&SmolStr::new_static("pill-star"), b(BuiltinFunction::ShapesPillStar)))
+            .or_else(|| f(&SmolStr::new_static("custom"), b(BuiltinFunction::ShapesCustom)))
+            .or_else(|| f(&SmolStr::new_static("normalized"), b(BuiltinFunction::ShapesNormalized)))
+            .or_else(|| f(&SmolStr::new_static("rotated"), b(BuiltinFunction::ShapesRotated)))
+            .or_else(|| f(&SmolStr::new_static("scaled"), b(BuiltinFunction::ShapesScaled)))
+            .or_else(|| f(&SmolStr::new_static("translated"), b(BuiltinFunction::ShapesTranslated)))
+            .or_else(|| f(&SmolStr::new_static("morph"), b(BuiltinFunction::ShapesMorph)))
+            .or_else(|| {
+                f(&SmolStr::new_static("path"), LookupResult::from(BuiltinMacroFunction::ShapePath))
+            })
+    }
+}
+
 struct BuiltinFunctionLookup;
 impl LookupObject for BuiltinFunctionLookup {
     fn for_each_entry<R>(
@@ -1133,6 +1181,7 @@ impl LookupObject for BuiltinNamespaceLookup {
             .or_else(|| {
                 f("MaterialColors", LookupResult::Namespace(BuiltinNamespace::MaterialColors))
             })
+            .or_else(|| f("Shapes", LookupResult::Namespace(BuiltinNamespace::Shapes)))
     }
 }
 

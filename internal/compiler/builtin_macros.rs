@@ -149,6 +149,72 @@ pub fn lower_macro(
             expr
         }
         BuiltinMacroFunction::Spring => spring_macro(n, sub_expr.collect(), diag),
+        BuiltinMacroFunction::ShapePath => {
+            shape_path_macro(n, sub_expr.collect(), diag, symbol_counters)
+        }
+    }
+}
+
+/// Lowers `Shapes.path("…")` and `Shapes.path(evenodd, "…")` into a
+/// `BuiltinFunction::ShapesFromPath` call whose second argument is a `FillRule`
+/// enumeration value.
+fn shape_path_macro(
+    node: &dyn Spanned,
+    mut args: Vec<(Expression, Option<NodeOrToken>)>,
+    diag: &mut BuildDiagnostics,
+    symbol_counters: &SymbolCounters,
+) -> Expression {
+    let fill_rule_enum = crate::typeregister::BUILTIN.enums.FillRule.clone();
+    let nonzero = Expression::EnumerationValue(
+        fill_rule_enum
+            .clone()
+            .try_value_from_string("nonzero")
+            .unwrap_or_else(|| fill_rule_enum.clone().default_value()),
+    );
+    if args.is_empty() || args.len() > 2 {
+        diag.push_error(
+            "Shapes.path() expects a path string and optionally a fill rule".into(),
+            node,
+        );
+        return Expression::Invalid;
+    }
+    let (fill_rule, path) = if args.len() == 1 {
+        (nonzero, args.pop().unwrap())
+    } else {
+        let (fr, fr_node) = args.remove(0);
+        let fill = match &fr {
+            Expression::StringLiteral(s) => match fill_rule_enum.try_value_from_string(s) {
+                Some(v) => Expression::EnumerationValue(v),
+                None => {
+                    let sl = fr_node
+                        .map(|n| n.to_source_location())
+                        .unwrap_or_else(|| node.to_source_location());
+                    diag.push_error(
+                        format!("Invalid fill rule '{s}'; expected 'nonzero' or 'evenodd'"),
+                        &sl,
+                    );
+                    Expression::Invalid
+                }
+            },
+            Expression::EnumerationValue(v) if v.enumeration.name == fill_rule_enum.name => {
+                fr.clone()
+            }
+            _ => {
+                let sl = fr_node
+                    .map(|n| n.to_source_location())
+                    .unwrap_or_else(|| node.to_source_location());
+                diag.push_error("Shapes.path() fill rule must be nonzero or evenodd".into(), &sl);
+                Expression::Invalid
+            }
+        };
+        (fill, args.remove(0))
+    };
+    let (path_expr, _path_node) = path;
+    let path_expr = path_expr.maybe_convert_to(Type::String, node, diag, symbol_counters);
+    Expression::FunctionCall {
+        function: Callable::Builtin(BuiltinFunction::ShapesFromPath),
+        arguments: vec![path_expr, fill_rule],
+        source_location: Some(node.to_source_location()),
     }
 }
 
@@ -644,6 +710,7 @@ fn to_debug_string(
         | Type::ArrayOfU16
         | Type::Model
         | Type::PathData
+        | Type::Shape
         | Type::Closure => {
             diag.push_error("Cannot debug this expression".into(), node);
             Expression::Invalid
