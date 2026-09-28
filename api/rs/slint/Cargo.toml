@@ -7,6 +7,7 @@ description = "GUI toolkit to efficiently develop fluid graphical user interface
 authors.workspace = true
 documentation.workspace = true
 edition = "2024"
+links = "slint"
 homepage = "https://slint.rs"
 keywords.workspace = true
 license.workspace = true
@@ -68,6 +69,12 @@ software-renderer-systemfonts = ["renderer-software"]
 # Enable support for Path element rendering with the software renderer. This is implicitly enabled by the
 # `std` feature, but can be enabled without `std` if you want to use the software renderer in a `#![no_std]` environment and need support for Path elements.
 software-renderer-path = ["i-slint-renderer-software/path"]
+
+# Rasterize compiler-embedded vector fonts with the software renderer without `std`,
+# for `no_std` targets that can't use the system font collection but need text whose
+# glyphs aren't pre-rendered at compile time — e.g. text animated along variable font
+# axes (`font-variation-settings`, `font-stretch`, `font-optical-sizing`, `font-weight`).
+embedded-vector-fonts = ["i-slint-renderer-software?/embedded-vector-fonts"]
 
 ## Slint uses internally some `thread_local` state.
 ##

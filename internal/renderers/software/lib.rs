@@ -1474,14 +1474,20 @@ impl RendererSealed for SoftwareRenderer {
         fonts::register_bitmap_font(font_data);
     }
 
-    #[cfg(feature = "systemfonts")]
+    #[cfg(any(feature = "systemfonts", feature = "embedded-vector-fonts"))]
     fn register_font_from_memory(
         &self,
         data: &'static [u8],
-    ) -> Result<(), std::boxed::Box<dyn std::error::Error>> {
-        let ctx = self.slint_context().ok_or("slint platform not initialized")?;
-        ctx.font_context().borrow_mut().register_static_font(data);
-        Ok(())
+    ) -> Result<(), alloc::boxed::Box<dyn core::error::Error>> {
+        #[cfg(feature = "systemfonts")]
+        let result = {
+            let ctx = self.slint_context().ok_or("slint platform not initialized")?;
+            ctx.font_context().borrow_mut().register_static_font(data);
+            Ok(())
+        };
+        #[cfg(all(feature = "embedded-vector-fonts", not(feature = "systemfonts")))]
+        let result = fonts::embeddedfonts::register(data);
+        result
     }
 
     #[cfg(all(feature = "systemfonts", not(target_arch = "wasm32")))]
@@ -3599,7 +3605,7 @@ impl<T: ProcessScene> sharedparley::GlyphRenderer for SceneBuilder<'_, T> {
         let (swash_key, swash_offset) =
             fonts::systemfonts::get_swash_font_info(&font.data, font.index);
         let font = fonts::vectorfont::VectorFont::new_from_blob_and_index_with_coords(
-            font.data.clone(),
+            font.data.clone().into(),
             font.index,
             swash_key,
             swash_offset,

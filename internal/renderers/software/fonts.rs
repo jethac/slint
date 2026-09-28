@@ -9,6 +9,7 @@ use core::cell::RefCell;
 use super::{Fixed, PhysicalLength, PhysicalSize};
 use i_slint_core::graphics::{BitmapFont, FontRequest};
 use i_slint_core::lengths::ScaleFactor;
+use i_slint_core::model::Model;
 use i_slint_core::textlayout::TextLayout;
 
 i_slint_core::thread_local! {
@@ -39,7 +40,7 @@ impl RenderableGlyph {
 }
 
 // Subset of `RenderableGlyph`, specifically for VectorFonts.
-#[cfg(feature = "systemfonts")]
+#[cfg(any(feature = "systemfonts", feature = "embedded-vector-fonts"))]
 #[derive(Clone)]
 pub struct RenderableVectorGlyph {
     pub x: Fixed<i32, 8>,
@@ -48,11 +49,21 @@ pub struct RenderableVectorGlyph {
     pub height: PhysicalLength,
     pub alpha_map: Rc<[u8]>,
     pub pixel_stride: u16,
+    /// Only the parley glyph-run path (`systemfonts`) positions glyphs at
+    /// sub-pixel offsets; the embedded path renders the offset into the bitmap.
+    #[cfg_attr(
+        all(feature = "embedded-vector-fonts", not(feature = "systemfonts")),
+        allow(dead_code)
+    )]
     pub glyph_origin_x: f32,
 }
 
-#[cfg(feature = "systemfonts")]
+#[cfg(any(feature = "systemfonts", feature = "embedded-vector-fonts"))]
 impl RenderableVectorGlyph {
+    #[cfg_attr(
+        all(feature = "embedded-vector-fonts", not(feature = "systemfonts")),
+        allow(dead_code)
+    )]
     pub fn size(&self) -> PhysicalSize {
         PhysicalSize::from_lengths(self.width, self.height)
     }
@@ -71,16 +82,19 @@ pub trait GlyphRenderer {
 pub(super) use i_slint_core::textlayout::DEFAULT_FONT_SIZE;
 
 mod pixelfont;
-#[cfg(feature = "systemfonts")]
+#[cfg(any(feature = "systemfonts", feature = "embedded-vector-fonts"))]
 pub mod vectorfont;
 
 #[cfg(feature = "systemfonts")]
 pub mod systemfonts;
 
+#[cfg(all(feature = "embedded-vector-fonts", not(feature = "systemfonts")))]
+pub mod embeddedfonts;
+
 #[derive(derive_more::From)]
 pub enum Font {
     PixelFont(pixelfont::PixelFont),
-    #[cfg(feature = "systemfonts")]
+    #[cfg(any(feature = "systemfonts", feature = "embedded-vector-fonts"))]
     VectorFont(vectorfont::VectorFont),
 }
 
@@ -99,7 +113,7 @@ macro_rules! with_font {
     ($font:expr, |$bound:ident| $body:block) => {
         match $font {
             $crate::fonts::Font::PixelFont($bound) => $body,
-            #[cfg(feature = "systemfonts")]
+            #[cfg(any(feature = "systemfonts", feature = "embedded-vector-fonts"))]
             $crate::fonts::Font::VectorFont($bound) => $body,
         }
     };
@@ -133,6 +147,54 @@ impl i_slint_core::textlayout::FontMetrics<PhysicalLength> for Font {
     }
 }
 
+/// Scores an embedded bitmap font against the requested axis settings:
+/// sum of |requested − rasterized| over the requested axes plus
+/// |rasterized − fvar default| over axes the request didn't pin. `wght` is
+/// carried by the font's `weight` field. Axes the font doesn't declare are
+/// inert and score zero — no bitmap or vector font could do better.
+fn axis_score(
+    font: &'static BitmapFont,
+    requested_weight: u16,
+    requested_variations: &[(i_slint_core::SharedString, f32)],
+    opsz_is_explicit: bool,
+    scale_factor: ScaleFactor,
+) -> f32 {
+    const WGHT: u32 = u32::from_be_bytes(*b"wght");
+    const OPSZ: u32 = u32::from_be_bytes(*b"opsz");
+
+    let mut score = (font.weight as f32 - requested_weight as f32).abs();
+    for (tag, requested) in requested_variations {
+        let Ok(tag_bytes) = <[u8; 4]>::try_from(tag.as_bytes()) else { continue };
+        let tag = u32::from_be_bytes(tag_bytes);
+        if tag == WGHT {
+            continue;
+        }
+        if tag == OPSZ && font.auto_opsz {
+            if !opsz_is_explicit {
+                continue;
+            }
+            // A pinned opsz only matches glyph sets rasterized near it.
+            score += font
+                .glyphs
+                .iter()
+                .map(|glyphs| (glyphs.pixel_size as f32 / scale_factor.get() - requested).abs())
+                .fold(f32::MAX, f32::min);
+            continue;
+        }
+        if let Some(axis) = font.variations.iter().find(|axis| axis.tag == tag) {
+            score += (axis.value - requested).abs();
+        }
+    }
+    for axis in font.variations.iter() {
+        if !requested_variations.iter().any(|(tag, _)| {
+            tag.as_bytes().try_into().map(u32::from_be_bytes).ok() == Some(axis.tag)
+        }) {
+            score += (axis.value - axis.default_value).abs();
+        }
+    }
+    score
+}
+
 pub fn match_font(
     request: &FontRequest,
     scale_factor: ScaleFactor,
@@ -143,6 +205,15 @@ pub fn match_font(
         .weight
         .and_then(|weight| weight.try_into().ok())
         .unwrap_or(/* CSS normal */ 400);
+
+    let requested_variations = request.effective_variations(
+        #[allow(clippy::unnecessary_cast)] // Coord is f32, but i16 with `slint_int_coord`
+        request.pixel_size.map(|s| s.get() as f32),
+    );
+    // `opsz` entries in `font-variation-settings` pin the axis explicitly;
+    // otherwise it comes from `font-optical-sizing` and an `auto_opsz` bitmap
+    // font satisfies it per glyph set.
+    let opsz_is_explicit = request.variations.iter().any(|entry| entry.tag.as_str() == "opsz");
 
     let bitmap_font = BITMAP_FONTS.with(|fonts| {
         let fonts = fonts.borrow();
@@ -155,13 +226,42 @@ pub fn match_font(
                         == requested_family.as_str()
                         && bitmap_font.italic == request.italic
                 })
-                .min_by_key(|bitmap_font| bitmap_font.weight.abs_diff(requested_weight))
-                .copied()
+                .map(|bitmap_font| {
+                    (
+                        *bitmap_font,
+                        axis_score(
+                            bitmap_font,
+                            requested_weight,
+                            &requested_variations,
+                            opsz_is_explicit,
+                            scale_factor,
+                        ),
+                    )
+                })
+                .min_by(|(_, a), (_, b)| a.total_cmp(b))
         })
     });
 
     let font = match bitmap_font {
-        Some(bitmap_font) => bitmap_font,
+        Some((bitmap_font, 0.)) => bitmap_font,
+        Some((bitmap_font, _)) => {
+            // The best bitmap font doesn't cover the requested axes: prefer a
+            // vector font that can rasterize the exact instance.
+            #[cfg(feature = "systemfonts")]
+            if let Some(vectorfont) = systemfonts::match_font(
+                request,
+                scale_factor,
+                &mut font_context.collection,
+                &mut font_context.source_cache,
+            ) {
+                return vectorfont.into();
+            }
+            #[cfg(all(feature = "embedded-vector-fonts", not(feature = "systemfonts")))]
+            if let Some(vectorfont) = embeddedfonts::match_font(request, scale_factor) {
+                return vectorfont.into();
+            }
+            bitmap_font
+        }
         None => {
             #[cfg(feature = "systemfonts")]
             if let Some(vectorfont) = systemfonts::match_font(
@@ -170,6 +270,10 @@ pub fn match_font(
                 &mut font_context.collection,
                 &mut font_context.source_cache,
             ) {
+                return vectorfont.into();
+            }
+            #[cfg(all(feature = "embedded-vector-fonts", not(feature = "systemfonts")))]
+            if let Some(vectorfont) = embeddedfonts::match_font(request, scale_factor) {
                 return vectorfont.into();
             }
             if let Some(fallback_bitmap_font) = BITMAP_FONTS.with(|fonts| {
@@ -191,6 +295,10 @@ pub fn match_font(
                     &mut font_context.source_cache,
                 )
                 .into();
+                #[cfg(all(feature = "embedded-vector-fonts", not(feature = "systemfonts")))]
+                if let Some(vectorfont) = embeddedfonts::fallback_font(request, scale_factor) {
+                    return vectorfont.into();
+                }
                 #[cfg(not(feature = "systemfonts"))]
                 panic!(
                     "No font fallback found. The software renderer requires enabling the `EmbedForSoftwareRenderer` option when compiling slint files."
@@ -238,6 +346,7 @@ pub fn register_bitmap_font(font_data: &'static BitmapFont) {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use alloc::boxed::Box;
     use i_slint_core::lengths::LogicalLength;
     use i_slint_core::textlayout::{FontMetrics, Glyph, TextShaper};
 
@@ -316,5 +425,77 @@ mod tests {
         let layout = text_layout_for_font(&TestFont, &font_request, ScaleFactor::new(1.));
 
         assert_eq!(layout.line_height, Some(PhysicalLength::new(10)));
+    }
+
+    fn bitmap(weight: u16, variations: &[(u32, f32, f32)], auto_opsz: bool) -> &'static BitmapFont {
+        let variations: &'static [i_slint_core::graphics::BitmapFontVariation] =
+            Box::leak(
+                variations
+                    .iter()
+                    .map(|&(tag, value, default_value)| {
+                        i_slint_core::graphics::BitmapFontVariation { tag, value, default_value }
+                    })
+                    .collect::<Vec<_>>()
+                    .into_boxed_slice(),
+            );
+        Box::leak(Box::new(BitmapFont {
+            family_name: b"test".as_slice().into(),
+            character_map: i_slint_core::slice::Slice::default(),
+            units_per_em: 1000.,
+            ascent: 0.8,
+            descent: -0.2,
+            x_height: 0.5,
+            cap_height: 0.7,
+            glyphs: i_slint_core::slice::Slice::default(),
+            weight,
+            italic: false,
+            sdf: false,
+            variations: variations.into(),
+            auto_opsz,
+        }))
+    }
+
+    const WDTH: u32 = u32::from_be_bytes(*b"wdth");
+    const GRAD: u32 = u32::from_be_bytes(*b"GRAD");
+
+    fn variations(entries: &[(&str, f32)]) -> Vec<(i_slint_core::SharedString, f32)> {
+        entries.iter().map(|(t, v)| (i_slint_core::SharedString::from(*t), *v)).collect()
+    }
+
+    #[test]
+    fn axis_score_exact_match_is_zero() {
+        let font = bitmap(700, &[(WDTH, 75., 100.)], false);
+        assert_eq!(
+            axis_score(font, 700, &variations(&[("wdth", 75.)]), false, ScaleFactor::new(1.)),
+            0.
+        );
+    }
+
+    #[test]
+    fn axis_score_counts_unpinned_axes_off_default() {
+        // Asking only for the weight penalizes a bitmap rasterized away from
+        // the wdth default: score 0 beats it, so the vector path wins.
+        let default = bitmap(400, &[(WDTH, 100., 100.)], false);
+        let narrow = bitmap(400, &[(WDTH, 75., 100.)], false);
+        let none = variations(&[]);
+        assert_eq!(axis_score(default, 400, &none, false, ScaleFactor::new(1.)), 0.);
+        assert_eq!(axis_score(narrow, 400, &none, false, ScaleFactor::new(1.)), 25.);
+    }
+
+    #[test]
+    fn axis_score_weight_distance_only() {
+        // wght lives in `weight`, never in `variations`.
+        let font = bitmap(400, &[(WDTH, 100., 100.)], false);
+        let w = variations(&[("wght", 700.)]);
+        assert_eq!(axis_score(font, 700, &w, false, ScaleFactor::new(1.)), 300.);
+    }
+
+    #[test]
+    fn axis_score_unknown_requested_axes_are_inert() {
+        // An axis the font doesn't declare can't be satisfied by anyone.
+        let font = bitmap(400, &[(WDTH, 100., 100.)], false);
+        let g = variations(&[("GRAD", 50.)]);
+        assert_eq!(axis_score(font, 400, &g, false, ScaleFactor::new(1.)), 0.);
+        let _ = GRAD;
     }
 }

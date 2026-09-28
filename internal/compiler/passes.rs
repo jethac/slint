@@ -335,9 +335,11 @@ pub async fn run_passes(
             let mut font_pixel_sizes = vec![(12. * sf) as i16];
             use i_slint_common::sharedfontique::fontique;
             let mut font_weights = vec![fontique::FontWeight::NORMAL.value() as u16];
+            let mut font_axes = embed_glyphs::FontAxesUsed::default();
             doc.visit_all_used_components(|component| {
                 embed_glyphs::collect_font_sizes_used(component, sf, &mut font_pixel_sizes);
                 embed_glyphs::collect_font_weights_used(component, &mut font_weights);
+                embed_glyphs::collect_font_axes_used(component, &mut font_axes);
                 embed_glyphs::scan_string_literals(component, &mut characters_seen);
             });
 
@@ -352,6 +354,7 @@ pub async fn run_passes(
                 &type_loader.compiler_config,
                 font_pixel_sizes,
                 font_weights,
+                font_axes,
                 characters_seen,
                 font_collection.as_ref().expect("EmbedTextures builds the shared font collection"),
                 diag,

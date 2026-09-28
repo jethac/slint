@@ -424,6 +424,27 @@ jobs:
               run: cargo check --target=thumbv6m-none-eabi -p material-color-utils --no-default-features --release
             - name: Test material-color-utils no_std vectors
               run: cargo test -p material-color-utils --no-default-features --test vectors
+            - name: Check software renderer's embedded vector fonts on no_std MCU
+              if: ${{ inputs.full || contains(fromJSON(inputs.changes), 'internal') || contains(fromJSON(inputs.changes), 'api_rs') }}
+              env:
+                  RUSTFLAGS: --cfg slint_int_coord -D warnings
+              run: cargo check --target=thumbv7em-none-eabihf -p i-slint-renderer-software --no-default-features --features=embedded-vector-fonts,libm,i-slint-core/unsafe-single-threaded --release
+            - name: Test embedded-vector-fonts font registration and matching
+              if: ${{ inputs.full || contains(fromJSON(inputs.changes), 'internal') || contains(fromJSON(inputs.changes), 'api_rs') }}
+              run: cargo test -p i-slint-renderer-software --no-default-features --features=embedded-vector-fonts,libm,i-slint-core/unsafe-single-threaded
+            - name: Compile-check the no-rasterizer diagnostic
+              if: ${{ inputs.full || contains(fromJSON(inputs.changes), 'internal') || contains(fromJSON(inputs.changes), 'api_rs') }}
+              working-directory: tests/vector_font_build_check
+              run: |
+                  if cargo check -p vector-font-build-fail >check.log 2>&1; then
+                      echo "a dynamic font-variation-settings binding must not compile without a vector font rasterizer"
+                      exit 1
+                  fi
+                  grep -F "vector font rasterizer" check.log
+            - name: Compile-check the build with embedded-vector-fonts
+              if: ${{ inputs.full || contains(fromJSON(inputs.changes), 'internal') || contains(fromJSON(inputs.changes), 'api_rs') }}
+              working-directory: tests/vector_font_build_check
+              run: cargo check -p vector-font-build-ok
             - name: Check pico-st7789
               if: ${{ inputs.full || contains(fromJSON(inputs.changes), 'examples_mcu') || contains(fromJSON(inputs.changes), 'api_rs') }}
               env:

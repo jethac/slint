@@ -40,6 +40,7 @@ astrowind
 asyncio
 auri
 Aurindam
+autohint
 autorelease
 autoremove
 AUTOSAR
@@ -196,6 +197,7 @@ dynamiccolor
 eabi
 eabihf
 Eeprom
+embeddedfonts
 eiusmod
 ELCDIF
 elems
