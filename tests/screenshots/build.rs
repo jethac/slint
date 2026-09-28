@@ -27,7 +27,7 @@ fn main() -> std::io::Result<()> {
     #[cfg(feature = "skia")]
     gen_skia(&mut generated_file)?;
 
-    #[cfg(feature = "femtovg")]
+    #[cfg(all(feature = "femtovg", target_family = "unix"))]
     gen_femtovg(&mut generated_file)?;
 
     #[cfg(feature = "software-embed-assets")]
@@ -138,6 +138,15 @@ fn generate_source(
     compiler_config.debug_info = source.contains("//PARITY=");
     let (root_component, diag, loader) =
         spin_on::spin_on(compile_syntax_node(syntax_node, diag, compiler_config));
+
+    // Every source the component was built from (imports, library files like
+    // `@material`) must invalidate the generated code — otherwise library
+    // edits would leave tests comparing stale components.
+    for path in &diag.all_loaded_files {
+        if path.is_absolute() {
+            println!("cargo:rerun-if-changed={}", path.display());
+        }
+    }
 
     if diag.has_errors() {
         diag.print_warnings_and_exit_on_error();
@@ -421,7 +430,9 @@ fn skia_{identifier}() -> Result<(), Box<dyn std::error::Error>> {{
 // The headless FemtoVG driver: only `cases/material/` gets generated tests —
 // the driver's purpose is running the material parity cases on the real GL
 // path, and it compares against `references/femtovg/` when a case provides one.
-#[cfg(feature = "femtovg")]
+// Unix only: the driver renders through a surfaceless EGL context, and
+// khronos-egl's build script requires pkg-config.
+#[cfg(all(feature = "femtovg", target_family = "unix"))]
 fn gen_femtovg(generated_file: &mut impl Write) -> Result<(), std::io::Error> {
     let references_root_dir: std::path::PathBuf =
         [env!("CARGO_MANIFEST_DIR"), "references", "femtovg"].iter().collect();

@@ -10,7 +10,14 @@ pub mod testing;
 pub mod parity;
 
 /// Compilation helpers shared by the interpreter-based drivers.
-#[cfg(all(test, any(feature = "skia", feature = "femtovg", feature = "anyrender")))]
+#[cfg(all(
+    test,
+    any(
+        feature = "skia",
+        all(feature = "femtovg", target_family = "unix"),
+        feature = "anyrender"
+    )
+))]
 pub mod interpreter;
 
 #[cfg(all(test, feature = "software"))]
@@ -19,7 +26,7 @@ pub mod software;
 #[cfg(all(test, feature = "skia"))]
 pub mod skia;
 
-#[cfg(all(test, feature = "femtovg"))]
+#[cfg(all(test, feature = "femtovg", target_family = "unix"))]
 pub mod femtovg;
 
 #[cfg(all(test, feature = "anyrender"))]

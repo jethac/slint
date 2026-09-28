@@ -190,6 +190,16 @@ pub struct TestCase {
 
 pub fn run_test(testcase: TestCase) -> Result<(), Box<dyn std::error::Error>> {
     if let Err(e) = init_femtovg() {
+        // Skipping is only acceptable when nobody is counting on the render:
+        // with PARITY_REQUIRE_REFS the run must produce a real comparison,
+        // so an unusable GL context is an error, not a skip.
+        if std::env::var_os("PARITY_REQUIRE_REFS").is_some() {
+            return Err(format!(
+                "femtovg: EGL unavailable ({e}) but PARITY_REQUIRE_REFS is set — {} must render",
+                testcase.relative_path.display()
+            )
+            .into());
+        }
         eprintln!("femtovg: skipping {} ({e})", testcase.relative_path.display());
         return Ok(());
     }
