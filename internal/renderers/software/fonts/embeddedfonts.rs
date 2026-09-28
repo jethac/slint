@@ -13,6 +13,8 @@
 //! adds (right-to-left scripts, ligatures, kerning) is not available — the
 //! same limitation the pre-rendered bitmap fonts have.
 
+// cSpell: ignore instancer
+
 use alloc::vec::Vec;
 use core::cell::RefCell;
 use i_slint_core::api::ToSharedString as _;
@@ -314,9 +316,9 @@ mod tests {
 
     /// (width, height, checksum) of a rendered glyph's alpha map.
     fn glyph_signature(glyph: &RenderableVectorGlyph) -> (i16, i16, u64) {
-        let mut hash = 0xcbf29ce484222325u64;
+        let mut hash = 14695981039346656037u64; // FNV-1a offset basis
         for &b in glyph.alpha_map.iter() {
-            hash = (hash ^ b as u64).wrapping_mul(0x100000001b3);
+            hash = (hash ^ b as u64).wrapping_mul(1099511628211); // FNV-1a prime
         }
         (glyph.width.get(), glyph.height.get(), hash)
     }
