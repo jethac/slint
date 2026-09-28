@@ -22,4 +22,11 @@ export component TestCase inherits Window {
 //                                    > <error{Syntax error: expected ';'}
 //                                    > <^error{Parse error}
     }
+
+    // The shorthand only parses in `font-variation-settings` bindings: on any
+    // other property the string is a plain string literal and the number is
+    // unexpected input.
+    property <string> not-variations: "wght" 700;
+//                                           > <error{Syntax error: expected ';'}
+//                                           > <^error{Parse error}
 }

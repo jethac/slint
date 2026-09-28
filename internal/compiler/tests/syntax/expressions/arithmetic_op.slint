@@ -19,7 +19,7 @@ export SuperSimple := Rectangle {
 //                    >      <error{Cannot convert string to float}
 
     property<int> p8: 1 - "hello" - 1;
-//                        >         <error{A list of axis settings is only valid for 'font-variation-settings'}
+//                        >      <error{Cannot convert string to float}
 
     property<string> p9: 1 + "hello" + 1;
     property<int> p10: "hello" + 1ms;

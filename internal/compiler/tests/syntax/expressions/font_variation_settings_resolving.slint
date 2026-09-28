@@ -31,12 +31,9 @@ export component TestCase inherits Window {
 //                               >     <error{Cannot convert string to [FontVariation]}
     }
 
-    // The shorthand is only valid for `font-variation-settings`.
-    property <string> not-variations: "wght" 700;
-//                                    >        <error{A list of axis settings is only valid for 'font-variation-settings'}
-
-    // `"a" - 4` is no longer a string-minus-number error either: the string +
-    // number pair is the settings-list shorthand.
+    // Outside `font-variation-settings` bindings a string is just a string:
+    // `"a" - 4` is a string-minus-number error again. (The parse-error side is
+    // covered in font_variation_settings.slint.)
     property <int> still-not-variations: "a" - 4;
-//                                       >     <error{A list of axis settings is only valid for 'font-variation-settings'}
+//                                       >  <error{Cannot convert string to float}
 }
