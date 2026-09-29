@@ -3,7 +3,7 @@
     {
       "at": 0.0,
       "kind": "press",
-      "x": 60.0,
+      "x": 36.0,
       "y": 44.0
     }
   ],
@@ -17,22 +17,11 @@
     "plain": "Roboto"
   },
   "mask_decor": {},
-  "mask_inner": {
-    "button0": [
-      15,
-      30,
-      60,
-      120,
-      200,
-      333,
-      500,
-      800,
-      1500
-    ]
-  },
+  "mask_inner": {},
   "name": "button-press-morph",
+  "negative_note": "issue #27: the Compose frame clock starts the press morph ~2ms after the Slint dispatch, so identical-timestamp frames report a systematic lead in the pill→pressed-shape morph — a silent pass would mean the harness went blind",
   "params": {},
-  "parity": "motion",
+  "parity": "xfail",
   "scheme": {
     "background": "FFFDF7FE",
     "error": "FFA8364B",
@@ -83,8 +72,8 @@
     "tertiaryFixedDim": "FFE5B2D5"
   },
   "size": [
-    200,
-    112
+    240,
+    96
   ],
   "theme": {
     "contrast": 0.0,
@@ -96,41 +85,40 @@
   },
   "times": [
     0,
-    15,
-    30,
-    60,
-    120,
+    33,
+    66,
+    100,
+    150,
     200,
-    333,
-    500,
-    800,
-    1500
+    300,
+    400,
+    600
   ],
   "trace_elements": [
     "button0"
   ],
-  "trace_props": [
-    "container_radius"
-  ],
+  "trace_props": [],
   "type": "canvas",
   "widgets": [
     {
       "checkable": null,
       "checked": null,
       "color": null,
+      "corner": null,
       "enabled": null,
       "height": null,
       "icon": null,
       "kind": "filled-button",
+      "level": null,
       "radius": null,
       "shape": null,
-      "size": "m",
+      "size": null,
       "slint_overrides": {},
       "state": "pressed",
       "text": "Label",
-      "width": 86.0,
+      "width": null,
       "width_option": null,
-      "x": 40.0,
+      "x": 16.0,
       "y": 28.0
     }
   ]

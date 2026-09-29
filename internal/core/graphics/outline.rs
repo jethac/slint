@@ -98,8 +98,11 @@ impl ShapeFitTransform {
     }
 }
 
-/// The transform fitting `shape`'s bounding box into `target`, or `None` for
-/// degenerate shapes or target sizes.
+/// The transform fitting `shape` into `target`, or `None` for degenerate
+/// shapes or target sizes. `Fill`/`Contain`/`Cover` fit the outline's bounding
+/// box like [ImageFit] fits an image's pixels; `Normalized` maps the shape's
+/// (0,0)-(1,1) space onto the target and centers the outline's bounding box,
+/// matching Compose's `RoundedPolygon.toShape()`.
 pub fn shape_fit_transform<U>(
     shape: &Shape,
     target: euclid::Rect<f32, U>,
@@ -132,6 +135,7 @@ pub fn shape_fit_transform<U>(
             let s = (w / bw).max(h / bh);
             (s, s)
         }
+        ShapeFit::Normalized => (w, h),
     };
     let dw = w - bw * sx;
     let dh = h - bh * sy;
@@ -733,6 +737,18 @@ mod tests {
         // The fitted 200x100 shape is centered horizontally over the 100x100
         // target: x offset -50, y offset 0.
         assert!((cover.tx + 50.).abs() < 1e-6 && cover.ty.abs() < 1e-6);
+        // Normalized maps the (0,0)-(1,1) space onto the target: a square at
+        // (0.2,0.2)-(0.8,0.8) keeps its inset instead of filling the bounds.
+        let shape = Shape::from_svg_path_lossy(
+            "M 0.2 0.2 L 0.8 0.2 L 0.8 0.8 L 0.2 0.8 Z",
+            FillRule::Nonzero,
+        );
+        let normalized =
+            shape_fit_transform(&shape, logical_rect(0., 0., 100., 50.), ShapeFit::Normalized)
+                .unwrap();
+        assert!((normalized.sx - 100.).abs() < 1e-6 && (normalized.sy - 50.).abs() < 1e-6);
+        assert_eq!(normalized.transform(0.2, 0.2), pt(20., 10.));
+        assert_eq!(normalized.transform(0.8, 0.8), pt(80., 40.));
         // Degenerate inputs yield no transform.
         assert!(
             shape_fit_transform(&shape, logical_rect(0., 0., 0., 100.), ShapeFit::Fill).is_none()

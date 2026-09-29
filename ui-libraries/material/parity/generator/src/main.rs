@@ -143,9 +143,9 @@ struct Widget {
     /// upstream `MinHeight`/`smallContainerSize` bucket).
     #[serde(default)]
     size: Option<String>,
-    /// `round` (default stadium) or `square`.
+    /// Button container corners: `round` (default stadium) or `square`.
     #[serde(default)]
-    shape: Option<String>,
+    corner: Option<String>,
     /// Renders the toggle variant of the widget (`checkable` on the Slint
     /// side, `*ToggleButton` composables upstream).
     #[serde(default)]
@@ -155,6 +155,16 @@ struct Widget {
     /// Icon-button container width: `narrow`, `uniform` (default), `wide`.
     #[serde(default)]
     width_option: Option<String>,
+    /// M3 elevation level (0–5) for `surface` widgets: the Slint side sets
+    /// `Elevation.level`, the Compose side sets `Modifier.shadow`'s dp.
+    #[serde(default)]
+    level: Option<i64>,
+    /// Caster outline for `surface` widgets: a `MaterialShapes` global
+    /// member name in kebab case (`"cookie-9-sided"` → `MaterialShapes.
+    /// cookie-9-sided` / Compose `MaterialShapes.Cookie9Sided`), or `"rect"`
+    /// (default) for the `radius` field's rounded rectangle.
+    #[serde(default)]
+    shape: Option<String>,
     /// What this widget deliberately gets wrong on the Slint side
     /// (`negative` scenes only). Keys shadow the widget's own fields.
     #[serde(default)]
@@ -482,14 +492,15 @@ fn slint_case(scene: &Scene) -> String {
             "filled-icon-button" => "FilledIconButton",
             "tonal-icon-button" => "TonalIconButton",
             "outlined-icon-button" => "OutlineIconButton",
-            "rect" => continue,
+            // `surface` imports `Elevation`/`MaterialShapes` below instead.
+            "rect" | "surface" => continue,
             other => panic!("unknown widget kind {other:?}"),
         };
         imports.push(component);
         if w.icon.is_some() {
             needs_icons = true;
         }
-        if w.size.is_some() || w.shape.is_some() || w.width_option.is_some() {
+        if w.size.is_some() || w.corner.is_some() || w.width_option.is_some() {
             imports.push("MaterialButtonSize");
             imports.push("MaterialButtonShape");
             imports.push("IconButtonWidth");
@@ -497,6 +508,16 @@ fn slint_case(scene: &Scene) -> String {
     }
     if needs_icons {
         imports.push("Icons");
+    }
+    if scene.widgets.iter().any(|w| w.kind == "surface") {
+        imports.push("Elevation");
+        if scene
+            .widgets
+            .iter()
+            .any(|w| w.shape.as_deref().is_some_and(|sh| sh != "rect"))
+        {
+            imports.push("MaterialShapes");
+        }
     }
     imports.sort();
     imports.dedup();
@@ -632,12 +653,12 @@ fn button_props(w: &Widget, timed: bool) -> String {
     if let Some(size) = size {
         writeln!(p, "        size: MaterialButtonSize.{};", size_variant(&size)).unwrap();
     }
-    let shape = over
-        .get("shape")
+    let corner = over
+        .get("corner")
         .and_then(|v| v.as_str())
         .map(str::to_string)
-        .or_else(|| w.shape.clone());
-    if shape.as_deref() == Some("square") {
+        .or_else(|| w.corner.clone());
+    if corner.as_deref() == Some("square") {
         p.push_str("        button_shape: MaterialButtonShape.square;\n");
     }
     if bool_over("checkable", w.checkable) {
@@ -699,6 +720,7 @@ fn slint_canvas(s: &mut String, scene: &Scene) {
     // widget index — a backdrop `rect` ahead of a button leaves `button0`
     // intact.
     let mut buttons = 0;
+    let mut surfaces = 0;
     for w in scene.widgets.iter() {
         let component = match w.kind.as_str() {
             "filled-button" => "FilledButton",
@@ -710,6 +732,63 @@ fn slint_canvas(s: &mut String, scene: &Scene) {
             "filled-icon-button" => "FilledIconButton",
             "tonal-icon-button" => "TonalIconButton",
             "outlined-icon-button" => "OutlineIconButton",
+            "surface" => {
+                let i = surfaces;
+                surfaces += 1;
+                // A `slint_overrides.level` makes the Slint side cast the
+                // shadow of a different z than Compose renders — the
+                // negative scene's deliberate wrong-shadow defect.
+                let level = w
+                    .slint_overrides
+                    .get("level")
+                    .map(|v| widget_num(v) as i64)
+                    .unwrap_or_else(|| w.level.unwrap_or(0));
+                let outline = match w.shape.as_deref() {
+                    None | Some("rect") => {
+                        format!("border-radius: {}px;", w.radius.unwrap_or(0.) as i64)
+                    }
+                    Some(name) => format!("shape: MaterialShapes.{name};"),
+                };
+                // A `slint_overrides.shape_fit` maps the outline the wrong
+                // way on the Slint side — e.g. `fill` stretches the outline's
+                // bounds where Compose maps the normalized (0,0)-(1,1) space —
+                // the negative scene's deliberate silhouette defect.
+                let fit_override = w
+                    .slint_overrides
+                    .get("shape_fit")
+                    .and_then(|v| v.as_str())
+                    .map(|f| format!("\n        shape-fit: ShapeFit.{f};"))
+                    .unwrap_or_default();
+                writeln!(
+                    s,
+                    "    surface{i} := Elevation {{\n        x: {}px;\n        y: {}px;\n        width: {}px;\n        height: {}px;\n        level: {level};\n        {outline}{fit_override}\n        background: MaterialPalette.{};\n    }}\n",
+                    w.x as i64,
+                    w.y as i64,
+                    w.width.unwrap() as i64,
+                    w.height.unwrap() as i64,
+                    w.color.as_deref().unwrap_or("surface").replace('-', "_"),
+                )
+                .unwrap();
+                if let Some(cover) = w.slint_overrides.get("cover") {
+                    let fill = cover["fill"].as_str().unwrap_or("primary");
+                    let fill_expr = if fill.starts_with('#') {
+                        fill.to_lowercase()
+                    } else {
+                        format!("MaterialPalette.{}", fill.replace('-', "_"))
+                    };
+                    let cover_radius = cover["radius"]
+                        .as_f64()
+                        .map(|r| format!("{r}px"))
+                        .unwrap_or_else(|| "0px".to_string());
+                    writeln!(
+                        s,
+                        "    // Deliberate defect (scene `slint_overrides.cover`).\n    Rectangle {{\n        x: surface{i}.x;\n        y: surface{i}.y;\n        width: surface{i}.width;\n        height: surface{i}.height;\n        border-radius: {cover_radius};\n        background: {fill_expr};\n        opacity: {};\n    }}\n",
+                        cover["opacity"].as_f64().unwrap_or(1.0),
+                    )
+                    .unwrap();
+                }
+                continue;
+            }
             "rect" => {
                 let radius = w
                     .slint_overrides

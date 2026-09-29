@@ -767,8 +767,11 @@ impl<'a, S: PaintScene> ItemRenderer for AnyrenderItemRenderer<'a, S> {
         let ctm = shadow::Affine::new(a as f32, b as f32, c as f32, d as f32, e as f32, f as f32);
 
         let adapter = i_slint_core::window::WindowInner::from_pub(self.window).window_adapter();
-        let (light, light_radius) =
-            shadow::elevation_light(adapter.display_geometry(), adapter.size());
+        let (light, light_radius) = shadow::elevation_light(
+            adapter.display_geometry(),
+            adapter.size(),
+            self.window.scale_factor(),
+        );
         let masks = shadow::elevation_shadow_masks(
             &outline,
             geom.cast::<f32>(),

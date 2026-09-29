@@ -1883,6 +1883,19 @@ fn render_window_frame_by_line(
                                     extra_right_clip,
                                 );
                             }
+                            SceneCommand::ShadowLayer { layer_index } => {
+                                let data = &scene.vectors.shadow_layers[layer_index as usize];
+                                let mut row = Vec::new();
+                                let mut scratch = shadow::ShadowRowScratch::default();
+                                draw_shadow_layer_line(
+                                    scene.current_line.get() as i32,
+                                    range_buffer,
+                                    begin as i32,
+                                    data,
+                                    &mut row,
+                                    &mut scratch,
+                                );
+                            }
                             SceneCommand::Path { path_index } => {
                                 let data = &scene.vectors.paths[path_index as usize];
                                 let rasterizer = path_rasterizers[path_index as usize]
@@ -2019,10 +2032,69 @@ trait ProcessScene {
     /// fill contours), clipped to `clip_geometry`. The `data`'s contours are
     /// in absolute physical screen coordinates, rotation applied.
     fn process_path(&mut self, data: alloc::rc::Rc<PathCommandData>, clip_geometry: PhysicalRect);
+    /// Draws one elevation-shadow layer in absolute physical screen
+    /// coordinates, clipped to `clip_geometry`. Tessellated mesh layers are
+    /// swept into spans per scanline — the span contract keeps memory
+    /// bounded to the row instead of a full-area mask; the blur fallback
+    /// carries a bounded A8 mask.
+    fn process_shadow_layer(&mut self, data: ShadowLayerData, clip_geometry: PhysicalRect);
     /// Sets the shape clip applying to subsequent draws: a mask AND-ed per
     /// row with everything drawn while it is set, on top of the rectangular
     /// clip.
     fn set_clip_outline(&mut self, clip: Option<alloc::rc::Rc<ClipOutlineData>>);
+}
+
+/// Draw the scanline `l` of an elevation-shadow layer into `dst`, whose
+/// first pixel sits at screen x `x_start`: tessellated meshes sweep into
+/// per-scanline spans; bounded masks read their A8 row.
+fn draw_shadow_layer_line<P: TargetPixel>(
+    l: i32,
+    dst: &mut [P],
+    x_start: i32,
+    data: &ShadowLayerData,
+    row: &mut Vec<u8>,
+    scratch: &mut shadow::ShadowRowScratch,
+) {
+    let color = PremultipliedRgbaColor::from(data.color);
+    match &data.layer {
+        shadow::ElevationLayer::Mesh(m) => {
+            row.clear();
+            row.resize(dst.len(), 0);
+            shadow::rasterize_shadow_mesh_row(
+                &m.mesh,
+                m.bounds.cast_unit(),
+                m.offset,
+                l,
+                x_start,
+                row,
+                scratch,
+            );
+            for (pix, &cov) in dst.iter_mut().zip(row.iter()) {
+                if cov != 0 {
+                    pix.blend(scale_premult(color, cov));
+                }
+            }
+        }
+        shadow::ElevationLayer::Mask(mask) => {
+            let y = l - mask.rect.origin.y as i32;
+            if y < 0 || y >= mask.size.height as i32 {
+                return;
+            }
+            let stride = mask.size.width as usize;
+            let row_data = &mask.mask[y as usize * stride..][..stride];
+            let x0 = mask.rect.origin.x as i32;
+            for (i, pix) in dst.iter_mut().enumerate() {
+                let sx = x_start + i as i32 - x0;
+                if sx < 0 || sx >= stride as i32 {
+                    continue;
+                }
+                let cov = row_data[sx as usize];
+                if cov != 0 {
+                    pix.blend(scale_premult(color, cov));
+                }
+            }
+        }
+    }
 }
 
 fn process_rectangle_impl(
@@ -2659,6 +2731,33 @@ impl<B: target_pixel_buffer::TargetPixelBuffer> ProcessScene for RenderToBuffer<
         });
     }
 
+    fn process_shadow_layer(&mut self, data: ShadowLayerData, clip_geometry: PhysicalRect) {
+        let geometry = match &data.layer {
+            shadow::ElevationLayer::Mesh(m) => m.bounds,
+            shadow::ElevationLayer::Mask(mask) => mask.rect,
+        };
+        let Some(geometry) = geometry
+            .cast_unit::<PhysicalPx>()
+            .round_out()
+            .cast::<i16>()
+            .intersection(&clip_geometry)
+        else {
+            return;
+        };
+        let mut row = Vec::new();
+        let mut scratch = shadow::ShadowRowScratch::default();
+        self.foreach_ranges(&geometry, |line, buffer, extra_left_clip, _extra_right_clip| {
+            draw_shadow_layer_line(
+                line as i32,
+                buffer,
+                geometry.min_x() as i32 + extra_left_clip as i32,
+                &data,
+                &mut row,
+                &mut scratch,
+            );
+        });
+    }
+
     fn set_clip_outline(&mut self, clip: Option<alloc::rc::Rc<ClipOutlineData>>) {
         self.clip_mask = clip;
     }
@@ -2830,6 +2929,33 @@ impl ProcessScene for PrepareScene {
             z: self.items.len() as u16,
             clip: self.current_clip_index,
             command: SceneCommand::Path { path_index },
+        });
+    }
+
+    fn process_shadow_layer(&mut self, data: ShadowLayerData, clip_geometry: PhysicalRect) {
+        let geometry = match &data.layer {
+            shadow::ElevationLayer::Mesh(m) => m.bounds,
+            shadow::ElevationLayer::Mask(mask) => mask.rect,
+        };
+        let Some(geometry) = geometry
+            .cast_unit::<PhysicalPx>()
+            .round_out()
+            .cast::<i16>()
+            .intersection(&clip_geometry)
+        else {
+            return;
+        };
+        if geometry.size.is_empty() {
+            return;
+        }
+        let layer_index = self.vectors.shadow_layers.len() as u16;
+        self.vectors.shadow_layers.push(alloc::rc::Rc::new(data));
+        self.items.push(SceneItem {
+            pos: geometry.origin,
+            size: geometry.size,
+            z: self.items.len() as u16,
+            clip: self.current_clip_index,
+            command: SceneCommand::ShadowLayer { layer_index },
         });
     }
 
@@ -4102,12 +4228,15 @@ impl<T: ProcessScene> i_slint_core::item_rendering::ItemRenderer for SceneBuilde
         let ctm = screen.pre_concat(&st);
 
         let adapter = self.window.window_adapter();
-        let (light, light_radius) =
-            shadow::elevation_light(adapter.display_geometry(), adapter.size());
+        let (light, light_radius) = shadow::elevation_light(
+            adapter.display_geometry(),
+            adapter.size(),
+            self.window.scale_factor(),
+        );
         let lp = screen.map_point(euclid::point2(light[0], light[1]));
         let light = [lp.x, lp.y, light[2]];
 
-        let masks = shadow::elevation_shadow_masks(
+        let layers = shadow::elevation_shadow_layers(
             &outline,
             geom.cast::<f32>(),
             &ctm,
@@ -4123,30 +4252,18 @@ impl<T: ProcessScene> i_slint_core::item_rendering::ItemRenderer for SceneBuilde
                 .round()
                 .cast::<i16>()
                 .transformed(self.rotation);
-        for (layer, color) in [(masks.ambient, ambient_color), (masks.spot, spot_color)].into_iter()
+        for (layer, color) in
+            [(layers.ambient, ambient_color), (layers.spot, spot_color)].into_iter()
         {
             let Some(layer) = layer else { continue };
             if color.alpha() == 0 {
                 continue;
             }
-            let (width, height) = (layer.size.width, layer.size.height);
-            // The mask was rasterized in post-rotation screen space: draw it
-            // with no further rotation.
-            let args = target_pixel_buffer::DrawTextureArgs {
-                data: target_pixel_buffer::TextureDataContainer::Shared {
-                    buffer: SharedBufferData::AlphaMap { data: layer.mask, width: width as u16 },
-                    source_rect: euclid::rect(0, 0, width as i16, height as i16),
-                },
-                colorize: Some(color),
-                alpha: color.alpha(),
-                dst_x: layer.rect.origin.x.round() as isize,
-                dst_y: layer.rect.origin.y.round() as isize,
-                dst_width: width as usize,
-                dst_height: height as usize,
-                rotation: RenderingRotation::NoRotation,
-                tiling: None,
-            };
-            self.processor.process_target_texture(&args, clipped.cast());
+            // The layer was rasterized in post-rotation screen space: draw it
+            // with no further rotation. The processor sweeps mesh layers
+            // into per-scanline spans; blur-fallback layers carry a bounded
+            // A8 mask.
+            self.processor.process_shadow_layer(ShadowLayerData { layer, color }, clipped.cast());
         }
     }
 

@@ -87,6 +87,13 @@ impl InterpolatedPropertyValue for Value {
         }
     }
 
+    fn scalar_delta(&self, target: &Self) -> f32 {
+        match (self, target) {
+            (Value::Shape(a), Value::Shape(b)) => a.scalar_delta(b),
+            _ => 0.0,
+        }
+    }
+
     /// A physical spring can't decompose values that don't share an animatable
     /// variant, so `0` makes such a retarget snap.
     fn channel_count(&self, target: &Self) -> usize {
@@ -95,13 +102,6 @@ impl InterpolatedPropertyValue for Value {
             (Value::Brush(a), Value::Brush(b)) => a.channel_count(b),
             (Value::Shape(a), Value::Shape(b)) => a.channel_count(b),
             _ => 0,
-        }
-    }
-
-    fn scalar_delta(&self, target: &Self) -> f32 {
-        match (self, target) {
-            (Value::Shape(a), Value::Shape(b)) => a.scalar_delta(b),
-            _ => 0.,
         }
     }
 
@@ -114,20 +114,22 @@ impl InterpolatedPropertyValue for Value {
         }
     }
 
-    /// `Shape`'s channel layout is directional (0 at the start shape, the morph
-    /// displacement at the target), so its start/target encodings can't fall
-    /// through to the absolute [`write_channels`](Self::write_channels) defaults.
+    /// A shape's channels are directional — the morph's progress sits at 0 on
+    /// the start and at the match displacement on the target — so the pair
+    /// methods delegate to the shape's own layout instead of `write_channels`.
     fn write_start_channels(&self, target: &Self, out: &mut [f32]) {
-        match (self, target) {
-            (Value::Shape(a), Value::Shape(b)) => a.write_start_channels(b, out),
-            _ => self.write_channels(target, out),
+        if let (Value::Shape(a), Value::Shape(b)) = (self, target) {
+            a.write_start_channels(b, out);
+        } else {
+            self.write_channels(target, out);
         }
     }
 
     fn write_target_channels(&self, start: &Self, out: &mut [f32]) {
-        match (self, start) {
-            (Value::Shape(a), Value::Shape(b)) => a.write_target_channels(b, out),
-            _ => self.write_channels(start, out),
+        if let (Value::Shape(a), Value::Shape(b)) = (self, start) {
+            a.write_target_channels(b, out);
+        } else {
+            self.write_channels(start, out);
         }
     }
 

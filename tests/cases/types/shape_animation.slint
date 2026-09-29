@@ -4,13 +4,23 @@
 // `animate shape` morphs the element's outline through the spring easing.
 // A mid-flight retarget keeps the sampled outline continuous — the new morph
 // starts from the current interpolated shape — and carries the outgoing
-// spring's velocity. Morph results re-segment their anchors every frame, so
-// continuity and displacement are measured geometrically: the distance from
-// each anchor of one outline to a dense polyline of the other.
+// spring's scalar speed (issue #6 design note R6: v0·D_new = rel_vel·D_old,
+// the mean per-anchor |velocity| normalized by the morph start's perimeter).
+// Morph results re-segment their anchors every frame, so all comparisons are
+// geometric (anchor-to-polyline Hausdorff distance). Pairing anchors between
+// consecutive frames reads the spring's speed ~7x low — or 0 outright once
+// the segmentation shifts — so the speed windows use the outline's delta to a
+// fixed reference instead, which stays smooth through the cruise. Both the
+// setter path and the binding path are exercised.
 
 export component TestCase inherits Rectangle {
+    in-out property <shape> bound-target: Shapes.pill(1, 0.6, 0);
     in-out property <shape> morph: Shapes.circle(8);
-    animate morph { easing: spring(0.6, 800); }
+    // `out`: an `in-out` alias for `bound-target` would be a two-way link
+    // that snaps to the new value without morphing.
+    out property <shape> bound: bound-target;
+    animate morph { easing: spring(0.8, 200); }
+    animate bound { easing: spring(0.8, 200); }
 }
 
 /*
@@ -58,44 +68,110 @@ fn outline_delta(a: &slint::Shape, b: &slint::Shape) -> f32 {
     let bwd = anchors(b).iter().map(|&p| dist_to_polyline(p, &pa)).fold(0., f32::max);
     fwd.max(bwd)
 }
+// Outline length: the polyline length approximates the measured perimeter
+// `scalar_delta` normalizes by.
+fn perimeter(shape: &slint::Shape) -> f32 {
+    let line = polyline(shape);
+    line.iter()
+        .zip(line.iter().skip(1))
+        .map(|(&a, &b)| ((b.0 - a.0).powi(2) + (b.1 - a.1).powi(2)).sqrt())
+        .sum()
+}
+// The outline's speed at an instant: distance covered between two frames,
+// measured as the delta of the outline's distance to a fixed reference.
+// Monotone through the spring's cruise for every shape pair here.
+fn outline_speed(from: &slint::Shape, a: &slint::Shape, b: &slint::Shape) -> f32 {
+    outline_delta(from, b) - outline_delta(from, a)
+}
+
+fn retarget_case(
+    get: &dyn Fn() -> slint::Shape,
+    retarget: &dyn Fn(slint::Shape),
+    start_from: slint::Shape,
+    mid_target: slint::Shape,
+    final_target: slint::Shape,
+) {
+    // Evaluate once so the binding holds the current value and has registered
+    // its dependencies — a property first read after the retarget would
+    // already see the new value and never animate.
+    let _ = get();
+    // Fly toward the mid target until the spring is clearly moving. T sits
+    // at ~30% of the spring's ~200ms envelope — its cruise — so the speed
+    // windows stay deep inside flight on every target, away from the
+    // underdamped apex and the settled tail. The windows span 10ms: a 1ms
+    // frame step is smaller than the proxy's per-reading jitter on some
+    // targets (i686 read 0 there); 10ms of cruise covers ~0.03 units of
+    // travel, an order above the noise, while the spring's own drift stays
+    // under ~5% across the window.
+    retarget(mid_target.clone());
+    slint_testing::mock_elapsed_time(49);
+    let t_lo = get();
+    slint_testing::mock_elapsed_time(10);
+    let t_m1 = get();
+    let pre_speed = outline_speed(&start_from, &t_lo, &t_m1) / 0.010;
+    assert!(pre_speed > 0., "the spring must still be moving: {pre_speed}");
+
+    retarget(final_target.clone());
+    // The animated outline does not snap at the retarget instant: the first
+    // evaluated frame of the new morph reproduces the incoming outline. The
+    // morph pipeline re-segments and re-detects features on construction, so
+    // even progress 0 differs from the source shape by its reproduction drift
+    // (≈0.04 measured on the star-bound morph); a snap to the old start or
+    // the new target would sit ≥0.1 away instead.
+    let t_0 = get();
+    let delta = outline_delta(&t_0, &t_m1);
+    assert!(delta <= 0.08, "retarget moved the outline by {delta}");
+
+    slint_testing::mock_elapsed_time(10);
+    let t_hi = get();
+    // The carried scalar speed is preserved across the retarget: the
+    // outline's speed, normalized by each morph's start perimeter (R6's
+    // rel_vel), matches on both sides of T. The Hausdorff proxy's jitter and
+    // the two morphs' differing speed profiles add ~10% bias between windows,
+    // so the bound is 15% — still 3x tighter than the least wrong rescaling
+    // (half-speed lands 50% out) and far above a restart from rest (~0).
+    let post_speed = outline_speed(&t_0, &t_0, &t_hi) / 0.010;
+    let rel_pre = pre_speed / perimeter(&start_from);
+    let rel_post = post_speed / perimeter(&t_0);
+    assert!(
+        (rel_post - rel_pre).abs() <= 0.15 * rel_pre,
+        "normalized speed must carry across the retarget: {rel_post} vs {rel_pre}"
+    );
+
+    // The spring settles on the new target.
+    slint_testing::mock_elapsed_time(3000);
+    assert_eq!(get(), final_target);
+}
 
 let instance = TestCase::new().unwrap();
+// Let `bound`'s initial binding evaluation land on the pill so the
+// binding-path case starts from a steady morph source.
+slint_testing::mock_elapsed_time(2500);
+let circle = slint::shapes::circle(8);
+let pill = slint::shapes::pill(1., 0.6, 0.);
 let triangle = slint::shapes::regular_polygon(3, slint::CornerRounding::UNROUNDED);
 let star = slint::shapes::star(5, 0.5, slint::CornerRounding::UNROUNDED, slint::CornerRounding::UNROUNDED);
+let star7 =
+    slint::shapes::star(7, 0.4, slint::CornerRounding::UNROUNDED, slint::CornerRounding::UNROUNDED);
 
-// Retarget the spring mid-flight: circle -> triangle morph is underway when
-// the target switches to the star.
-instance.set_morph(triangle.clone());
-slint_testing::mock_elapsed_time(100);
-let mid = instance.get_morph();
-slint_testing::mock_elapsed_time(16);
-let pre = instance.get_morph();
-let pre_displacement = outline_delta(&pre, &mid);
-assert!(pre_displacement > 0., "the spring must still be moving: {pre_displacement}");
-
-instance.set_morph(star.clone());
-// The animated outline does not snap at the retarget instant: every anchor
-// of the new morph's start sits on the previous outline.
-let delta = outline_delta(&instance.get_morph(), &pre);
-assert!(delta <= 1e-3, "retarget moved the outline by {delta}");
-
-slint_testing::mock_elapsed_time(16);
-let post = instance.get_morph();
-let post_displacement = outline_delta(&post, &pre);
-
-// Still moving (the spring kept its velocity rather than restarting from
-// rest or freezing): displacement the tick after retargeting stays in the
-// same range as the tick before. Only a lower bound is meaningful here —
-// the carried speed is normalized by the new morph path's perimeter, so its
-// absolute outline displacement can legitimately exceed the old path's.
-assert!(
-    post_displacement > 0.1 * pre_displacement,
-    "velocity must carry across the retarget: {post_displacement} vs {pre_displacement}"
+// Setter path: circle -> triangle morph is underway when the target switches
+// to the star.
+retarget_case(
+    &|| instance.get_morph(),
+    &|s| instance.set_morph(s),
+    circle,
+    triangle,
+    star.clone(),
 );
 
-// The spring settles on the new target.
-slint_testing::mock_elapsed_time(3000);
-assert_eq!(instance.get_morph(), star);
+// Binding path: `bound` re-targets when `bound-target`'s binding re-evaluates.
+retarget_case(
+    &|| instance.get_bound(),
+    &|s| instance.set_bound_target(s),
+    pill,
+    star7,
+    star,
+);
 ```
 
 ```cpp
@@ -109,7 +185,7 @@ auto eval_cubic = [](const float *c, float t) -> std::pair<float, float> {
              c[1] * (u * u * u) + c[3] * (3.f * t * u * u) + c[5] * (3.f * t * t * u)
                  + c[7] * (t * t * t) };
 };
-auto polyline = [&](const slint::Shape &shape) -> std::vector<std::pair<float, float>> {
+auto polyline = [&eval_cubic](const slint::Shape &shape) -> std::vector<std::pair<float, float>> {
     std::vector<std::pair<float, float>> points;
     const auto &cubics = shape.cubics();
     for (size_t i = 0; i + 8 <= cubics.size(); i += 8) {
@@ -119,7 +195,7 @@ auto polyline = [&](const slint::Shape &shape) -> std::vector<std::pair<float, f
     }
     return points;
 };
-auto anchors = [&](const slint::Shape &shape) -> std::vector<std::pair<float, float>> {
+auto anchors = [](const slint::Shape &shape) -> std::vector<std::pair<float, float>> {
     std::vector<std::pair<float, float>> points;
     const auto &cubics = shape.cubics();
     for (size_t i = 0; i + 8 <= cubics.size(); i += 8) {
@@ -127,7 +203,7 @@ auto anchors = [&](const slint::Shape &shape) -> std::vector<std::pair<float, fl
     }
     return points;
 };
-auto dist_to_polyline = [&](std::pair<float, float> p,
+auto dist_to_polyline = [](std::pair<float, float> p,
                            const std::vector<std::pair<float, float>> &line) -> float {
     float min_dist = std::numeric_limits<float>::max();
     for (size_t i = 0; i + 1 < line.size(); i++) {
@@ -154,28 +230,84 @@ auto outline_delta = [&](const slint::Shape &a, const slint::Shape &b) -> float 
     }
     return delta;
 };
+auto perimeter = [&polyline](const slint::Shape &shape) -> float {
+    auto line = polyline(shape);
+    float total = 0.f;
+    for (size_t i = 0; i + 1 < line.size(); i++) {
+        float dx = line[i + 1].first - line[i].first;
+        float dy = line[i + 1].second - line[i].second;
+        total += std::sqrt(dx * dx + dy * dy);
+    }
+    return total;
+};
+// The outline's speed at an instant: distance covered between two frames,
+// measured as the delta of the outline's distance to a fixed reference.
+// Monotone through the spring's cruise for every shape pair here.
+auto outline_speed = [&](const slint::Shape &from, const slint::Shape &a,
+                         const slint::Shape &b) -> float {
+    return outline_delta(from, b) - outline_delta(from, a);
+};
 
+auto retarget_case = [&](auto get, auto retarget, const slint::Shape &start_from,
+                         const slint::Shape &mid_target, const slint::Shape &final_target) {
+    // Evaluate once so the binding holds the current value and has registered
+    // its dependencies — a property first read after the retarget would
+    // already see the new value and never animate.
+    get();
+    // Fly toward the mid target until the spring is clearly moving. T sits
+    // at ~30% of the spring's ~200ms envelope — its cruise — so the speed
+    // windows stay deep inside flight on every target, away from the
+    // underdamped apex and the settled tail. The windows span 10ms: a 1ms
+    // frame step is smaller than the proxy's per-reading jitter on some
+    // targets (i686 read 0 there); 10ms of cruise covers ~0.03 units of
+    // travel, an order above the noise, while the spring's own drift stays
+    // under ~5% across the window.
+    retarget(mid_target);
+    slint_testing::mock_elapsed_time(49);
+    auto t_lo = get();
+    slint_testing::mock_elapsed_time(10);
+    auto t_m1 = get();
+    float pre_speed = outline_speed(start_from, t_lo, t_m1) / 0.010f;
+
+    retarget(final_target);
+    // The animated outline does not snap at the retarget instant: the first
+    // evaluated frame of the new morph reproduces the incoming outline. The
+    // morph pipeline re-segments and re-detects features on construction, so
+    // even progress 0 differs from the source shape by its reproduction drift
+    // (≈0.04 measured on the star-bound morph); a snap to the old start or
+    // the new target would sit ≥0.1 away instead.
+    auto t_0 = get();
+    float delta = outline_delta(t_0, t_m1);
+
+    slint_testing::mock_elapsed_time(10);
+    auto t_hi = get();
+    // The carried scalar speed is preserved across the retarget: the
+    // outline's speed, normalized by each morph's start perimeter (R6's
+    // rel_vel), matches on both sides of T. The Hausdorff proxy's jitter and
+    // the two morphs' differing speed profiles add ~10% bias between windows,
+    // so the bound is 15% — still 3x tighter than the least wrong rescaling
+    // (half-speed lands 50% out) and far above a restart from rest (~0).
+    float post_speed = outline_speed(t_0, t_0, t_hi) / 0.010f;
+    float rel_pre = pre_speed / perimeter(start_from);
+    float rel_post = post_speed / perimeter(t_0);
+    assert(pre_speed > 0.f);
+    assert(delta <= 0.08f);
+    assert(std::fabs(rel_post - rel_pre) <= 0.15f * rel_pre);
+
+    slint_testing::mock_elapsed_time(3000);
+    assert(get() == final_target);
+};
+
+slint_testing::mock_elapsed_time(2500);
+auto circle = slint::shapes::circle(8);
+auto pill = slint::shapes::pill(1.f, 0.6f, 0.f);
 auto triangle = slint::shapes::regular_polygon(3, {});
 auto star = slint::shapes::star(5, 0.5f, {}, {});
+auto star7 = slint::shapes::star(7, 0.4f, {}, {});
 
-instance.set_morph(triangle);
-slint_testing::mock_elapsed_time(100);
-auto mid = instance.get_morph();
-slint_testing::mock_elapsed_time(16);
-auto pre = instance.get_morph();
-float pre_displacement = outline_delta(pre, mid);
-assert(pre_displacement > 0.f);
-
-instance.set_morph(star);
-assert(outline_delta(instance.get_morph(), pre) <= 1e-3f);
-
-slint_testing::mock_elapsed_time(16);
-auto post = instance.get_morph();
-float post_displacement = outline_delta(post, pre);
-
-assert(post_displacement > 0.1f * pre_displacement);
-
-slint_testing::mock_elapsed_time(3000);
-assert(instance.get_morph() == star);
+retarget_case([&] { return instance.get_morph(); },
+              [&](slint::Shape s) { instance.set_morph(s); }, circle, triangle, star);
+retarget_case([&] { return instance.get_bound(); },
+              [&](slint::Shape s) { instance.set_bound_target(s); }, pill, star7, star);
 ```
 */

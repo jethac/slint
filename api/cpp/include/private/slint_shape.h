@@ -8,6 +8,7 @@
 #include "private/slint_models.h"
 #include "private/slint_enums_internal.h"
 #include "private/slint_builtin_structs_internal.h"
+#include "private/slint_properties.h"
 
 #include <memory>
 #include <vector>
@@ -103,6 +104,15 @@ struct ShapeFeature
 /// floats per cubic (anchor0, control0, control1, anchor1).
 struct Shape
 {
+    /// Copies the `#[repr(C)]` FFI twin (`cbindgen_private::Shape`), the
+    /// storage type of `shape` properties on native items — the layouts
+    /// match by construction, so binding a native `shape` property to a
+    /// `Property<Shape>` assigns through here.
+    Shape(const cbindgen_private::Shape &other)
+    {
+        *this = *reinterpret_cast<const Shape *>(&other);
+    }
+    Shape() = default;
     /// The cubic Bézier outline: 8 floats per cubic.
     const SharedVector<float> &cubics() const { return cubics_; }
     /// The feature segmentation of the outline.
@@ -349,13 +359,18 @@ inline const cbindgen_private::Shape &as_cbindgen_shape(const slint::Shape &shap
     return *reinterpret_cast<const cbindgen_private::Shape *>(&shape);
 }
 
+// The `set_animated_binding` helper overload for `slint::Shape` lives in
+// slint_properties.h before the template's definition; only the
+// `set_animated_value` specialization needs the complete type and belongs
+// here. `slint::Shape` is spelled out because `private_api` pulls in
+// `cbindgen_private::Shape` through `using namespace`.
 template<>
 inline void Property<slint::Shape>::set_animated_value(
         const slint::Shape &new_value,
         const cbindgen_private::PropertyAnimation &animation_data) const
 {
-    cbindgen_private::slint_property_set_animated_value_shape(
-            &inner, &as_cbindgen_shape(get()), &as_cbindgen_shape(new_value), &animation_data);
+    cbindgen_private::slint_property_set_animated_value_shape(&inner, &get(), &new_value,
+                                                              &animation_data);
 }
 
 } // namespace private_api

@@ -84,8 +84,16 @@ class Widget(json: JSONObject) {
     /** Button size bucket `xs`/`s`/`m`/`l`/`xl` — maps to the container
      * heights and [ToggleButtonSize]s; `s` is the upstream default. */
     val size: String = (json.opt("size") as? String) ?: "s"
-    /** `round` (default stadium) or `square`. */
-    val shape: String = (json.opt("shape") as? String) ?: "round"
+    /** Button container corners: `round` (default stadium) or `square`. */
+    val corner: String = (json.opt("corner") as? String) ?: "round"
+    /** M3 elevation level (0–5) for `surface` widgets, mapped to
+     * `Modifier.shadow`'s dp by `elevationDp`. */
+    val level: Int = json.optInt("level", 0)
+    /** Caster outline for `surface` widgets: a `MaterialShapes` member name
+     * in kebab case (`"cookie-9-sided"` → `MaterialShapes.Cookie9Sided`), or
+     * `"rect"` (default) for `radius`'s rounded rectangle. */
+    val shape: String =
+        if (json.isNull("shape")) "rect" else json.getString("shape")
     /** Toggle variant (`checkable` on the Slint side, `*ToggleButton`
      * composables upstream). */
     val checkable: Boolean = json.optBoolean("checkable", false)

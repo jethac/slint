@@ -206,6 +206,7 @@ eabihf
 Eeprom
 eiusmod
 ELCDIF
+elementwise
 elems
 elevatedbutton
 elit
@@ -296,8 +297,8 @@ gethighcontrast
 getifs
 getpid
 getrandom
-ghostish
 Ghostish
+ghostish
 globalfun
 globallogic
 Globus
@@ -399,6 +400,7 @@ layoutinfo
 LBUTTONUP
 lerp
 lerping
+letterboxed
 libasound
 libav
 libavcodec
@@ -617,7 +619,9 @@ radiobuttontile
 Raleway
 Randriana
 raphson
+rasterizable
 rasterizer
+rasterizers
 rasterizes
 rasterizing
 RBUTTONUP
@@ -660,6 +664,8 @@ rustls
 rustup
 Rustybuzz
 safeui
+scanline
+scanlines
 scanout
 Schukat
 sclk
@@ -738,6 +744,7 @@ subelement
 subfolders
 submod
 subprinters
+supersample
 supersampling
 surfman
 svgz
@@ -866,8 +873,8 @@ wordlike
 WQXGA
 writeback
 WRONLY
-Wsmeans
 wsmeans
+Wsmeans
 xbuild
 xcarchive
 xcassets
@@ -880,10 +887,8 @@ Xiaolin
 xlib
 xmark
 XOPQ
-XOPQ
 Xrgb
 xshell
-XTRA
 XTRA
 xxaaxx
 YOPQ

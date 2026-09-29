@@ -11,6 +11,10 @@ export component Elevation {
     // `shape` is an element-level property: `Elevation { shape: X }` binds it
     // on this component's root element and `root.shape` forwards it to the
     // caster. When unset it stays empty and the caster uses `border_radius`.
+    // `shape-fit` defaults to `normalized`: the MaterialShapes coordinate
+    // space is the (0,0)-(1,1) square Compose's `RoundedPolygon.toShape()`
+    // maps onto the element — `fill` would stretch the outline's own bounds.
+    shape-fit: ShapeFit.normalized;
 
     // The M3 `level` slot mapped to its dp token (ElevationTokens.levelN).
     property <length> shadow_height:

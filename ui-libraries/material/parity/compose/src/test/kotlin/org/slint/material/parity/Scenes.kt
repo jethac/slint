@@ -50,8 +50,8 @@ import androidx.compose.material3.ToggleButton
 import androidx.compose.material3.ToggleButtonDefaults
 import androidx.compose.material3.Typography
 import androidx.compose.material3.lightColorScheme
+import androidx.compose.material3.toShape
 import androidx.compose.ui.graphics.vector.path
-import androidx.compose.runtime.setValue
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
@@ -405,6 +405,7 @@ private fun CanvasScene(
         // button-family widgets, not widget index — a backdrop `rect`
         // ahead of a button leaves `button0` intact.
         var buttons = 0
+        var surfaces = 0
         scene.widgets.forEach { widget ->
             when {
                 widget.isIconButton -> StateIconButton(
@@ -431,6 +432,24 @@ private fun CanvasScene(
                             .clip(RoundedCornerShapeOrRect(widget.radius.dp))
                             .background(schemeColor(widget.color ?: "primary")),
                     )
+                "surface" -> {
+                    // A clip + color surface: the shape machinery's outline
+                    // and fills. Platform shadows (`Modifier.shadow`,
+                    // `View.elevation`) deadlock layoutlib's hardware
+                    // renderer — `nSyncAndDrawFrame` never returns — so the
+                    // parity surfaces are unelevated; the shadow recipe
+                    // itself is validated against Skia's native `draw_shadow`
+                    // in the i-slint-renderer-skia tests.
+                    val shape = widget.outline()
+                    val tag = "surface${surfaces++}"
+                    Box(
+                        Modifier.offset(widget.x.dp, widget.y.dp)
+                            .size(widget.width.dp, widget.height.dp)
+                            .clip(shape)
+                            .background(schemeColor(widget.color ?: "surface"))
+                            .track(tracer, tag),
+                    )
+                }
                 else -> error("unknown widget kind ${widget.kind}")
             }
         }
@@ -673,7 +692,7 @@ private fun StateButton(
     // `defaultMinSize(MinHeight)` exactly. The label style is overridden on
     // the `Text` below since alpha18's composable hard-codes `labelLarge`.
     val toggleShapes = ToggleButtonDefaults.shapesFor(h).let {
-        if (widget.shape == "square") it.copy(shape = squareShapeFor(widget)) else it
+        if (widget.corner == "square") it.copy(shape = squareShapeFor(widget)) else it
     }
     // `Modifier.height` is exact (not `heightIn`): an extra-small 32dp
     // button is below the composable's internal `defaultMinSize(40dp)` —
@@ -863,7 +882,7 @@ private fun StateButton(
 @Composable
 private fun buttonShapesFor(widget: Widget, h: Dp): androidx.compose.material3.ButtonShapes {
     val base = ButtonDefaults.shapesFor(h)
-    return if (widget.shape == "square") {
+    return if (widget.corner == "square") {
         base.copy(shape = squareShapeFor(widget))
     } else {
         base
@@ -872,6 +891,68 @@ private fun buttonShapesFor(widget: Widget, h: Dp): androidx.compose.material3.B
 
 private fun RoundedCornerShapeOrRect(radius: Dp): Shape =
     if (radius <= 0.dp) RectangleShape else androidx.compose.foundation.shape.RoundedCornerShape(radius)
+
+/** The M3 elevation level → dp mapping `ElevationTokens` generates for
+ * Slint (`level1 = 1dp` … `level5 = 12dp`). */
+fun Widget.elevationDp(): Dp =
+    when (level) {
+        1 -> 1.dp
+        2 -> 3.dp
+        3 -> 6.dp
+        4 -> 8.dp
+        5 -> 12.dp
+        else -> 0.dp
+    }
+
+/** The `MaterialShapes` polygon a scene's `surface` widget names — the same
+ * kebab name `MaterialShapes.<kebab>` exposes on the Slint side. */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun materialShape(name: String): Shape =
+    (
+        when (name) {
+            "circle" -> androidx.compose.material3.MaterialShapes.Circle
+            "square" -> androidx.compose.material3.MaterialShapes.Square
+            "slanted" -> androidx.compose.material3.MaterialShapes.Slanted
+            "arch" -> androidx.compose.material3.MaterialShapes.Arch
+            "fan" -> androidx.compose.material3.MaterialShapes.Fan
+            "arrow" -> androidx.compose.material3.MaterialShapes.Arrow
+            "semi-circle" -> androidx.compose.material3.MaterialShapes.SemiCircle
+            "oval" -> androidx.compose.material3.MaterialShapes.Oval
+            "pill" -> androidx.compose.material3.MaterialShapes.Pill
+            "triangle" -> androidx.compose.material3.MaterialShapes.Triangle
+            "diamond" -> androidx.compose.material3.MaterialShapes.Diamond
+            "clam-shell" -> androidx.compose.material3.MaterialShapes.ClamShell
+            "pentagon" -> androidx.compose.material3.MaterialShapes.Pentagon
+            "gem" -> androidx.compose.material3.MaterialShapes.Gem
+            "sunny" -> androidx.compose.material3.MaterialShapes.Sunny
+            "very-sunny" -> androidx.compose.material3.MaterialShapes.VerySunny
+            "cookie-4-sided" -> androidx.compose.material3.MaterialShapes.Cookie4Sided
+            "cookie-6-sided" -> androidx.compose.material3.MaterialShapes.Cookie6Sided
+            "cookie-7-sided" -> androidx.compose.material3.MaterialShapes.Cookie7Sided
+            "cookie-9-sided" -> androidx.compose.material3.MaterialShapes.Cookie9Sided
+            "cookie-12-sided" -> androidx.compose.material3.MaterialShapes.Cookie12Sided
+            "ghostish" -> androidx.compose.material3.MaterialShapes.Ghostish
+            "clover-4-leaf" -> androidx.compose.material3.MaterialShapes.Clover4Leaf
+            "clover-8-leaf" -> androidx.compose.material3.MaterialShapes.Clover8Leaf
+            "burst" -> androidx.compose.material3.MaterialShapes.Burst
+            "soft-burst" -> androidx.compose.material3.MaterialShapes.SoftBurst
+            "boom" -> androidx.compose.material3.MaterialShapes.Boom
+            "soft-boom" -> androidx.compose.material3.MaterialShapes.SoftBoom
+            "flower" -> androidx.compose.material3.MaterialShapes.Flower
+            "puffy" -> androidx.compose.material3.MaterialShapes.Puffy
+            "puffy-diamond" -> androidx.compose.material3.MaterialShapes.PuffyDiamond
+            "pixel-circle" -> androidx.compose.material3.MaterialShapes.PixelCircle
+            "pixel-triangle" -> androidx.compose.material3.MaterialShapes.PixelTriangle
+            "bun" -> androidx.compose.material3.MaterialShapes.Bun
+            "heart" -> androidx.compose.material3.MaterialShapes.Heart
+            else -> error("scene catalog has no MaterialShapes member for $name")
+        }
+    ).toShape()
+
+@Composable
+fun Widget.outline(): Shape =
+    if (shape == "rect") RoundedCornerShapeOrRect(radius.dp) else materialShape(shape)
 
 @Composable
 private fun schemeColor(role: String): Color =
@@ -984,7 +1065,7 @@ private fun iconSize(widget: Widget) = when (widget.size) {
 private fun iconRestingShape(widget: Widget): Shape {
     val d = IconButtonDefaults
     return when {
-        widget.shape == "square" -> when (widget.size) {
+        widget.corner == "square" -> when (widget.size) {
             "xs" -> d.extraSmallSquareShape
             "s" -> d.smallSquareShape
             "m" -> d.mediumSquareShape
@@ -1021,7 +1102,7 @@ private fun iconPressedShape(widget: Widget): Shape = when (widget.size) {
 private fun iconCheckedShape(widget: Widget): Shape {
     val d = IconButtonDefaults
     return when {
-        widget.shape == "square" -> when (widget.size) {
+        widget.corner == "square" -> when (widget.size) {
             "xs" -> d.extraSmallSelectedSquareShape
             "s" -> d.smallSelectedSquareShape
             "m" -> d.mediumSelectedSquareShape

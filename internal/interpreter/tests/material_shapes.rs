@@ -16,8 +16,9 @@
 //! in `TOLERANT_SHAPES` below and held to a 1e-4 absolute bound, mirroring the
 //! tolerance table in `tests/shapes/golden/README.md`.
 
-use i_slint_core::graphics::shapes::Cubic;
+use i_slint_core::graphics::shapes::{Cubic, Feature, LengthMeasurer, MeasuredPolygon, Measurer};
 use slint_interpreter::{Compiler, Value};
+use std::rc::Rc;
 
 /// `(slint property, golden key)` pairs — all 35 `MaterialShapes` members.
 const SHAPES: &[(&str, &str)] = &[
@@ -151,5 +152,75 @@ fn material_shapes_match_golden() {
             polygon.center_y().to_bits(),
             "{label}: centerY"
         );
+
+        // The feature segmentation (corners + edges, each with its cubic
+        // count) — this is what morph feature matching groups on.
+        let expected_features = entry["features"].as_array().unwrap();
+        let features = polygon.features();
+        assert_eq!(expected_features.len(), features.len(), "{label}: feature count");
+        for (i, (feature, expected)) in features.iter().zip(expected_features.iter()).enumerate() {
+            let (kind, count, convex) = match feature {
+                Feature::Edge(cubics) => ("edge", cubics.len(), None),
+                Feature::Corner { cubics, convex } => ("corner", cubics.len(), Some(*convex)),
+            };
+            assert_eq!(expected["kind"].as_str().unwrap(), kind, "{label}: feature[{i}] kind");
+            assert_eq!(
+                expected["count"].as_u64().unwrap() as usize,
+                count,
+                "{label}: feature[{i}] count"
+            );
+            if let Some(convex) = convex {
+                assert_eq!(
+                    expected["convex"].as_bool().unwrap(),
+                    convex,
+                    "{label}: feature[{i}] convex"
+                );
+            }
+        }
+
+        // The measured corner progress along the outline — the morph
+        // mapper's input. `start_offset` is the feature's progress in
+        // [0, 1); for trig-derived shapes the arc-length progression may
+        // differ in the last ulp, so TOLERANT_SHAPES gets the 1e-4 bound.
+        let measured = MeasuredPolygon::measure_polygon(
+            Rc::new(LengthMeasurer::default()) as Rc<dyn Measurer>,
+            &polygon,
+        )
+        .expect("{label}: measure_polygon");
+        let expected_measured = entry["measured_features"].as_array().unwrap();
+        assert_eq!(
+            expected_measured.len(),
+            measured.features.len(),
+            "{label}: measured feature count"
+        );
+        for (i, (pf, expected)) in
+            measured.features.iter().zip(expected_measured.iter()).enumerate()
+        {
+            let Feature::Corner { cubics, convex } = pf.feature() else {
+                panic!("{label}: measured feature[{i}] is not a corner")
+            };
+            assert_eq!(
+                expected["convex"].as_bool().unwrap(),
+                *convex,
+                "{label}: measured feature[{i}] convex"
+            );
+            assert_eq!(
+                expected["count"].as_u64().unwrap() as usize,
+                cubics.len(),
+                "{label}: measured feature[{i}] count"
+            );
+            let expected_offset = f32_bits(&expected["start_offset"]);
+            if expected_offset.to_bits() != pf.progress().to_bits() {
+                let diff = (expected_offset - pf.progress()).abs();
+                assert!(
+                    tolerant && diff <= 1e-4,
+                    "{label}: measured feature[{i}] start_offset: expected \
+                     {expected_offset} ({:#x}) got {} ({:#x})",
+                    expected_offset.to_bits(),
+                    pf.progress(),
+                    pf.progress().to_bits()
+                );
+            }
+        }
     }
 }

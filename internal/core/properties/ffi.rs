@@ -315,6 +315,26 @@ pub unsafe extern "C" fn slint_property_set_animated_value_font_variations(
     c_set_animated_value(handle, from.clone(), to.clone(), animation_data);
 }
 
+/// Internal function to set up a property animation to the specified target value for a shape property.
+/// `from`/`to` are `void*` because `slint::Shape` is defined in a handwritten
+/// C++ header, like the `slint_shapes_*` entry points' `out` buffers.
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn slint_property_set_animated_value_shape(
+    handle: &PropertyHandleOpaque,
+    from: *const c_void,
+    to: *const c_void,
+    animation_data: &PropertyAnimation,
+) {
+    unsafe {
+        c_set_animated_value(
+            handle,
+            (*(from as *const Shape)).clone(),
+            (*(to as *const Shape)).clone(),
+            animation_data,
+        );
+    }
+}
+
 unsafe fn c_set_animated_binding<T: InterpolatedPropertyValue + Clone>(
     handle: &PropertyHandleOpaque,
     binding: extern "C" fn(*mut c_void, *mut T),
@@ -457,6 +477,30 @@ pub unsafe extern "C" fn slint_property_set_animated_binding_font_variations(
     ) -> PropertyAnimation,
 ) {
     unsafe {
+        c_set_animated_binding(handle, binding, user_data, drop_user_data, transition_data);
+    }
+}
+
+/// Internal function to set up a property animation between values produced by the specified binding for a shape property.
+/// The binding's out-pointer is `void*` because `slint::Shape` is defined in a
+/// handwritten C++ header, like the `slint_shapes_*` entry points' `out`
+/// buffers.
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn slint_property_set_animated_binding_shape(
+    handle: &PropertyHandleOpaque,
+    binding: extern "C" fn(*mut c_void, *mut c_void),
+    user_data: *mut c_void,
+    drop_user_data: Option<extern "C" fn(*mut c_void)>,
+    transition_data: extern "C" fn(
+        user_data: *mut c_void,
+        start_instant: &mut *mut u64,
+    ) -> PropertyAnimation,
+) {
+    unsafe {
+        let binding = core::mem::transmute::<
+            extern "C" fn(*mut c_void, *mut c_void),
+            extern "C" fn(*mut c_void, *mut Shape),
+        >(binding);
         c_set_animated_binding(handle, binding, user_data, drop_user_data, transition_data);
     }
 }

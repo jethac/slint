@@ -988,10 +988,13 @@ impl ItemRenderer for SkiaItemRenderer<'_> {
         self.current_state.transform
     }
 
-    /// The elevation shadow of an element: the Android ambient + spot model
-    /// (`i_slint_core::graphics::shadow`). Each layer is tessellated into an
-    /// A8 mask bounded by the shadow's extent in device space, tinted to the
-    /// layer's color, and drawn as a premultiplied image.
+    /// The elevation shadow of an element via Skia's own
+    /// `SkShadowUtils::DrawShadow` — the Android ambient + spot model the
+    /// ported `i_slint_core::graphics::shadow` rasterizer mirrors for the
+    /// other renderers. The path is fitted into the item's bounds in physical
+    /// pixels, matching the physical space the canvas transform operates in;
+    /// the light comes back from `elevation_light` in device space, which is
+    /// exactly what `DrawShadow` expects for `light_pos`.
     #[allow(clippy::unnecessary_cast)] // Coord
     fn draw_elevation_shadow(
         &mut self,
@@ -1017,76 +1020,29 @@ impl ItemRenderer for SkiaItemRenderer<'_> {
         }
         let outline = shadow_item.element_outline();
 
-        // Map item space to physical window space: the item transform in
-        // logical coordinates scaled by the scale factor (the same space the
-        // canvas draws in).
-        let t = self.current_state.transform;
-        let ctm = shadow::Affine::new(
-            t.m11 * scale_factor,
-            t.m12 * scale_factor,
-            t.m21 * scale_factor,
-            t.m22 * scale_factor,
-            t.m31 * scale_factor,
-            t.m32 * scale_factor,
-        );
-
         let adapter = WindowInner::from_pub(self.window).window_adapter();
-        let (light, light_radius) =
-            shadow::elevation_light(adapter.display_geometry(), adapter.size());
-        let masks = shadow::elevation_shadow_masks(
-            &outline,
-            geom.cast::<f32>(),
-            &ctm,
-            z,
-            light,
-            light_radius,
-            caster_alpha < 1.,
+        let (light, light_radius) = shadow::elevation_light(
+            adapter.display_geometry(),
+            adapter.size(),
+            self.window.scale_factor(),
         );
 
-        for (layer, color) in [(masks.ambient, ambient_color), (masks.spot, spot_color)].into_iter()
-        {
-            let Some(layer) = layer else { continue };
-            if color.alpha() == 0 {
-                continue;
-            }
-            // Tint the mask: premultiplied color × coverage.
-            let data: Vec<u8> = layer
-                .mask
-                .iter()
-                .flat_map(|&a| {
-                    let alpha = (u16::from(a) * u16::from(color.alpha()) + 127) / 255;
-                    [
-                        (u16::from(color.red()) * alpha + 127) / 255,
-                        (u16::from(color.green()) * alpha + 127) / 255,
-                        (u16::from(color.blue()) * alpha + 127) / 255,
-                        alpha,
-                    ]
-                    .map(|v| v as u8)
-                })
-                .collect();
-            let image_info = crate::image_info(
-                skia_safe::ISize::new(layer.size.width as i32, layer.size.height as i32),
-                skia_safe::ColorType::RGBA8888,
-                skia_safe::AlphaType::Premul,
-            );
-            let Some(image) = skia_safe::images::raster_from_data(
-                &image_info,
-                skia_safe::Data::new_copy(&data),
-                layer.size.width as usize * 4,
-            ) else {
-                continue;
-            };
-            // The mask is a device-space raster: draw it untransformed,
-            // snapped to whole pixels so the coverage ramp isn't resampled.
-            self.canvas.save();
-            self.canvas.reset_matrix();
-            self.canvas.draw_image(
-                image,
-                skia_safe::Point::new(layer.rect.origin.x.round(), layer.rect.origin.y.round()),
-                self.default_paint().as_ref(),
-            );
-            self.canvas.restore();
+        let path = outline_to_skia_path(&outline, geom * self.scale_factor);
+        if path.is_empty() {
+            return;
         }
+
+        let flags = (caster_alpha < 1.)
+            .then_some(skia_safe::utils::shadow_utils::ShadowFlags::TRANSPARENT_OCCLUDER);
+        self.canvas.draw_shadow(
+            &path,
+            skia_safe::Point3::new(0., 0., z),
+            skia_safe::Point3::new(light[0], light[1], light[2]),
+            light_radius,
+            to_skia_color(&ambient_color),
+            to_skia_color(&spot_color),
+            flags,
+        );
     }
 
     fn rotate(&mut self, angle_in_degrees: f32) {
@@ -1529,4 +1485,430 @@ pub fn to_skia_color(col: &Color) -> skia_safe::Color {
 /// Gamma encoded sRGB as well, see [`to_skia_color`].
 pub fn to_skia_color4f(col: &Color) -> skia_safe::Color4f {
     to_skia_color(col).into()
+}
+
+#[cfg(test)]
+mod shadow_parity_tests {
+    //! The ported `i_slint_core::graphics::shadow` rasterizer vs. the native
+    //! `SkShadowUtils::DrawShadow` oracle the Skia renderer draws with. Both
+    //! render the Android ambient + spot model; this draws each into a raster
+    //! surface and compares the pixels (the caster is composited on top of
+    //! both, as in a real frame, so umbra dropped under an opaque caster
+    //! doesn't count as a difference).
+    use super::*;
+    use i_slint_core::graphics::ElementOutline;
+    use i_slint_core::graphics::shadow::{self, Affine};
+    use i_slint_core::items::ShapeFit;
+    use i_slint_core::lengths::LogicalBorderRadius;
+
+    const W: i32 = 480;
+    const H: i32 = 360;
+
+    fn snapshot(surface: &mut skia_safe::Surface) -> Vec<u8> {
+        surface
+            .image_snapshot()
+            .peek_pixels()
+            .and_then(|p| p.bytes().map(<[u8]>::to_vec))
+            .unwrap_or_default()
+    }
+
+    fn clear(surface: &mut skia_safe::Surface) {
+        surface.canvas().clear(skia_safe::Color::WHITE);
+    }
+
+    /// The ported rasterizer's draw: tint each mask layer and composite it
+    /// snapped to whole device pixels.
+    fn draw_ported(
+        surface: &mut skia_safe::Surface,
+        outline: &ElementOutline,
+        geom: LogicalRect,
+        ctm: &Affine,
+        z: f32,
+        light: [f32; 3],
+        light_radius: f32,
+        caster_alpha: f32,
+        ambient: i_slint_core::graphics::Color,
+        spot: i_slint_core::graphics::Color,
+    ) {
+        let masks = shadow::elevation_shadow_masks(
+            outline,
+            geom,
+            ctm,
+            z,
+            light,
+            light_radius,
+            caster_alpha < 1.,
+        );
+        let canvas = surface.canvas();
+        for (layer, color) in [(masks.ambient, ambient), (masks.spot, spot)].into_iter() {
+            let Some(layer) = layer else { continue };
+            if color.alpha() == 0 {
+                continue;
+            }
+            let data: Vec<u8> = layer
+                .mask
+                .iter()
+                .flat_map(|&a| {
+                    let alpha = (u16::from(a) * u16::from(color.alpha()) + 127) / 255;
+                    [
+                        (u16::from(color.red()) * alpha + 127) / 255,
+                        (u16::from(color.green()) * alpha + 127) / 255,
+                        (u16::from(color.blue()) * alpha + 127) / 255,
+                        alpha,
+                    ]
+                    .map(|v| v as u8)
+                })
+                .collect();
+            let image_info = crate::image_info(
+                skia_safe::ISize::new(layer.size.width as i32, layer.size.height as i32),
+                skia_safe::ColorType::RGBA8888,
+                skia_safe::AlphaType::Premul,
+            );
+            let Some(image) = skia_safe::images::raster_from_data(
+                &image_info,
+                skia_safe::Data::new_copy(&data),
+                layer.size.width as usize * 4,
+            ) else {
+                continue;
+            };
+            canvas.save();
+            canvas.reset_matrix();
+            canvas.draw_image(
+                image,
+                skia_safe::Point::new(layer.rect.origin.x.round(), layer.rect.origin.y.round()),
+                None,
+            );
+            canvas.restore();
+        }
+    }
+
+    /// The native draw, matching `draw_elevation_shadow`: the path in
+    /// physical local space, `canvas_ctm` mapping physical local to device
+    /// space, z/light/radius in device pixels.
+    fn draw_native(
+        surface: &mut skia_safe::Surface,
+        outline: &ElementOutline,
+        geom_phys: PhysicalRect,
+        canvas_ctm: &skia_safe::Matrix,
+        z: f32,
+        light: [f32; 3],
+        light_radius: f32,
+        caster_alpha: f32,
+        ambient: i_slint_core::graphics::Color,
+        spot: i_slint_core::graphics::Color,
+    ) {
+        let canvas = surface.canvas();
+        canvas.save();
+        canvas.set_matrix(&(*canvas_ctm).into());
+        let path = outline_to_skia_path(outline, geom_phys);
+        let flags = (caster_alpha < 1.)
+            .then_some(skia_safe::utils::shadow_utils::ShadowFlags::TRANSPARENT_OCCLUDER);
+        canvas.draw_shadow(
+            &path,
+            skia_safe::Point3::new(0., 0., z),
+            skia_safe::Point3::new(light[0], light[1], light[2]),
+            light_radius,
+            to_skia_color(&ambient),
+            to_skia_color(&spot),
+            flags,
+        );
+        canvas.restore();
+    }
+
+    /// Composite the caster silhouette over the shadow, as the real frame
+    /// does — the umbra under an opaque caster must not count as a
+    /// difference.
+    fn draw_caster(
+        surface: &mut skia_safe::Surface,
+        outline: &ElementOutline,
+        geom_phys: PhysicalRect,
+        canvas_ctm: &skia_safe::Matrix,
+        alpha: f32,
+    ) {
+        let canvas = surface.canvas();
+        canvas.save();
+        canvas.set_matrix(&(*canvas_ctm).into());
+        let path = outline_to_skia_path(outline, geom_phys);
+        let mut paint = skia_safe::Paint::default();
+        paint.set_anti_alias(true);
+        paint.set_color(skia_safe::Color::from_argb((alpha * 255.) as u8, 255, 255, 255));
+        canvas.draw_path(&path, &paint);
+        canvas.restore();
+    }
+
+    fn to_skia_matrix(a: &Affine) -> skia_safe::Matrix {
+        // SkMatrix order: scaleX, skewX, transX, skewY, scaleY, transY —
+        // the affine's m21/m12 swap places.
+        skia_safe::Matrix::new_all(a.m11, a.m21, a.tx, a.m12, a.m22, a.ty, 0., 0., 1.)
+    }
+
+    /// Per-pixel comparison over premultiplied RGBA buffers.
+    fn compare(name: &str, ported: &[u8], native: &[u8]) {
+        assert_eq!(ported.len(), native.len());
+        let n = ported.len() / 4;
+        let mut sum = 0u64;
+        let mut max = 0u8;
+        let mut big = 0usize;
+        let mut ported_alpha = 0usize;
+        let mut native_alpha = 0usize;
+        for i in 0..n {
+            let d = (0..4)
+                .map(|c| (ported[i * 4 + c] as i32 - native[i * 4 + c] as i32).unsigned_abs() as u8)
+                .max()
+                .unwrap_or(0);
+            sum += d as u64;
+            max = max.max(d);
+            if d > 64 {
+                big += 1;
+            }
+            // The Android model's alphas are low (ambient ≈ 10/255, spot ≈
+            // 48/255), so any darkening past quantization noise counts.
+            if 255 - ported[i * 4].min(ported[i * 4 + 1]).min(ported[i * 4 + 2]) > 8 {
+                ported_alpha += 1;
+            }
+            if 255 - native[i * 4].min(native[i * 4 + 1]).min(native[i * 4 + 2]) > 8 {
+                native_alpha += 1;
+            }
+        }
+        let mean = sum as f64 / n as f64;
+        eprintln!(
+            "{name}: mean={mean:.2} max={max} big(>64)={big} ported_shadow={ported_alpha} native_shadow={native_alpha}"
+        );
+        // Sanity: each pipeline produced a visible shadow at all.
+        assert!(ported_alpha > 50, "{name}: ported shadow empty ({ported_alpha})");
+        assert!(native_alpha > 50, "{name}: native shadow empty ({native_alpha})");
+        // The two rasterizers quantize coverage differently (4×4 supersample
+        // vs. tessellated vertices): individual pixels along the penumbra
+        // ramp disagree, but the average must be tight and large misses rare.
+        assert!(mean < 12., "{name}: mean diff {mean}");
+        assert!((big as f64) < n as f64 * 0.02, "{name}: {big} pixels differ by >64");
+    }
+
+    struct Case {
+        name: &'static str,
+        outline: ElementOutline,
+        /// Item size in logical px.
+        w: f32,
+        h: f32,
+        /// Logical transform (translate/rotate/scale).
+        xf: Affine,
+        sf: f32,
+        /// Elevation in logical px.
+        elevation: f32,
+        caster_alpha: f32,
+    }
+
+    fn run(case: &Case) {
+        let Case { name, ref outline, w, h, xf, sf, elevation, caster_alpha } = *case;
+
+        // Ported ctm: logical→device — elementwise × sf.
+        let ctm =
+            Affine::new(xf.m11 * sf, xf.m12 * sf, xf.m21 * sf, xf.m22 * sf, xf.tx * sf, xf.ty * sf);
+        // Canvas ctm for the native path: physical-local→device — linear part
+        // of the logical transform, translations scaled.
+        let canvas_ctm = Affine::new(xf.m11, xf.m12, xf.m21, xf.m22, xf.tx * sf, xf.ty * sf);
+        let canvas_matrix = to_skia_matrix(&canvas_ctm);
+
+        let z = elevation * sf;
+        let (light, light_radius) = shadow::elevation_light(
+            None,
+            i_slint_core::api::PhysicalSize::new((W as f32 * sf) as u32, (H as f32 * sf) as u32),
+            sf,
+        );
+        let ambient = shadow::effective_ambient_color(Color::from_rgb_u8(0, 0, 0), caster_alpha);
+        let spot = shadow::effective_spot_color(Color::from_rgb_u8(0, 0, 0), caster_alpha);
+        let geom = euclid::rect(0., 0., w, h);
+        let geom_phys =
+            PhysicalRect::new(PhysicalPoint::new(0., 0.), PhysicalSize::new(w * sf, h * sf));
+
+        let mut s_ported = skia_safe::surfaces::raster_n32_premul((W, H)).unwrap();
+        clear(&mut s_ported);
+        draw_ported(
+            &mut s_ported,
+            &outline,
+            geom,
+            &ctm,
+            z,
+            light,
+            light_radius,
+            caster_alpha,
+            ambient,
+            spot,
+        );
+        draw_caster(&mut s_ported, &outline, geom_phys, &canvas_matrix, caster_alpha);
+        let p = snapshot(&mut s_ported);
+
+        let mut s_native = skia_safe::surfaces::raster_n32_premul((W, H)).unwrap();
+        clear(&mut s_native);
+        draw_native(
+            &mut s_native,
+            &outline,
+            geom_phys,
+            &canvas_matrix,
+            z,
+            light,
+            light_radius,
+            caster_alpha,
+            ambient,
+            spot,
+        );
+        draw_caster(&mut s_native, &outline, geom_phys, &canvas_matrix, caster_alpha);
+        let n = snapshot(&mut s_native);
+
+        compare(name, &p, &n);
+    }
+
+    fn rect_outline() -> ElementOutline {
+        ElementOutline::Rectangle(LogicalBorderRadius::default())
+    }
+
+    fn rounded_outline(r: f32) -> ElementOutline {
+        ElementOutline::Rectangle(LogicalBorderRadius::new_uniform(r))
+    }
+
+    fn shape_outline(s: i_slint_core::graphics::Shape) -> ElementOutline {
+        ElementOutline::Shape { shape: s, fit: ShapeFit::Fill }
+    }
+
+    #[test]
+    fn elevation_shadow_port_matches_native_skia() {
+        use i_slint_core::graphics::shapes;
+
+        let star =
+            shape_outline(shapes::star_shape(4, 0.45, Default::default(), Default::default()));
+        let circle = shape_outline(shapes::circle_shape(64));
+
+        let cases = [
+            // Convex casters, several elevations.
+            Case {
+                name: "rect z4 d1",
+                outline: rect_outline(),
+                w: 96.,
+                h: 64.,
+                xf: Affine::new(1., 0., 0., 1., 80., 90.),
+                sf: 1.,
+                elevation: 4.,
+                caster_alpha: 1.,
+            },
+            Case {
+                name: "rect z16 d1",
+                outline: rect_outline(),
+                w: 96.,
+                h: 64.,
+                xf: Affine::new(1., 0., 0., 1., 80., 90.),
+                sf: 1.,
+                elevation: 16.,
+                caster_alpha: 1.,
+            },
+            Case {
+                name: "rrect z24 d1",
+                outline: rounded_outline(14.),
+                w: 120.,
+                h: 80.,
+                xf: Affine::new(1., 0., 0., 1., 200., 140.),
+                sf: 1.,
+                elevation: 24.,
+                caster_alpha: 1.,
+            },
+            // Concave caster.
+            Case {
+                name: "star z8 d1",
+                outline: star.clone(),
+                w: 110.,
+                h: 110.,
+                xf: Affine::new(1., 0., 0., 1., 300., 60.),
+                sf: 1.,
+                elevation: 8.,
+                caster_alpha: 1.,
+            },
+            Case {
+                name: "star z8 d1 translucent",
+                outline: star.clone(),
+                w: 110.,
+                h: 110.,
+                xf: Affine::new(1., 0., 0., 1., 300., 200.),
+                sf: 1.,
+                elevation: 8.,
+                caster_alpha: 0.6,
+            },
+            // Convex shape + translucent.
+            Case {
+                name: "circle z12 d1 translucent",
+                outline: circle.clone(),
+                w: 90.,
+                h: 90.,
+                xf: Affine::new(1., 0., 0., 1., 140., 220.),
+                sf: 1.,
+                elevation: 12.,
+                caster_alpha: 0.6,
+            },
+            // Transform: rotate + non-uniform scale.
+            Case {
+                name: "rect z8 rotated",
+                outline: rect_outline(),
+                w: 96.,
+                h: 64.,
+                xf: Affine::new(0.985, 0.174, -0.191, 1.078, 60., 60.),
+                sf: 1.,
+                elevation: 8.,
+                caster_alpha: 1.,
+            },
+            Case {
+                name: "star z12 rotated",
+                outline: star.clone(),
+                w: 100.,
+                h: 100.,
+                xf: Affine::new(0.899, 0.416, -0.416, 0.899, 250., 180.),
+                sf: 1.,
+                elevation: 12.,
+                caster_alpha: 1.,
+            },
+            // Density 2.
+            Case {
+                name: "rect z8 d2",
+                outline: rect_outline(),
+                w: 96.,
+                h: 64.,
+                xf: Affine::new(1., 0., 0., 1., 40., 40.),
+                sf: 2.,
+                elevation: 8.,
+                caster_alpha: 1.,
+            },
+            Case {
+                name: "star z16 d2 translucent",
+                outline: star.clone(),
+                w: 90.,
+                h: 90.,
+                xf: Affine::new(1., 0., 0., 1., 90., 150.),
+                sf: 2.,
+                elevation: 16.,
+                caster_alpha: 0.6,
+            },
+            Case {
+                name: "circle z6 d2",
+                outline: circle.clone(),
+                w: 70.,
+                h: 70.,
+                xf: Affine::new(1., 0., 0., 1., 160., 40.),
+                sf: 2.,
+                elevation: 6.,
+                caster_alpha: 1.,
+            },
+            // Fractional origin.
+            Case {
+                name: "rect z8 frac",
+                outline: rect_outline(),
+                w: 96.,
+                h: 64.,
+                xf: Affine::new(1., 0., 0., 1., 63.7, 88.4),
+                sf: 1.,
+                elevation: 8.,
+                caster_alpha: 1.,
+            },
+        ];
+
+        for case in &cases {
+            run(case);
+        }
+    }
 }

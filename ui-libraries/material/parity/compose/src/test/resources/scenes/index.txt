@@ -8,6 +8,7 @@ button-release-morph
 button-sizes
 button-states
 button-styles
+elevation-surfaces
 icon-button-focus
 icon-button-press-morph
 icon-button-states
@@ -24,8 +25,11 @@ negative-icon-button-morph
 negative-press-overlay
 negative-radius
 negative-recolor
+negative-shape-fit
+negative-shape-leak
 negative-thumb-offset
 negative-toggle-select
+negative-wrong-shadow
 spring-motion
 toggle-buttons
 toggle-select-morph
