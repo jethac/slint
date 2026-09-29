@@ -271,7 +271,7 @@ impl Item for Flickable {
     ) -> RenderingResult {
         (*backend).combine_clip(
             LogicalRect::new(LogicalPoint::default(), size),
-            LogicalBorderRadius::zero(),
+            &crate::graphics::ElementOutline::Rectangle(LogicalBorderRadius::zero()),
         );
         RenderingResult::ContinueRenderingChildren
     }
@@ -283,6 +283,13 @@ impl Item for Flickable {
         geometry: LogicalRect,
     ) -> LogicalRect {
         geometry
+    }
+
+    fn boundary_shape(
+        self: core::pin::Pin<&Self>,
+        _geometry: LogicalRect,
+    ) -> crate::graphics::ItemBoundaryShape {
+        Default::default()
     }
 
     fn clips_children(self: core::pin::Pin<&Self>) -> bool {

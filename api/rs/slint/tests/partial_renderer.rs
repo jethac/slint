@@ -40,6 +40,12 @@ impl TargetPixel for TestPixel {
         *self = Self(true);
     }
 
+    fn lerp_from(&mut self, src: Self, mask: u8) {
+        if src.0 && mask != 0 {
+            *self = Self(true);
+        }
+    }
+
     fn from_rgb(_red: u8, _green: u8, _blue: u8) -> Self {
         Self(true)
     }

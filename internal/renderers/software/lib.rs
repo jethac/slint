@@ -24,6 +24,8 @@ mod minimal_software_window;
 #[cfg(feature = "path")]
 mod path;
 mod scene;
+#[cfg(feature = "path")]
+pub mod shape_raster;
 
 pub use self::api::*;
 use self::box_shadow::{BoxShadowCommand, process_drop_shadow};
@@ -2929,6 +2931,250 @@ impl<'a, T: ProcessScene> SceneBuilder<'a, T> {
         );
     }
 
+    /// Draws the background and border of an element whose outline is a `shape`.
+    #[cfg(feature = "path")]
+    fn draw_shape_outline(&mut self, rect: Pin<&dyn RenderBorderRectangle>, size: LogicalSize) {
+        let geom = LogicalRect::from(size);
+        if !self.should_draw(&geom) {
+            return;
+        }
+        let alpha = (self.current_state.alpha * 255.) as u8;
+        if alpha == 0 {
+            return;
+        }
+        let outline = rect.outline();
+        let scale_factor = self.scale_factor;
+        let contours =
+            outline.flatten(geom.cast(), shape_raster::FLATTEN_TOLERANCE / scale_factor.get());
+        // A `cover` fit overflows the element, so the path covers the outline's own bounds.
+        let bounds = euclid::Box2D::from_points(contours.iter().flatten()).to_rect();
+        if bounds.is_empty() {
+            return;
+        }
+        let offset = self.current_state.offset.to_vector().cast::<f32>();
+        let gradient_box =
+            (geom.cast::<f32>().translate(offset) * scale_factor).transformed(self.rotation);
+        let physical_geom_f32 = bounds.translate(offset) * scale_factor;
+        let rounded_geom = physical_geom_f32.round_out();
+        let physical_geom = rounded_geom.cast().transformed(self.rotation);
+        let rotation = RotationInfo {
+            orientation: self.rotation.orientation,
+            screen_size: rounded_geom.size.cast::<i16>() + euclid::size2(1, 1),
+        };
+        let shift: euclid::Vector2D<f32, PhysicalPx> =
+            physical_geom_f32.origin - rounded_geom.origin;
+        let Some(clipped_geom) =
+            self.physical_clip().and_then(|clip| physical_geom.intersection(&clip))
+        else {
+            return;
+        };
+
+        let mut commands = Vec::new();
+        for contour in contours {
+            let mut points = contour.into_iter().map(|p| {
+                let local: euclid::Vector2D<f32, PhysicalPx> = (p - bounds.origin) * scale_factor;
+                let p = (euclid::Point2D::<f32, PhysicalPx>::origin() + local + shift)
+                    .transformed(rotation);
+                zeno::Point::new(p.x, p.y)
+            });
+            let Some(first) = points.next() else { continue };
+            commands.push(path::Command::MoveTo(first));
+            commands.extend(points.map(path::Command::LineTo));
+            commands.push(path::Command::Close);
+        }
+
+        let orientation = self.rotation.orientation;
+        let resolve_paint = |brush: Brush| {
+            let mut gradients = Vec::new();
+            let fill = gradient_commands(
+                &brush,
+                alpha,
+                orientation,
+                gradient_box,
+                clipped_geom.cast(),
+                scale_factor,
+                &mut |rect, gradient| gradients.push((rect, gradient)),
+            );
+            match fill {
+                BrushFill::Solid(color) => {
+                    let color = PremultipliedRgbaColor::from(color);
+                    (color.alpha > 0).then_some(path::Paint::Solid(color))
+                }
+                BrushFill::Gradient => Some(path::Paint::Gradient(gradients)),
+            }
+        };
+
+        let background = rect.background();
+        if !background.is_transparent()
+            && let Some(paint) = resolve_paint(background)
+        {
+            self.processor.process_filled_path(
+                physical_geom,
+                clipped_geom,
+                commands.clone(),
+                paint,
+                outline.fill_rule(),
+                &self.rounded_clips,
+            );
+        }
+        let border_width = rect.border_width();
+        let border_color = rect.border_color();
+        if border_width.get() > 0 as Coord
+            && !border_color.is_transparent()
+            && let Some(paint) = resolve_paint(border_color)
+        {
+            let stroke_style = path::StrokeStyle {
+                width: (border_width.cast() * scale_factor).get(),
+                line_cap: i_slint_core::items::LineCap::Butt,
+                line_join: i_slint_core::items::LineJoin::Miter,
+                miter_limit: 4.,
+                dash_array: &[],
+                dash_offset: 0.,
+            };
+            self.processor.process_stroked_path(
+                physical_geom,
+                clipped_geom,
+                commands,
+                paint,
+                stroke_style,
+                &self.rounded_clips,
+            );
+        }
+    }
+
+    /// Draws a drop or inset shadow of `outline`, spread and blurred, as an alpha mask in the
+    /// shadow color.
+    #[cfg(feature = "path")]
+    #[allow(clippy::unnecessary_cast)] // Coord
+    fn draw_mask_shadow(
+        &mut self,
+        box_shadow: Pin<&i_slint_core::items::BoxShadow>,
+        size: LogicalSize,
+        outline: i_slint_core::graphics::ElementOutline,
+    ) {
+        let geom = LogicalRect::from(size);
+        let color = self.alpha_color(box_shadow.color());
+        if color.alpha() == 0 {
+            return;
+        }
+        let Some(clip) = self.physical_clip() else { return };
+        let logical_geom = geom.translate(self.current_state.offset.to_vector()).cast::<f32>();
+        let scale_factor = self.scale_factor;
+        let rotation = self.rotation;
+        let transform_continuous = |mut p: shape_raster::Point| {
+            if rotation.orientation.mirror_width() {
+                p.x = rotation.screen_size.width as f32 - p.x;
+            }
+            if rotation.orientation.mirror_height() {
+                p.y = rotation.screen_size.height as f32 - p.y;
+            }
+            if rotation.orientation.is_transpose() {
+                core::mem::swap(&mut p.x, &mut p.y);
+            }
+            p
+        };
+        let mut contours: Vec<shape_raster::Contour> = outline
+            .flatten(logical_geom, shape_raster::FLATTEN_TOLERANCE / scale_factor.get())
+            .into_iter()
+            .map(|c| c.into_iter().map(|p| transform_continuous(p * scale_factor)).collect())
+            .collect();
+        if contours.iter().all(|c| c.is_empty()) {
+            return;
+        }
+
+        let spread = box_shadow.spread().get() as f32 * scale_factor.get();
+        let sigma = box_shadow.blur().get() as f32 * scale_factor.get() / 2.;
+        let margin = (3. * sigma).ceil() as i32 + 1;
+        // The offset is applied in physical space so its direction rotates with the element.
+        let zero = transform_continuous(shape_raster::Point::new(0., 0.));
+        let off = transform_continuous(shape_raster::Point::new(
+            box_shadow.offset_x().get() as f32 * scale_factor.get(),
+            box_shadow.offset_y().get() as f32 * scale_factor.get(),
+        )) - zero;
+        let shifted = |contours: &mut Vec<shape_raster::Contour>| {
+            for p in contours.iter_mut().flatten() {
+                *p += off;
+            }
+        };
+
+        let inset = box_shadow.inset();
+        let mut hole_contours = Vec::new();
+        if inset {
+            hole_contours = contours.clone();
+            shifted(&mut hole_contours);
+        } else {
+            shifted(&mut contours);
+        }
+        let pad =
+            spread.abs() + margin as f32 + if inset { off.x.abs() + off.y.abs() } else { 0. };
+        let mut min = shape_raster::Point::splat(f32::MAX);
+        let mut max = shape_raster::Point::splat(f32::MIN);
+        for p in contours.iter().flatten() {
+            min = min.min(*p);
+            max = max.max(*p);
+        }
+        let mask_origin = euclid::point2::<i32, PhysicalPx>(
+            (min.x - pad).floor() as i32,
+            (min.y - pad).floor() as i32,
+        );
+        let mask_size = euclid::size2::<i32, PhysicalPx>(
+            (max.x + pad).ceil() as i32 - mask_origin.x,
+            (max.y + pad).ceil() as i32 - mask_origin.y,
+        );
+        let (w, h) = (mask_size.width.max(0) as usize, mask_size.height.max(0) as usize);
+        if w == 0 || h == 0 {
+            return;
+        }
+
+        let coverage = shape_raster::rasterize_spread_mask(
+            &contours,
+            if inset { 0. } else { spread },
+            mask_origin,
+            mask_size,
+            outline.fill_rule(),
+        );
+        let mut blurred = alloc::vec![0; coverage.len()];
+        if inset {
+            // The ring is what the offset hole, eroded by the spread, doesn't cover.
+            // Blurred and masked by the element's coverage, it hugs the inside edge.
+            let hole = shape_raster::rasterize_spread_mask(
+                &hole_contours,
+                -spread,
+                mask_origin,
+                mask_size,
+                outline.fill_rule(),
+            );
+            let ring: Vec<u8> = hole.iter().map(|h| 255 - h).collect();
+            shape_raster::gaussian_blur(&ring, &mut blurred, w, h, sigma);
+            for (b, c) in blurred.iter_mut().zip(coverage.iter()) {
+                *b = (*b as u16 * *c as u16 / 255) as u8;
+            }
+        } else {
+            shape_raster::gaussian_blur(&coverage, &mut blurred, w, h, sigma);
+        }
+
+        // The mask is in post-rotation screen space, so it's drawn without rotation.
+        let args = target_pixel_buffer::DrawTextureArgs {
+            data: target_pixel_buffer::TextureDataContainer::Shared {
+                buffer: SharedBufferData::AlphaMap {
+                    data: fonts::GlyphAlphaMap::Rendered(Rc::from(blurred)),
+                    width: w as u16,
+                    sdf: false,
+                },
+                source_rect: euclid::rect(0, 0, w as i16, h as i16),
+            },
+            colorize: Some(color),
+            alpha: color.alpha(),
+            dst_x: mask_origin.x as _,
+            dst_y: mask_origin.y as _,
+            dst_width: w,
+            dst_height: h,
+            rotation: RenderingRotation::NoRotation,
+            tiling: None,
+        };
+        self.processor.process_target_texture(&args, clip, &self.rounded_clips);
+    }
+
     /// Returns the color, mixed with the current_state's alpha
     fn alpha_color(&self, color: Color) -> Color {
         if self.current_state.alpha < 1.0 {
@@ -3030,6 +3276,11 @@ impl<T: ProcessScene> i_slint_core::item_rendering::ItemRenderer for SceneBuilde
         size: LogicalSize,
         _: &CachedRenderingData,
     ) {
+        #[cfg(feature = "path")]
+        if rect.outline().shape().is_some() {
+            self.draw_shape_outline(rect, size);
+            return;
+        }
         let geom = LogicalRect::from(size);
         if self.should_draw(&geom)
             && let Some(clipped) = self.physical_clip()
@@ -3454,6 +3705,19 @@ impl<T: ProcessScene> i_slint_core::item_rendering::ItemRenderer for SceneBuilde
         self_rc: &ItemRc,
         size: LogicalSize,
     ) {
+        #[cfg(feature = "path")]
+        if box_shadow.inset() || !box_shadow.shape().is_empty() {
+            let shape = box_shadow.shape();
+            let outline = if shape.is_empty() {
+                i_slint_core::graphics::ElementOutline::Rectangle(
+                    box_shadow.logical_border_radius(),
+                )
+            } else {
+                i_slint_core::graphics::ElementOutline::Shape { shape, fit: box_shadow.shape_fit() }
+            };
+            self.draw_mask_shadow(box_shadow, size, outline);
+            return;
+        }
         if box_shadow.inset() {
             return;
         }
@@ -3502,7 +3766,10 @@ impl<T: ProcessScene> i_slint_core::item_rendering::ItemRenderer for SceneBuilde
         // The rounded clip's rect is the border's inner edge in physical pixels;
         // the logical inset rounds differently at a fractional scale factor.
         let clip_rect = if rounded_clip.is_some() { LogicalRect::from(size) } else { clip_rect };
-        if !self.combine_clip(clip_rect, LogicalBorderRadius::default()) {
+        if !self.combine_clip(
+            clip_rect,
+            &i_slint_core::graphics::ElementOutline::Rectangle(Default::default()),
+        ) {
             return RenderingResult::ContinueRenderingWithoutChildren;
         }
         if let Some(rounded_clip) = rounded_clip {
@@ -3519,8 +3786,11 @@ impl<T: ProcessScene> i_slint_core::item_rendering::ItemRenderer for SceneBuilde
         RenderingResult::ContinueRenderingChildren
     }
 
-    fn combine_clip(&mut self, other: LogicalRect, radius: LogicalBorderRadius) -> bool {
-        debug_assert!(radius.is_zero(), "rounded clips go through visit_clip");
+    fn combine_clip(
+        &mut self,
+        other: LogicalRect,
+        _outline: &i_slint_core::graphics::ElementOutline,
+    ) -> bool {
         match self.current_state.clip.intersection(&other) {
             Some(r) => {
                 self.current_state.clip = r;

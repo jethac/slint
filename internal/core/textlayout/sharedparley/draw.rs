@@ -558,7 +558,7 @@ impl TextParagraph {
                     current_clip.height_length(),
                 ),
             ),
-            LogicalBorderRadius::zero(),
+            &crate::graphics::ElementOutline::Rectangle(LogicalBorderRadius::zero()),
         );
 
         if render {

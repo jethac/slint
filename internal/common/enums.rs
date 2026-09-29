@@ -296,6 +296,23 @@ macro_rules! for_each_enums {
                 //zoom_out,
             }
 
+            /// This enum defines how the outline of a `shape` property shall be scaled into an
+            /// element's geometry. The outline's own coordinate space is fitted into the
+            /// element's bounds much like `ImageFit` fits an image's source dimensions.
+            #[non_exhaustive]
+            enum ShapeFit {
+                /// The shape's bounding box is scaled independently in width and height to
+                /// exactly fill the element's bounds.
+                Fill,
+                /// The shape is scaled uniformly so that its bounding box is entirely
+                /// contained in the element's bounds, preserving the aspect ratio.
+                Contain,
+                /// The shape is scaled uniformly so that its bounding box covers the
+                /// element's bounds, preserving the aspect ratio. Parts of the outline
+                /// outside the bounds are clipped when the element clips.
+                Cover,
+            }
+
             /// This enum defines how the source image or path shall fit into an `Image` or `Path` element.
             #[non_exhaustive]
             enum ImageFit {

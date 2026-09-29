@@ -67,3 +67,10 @@ unexpected_cfgs = { level = "warn", check-cfg = ["cfg(cbindgen)", "cfg(slint_nig
 [package.metadata.docs.rs]
 rustdoc-args = ["--generate-link-to-definition"]
 features = ["experimental"]
+
+[dev-dependencies]
+criterion = "0.8"
+
+[[bench]]
+name = "shape_raster"
+harness = false
