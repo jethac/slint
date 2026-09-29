@@ -23,7 +23,9 @@ use crate::item_rendering::{
 use crate::item_tree::{ItemTreeRc, ItemTreeWeak, ItemVisitorResult};
 #[cfg(feature = "path")]
 use crate::items::Path;
-use crate::items::{BoxShadow, Clip, ItemRc, ItemRef, Layer, Opacity, RenderingResult, TextInput};
+use crate::items::{
+    BoxShadow, Clip, ElevationShadow, ItemRc, ItemRef, Layer, Opacity, RenderingResult, TextInput,
+};
 use crate::lengths::{
     ItemTransform, LogicalPoint, LogicalPx, LogicalRect, LogicalSize, LogicalVector, ScaleFactor,
 };
@@ -816,6 +818,7 @@ impl<T: ItemRenderer + ItemRendererFeatures> ItemRenderer for PartialRenderer<'_
     #[cfg(feature = "path")]
     forward_rendering_call!(fn draw_path(Path));
     forward_rendering_call!(fn draw_box_shadow(BoxShadow));
+    forward_rendering_call!(fn draw_elevation_shadow(ElevationShadow));
 
     forward_rendering_call!(fn visit_clip(Clip) -> RenderingResult);
     forward_rendering_call!(fn visit_opacity(Opacity) -> RenderingResult);

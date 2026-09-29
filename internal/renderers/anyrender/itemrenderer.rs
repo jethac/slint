@@ -733,6 +733,91 @@ impl<'a, S: PaintScene> ItemRenderer for AnyrenderItemRenderer<'a, S> {
         );
     }
 
+    /// The elevation shadow of an element: the Android ambient + spot model
+    /// (`i_slint_core::graphics::shadow`). Each layer is tessellated into an
+    /// A8 mask bounded by the shadow's extent in device space, tinted to the
+    /// layer's color, and drawn as a premultiplied image.
+    #[allow(clippy::unnecessary_cast)] // Coord
+    fn draw_elevation_shadow(
+        &mut self,
+        shadow_item: Pin<&i_slint_core::items::ElevationShadow>,
+        _self_rc: &ItemRc,
+        size: LogicalSize,
+    ) {
+        use i_slint_core::graphics::shadow;
+
+        let geom = LogicalRect::from(size);
+        let scale_factor = self.scale_factor.get();
+        let z = shadow_item.elevation().get() as f32 * scale_factor;
+        if z < shadow::MIN_HEIGHT {
+            return;
+        }
+        let caster_alpha = shadow_item.caster_alpha();
+        let ambient_color =
+            shadow::effective_ambient_color(shadow_item.ambient_shadow_color(), caster_alpha);
+        let spot_color =
+            shadow::effective_spot_color(shadow_item.spot_shadow_color(), caster_alpha);
+        if ambient_color.alpha() == 0 && spot_color.alpha() == 0 {
+            return;
+        }
+        let outline = shadow_item.element_outline();
+
+        // `current_state.transform` already maps item space to device pixels.
+        let [a, b, c, d, e, f] = self.current_state.transform.as_coeffs();
+        let ctm = shadow::Affine::new(a as f32, b as f32, c as f32, d as f32, e as f32, f as f32);
+
+        let adapter = i_slint_core::window::WindowInner::from_pub(self.window).window_adapter();
+        let (light, light_radius) =
+            shadow::elevation_light(adapter.display_geometry(), adapter.size());
+        let masks = shadow::elevation_shadow_masks(
+            &outline,
+            geom.cast::<f32>(),
+            &ctm,
+            z,
+            light,
+            light_radius,
+            caster_alpha < 1.,
+        );
+
+        for (layer, color) in [(masks.ambient, ambient_color), (masks.spot, spot_color)].into_iter()
+        {
+            let Some(layer) = layer else { continue };
+            let alpha = f32::from(color.alpha()) / 255. * self.current_state.alpha;
+            if alpha == 0. {
+                continue;
+            }
+            // Tint the mask: premultiplied color × coverage.
+            let tint = |v: u8| (v as f32 * alpha + 0.5) as u8;
+            let data: Vec<u8> = layer
+                .mask
+                .iter()
+                .flat_map(|&a| {
+                    let a = tint(a);
+                    [
+                        (u16::from(color.red()) * u16::from(a) + 127) / 255,
+                        (u16::from(color.green()) * u16::from(a) + 127) / 255,
+                        (u16::from(color.blue()) * u16::from(a) + 127) / 255,
+                        u16::from(a),
+                    ]
+                    .map(|v| v as u8)
+                })
+                .collect();
+            let image = peniko::ImageData {
+                data: peniko::Blob::new(Arc::new(data)),
+                format: peniko::ImageFormat::Rgba8,
+                alpha_type: peniko::ImageAlphaType::AlphaPremultiplied,
+                width: layer.size.width,
+                height: layer.size.height,
+            };
+            // The mask was rasterized in device space: draw it translated to
+            // its rect, with no other transform.
+            self.scene.draw_image(
+                peniko::ImageBrush::new(image).as_ref(),
+                kurbo::Affine::translate((layer.rect.origin.x as f64, layer.rect.origin.y as f64)),
+            );
+        }
+    }
+
     fn window(&self) -> &i_slint_core::window::WindowInner {
         i_slint_core::window::WindowInner::from_pub(self.window)
     }

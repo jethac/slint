@@ -64,6 +64,8 @@ pub use shapes::{Shape, ShapeError, ShapeFeature, ShapeFeatureKind, ShapePoint};
 mod outline;
 pub use outline::*;
 
+pub mod shadow;
+
 #[cfg(feature = "wgpu-29")]
 pub mod wgpu_29;
 #[cfg(feature = "wgpu-30")]

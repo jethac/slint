@@ -124,6 +124,17 @@ pub trait WindowAdapter {
     /// Return the size of the Window on the screen
     fn size(&self) -> PhysicalSize;
 
+    /// Returns the display's size and the window's top-left position on it,
+    /// when the backend can determine both (i.e. `position()` isn't `None`).
+    ///
+    /// This feeds the elevation-shadow light: Android places the spot light
+    /// centered over the display, and its distance from the caster depends on
+    /// the window's position on the display. `None` means "no display
+    /// geometry known" — callers fall back to the window size and origin.
+    fn display_geometry(&self) -> Option<(PhysicalSize, PhysicalPosition)> {
+        None
+    }
+
     /// Issues a request to the windowing system to re-render the contents of the window.
     ///
     /// This request is typically asynchronous.

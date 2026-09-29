@@ -988,6 +988,107 @@ impl ItemRenderer for SkiaItemRenderer<'_> {
         self.current_state.transform
     }
 
+    /// The elevation shadow of an element: the Android ambient + spot model
+    /// (`i_slint_core::graphics::shadow`). Each layer is tessellated into an
+    /// A8 mask bounded by the shadow's extent in device space, tinted to the
+    /// layer's color, and drawn as a premultiplied image.
+    #[allow(clippy::unnecessary_cast)] // Coord
+    fn draw_elevation_shadow(
+        &mut self,
+        shadow_item: Pin<&i_slint_core::items::ElevationShadow>,
+        _self_rc: &ItemRc,
+        size: LogicalSize,
+    ) {
+        use i_slint_core::graphics::shadow;
+
+        let geom = LogicalRect::from(size);
+        let scale_factor = self.scale_factor.get();
+        let z = shadow_item.elevation().get() as f32 * scale_factor;
+        if z < shadow::MIN_HEIGHT {
+            return;
+        }
+        let caster_alpha = shadow_item.caster_alpha();
+        let ambient_color =
+            shadow::effective_ambient_color(shadow_item.ambient_shadow_color(), caster_alpha);
+        let spot_color =
+            shadow::effective_spot_color(shadow_item.spot_shadow_color(), caster_alpha);
+        if ambient_color.alpha() == 0 && spot_color.alpha() == 0 {
+            return;
+        }
+        let outline = shadow_item.element_outline();
+
+        // Map item space to physical window space: the item transform in
+        // logical coordinates scaled by the scale factor (the same space the
+        // canvas draws in).
+        let t = self.current_state.transform;
+        let ctm = shadow::Affine::new(
+            t.m11 * scale_factor,
+            t.m12 * scale_factor,
+            t.m21 * scale_factor,
+            t.m22 * scale_factor,
+            t.m31 * scale_factor,
+            t.m32 * scale_factor,
+        );
+
+        let adapter = WindowInner::from_pub(self.window).window_adapter();
+        let (light, light_radius) =
+            shadow::elevation_light(adapter.display_geometry(), adapter.size());
+        let masks = shadow::elevation_shadow_masks(
+            &outline,
+            geom.cast::<f32>(),
+            &ctm,
+            z,
+            light,
+            light_radius,
+            caster_alpha < 1.,
+        );
+
+        for (layer, color) in [(masks.ambient, ambient_color), (masks.spot, spot_color)].into_iter()
+        {
+            let Some(layer) = layer else { continue };
+            if color.alpha() == 0 {
+                continue;
+            }
+            // Tint the mask: premultiplied color × coverage.
+            let data: Vec<u8> = layer
+                .mask
+                .iter()
+                .flat_map(|&a| {
+                    let alpha = (u16::from(a) * u16::from(color.alpha()) + 127) / 255;
+                    [
+                        (u16::from(color.red()) * alpha + 127) / 255,
+                        (u16::from(color.green()) * alpha + 127) / 255,
+                        (u16::from(color.blue()) * alpha + 127) / 255,
+                        alpha,
+                    ]
+                    .map(|v| v as u8)
+                })
+                .collect();
+            let image_info = crate::image_info(
+                skia_safe::ISize::new(layer.size.width as i32, layer.size.height as i32),
+                skia_safe::ColorType::RGBA8888,
+                skia_safe::AlphaType::Premul,
+            );
+            let Some(image) = skia_safe::images::raster_from_data(
+                &image_info,
+                skia_safe::Data::new_copy(&data),
+                layer.size.width as usize * 4,
+            ) else {
+                continue;
+            };
+            // The mask is a device-space raster: draw it untransformed,
+            // snapped to whole pixels so the coverage ramp isn't resampled.
+            self.canvas.save();
+            self.canvas.reset_matrix();
+            self.canvas.draw_image(
+                image,
+                skia_safe::Point::new(layer.rect.origin.x.round(), layer.rect.origin.y.round()),
+                self.default_paint().as_ref(),
+            );
+            self.canvas.restore();
+        }
+    }
+
     fn rotate(&mut self, angle_in_degrees: f32) {
         self.current_state.transform =
             self.current_state.transform.pre_rotate(euclid::Angle::degrees(angle_in_degrees));

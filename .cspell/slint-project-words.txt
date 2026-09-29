@@ -81,6 +81,7 @@ bytemuck
 calloop
 caplog
 casesensitive
+Casteljau
 cbrt
 CDPATH
 celebi
@@ -170,6 +171,7 @@ devcode
 devenv
 dfaure
 dgettext
+dimens
 directx
 dists
 divp
@@ -201,12 +203,12 @@ dynamiccolor
 eabi
 eabihf
 Eeprom
-embeddedfonts
 eiusmod
 ELCDIF
 elems
 elevatedbutton
 elit
+embeddedfonts
 emcmake
 Emre
 emscripten
@@ -302,10 +304,10 @@ glutin
 glyphclusters
 gnueabihf
 goldens
-GRAD
 googlefonts
 googlesans
 googlesansflex
+GRAD
 grcov
 Grimme
 Grotesk
@@ -529,8 +531,10 @@ Nunito
 nushu
 NVIC
 nvim
+O_WRONLY
 objc
 objfile
+Occluder
 Octa
 oklab
 oklch
@@ -542,7 +546,6 @@ ospi
 Ostromentsky
 othercomp
 ovmf
-O_WRONLY
 PAKE
 Pantone
 partytown
@@ -613,6 +616,7 @@ rasterizer
 rasterizes
 rasterizing
 RBUTTONUP
+Recip
 recompiles
 rects
 redoable
@@ -635,9 +639,9 @@ rlibs
 Roboto
 robotoflex
 RODATA
+ROND
 roundings
 roundoff
-ROND
 rowcol
 rsplit
 rspolib
@@ -729,6 +733,7 @@ subelement
 subfolders
 submod
 subprinters
+supersampling
 surfman
 svgz
 Swapchain
@@ -746,6 +751,8 @@ targetstruct
 Tdefmt
 tempor
 termcolor
+Tessellator
+tessellators
 texels
 texteditor
 textinput
@@ -852,8 +859,6 @@ writeback
 WRONLY
 Wsmeans
 wsmeans
-XOPQ
-XTRA
 xbuild
 xcarchive
 xcassets
@@ -866,17 +871,19 @@ Xiaolin
 xlib
 xmark
 XOPQ
+XOPQ
 Xrgb
 xshell
 XTRA
+XTRA
 xxaaxx
 YOPQ
+yoyo
 YTAS
 YTDE
 YTFI
 YTLC
 YTUC
-yoyo
 Yury
 zaimoku
 Zbuild

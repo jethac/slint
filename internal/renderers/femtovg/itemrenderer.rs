@@ -720,6 +720,114 @@ impl<'a, R: femtovg::Renderer + TextureImporter> ItemRenderer for GLItemRenderer
         });
     }
 
+    /// The elevation shadow of an element: the Android ambient + spot model
+    /// (`i_slint_core::graphics::shadow`). Each layer is tessellated into an
+    /// A8 mask bounded by the shadow's extent in device space, tinted to the
+    /// layer's color, and drawn as a premultiplied image.
+    #[allow(clippy::unnecessary_cast)] // Coord
+    fn draw_elevation_shadow(
+        &mut self,
+        shadow_item: Pin<&i_slint_core::items::ElevationShadow>,
+        _self_rc: &ItemRc,
+        size: LogicalSize,
+    ) {
+        use i_slint_core::graphics::shadow;
+
+        let geom = LogicalRect::from(size);
+        let scale_factor = self.scale_factor.get();
+        let z = shadow_item.elevation().get() as f32 * scale_factor;
+        if z < shadow::MIN_HEIGHT {
+            return;
+        }
+        let caster_alpha = shadow_item.caster_alpha();
+        let ambient_color =
+            shadow::effective_ambient_color(shadow_item.ambient_shadow_color(), caster_alpha);
+        let spot_color =
+            shadow::effective_spot_color(shadow_item.spot_shadow_color(), caster_alpha);
+        if ambient_color.alpha() == 0 && spot_color.alpha() == 0 {
+            return;
+        }
+        let outline = shadow_item.element_outline();
+
+        // The canvas transform already maps item space to device pixels.
+        let [a, b, c, d, e, f] = self.canvas.borrow().transform().0;
+        let ctm = shadow::Affine::new(a, b, c, d, e, f);
+
+        let adapter = i_slint_core::window::WindowInner::from_pub(self.window).window_adapter();
+        let (light, light_radius) =
+            shadow::elevation_light(adapter.display_geometry(), adapter.size());
+        let masks = shadow::elevation_shadow_masks(
+            &outline,
+            geom.cast::<f32>(),
+            &ctm,
+            z,
+            light,
+            light_radius,
+            caster_alpha < 1.,
+        );
+
+        for (layer, color) in [(masks.ambient, ambient_color), (masks.spot, spot_color)].into_iter()
+        {
+            let Some(layer) = layer else { continue };
+            if color.alpha() == 0 {
+                continue;
+            }
+            // Tint the mask: premultiplied color × coverage.
+            let data: Vec<u8> = layer
+                .mask
+                .iter()
+                .flat_map(|&a| {
+                    let alpha = (u16::from(a) * u16::from(color.alpha()) + 127) / 255;
+                    [
+                        (u16::from(color.red()) * alpha + 127) / 255,
+                        (u16::from(color.green()) * alpha + 127) / 255,
+                        (u16::from(color.blue()) * alpha + 127) / 255,
+                        alpha,
+                    ]
+                    .map(|v| v as u8)
+                })
+                .collect();
+            let image_id = {
+                use rgb::FromSlice;
+                let img = imgref::Img::new(
+                    data.as_rgba(),
+                    layer.size.width as usize,
+                    layer.size.height as usize,
+                );
+                match self.canvas.borrow_mut().create_image(img, femtovg::ImageFlags::PREMULTIPLIED)
+                {
+                    Ok(id) => id,
+                    Err(_) => continue,
+                }
+            };
+            let texture = Texture::adopt(&self.canvas, image_id);
+            // The mask was rasterized in device space: draw it with no
+            // further transform.
+            self.canvas.borrow_mut().save_with(|canvas| {
+                canvas.reset_transform();
+                let mut path = femtovg::Path::new();
+                path.rect(
+                    layer.rect.origin.x,
+                    layer.rect.origin.y,
+                    layer.size.width as f32,
+                    layer.size.height as f32,
+                );
+                let paint = femtovg::Paint::image(
+                    image_id,
+                    layer.rect.origin.x,
+                    layer.rect.origin.y,
+                    layer.size.width as f32,
+                    layer.size.height as f32,
+                    0.0,
+                    1.0,
+                )
+                .with_anti_alias(false);
+                canvas.fill_path(&path, &paint);
+            });
+            self.textures_to_delete_after_flush.borrow_mut().push(texture);
+        }
+    }
+
     fn visit_opacity(
         &mut self,
         opacity_item: Pin<&Opacity>,
