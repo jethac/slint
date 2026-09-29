@@ -40,7 +40,8 @@ pub type Contour = Vec<Point>;
 /// The flattening tolerance for curves, in physical pixels. Matches the
 /// tolerance `ElementOutline::flatten` uses, so rasterization and
 /// hit-testing see the same geometry.
-pub const FLATTEN_TOLERANCE: f32 = 0.25;
+// Not `pub`: cbindgen emits exported constants into the C++ headers.
+pub(crate) const FLATTEN_TOLERANCE: f32 = 0.25;
 
 /// Flattens `events` (lyon path events) into closed contours, applying
 /// `transform` to every point. Curves are subdivided adaptively until the
