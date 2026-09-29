@@ -8,6 +8,7 @@
 #include "private/slint_models.h"
 #include "private/slint_enums_internal.h"
 #include "private/slint_builtin_structs_internal.h"
+#include "private/slint_properties.h"
 
 #include <memory>
 #include <vector>
@@ -36,7 +37,8 @@ void slint_shapes_pill(float width, float height, float smoothing, void *out);
 void slint_shapes_pill_star(int32_t num_vertices_per_radius, float width, float height,
                             float inner_radius_ratio, float radius, float smoothing, void *out);
 void slint_shapes_custom(const float *coords, uintptr_t coord_count, const float *roundings,
-                         uintptr_t rounding_count, int32_t repetitions, bool mirror, void *out);
+                         uintptr_t rounding_count, int32_t repetitions, float center_x,
+                         float center_y, bool mirror, void *out);
 void slint_shape_normalized(const void *shape, void *out);
 void slint_shape_rotated(const void *shape, float degrees, void *out);
 void slint_shape_scaled(const void *shape, float scale_x, float scale_y, void *out);
@@ -102,6 +104,15 @@ struct ShapeFeature
 /// floats per cubic (anchor0, control0, control1, anchor1).
 struct Shape
 {
+    /// Copies the `#[repr(C)]` FFI twin (`cbindgen_private::Shape`), the
+    /// storage type of `shape` properties on native items — the layouts
+    /// match by construction, so binding a native `shape` property to a
+    /// `Property<Shape>` assigns through here.
+    Shape(const cbindgen_private::Shape &other)
+    {
+        *this = *reinterpret_cast<const Shape *>(&other);
+    }
+    Shape() = default;
     /// The cubic Bézier outline: 8 floats per cubic.
     const SharedVector<float> &cubics() const { return cubics_; }
     /// The feature segmentation of the outline.
@@ -307,13 +318,13 @@ inline Shape pill_star(int num_vertices_per_radius, float width, float height,
 
 inline Shape custom(const std::shared_ptr<slint::Model<LogicalPosition>> &vertices,
                     const std::shared_ptr<slint::Model<language::CornerRounding>> &roundings,
-                    int repetitions, bool mirror)
+                    int repetitions, const LogicalPosition &center, bool mirror)
 {
     auto flat = internal::flatten_points(vertices);
     auto flat_r = internal::flatten_roundings(roundings);
     Shape result;
     cbindgen_private::slint_shapes_custom(flat.data(), flat.size(), flat_r.data(), flat_r.size(),
-                                          repetitions, mirror, &result);
+                                          repetitions, center.x, center.y, mirror, &result);
     return result;
 }
 
@@ -346,6 +357,20 @@ namespace private_api {
 inline const cbindgen_private::Shape &as_cbindgen_shape(const slint::Shape &shape)
 {
     return *reinterpret_cast<const cbindgen_private::Shape *>(&shape);
+}
+
+// The `set_animated_binding` helper overload for `slint::Shape` lives in
+// slint_properties.h before the template's definition; only the
+// `set_animated_value` specialization needs the complete type and belongs
+// here. `slint::Shape` is spelled out because `private_api` pulls in
+// `cbindgen_private::Shape` through `using namespace`.
+template<>
+inline void Property<slint::Shape>::set_animated_value(
+        const slint::Shape &new_value,
+        const cbindgen_private::PropertyAnimation &animation_data) const
+{
+    cbindgen_private::slint_property_set_animated_value_shape(&inner, &get(), &new_value,
+                                                              &animation_data);
 }
 
 } // namespace private_api

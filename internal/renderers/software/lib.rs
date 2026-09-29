@@ -3884,7 +3884,7 @@ impl<T: ProcessScene> i_slint_core::item_rendering::ItemRenderer for SceneBuilde
 
         let adapter = self.window.window_adapter();
         let (light, light_radius) =
-            shadow::elevation_light(adapter.display_geometry(), adapter.size());
+            shadow::elevation_light(adapter.display_geometry(), adapter.size(), scale_factor);
         let lp = screen.map_point(euclid::point2(light[0], light[1]));
         let light = [lp.x, lp.y, light[2]];
 

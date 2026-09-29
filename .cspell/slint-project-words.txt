@@ -215,6 +215,7 @@ eabihf
 Eeprom
 eiusmod
 ELCDIF
+elementwise
 elems
 elevatedbutton
 elit
@@ -407,6 +408,7 @@ layoutinfo
 LBUTTONUP
 lerp
 lerping
+letterboxed
 libasound
 libav
 libavcodec
@@ -630,6 +632,7 @@ radiobuttontile
 Raleway
 Randriana
 raphson
+rasterizable
 rasterizer
 rasterizers
 rasterizes
@@ -675,6 +678,8 @@ rustls
 rustup
 Rustybuzz
 safeui
+scanline
+scanlines
 scanout
 Schukat
 sclk
@@ -759,6 +764,7 @@ subelement
 subfolders
 submod
 subprinters
+supersample
 supersampling
 surfman
 svgz

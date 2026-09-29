@@ -225,3 +225,7 @@ rustdoc-args = ["--generate-link-to-definition"]
 [[bench]]
 name = "shape_morph"
 harness = false
+
+[[bench]]
+name = "shadow_span"
+harness = false

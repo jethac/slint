@@ -11,6 +11,7 @@ struct PropertyAnimation;
 namespace slint {
 template<typename T>
 class Model;
+struct Shape;
 }
 
 // builtin_structs_internal.h first: it brings `using slint::language::FontVariation`
@@ -66,6 +67,22 @@ inline void slint_property_set_animated_binding_helper(
 {
     cbindgen_private::slint_property_set_animated_binding_font_variations(
             handle, binding, user_data, drop_user_data, transition_data);
+}
+
+// `slint::Shape` is only forward-declared here (its handwritten header is
+// included after this one): the FFI entry point takes `void *` out-pointers
+// anyway, so the cast keeps the generated binding signature. This overload
+// must sit before `set_animated_binding`'s definition — the call is
+// dependent, so only declarations before the definition point participate
+// in lookup (ADL on `slint::Shape` does not reach `slint::private_api`).
+inline void slint_property_set_animated_binding_helper(
+        const cbindgen_private::PropertyHandleOpaque *handle,
+        void (*binding)(void *, slint::Shape *), void *user_data, void (*drop_user_data)(void *),
+        cbindgen_private::PropertyAnimation (*transition_data)(void *, uint64_t **))
+{
+    cbindgen_private::slint_property_set_animated_binding_shape(
+            handle, reinterpret_cast<void (*)(void *, void *)>(binding), user_data, drop_user_data,
+            transition_data);
 }
 
 template<typename T>
