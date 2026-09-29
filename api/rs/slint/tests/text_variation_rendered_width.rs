@@ -39,7 +39,6 @@ impl TargetPixel for RgbPixel {
         self.b = (color.blue as u32 + self.b as u32 * inv_alpha / 255).min(255) as u8;
     }
 
-
     fn lerp_from(&mut self, src: Self, mask: u8) {
         let m = mask as u32;
         let n = 255 - m;
