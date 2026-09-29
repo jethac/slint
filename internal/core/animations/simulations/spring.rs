@@ -305,6 +305,28 @@ mod spring_regime_tests {
     use crate::animations::simulations::{Simulation, test_limit_property};
     use core::time::Duration;
 
+    #[test]
+    fn position_simulation_reports_remaining_motion() {
+        use crate::animations::simulations::PositionSimulation;
+
+        let mut simulation = PhysicalSpringToLimit::new(
+            0.,
+            test_limit_property(100.),
+            PhysicalSpringParameters::new(1., 380., 1., 250.),
+        );
+        let start = simulation.anchor_tick;
+        assert_approx_eq!(simulation.remaining_distance(start), 100.);
+        assert_approx_eq!(simulation.remaining_velocity(start), 250.);
+        let now = start + Duration::from_millis(50);
+        let mut position = 0.;
+        assert!(!simulation.step(&mut position, now));
+        assert_approx_eq!(simulation.remaining_distance(now), 100. - position);
+        assert!(simulation.remaining_velocity(now) > 0.);
+        let settled = start + Duration::from_millis(simulation.estimated_ms);
+        assert_eq!(simulation.remaining_distance(settled), 0.);
+        assert_eq!(simulation.remaining_velocity(settled), 0.);
+    }
+
     const W_N: f32 = 10.;
     const X0: f32 = 5.;
     const V0: f32 = -3.;

@@ -1,0 +1,73 @@
+// Copyright © SixtyFPS GmbH <info@slint.dev>
+// SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0
+
+// SIZE=400x140
+// BASE_THRESHOLD=3
+
+export component TestCase inherits Window {
+    width: 400px;
+    height: 140px;
+    background: #f4f4f4;
+
+    // A shape drives the background, border and drop shadow.
+    Rectangle {
+        x: 15px;
+        y: 20px;
+        width: 100px;
+        height: 100px;
+        shape: Shapes.star(4, 0.45, { radius: 8, smoothing: 0.4 }, { radius: 4, smoothing: 0.2 });
+        background: @linear-gradient(135deg, #7bd, #236);
+        border-width: 2px;
+        border-color: #123;
+        drop-shadow-color: #0008;
+        drop-shadow-offset-x: 6px;
+        drop-shadow-offset-y: 5px;
+        drop-shadow-blur: 7px;
+    }
+
+    // `shape-fit: contain` letterboxes the shape inside the bounds.
+    Rectangle {
+        x: 140px;
+        y: 20px;
+        width: 100px;
+        height: 60px;
+        shape: Shapes.regular-polygon(3, { radius: 10, smoothing: 0 });
+        shape-fit: contain;
+        background: #ea6;
+        border-width: 2px;
+        border-color: black;
+    }
+
+    // `shape-fit: cover` overflows the bounds.
+    Rectangle {
+        x: 140px;
+        y: 95px;
+        width: 100px;
+        height: 30px;
+        shape: Shapes.circle(16);
+        shape-fit: cover;
+        background: #9c6;
+        border-width: 1px;
+        border-color: #350;
+    }
+
+    // `clip: true` clips children to the shape outline.
+    Rectangle {
+        x: 265px;
+        y: 20px;
+        width: 100px;
+        height: 100px;
+        shape: Shapes.circle(16);
+        clip: true;
+        border-width: 1px;
+        border-color: #888;
+        background: white;
+        Rectangle {
+            x: -15px;
+            y: -15px;
+            width: 130px;
+            height: 130px;
+            background: @linear-gradient(90deg, orange, orange 50%, purple 50%, purple);
+        }
+    }
+}

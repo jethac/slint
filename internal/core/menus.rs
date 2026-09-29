@@ -297,6 +297,13 @@ impl crate::items::Item for MenuItem {
         geometry
     }
 
+    fn boundary_shape(
+        self: Pin<&Self>,
+        _geometry: crate::lengths::LogicalRect,
+    ) -> crate::graphics::ItemBoundaryShape {
+        Default::default()
+    }
+
     fn clips_children(self: core::pin::Pin<&Self>) -> bool {
         false
     }

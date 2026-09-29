@@ -3711,6 +3711,7 @@ version = "1.19.0"
 dependencies = [
  "bytemuck",
  "clru",
+ "criterion",
  "derive_more",
  "euclid",
  "i-slint-common",
@@ -3719,7 +3720,6 @@ dependencies = [
  "num-traits",
  "skrifa",
  "swash",
- "zeno",
 ]
 
 [[package]]

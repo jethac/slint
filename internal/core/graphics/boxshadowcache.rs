@@ -41,6 +41,15 @@ pub struct BoxShadowOptions {
     pub offset_x_inset: f32,
     /// Vertical offset in physical pixels. Only used by inset shadows.
     pub offset_y_inset: f32,
+    /// The element's `shape` when set: then the shadow silhouette is the
+    /// shape's outline (its `fill_rule` is used) instead of the rounded
+    /// rectangle described by `radius`.
+    pub shape: crate::graphics::Shape,
+    /// How `shape` maps into the shadow's geometry.
+    pub shape_fit: crate::items::ShapeFit,
+    /// `shape`'s content hash: participates in the cache key instead of the
+    /// (non-orderable) shape data itself.
+    pub shape_hash: u64,
 }
 
 impl BoxShadowOptions {
@@ -83,6 +92,21 @@ impl BoxShadowOptions {
     /// The Gaussian sigma corresponding to the CSS blur radius.
     pub fn blur_sigma(&self) -> f32 {
         self.blur.get() / 2.
+    }
+
+    /// The shadow silhouette's shape outline, or `None` when no `shape` is
+    /// set and the shadow follows the rounded rectangle described by
+    /// `radius`, `spread` and `blur`. A returned outline carries its own
+    /// fill rule.
+    pub fn element_outline(&self) -> Option<crate::graphics::ElementOutline> {
+        if self.shape.is_empty() {
+            None
+        } else {
+            Some(crate::graphics::ElementOutline::Shape {
+                shape: self.shape.clone(),
+                fit: self.shape_fit,
+            })
+        }
     }
 
     /// Extracts the rendering specific properties from the BoxShadow item and scales the logical
@@ -136,6 +160,7 @@ impl BoxShadowOptions {
             }
             Some((box_shadow.background(), layout))
         };
+        let shape = box_shadow.shape();
         Some(Self {
             source,
             scale_factor,
@@ -148,6 +173,9 @@ impl BoxShadowOptions {
             inset,
             offset_x_inset,
             offset_y_inset,
+            shape_hash: shape.content_hash(),
+            shape_fit: box_shadow.shape_fit(),
+            shape,
         })
     }
 }

@@ -636,6 +636,14 @@ fn build(l: &mut Loader) {
         in property <length> border-bottom-left-radius;
         ///
         in property <length> border-bottom-right-radius;
+        /// The element's outline as a `shape` value (e.g. from `Shapes`): when set,
+        /// the shape drives the background, border, clip, shadows and hit-testing,
+        /// and the `border-radius` properties are ignored (setting both is a compile
+        /// error).
+        in property <shape> shape;
+        /// How the `shape`'s own coordinate space maps into the element's bounds.
+        /// \default fill
+        in property <ShapeFit> shape-fit;
         //! ## Drop Shadows
         //!
         //! Use the `drop-shadow-*` properties to draw a shadow of a rectangle's painted shape.
@@ -2363,6 +2371,8 @@ fn build(l: &mut Loader) {
         in property <length> border-top-right-radius;
         in property <length> border-bottom-left-radius;
         in property <length> border-bottom-right-radius;
+        in property <shape> shape;
+        in property <ShapeFit> shape-fit;
         in property <length> offset-x;
         in property <length> offset-y;
         in property <color> color;
@@ -2586,6 +2596,8 @@ fn build(l: &mut Loader) {
         in property <length> border-width;
         in property <bool> clip;
         in property <bool> is-visibility-clip;
+        in property <shape> shape;
+        in property <ShapeFit> shape-fit;
     } }
 
     element! {
@@ -3256,6 +3268,10 @@ fn build(l: &mut Loader) {
         //!
 
         @fake in property <string> commands;
+        /// A `shape` value used as the path's outline instead of the `commands`.
+        /// The `fit`/`viewbox-*` properties apply to the shape's bounding box,
+        /// and the shape's own fill rule is used for filling.
+        in property <shape> shape;
         /// Defines how the path's view box is scaled to fit the element's width and height.
         /// If no view box is defined, the implicit bounding rectangle is used.
         /// \default contain

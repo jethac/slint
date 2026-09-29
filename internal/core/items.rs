@@ -23,7 +23,7 @@ When adding an item or a property, it needs to be kept in sync with different pl
 use crate::api::LogicalPosition;
 use crate::cursor::MouseCursorInner;
 use crate::data_transfer::DataTransfer;
-use crate::graphics::{Brush, Color, FontRequest, Image};
+use crate::graphics::{Brush, Color, ElementOutline, FontRequest, Image, ItemBoundaryShape, Shape};
 use crate::input::{
     FocusEvent, FocusEventResult, InputEventFilterResult, InputEventResult, InternalKeyEvent,
     KeyEventResult, KeyEventType, Keys, MouseEvent,
@@ -33,7 +33,7 @@ use crate::item_tree::ItemTreeRc;
 pub use crate::item_tree::{ItemRc, ItemTreeVTable};
 use crate::layout::LayoutInfo;
 use crate::lengths::{
-    LogicalBorderRadius, LogicalLength, LogicalPoint, LogicalRect, LogicalSize, LogicalVector,
+    LogicalBorderRadius, LogicalLength, LogicalPx, LogicalPoint, LogicalRect, LogicalSize, LogicalVector,
     PointLengths, RectLengths,
 };
 pub use crate::menus::MenuItem;
@@ -128,6 +128,7 @@ pub enum RenderingResult {
 #[cfg_attr(not(feature = "ffi"), i_slint_core_macros::remove_extern)]
 #[vtable]
 #[repr(C)]
+#[allow(clippy::crate_in_macro_def)]
 pub struct ItemVTable {
     /// This function is called by the run-time after the memory for the item
     /// has been allocated and initialized. It will be called before any user specified
@@ -220,6 +221,14 @@ pub struct ItemVTable {
     ) -> LogicalRect,
 
     pub clips_children: extern "C" fn(core::pin::Pin<VRef<ItemVTable>>) -> bool,
+
+    /// Returns the outline the item contributes for hit-testing, accessibility
+    /// bounds and the focus indicator: the `shape` when the item carries one,
+    /// else the rounded rectangle given by its corner radius. Implementations
+    /// return the default (the empty shape with a zero radius), which bounds
+    /// the item by its rectangle `geometry`.
+    pub boundary_shape:
+        extern "C" fn(core::pin::Pin<VRef<ItemVTable>>, geometry: LogicalRect) -> ItemBoundaryShape,
 }
 
 /// Alias for `vtable::VRef<ItemVTable>` which represent a pointer to a `dyn Item` with
@@ -313,6 +322,10 @@ impl Item for Empty {
     ) -> LogicalRect {
         geometry.size = LogicalSize::zero();
         geometry
+    }
+
+    fn boundary_shape(self: core::pin::Pin<&Self>, _geometry: LogicalRect) -> ItemBoundaryShape {
+        Default::default()
     }
 
     fn clips_children(self: core::pin::Pin<&Self>) -> bool {
@@ -419,6 +432,10 @@ impl Item for Rectangle {
         geometry: LogicalRect,
     ) -> LogicalRect {
         geometry
+    }
+
+    fn boundary_shape(self: core::pin::Pin<&Self>, _geometry: LogicalRect) -> ItemBoundaryShape {
+        Default::default()
     }
 
     fn clips_children(self: core::pin::Pin<&Self>) -> bool {
@@ -536,6 +553,10 @@ impl Item for BasicBorderRectangle {
         geometry
     }
 
+    fn boundary_shape(self: core::pin::Pin<&Self>, _geometry: LogicalRect) -> ItemBoundaryShape {
+        Default::default()
+    }
+
     fn clips_children(self: core::pin::Pin<&Self>) -> bool {
         false
     }
@@ -580,6 +601,8 @@ pub struct BorderRectangle {
     pub border_bottom_left_radius: Property<LogicalLength>,
     pub border_bottom_right_radius: Property<LogicalLength>,
     pub border_color: Property<Brush>,
+    pub shape: Property<Shape>,
+    pub shape_fit: Property<ShapeFit>,
     pub cached_rendering_data: CachedRenderingData,
 }
 
@@ -661,7 +684,11 @@ impl Item for BorderRectangle {
         _self_rc: &ItemRc,
         geometry: LogicalRect,
     ) -> LogicalRect {
-        geometry
+        self.outline().bounds(geometry)
+    }
+
+    fn boundary_shape(self: core::pin::Pin<&Self>, _geometry: LogicalRect) -> ItemBoundaryShape {
+        self.outline().into()
     }
 
     fn clips_children(self: core::pin::Pin<&Self>) -> bool {
@@ -686,6 +713,12 @@ impl RenderBorderRectangle for BorderRectangle {
     }
     fn border_color(self: Pin<&Self>) -> Brush {
         self.border_color()
+    }
+    fn shape(self: Pin<&Self>) -> Shape {
+        self.shape()
+    }
+    fn shape_fit(self: Pin<&Self>) -> ShapeFit {
+        self.shape_fit()
     }
 }
 
@@ -733,6 +766,8 @@ pub struct Clip {
     pub cached_rendering_data: CachedRenderingData,
     pub clip: Property<bool>,
     pub is_visibility_clip: Property<bool>,
+    pub shape: Property<Shape>,
+    pub shape_fit: Property<ShapeFit>,
 }
 
 impl Item for Clip {
@@ -759,11 +794,17 @@ impl Item for Clip {
     ) -> InputEventFilterResult {
         if let Some(pos) = event.position() {
             let geometry = self_rc.geometry();
+            // `pos` is in this item's coordinate space.
             if self.clip()
-                && (pos.x < 0 as Coord
-                    || pos.y < 0 as Coord
-                    || pos.x_length() > geometry.width_length()
-                    || pos.y_length() > geometry.height_length())
+                && !self.element_outline().hit_test(
+                    euclid::rect::<f32, LogicalPx>(
+                        0.,
+                        0.,
+                        geometry.size.width as f32,
+                        geometry.size.height as f32,
+                    ),
+                    euclid::point2(pos.x as f32, pos.y as f32),
+                )
             {
                 return InputEventFilterResult::Intercept;
             }
@@ -823,7 +864,11 @@ impl Item for Clip {
         _self_rc: &ItemRc,
         geometry: LogicalRect,
     ) -> LogicalRect {
-        geometry
+        self.element_outline().bounds(geometry)
+    }
+
+    fn boundary_shape(self: core::pin::Pin<&Self>, _geometry: LogicalRect) -> ItemBoundaryShape {
+        self.element_outline().into()
     }
 
     fn clips_children(self: core::pin::Pin<&Self>) -> bool {
@@ -839,6 +884,12 @@ impl Clip {
             self.border_bottom_right_radius(),
             self.border_bottom_left_radius(),
         )
+    }
+
+    /// The outline children are clipped to: the `shape` when set, else the
+    /// rounded rectangle given by the border properties.
+    pub fn element_outline(self: Pin<&Self>) -> ElementOutline {
+        ElementOutline::new(self.shape(), self.shape_fit(), self.logical_border_radius())
     }
 }
 
@@ -942,6 +993,10 @@ impl Item for Opacity {
         geometry: LogicalRect,
     ) -> LogicalRect {
         geometry
+    }
+
+    fn boundary_shape(self: core::pin::Pin<&Self>, _geometry: LogicalRect) -> ItemBoundaryShape {
+        Default::default()
     }
 
     fn clips_children(self: core::pin::Pin<&Self>) -> bool {
@@ -1079,6 +1134,10 @@ impl Item for Layer {
         geometry
     }
 
+    fn boundary_shape(self: core::pin::Pin<&Self>, _geometry: LogicalRect) -> ItemBoundaryShape {
+        Default::default()
+    }
+
     fn clips_children(self: core::pin::Pin<&Self>) -> bool {
         false
     }
@@ -1191,6 +1250,10 @@ impl Item for Transform {
         geometry: LogicalRect,
     ) -> LogicalRect {
         geometry
+    }
+
+    fn boundary_shape(self: core::pin::Pin<&Self>, _geometry: LogicalRect) -> ItemBoundaryShape {
+        Default::default()
     }
 
     fn clips_children(self: core::pin::Pin<&Self>) -> bool {
@@ -1390,6 +1453,10 @@ impl Item for WindowItem {
         geometry: LogicalRect,
     ) -> LogicalRect {
         geometry
+    }
+
+    fn boundary_shape(self: core::pin::Pin<&Self>, _geometry: LogicalRect) -> ItemBoundaryShape {
+        Default::default()
     }
 
     fn clips_children(self: core::pin::Pin<&Self>) -> bool {
@@ -1820,6 +1887,10 @@ impl Item for ContextMenu {
         geometry
     }
 
+    fn boundary_shape(self: core::pin::Pin<&Self>, _geometry: LogicalRect) -> ItemBoundaryShape {
+        Default::default()
+    }
+
     fn clips_children(self: core::pin::Pin<&Self>) -> bool {
         false
     }
@@ -1922,6 +1993,8 @@ pub struct BoxShadow {
     pub border_top_right_radius: Property<LogicalLength>,
     pub border_bottom_left_radius: Property<LogicalLength>,
     pub border_bottom_right_radius: Property<LogicalLength>,
+    pub shape: Property<Shape>,
+    pub shape_fit: Property<ShapeFit>,
     // Shadow specific properties
     pub offset_x: Property<LogicalLength>,
     pub offset_y: Property<LogicalLength>,
@@ -1940,6 +2013,12 @@ impl BoxShadow {
             self.border_bottom_right_radius(),
             self.border_bottom_left_radius(),
         )
+    }
+
+    /// The outline the shadow is cast for: the `shape` when set, else the
+    /// rounded rectangle given by the border radius properties.
+    pub fn element_outline(self: Pin<&Self>) -> ElementOutline {
+        ElementOutline::new(self.shape(), self.shape_fit(), self.logical_border_radius())
     }
 }
 
@@ -2045,6 +2124,10 @@ impl Item for BoxShadow {
                 .outer_rect(euclid::SideOffsets2D::from_length_all_same(pad))
                 .translate(LogicalVector::from_lengths(self.offset_x(), self.offset_y()))
         }
+    }
+
+    fn boundary_shape(self: core::pin::Pin<&Self>, _geometry: LogicalRect) -> ItemBoundaryShape {
+        Default::default()
     }
 
     fn clips_children(self: core::pin::Pin<&Self>) -> bool {
@@ -2367,6 +2450,10 @@ impl Item for TooltipArea {
         geometry: LogicalRect,
     ) -> LogicalRect {
         geometry
+    }
+
+    fn boundary_shape(self: core::pin::Pin<&Self>, _geometry: LogicalRect) -> ItemBoundaryShape {
+        Default::default()
     }
 
     fn clips_children(self: core::pin::Pin<&Self>) -> bool {

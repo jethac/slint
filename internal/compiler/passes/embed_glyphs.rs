@@ -11,7 +11,7 @@ use crate::expression_tree::BuiltinFunction;
 use crate::expression_tree::{Expression, Unit};
 use crate::object_tree::*;
 use crate::source_path::SourcePath;
-use std::collections::{BTreeMap, BTreeSet, HashMap};
+use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 use std::rc::Rc;
 
 use i_slint_common::sharedfontique::{self, fontique, skrifa};
@@ -690,7 +690,7 @@ fn get_fallback_fonts() -> Vec<Font> {
 /// when the font can't be subsetted; the caller then embeds the original
 /// data instead.
 #[cfg(not(target_arch = "wasm32"))]
-fn subset_vector_font(data: &[u8], index: u32, characters_seen: &HashSet<char>) -> Option<Vec<u8>> {
+fn subset_vector_font(data: &[u8], index: u32, characters_seen: &BTreeSet<char>) -> Option<Vec<u8>> {
     use fontcull_klippa::{Plan, SubsetFlags, subset_font};
     use fontcull_write_fonts::read::{
         FontRef,
