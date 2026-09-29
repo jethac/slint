@@ -84,19 +84,25 @@
   "type": "canvas",
   "widgets": [
     {
+      "checkable": null,
+      "checked": null,
       "color": "primary-container",
+      "corner": null,
       "enabled": null,
       "height": 64.0,
+      "icon": null,
       "kind": "surface",
       "level": 0,
       "radius": null,
       "shape": "cookie-9-sided",
+      "size": null,
       "slint_overrides": {
         "shape_fit": "fill"
       },
       "state": null,
       "text": null,
       "width": 64.0,
+      "width_option": null,
       "x": 68.0,
       "y": 34.0
     }

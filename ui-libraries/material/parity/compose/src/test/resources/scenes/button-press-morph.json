@@ -1,9 +1,10 @@
 {
   "actions": [
     {
+      "at": 0.0,
       "kind": "press",
-      "x": 56.0,
-      "y": 48.0
+      "x": 36.0,
+      "y": 44.0
     }
   ],
   "case_rel": "material/button_press_morph",
@@ -100,17 +101,23 @@
   "type": "canvas",
   "widgets": [
     {
+      "checkable": null,
+      "checked": null,
       "color": null,
+      "corner": null,
       "enabled": null,
       "height": null,
+      "icon": null,
       "kind": "filled-button",
       "level": null,
       "radius": null,
       "shape": null,
+      "size": null,
       "slint_overrides": {},
       "state": "pressed",
       "text": "Label",
       "width": null,
+      "width_option": null,
       "x": 16.0,
       "y": 28.0
     }

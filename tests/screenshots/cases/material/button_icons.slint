@@ -1,0 +1,80 @@
+// Copyright © SixtyFPS GmbH <info@slint.dev>
+// SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0
+
+// Scene: button-icons — generated from `ui-libraries/material/parity/scenes/button-icons.json`
+// (edit the scene, regenerate with `cargo run -p material-parity-generator`).
+//PARITY=static
+//SIZE=716x176
+//TRACE_ELEMENTS=button0,button1,button2,button3,button4
+//XFAIL_TEXT=issue #28: Slint ceils text layout widths where Compose keeps fractional advances
+//DENSITIES=1,2
+import "../../fonts/Roboto-VariableFont.ttf";
+import { FilledButton, IconButtonWidth, Icons, MaterialButtonShape, MaterialButtonSize, MaterialPalette, MaterialTheme, MaterialWindow } from "@material";
+
+export component TestCase inherits MaterialWindow {
+    init => {
+        // The scene pins seed #6750A4, tonal-spot, spec2025, light, contrast 0
+        // (all the library defaults; restated here so a default change can't
+        // silently move the parity baseline).
+        MaterialTheme.seed-color = #6750A4;
+        MaterialTheme.dark = false;
+        MaterialTheme.contrast-level = 0;
+        MaterialTheme.use-platform-color = false;
+        MaterialTheme.plain-family = "Roboto";
+        MaterialTheme.brand-family = "Roboto";
+        // Compose builds its scene scheme from the same seed — use the
+        // runtime-generated scheme, not the static expressive table.
+        MaterialPalette.dynamic = true;
+    }
+
+    button0 := FilledButton {
+        x: 16px;
+        y: 128px;
+        text: "Add";
+        size: MaterialButtonSize.extra_small;
+        icon: Icons.check;
+        width: 75px;
+        enforce_touch_target: false;
+    }
+
+    button1 := FilledButton {
+        x: 156px;
+        y: 120px;
+        text: "Add";
+        size: MaterialButtonSize.small;
+        icon: Icons.check;
+        width: 87px;
+        enforce_touch_target: false;
+    }
+
+    button2 := FilledButton {
+        x: 296px;
+        y: 104px;
+        text: "Add";
+        size: MaterialButtonSize.medium;
+        icon: Icons.check;
+        width: 107px;
+        enforce_touch_target: false;
+    }
+
+    button3 := FilledButton {
+        x: 436px;
+        y: 64px;
+        text: "Add";
+        size: MaterialButtonSize.large;
+        icon: Icons.check;
+        width: 167px;
+        enforce_touch_target: false;
+    }
+
+    button4 := FilledButton {
+        x: 576px;
+        y: 24px;
+        text: "Add";
+        size: MaterialButtonSize.extra_large;
+        icon: Icons.check;
+        width: 211px;
+        enforce_touch_target: false;
+    }
+
+}

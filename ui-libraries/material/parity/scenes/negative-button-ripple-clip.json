@@ -1,0 +1,43 @@
+{
+    "name": "negative-button-ripple-clip",
+    "type": "canvas",
+    "parity": "negative",
+    "negative_note": "slint_overrides turns the icon button `inline` \u2014 its ripple paints unbounded past the container, the clipped Compose ripple must not match",
+    "size": [
+        120,
+        96
+    ],
+    "densities": [
+        1,
+        2
+    ],
+    "theme": {
+        "seed": "6750A4",
+        "variant": "tonal-spot",
+        "spec": "spec2025",
+        "platform": "phone",
+        "dark": false,
+        "contrast": 0.0
+    },
+    "fonts": {
+        "plain": "Roboto",
+        "brand": "Roboto"
+    },
+    "widgets": [
+        {
+            "kind": "icon-button",
+            "x": 32,
+            "y": 24,
+            "icon": "check",
+            "size": "s",
+            "state": "pressed",
+            "slint_overrides": {
+                "inline": true
+            }
+        }
+    ],
+    "trace_elements": [
+        "button0"
+    ],
+    "trace_props": []
+}

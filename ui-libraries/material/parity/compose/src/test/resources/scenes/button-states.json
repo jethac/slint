@@ -1,19 +1,16 @@
 {
   "actions": [
     {
+      "at": 0.0,
       "kind": "key:Tab",
       "x": 0.0,
       "y": 0.0
     },
     {
+      "at": 0.0,
       "kind": "key:Tab",
       "x": 0.0,
       "y": 0.0
-    },
-    {
-      "kind": "press",
-      "x": 288.0,
-      "y": 48.0
     }
   ],
   "case_rel": "material/button_states",
@@ -25,7 +22,12 @@
     "brand": "Roboto",
     "plain": "Roboto"
   },
-  "mask_decor": {},
+  "mask_decor": {
+    "button1": [
+      0,
+      2000
+    ]
+  },
   "mask_inner": {
     "button2": [
       2000
@@ -106,62 +108,86 @@
   "type": "canvas",
   "widgets": [
     {
+      "checkable": null,
+      "checked": null,
       "color": null,
+      "corner": null,
       "enabled": null,
       "height": null,
+      "icon": null,
       "kind": "filled-button",
       "level": null,
       "radius": null,
       "shape": null,
+      "size": null,
       "slint_overrides": {},
       "state": "enabled",
       "text": "Enabled",
-      "width": null,
+      "width": 86.0,
+      "width_option": null,
       "x": 16.0,
       "y": 28.0
     },
     {
+      "checkable": null,
+      "checked": null,
       "color": null,
+      "corner": null,
       "enabled": null,
       "height": null,
+      "icon": null,
       "kind": "filled-button",
       "level": null,
       "radius": null,
       "shape": null,
+      "size": null,
       "slint_overrides": {},
       "state": "focused",
       "text": "Focused",
-      "width": null,
+      "width": 88.0,
+      "width_option": null,
       "x": 132.0,
       "y": 28.0
     },
     {
+      "checkable": null,
+      "checked": null,
       "color": null,
+      "corner": null,
       "enabled": null,
       "height": null,
+      "icon": null,
       "kind": "filled-button",
       "level": null,
       "radius": null,
       "shape": null,
+      "size": null,
       "slint_overrides": {},
       "state": "pressed",
       "text": "Pressed",
-      "width": null,
+      "width": 86.0,
+      "width_option": null,
       "x": 248.0,
       "y": 28.0
     },
     {
+      "checkable": null,
+      "checked": null,
       "color": null,
+      "corner": null,
       "enabled": false,
       "height": null,
+      "icon": null,
       "kind": "filled-button",
       "level": null,
       "radius": null,
       "shape": null,
+      "size": null,
       "slint_overrides": {},
       "state": null,
       "text": "Disabled",
-      "width": null,
+      "width": 90.0,
+      "width_option": null,
       "x": 364.0,
       "y": 28.0
     }

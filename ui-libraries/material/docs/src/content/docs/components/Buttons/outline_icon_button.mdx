@@ -6,33 +6,65 @@ description: OutlineIconButton API.
 import CodeSnippetMD from '@slint/common-files/src/components/CodeSnippetMD.astro';
 import SlintProperty from '@slint/common-files/src/components/SlintProperty.astro';
 
-<CodeSnippetMD imagePath="" noScreenShot scale="3" imageWidth="300" imageHeight="200" imageAlt="">
+<CodeSnippetMD imagePath="/src/assets/generated/outlineiconbutton.png" scale="3" imageWidth="200" imageHeight="140" imageAlt="">
 ```slint
 import { OutlineIconButton } from "@material";
 export component Example inherits Window {
-    width: 100px;
+    width: 160px;
     height: 100px;
     background: transparent;
-    OutlineIconButton {
-        icon: @image-url("../icons/edit.svg");
-        tooltip: "Edit";
-    }
+    OutlineIconButton { icon: @image-url("../icons/settings.svg"); checked-icon: @image-url("../icons/close.svg"); }
 }
 ```
 </CodeSnippetMD>
 
-An `OutlineIconButton` is a button with a border outline and an icon, used for secondary actions.
+An `OutlineIconButton` is an icon button with a stroked border and a transparent container.
+Set `checkable` and the button springs between its resting shape and its selected shape whenever `checked` changes.
 
+<CodeSnippetMD imagePath="/src/assets/generated/outlineiconbutton-sizes.png" scale="3" imageWidth="640" imageHeight="280" imageAlt="">
+```slint
+import { OutlineIconButton, MaterialButtonSize, MaterialButtonShape, IconButtonWidth } from "@material";
+export component Example inherits Window {
+    width: 620px;
+    height: 260px;
+    background: transparent;
+    VerticalLayout {
+        padding: 20px;
+        spacing: 12px;
+        alignment: center;
+        for s in [MaterialButtonSize.small, MaterialButtonSize.medium, MaterialButtonSize.large]: HorizontalLayout {
+            spacing: 12px;
+            alignment: center;
+            OutlineIconButton { icon: @image-url("../icons/settings.svg"); size: s; }
+            OutlineIconButton { icon: @image-url("../icons/settings.svg"); size: s; button-shape: MaterialButtonShape.square; }
+            OutlineIconButton { icon: @image-url("../icons/settings.svg"); size: s; width-option: IconButtonWidth.wide; }
+            OutlineIconButton { icon: @image-url("../icons/settings.svg"); size: s; checkable: true; checked: true; }
+        }
+    }
+}
+```
+</CodeSnippetMD>
 ## Properties
+
+### button-shape
+<SlintProperty propName="button-shape" typeName="enum" enumName="MaterialButtonShape" defaultValue="MaterialButtonShape.round">
+The resting container shape: `round` for the fully rounded stadium, `square` for the smaller rounded corner.
+</SlintProperty>
 
 ### checkable
 <SlintProperty propName="checkable" typeName="bool">
-Whether the button can be toggled between checked and unchecked states.
+Whether the button toggles between a checked and an unchecked state when clicked.
 </SlintProperty>
 
 ### checked
 <SlintProperty propName="checked" typeName="bool" propertyVisibility="in-out">
 Whether the button is currently checked.
+The container shape and colors animate when it changes.
+</SlintProperty>
+
+### checked-icon
+<SlintProperty propName="checked-icon" typeName="image">
+The icon image displayed while the button is checked; defaults to `icon`.
 </SlintProperty>
 
 ### enabled
@@ -40,19 +72,29 @@ Whether the button is currently checked.
 Whether the button is enabled and can be interacted with.
 </SlintProperty>
 
+### enforce-touch-target
+<SlintProperty propName="enforce-touch-target" typeName="bool" defaultValue="true">
+Whether the button extends its touch target to at least 48px when its visual container is smaller.
+</SlintProperty>
+
 ### icon
 <SlintProperty propName="icon" typeName="image">
 The icon image displayed on the button.
 </SlintProperty>
 
-### checked-icon
-<SlintProperty propName="checked-icon" typeName="image">
-The icon image displayed when the button is checked (if checkable).
+### size
+<SlintProperty propName="size" typeName="enum" enumName="MaterialButtonSize" defaultValue="MaterialButtonSize.small">
+The size bucket, from `extra-small` (32px) through `extra-large` (136px).
 </SlintProperty>
 
 ### tooltip
 <SlintProperty propName="tooltip" typeName="string">
 A tooltip text that appears when hovering over the button.
+</SlintProperty>
+
+### width-option
+<SlintProperty propName="width-option" typeName="enum" enumName="IconButtonWidth" defaultValue="IconButtonWidth.uniform">
+The container width bucket: `narrow`, `uniform`, or `wide`.
 </SlintProperty>
 
 ## Callbacks

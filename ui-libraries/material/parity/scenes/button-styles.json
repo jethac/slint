@@ -1,0 +1,227 @@
+{
+  "name": "button-styles",
+  "type": "canvas",
+  "parity": "static",
+  "size": [
+    576,
+    240
+  ],
+  "densities": [
+    1,
+    2
+  ],
+  "theme": {
+    "seed": "6750A4",
+    "variant": "tonal-spot",
+    "spec": "spec2025",
+    "platform": "phone",
+    "dark": false,
+    "contrast": 0.0
+  },
+  "fonts": {
+    "plain": "Roboto",
+    "brand": "Roboto"
+  },
+  "widgets": [
+    {
+      "kind": "filled-button",
+      "x": 16,
+      "y": 16,
+      "text": "Label",
+      "width": 70
+    },
+    {
+      "kind": "filled-button",
+      "x": 156,
+      "y": 16,
+      "text": "Label",
+      "state": "hovered",
+      "width": 70
+    },
+    {
+      "kind": "filled-button",
+      "x": 296,
+      "y": 16,
+      "text": "Label",
+      "state": "pressed",
+      "width": 70
+    },
+    {
+      "kind": "filled-button",
+      "x": 436,
+      "y": 16,
+      "text": "Label",
+      "enabled": false,
+      "width": 70
+    },
+    {
+      "kind": "tonal-button",
+      "x": 16,
+      "y": 68,
+      "text": "Label",
+      "width": 70
+    },
+    {
+      "kind": "tonal-button",
+      "x": 156,
+      "y": 68,
+      "text": "Label",
+      "state": "hovered",
+      "width": 70
+    },
+    {
+      "kind": "tonal-button",
+      "x": 296,
+      "y": 68,
+      "text": "Label",
+      "state": "pressed",
+      "width": 70
+    },
+    {
+      "kind": "tonal-button",
+      "x": 436,
+      "y": 68,
+      "text": "Label",
+      "enabled": false,
+      "width": 70
+    },
+    {
+      "kind": "elevated-button",
+      "x": 16,
+      "y": 120,
+      "text": "Label",
+      "width": 70
+    },
+    {
+      "kind": "elevated-button",
+      "x": 156,
+      "y": 120,
+      "text": "Label",
+      "state": "hovered",
+      "width": 70
+    },
+    {
+      "kind": "elevated-button",
+      "x": 296,
+      "y": 120,
+      "text": "Label",
+      "state": "pressed",
+      "width": 70
+    },
+    {
+      "kind": "elevated-button",
+      "x": 436,
+      "y": 120,
+      "text": "Label",
+      "enabled": false,
+      "width": 70
+    },
+    {
+      "kind": "outlined-button",
+      "x": 16,
+      "y": 172,
+      "text": "Label",
+      "width": 70
+    },
+    {
+      "kind": "outlined-button",
+      "x": 156,
+      "y": 172,
+      "text": "Label",
+      "state": "hovered",
+      "width": 70
+    },
+    {
+      "kind": "outlined-button",
+      "x": 296,
+      "y": 172,
+      "text": "Label",
+      "state": "pressed",
+      "width": 70
+    },
+    {
+      "kind": "outlined-button",
+      "x": 436,
+      "y": 172,
+      "text": "Label",
+      "enabled": false,
+      "width": 70
+    },
+    {
+      "kind": "text-button",
+      "x": 16,
+      "y": 224,
+      "text": "Label",
+      "width": 70
+    },
+    {
+      "kind": "text-button",
+      "x": 156,
+      "y": 224,
+      "text": "Label",
+      "state": "hovered",
+      "width": 70
+    },
+    {
+      "kind": "text-button",
+      "x": 296,
+      "y": 224,
+      "text": "Label",
+      "state": "pressed",
+      "width": 70
+    },
+    {
+      "kind": "text-button",
+      "x": 436,
+      "y": 224,
+      "text": "Label",
+      "enabled": false,
+      "width": 70
+    }
+  ],
+  "trace_elements": [
+    "button0",
+    "button1",
+    "button2",
+    "button3",
+    "button4",
+    "button5",
+    "button6",
+    "button7",
+    "button8",
+    "button9",
+    "button10",
+    "button11",
+    "button12",
+    "button13",
+    "button14",
+    "button15",
+    "button16",
+    "button17",
+    "button18",
+    "button19"
+  ],
+  "trace_props": [],
+  "mask_decor": {
+    "button1": [
+      0,
+      2000
+    ],
+    "button5": [
+      0,
+      2000
+    ],
+    "button8": [
+      0,
+      2000
+    ],
+    "button9": [
+      0,
+      2000
+    ],
+    "button10": [
+      0,
+      2000
+    ]
+  }
+}
