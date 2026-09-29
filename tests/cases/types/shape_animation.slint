@@ -109,7 +109,7 @@ auto eval_cubic = [](const float *c, float t) -> std::pair<float, float> {
              c[1] * (u * u * u) + c[3] * (3.f * t * u * u) + c[5] * (3.f * t * t * u)
                  + c[7] * (t * t * t) };
 };
-auto polyline = [](const slint::Shape &shape) -> std::vector<std::pair<float, float>> {
+auto polyline = [&](const slint::Shape &shape) -> std::vector<std::pair<float, float>> {
     std::vector<std::pair<float, float>> points;
     const auto &cubics = shape.cubics();
     for (size_t i = 0; i + 8 <= cubics.size(); i += 8) {
@@ -119,7 +119,7 @@ auto polyline = [](const slint::Shape &shape) -> std::vector<std::pair<float, fl
     }
     return points;
 };
-auto anchors = [](const slint::Shape &shape) -> std::vector<std::pair<float, float>> {
+auto anchors = [&](const slint::Shape &shape) -> std::vector<std::pair<float, float>> {
     std::vector<std::pair<float, float>> points;
     const auto &cubics = shape.cubics();
     for (size_t i = 0; i + 8 <= cubics.size(); i += 8) {
@@ -127,7 +127,7 @@ auto anchors = [](const slint::Shape &shape) -> std::vector<std::pair<float, flo
     }
     return points;
 };
-auto dist_to_polyline = [](std::pair<float, float> p,
+auto dist_to_polyline = [&](std::pair<float, float> p,
                            const std::vector<std::pair<float, float>> &line) -> float {
     float min_dist = std::numeric_limits<float>::max();
     for (size_t i = 0; i + 1 < line.size(); i++) {
