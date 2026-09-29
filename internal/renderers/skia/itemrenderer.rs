@@ -1,7 +1,7 @@
 // Copyright © SixtyFPS GmbH <info@slint.dev>
 // SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0
 
-// cSpell: ignore rrect skpath
+// cSpell: ignore rrect skpath Minkowski unspread
 
 use std::pin::Pin;
 
@@ -139,42 +139,48 @@ impl<'a> SkiaItemRenderer<'a> {
                 // the Minkowski sum of the outline and a disk of that radius:
                 // fill(outline) ∪ stroke(outline, 2·spread). The outline sits
                 // at the unspread geometry's position within the texture.
-                // A negative spread instead shrinks the silhouette by fitting
-                // into the shrunken shape rect.
+                // A negative spread erodes instead: fill ∖ stroke(2·|spread|).
                 let spread = shadow_options.spread.get();
-                let target = if spread >= 0. {
-                    PhysicalRect::new(
-                        PhysicalPoint::new(
-                            shadow_options.shape_origin().x + spread,
-                            shadow_options.shape_origin().y + spread,
-                        ),
-                        PhysicalSize::new(shadow_options.width.get(), shadow_options.height.get()),
-                    )
-                } else {
-                    PhysicalRect::new(shadow_options.shape_origin(), shape_size)
-                };
+                let target = PhysicalRect::new(
+                    PhysicalPoint::new(
+                        shadow_options.shape_origin().x + spread.max(0.),
+                        shadow_options.shape_origin().y + spread.max(0.),
+                    ),
+                    PhysicalSize::new(shadow_options.width.get(), shadow_options.height.get()),
+                );
                 let path = outline_to_skia_path(outline, target);
-                let mut builder = skia_safe::PathBuilder::new();
-                builder.set_fill_type(skia_safe::PathFillType::Winding);
-                builder.add_path(&path, skia_safe::path::AddPathMode::Append);
-                if shadow_options.spread.get() > 0. {
+                let band = if spread != 0. {
                     let mut stroke_paint = skia_safe::Paint::default();
                     stroke_paint.set_style(skia_safe::PaintStyle::Stroke);
-                    stroke_paint.set_stroke_width(2. * shadow_options.spread.get());
+                    stroke_paint.set_stroke_width(2. * spread.abs());
                     stroke_paint.set_stroke_join(skia_safe::PaintJoin::Round);
                     stroke_paint.set_stroke_cap(skia_safe::PaintCap::Round);
                     let mut stroked = skia_safe::PathBuilder::new();
-                    if skia_safe::path_utils::fill_path_with_paint(
+                    skia_safe::path_utils::fill_path_with_paint(
                         &path,
                         &stroke_paint,
                         &mut stroked,
                         None,
                         None,
-                    ) {
-                        builder.add_path(&stroked.detach(), skia_safe::path::AddPathMode::Append);
+                    )
+                    .then(|| stroked.detach())
+                } else {
+                    None
+                };
+                let silhouette = if spread > 0. {
+                    let mut builder = skia_safe::PathBuilder::new();
+                    builder.set_fill_type(skia_safe::PathFillType::Winding);
+                    builder.add_path(&path, skia_safe::path::AddPathMode::Append);
+                    if let Some(band) = &band {
+                        builder.add_path(band, skia_safe::path::AddPathMode::Append);
                     }
-                }
-                surface_canvas.draw_path(&builder.detach(), &paint);
+                    builder.detach()
+                } else if let Some(band) = band {
+                    skia_safe::op(&path, &band, skia_safe::PathOp::Difference).unwrap_or(path)
+                } else {
+                    path
+                };
+                surface_canvas.draw_path(&silhouette, &paint);
             }
         }
         Some(surface.image_snapshot())
@@ -236,19 +242,18 @@ impl<'a> SkiaItemRenderer<'a> {
                 path_builder.add_rrect(inner_rrect, None, None);
             }
             Some(outline) => {
-                // The hole is the outline eroded by the spread: fill(outline)
-                // minus the band the stroke of width 2·spread covers, both
-                // translated by the inset offset. EvenOdd parity over
-                // [fill ⊕ stroke-band] leaves exactly the eroded interior.
+                // The hole is the outline eroded by a positive spread —
+                // fill(outline) minus the band the stroke of width 2·spread
+                // covers — and dilated by a negative one — fill ∪ band —
+                // both translated by the inset offset.
                 let hole_path = outline_to_skia_path(
                     outline,
                     PhysicalRect::new(PhysicalPoint::new(offset_x, offset_y), geometry_rect.size),
                 );
-                path_builder.add_path(&hole_path, skia_safe::path::AddPathMode::Append);
-                if spread > 0. {
+                let hole = if spread != 0. {
                     let mut stroke_paint = skia_safe::Paint::default();
                     stroke_paint.set_style(skia_safe::PaintStyle::Stroke);
-                    stroke_paint.set_stroke_width(2. * spread);
+                    stroke_paint.set_stroke_width(2. * spread.abs());
                     stroke_paint.set_stroke_join(skia_safe::PaintJoin::Round);
                     stroke_paint.set_stroke_cap(skia_safe::PaintCap::Round);
                     let mut band = skia_safe::PathBuilder::new();
@@ -259,9 +264,23 @@ impl<'a> SkiaItemRenderer<'a> {
                         None,
                         None,
                     ) {
-                        path_builder.add_path(&band.detach(), skia_safe::path::AddPathMode::Append);
+                        skia_safe::op(
+                            &hole_path,
+                            &band.detach(),
+                            if spread > 0. {
+                                skia_safe::PathOp::Difference
+                            } else {
+                                skia_safe::PathOp::Union
+                            },
+                        )
+                        .unwrap_or_else(|| hole_path.clone())
+                    } else {
+                        hole_path.clone()
                     }
-                }
+                } else {
+                    hole_path
+                };
+                path_builder.add_path(&hole, skia_safe::path::AddPathMode::Append);
             }
         }
         let path = path_builder.detach();

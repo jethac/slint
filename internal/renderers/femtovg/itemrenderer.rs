@@ -1,7 +1,7 @@
 // Copyright © SixtyFPS GmbH <info@slint.dev>
 // SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0
 
-// cSpell: ignore blitting
+// cSpell: ignore blitting Minkowski
 use std::cell::RefCell;
 use std::pin::Pin;
 use std::rc::Rc;
@@ -513,20 +513,13 @@ impl<'a, R: femtovg::Renderer + TextureImporter> ItemRenderer for GLItemRenderer
                                 canvas.fill_path(&shadow_path, &mask_paint);
                             }
                             Some(outline) => {
-                                let target = if spread.get() >= 0. {
-                                    PhysicalRect::new(
-                                        PhysicalPoint::new(
-                                            shadow_options.shape_origin().x + spread.get(),
-                                            shadow_options.shape_origin().y + spread.get(),
-                                        ),
-                                        PhysicalSize::from_lengths(width, height),
-                                    )
-                                } else {
-                                    PhysicalRect::new(
-                                        shadow_options.shape_origin(),
-                                        shadow_options.shape_size(),
-                                    )
-                                };
+                                let target = PhysicalRect::new(
+                                    PhysicalPoint::new(
+                                        shadow_options.shape_origin().x + spread.get().max(0.),
+                                        shadow_options.shape_origin().y + spread.get().max(0.),
+                                    ),
+                                    PhysicalSize::from_lengths(width, height),
+                                );
                                 let shadow_path = outline_to_femtovg_path(outline, target);
                                 canvas.fill_path(&shadow_path, &mask_paint);
                                 if spread.get() > 0. {
@@ -535,6 +528,21 @@ impl<'a, R: femtovg::Renderer + TextureImporter> ItemRenderer for GLItemRenderer
                                     stroke_paint.set_line_join(femtovg::LineJoin::Round);
                                     stroke_paint.set_line_cap(femtovg::LineCap::Round);
                                     canvas.stroke_path(&shadow_path, &stroke_paint);
+                                } else if spread.get() < 0. {
+                                    // Erode the silhouette: subtract the
+                                    // band a stroke of width 2·|spread|
+                                    // covers.
+                                    canvas.global_composite_operation(
+                                        femtovg::CompositeOperation::DestinationOut,
+                                    );
+                                    let mut band_paint = mask_paint.clone();
+                                    band_paint.set_line_width(2. * spread.get().abs());
+                                    band_paint.set_line_join(femtovg::LineJoin::Round);
+                                    band_paint.set_line_cap(femtovg::LineCap::Round);
+                                    canvas.stroke_path(&shadow_path, &band_paint);
+                                    canvas.global_composite_operation(
+                                        femtovg::CompositeOperation::SourceOver,
+                                    );
                                 }
                             }
                         }
@@ -585,14 +593,36 @@ impl<'a, R: femtovg::Renderer + TextureImporter> ItemRenderer for GLItemRenderer
                             }
                             Some(outline) => {
                                 let hole_path = outline_to_femtovg_path(outline, hole_target);
-                                if spread.get() != 0. {
+                                if spread.get() > 0. {
+                                    // The hole is eroded: parity over
+                                    // [fill ⊕ stroke-band] leaves the
+                                    // eroded interior (the band's outer
+                                    // spill is outside the silhouette and
+                                    // is clipped away later).
+                                    canvas.global_composite_operation(
+                                        femtovg::CompositeOperation::Xor,
+                                    );
+                                    canvas.fill_path(&hole_path, &mask_paint);
                                     let mut band_paint = mask_paint.clone();
-                                    band_paint.set_line_width(2. * spread.get().abs());
+                                    band_paint.set_line_width(2. * spread.get());
                                     band_paint.set_line_join(femtovg::LineJoin::Round);
                                     band_paint.set_line_cap(femtovg::LineCap::Round);
                                     canvas.stroke_path(&hole_path, &band_paint);
+                                } else {
+                                    // Negative spread: the hole is dilated,
+                                    // i.e. fill ∪ stroke-band.
+                                    canvas.global_composite_operation(
+                                        femtovg::CompositeOperation::DestinationOut,
+                                    );
+                                    if spread.get() != 0. {
+                                        let mut band_paint = mask_paint.clone();
+                                        band_paint.set_line_width(2. * spread.get().abs());
+                                        band_paint.set_line_join(femtovg::LineJoin::Round);
+                                        band_paint.set_line_cap(femtovg::LineCap::Round);
+                                        canvas.stroke_path(&hole_path, &band_paint);
+                                    }
+                                    canvas.fill_path(&hole_path, &mask_paint);
                                 }
-                                canvas.fill_path(&hole_path, &mask_paint);
                             }
                         }
                         canvas.global_composite_operation(femtovg::CompositeOperation::SourceOver);
@@ -824,9 +854,10 @@ impl<'a, R: femtovg::Renderer + TextureImporter> ItemRenderer for GLItemRenderer
             phys_rect.size.height,
         );
 
-        // femtovg only supports rectangular clipping. Non-rectangular clips must be handled via
-        // `visit_clip`, which renders children into a layer.
-        debug_assert!(outline.shape().is_none());
+        // femtovg only supports rectangular clipping. Non-rectangular clips
+        // (shapes and rounded rectangles alike) must go through `visit_clip`,
+        // which renders children into a layer masked by the outline.
+        debug_assert!(outline.is_plain_rect());
 
         clip_region_valid
     }

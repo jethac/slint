@@ -1,6 +1,8 @@
 // Copyright © SixtyFPS GmbH <info@slint.dev>
 // SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0
 
+// cSpell: ignore Casteljau letterboxed rasterizers
+
 //! Element outlines: turning the `shape`/`shape-fit` properties into concrete
 //! geometry. Every consumer of an element's shape — background, border, clip,
 //! shadows, hit-testing, accessibility bounds — goes through the types defined
@@ -202,6 +204,9 @@ impl ElementOutline {
                     push_flattened_cubic(p0, c0, c1, p1, tolerance, &mut contour, 0);
                     p0 = p1;
                 }
+                // Repeat the start point: the explicit wrap marks the contour
+                // as closed (strokes join rather than cap the closing edge).
+                contour.push(contour[0]);
                 alloc::vec![contour]
             }
         }
@@ -322,10 +327,10 @@ impl ElementOutline {
                     builder.add_rounded_rectangle(
                         &rect,
                         &lyon_path::builder::BorderRadii {
-                            top_left: radius.top_left,
-                            top_right: radius.top_right,
-                            bottom_left: radius.bottom_left,
-                            bottom_right: radius.bottom_right,
+                            top_left: radius.top_left as f32,
+                            top_right: radius.top_right as f32,
+                            bottom_left: radius.bottom_left as f32,
+                            bottom_right: radius.bottom_right as f32,
                         },
                         lyon_path::Winding::Positive,
                     );
@@ -436,10 +441,10 @@ fn flatten_rounded_rectangle<U>(
     // Clamp the radii like the renderers do: no corner radius may exceed half
     // the corresponding side.
     let max = (w / 2.).min(h / 2.);
-    let tl = (radius.top_left).clamp(0., max);
-    let tr = (radius.top_right).clamp(0., max);
-    let br = (radius.bottom_right).clamp(0., max);
-    let bl = (radius.bottom_left).clamp(0., max);
+    let tl = (radius.top_left as f32).clamp(0., max);
+    let tr = (radius.top_right as f32).clamp(0., max);
+    let br = (radius.bottom_right as f32).clamp(0., max);
+    let bl = (radius.bottom_left as f32).clamp(0., max);
     let mut contour = Vec::new();
     // (corner center, start angle, corner radius) in clockwise order.
     for (cx, cy, a0, r) in [
@@ -463,6 +468,8 @@ fn flatten_rounded_rectangle<U>(
             contour.push(OutlinePoint::new(cx + r * a.cos(), cy + r * a.sin()));
         }
     }
+    // Repeat the start point: the explicit wrap marks the contour as closed.
+    contour.push(contour[0]);
     Some(contour)
 }
 
@@ -482,10 +489,10 @@ fn point_in_rounded_rectangle<U>(
     let max = (w / 2.).min(h / 2.);
     let corners = [
         // (corner vertex x, corner vertex y, radius)
-        (x + w, y, radius.top_right),
-        (x + w, y + h, radius.bottom_right),
-        (x, y + h, radius.bottom_left),
-        (x, y, radius.top_left),
+        (x + w, y, radius.top_right as f32),
+        (x + w, y + h, radius.bottom_right as f32),
+        (x, y + h, radius.bottom_left as f32),
+        (x, y, radius.top_left as f32),
     ];
     for (vx, vy, r) in corners {
         let r = r.clamp(0., max);
@@ -549,19 +556,19 @@ fn emit_rounded_rectangle_path<U>(
     // https://pomax.github.io/bezierinfo/#circles_cubic: a quarter circle is
     // one cubic with handle length κ·r, κ = (4/3)·tan(π/8).
     const KAPPA: f32 = 0.552_284_75;
-    let x = target.min_x();
-    let y = target.min_y();
-    let w = target.width();
-    let h = target.height();
+    let x = target.min_x() as f32;
+    let y = target.min_y() as f32;
+    let w = target.width() as f32;
+    let h = target.height() as f32;
     if w <= 0. || h <= 0. {
         return;
     }
     let clamp = |r: f32| r.max(0.).min(w.min(h) / 2.);
     let (tl, tr, br, bl) = (
-        clamp(radius.top_left),
-        clamp(radius.top_right),
-        clamp(radius.bottom_right),
-        clamp(radius.bottom_left),
+        clamp(radius.top_left as f32),
+        clamp(radius.top_right as f32),
+        clamp(radius.bottom_right as f32),
+        clamp(radius.bottom_left as f32),
     );
     // Clockwise: top edge left-to-right, then the right, bottom and left edges.
     f(OutlinePathEl::MoveTo(OutlinePoint::new(x + tl, y)));

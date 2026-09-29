@@ -1,6 +1,8 @@
 // Copyright © SixtyFPS GmbH <info@slint.dev>
 // SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0
 
+// cSpell: ignore segs
+
 use super::*;
 use crate::{
     animations::simulations::{
@@ -224,9 +226,9 @@ impl<T: InterpolatedPropertyValue + Clone> PropertyValueAnimationData<T> {
                 };
 
                 let mut from_channels = alloc::vec![0.0; channel_count];
-                from_value.write_channels(to_value, &mut from_channels);
+                from_value.write_start_channels(to_value, &mut from_channels);
                 let mut to_channels = alloc::vec![0.0; channel_count];
-                to_value.write_channels(from_value, &mut to_channels);
+                to_value.write_target_channels(from_value, &mut to_channels);
                 // A velocity carried over from an animation with a different channel
                 // count keeps the channels that line up; the rest start at 0.
                 let carried = if carried_velocity.is_empty() {
@@ -730,6 +732,20 @@ pub trait InterpolatedPropertyValue: PartialEq + Default + 'static {
     fn write_channels(&self, target_value: &Self, out: &mut [f32]) {
         debug_assert_eq!(out.len(), self.channel_count(target_value));
         out[0] = Self::default().scalar_delta(self);
+    }
+
+    /// [`write_channels`](Self::write_channels) for the endpoint that starts a
+    /// spring. Directional channel layouts (e.g. morph progress, which runs
+    /// 0 at the start to a displacement at the target) override this and
+    /// [`write_target_channels`](Self::write_target_channels) together.
+    fn write_start_channels(&self, target_value: &Self, out: &mut [f32]) {
+        self.write_channels(target_value, out);
+    }
+
+    /// [`write_channels`](Self::write_channels) for the endpoint a spring
+    /// animates towards.
+    fn write_target_channels(&self, start_value: &Self, out: &mut [f32]) {
+        self.write_channels(start_value, out);
     }
 
     /// Rebuild a value from channels in the `(self, target_value)` pair's layout:
@@ -2253,9 +2269,11 @@ mod animation_tests {
         let tick = core::time::Duration::from_millis(16);
 
         let spring_details = PropertyAnimation {
-            duration: 400,
-            easing: crate::animations::EasingCurve::Spring(0.6),
-            iteration_count: 1.,
+            easing: crate::animations::EasingCurve::PhysicalSpring {
+                damping_ratio: 0.8,
+                stiffness: 200.,
+                mass: 1.,
+            },
             ..PropertyAnimation::default()
         };
 
@@ -2303,8 +2321,107 @@ mod animation_tests {
         compo.shape.handle.access(|binding| assert!(binding.is_none()));
     }
 
+    /// The driver samples a shape spring at every tick: consecutive samples
+    /// move each anchor continuously — every anchor of the outline at T sits
+    /// within a frame's step of both the T−1 and T+1 outlines rather than
+    /// jumping.
+    #[test]
+    fn shape_physical_spring_anchors_track_continuously() {
+        use crate::graphics::shapes::Point;
+        use crate::graphics::shapes::{self, Cubic, Shape};
+
+        #[derive(Default)]
+        struct ShapeComponent {
+            shape: Property<Shape>,
+        }
+        let compo = Rc::pin(ShapeComponent::default());
+
+        let anchors = |s: &Shape| -> Vec<Point> {
+            s.cubics()
+                .as_chunks::<8>()
+                .0
+                .iter()
+                .map(|p| Cubic { points: *p })
+                .map(|c| Point { x: c.anchor0_x(), y: c.anchor0_y() })
+                .collect()
+        };
+        // Dense polyline of the outline: the anchor layout of a morph result is
+        // re-detected per frame, so compare each anchor against the neighboring
+        // outlines, not by index.
+        let outline = |s: &Shape| -> Vec<Point> {
+            s.cubics()
+                .as_chunks::<8>()
+                .0
+                .iter()
+                .map(|p| Cubic { points: *p })
+                .flat_map(|c| [0., 1. / 3., 2. / 3.].map(|t| c.point_on_curve(t)))
+                .collect()
+        };
+        let dist_to_segment = |p: Point, (a, b): (Point, Point)| -> f32 {
+            let ab = b - a;
+            let t = (((p - a).x * ab.x + (p - a).y * ab.y)
+                / (ab.x * ab.x + ab.y * ab.y).max(1e-12))
+            .clamp(0., 1.);
+            ((p - a).x - t * ab.x).hypot((p - a).y - t * ab.y)
+        };
+        let dist_to_outline = |p: Point, outline: &[Point]| -> f32 {
+            outline
+                .iter()
+                .zip(outline.iter().cycle().skip(1))
+                .map(|(&a, &b)| dist_to_segment(p, (a, b)))
+                .fold(f32::MAX, f32::min)
+        };
+
+        let circle = shapes::circle_shape(8);
+        let star = shapes::star_shape(
+            5,
+            0.4,
+            shapes::CornerRounding::UNROUNDED,
+            shapes::CornerRounding::UNROUNDED,
+        );
+        compo.shape.set(circle);
+        let start_time = crate::animations::current_tick();
+        let tick = core::time::Duration::from_millis(16);
+
+        set_animated_value(
+            &compo.shape,
+            star,
+            PropertyAnimation {
+                easing: crate::animations::EasingCurve::PhysicalSpring {
+                    damping_ratio: 0.9,
+                    stiffness: 60.,
+                    mass: 1.,
+                },
+                ..PropertyAnimation::default()
+            },
+        );
+        let sample = |i: u32| {
+            crate::animations::CURRENT_ANIMATION_DRIVER
+                .with(|driver| driver.update_animations(start_time + tick * i));
+            get_prop_value(&compo.shape)
+        };
+
+        let samples: Vec<Shape> = (2..40).map(&sample).collect();
+        let outlines: Vec<Vec<Point>> = samples.iter().map(&outline).collect();
+        let mut checked_ticks = 0;
+        for (i, w) in samples.windows(3).enumerate() {
+            // A snap to the empty shape or to an endpoint is a teleport — the
+            // tolerance bounds per-frame anchor travel to a fraction of the
+            // unit-square shape extent.
+            let tol = 0.3;
+            let (a_mid, prev, next) = (anchors(&w[1]), &outlines[i], &outlines[i + 2]);
+            assert!(!a_mid.is_empty(), "tick {} produced an empty outline", i + 3);
+            for (j, a) in a_mid.iter().enumerate() {
+                let d = dist_to_outline(*a, prev).max(dist_to_outline(*a, next));
+                assert!(d <= tol, "anchor {j} at tick {} off its trajectory by {d}", i + 3,);
+            }
+            checked_ticks += 1;
+        }
+        assert!(checked_ticks >= 30, "checked only {checked_ticks} animating ticks");
+    }
+
     /// `spring(damping_ratio, stiffness)` — the `PhysicalSpring` variant the
-    /// Material animations API uses — animates a `shape` on its perimeter
+    /// Material animations API uses — animates a `shape` on its displacement
     /// channel instead of snapping or producing the empty shape mid-flight.
     #[test]
     fn shape_physical_spring_animates_and_settles() {

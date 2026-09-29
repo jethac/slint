@@ -1,0 +1,92 @@
+// Copyright © SixtyFPS GmbH <info@slint.dev>
+// SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0
+
+// SIZE=400x140
+// BASE_THRESHOLD=3
+// ROTATION_THRESHOLD=80  - shape rasterization anti-aliasing differs by rotation
+
+export component TestCase inherits Window {
+    width: 400px;
+    height: 140px;
+    background: #f4f4f4;
+
+    // A circular clip inside a star clip: children show only where both
+    // outlines cover them.
+    Rectangle {
+        x: 15px;
+        y: 10px;
+        width: 120px;
+        height: 120px;
+        shape: Shapes.star(5, 0.5, { radius: 10, smoothing: 0.4 }, { radius: 4, smoothing: 0 });
+        clip: true;
+        background: #eee;
+
+        Rectangle {
+            x: 20px;
+            y: 20px;
+            width: 80px;
+            height: 80px;
+            shape: Shapes.circle(16);
+            clip: true;
+            background: transparent;
+
+            Rectangle {
+                x: -40px;
+                y: -40px;
+                width: 160px;
+                height: 160px;
+                background: @linear-gradient(90deg, orange, orange 50%, purple 50%, purple);
+            }
+        }
+    }
+
+    // A shape clip nested inside a plain rounded-rect clip.
+    Rectangle {
+        x: 155px;
+        y: 10px;
+        width: 120px;
+        height: 120px;
+        border-radius: 20px;
+        clip: true;
+        background: #eee;
+
+        Rectangle {
+            x: 10px;
+            y: 30px;
+            width: 100px;
+            height: 60px;
+            shape: Shapes.regular-polygon(3, { radius: 6, smoothing: 0 });
+            clip: true;
+            background: transparent;
+
+            Rectangle {
+                x: -60px;
+                y: -30px;
+                width: 200px;
+                height: 140px;
+                background: @linear-gradient(0deg, teal, teal 50%, tomato 50%, tomato);
+            }
+        }
+    }
+
+    // A plain-rect clip nested inside a shape clip stays a rect intersection.
+    Rectangle {
+        x: 295px;
+        y: 10px;
+        width: 90px;
+        height: 120px;
+        shape: Shapes.circle(16);
+        shape-fit: cover;
+        clip: true;
+        background: #eee;
+
+        Rectangle {
+            x: 25px;
+            y: 10px;
+            width: 40px;
+            height: 100px;
+            clip: true;
+            background: @linear-gradient(0deg, navy, lime);
+        }
+    }
+}

@@ -1,6 +1,8 @@
 // Copyright © SixtyFPS GmbH <info@slint.dev>
 // SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0
 
+// cSpell: ignore Casteljau scanline scanlines subpaths supersampled supersampling
+
 //! Scanline coverage rasterization for shape outlines and paths.
 //!
 //! This module is the software renderer's single rasterization pipeline for
@@ -25,6 +27,8 @@ use alloc::vec;
 use alloc::vec::Vec;
 use i_slint_core::items::{FillRule, LineCap, LineJoin};
 use i_slint_core::lengths::PhysicalPx;
+#[cfg(not(feature = "std"))]
+use num_traits::Float;
 
 /// A rasterizer-space point: physical pixels.
 pub type Point = euclid::Point2D<f32, PhysicalPx>;
@@ -86,10 +90,15 @@ pub fn flatten_events<P: Copy>(
                 );
             }
             lyon_path::Event::End { close, .. } => {
+                if close && current.len() > 1 && current[0] != *current.last().unwrap() {
+                    // Repeat the first point so closed contours carry their
+                    // explicit wrap: `stroke_to_fill` detects closure by
+                    // first == last and otherwise drops the closing segment.
+                    current.push(current[0]);
+                }
                 if !current.is_empty() {
                     contours.push(core::mem::take(&mut current));
                 }
-                let _ = close;
             }
         }
     }
@@ -160,6 +169,7 @@ fn push_flattened_quadratic(
     push_flattened_quadratic(m, m1, p1, tolerance, out, depth + 1);
 }
 
+#[cfg(feature = "path")]
 fn midpoint(a: Point, b: Point) -> Point {
     Point::new((a.x + b.x) * 0.5, (a.y + b.y) * 0.5)
 }
@@ -438,6 +448,10 @@ pub struct Rasterizer {
     /// Index into `edges` of the first edge that could still cover future
     /// scanlines. Used as an incremental active-edge window.
     window_start: usize,
+    /// The last scanline rasterized; a lower `y` on the next call rewinds
+    /// `window_start` since the active-edge window is only valid
+    /// monotonically.
+    last_y: i32,
 }
 
 /// One rasterization edge: a line segment with a winding sign.
@@ -458,6 +472,7 @@ impl Rasterizer {
     pub fn begin(&mut self, contours: &[Contour]) {
         self.edges.clear();
         self.window_start = 0;
+        self.last_y = i32::MIN;
         for contour in contours {
             if contour.len() < 2 {
                 continue;
@@ -495,6 +510,12 @@ impl Rasterizer {
         self.area.resize(w, 0.);
         self.cover.fill(0.);
         self.area.fill(0.);
+
+        // A row below the previous one invalidates the active-edge window.
+        if y < self.last_y {
+            self.window_start = 0;
+        }
+        self.last_y = y;
 
         // Advance the active-edge window past edges that end at or above this
         // row; they can't be covered again since edges are sorted by y_start.
@@ -545,7 +566,7 @@ impl Rasterizer {
 /// The contribution of an edge to a pixel column is a signed quantity:
 /// `cover` accumulates the vertical extent of the edge inside the column and
 /// `area` the same extent weighted by how far inside the column the edge is.
-/// After the sweep, `coverage(x) = Σcover − area(x)` is the fraction of the
+/// After the sweep, `coverage(x) = total cover − area(x)` is the fraction of the
 /// pixel inside the outline.
 fn accumulate_edge(
     cover: &mut [f32],
@@ -864,6 +885,26 @@ mod tests {
         let stroked = stroke_to_fill(&[rect], 2., LineCap::Butt, LineJoin::Miter, 4.);
         let grid = rasterize(&stroked, FillRule::Nonzero, 0, 0, 14, 12);
         assert_eq!(grid[2][6], 255, "on the stroke ring");
+        assert_eq!(grid[5][6], 0, "inside the stroked rect");
+    }
+
+    #[test]
+    fn stroke_closed_contour_covers_closing_edge() {
+        // A rect whose last point repeats its first is closed: the closing
+        // edge joins rather than caps, so coverage reaches both sides of it.
+        let closed = vec![pt(2., 2.), pt(10., 2.), pt(10., 8.), pt(2., 8.), pt(2., 2.)];
+        let stroked = stroke_to_fill(&[closed], 2., LineCap::Butt, LineJoin::Miter, 4.);
+        let grid = rasterize(&stroked, FillRule::Nonzero, 0, 0, 14, 12);
+        // The closing edge is the left side (x = 2): coverage straddles it.
+        assert_eq!(grid[5][1], 255, "left of the closing edge");
+        assert_eq!(grid[5][3], 255, "right of the closing edge");
+        assert_eq!(grid[5][6], 0, "inside the stroked rect");
+        // The same rect without the wrap is open: no closing edge at all.
+        let open = vec![pt(2., 2.), pt(10., 2.), pt(10., 8.), pt(2., 8.)];
+        let stroked = stroke_to_fill(&[open], 2., LineCap::Butt, LineJoin::Miter, 4.);
+        let grid = rasterize(&stroked, FillRule::Nonzero, 0, 0, 14, 12);
+        assert_eq!(grid[5][1], 0, "left of the missing closing edge");
+        assert_eq!(grid[5][3], 0, "right of the missing closing edge");
         assert_eq!(grid[5][6], 0, "inside the stroked rect");
     }
 

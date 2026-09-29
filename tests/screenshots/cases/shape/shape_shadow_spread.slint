@@ -1,0 +1,98 @@
+// Copyright © SixtyFPS GmbH <info@slint.dev>
+// SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0
+
+// SIZE=400x200
+// BASE_THRESHOLD=3
+// ROTATION_THRESHOLD=80  - shape rasterization anti-aliasing differs by rotation
+
+export component TestCase inherits Window {
+    width: 400px;
+    height: 200px;
+    background: #f4f4f4;
+
+    // Drop shadow on a shape: positive spread dilates the silhouette.
+    Rectangle {
+        x: 20px;
+        y: 15px;
+        width: 80px;
+        height: 80px;
+        shape: Shapes.star(4, 0.45, { radius: 8, smoothing: 0.4 }, { radius: 4, smoothing: 0 });
+        background: #48b;
+        drop-shadow-color: #0009;
+        drop-shadow-offset-x: 4px;
+        drop-shadow-offset-y: 4px;
+        drop-shadow-blur: 6px;
+        drop-shadow-spread: 5px;
+    }
+
+    // Drop shadow on a shape: negative spread erodes the silhouette.
+    Rectangle {
+        x: 130px;
+        y: 15px;
+        width: 80px;
+        height: 80px;
+        shape: Shapes.star(4, 0.45, { radius: 8, smoothing: 0.4 }, { radius: 4, smoothing: 0 });
+        background: #48b;
+        drop-shadow-color: #0009;
+        drop-shadow-offset-x: 4px;
+        drop-shadow-offset-y: 4px;
+        drop-shadow-blur: 6px;
+        drop-shadow-spread: -4px;
+    }
+
+    // Inner shadow on a shape: positive spread thickens the shadow band.
+    Rectangle {
+        x: 240px;
+        y: 15px;
+        width: 80px;
+        height: 80px;
+        shape: Shapes.circle(16);
+        background: #d85;
+        inner-shadow-color: #000000a0;
+        inner-shadow-blur: 7px;
+        inner-shadow-spread: 6px;
+    }
+
+    // Inner shadow on a shape: negative spread pulls the shadow ring inward.
+    Rectangle {
+        x: 20px;
+        y: 110px;
+        width: 80px;
+        height: 80px;
+        shape: Shapes.circle(16);
+        background: #d85;
+        inner-shadow-color: #000000a0;
+        inner-shadow-blur: 7px;
+        inner-shadow-spread: -4px;
+    }
+
+    // Drop shadow spread on a plain rounded rect stays border-radius-like.
+    Rectangle {
+        x: 130px;
+        y: 110px;
+        width: 80px;
+        height: 80px;
+        border-radius: 16px;
+        background: #6a5;
+        drop-shadow-color: #0009;
+        drop-shadow-offset-x: 3px;
+        drop-shadow-offset-y: 3px;
+        drop-shadow-blur: 5px;
+        drop-shadow-spread: -4px;
+    }
+
+    // Inner shadow with offset + spread on a shape.
+    Rectangle {
+        x: 240px;
+        y: 110px;
+        width: 80px;
+        height: 80px;
+        shape: Shapes.regular-polygon(3, { radius: 8, smoothing: 0 });
+        background: #b7c;
+        inner-shadow-color: #000000a0;
+        inner-shadow-blur: 6px;
+        inner-shadow-offset-x: 5px;
+        inner-shadow-offset-y: 5px;
+        inner-shadow-spread: 3px;
+    }
+}

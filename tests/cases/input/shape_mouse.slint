@@ -1,0 +1,94 @@
+// Copyright © SixtyFPS GmbH <info@slint.dev>
+// SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0
+
+export component TestCase inherits Rectangle {
+    width: 100phx;
+    height: 100phx;
+    in-out property <int> touch_inside;
+    in-out property <int> touch_plain;
+    out property <bool> hover_inside <=> ta_inside.has-hover;
+    out property <bool> hover_plain <=> ta_plain.has-hover;
+
+    // clip: true lowers to a Clip item whose outline is the shape: the child
+    // TouchArea fills the 40x40 rectangle, but points outside the inscribed
+    // circle must not reach it.
+    Rectangle {
+        x: 10phx;
+        y: 10phx;
+        width: 40phx;
+        height: 40phx;
+        clip: true;
+        shape: Shapes.circle(1);
+        ta_inside := TouchArea {
+            width: 100%;
+            height: 100%;
+            clicked => { touch_inside += 1; }
+        }
+    }
+
+    // The same shape without clip: the parent outline doesn't gate input,
+    // so the child stays hit-testable everywhere inside its geometry.
+    Rectangle {
+        x: 10phx;
+        y: 60phx;
+        width: 40phx;
+        height: 40phx;
+        shape: Shapes.circle(1);
+        ta_plain := TouchArea {
+            width: 100%;
+            height: 100%;
+            clicked => { touch_plain += 1; }
+        }
+    }
+
+    out property <bool> test: true;
+}
+
+/*
+```rust
+let instance = TestCase::new().unwrap();
+
+assert_eq!(instance.get_test(), true);
+
+// Inside the circle: the click reaches the clipped TouchArea and hovers it.
+slint_testing::send_mouse_click(&instance, 30., 30.);
+assert_eq!(instance.get_touch_inside(), 1);
+assert_eq!(instance.get_hover_inside(), true);
+
+// The rectangle's corner is inside the TouchArea's geometry but outside the
+// circle outline: the clip intercepts the event.
+slint_testing::send_mouse_click(&instance, 12., 12.);
+assert_eq!(instance.get_touch_inside(), 1);
+assert_eq!(instance.get_hover_inside(), false);
+
+// Without clip, the same corner point keeps reaching the child.
+slint_testing::send_mouse_click(&instance, 30., 80.);
+assert_eq!(instance.get_touch_plain(), 1);
+assert_eq!(instance.get_hover_plain(), true);
+slint_testing::send_mouse_click(&instance, 12., 62.);
+assert_eq!(instance.get_touch_plain(), 2);
+assert_eq!(instance.get_hover_plain(), true);
+```
+
+```cpp
+auto handle = TestCase::create();
+const TestCase &instance = *handle;
+
+assert_eq(instance.get_test(), true);
+
+slint_testing::send_mouse_click(&instance, 30., 30.);
+assert_eq(instance.get_touch_inside(), 1);
+assert_eq(instance.get_hover_inside(), true);
+
+slint_testing::send_mouse_click(&instance, 12., 12.);
+assert_eq(instance.get_touch_inside(), 1);
+assert_eq(instance.get_hover_inside(), false);
+
+slint_testing::send_mouse_click(&instance, 30., 80.);
+assert_eq(instance.get_touch_plain(), 1);
+assert_eq(instance.get_hover_plain(), true);
+slint_testing::send_mouse_click(&instance, 12., 62.);
+assert_eq(instance.get_touch_plain(), 2);
+assert_eq(instance.get_hover_plain(), true);
+```
+*/

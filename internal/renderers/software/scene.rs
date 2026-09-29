@@ -1,6 +1,8 @@
 // Copyright © SixtyFPS GmbH <info@slint.dev>
 // SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0
 
+// cSpell: ignore scanline
+
 //! This is the module contain data structures for a scene of items that can be rendered
 
 use super::{
@@ -84,8 +86,8 @@ pub enum PathBrush {
     },
 }
 
-/// A shape clip outline, in absolute physical screen coordinates.
-pub struct ClipOutlineData {
+/// One clip outline layer, in absolute physical screen coordinates.
+pub struct ClipOutlineLayer {
     /// How the contours combine into coverage.
     pub fill_rule: FillRule,
     /// Integer y-range [first, last) the clip can cover.
@@ -95,6 +97,52 @@ pub struct ClipOutlineData {
     /// The coverage rasterizer with the contours' edge list already loaded —
     /// rows are rasterized through it on demand.
     pub rasterizer: core::cell::RefCell<crate::shape_raster::Rasterizer>,
+}
+
+/// The active shape clip. Nested `clip` elements intersect, so the clip is a
+/// stack of outlines whose coverages are multiplied per row.
+pub struct ClipOutlineData {
+    /// Outermost clip first. Never empty.
+    pub layers: Vec<ClipOutlineLayer>,
+    /// Scratch row for folding stacked layers into the coverage mask.
+    scratch: core::cell::RefCell<Vec<u8>>,
+}
+
+impl ClipOutlineData {
+    pub fn new(layers: Vec<ClipOutlineLayer>) -> Self {
+        Self { layers, scratch: core::cell::RefCell::new(Vec::new()) }
+    }
+
+    /// Rasterizes the intersection of the stacked outlines' coverage for
+    /// scanline `y` (columns start at `x_start`) into `alpha`.
+    pub fn rasterize_row(&self, y: i32, x_start: i32, alpha: &mut [u8]) {
+        let mut first = true;
+        for layer in &self.layers {
+            if first {
+                first = false;
+                if y >= layer.y_start && y < layer.y_end {
+                    layer.rasterizer.borrow_mut().rasterize_row(y, x_start, alpha, layer.fill_rule);
+                } else {
+                    alpha.fill(0);
+                }
+                continue;
+            }
+            let mut scratch = self.scratch.borrow_mut();
+            scratch.clear();
+            scratch.resize(alpha.len(), 0);
+            if y >= layer.y_start && y < layer.y_end {
+                layer.rasterizer.borrow_mut().rasterize_row(
+                    y,
+                    x_start,
+                    &mut scratch,
+                    layer.fill_rule,
+                );
+            }
+            for (a, &s) in alpha.iter_mut().zip(scratch.iter()) {
+                *a = (*a as u16 * s as u16 / 255) as u8;
+            }
+        }
+    }
 }
 
 pub struct Scene {

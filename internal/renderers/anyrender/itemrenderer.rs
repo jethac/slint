@@ -1000,17 +1000,8 @@ impl<'a, S: PaintScene> AnyrenderItemRenderer<'a, S> {
         let opaque = peniko::color::palette::css::BLACK;
 
         if !inset {
-            let target = if spread >= 0. {
-                PhysicalRect::new(PhysicalPoint::new(offset.x as f32, offset.y as f32), size)
-            } else {
-                PhysicalRect::new(
-                    PhysicalPoint::new(offset.x as f32, offset.y as f32),
-                    PhysicalSize::new(
-                        (size.width as f64 + 2. * spread) as f32,
-                        (size.height as f64 + 2. * spread) as f32,
-                    ),
-                )
-            };
+            let target =
+                PhysicalRect::new(PhysicalPoint::new(offset.x as f32, offset.y as f32), size);
             let path = outline_to_bezpath(outline, target);
             // Bound the blur's bleed into the layer's clip.
             let inflate = spread.abs() + blur * 2. + 8.;
@@ -1028,6 +1019,15 @@ impl<'a, S: PaintScene> AnyrenderItemRenderer<'a, S> {
                     .with_join(kurbo::Join::Round)
                     .with_caps(kurbo::Cap::Round);
                 self.scene.stroke(&stroke, transform, brush, None, &path);
+            } else if spread < 0. {
+                // Erode the silhouette: subtract the band a stroke of width
+                // 2·|spread| covers, via a nested destination-out layer.
+                self.scene.push_layer(dest_out, 1.0, transform, &layer_clip, None, None);
+                let band = kurbo::Stroke::new(2. * spread.abs())
+                    .with_join(kurbo::Join::Round)
+                    .with_caps(kurbo::Cap::Round);
+                self.scene.stroke(&band, transform, peniko::BrushRef::Solid(opaque), None, &path);
+                self.scene.pop_layer();
             }
             self.scene.pop_layer();
         } else {
@@ -1047,13 +1047,21 @@ impl<'a, S: PaintScene> AnyrenderItemRenderer<'a, S> {
             let hole = outline_to_bezpath(outline, hole_target);
             self.scene.push_layer(dest_out, 1.0, transform, &clip_rect, blur_filter(), None);
             self.scene.fill(fill_style, transform, peniko::BrushRef::Solid(opaque), None, &hole);
-            if spread != 0. {
+            if spread > 0. {
+                // The hole is eroded: subtract the stroke band via a nested
+                // destination-out layer.
                 self.scene.push_layer(dest_out, 1.0, transform, &clip_rect, None, None);
-                let band = kurbo::Stroke::new(2. * spread.abs())
+                let band = kurbo::Stroke::new(2. * spread)
                     .with_join(kurbo::Join::Round)
                     .with_caps(kurbo::Cap::Round);
                 self.scene.stroke(&band, transform, peniko::BrushRef::Solid(opaque), None, &hole);
                 self.scene.pop_layer();
+            } else if spread < 0. {
+                // The hole is dilated: the stroke band joins the hole.
+                let band = kurbo::Stroke::new(2. * spread.abs())
+                    .with_join(kurbo::Join::Round)
+                    .with_caps(kurbo::Cap::Round);
+                self.scene.stroke(&band, transform, peniko::BrushRef::Solid(opaque), None, &hole);
             }
             self.scene.pop_layer();
             self.scene.pop_layer();

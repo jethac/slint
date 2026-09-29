@@ -1,7 +1,7 @@
 // Copyright © SixtyFPS GmbH <info@slint.dev>
 // SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0
 
-// cSpell: ignore frontmost
+// cSpell: ignore frontmost premult rasterizers unrotated untransform
 #![doc = include_str!("README.md")]
 #![doc(html_logo_url = "https://slint.dev/logo/slint-logo-square-light.svg")]
 #![cfg_attr(docsrs, feature(doc_cfg))]
@@ -738,8 +738,38 @@ pub struct SoftwareRenderer {
     maybe_window_adapter: RefCell<Option<Weak<dyn i_slint_core::window::WindowAdapter>>>,
     rotation: Cell<RenderingRotation>,
     rendering_metrics_collector: Option<Rc<RenderingMetricsCollector>>,
+    /// The blurred shadow alpha masks of `draw_box_shadow`,
+    /// keyed by a hash of everything that produced them.
+    shadow_mask_cache: RefCell<ShadowMaskCache>,
     #[cfg(feature = "systemfonts")]
     text_layout_cache: sharedparley::TextLayoutCache,
+}
+
+/// A bounded cache for box-shadow alpha masks: FIFO eviction.
+struct ShadowMaskCache {
+    masks: alloc::collections::BTreeMap<u64, Rc<[u8]>>,
+    /// Insertion order of `masks`, for eviction.
+    order: alloc::collections::VecDeque<u64>,
+}
+
+impl ShadowMaskCache {
+    const MAX_ENTRIES: usize = 32;
+
+    fn get(&self, key: u64) -> Option<Rc<[u8]>> {
+        self.masks.get(&key).cloned()
+    }
+
+    fn insert(&mut self, key: u64, mask: Rc<[u8]>) {
+        if !self.masks.contains_key(&key) {
+            self.order.push_back(key);
+        }
+        self.masks.insert(key, mask);
+        while self.order.len() > Self::MAX_ENTRIES {
+            if let Some(evicted) = self.order.pop_front() {
+                self.masks.remove(&evicted);
+            }
+        }
+    }
 }
 
 impl Default for SoftwareRenderer {
@@ -752,6 +782,10 @@ impl Default for SoftwareRenderer {
             rotation: Default::default(),
             rendering_metrics_collector: RenderingMetricsCollector::new("software"),
             repaint_buffer_type: Default::default(),
+            shadow_mask_cache: RefCell::new(ShadowMaskCache {
+                masks: Default::default(),
+                order: Default::default(),
+            }),
             #[cfg(feature = "systemfonts")]
             text_layout_cache: Default::default(),
         }
@@ -787,6 +821,9 @@ impl SoftwareRenderer {
     pub fn set_repaint_buffer_type(&self, repaint_buffer_type: RepaintBufferType) {
         if self.repaint_buffer_type.replace(repaint_buffer_type) != repaint_buffer_type {
             self.partial_rendering_state.clear_cache();
+            let mut cache = self.shadow_mask_cache.borrow_mut();
+            cache.masks.clear();
+            cache.order.clear();
         }
     }
 
@@ -923,6 +960,7 @@ impl SoftwareRenderer {
                 mask_row: Vec::new(),
             },
             rotation,
+            &self.shadow_mask_cache,
             #[cfg(feature = "systemfonts")]
             &self.text_layout_cache,
         );
@@ -1677,6 +1715,12 @@ fn render_window_frame_by_line(
 
     let to_draw_tr = scene.dirty_region.bounding_rect();
 
+    // One rasterizer per scene path, primed on first use: spans touching the
+    // same path on consecutive lines reuse the built edge table, whose
+    // active-edge window stays valid since lines advance monotonically.
+    let mut path_rasterizers: Vec<Option<shape_raster::Rasterizer>> =
+        (0..scene.vectors.paths.len()).map(|_| None).collect();
+
     let mut background_color = TargetPixel::background();
     // FIXME gradient
     TargetPixel::blend(&mut background_color, background.color().into());
@@ -1734,15 +1778,11 @@ fn render_window_frame_by_line(
                             scratch.clear();
                             scratch.extend_from_slice(range_buffer);
                             mask.resize(range_buffer.len(), 0);
-                            let y = scene.current_line.get() as i32;
-                            if y >= clip.y_start && y < clip.y_end {
-                                clip.rasterizer.borrow_mut().rasterize_row(
-                                    y,
-                                    begin as i32,
-                                    &mut mask,
-                                    clip.fill_rule,
-                                );
-                            }
+                            clip.rasterize_row(
+                                scene.current_line.get() as i32,
+                                begin as i32,
+                                &mut mask,
+                            );
                         }
 
                         match span.command {
@@ -1823,15 +1863,19 @@ fn render_window_frame_by_line(
                             }
                             SceneCommand::Path { path_index } => {
                                 let data = &scene.vectors.paths[path_index as usize];
-                                let mut rasterizer = shape_raster::Rasterizer::default();
-                                rasterizer.begin(&data.contours);
+                                let rasterizer = path_rasterizers[path_index as usize]
+                                    .get_or_insert_with(|| {
+                                        let mut r = shape_raster::Rasterizer::default();
+                                        r.begin(&data.contours);
+                                        r
+                                    });
                                 let mut row = Vec::new();
                                 draw_path_line(
                                     scene.current_line.get() as i32,
                                     range_buffer,
                                     begin as i32,
                                     data,
-                                    &mut rasterizer,
+                                    rasterizer,
                                     &mut row,
                                 );
                             }
@@ -1871,6 +1915,7 @@ fn prepare_scene(
         window,
         PrepareScene { scale_factor: factor, ..Default::default() },
         software_renderer.rotation.get(),
+        &software_renderer.shadow_mask_cache,
         #[cfg(feature = "systemfonts")]
         &software_renderer.text_layout_cache,
     );
@@ -2234,14 +2279,7 @@ impl<B: target_pixel_buffer::TargetPixelBuffer> RenderToBuffer<'_, B> {
                     let clip = self.clip_mask.clone().unwrap();
                     self.mask_row.clear();
                     self.mask_row.resize(dst.len(), 0);
-                    if l >= clip.y_start as i16 && l < clip.y_end as i16 {
-                        clip.rasterizer.borrow_mut().rasterize_row(
-                            l as i32,
-                            region.min_x() as i32,
-                            &mut self.mask_row,
-                            clip.fill_rule,
-                        );
-                    }
+                    clip.rasterize_row(l as i32, region.min_x() as i32, &mut self.mask_row);
                     self.mask_scratch.clear();
                     self.mask_scratch.extend_from_slice(dst);
                     f(l, &mut self.mask_scratch, extra_left_clip, extra_right_clip);
@@ -2343,7 +2381,8 @@ fn eval_path_brush(
             let dy = p.y - center_y;
             // Angle clockwise from north, matching draw_conic_gradient.
             let a = dy.atan2(dx) + core::f32::consts::FRAC_PI_2;
-            let t = a.rem_euclid(2. * core::f32::consts::PI) / (2. * core::f32::consts::PI);
+            let tau = 2. * core::f32::consts::PI;
+            let t = (a % tau + tau) % tau / tau;
             eval_stops(stops, t)
         }
     }
@@ -2799,6 +2838,7 @@ struct SceneBuilder<'a, T> {
     scale_factor: ScaleFactor,
     window: &'a WindowInner,
     rotation: RotationInfo,
+    shadow_mask_cache: &'a RefCell<ShadowMaskCache>,
     #[cfg(feature = "systemfonts")]
     text_layout_cache: &'a sharedparley::TextLayoutCache,
 }
@@ -2810,6 +2850,7 @@ impl<'a, T: ProcessScene> SceneBuilder<'a, T> {
         window: &'a WindowInner,
         processor: T,
         orientation: RenderingRotation,
+        shadow_mask_cache: &'a RefCell<ShadowMaskCache>,
         #[cfg(feature = "systemfonts")] text_layout_cache: &'a sharedparley::TextLayoutCache,
     ) -> Self {
         Self {
@@ -2822,11 +2863,12 @@ impl<'a, T: ProcessScene> SceneBuilder<'a, T> {
                     LogicalPoint::default(),
                     (screen_size.cast() / scale_factor).cast(),
                 ),
-                clip_outline: None,
+                clip_outlines: Vec::new(),
             },
             scale_factor,
             window,
             rotation: RotationInfo { orientation, screen_size },
+            shadow_mask_cache,
             #[cfg(feature = "systemfonts")]
             text_layout_cache,
         }
@@ -2842,38 +2884,49 @@ impl<'a, T: ProcessScene> SceneBuilder<'a, T> {
     /// absolute physical screen coordinates (offset, scale and rotation
     /// applied).
     fn sync_clip_outline(&mut self) {
-        let clip = self.current_state.clip_outline.as_ref().map(|outline| {
+        let clip = if self.current_state.clip_outlines.is_empty() {
+            None
+        } else {
             let offset = self.current_state.offset.cast::<f32>() * self.scale_factor;
             let rotation = self.rotation;
-            let contours: Vec<shape_raster::Contour> = outline
-                .contours
+            let layers = self
+                .current_state
+                .clip_outlines
                 .iter()
-                .map(|c| {
-                    c.iter()
-                        .map(|p| {
-                            let pt = p.cast::<f32>() * self.scale_factor + offset.to_vector();
-                            transform_continuous(pt, rotation)
+                .map(|outline| {
+                    let contours: Vec<shape_raster::Contour> = outline
+                        .contours
+                        .iter()
+                        .map(|c| {
+                            c.iter()
+                                .map(|p| {
+                                    let pt =
+                                        p.cast::<f32>() * self.scale_factor + offset.to_vector();
+                                    transform_continuous(pt, rotation)
+                                })
+                                .collect()
                         })
-                        .collect()
+                        .collect();
+                    let mut y_start = i32::MAX;
+                    let mut y_end = i32::MIN;
+                    for c in &contours {
+                        for p in c {
+                            y_start = y_start.min(p.y.floor() as i32);
+                            y_end = y_end.max(p.y.ceil() as i32);
+                        }
+                    }
+                    let mut rasterizer = shape_raster::Rasterizer::default();
+                    rasterizer.begin(&contours);
+                    scene::ClipOutlineLayer {
+                        fill_rule: outline.fill_rule,
+                        y_start,
+                        y_end,
+                        rasterizer: core::cell::RefCell::new(rasterizer),
+                    }
                 })
                 .collect();
-            let mut y_start = i32::MAX;
-            let mut y_end = i32::MIN;
-            for c in &contours {
-                for p in c {
-                    y_start = y_start.min(p.y.floor() as i32);
-                    y_end = y_end.max(p.y.ceil() as i32);
-                }
-            }
-            let mut rasterizer = shape_raster::Rasterizer::default();
-            rasterizer.begin(&contours);
-            alloc::rc::Rc::new(ClipOutlineData {
-                fill_rule: outline.fill_rule,
-                y_start,
-                y_end,
-                rasterizer: core::cell::RefCell::new(rasterizer),
-            })
-        });
+            Some(alloc::rc::Rc::new(ClipOutlineData::new(layers)))
+        };
         self.processor.set_clip_outline(clip);
     }
 
@@ -3287,9 +3340,10 @@ struct RenderState {
     alpha: f32,
     offset: LogicalPoint,
     clip: LogicalRect,
-    /// A shape clip active on top of `clip`: contours in this state's
-    /// logical coordinate space, translated along `offset` like `clip`.
-    clip_outline: Option<alloc::rc::Rc<LogicalClipOutline>>,
+    /// The stack of nested shape clips active on top of `clip`, outermost
+    /// first: contours in this state's logical coordinate space, translated
+    /// along `offset` like `clip`. Their coverages intersect.
+    clip_outlines: Vec<alloc::rc::Rc<LogicalClipOutline>>,
 }
 
 /// A clip outline in logical coordinates; converted to physical screen
@@ -3819,8 +3873,8 @@ impl<T: ProcessScene> i_slint_core::item_rendering::ItemRenderer for SceneBuilde
             return;
         }
 
-        let spread = box_shadow.spread().get() * scale_factor.get();
-        let sigma = box_shadow.blur().get() * scale_factor.get() / 2.;
+        let spread = box_shadow.spread().get() as f32 * scale_factor.get();
+        let sigma = box_shadow.blur().get() as f32 * scale_factor.get() / 2.;
         let margin = (3. * sigma).ceil() as i32 + 1;
 
         // The shadow offset is applied in physical space so its direction
@@ -3829,8 +3883,8 @@ impl<T: ProcessScene> i_slint_core::item_rendering::ItemRenderer for SceneBuilde
             let zero = transform_continuous(euclid::point2::<f32, PhysicalPx>(0., 0.), rotation);
             let off = transform_continuous(
                 euclid::point2::<f32, PhysicalPx>(
-                    box_shadow.offset_x().get() * scale_factor.get(),
-                    box_shadow.offset_y().get() * scale_factor.get(),
+                    box_shadow.offset_x().get() as f32 * scale_factor.get(),
+                    box_shadow.offset_y().get() as f32 * scale_factor.get(),
                 ),
                 rotation,
             ) - zero.to_vector();
@@ -3866,7 +3920,7 @@ impl<T: ProcessScene> i_slint_core::item_rendering::ItemRenderer for SceneBuilde
             shifted(&mut contours);
         }
         let off_extent = if inset {
-            (box_shadow.offset_x().get().abs() + box_shadow.offset_y().get().abs())
+            (box_shadow.offset_x().get().abs() as f32 + box_shadow.offset_y().get().abs() as f32)
                 * scale_factor.get()
         } else {
             0.
@@ -3874,40 +3928,76 @@ impl<T: ProcessScene> i_slint_core::item_rendering::ItemRenderer for SceneBuilde
         let (mask_origin, mask_size) =
             padded_bounds(&contours, spread.abs() + margin as f32 + off_extent);
 
-        let coverage = shape_raster::rasterize_spread_mask(
-            &contours,
-            if inset { 0. } else { spread },
-            mask_origin,
-            mask_size,
-            outline.fill_rule(),
-        );
-        let mut blurred = Vec::new();
-        blurred.resize(coverage.len(), 0);
-        let (w, h) = (mask_size.width.max(0) as usize, mask_size.height.max(0) as usize);
-        if inset {
-            // Ring coverage = 1 - hole, where the hole is the outline moved by
-            // the inset offset and eroded by the spread (a positive spread
-            // shrinks the hole and so thickens the shadow band). Blurring the
-            // ring and clipping to the element coverage keeps the shadow on
-            // the inside edge.
-            let hole = shape_raster::rasterize_spread_mask(
-                &hole_contours,
-                -spread,
-                mask_origin,
-                mask_size,
-                outline.fill_rule(),
-            );
-            let mut ring = alloc::vec![0u8; hole.len()];
-            for (r, h) in ring.iter_mut().zip(hole.iter()) {
-                *r = 255 - *h;
+        // Everything that feeds the blurred mask: the transformed contours
+        // (which carry outline content, geometry, offset and rotation), the
+        // spread and sigma, and the mask's own placement.
+        let mask_key = {
+            let mut h = 14695981039346656037u64;
+            let mut mix = |bits: u64| {
+                h ^= bits;
+                h = h.wrapping_mul(0x100000001b3);
+            };
+            for p in contours.iter().flatten() {
+                mix(p.x.to_bits() as u64);
+                mix(p.y.to_bits() as u64);
             }
-            shape_raster::gaussian_blur(&ring, &mut blurred, w, h, sigma);
-            for (b, c) in blurred.iter_mut().zip(coverage.iter()) {
-                *b = (*b as u16 * *c as u16 / 255) as u8;
+            for p in hole_contours.iter().flatten() {
+                mix(p.x.to_bits() as u64);
+                mix(p.y.to_bits() as u64);
             }
-        } else {
-            shape_raster::gaussian_blur(&coverage, &mut blurred, w, h, sigma);
-        }
+            mix(spread.to_bits() as u64);
+            mix(sigma.to_bits() as u64);
+            mix(inset as u64);
+            mix(outline.fill_rule() as u64);
+            mix(mask_origin.x as u64);
+            mix(mask_origin.y as u64);
+            mix(mask_size.width as u64);
+            mix(mask_size.height as u64);
+            h
+        };
+        let blurred_rc = self.shadow_mask_cache.borrow().get(mask_key);
+        let blurred = match blurred_rc {
+            Some(mask) => mask,
+            None => {
+                let coverage = shape_raster::rasterize_spread_mask(
+                    &contours,
+                    if inset { 0. } else { spread },
+                    mask_origin,
+                    mask_size,
+                    outline.fill_rule(),
+                );
+                let mut blurred = Vec::new();
+                blurred.resize(coverage.len(), 0);
+                let (w, h) = (mask_size.width.max(0) as usize, mask_size.height.max(0) as usize);
+                if inset {
+                    // Ring coverage = 1 - hole, where the hole is the outline
+                    // moved by the inset offset and eroded by the spread (a
+                    // positive spread shrinks the hole and so thickens the
+                    // shadow band). Blurring the ring and clipping to the
+                    // element coverage keeps the shadow on the inside edge.
+                    let hole = shape_raster::rasterize_spread_mask(
+                        &hole_contours,
+                        -spread,
+                        mask_origin,
+                        mask_size,
+                        outline.fill_rule(),
+                    );
+                    let mut ring = alloc::vec![0u8; hole.len()];
+                    for (r, h) in ring.iter_mut().zip(hole.iter()) {
+                        *r = 255 - *h;
+                    }
+                    shape_raster::gaussian_blur(&ring, &mut blurred, w, h, sigma);
+                    for (b, c) in blurred.iter_mut().zip(coverage.iter()) {
+                        *b = (*b as u16 * *c as u16 / 255) as u8;
+                    }
+                } else {
+                    shape_raster::gaussian_blur(&coverage, &mut blurred, w, h, sigma);
+                }
+                let blurred: Rc<[u8]> = Rc::from(blurred.as_slice());
+                self.shadow_mask_cache.borrow_mut().insert(mask_key, blurred.clone());
+                blurred
+            }
+        };
 
         let width = mask_size.width.max(0) as u32;
         let height = mask_size.height.max(0) as u32;
@@ -3918,10 +4008,7 @@ impl<T: ProcessScene> i_slint_core::item_rendering::ItemRenderer for SceneBuilde
         // with no further rotation.
         let args = target_pixel_buffer::DrawTextureArgs {
             data: target_pixel_buffer::TextureDataContainer::Shared {
-                buffer: SharedBufferData::AlphaMap {
-                    data: alloc::rc::Rc::from(blurred.as_slice()),
-                    width: width as _,
-                },
+                buffer: SharedBufferData::AlphaMap { data: blurred, width: width as _ },
                 source_rect: euclid::rect(0, 0, width as i16, height as i16),
             },
             colorize: Some(color),
@@ -3947,13 +4034,14 @@ impl<T: ProcessScene> i_slint_core::item_rendering::ItemRenderer for SceneBuilde
         other: LogicalRect,
         outline: &i_slint_core::graphics::ElementOutline,
     ) -> bool {
-        if outline.is_plain_rect() {
-            self.current_state.clip_outline = None;
-        } else {
+        // A rectangular clip leaves the stacked shape clips in place: both
+        // constraints apply (the rectangle lands on `clip` below). A shape
+        // clip pushes onto the stack so nested clips intersect.
+        if !outline.is_plain_rect() {
             // Keep the flattened outline in this state's logical space; it
             // is moved along with `clip` by `translate` and converted to
             // physical coordinates when the processor is told about it.
-            self.current_state.clip_outline = Some(alloc::rc::Rc::new(LogicalClipOutline {
+            self.current_state.clip_outlines.push(alloc::rc::Rc::new(LogicalClipOutline {
                 contours: outline.flatten(other.to_f32(), shape_raster::FLATTEN_TOLERANCE),
                 fill_rule: outline.fill_rule(),
             }));
@@ -3980,17 +4068,29 @@ impl<T: ProcessScene> i_slint_core::item_rendering::ItemRenderer for SceneBuilde
         self.current_state.clip = self.current_state.clip.translate(-distance);
         // The clip outline keeps its absolute position: shift it back the
         // same way `clip` is shifted.
-        if let Some(outline) = &self.current_state.clip_outline {
-            let mut contours = Vec::with_capacity(outline.contours.len());
-            for c in &outline.contours {
-                contours.push(
-                    c.iter().map(|p| euclid::point2(p.x - distance.x, p.y - distance.y)).collect(),
-                );
-            }
-            self.current_state.clip_outline = Some(alloc::rc::Rc::new(LogicalClipOutline {
-                contours,
-                fill_rule: outline.fill_rule,
-            }));
+        if !self.current_state.clip_outlines.is_empty() {
+            self.current_state.clip_outlines = self
+                .current_state
+                .clip_outlines
+                .iter()
+                .map(|outline| {
+                    let contours = outline
+                        .contours
+                        .iter()
+                        .map(|c| {
+                            c.iter()
+                                .map(|p| {
+                                    euclid::point2(p.x - distance.x as f32, p.y - distance.y as f32)
+                                })
+                                .collect()
+                        })
+                        .collect();
+                    alloc::rc::Rc::new(LogicalClipOutline {
+                        contours,
+                        fill_rule: outline.fill_rule,
+                    })
+                })
+                .collect();
             self.sync_clip_outline();
         }
     }

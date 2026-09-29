@@ -658,6 +658,9 @@ impl ItemRc {
     /// Whether `position`, in the item's parent coordinate space (the same
     /// space `geometry()` returns), hits the item: inside its geometry
     /// rectangle and inside the outline given by `boundary_shape`.
+    /// The geometry check comes first, so the parts a `shape-fit: cover`
+    /// outline overflows past the element bounds are not hit-testable; give
+    /// the element the bounds its shape should cover instead.
     pub fn hit_test(&self, position: LogicalPoint) -> bool {
         let geometry = self.geometry();
         geometry.contains(position)
