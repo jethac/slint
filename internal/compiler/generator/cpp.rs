@@ -647,7 +647,7 @@ fn is_native_item_property(prop: &llr::MemberReference) -> bool {
 /// the opaque FFI mirror with an identical `#[repr(C)]` layout, already
 /// punned by the `extern "C"` shape entry points taking `void *`. The
 /// helper does the punning: GCC and Clang reject reinterpret_cast on a
-/// prvalue, even to a reference.
+/// temporary, even to a reference.
 fn cast_to_private_shape(
     value_expr: &str,
     prop: &llr::MemberReference,
