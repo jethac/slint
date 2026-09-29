@@ -283,13 +283,16 @@ public:
     }
     static slint::interpreter::Value value_from_shape(const slint::Shape &shape)
     {
-        return slint::interpreter::Value(
-                cbindgen_private::slint_interpreter_value_new_shape(&shape));
+        // `cbindgen_private::Shape` is opaque here (the C++ API's `slint::Shape`
+        // is hand-written), but the FFI struct and the hand-written one share
+        // the same `#[repr(C)]` layout.
+        return slint::interpreter::Value(cbindgen_private::slint_interpreter_value_new_shape(
+                reinterpret_cast<const cbindgen_private::Shape *>(&shape)));
     }
     static slint::Shape shape_from_value(const slint::interpreter::Value &value)
     {
         if (auto *p = cbindgen_private::slint_interpreter_value_to_shape(value.inner)) {
-            return *p;
+            return *reinterpret_cast<const slint::Shape *>(p);
         }
         return {};
     }
