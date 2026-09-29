@@ -64,6 +64,7 @@ impl ItemRegistry {
             Clip,
             BoxShadow,
             BackdropBlur,
+            ElevationShadow,
             Transform,
             Opacity,
             Layer,

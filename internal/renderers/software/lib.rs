@@ -44,7 +44,7 @@ use i_slint_core::graphics::OwnedStorage;
 use i_slint_core::graphics::Rgba8Pixel;
 use i_slint_core::graphics::boxshadow::{BoxShadowOptions, drop_shadow_bounding_rect};
 use i_slint_core::graphics::rendering_metrics_collector::RefreshMode;
-use i_slint_core::graphics::{BorderRadius, SharedImageBuffer, SharedPixelBuffer};
+use i_slint_core::graphics::{BorderRadius, SharedImageBuffer, SharedPixelBuffer, shadow};
 use i_slint_core::graphics::{IntSize, StaticTexture};
 use i_slint_core::item_rendering::HasFont;
 use i_slint_core::item_rendering::{
@@ -122,6 +122,64 @@ impl<T: Copy> Transform for euclid::Size2D<T, PhysicalPx> {
         }
         self
     }
+}
+
+/// Applies the rendering rotation to a point in continuous (sub-pixel)
+/// coordinates: cells mirror about `W − x` / `H − y`, unlike the integer
+/// pixel transform which subtracts the extra 1 of pixel indexing.
+fn transform_continuous(
+    mut p: euclid::Point2D<f32, PhysicalPx>,
+    info: RotationInfo,
+) -> euclid::Point2D<f32, PhysicalPx> {
+    if info.orientation.mirror_width() {
+        p.x = info.screen_size.width as f32 - p.x;
+    }
+    if info.orientation.mirror_height() {
+        p.y = info.screen_size.height as f32 - p.y;
+    }
+    if info.orientation.is_transpose() {
+        core::mem::swap(&mut p.x, &mut p.y);
+    }
+    p
+}
+
+/// The screen rotation as an affine in post-rotation physical space:
+/// mirror-width, mirror-height, then transpose, matching
+/// [`transform_continuous`].
+fn screen_space_affine(rotation: RotationInfo) -> shadow::Affine {
+    let w = rotation.screen_size.width as f32;
+    let h = rotation.screen_size.height as f32;
+    let mirror = shadow::Affine::new(
+        if rotation.orientation.mirror_width() { -1. } else { 1. },
+        0.,
+        0.,
+        if rotation.orientation.mirror_height() { -1. } else { 1. },
+        if rotation.orientation.mirror_width() { w } else { 0. },
+        if rotation.orientation.mirror_height() { h } else { 0. },
+    );
+    if rotation.orientation.is_transpose() {
+        shadow::Affine::new(0., 1., 1., 0., 0., 0.).pre_concat(&mirror)
+    } else {
+        mirror
+    }
+}
+
+/// The inverse of [`transform_continuous`]: maps a rendered point back to
+/// the frame it was drawn in before the renderer's rotation.
+fn untransform_continuous(
+    mut p: euclid::Point2D<f32, PhysicalPx>,
+    info: RotationInfo,
+) -> euclid::Point2D<f32, PhysicalPx> {
+    if info.orientation.is_transpose() {
+        core::mem::swap(&mut p.x, &mut p.y);
+    }
+    if info.orientation.mirror_height() {
+        p.y = info.screen_size.height as f32 - p.y;
+    }
+    if info.orientation.mirror_width() {
+        p.x = info.screen_size.width as f32 - p.x;
+    }
+    p
 }
 
 impl<T: Copy + NumCast + core::ops::Sub<Output = T>> Transform for euclid::Rect<T, PhysicalPx> {
@@ -3061,18 +3119,7 @@ impl<'a, T: ProcessScene> SceneBuilder<'a, T> {
         let logical_geom = geom.translate(self.current_state.offset.to_vector()).cast::<f32>();
         let scale_factor = self.scale_factor;
         let rotation = self.rotation;
-        let transform_continuous = |mut p: shape_raster::Point| {
-            if rotation.orientation.mirror_width() {
-                p.x = rotation.screen_size.width as f32 - p.x;
-            }
-            if rotation.orientation.mirror_height() {
-                p.y = rotation.screen_size.height as f32 - p.y;
-            }
-            if rotation.orientation.is_transpose() {
-                core::mem::swap(&mut p.x, &mut p.y);
-            }
-            p
-        };
+        let transform_continuous = |p| transform_continuous(p, rotation);
         let mut contours: Vec<shape_raster::Contour> = outline
             .flatten(logical_geom, shape_raster::FLATTEN_TOLERANCE / scale_factor.get())
             .into_iter()
@@ -3784,6 +3831,108 @@ impl<T: ProcessScene> i_slint_core::item_rendering::ItemRenderer for SceneBuilde
             self.current_state.rounded_clip_count += 1;
         }
         RenderingResult::ContinueRenderingChildren
+    }
+
+    /// The elevation shadow of an element: the Android ambient + spot model
+    /// (i_slint_core::graphics::shadow). Both layers are tessellated into
+    /// A8 masks bounded by the shadow's extent — never a full-window mask —
+    /// and drawn through the shared texture path, so this works identically
+    /// in whole-scene and line-by-line mode.
+    #[allow(clippy::unnecessary_cast)] // Coord
+    fn draw_elevation_shadow(
+        &mut self,
+        shadow_item: Pin<&i_slint_core::items::ElevationShadow>,
+        _self_rc: &ItemRc,
+        size: LogicalSize,
+    ) {
+        let geom = LogicalRect::from(size);
+        if !self.should_draw(&geom) {
+            return;
+        }
+        let scale_factor = self.scale_factor.get();
+        let z = shadow_item.elevation().get() as f32 * scale_factor;
+        if z < shadow::MIN_HEIGHT {
+            return;
+        }
+        let caster_alpha = shadow_item.caster_alpha();
+        let ambient_color = self.alpha_color(shadow::effective_ambient_color(
+            shadow_item.ambient_shadow_color(),
+            caster_alpha,
+        ));
+        let spot_color = self.alpha_color(shadow::effective_spot_color(
+            shadow_item.spot_shadow_color(),
+            caster_alpha,
+        ));
+        if ambient_color.alpha() == 0 && spot_color.alpha() == 0 {
+            return;
+        }
+        let outline = shadow_item.element_outline();
+
+        // Map item space to post-rotation physical screen space: offset in
+        // logical coordinates, then the scale factor, then the screen
+        // rotation (a physical-space affine built from the rotation flags,
+        // matching `transform_continuous`).
+        let offset = self.current_state.offset.cast::<f32>();
+        let st = shadow::Affine::scale_translate(
+            scale_factor,
+            scale_factor,
+            offset.x * scale_factor,
+            offset.y * scale_factor,
+        );
+        let screen = screen_space_affine(self.rotation);
+        let ctm = screen.pre_concat(&st);
+
+        let adapter = self.window.window_adapter();
+        let (light, light_radius) =
+            shadow::elevation_light(adapter.display_geometry(), adapter.size());
+        let lp = screen.map_point(euclid::point2(light[0], light[1]));
+        let light = [lp.x, lp.y, light[2]];
+
+        let masks = shadow::elevation_shadow_masks(
+            &outline,
+            geom.cast::<f32>(),
+            &ctm,
+            z,
+            light,
+            light_radius,
+            caster_alpha < 1.,
+        );
+
+        let clipped =
+            (self.current_state.clip.translate(self.current_state.offset.to_vector()).cast()
+                * self.scale_factor)
+                .round()
+                .cast::<i16>()
+                .transformed(self.rotation);
+        for (layer, color) in [(masks.ambient, ambient_color), (masks.spot, spot_color)].into_iter()
+        {
+            let Some(layer) = layer else { continue };
+            if color.alpha() == 0 {
+                continue;
+            }
+            let (width, height) = (layer.size.width, layer.size.height);
+            // The mask was rasterized in post-rotation screen space: draw it
+            // with no further rotation.
+            let args = target_pixel_buffer::DrawTextureArgs {
+                data: target_pixel_buffer::TextureDataContainer::Shared {
+                    buffer: SharedBufferData::AlphaMap {
+                        data: fonts::GlyphAlphaMap::Rendered(layer.mask),
+                        width: width as u16,
+                        sdf: false,
+                    },
+                    source_rect: euclid::rect(0, 0, width as i16, height as i16),
+                },
+                colorize: Some(color),
+                alpha: color.alpha(),
+                dst_x: layer.rect.origin.x.round() as isize,
+                dst_y: layer.rect.origin.y.round() as isize,
+                dst_width: width as usize,
+                dst_height: height as usize,
+                rotation: RenderingRotation::NoRotation,
+                tiling: None,
+            };
+            self.processor.process_target_texture(&args, clipped.cast(), &self.rounded_clips);
+        }
     }
 
     fn combine_clip(

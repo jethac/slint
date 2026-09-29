@@ -505,6 +505,7 @@ fn gen_corelib(
         "Clip",
         "BoxShadow",
         "BackdropBlur",
+        "ElevationShadow",
         "Transform",
         "Opacity",
         "Layer",
