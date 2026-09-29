@@ -77,13 +77,12 @@ inline void slint_property_set_animated_binding_helper(
 // in lookup (ADL on `slint::Shape` does not reach `slint::private_api`).
 inline void slint_property_set_animated_binding_helper(
         const cbindgen_private::PropertyHandleOpaque *handle,
-        void (*binding)(void *, slint::Shape *), void *user_data,
-        void (*drop_user_data)(void *),
+        void (*binding)(void *, slint::Shape *), void *user_data, void (*drop_user_data)(void *),
         cbindgen_private::PropertyAnimation (*transition_data)(void *, uint64_t **))
 {
     cbindgen_private::slint_property_set_animated_binding_shape(
-            handle, reinterpret_cast<void (*)(void *, void *)>(binding), user_data,
-            drop_user_data, transition_data);
+            handle, reinterpret_cast<void (*)(void *, void *)>(binding), user_data, drop_user_data,
+            transition_data);
 }
 
 template<typename T>
