@@ -100,8 +100,12 @@ fn main() -> std::io::Result<()> {
     // Generate the per-case modules on all cores: with the build-time feature,
     // each case runs the Slint compiler (twice with deterministic-output),
     // which dominates the build script's runtime.
+    // Give each worker a stack on the order of the serial main thread's:
+    // the compiler's recursion is deep enough that 512 KiB overflows on
+    // MSVC targets (e.g. imports/external_interfaces.slint,
+    // STATUS_STACK_OVERFLOW).
     let module_lines = rayon::ThreadPoolBuilder::new()
-        .stack_size(512 * 1024)
+        .stack_size(4 * 1024 * 1024)
         .build()
         .expect("failed to create thread pool")
         .install(|| {
