@@ -77,7 +77,7 @@ fn perimeter(shape: &slint::Shape) -> f32 {
         .map(|(&a, &b)| ((b.0 - a.0).powi(2) + (b.1 - a.1).powi(2)).sqrt())
         .sum()
 }
-// The outline's speed at an instant: distance travelled between two frames,
+// The outline's speed at an instant: distance covered between two frames,
 // measured as the delta of the outline's distance to a fixed reference.
 // Monotone through the spring's cruise for every shape pair here.
 fn outline_speed(from: &slint::Shape, a: &slint::Shape, b: &slint::Shape) -> f32 {
@@ -236,7 +236,7 @@ auto perimeter = [&polyline](const slint::Shape &shape) -> float {
     }
     return total;
 };
-// The outline's speed at an instant: distance travelled between two frames,
+// The outline's speed at an instant: distance covered between two frames,
 // measured as the delta of the outline's distance to a fixed reference.
 // Monotone through the spring's cruise for every shape pair here.
 auto outline_speed = [&](const slint::Shape &from, const slint::Shape &a,
