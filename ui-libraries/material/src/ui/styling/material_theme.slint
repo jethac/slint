@@ -59,10 +59,12 @@ export global MaterialTheme {
             root.contrast-level
         );
 
-    // Theme-configurable brand and plain typeface families; the font work
-    // (#7) replaces the defaults with the bundled Google Sans Flex.
-    in-out property <string> brand-family: "sans-serif";
-    in-out property <string> plain-family: "sans-serif";
+    // Theme-configurable brand and plain typeface families, defaulting to the
+    // bundled Google Sans Flex. Apps can set these to swap in their own fonts
+    // (for example "Roboto Flex", bundled via the opt-in `roboto_flex.slint`
+    // import).
+    in-out property <string> brand-family: "Google Sans Flex";
+    in-out property <string> plain-family: "Google Sans Flex";
 
     // `scheme` in the `MaterialScheme` struct shape used by `MaterialPalette`
     // and the Material Theme Builder JSON format.

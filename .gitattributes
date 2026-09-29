@@ -11,3 +11,6 @@ tests/screenshots/references/anyrender/**/*.json text eol=lf
 # The slint-sc test driver compares and rewrites the coverage annotations of
 # the cases as text; keep LF on every platform.
 api/slint-sc/tests/cases/**/*.slint text eol=lf
+# Vendored font releases ship verbatim (upstream uses CRLF in OFL.txt);
+# keep them untouched by EOL conversion and the trailing-whitespace fixer.
+ui-libraries/material/src/fonts/** -text

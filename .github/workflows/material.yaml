@@ -81,6 +81,13 @@ jobs:
                 save-if: ${{ github.ref == 'refs/heads/master' }}
           - name: Check generated tokens are up to date
             run: cargo run -p material-token-generator -- check
+          - name: Check Material sample for bare-metal MCU
+            # thumbv7em has the software renderer's embedded-vector-fonts
+            # rasterizer; the Material sample's theme-bound font bindings take
+            # the vector path there.
+            run: |
+              rustup target add thumbv7em-none-eabihf
+              RUSTFLAGS="--cfg slint_int_coord -D warnings" cargo check --target=thumbv7em-none-eabihf -p material-mcu --release
           - name: Build & run tests
             run: cargo test -p material-gallery
           - name: Check generated parity scenes are up to date

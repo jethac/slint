@@ -17,13 +17,14 @@ else
 fi
 
 # crlf-* test files must keep their CRLF line terminators, which sed would
-# strip as trailing whitespace.
+# strip as trailing whitespace. Vendored fonts are verbatim third-party
+# artifacts with the same problem.
 if git rev-parse --git-dir >/dev/null 2>&1 ; then
-    git grep -I -l -O"$SED_INPLACE \"s/[[:space:]]*$//\"" -e '' -- ':!*.patch' ':!*crlf-*'
+    git grep -I -l -O"$SED_INPLACE \"s/[[:space:]]*$//\"" -e '' -- ':!*.patch' ':!*crlf-*' ':!ui-libraries/material/src/fonts/**'
 else
     while IFS= read -r -d '' -u 9
     do
-        if [[ "$REPLY" == *crlf-* ]]
+        if [[ "$REPLY" == *crlf-* || "$REPLY" == *ui-libraries/material/src/fonts/* ]]
         then
             continue
         fi
