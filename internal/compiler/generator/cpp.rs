@@ -645,14 +645,16 @@ fn is_native_item_property(prop: &llr::MemberReference) -> bool {
 /// `shape` expressions are `slint::Shape` values, but a `shape` property
 /// declared on a native item stores `slint::cbindgen_private::Shape` —
 /// the opaque FFI mirror with an identical `#[repr(C)]` layout, already
-/// punned by the `extern "C"` shape entry points taking `void *`.
+/// punned by the `extern "C"` shape entry points taking `void *`. The
+/// helper does the punning: GCC and Clang reject reinterpret_cast on a
+/// prvalue, even to a reference.
 fn cast_to_private_shape(
     value_expr: &str,
     prop: &llr::MemberReference,
     ctx: &EvaluationContext,
 ) -> String {
     if matches!(ctx.property_ty(prop), Type::Shape) && is_native_item_property(prop) {
-        format!("reinterpret_cast<slint::cbindgen_private::Shape &&>({value_expr})")
+        format!("slint::private_api::as_cbindgen_shape({value_expr})")
     } else {
         value_expr.into()
     }
