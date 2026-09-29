@@ -3,6 +3,7 @@
 
 
 import { ColorSchemeSelector } from "color-scheme.slint";
+import { ReducedMotionSelector } from "reduced-motion.slint";
 
 // typo settings
 struct TextStyle { font-size: relative-font-size, font-weight: int}
@@ -69,6 +70,10 @@ export global MaterialPalette {
     out property <brush> surface-container-highest: !dark-color-scheme ? #E6E0E9 : #36343B;
     out property <brush> tertiary-container: !dark-color-scheme ? #FFD8E4 : #633B48;
     out property <brush> on-tertiary-container: !dark-color-scheme ? #31111D : #FFD8E4;
+
+    /// True when reduced motion is requested (platform setting or override).
+    /// Mirrors `SlintInternal.reduced-motion` unless overridden per-style.
+    in-out property <bool> reduced-motion: ReducedMotionSelector.reduced-motion;
 
     out property <brush> state-default: dark-color-scheme ? #E6E0E9 : #1D1B20;
     out property <brush> state-secondary: accent-background;

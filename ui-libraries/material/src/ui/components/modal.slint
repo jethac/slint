@@ -14,7 +14,7 @@ export component Modal {
             @children
         }
 
-        animate background { duration: MaterialAnimations.opacity_duration; easing: MaterialAnimations.opacity_easing; }
+        animate background { enabled: !MaterialPalette.reduced-motion; duration: MaterialAnimations.opacity_duration; easing: MaterialAnimations.opacity_easing; }
     }
 
     Timer {

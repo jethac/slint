@@ -117,6 +117,10 @@ inline bool operator==(const EasingCurve &a, const EasingCurve &b)
         return std::equal(a.cubic_bezier._0, a.cubic_bezier._0 + 4, b.cubic_bezier._0);
     } else if (a.tag == EasingCurve::Tag::Spring) {
         return a.spring._0 == b.spring._0;
+    } else if (a.tag == EasingCurve::Tag::PhysicalSpring) {
+        return a.physical_spring.damping_ratio == b.physical_spring.damping_ratio
+                && a.physical_spring.stiffness == b.physical_spring.stiffness
+                && a.physical_spring.mass == b.physical_spring.mass;
     }
     return true;
 }

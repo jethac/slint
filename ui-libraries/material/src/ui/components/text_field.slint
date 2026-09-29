@@ -130,7 +130,7 @@ export component TextField {
                                 }
                             ]
 
-                            animate font_size, y {
+                            animate font_size, y { enabled: !MaterialPalette.reduced-motion;
                                  duration: MaterialAnimations.standard_fast_duration;
                                  easing: MaterialAnimations.standard_easing;
                             }
@@ -154,7 +154,7 @@ export component TextField {
                 height: MaterialStyleMetrics.size_1;
                 background: root.highlight;
 
-                animate height {
+                animate height { enabled: !MaterialPalette.reduced-motion;
                      duration: MaterialAnimations.standard_fast_duration;
                      easing: MaterialAnimations.standard_easing;
                 }

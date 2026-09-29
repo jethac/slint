@@ -1132,3 +1132,62 @@ test("get/set styled-text from markdown property", () => {
     expect(result).toBeInstanceOf(StyledText);
     expect((result as InstanceType<typeof StyledText>).equals(st)).toBe(true);
 });
+
+test("get/set easing properties", () => {
+    const compiler = new private_api.ComponentCompiler();
+    const definition = compiler.buildFromSource(
+        `export component App {
+            in-out property <easing> e1: linear;
+            in-out property <easing> e2: cubic-bezier(0.1, 0.2, 0.3, 0.4);
+            in-out property <easing> e3: spring(0.6, 800, 2);
+            in-out property <easing> e4: spring(0.4);
+            in-out property <easing> e5: ease-out-bounce;
+        }`,
+        "",
+    );
+    const instance = createNonNullInstance(definition);
+
+    expect(instance.getProperty("e1")).toEqual({ type: "linear" });
+    expect(instance.getProperty("e2")).toEqual({
+        type: "cubicBezier",
+        p: [0.1, 0.2, 0.3, 0.4],
+    });
+    expect(instance.getProperty("e3")).toEqual({
+        type: "spring",
+        dampingRatio: 0.6,
+        stiffness: 800,
+        mass: 2,
+    });
+    expect(instance.getProperty("e4")).toEqual({
+        type: "springBounce",
+        bounce: 0.4,
+    });
+    expect(instance.getProperty("e5")).toEqual({ type: "ease-out-bounce" });
+
+    // Round trip: each JavaScript shape comes back unchanged.
+    instance.setProperty("e1", {
+        type: "spring",
+        dampingRatio: 0.9,
+        stiffness: 700,
+    });
+    expect(instance.getProperty("e1")).toEqual({
+        type: "spring",
+        dampingRatio: 0.9,
+        stiffness: 700,
+        mass: 1,
+    });
+    instance.setProperty("e2", { type: "linear" });
+    expect(instance.getProperty("e2")).toEqual({ type: "linear" });
+    instance.setProperty("e3", { type: "springBounce", bounce: 0.5 });
+    expect(instance.getProperty("e3")).toEqual({
+        type: "springBounce",
+        bounce: 0.5,
+    });
+    instance.setProperty("e4", { type: "cubicBezier", p: [0, 0, 1, 1] });
+    expect(instance.getProperty("e4")).toEqual({
+        type: "cubicBezier",
+        p: [0, 0, 1, 1],
+    });
+    instance.setProperty("e5", { type: "named", name: "ease-in-elastic" });
+    expect(instance.getProperty("e5")).toEqual({ type: "ease-in-elastic" });
+});

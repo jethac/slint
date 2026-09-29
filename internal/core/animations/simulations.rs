@@ -12,6 +12,7 @@ pub mod android;
 pub mod bounce;
 pub mod rubber_band;
 pub mod spring;
+pub mod spring_estimation;
 
 use crate::animations::Instant;
 

@@ -181,6 +181,10 @@ pub fn lower_expression(
         },
         tree_Expression::PathData(data) => compile_path(data, ctx),
         tree_Expression::EasingCurve(x) => llr_Expression::EasingCurve(x.clone()),
+        tree_Expression::EasingCurveCtor { variant, args } => llr_Expression::EasingCurveCtor {
+            variant: *variant,
+            args: args.iter().map(|e| lower_expression(e, ctx)).collect(),
+        },
         tree_Expression::MouseCursor(_) => lower_mouse_cursor(expression, ctx),
         tree_Expression::LinearGradient { .. } => lower_linear_gradient(expression, ctx),
         tree_Expression::RadialGradient { .. } => lower_radial_gradient(expression, ctx),

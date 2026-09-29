@@ -37,6 +37,7 @@ import {
     Dialog,
     FullscreenDialog,
     MaterialAnimations,
+    MaterialMotionScheme,
     MaterialTheme,
     Slider,
     Switch
@@ -597,10 +598,10 @@ export component ActionsView {
                             { text: "Expressive" },
                             { text: "Standard" },
                         ];
-                        current_index: MaterialAnimations.expressive ? 0 : 1;
+                        current_index: MaterialAnimations.motion-scheme == MaterialMotionScheme.expressive ? 0 : 1;
 
                         index_changed(index) => {
-                            MaterialAnimations.expressive = index == 0;
+                            MaterialAnimations.motion-scheme = index == 0 ? MaterialMotionScheme.expressive : MaterialMotionScheme.standard;
                         }
                     }
                 }
@@ -615,7 +616,7 @@ export component ActionsView {
                     }
 
                     Switch {
-                        checked <=> MaterialAnimations.reduced_motion;
+                        checked <=> MaterialPalette.reduced-motion;
                     }
                 }
 

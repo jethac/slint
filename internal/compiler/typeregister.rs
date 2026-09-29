@@ -223,6 +223,8 @@ impl BuiltinTypes {
                 ("iteration-count", Type::Float32),
                 ("direction", enumeration(&enums.AnimationDirection)),
                 ("easing", Type::Easing),
+                ("initial-velocity", Type::Float32),
+                ("visibility-threshold", Type::Float32),
                 ("delay", Type::Int32),
                 ("enabled", Type::Bool),
             ],

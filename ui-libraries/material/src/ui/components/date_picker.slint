@@ -299,7 +299,7 @@ export component SelectionButton {
             colorize: MaterialPalette.on_surface_variant;
             transform-rotation: root.checked ? 180deg : 0;
 
-            animate transform-rotation { duration: 250ms; }
+            animate transform-rotation { enabled: !MaterialPalette.reduced-motion; duration: 250ms; }
         }
     }
 

@@ -130,6 +130,7 @@ macro_rules! for_each_builtin_function {
             }
             ColorScheme: pure fn() -> ColorScheme
             AccentColor: pure fn accent_color(&context) -> Color { context.accent_color() }
+            ReducedMotion: pure fn() -> bool
             MaterialColorScheme: pure fn(seed_color: Color, variant: MaterialSchemeVariant, spec_version: MaterialSpecVersion, platform: MaterialSchemePlatform, is_dark: bool, contrast_level: f32) -> MaterialColorScheme
             MaterialPlatformColorScheme: pure fn(variant: MaterialSchemeVariant, spec_version: MaterialSpecVersion, platform: MaterialSchemePlatform, is_dark: bool, contrast_level: f32) -> MaterialColorScheme
             MaterialSeedFromImage: pure fn(image: Image) -> Color

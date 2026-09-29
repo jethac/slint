@@ -312,7 +312,7 @@ export component SearchBar {
                 }
             }
 
-            animate height {
+            animate height { enabled: !MaterialPalette.reduced-motion;
                 duration: MaterialAnimations.standard_accelerate_duration;
                 easing: MaterialAnimations.standard_easing;
             }

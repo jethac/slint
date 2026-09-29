@@ -26,6 +26,10 @@ pub(crate) struct DesktopSettings {
     /// True while the appearance query is in flight; the backend holds the first
     /// windows in `inactive_windows` until it clears, to avoid a default flash.
     appearance_pending: Cell<bool>,
+    /// `org.freedesktop.appearance` `reduced-motion` (None until read).
+    motion_portal: Cell<Option<bool>>,
+    /// `org.gnome.desktop.interface` `enable-animations` inverted (None until read).
+    motion_gnome: Cell<Option<bool>>,
 }
 
 impl DesktopSettings {
@@ -34,9 +38,21 @@ impl DesktopSettings {
             cursor_blink_enabled: Cell::new(true),
             cursor_blink_time: Cell::new(crate::DEFAULT_CURSOR_FLASH_CYCLE),
             appearance_pending: Cell::new(false),
+            motion_portal: Cell::new(None),
+            motion_gnome: Cell::new(None),
         }
     }
 
+    /// Records one animation-toggle source and returns the combined state:
+    /// reduced when either source says reduced. Tracking them independently
+    /// keeps one namespace's update from erasing the other's.
+    pub(crate) fn update_reduced_motion(&self, source: ReducedMotionSource, reduced: bool) -> bool {
+        match source {
+            ReducedMotionSource::Portal => self.motion_portal.set(Some(reduced)),
+            ReducedMotionSource::Gnome => self.motion_gnome.set(Some(reduced)),
+        }
+        [self.motion_portal.get(), self.motion_gnome.get()].into_iter().flatten().any(|r| r)
+    }
     /// The cursor blink period, or zero when blinking is disabled.
     pub(crate) fn cursor_flash_cycle(&self) -> Duration {
         if self.cursor_blink_enabled.get() { self.cursor_blink_time.get() } else { Duration::ZERO }
@@ -46,6 +62,13 @@ impl DesktopSettings {
     pub(crate) fn is_appearance_pending(&self) -> bool {
         self.appearance_pending.get()
     }
+}
+
+/// Which desktop setting reported the reduced-motion state in
+/// [`DesktopSettings::update_reduced_motion`].
+pub(crate) enum ReducedMotionSource {
+    Portal,
+    Gnome,
 }
 
 const APPEARANCE: &str = "org.freedesktop.appearance";
@@ -76,6 +99,18 @@ static SETTINGS: &[SettingDescriptor] = &[
     },
     SettingDescriptor { namespace: APPEARANCE, key: "accent-color", apply: apply_accent_value },
     SettingDescriptor { namespace: APPEARANCE, key: "contrast", apply: apply_contrast_value },
+    // GNOME proxies `enable-animations` into `reduced-motion`; both stay live
+    // sources and are combined in `DesktopSettings::update_reduced_motion`.
+    SettingDescriptor {
+        namespace: GNOME_INTERFACE,
+        key: "enable-animations",
+        apply: apply_enable_animations_value,
+    },
+    SettingDescriptor {
+        namespace: APPEARANCE,
+        key: "reduced-motion",
+        apply: apply_reduce_motion_value,
+    },
     SettingDescriptor { namespace: GNOME_INTERFACE, key: "font-name", apply: apply_font_value },
     SettingDescriptor {
         namespace: GNOME_INTERFACE,
@@ -148,6 +183,34 @@ fn apply_contrast_value(value: zbus::zvariant::OwnedValue, cx: &SettingsContext)
         && let Some(ctx) = cx.ctx.upgrade()
     {
         ctx.set_contrast_preference(if contrast == 1 { 1.0 } else { 0.0 });
+    }
+}
+
+/// The `org.freedesktop.appearance` `reduced-motion` setting is a u32:
+/// `0` means no preference and `1` means reduced motion.
+fn apply_reduce_motion_value(value: zbus::zvariant::OwnedValue, cx: &SettingsContext) {
+    if let Ok(reduced) = value.downcast_ref::<u32>()
+        && let Some(shared) = cx.shared.upgrade()
+        && let Some(ctx) = cx.ctx.upgrade()
+    {
+        ctx.set_reduced_motion(
+            shared
+                .desktop_settings
+                .update_reduced_motion(ReducedMotionSource::Portal, reduced == 1),
+        );
+    }
+}
+
+/// GNOME's `org.gnome.desktop.interface` `enable-animations` is the boolean
+/// animation toggle: it being off means reduced motion.
+fn apply_enable_animations_value(value: zbus::zvariant::OwnedValue, cx: &SettingsContext) {
+    if let Ok(enabled) = value.downcast_ref::<bool>()
+        && let Some(shared) = cx.shared.upgrade()
+        && let Some(ctx) = cx.ctx.upgrade()
+    {
+        ctx.set_reduced_motion(
+            shared.desktop_settings.update_reduced_motion(ReducedMotionSource::Gnome, !enabled),
+        );
     }
 }
 

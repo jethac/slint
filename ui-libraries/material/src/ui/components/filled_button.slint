@@ -34,11 +34,8 @@ export component FilledButton {
         height: 100%;
 
         animate border_radius {
-            duration: MaterialAnimations.default_effects_duration;
-            // spring() takes a literal: bounce = 1 - damping ratio of the
-            // default effects spec — 1 - 1 = 0 in both schemes (see
-            // MaterialAnimations.default_effects_bounce).
-            easing: spring(0);
+            enabled: !MaterialPalette.reduced-motion;
+            easing: MaterialAnimations.default-effects-spring;
         }
     }
 

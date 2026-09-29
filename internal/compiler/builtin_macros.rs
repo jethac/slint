@@ -6,8 +6,8 @@
 
 use crate::diagnostics::{BuildDiagnostics, Spanned};
 use crate::expression_tree::{
-    BuiltinFunction, BuiltinMacroFunction, Callable, EasingCurve, Expression, MinMaxOp,
-    MouseCursorInner, Unit,
+    BuiltinFunction, BuiltinMacroFunction, Callable, EasingCurve, EasingCurveCtor, Expression,
+    MinMaxOp, MouseCursorInner, Unit,
 };
 use crate::langtype::Type;
 use crate::parser::NodeOrToken;
@@ -55,41 +55,7 @@ pub fn lower_macro(
         }
         BuiltinMacroFunction::Debug => debug_macro(n, sub_expr.collect(), diag, symbol_counters),
         BuiltinMacroFunction::CubicBezier => {
-            let mut has_error = None;
-            let expected_argument_type_error =
-                "Arguments to cubic bezier curve must be number literal";
-            // FIXME: this is not pretty to be handling there.
-            // Maybe "cubic_bezier" should be a function that is lowered later
-            let mut a = || match sub_expr.next() {
-                None => {
-                    has_error.get_or_insert((n.to_source_location(), "Not enough arguments"));
-                    0.
-                }
-                Some((Expression::NumberLiteral(val, Unit::None), _)) => val as f32,
-                // handle negative numbers
-                Some((Expression::UnaryOp { sub, op: '-' }, n)) => match *sub {
-                    Expression::NumberLiteral(val, Unit::None) => -val as f32,
-                    _ => {
-                        has_error
-                            .get_or_insert((n.to_source_location(), expected_argument_type_error));
-                        0.
-                    }
-                },
-                Some((_, n)) => {
-                    has_error.get_or_insert((n.to_source_location(), expected_argument_type_error));
-                    0.
-                }
-            };
-            let expr = Expression::EasingCurve(EasingCurve::CubicBezier(a(), a(), a(), a()));
-            if let Some((_, n)) = sub_expr.next() {
-                has_error
-                    .get_or_insert((n.to_source_location(), "Too many argument for bezier curve"));
-            }
-            if let Some((n, msg)) = has_error {
-                diag.push_error(msg.into(), &n);
-            }
-
-            expr
+            cubic_bezier_macro(n, sub_expr.collect(), diag, symbol_counters)
         }
         BuiltinMacroFunction::Rgb => rgb_macro(n, sub_expr.collect(), diag, symbol_counters),
         BuiltinMacroFunction::Hsv => hsv_macro(n, sub_expr.collect(), diag, symbol_counters),
@@ -148,7 +114,7 @@ pub fn lower_macro(
 
             expr
         }
-        BuiltinMacroFunction::Spring => spring_macro(n, sub_expr.collect(), diag),
+        BuiltinMacroFunction::Spring => spring_macro(n, sub_expr.collect(), diag, symbol_counters),
         BuiltinMacroFunction::ShapePath => {
             shape_path_macro(n, sub_expr.collect(), diag, symbol_counters)
         }
@@ -243,22 +209,87 @@ fn shape_path_literal_error(d: &str) -> Option<String> {
         .map(|e| e.to_string())
 }
 
+/// The unit-less number an argument of `cubic-bezier`/`spring` wrote, including a
+/// unary sign. `None` for anything else.
+fn easing_arg_literal(e: &Expression) -> Option<f64> {
+    match e {
+        Expression::NumberLiteral(val, Unit::None) => Some(*val),
+        Expression::UnaryOp { sub, op: '-' } => easing_arg_literal(sub).map(|v| -v),
+        Expression::UnaryOp { sub, op: '+' } => easing_arg_literal(sub),
+        _ => None,
+    }
+}
+
+/// Convert a macro argument to a float expression for a runtime easing constructor.
+fn easing_ctor_arg(
+    expr: Expression,
+    node: &Option<NodeOrToken>,
+    diag: &mut BuildDiagnostics,
+    symbol_counters: &SymbolCounters,
+) -> Expression {
+    expr.maybe_convert_to(Type::Float32, node, diag, symbol_counters)
+}
+
+fn cubic_bezier_macro(
+    node: &dyn Spanned,
+    args: Vec<(Expression, Option<NodeOrToken>)>,
+    diag: &mut BuildDiagnostics,
+    symbol_counters: &SymbolCounters,
+) -> Expression {
+    if args.len() < 4 {
+        diag.push_error("Not enough arguments".into(), node);
+        return Expression::EasingCurve(EasingCurve::CubicBezier(0., 0., 0., 0.));
+    }
+    if args.len() > 4 {
+        let loc = args[4].1.as_ref().map_or(node, |n| n as &dyn Spanned);
+        diag.push_error("Too many argument for bezier curve".into(), loc);
+        return Expression::EasingCurve(EasingCurve::CubicBezier(0., 0., 0., 0.));
+    }
+    if let Some(values) =
+        args.iter().map(|(e, _)| easing_arg_literal(e)).collect::<Option<Vec<_>>>()
+    {
+        let v: Vec<f32> = values.iter().map(|v| *v as f32).collect();
+        Expression::EasingCurve(EasingCurve::CubicBezier(v[0], v[1], v[2], v[3]))
+    } else {
+        Expression::EasingCurveCtor {
+            variant: EasingCurveCtor::CubicBezier,
+            args: args
+                .into_iter()
+                .map(|(e, n)| easing_ctor_arg(e, &n, diag, symbol_counters))
+                .collect(),
+        }
+    }
+}
+
 fn spring_macro(
     node: &dyn Spanned,
     args: Vec<(Expression, Option<NodeOrToken>)>,
     diag: &mut BuildDiagnostics,
+    symbol_counters: &SymbolCounters,
 ) -> Expression {
-    let literal = |e: &Expression| match e {
-        Expression::NumberLiteral(val, Unit::None) => Some(*val),
-        _ => None,
-    };
-    let bounce = match args.as_slice() {
-        [(Expression::UnaryOp { sub, op: '-' }, _)] => literal(sub).map(|v| -v),
-        [(Expression::UnaryOp { sub, op: '+' }, _)] => literal(sub),
-        [(expr, _)] => literal(expr),
-        _ => None,
-    };
-    let Some(mut bounce) = bounce else {
+    // Two or three arguments select the physical `spring(damping_ratio,
+    // stiffness[, mass])` form — a Compose-style spring that runs until it
+    // settles. A single argument keeps meaning the legacy bounce spring.
+    match args.len() {
+        0 => {
+            diag.push_error("The spring curve needs between 1 and 3 arguments".into(), node);
+            Expression::EasingCurve(EasingCurve::Spring(0.))
+        }
+        1 => legacy_spring_macro(node, args, diag),
+        2 | 3 => physical_spring_macro(node, args, diag, symbol_counters),
+        _ => {
+            diag.push_error("Too many arguments for spring curve".into(), node);
+            Expression::EasingCurve(EasingCurve::Spring(0.))
+        }
+    }
+}
+
+fn legacy_spring_macro(
+    node: &dyn Spanned,
+    args: Vec<(Expression, Option<NodeOrToken>)>,
+    diag: &mut BuildDiagnostics,
+) -> Expression {
+    let Some(mut bounce) = easing_arg_literal(&args[0].0).map(|v| v as f32) else {
         diag.push_error("The spring curve needs a single number literal argument".into(), node);
         return Expression::EasingCurve(EasingCurve::Spring(0.));
     };
@@ -267,7 +298,59 @@ fn spring_macro(
         diag.push_error("The bounce argument to spring curve must be between -1 and 1".into(), loc);
         bounce = 0.;
     }
-    Expression::EasingCurve(EasingCurve::Spring(bounce as f32))
+    Expression::EasingCurve(EasingCurve::Spring(bounce))
+}
+
+fn physical_spring_macro(
+    node: &dyn Spanned,
+    args: Vec<(Expression, Option<NodeOrToken>)>,
+    diag: &mut BuildDiagnostics,
+    symbol_counters: &SymbolCounters,
+) -> Expression {
+    if let Some(values) =
+        args.iter().map(|(e, _)| easing_arg_literal(e)).collect::<Option<Vec<_>>>()
+    {
+        let mut values = values.iter().map(|v| *v as f32);
+        let damping_ratio = values.next().unwrap_or_default();
+        let stiffness = values.next().unwrap_or_default();
+        let mass = values.next().unwrap_or(1.);
+        // The checks androidx Compose applies in SpringSimulation's setters,
+        // reported at compile time for literal arguments.
+        if damping_ratio < 0. {
+            let loc = args[0].1.as_ref().map_or(node, |n| n as &dyn Spanned);
+            diag.push_error(
+                "The damping ratio argument to spring must be non-negative".into(),
+                loc,
+            );
+        } else if damping_ratio == 0. {
+            let loc = args[0].1.as_ref().map_or(node, |n| n as &dyn Spanned);
+            diag.push_warning(
+                "A spring with damping ratio 0 oscillates forever and never settles".into(),
+                loc,
+            );
+        }
+        if stiffness <= 0. {
+            let loc = args[1].1.as_ref().map_or(node, |n| n as &dyn Spanned);
+            diag.push_error("The stiffness argument to spring must be positive".into(), loc);
+        }
+        if args.len() == 3 && mass <= 0. {
+            let loc = args[2].1.as_ref().map_or(node, |n| n as &dyn Spanned);
+            diag.push_error("The mass argument to spring must be positive".into(), loc);
+        }
+        Expression::EasingCurve(EasingCurve::PhysicalSpring(
+            damping_ratio.max(0.),
+            stiffness.max(f32::EPSILON),
+            mass.max(f32::EPSILON),
+        ))
+    } else {
+        let mut args: Vec<Expression> =
+            args.into_iter().map(|(e, n)| easing_ctor_arg(e, &n, diag, symbol_counters)).collect();
+        // The Compose default for an omitted mass
+        if args.len() == 2 {
+            args.push(Expression::NumberLiteral(1., Unit::None));
+        }
+        Expression::EasingCurveCtor { variant: EasingCurveCtor::PhysicalSpring, args }
+    }
 }
 
 fn min_max_macro(

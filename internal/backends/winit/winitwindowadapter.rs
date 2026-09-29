@@ -674,6 +674,9 @@ impl WinitWindowAdapter {
             self.renderer.resume(active_event_loop, window_attributes, self.self_weak.clone())?;
         self.first_frame_presented.set(false);
 
+        #[cfg(target_os = "windows")]
+        crate::install_setting_change_subclass(&winit_window);
+
         // Push the host shell's color scheme and accent color to the SlintContext.
         // With `xdg_desktop_settings` the backend-wide portal watcher (spawned in
         // `Backend::bind_context`) is responsible for that; we only echo the

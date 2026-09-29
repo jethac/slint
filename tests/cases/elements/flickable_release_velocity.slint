@@ -1,0 +1,56 @@
+// Copyright © SixtyFPS GmbH <info@slint.dev>
+// SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0
+
+// `release-velocity` reports the pointer's velocity at release in logical
+// px/sec, and a physical `spring` declared on `content-x`/`content-y` takes
+// over the fling from `ConstantDeceleration` (which is kept otherwise).
+
+export component TestCase inherits Window {
+    width: 300phx;
+    height: 300phx;
+
+    f := Flickable {
+        content-width: 1000phx;
+        content-height: 1000phx;
+
+        animate content-x { easing: spring(1.0, 380); }
+        animate content-y { easing: spring(1.0, 380); }
+
+        Rectangle {
+            width: 1000phx;
+            height: 1000phx;
+            background: red;
+        }
+    }
+
+    out property <float> velocity_x: f.release-velocity.x / 1px;
+    out property <float> velocity_y: f.release-velocity.y / 1px;
+    out property <length> content_x: f.content-x;
+    out property <length> content_y: f.content-y;
+    out property <bool> test: true;
+}
+
+/*
+```rust
+use slint::platform::WindowEvent;
+use slint_testing::{InternalEvent, LogicalPoint, TouchPhase};
+let instance = TestCase::new().unwrap();
+let window = instance.window();
+window.dispatch_event(WindowEvent::internal(InternalEvent::Touch { id: 3, position: LogicalPoint::new(175.0, 175.0), phase: TouchPhase::Started }));
+window.dispatch_event(WindowEvent::internal(InternalEvent::Touch { id: 3, position: LogicalPoint::new(176.0, 176.0), phase: TouchPhase::Moved }));
+slint_testing::mock_elapsed_time(100);
+window.dispatch_event(WindowEvent::internal(InternalEvent::Touch { id: 3, position: LogicalPoint::new(100.0, 120.0), phase: TouchPhase::Moved }));
+assert!(instance.get_content_x() < -50., "drag should move content: {}", instance.get_content_x());
+slint_testing::mock_elapsed_time(1);
+window.dispatch_event(WindowEvent::internal(InternalEvent::Touch { id: 3, position: LogicalPoint::new(100.0, 120.0), phase: TouchPhase::Ended }));
+// velocity = delta / dt over the recorded moves: (-75,-55) px in 100ms → (-750, -550) px/s
+assert!(instance.get_velocity_x() < -600. && instance.get_velocity_x() > -900., "velocity_x: {}", instance.get_velocity_x());
+assert!(instance.get_velocity_y() < -400. && instance.get_velocity_y() > -700., "velocity_y: {}", instance.get_velocity_y());
+
+// The springs animate toward the flick limit rather than stopping dead:
+// content-x is still mid-flight 150 ms after release.
+slint_testing::mock_elapsed_time(150);
+let pos_x = instance.get_content_x();
+assert!(pos_x < 0. && pos_x > -700., "spring mid-flight: {pos_x}");
+```
+*/

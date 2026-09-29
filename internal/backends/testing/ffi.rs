@@ -187,3 +187,13 @@ pub extern "C" fn slint_testing_element_layout_kind(
 pub extern "C" fn slint_testing_set_system_accent_color(argb_encoded: u32) {
     crate::set_system_accent_color(i_slint_core::Color::from_argb_encoded(argb_encoded));
 }
+
+#[unsafe(no_mangle)]
+pub extern "C" fn slint_testing_set_reduced_motion(reduced: bool) {
+    crate::set_reduced_motion(reduced);
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn slint_testing_set_animation_duration_scale(scale: f32) {
+    crate::set_animation_duration_scale(scale);
+}

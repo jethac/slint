@@ -329,7 +329,9 @@ struct BindingVTable {
     intercept_set: unsafe fn(_self: *const BindingHolder, value: *const c_void) -> bool,
     intercept_set_binding:
         unsafe fn(_self: *const BindingHolder, new_binding: *mut BindingHolder) -> bool,
-    velocity: unsafe fn(_self: *const BindingHolder) -> Option<f32>,
+    velocity: unsafe fn(_self: *const BindingHolder) -> Option<alloc::vec::Vec<f32>>,
+    declared_animation:
+        unsafe fn(_self: *const BindingHolder) -> Option<crate::items::PropertyAnimation>,
     common_property: unsafe fn(_self: *const BindingHolder) -> Option<*const dyn Any>,
 }
 
@@ -359,9 +361,18 @@ trait BindingCallable<T> {
         false
     }
 
-    /// Returns the current velocity in the property's units per second so a spring retarget can
-    /// maintain velocity. Non spring bindings return None
-    fn velocity(self: Pin<&Self>) -> Option<f32> {
+    /// Returns the current velocity of a running animation, as one value per animation
+    /// channel (in that channel's units per second — see
+    /// [`InterpolatedPropertyValue`](properties_animations::InterpolatedPropertyValue)),
+    /// so a spring retarget can maintain velocity. Non spring bindings return `None`.
+    fn velocity(self: Pin<&Self>) -> Option<alloc::vec::Vec<f32>> {
+        None
+    }
+
+    /// The animation declared on this binding (`animate` block on the property,
+    /// or the `PropertyAnimation` passed to `set_animated_value`/`set_animated_binding`).
+    /// Non-animated bindings return `None`.
+    fn declared_animation(self: Pin<&Self>) -> Option<crate::items::PropertyAnimation> {
         None
     }
 
@@ -526,8 +537,20 @@ fn alloc_binding_holder<T, B: BindingCallable<T> + 'static>(binding: B) -> *mut 
     }
 
     /// Safety: _self must be a pointer to a `BindingHolder<B>`
-    unsafe fn velocity<T, B: BindingCallable<T>>(_self: *const BindingHolder) -> Option<f32> {
+    unsafe fn velocity<T, B: BindingCallable<T>>(
+        _self: *const BindingHolder,
+    ) -> Option<alloc::vec::Vec<f32>> {
         unsafe { Pin::new_unchecked(&((*(_self as *const BindingHolder<B>)).binding)).velocity() }
+    }
+
+    /// Safety: _self must be a pointer to a `BindingHolder<B>`
+    unsafe fn declared_animation<T, B: BindingCallable<T>>(
+        _self: *const BindingHolder,
+    ) -> Option<crate::items::PropertyAnimation> {
+        unsafe {
+            Pin::new_unchecked(&((*(_self as *const BindingHolder<B>)).binding))
+                .declared_animation()
+        }
     }
 
     /// Safety: _self must be a pointer to a `BindingHolder<B>`
@@ -552,6 +575,7 @@ fn alloc_binding_holder<T, B: BindingCallable<T> + 'static>(binding: B) -> *mut 
             intercept_set: intercept_set::<T, B>,
             intercept_set_binding: intercept_set_binding::<T, B>,
             velocity: velocity::<T, B>,
+            declared_animation: declared_animation::<T, B>,
             common_property: common_property::<T, B>,
         };
     }
@@ -683,11 +707,22 @@ impl PropertyHandle {
 
     /// Returns the velocity reported by the currently installed binding, if any (see
     /// `BindingCallable::velocity`). Used to carry velocity over across a retarget.
-    fn current_velocity(&self) -> Option<f32> {
+    fn current_velocity(&self) -> Option<alloc::vec::Vec<f32>> {
         self.access(|b| {
             b.and_then(|b| unsafe {
                 // Safety: b is a valid BindingHolder
                 (b.vtable.velocity)(&*b as *const BindingHolder)
+            })
+        })
+    }
+
+    /// The animation declared on the currently installed binding, if any (see
+    /// `BindingCallable::declared_animation`).
+    fn declared_animation(&self) -> Option<crate::items::PropertyAnimation> {
+        self.access(|b| {
+            b.and_then(|b| unsafe {
+                // Safety: b is a valid BindingHolder
+                (b.vtable.declared_animation)(&*b as *const BindingHolder)
             })
         })
     }
@@ -1117,6 +1152,16 @@ impl<T: Clone> Property<T> {
         PropertyHandle::pointer_to_binding(self.handle.handle.get()).is_some()
     }
 
+    /// The animation declared on the property's current binding — the `animate` block's
+    /// `PropertyAnimation`, or the one passed to `set_animated_value`/`set_animated_binding`.
+    /// `None` when there is no binding or the binding is not animated.
+    ///
+    /// Internal: used by `Flickable` to detect a physical `spring()` attached to
+    /// `content-x`/`content-y` before its own flick binding replaces the declared one.
+    pub fn declared_animation(&self) -> Option<crate::items::PropertyAnimation> {
+        self.handle.declared_animation()
+    }
+
     /// Any of the properties accessed during the last evaluation of the closure called
     /// from the last call to evaluate is potentially dirty.
     pub fn is_dirty(&self) -> bool {
@@ -1293,6 +1338,7 @@ impl<const NEEDS_SET_DIRTY: bool> Default for PropertyTracker<NEEDS_SET_DIRTY, (
             intercept_set: |_, _| false,
             intercept_set_binding: |_, _| false,
             velocity: |_| None,
+            declared_animation: |_| None,
             common_property: |_| None,
         };
 
@@ -1418,6 +1464,7 @@ impl<const NEEDS_SET_DIRTY: bool, DirtyHandler: PropertyDirtyHandler>
                 intercept_set: |_, _| false,
                 intercept_set_binding: |_, _| false,
                 velocity: |_| None,
+                declared_animation: |_| None,
                 common_property: |_| None,
             };
         }

@@ -67,7 +67,7 @@ export component ModalDrawer inherits PopupWindow {
 
             @children
 
-            animate x {
+            animate x { enabled: !MaterialPalette.reduced-motion;
                 duration: MaterialAnimations.standard_accelerate_duration;
                 easing: MaterialAnimations.standard_easing;
             }

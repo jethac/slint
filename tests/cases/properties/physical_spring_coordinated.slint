@@ -1,0 +1,183 @@
+// Copyright © SixtyFPS GmbH <info@slint.dev>
+// SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0
+
+// Coordinated springs: a segmented-button group where one `selected` toggle
+// drives two widths on the M3 fast-spatial spring (ζ = 0.6, k = 800) and an
+// opacity on the slow-spatial spring (ζ = 0.9, k = 300). `second-x` is a
+// plain binding onto the animated `first-width`, so the neighbor tracks the
+// live spring output — equal to it on every tick, never the target. The
+// second leg of the test toggles mid-flight: the retargeted springs continue
+// from their current position and velocity instead of jumping.
+
+export component TestCase inherits Rectangle {
+    in-out property <bool> second-selected: false;
+
+    in-out property <length> first-width: second-selected ? 20px : 40px;
+    animate first-width { easing: spring(0.6, 800); }
+
+    in-out property <length> second-width: second-selected ? 40px : 20px;
+    animate second-width { easing: spring(0.6, 800); }
+
+    // Neighbor segment position derived from the running spring.
+    in-out property <length> second-x: first-width;
+
+    in-out property <float> selected-opacity: second-selected ? 1.0 : 0.5;
+    animate selected-opacity { easing: spring(0.9, 300); }
+}
+
+/*
+```rust
+fn assert_approx(value: f32, expected: f32) {
+    assert!((value - expected).abs() < 0.05, "Expected {value} to be close to {expected}");
+}
+
+let instance = TestCase::new().unwrap();
+// Read the properties once: the binding has to have run once for
+// `second-selected` to know it has dependents to retarget.
+assert_eq!(instance.get_first_width(), 40.0);
+assert_eq!(instance.get_second_width(), 20.0);
+assert_eq!(instance.get_second_x(), 40.0);
+assert_eq!(instance.get_selected_opacity(), 0.5);
+instance.set_second_selected(true);
+
+slint_testing::mock_elapsed_time(150);
+// Both width springs cross mid-flight; the underdamped second width
+// overshoots past its 40px target. `second-x` tracks the animated first
+// width on the same tick — coordination, not the final value.
+assert_approx(instance.get_first_width(), 18.19);
+assert_approx(instance.get_second_width(), 41.81);
+assert_eq!(instance.get_second_x(), instance.get_first_width());
+assert_approx(instance.get_selected_opacity(), 0.89);
+
+slint_testing::mock_elapsed_time(100); // t = 250ms, still mid-flight
+assert_approx(instance.get_first_width(), 20.11);
+assert_approx(instance.get_second_width(), 39.89);
+assert_eq!(instance.get_second_x(), instance.get_first_width());
+assert_approx(instance.get_selected_opacity(), 0.98);
+
+// Mid-flight retarget: toggle back at 250 ms — ~54% of the width springs'
+// ~461 ms estimated settle and ~82% of the opacity spring's ~304 ms
+// (SpringEstimation, delta 0.01), both still moving. The next tick continues
+// from the current values — a reset would jump ~20px.
+let w2_before = instance.get_second_width();
+let w1_before = instance.get_first_width();
+let op_before = instance.get_selected_opacity();
+instance.set_second_selected(false);
+slint_testing::mock_elapsed_time(1);
+assert!((instance.get_second_width() - w2_before).abs() < 0.1, "w2 jumped");
+assert!((instance.get_first_width() - w1_before).abs() < 0.1, "w1 jumped");
+assert!((instance.get_selected_opacity() - op_before).abs() < 0.01, "opacity jumped");
+assert_eq!(instance.get_second_x(), instance.get_first_width());
+
+slint_testing::mock_elapsed_time(99); // +100ms after retarget
+assert_approx(instance.get_second_width(), 19.74);
+assert_approx(instance.get_first_width(), 40.26);
+assert_approx(instance.get_selected_opacity(), 0.73);
+assert_eq!(instance.get_second_x(), instance.get_first_width());
+
+// +1100 ms exceeds the longest post-retarget estimate (~460 ms widths,
+// ~304 ms opacity): all springs have settled on their targets.
+slint_testing::mock_elapsed_time(1100); // settle
+assert_approx(instance.get_first_width(), 40.0);
+assert_approx(instance.get_second_width(), 20.0);
+assert_approx(instance.get_selected_opacity(), 0.5);
+assert_eq!(instance.get_second_x(), instance.get_first_width());
+```
+
+```cpp
+auto handle = TestCase::create();
+const TestCase &instance = *handle;
+auto assert_approx = [](float value, float expected) {
+    assert(std::abs(value - expected) < 0.05);
+};
+
+assert(instance.get_first_width() == 40.0);
+assert(instance.get_second_width() == 20.0);
+assert(instance.get_second_x() == 40.0);
+assert(instance.get_selected_opacity() == 0.5);
+instance.set_second_selected(true);
+
+slint_testing::mock_elapsed_time(150);
+assert_approx(instance.get_first_width(), 18.19);
+assert_approx(instance.get_second_width(), 41.81);
+assert(instance.get_second_x() == instance.get_first_width());
+assert_approx(instance.get_selected_opacity(), 0.89);
+
+slint_testing::mock_elapsed_time(100);
+assert_approx(instance.get_first_width(), 20.11);
+assert_approx(instance.get_second_width(), 39.89);
+assert(instance.get_second_x() == instance.get_first_width());
+assert_approx(instance.get_selected_opacity(), 0.98);
+
+float w2_before = instance.get_second_width();
+float w1_before = instance.get_first_width();
+float op_before = instance.get_selected_opacity();
+// Retarget at 250 ms: ~54% of the width springs' ~461 ms estimated settle,
+// ~82% of the opacity spring's ~304 ms — all still moving.
+instance.set_second_selected(false);
+slint_testing::mock_elapsed_time(1);
+assert(std::abs(instance.get_second_width() - w2_before) < 0.1);
+assert(std::abs(instance.get_first_width() - w1_before) < 0.1);
+assert(std::abs(instance.get_selected_opacity() - op_before) < 0.01);
+assert(instance.get_second_x() == instance.get_first_width());
+
+slint_testing::mock_elapsed_time(99);
+assert_approx(instance.get_second_width(), 19.74);
+assert_approx(instance.get_first_width(), 40.26);
+assert_approx(instance.get_selected_opacity(), 0.73);
+assert(instance.get_second_x() == instance.get_first_width());
+
+// +1100 ms exceeds the longest post-retarget estimate (~460 ms): settled.
+slint_testing::mock_elapsed_time(1100);
+assert_approx(instance.get_first_width(), 40.0);
+assert_approx(instance.get_second_width(), 20.0);
+assert_approx(instance.get_selected_opacity(), 0.5);
+assert(instance.get_second_x() == instance.get_first_width());
+```
+
+```js
+var instance = new slint.TestCase({});
+assert(instance.first_width === 40);
+assert(instance.second_width === 20);
+assert(instance.second_x === 40);
+assert(instance.selected_opacity === 0.5);
+instance.second_selected = true;
+
+slintlib.private_api.mock_elapsed_time(150);
+assert(Math.abs(instance.first_width - 18.19) < 0.05);
+assert(Math.abs(instance.second_width - 41.81) < 0.05);
+assert(instance.second_x === instance.first_width);
+assert(Math.abs(instance.selected_opacity - 0.89) < 0.05);
+
+slintlib.private_api.mock_elapsed_time(100);
+assert(Math.abs(instance.first_width - 20.11) < 0.05);
+assert(Math.abs(instance.second_width - 39.89) < 0.05);
+assert(instance.second_x === instance.first_width);
+assert(Math.abs(instance.selected_opacity - 0.98) < 0.05);
+
+var w2_before = instance.second_width;
+var w1_before = instance.first_width;
+var op_before = instance.selected_opacity;
+// Retarget at 250 ms: ~54% of the width springs' ~461 ms settle estimate,
+// ~82% of the opacity spring's ~304 ms — all still moving.
+instance.second_selected = false;
+slintlib.private_api.mock_elapsed_time(1);
+assert(Math.abs(instance.second_width - w2_before) < 0.1);
+assert(Math.abs(instance.first_width - w1_before) < 0.1);
+assert(Math.abs(instance.selected_opacity - op_before) < 0.01);
+assert(instance.second_x === instance.first_width);
+
+slintlib.private_api.mock_elapsed_time(99);
+assert(Math.abs(instance.second_width - 19.74) < 0.05);
+assert(Math.abs(instance.first_width - 40.26) < 0.05);
+assert(Math.abs(instance.selected_opacity - 0.73) < 0.05);
+assert(instance.second_x === instance.first_width);
+
+// +1100 ms exceeds the longest post-retarget estimate (~460 ms): settled.
+slintlib.private_api.mock_elapsed_time(1100);
+assert(Math.abs(instance.first_width - 40.0) < 0.05);
+assert(Math.abs(instance.second_width - 20.0) < 0.05);
+assert(Math.abs(instance.selected_opacity - 0.5) < 0.05);
+assert(instance.second_x === instance.first_width);
+```
+*/

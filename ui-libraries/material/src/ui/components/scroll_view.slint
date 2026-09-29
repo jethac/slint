@@ -31,7 +31,7 @@ export component ScrollBar {
             background: MaterialPalette.on_background;
             opacity: hide_timer.running || touch_area.has_hover || touch_area.pressed ? root.state_opacity : 0;
 
-            animate opacity { duration: 150ms; }
+            animate opacity { enabled: !MaterialPalette.reduced-motion; duration: 150ms; }
         }
     }
 
