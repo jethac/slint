@@ -1994,10 +1994,10 @@ impl BaseTessellator {
             const TOLERANCE: f32 = 1.0e-2;
             if min_dist_sq < (inset + TOLERANCE) * (inset + TOLERANCE) {
                 // the umbra would collapse: back off the inset and fade the
-                // umbra ring to preserve total darkness
+                // umbra ring toward the penumbra a-value as it shrinks
                 let new_inset = min_dist_sq.sqrt() - TOLERANCE;
                 let ratio = (128. * (new_inset / inset + 1.)).clamp(0., 256.);
-                umbra_alpha = 1. - ratio / 256.;
+                umbra_alpha = ratio / 256.;
                 inset = new_inset;
             }
             match inset_convex_polygon(&self.path_polygon, inset) {
