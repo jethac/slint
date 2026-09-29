@@ -1,0 +1,86 @@
+// Copyright © SixtyFPS GmbH <info@slint.dev>
+// SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0
+
+// `initial-velocity` bound to an `in property`: native code that knows a
+// launch speed — a game loop, a native gesture recognizer — feeds it into
+// the spring through the property. Here a critically damped spring launched
+// backward first dips below its start position, then rockets to the target.
+
+export component TestCase inherits Rectangle {
+    in property <float> launch-velocity;
+
+    in-out property <length> thrown: 0px;
+    animate thrown {
+        easing: spring(1.0, 1600);
+        initial-velocity: launch-velocity;
+    }
+}
+
+/*
+```rust
+fn assert_approx(value: f32, expected: f32) {
+    assert!((value - expected).abs() < 0.5, "Expected {value} to be close to {expected}");
+}
+
+let instance = TestCase::new().unwrap();
+// Launch backward at 800 px/s: the critically damped spring dips below 0
+// before accelerating toward the 100px target.
+instance.set_launch_velocity(-800.0);
+instance.set_thrown(100.0);
+
+slint_testing::mock_elapsed_time(5);
+assert!(instance.get_thrown() < -0.5, "thrown should dip below start, got {}", instance.get_thrown());
+
+slint_testing::mock_elapsed_time(45);
+assert_approx(instance.get_thrown(), 53.99);
+
+slint_testing::mock_elapsed_time(100);
+assert_approx(instance.get_thrown(), 97.97);
+
+slint_testing::mock_elapsed_time(200);
+assert_approx(instance.get_thrown(), 100.0);
+```
+
+```cpp
+auto handle = TestCase::create();
+const TestCase &instance = *handle;
+
+instance.set_launch_velocity(-800.0);
+instance.set_thrown(100.0);
+
+slint_testing::mock_elapsed_time(5);
+assert(instance.get_thrown() < -0.5);
+
+slint_testing::mock_elapsed_time(45);
+assert(std::abs(instance.get_thrown() - 53.99) < 0.5);
+
+slint_testing::mock_elapsed_time(100);
+assert(std::abs(instance.get_thrown() - 97.97) < 0.5);
+
+slint_testing::mock_elapsed_time(200);
+assert(std::abs(instance.get_thrown() - 100.0) < 0.5);
+```
+
+```js
+var instance = new slint.TestCase({});
+instance.launch_velocity = -800.0;
+instance.thrown = 100.0;
+
+slintlib.private_api.mock_elapsed_time(5);
+assert(instance.thrown < -0.5);
+
+slintlib.private_api.mock_elapsed_time(45);
+assert(Math.abs(instance.thrown - 53.99) < 0.5);
+
+slintlib.private_api.mock_elapsed_time(100);
+assert(Math.abs(instance.thrown - 97.97) < 0.5);
+
+slintlib.private_api.mock_elapsed_time(200);
+assert(Math.abs(instance.thrown - 100.0) < 0.5);
+```
+
+```python
+# slint-python has no mock-time API (no `slint.testing` module); the
+# initial-velocity assertions live in the rust/cpp/js blocks.
+```
+*/

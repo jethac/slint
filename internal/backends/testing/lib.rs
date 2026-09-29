@@ -39,7 +39,8 @@ pub fn init_no_event_loop() {
         testing_backend::TestingBackendOptions {
             mock_time: true,
             threading: false,
-            ..Default::default()
+            #[cfg(supports_headless)]
+            renderer_name: None,
         },
     )))
     .expect("platform already initialized");
@@ -58,7 +59,8 @@ pub fn init_integration_test_with_mock_time() {
         testing_backend::TestingBackendOptions {
             mock_time: true,
             threading: true,
-            ..Default::default()
+            #[cfg(supports_headless)]
+            renderer_name: None,
         },
     )))
     .expect("platform already initialized");
@@ -74,7 +76,8 @@ pub fn init_integration_test_with_system_time() {
         testing_backend::TestingBackendOptions {
             mock_time: false,
             threading: true,
-            ..Default::default()
+            #[cfg(supports_headless)]
+            renderer_name: None,
         },
     )))
     .expect("platform already initialized");
@@ -99,6 +102,14 @@ pub fn set_system_accent_color(color: i_slint_core::Color) {
 /// Must be called after initializing the testing backend (e.g. after [`init_no_event_loop()`]).
 pub fn set_motion_preference(preference: MotionPreference) {
     i_slint_core::context::with_existing_context(|ctx| ctx.set_motion_preference(preference))
+        .expect("the testing backend must be initialized first");
+}
+
+/// Set the global animation duration scale, as a platform backend would from a
+/// platform setting like Android's `animator_duration_scale`.
+/// Must be called after initializing the testing backend (e.g. after [`init_no_event_loop()`]).
+pub fn set_animation_duration_scale(scale: f32) {
+    i_slint_core::context::with_existing_context(|ctx| ctx.set_animation_duration_scale(scale))
         .expect("the testing backend must be initialized first");
 }
 

@@ -405,6 +405,8 @@ impl BackendBuilder {
     /// slint::platform::set_platform(Box::new(backend));
     /// ```
     pub fn build(self) -> Result<Backend, PlatformError> {
+        #[cfg(target_os = "windows")]
+        let user_supplied_builder = self.event_loop_builder.is_some();
         #[allow(unused_mut)]
         let mut event_loop_builder =
             self.event_loop_builder.unwrap_or_else(winit::event_loop::EventLoop::with_user_event);
@@ -416,6 +418,31 @@ impl BackendBuilder {
             &mut event_loop_builder,
             false,
         );
+
+        // Watch WM_SETTINGCHANGE so the "Animation effects" accessibility toggle is
+        // reflected live. The hook is only installed on a builder we created: an
+        // application-supplied builder may already carry its own message hook.
+        // `with_msg_hook` only sees messages that go through the event loop's
+        // `GetMessage`/`DispatchMessage`, so each created window is additionally
+        // subclassed (`install_setting_change_subclass`) to catch
+        // `SendMessageTimeout(HWND_BROADCAST, …)` deliveries straight to the
+        // window procedure.
+        #[cfg(target_os = "windows")]
+        if !user_supplied_builder {
+            use winit::platform::windows::EventLoopBuilderExtWindows;
+            event_loop_builder.with_msg_hook(|msg| {
+                use windows::Win32::UI::WindowsAndMessaging::{MSG, WM_SETTINGCHANGE};
+                // SAFETY: winit guarantees `msg` points at the `MSG` being dispatched.
+                let msg = unsafe { &*msg.cast::<MSG>() };
+                if msg.message == WM_SETTINGCHANGE {
+                    let _ = i_slint_core::with_global_context(
+                        || Err(i_slint_core::platform::PlatformError::NoPlatform),
+                        |ctx| ctx.set_motion_preference(windows_settings::motion_preference()),
+                    );
+                }
+                false // observe only; let the message dispatch normally
+            });
+        }
 
         // Initialize the winit event loop and propagate errors if for example `DISPLAY` or `WAYLAND_DISPLAY` isn't set.
 
@@ -437,6 +464,8 @@ impl BackendBuilder {
             custom_application_handler: self.custom_application_handler.into(),
             #[cfg(xdg_desktop_settings)]
             xdg_watcher: RefCell::new(None),
+            #[cfg(any(target_os = "macos", target_os = "ios", target_arch = "wasm32"))]
+            reduced_motion_observer: RefCell::new(None),
         })
     }
 }
@@ -740,6 +769,12 @@ pub struct Backend {
     #[cfg(xdg_desktop_settings)]
     xdg_watcher: RefCell<Option<i_slint_core::future::JoinHandle<()>>>,
 
+    /// Keeps the live reduced-motion observers (NSNotificationCenter on Apple,
+    /// `change` listener on the `prefers-reduced-motion` MediaQueryList on the
+    /// web) alive for the backend's lifetime.
+    #[cfg(any(target_os = "macos", target_os = "ios", target_arch = "wasm32"))]
+    reduced_motion_observer: RefCell<Option<ReducedMotionObserver>>,
+
     /// This hook is called before a Window is created.
     ///
     /// It can be used to adjust settings of window that will be created
@@ -880,6 +915,153 @@ impl Drop for Backend {
     }
 }
 
+/// Subclasses the window's Win32 procedure so `WM_SETTINGCHANGE` is observed
+/// even when it is delivered straight to the procedure — the "Animation
+/// effects" toggle broadcasts it via `SendMessageTimeout(HWND_BROADCAST, …)`,
+/// which bypasses the thread's message queue (and therefore winit's
+/// `with_msg_hook`). The subclass is removed automatically when the window is
+/// destroyed.
+#[cfg(target_os = "windows")]
+pub(crate) fn install_setting_change_subclass(winit_window: &winit::window::Window) {
+    use raw_window_handle::{HasWindowHandle, RawWindowHandle};
+    use windows::Win32::Foundation::{HWND, LPARAM, LRESULT, WPARAM};
+    use windows::Win32::UI::Shell::{DefSubclassProc, SetWindowSubclass};
+    use windows::Win32::UI::WindowsAndMessaging::WM_SETTINGCHANGE;
+
+    let Ok(RawWindowHandle::Win32(handle)) = winit_window.window_handle().map(|h| h.as_raw())
+    else {
+        return;
+    };
+    let hwnd = HWND(handle.hwnd.get() as *mut core::ffi::c_void);
+    const SUBCLASS_ID: usize = 0x534C4E54; // "SLNT"
+
+    unsafe extern "system" fn subclass_proc(
+        hwnd: HWND,
+        msg: u32,
+        wparam: WPARAM,
+        lparam: LPARAM,
+        _subclass_id: usize,
+        _ref_data: usize,
+    ) -> LRESULT {
+        if msg == WM_SETTINGCHANGE {
+            let _ = i_slint_core::with_global_context(
+                || Err(i_slint_core::platform::PlatformError::NoPlatform),
+                |ctx| ctx.set_motion_preference(windows_settings::motion_preference()),
+            );
+        }
+        unsafe { DefSubclassProc(hwnd, msg, wparam, lparam) }
+    }
+
+    unsafe {
+        let _ = SetWindowSubclass(hwnd, Some(subclass_proc), SUBCLASS_ID, 0);
+    }
+}
+
+/// Keeps the platform's reduced-motion change registration alive: on Apple
+/// this is an `NSNotificationCenter` observer, on the web a `change` listener
+/// on the `prefers-reduced-motion` `MediaQueryList`.
+#[cfg(any(target_os = "macos", target_os = "ios", target_arch = "wasm32"))]
+struct ReducedMotionObserver {
+    // Held for its lifetime: deallocating unregisters it from
+    // NSNotificationCenter (automatic since macOS 10.11 / iOS 9).
+    #[cfg(any(target_os = "macos", target_os = "ios"))]
+    #[allow(dead_code)]
+    observer:
+        objc2::rc::Retained<objc2::runtime::ProtocolObject<dyn objc2::runtime::NSObjectProtocol>>,
+    #[cfg(target_arch = "wasm32")]
+    media: web_sys::MediaQueryList,
+    #[cfg(target_arch = "wasm32")]
+    listener: wasm_bindgen::closure::Closure<dyn FnMut()>,
+}
+
+#[cfg(target_arch = "wasm32")]
+impl Drop for ReducedMotionObserver {
+    fn drop(&mut self) {
+        let _ = self.media.remove_event_listener_with_callback(
+            "change",
+            wasm_bindgen::JsCast::unchecked_ref(self.listener.as_ref()),
+        );
+    }
+}
+
+/// The [`MotionPreference`](i_slint_core::MotionPreference) of a platform's "reduce motion" switch.
+#[cfg(any(target_os = "macos", target_os = "ios", target_arch = "wasm32", xdg_desktop_settings))]
+fn motion_preference_from_reduced(reduced: bool) -> i_slint_core::MotionPreference {
+    if reduced {
+        i_slint_core::MotionPreference::Reduced
+    } else {
+        i_slint_core::MotionPreference::NoPreference
+    }
+}
+
+
+/// Registers a callback that re-reads the platform's reduced-motion setting
+/// whenever it changes.
+#[cfg(any(target_os = "macos", target_os = "ios", target_arch = "wasm32"))]
+fn install_reduced_motion_observer(
+    #[cfg(target_arch = "wasm32")] media: web_sys::MediaQueryList,
+) -> Option<ReducedMotionObserver> {
+    #[cfg(any(target_os = "macos", target_os = "ios"))]
+    {
+        // Both notifications are posted on the main thread; the winit event
+        // loop runs there, so re-reading in the block is safe.
+        let block =
+            block2::RcBlock::new(|_: core::ptr::NonNull<objc2_foundation::NSNotification>| {
+                let _ = i_slint_core::with_global_context(
+                    || Err(i_slint_core::platform::PlatformError::NoPlatform),
+                    |ctx| {
+                        #[cfg(target_os = "macos")]
+                        ctx.set_motion_preference(motion_preference_from_reduced(
+                            objc2_app_kit::NSWorkspace::sharedWorkspace()
+                                .accessibilityDisplayShouldReduceMotion(),
+                        ));
+                        #[cfg(target_os = "ios")]
+                        {
+                            unsafe extern "C" {
+                                fn UIAccessibilityIsReduceMotionEnabled() -> objc2::runtime::Bool;
+                            }
+                            ctx.set_motion_preference(motion_preference_from_reduced(
+                                unsafe { UIAccessibilityIsReduceMotionEnabled() }.as_bool(),
+                            ));
+                        }
+                    },
+                );
+            });
+        // objc2 0.3 doesn't expose the notification-name constants yet; both
+        // are stable NSString values documented by Apple.
+        let name = objc2_foundation::NSString::from_str(if cfg!(target_os = "macos") {
+            "NSWorkspaceAccessibilityDisplayShouldReduceMotionDidChangeNotification"
+        } else {
+            "UIAccessibilityReduceMotionStatusDidChangeNotification"
+        });
+        let observer = unsafe {
+            #[cfg(target_os = "macos")]
+            let center = objc2_app_kit::NSWorkspace::sharedWorkspace().notificationCenter();
+            #[cfg(target_os = "ios")]
+            let center = objc2_foundation::NSNotificationCenter::defaultCenter();
+            center.addObserverForName_object_queue_usingBlock(Some(&name), None, None, &block)
+        };
+        Some(ReducedMotionObserver { observer })
+    }
+    #[cfg(target_arch = "wasm32")]
+    {
+        let media_for_listener = media.clone();
+        let listener = wasm_bindgen::closure::Closure::new(move || {
+            let _ = i_slint_core::with_global_context(
+                || Err(i_slint_core::platform::PlatformError::NoPlatform),
+                |ctx| ctx.set_motion_preference(motion_preference_from_reduced(media_for_listener.matches())),
+            );
+        });
+        media
+            .add_event_listener_with_callback(
+                "change",
+                wasm_bindgen::JsCast::unchecked_ref(listener.as_ref()),
+            )
+            .ok()?;
+        Some(ReducedMotionObserver { media, listener })
+    }
+}
+
 impl i_slint_core::platform::Platform for Backend {
     fn bind_context(&self, _ctx: i_slint_core::SlintContextWeak, _: i_slint_core::InternalToken) {
         let _ = self.shared_data.context.set(_ctx.clone());
@@ -928,6 +1110,32 @@ impl i_slint_core::platform::Platform for Backend {
             }
 
             ctx.set_motion_preference(windows_settings::motion_preference());
+        }
+        #[cfg(target_os = "macos")]
+        if let Some(ctx) = _ctx.upgrade() {
+            ctx.set_motion_preference(motion_preference_from_reduced(
+                objc2_app_kit::NSWorkspace::sharedWorkspace()
+                    .accessibilityDisplayShouldReduceMotion(),
+            ));
+            *self.reduced_motion_observer.borrow_mut() = install_reduced_motion_observer();
+        }
+        #[cfg(target_os = "ios")]
+        if let Some(ctx) = _ctx.upgrade() {
+            unsafe extern "C" {
+                fn UIAccessibilityIsReduceMotionEnabled() -> objc2::runtime::Bool;
+            }
+            ctx.set_motion_preference(motion_preference_from_reduced(unsafe { UIAccessibilityIsReduceMotionEnabled() }.as_bool()));
+            *self.reduced_motion_observer.borrow_mut() = install_reduced_motion_observer();
+        }
+        #[cfg(target_arch = "wasm32")]
+        if let Some(ctx) = _ctx.upgrade() {
+            // CSS `prefers-reduced-motion` media query.
+            if let Some(media) = web_sys::window().and_then(|window| {
+                window.match_media("(prefers-reduced-motion: reduce)").ok().flatten()
+            }) {
+                ctx.set_motion_preference(motion_preference_from_reduced(media.matches()));
+                *self.reduced_motion_observer.borrow_mut() = install_reduced_motion_observer(media);
+            }
         }
     }
 

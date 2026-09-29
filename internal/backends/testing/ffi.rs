@@ -226,3 +226,8 @@ pub extern "C" fn slint_testing_set_reduced_motion(reduced: bool) {
         MotionPreference::NoPreference
     });
 }
+
+#[unsafe(no_mangle)]
+pub extern "C" fn slint_testing_set_animation_duration_scale(scale: f32) {
+    crate::set_animation_duration_scale(scale);
+}

@@ -71,6 +71,11 @@ inline void set_reduced_motion(bool reduced)
     cbindgen_private::slint_testing_set_reduced_motion(reduced);
 }
 
+inline void set_animation_duration_scale(float scale)
+{
+    cbindgen_private::slint_testing_set_animation_duration_scale(scale);
+}
+
 template<typename Component>
 inline void set_use_native_popup(const Component *component, bool native)
 {

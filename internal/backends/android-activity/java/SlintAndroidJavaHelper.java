@@ -13,12 +13,15 @@ import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.res.Configuration;
 import android.content.res.TypedArray;
+import android.database.ContentObserver;
 import android.graphics.Insets;
 import android.graphics.PorterDuff;
 import android.graphics.Rect;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
+import android.os.Handler;
+import android.os.Looper;
 import android.provider.Settings;
 import android.text.Editable;
 import android.text.Selection;
@@ -596,6 +599,8 @@ class SlintInputView extends View {
         super.onConfigurationChanged(newConfig);
         SlintAndroidJavaHelper.setNightMode(newConfig.uiMode & Configuration.UI_MODE_NIGHT_MASK);
         SlintAndroidJavaHelper.setFontScale(newConfig.fontScale);
+        SlintAndroidJavaHelper.setAnimatorDurationScale(Settings.Global.getFloat(
+                getContext().getContentResolver(), Settings.Global.ANIMATOR_DURATION_SCALE, 1f));
     }
 
     // As in Android's own text fields, the menu hides while a handle is held
@@ -879,6 +884,16 @@ public class SlintAndroidJavaHelper {
         mActivity = activity;
         mInputView = new SlintInputView(activity);
         mActivity.runOnUiThread(this::attachInputView);
+        // Settings.Global.ANIMATOR_DURATION_SCALE doubles as Android's reduced-motion
+        // source ("Remove animations" sets it to 0); watch for live changes.
+        activity.getContentResolver().registerContentObserver(
+                Settings.Global.getUriFor(Settings.Global.ANIMATOR_DURATION_SCALE), false,
+                new ContentObserver(new Handler(Looper.getMainLooper())) {
+                    @Override
+                    public void onChange(boolean selfChange) {
+                        SlintAndroidJavaHelper.setAnimatorDurationScale(animator_duration_scale());
+                    }
+                });
     }
 
     private void attachInputView() {
@@ -1000,6 +1015,8 @@ public class SlintAndroidJavaHelper {
     public static native void setNightMode(int nightMode);
 
     public static native void setFontScale(float fontScale);
+
+    public static native void setAnimatorDurationScale(float scale);
 
     public static native void onBackInvoked();
 
@@ -1203,6 +1220,13 @@ public class SlintAndroidJavaHelper {
             }
         }
         return 0;
+    }
+
+    // Settings.Global.ANIMATOR_DURATION_SCALE; the accessibility "Remove
+    // animations" toggle sets it to 0.
+    public float animator_duration_scale() {
+        return Settings.Global.getFloat(
+            mActivity.getContentResolver(), Settings.Global.ANIMATOR_DURATION_SCALE, 1f);
     }
 
     // Get the size of the window

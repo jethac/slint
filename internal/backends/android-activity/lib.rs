@@ -200,6 +200,9 @@ impl i_slint_core::platform::Platform for AndroidPlatform {
         {
             ctx.set_platform_default_font_size(Some(size));
         }
+        if let Ok(scale) = self.window.java_helper.animator_duration_scale() {
+            ctx.set_animation_duration_scale(scale);
+        }
     }
 
     fn long_press_interval(&self, _: i_slint_core::InternalToken) -> Duration {

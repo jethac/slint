@@ -192,8 +192,22 @@ pub enum EasingCurve {
     EaseOutBounce,
     EaseInOutBounce,
     Spring(f32),
-    // CubicBezierNonConst([Box<Expression>; 4]),
+    /// `spring(damping_ratio, stiffness[, mass])` — a physical spring like
+    /// androidx.compose.animation.core's `spring()`, running until it settles.
+    PhysicalSpring(f32, f32, f32),
     // Custom(Box<dyn Fn(f32)->f32>),
+}
+
+/// Which `EasingCurve` constructor an `Expression::EasingCurveCtor` builds: the
+/// `cubic-bezier(...)` and `spring(...)` macros emit it when an argument isn't a
+/// constant number literal.
+#[derive(Clone, Copy, Debug, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+pub enum EasingCurveCtor {
+    /// `cubic-bezier(x1, y1, x2, y2)`
+    CubicBezier,
+    /// `spring(damping_ratio, stiffness[, mass])`
+    PhysicalSpring,
 }
 
 /// The compiled `mouse-cursor` value: either a built-in cursor or a custom one built from an

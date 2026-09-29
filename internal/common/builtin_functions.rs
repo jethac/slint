@@ -183,9 +183,10 @@ macro_rules! for_each_builtin_function {
             }
             ColorScheme: pure fn() -> ColorScheme
             AccentColor: pure fn accent_color(&context) -> Color { context.accent_color() }
-            /// Not callable from `.slint`: `lower_animation` ANDs it into each animation's `enabled` field.
+            /// `SlintInternal.reduced-motion` in `.slint`. `lower_animation` also ANDs it into each
+            /// animation's `enabled` field.
             ReducedMotion: pure fn reduced_motion(&context) -> bool {
-                cfg!(feature = "std") && context.motion_preference() == crate::MotionPreference::Reduced
+                cfg!(feature = "std") && context.reduced_motion()
             }
             MaterialColorScheme: pure fn(seed_color: Color, variant: MaterialSchemeVariant, spec_version: MaterialSpecVersion, platform: MaterialSchemePlatform, is_dark: bool, contrast_level: f32) -> MaterialColorScheme
             MaterialPlatformColorScheme: pure fn(variant: MaterialSchemeVariant, spec_version: MaterialSpecVersion, platform: MaterialSchemePlatform, is_dark: bool, contrast_level: f32) -> MaterialColorScheme

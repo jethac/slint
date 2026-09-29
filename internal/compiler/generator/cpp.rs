@@ -4904,6 +4904,22 @@ fn compile_expression(expr: &llr::Expression, ctx: &EvaluationContext) -> String
         Expression::EasingCurve(EasingCurve::Spring(a)) => format!(
             "::slint::cbindgen_private::EasingCurve(::slint::cbindgen_private::EasingCurve::Tag::Spring, {a})"
         ),
+        Expression::EasingCurve(EasingCurve::PhysicalSpring(a, b, c)) => format!(
+            "slint::cbindgen_private::EasingCurve(slint::cbindgen_private::EasingCurve::Tag::PhysicalSpring, {a}, {b}, {c})"
+        ),
+        Expression::EasingCurveCtor { variant, args } => {
+            let a = args.iter().map(|a| compile_expression(a, ctx));
+            match variant {
+                crate::expression_types::EasingCurveCtor::CubicBezier => format!(
+                    "slint::cbindgen_private::EasingCurve(slint::cbindgen_private::EasingCurve::Tag::CubicBezier, {})",
+                    a.map(|e| format!("float({e})")).join(", ")
+                ),
+                crate::expression_types::EasingCurveCtor::PhysicalSpring => format!(
+                    "slint::cbindgen_private::EasingCurve(slint::cbindgen_private::EasingCurve::Tag::PhysicalSpring, {})",
+                    a.map(|e| format!("float({e})")).join(", ")
+                ),
+            }
+        }
         // The other curves have no parameters and their C++ Tag matches the variant name.
         Expression::EasingCurve(e) => {
             format!("::slint::cbindgen_private::EasingCurve::Tag::{e:?}")

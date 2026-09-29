@@ -99,7 +99,7 @@ export component FilterChip {
             }
         ]
 
-        animate width { duration: MaterialAnimations.standard_accelerate_duration; easing: MaterialAnimations.standard_easing; }
+        animate width { enabled: !MaterialPalette.reduced-motion; duration: MaterialAnimations.standard_accelerate_duration; easing: MaterialAnimations.standard_easing; }
     }
 
     function toggle() {
@@ -184,7 +184,7 @@ export component InputChip {
             }
         ]
 
-        animate width { duration: MaterialAnimations.standard_accelerate_duration; easing: MaterialAnimations.standard_easing; }
+        animate width { enabled: !MaterialPalette.reduced-motion; duration: MaterialAnimations.standard_accelerate_duration; easing: MaterialAnimations.standard_easing; }
     }
 
     function toggle() {

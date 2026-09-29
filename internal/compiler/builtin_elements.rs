@@ -1685,6 +1685,10 @@ fn build(l: &mut Loader) {
         @shadowable function scroll-to(pos: Point, behavior: ScrollBehavior) { BuiltinFunction.ScrollTo }
         /// Invoked when `content-x` or `content-y` is changed by a user action (dragging, scrolling).
         callback flicked;
+        /// The velocity of the pointer in logical pixels per second at the moment a flick
+        /// gesture ends, written when the pointer is released after a drag. Use it as the
+        /// `initial-velocity` of `animate` blocks to continue a fling with a spring.
+        out property <Point> release-velocity;
     } }
 
     element! {
@@ -3939,6 +3943,10 @@ fn build(l: &mut Loader) {
             in property <duration> duration;
             in property <AnimationDirection> direction;
             in property <easing> easing;
+            /// The velocity a spring starts out with, in animated property units per
+            /// second. A carried-over velocity takes precedence — see
+            /// `initial-velocity` in the animations documentation.
+            in property <float> initial-velocity;
             in property <float> iteration-count: 1.0;
             in property <bool> enabled: true;
             in property <AngleInterpolation> angle-interpolation;

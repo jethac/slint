@@ -91,7 +91,6 @@ casesensitive
 cbrt
 CDPATH
 celebi
-Celebi
 cfgs
 CFLAGS
 chacha
@@ -105,6 +104,7 @@ Cinstrument
 ciphertext
 circledraw
 circularprogressindicator
+classmethods
 CLIB
 clippy
 clru
@@ -297,6 +297,7 @@ fwasm
 Fwww
 genhtml
 getattr
+getclientareaanimation
 gethighcontrast
 getpid
 getrandom
@@ -450,7 +451,6 @@ linearprogressindicator
 linebender
 linebreaker
 LINRGB
-linrgb
 linuxkms
 lipo
 Literata
@@ -544,10 +544,10 @@ Nunito
 nushu
 NVIC
 nvim
-O_WRONLY
 objc
 objfile
 Octa
+oklab
 oklch
 oldsyspath
 Olguin's
@@ -558,6 +558,7 @@ Ostromentsky
 othercomp
 ovmf
 pagefind
+O_WRONLY
 PAKE
 pannable
 Pantone
@@ -617,7 +618,6 @@ qtsvg
 qttypes
 qtwayland
 quantizer
-Quantizer
 quantizers
 Quis
 qwidget
@@ -625,6 +625,7 @@ QXGA
 radiobuttontile
 Raleway
 Randriana
+raphson
 rasterizer
 rasterizers
 rasterizes
@@ -643,6 +644,8 @@ repr
 reqwest
 respawn
 resvg
+retargeting
+retargets
 rfind
 Rgbx
 Ringbuffer

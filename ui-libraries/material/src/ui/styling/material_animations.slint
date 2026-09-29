@@ -1,47 +1,45 @@
 // Copyright © SixtyFPS GmbH <info@slint.dev>
 // SPDX-License-Identifier: MIT
 
-import { MotionTokens, MaterialMotion, MaterialMotionSchemeSpec } from "generated/material_motion_tokens.slint";
+import { MaterialMotion, MaterialMotionSchemeSpec, MaterialSpringSpec, MotionTokens } from "generated/material_motion_tokens.slint";
+
+/// The M3 motion scheme: `standard` mirrors `MotionScheme.standard()` and
+/// `expressive` mirrors `MotionScheme.expressive()` in the pinned androidx
+/// sources. Assign to `MaterialAnimations.motion-scheme` to switch schemes
+/// at runtime; all spring tokens re-evaluate through the same binding.
+export enum MaterialMotionScheme { standard, expressive }
 
 export global MaterialAnimations {
-    // The active motion scheme: expressive (the M3 Expressive default) or
-    // standard (the pre-Expressive scheme). Switches the spring specs in
-    // `motion_scheme` and the emphasized easings between the emphasized and
-    // legacy token sets.
-    in property <bool> expressive: true;
+    in-out property <MaterialMotionScheme> motion-scheme: MaterialMotionScheme.expressive;
+    property <bool> expressive: motion-scheme == MaterialMotionScheme.expressive;
+    property <MaterialMotionSchemeSpec> scheme:
+        motion-scheme == MaterialMotionScheme.standard ? MaterialMotion.standard : MaterialMotion.expressive;
 
-    // Reduced motion collapses every component duration to zero, matching
-    // the platform "reduce animations" accessibility setting.
-    in property <bool> reduced_motion: false;
+    function spring-of(spec: MaterialSpringSpec) -> easing {
+        spring(spec.damping-ratio, spec.stiffness)
+    }
 
-    // The spring specs of the active scheme, for components that animate
-    // with springs (spatial/effects per the motion spec).
-    out property <MaterialMotionSchemeSpec> motion_scheme: root.expressive ? MaterialMotion.expressive : MaterialMotion.standard;
+    // The six springs of the active scheme, as runtime `easing` values.
+    out property <easing> default-spatial-spring: spring-of(scheme.default_spatial);
+    out property <easing> fast-spatial-spring: spring-of(scheme.fast_spatial);
+    out property <easing> slow-spatial-spring: spring-of(scheme.slow_spatial);
+    out property <easing> default-effects-spring: spring-of(scheme.default_effects);
+    out property <easing> fast-effects-spring: spring-of(scheme.fast_effects);
+    out property <easing> slow-effects-spring: spring-of(scheme.slow_effects);
 
-    // The default spatial spring in Slint's duration+bounce
-    // parameterization: a physical spring's natural period is 2π/√stiffness
-    // and damping ratio maps to (1 - bounce). `easing:` accepts no bound
-    // spring() call — bounce stays a number, matched to the scheme's
-    // damping ratio by the `spring_bounce` property and inlined literally
-    // where the easing is declared.
-    out property <duration> default_spatial_duration: root.reduced_motion ? 0ms : 6.283185307 / Math.sqrt(root.motion_scheme.default_spatial.stiffness) * 1s;
-    out property <float> default_spatial_bounce: 1 - root.motion_scheme.default_spatial.damping_ratio;
-    // The default effects spring (`MotionSchemeKeyTokens.DefaultEffects`):
-    // damping ratio 1 (bounce 0), stiffness 1600 in both schemes.
-    out property <duration> default_effects_duration: root.reduced_motion ? 0ms : 6.283185307 / Math.sqrt(root.motion_scheme.default_effects.stiffness) * 1s;
-    out property <float> default_effects_bounce: 1 - root.motion_scheme.default_effects.damping_ratio;
-
+    // Emphasized and standard easings switch between the emphasized and
+    // legacy token sets with the motion scheme.
     out property <easing> emphasized_easing: root.expressive ? MotionTokens.easing_emphasized_decelerate_cubic_bezier : MotionTokens.easing_legacy_decelerate_cubic_bezier;
-    out property <duration> emphasized_duration: root.reduced_motion ? 0ms : MotionTokens.duration_long2;
-    out property <duration> emphasized_decelerate_duration: root.reduced_motion ? 0ms : MotionTokens.duration_medium4;
-    out property <duration> emphasized_accelerate_duration: root.reduced_motion ? 0ms : MotionTokens.duration_short4;
+    out property <duration> emphasized_duration: MotionTokens.duration_long2;
+    out property <duration> emphasized_decelerate_duration: MotionTokens.duration_medium4;
+    out property <duration> emphasized_accelerate_duration: MotionTokens.duration_short4;
     out property <easing> standard_easing: root.expressive ? MotionTokens.easing_standard_cubic_bezier : MotionTokens.easing_legacy_cubic_bezier;
-    out property <duration> standard_decelerate_duration: root.reduced_motion ? 0ms : MotionTokens.duration_medium1;
-    out property <duration> standard_accelerate_duration: root.reduced_motion ? 0ms : MotionTokens.duration_short4;
-    out property <duration> standard_fast_duration: root.reduced_motion ? 0ms : MotionTokens.duration_short3;
+    out property <duration> standard_decelerate_duration: MotionTokens.duration_medium1;
+    out property <duration> standard_accelerate_duration: MotionTokens.duration_short4;
+    out property <duration> standard_fast_duration: MotionTokens.duration_short3;
     // Ripple/opacity timings are not tokens in material3 — kept local.
     out property <easing> ripple_easing: ease_out;
-    out property <duration> ripple_duration: root.reduced_motion ? 0ms : 2s;
+    out property <duration> ripple_duration: 2s;
     out property <easing> opacity_easing: ease;
-    out property <duration> opacity_duration: root.reduced_motion ? 0ms : 250ms;
+    out property <duration> opacity_duration: 250ms;
 }

@@ -5,4 +5,19 @@
 //! It is used by the compiler to avoid loading the entire widget library.
 
 export { NativeStyleMetrics as StyleMetrics }
-export { NativePalette as Palette }
+
+export global Palette {
+    out property <brush> background: NativePalette.background;
+    out property <brush> foreground: NativePalette.foreground;
+    out property <brush> alternate-background: NativePalette.alternate-background;
+    out property <brush> alternate-foreground: NativePalette.alternate-foreground;
+    out property <brush> control-background: NativePalette.control-background;
+    out property <brush> control-foreground: NativePalette.control-foreground;
+    out property <brush> accent-background: NativePalette.accent-background;
+    out property <brush> accent-foreground: NativePalette.accent-foreground;
+    out property <brush> selection-background: NativePalette.selection-background;
+    out property <brush> selection-foreground: NativePalette.selection-foreground;
+    out property <brush> border: NativePalette.border;
+    in-out property <ColorScheme> color-scheme <=> NativePalette.color-scheme;
+    in-out property <bool> reduced-motion: SlintInternal.reduced-motion;
+}

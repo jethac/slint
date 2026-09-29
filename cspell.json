@@ -16,6 +16,7 @@
         "concat",
         "Consts",
         "desugars",
+        "eotf", // electro-optical transfer function (sRGB decode)
         "evenodd",
         "FBOs", // plural of FBO (frame buffer object)
         "fontdb",
@@ -31,6 +32,7 @@
         "miri",
         "monomorphized",
         "monomorphizing",
+        "oetf", // opto-electronic transfer function (sRGB encode)
         "peekable",
         "overscroll",
         "overscrolled",
@@ -43,6 +45,7 @@
         "submillisecond",
         "subsec", // std::time::Duration::subsec_nanos
         "subspan",
+        "ulps",
         "uninit",
         "unlocalized",
         "Unlocalized",
@@ -156,6 +159,7 @@
     "embedders",
     "emsdk", // the Emscripten SDK, one of Skia's DEPS entries
     "ERASEBKGND",
+    "eotf", // electro-optical transfer function
     "equalish",
     "Equalish",
     "espflash",
@@ -204,6 +208,7 @@
     "miscompilation",
     "miscompiled",
     "miscompiles",
+    "Millis",
     "MSVC",
     "muda",
     "napi",
@@ -241,6 +246,7 @@
     "SANDBOXING",
     "scrollview",
     "SDK",
+    "SETTINGCHANGE", // WM_SETTINGCHANGE
     "seti",
     "sharedparley",
     "sixtyfps",

@@ -1250,8 +1250,20 @@ pub struct PropertyAnimation {
     /// Interpolation method for angle properties (which arc / direction to take)
     #[rtti_field]
     pub angle_interpolation: AngleInterpolation,
+    /// The velocity (in the property's units per second, per animation channel) with
+    /// which a `spring(damping_ratio, stiffness)` animation starts; a velocity carried
+    /// over from an interrupted animation takes precedence. `0` starts from rest.
+    #[rtti_field]
+    pub initial_velocity: f32,
+    /// Internal spring settle threshold override (channel units): `<= 0` uses the
+    /// animated type's [`InterpolatedPropertyValue::visibility_threshold`]. Not part
+    /// of the `.slint` `animate` surface — the interpreter sets it for integer-typed
+    /// properties so their springs settle like compiled `int`/`duration` ones.
+    pub visibility_threshold: f32,
 }
 
+// iteration_count and enabled differ from `Default::default()`
+#[allow(clippy::derivable_impls)]
 impl Default for PropertyAnimation {
     fn default() -> Self {
         // Defaults for PropertyAnimation are defined here (for internal Rust code doing programmatic animations)
@@ -1264,6 +1276,8 @@ impl Default for PropertyAnimation {
             easing: Default::default(),
             enabled: true,
             angle_interpolation: Default::default(),
+            initial_velocity: 0.,
+            visibility_threshold: 0.,
         }
     }
 }

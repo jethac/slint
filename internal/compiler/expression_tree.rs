@@ -5,7 +5,7 @@ use crate::builtin_functions::BuiltinFunction;
 use crate::diagnostics::{BuildDiagnostics, SourceLocation, Spanned};
 use crate::element_type::{BuiltinElement, PropertyLookupMode};
 use crate::expression_types::{
-    EasingCurve, ImageReference, MinMaxOp, MouseCursorInner, OperatorClass, RadialGradientShape,
+    EasingCurve, EasingCurveCtor, ImageReference, MinMaxOp, MouseCursorInner, OperatorClass, RadialGradientShape,
     Unit, operator_class,
 };
 use crate::langtype::{ConstantExpression, EnumerationValue, Keys, Struct, Type};
@@ -391,6 +391,16 @@ pub enum Expression {
 
     EasingCurve(EasingCurve),
 
+    /// Constructs an `EasingCurve` from possibly-runtime arguments: what the
+    /// `cubic-bezier(x1, y1, x2, y2)` and `spring(damping_ratio, stiffness[, mass])`
+    /// macros emit when an argument isn't a constant number literal.
+    EasingCurveCtor {
+        /// Which constructor the arguments feed.
+        variant: EasingCurveCtor,
+        /// The constructor's arguments, in signature order (padded with defaults).
+        args: Vec<Expression>,
+    },
+
     EmptyDataTransfer,
 
     MouseCursor(MouseCursorInner<Expression>),
@@ -657,7 +667,7 @@ impl Expression {
             Expression::EmptyDataTransfer => Type::DataTransfer,
             Expression::StoreLocalVariable { .. } => Type::Void,
             Expression::ReadLocalVariable { ty, .. } => ty.clone(),
-            Expression::EasingCurve(_) => Type::Easing,
+            Expression::EasingCurve(_) | Expression::EasingCurveCtor { .. } => Type::Easing,
             Expression::MouseCursor(_) => Type::MouseCursor,
             Expression::LinearGradient { .. } => Type::Brush,
             Expression::RadialGradient { .. } => Type::Brush,
@@ -752,6 +762,7 @@ impl Expression {
             Expression::StoreLocalVariable { value, .. } => visitor(value),
             Expression::ReadLocalVariable { .. } => {}
             Expression::EasingCurve(_) => {}
+            Expression::EasingCurveCtor { args, .. } => args.iter().for_each(visitor),
             Expression::MouseCursor(cursor) => match cursor {
                 MouseCursorInner::CustomMouseCursor { image, hotspot_x, hotspot_y } => {
                     visitor(image);
@@ -902,6 +913,7 @@ impl Expression {
             Expression::StoreLocalVariable { value, .. } => visitor(value),
             Expression::ReadLocalVariable { .. } => {}
             Expression::EasingCurve(_) => {}
+            Expression::EasingCurveCtor { args, .. } => args.iter_mut().for_each(visitor),
             Expression::MouseCursor(cursor) => match cursor {
                 MouseCursorInner::CustomMouseCursor { image, hotspot_x, hotspot_y } => {
                     visitor(image);
@@ -1061,6 +1073,7 @@ impl Expression {
             // We only load what we store, and stores are already checked
             Expression::ReadLocalVariable { .. } => true,
             Expression::EasingCurve(_) => true,
+            Expression::EasingCurveCtor { args, .. } => args.iter().all(|a| a.is_constant(ga)),
             Expression::MouseCursor(cursor) => match cursor {
                 MouseCursorInner::BuiltIn(cursor) => cursor.is_constant(ga),
                 MouseCursorInner::CustomMouseCursor { image, hotspot_x, hotspot_y } => {
@@ -2070,6 +2083,21 @@ pub fn pretty_print(f: &mut dyn std::fmt::Write, expression: &Expression) -> std
         Expression::PathData(data) => write!(f, "{data:?}"),
         Expression::EmptyDataTransfer => write!(f, "{{ }}"),
         Expression::EasingCurve(e) => write!(f, "{e:?}"),
+        Expression::EasingCurveCtor { variant, args } => {
+            write!(
+                f,
+                "{}(",
+                match variant {
+                    EasingCurveCtor::CubicBezier => "cubic-bezier",
+                    EasingCurveCtor::PhysicalSpring => "spring",
+                }
+            )?;
+            for e in args {
+                pretty_print(f, e)?;
+                write!(f, ", ")?;
+            }
+            write!(f, ")")
+        }
         Expression::MouseCursor(m) => write!(f, "{m:?}"),
         Expression::LinearGradient { angle, stops } => {
             write!(f, "@linear-gradient(")?;

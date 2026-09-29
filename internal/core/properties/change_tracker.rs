@@ -172,6 +172,7 @@ impl ChangeTracker {
                 intercept_set_binding: |_, _| false,
                 velocity: |_| None,
                 common_property: |_| None,
+                declared_animation: |_| None,
             };
         }
         let holder = BindingHolder {

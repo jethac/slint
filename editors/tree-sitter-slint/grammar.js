@@ -415,6 +415,7 @@ module.exports = grammar({
         "easing",
         "enabled",
         "angle-interpolation",
+        "initial-velocity",
       ),
 
     animate_option: ($) =>

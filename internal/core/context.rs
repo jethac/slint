@@ -64,6 +64,14 @@ pub(crate) struct PlatformContext {
     #[pin]
     platform_schemes:
         Property<Option<(crate::items::MaterialColorScheme, crate::items::MaterialColorScheme)>>,
+    /// Overrides `motion_preference` when `Some`: installed by a style's reduced-motion
+    /// selector so `.slint` code can force the preference on or off.
+    #[pin]
+    reduced_motion_override: Property<Option<bool>>,
+    /// A multiplier on animation durations, like Android's `animator_duration_scale`:
+    /// `0` finishes every animation immediately, `1` is real-time.
+    #[pin]
+    animation_duration_scale: Property<f32>,
     modifiers: Cell<InternalKeyboardModifierState>,
     #[cfg(all(unix, not(target_os = "macos")))]
     xdg_app_id: RefCell<Option<crate::SharedString>>,
@@ -94,6 +102,15 @@ impl PlatformContext {
             ),
             contrast_preference: Property::new_named(0.0, "PlatformContext::contrast_preference"),
             platform_schemes: Property::new_named(None, "PlatformContext::platform_schemes"),
+            reduced_motion_override: Property::new_named(
+                None,
+                "PlatformContext::reduced_motion_override",
+            ),
+            // `ANIMATOR_DURATION_SCALE` matches Android's developer setting of the same name.
+            animation_duration_scale: Property::new_named(
+                initial_animation_duration_scale(),
+                "PlatformContext::animation_duration_scale",
+            ),
             modifiers: Cell::new(Default::default()),
             #[cfg(all(unix, not(target_os = "macos")))]
             xdg_app_id: Default::default(),
@@ -190,6 +207,23 @@ pub(crate) struct SlintContextInner {
     /// The timers registered on this context. Shared, so that `Timer` handles can hold a
     /// `Weak` to the list they registered in without knowing which context owns it.
     pub(crate) timers: crate::timers::TimerListRc,
+}
+
+/// The initial [`SlintContext::animation_duration_scale`]: the `ANIMATOR_DURATION_SCALE`
+/// environment variable when set (Android's developer setting of the same name),
+/// else `1`.
+#[cfg(feature = "std")]
+fn initial_animation_duration_scale() -> f32 {
+    std::env::var("ANIMATOR_DURATION_SCALE")
+        .ok()
+        .and_then(|v| v.parse::<f32>().ok())
+        .unwrap_or(1.0)
+        .max(0.0)
+}
+
+#[cfg(not(feature = "std"))]
+fn initial_animation_duration_scale() -> f32 {
+    1.0
 }
 
 /// This context is meant to hold the state and the backend.
@@ -493,6 +527,39 @@ impl SlintContext {
 
     pub fn set_motion_preference(&self, preference: MotionPreference) {
         self.platform_context().project_ref().motion_preference.set(preference);
+    }
+
+    /// Returns whether animations should reduce motion: the style-provided override when one
+    /// is installed, otherwise the [`MotionPreference`] the backend reports. Reads register a
+    /// property dependency, so bindings re-evaluate when the preference changes.
+    pub fn reduced_motion(&self) -> bool {
+        let platform = self.platform_context().project_ref();
+        platform
+            .reduced_motion_override
+            .get()
+            .unwrap_or_else(|| platform.motion_preference.get() == MotionPreference::Reduced)
+    }
+
+    /// Install or remove a reduced-motion override, shadowing the platform value — this
+    /// is what a style's reduced-motion selector global calls. `Property::set`
+    /// short-circuits no-op writes.
+    pub fn set_reduced_motion_override(&self, reduced: Option<bool>) {
+        self.platform_context().project_ref().reduced_motion_override.set(reduced);
+    }
+
+    /// Returns the global animation duration scale (see
+    /// [`crate::animations::duration_scale`]). `0` means every animation finishes
+    /// immediately. Reads register a property dependency, so animations re-evaluate
+    /// when the platform reports a change.
+    pub fn animation_duration_scale(&self) -> f32 {
+        self.platform_context().project_ref().animation_duration_scale.get()
+    }
+
+    /// Backend-side write path for the platform's animation duration scale (e.g.
+    /// Android's `animator_duration_scale`). Negative values are clamped to `0`
+    /// (immediate animations); `Property::set` short-circuits no-op writes.
+    pub fn set_animation_duration_scale(&self, scale: f32) {
+        self.platform_context().project_ref().animation_duration_scale.set(scale.max(0.0));
     }
 
     #[doc(hidden)]

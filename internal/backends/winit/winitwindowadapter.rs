@@ -785,6 +785,9 @@ impl WinitWindowAdapter {
         #[cfg(target_os = "windows")]
         subclass_window_for_transparent_erase(&winit_window, self.self_weak.clone());
 
+        #[cfg(target_os = "windows")]
+        crate::install_setting_change_subclass(&winit_window);
+
         // Push the host shell's color scheme and accent color to the SlintContext.
         // With `xdg_desktop_settings` the backend-wide portal watcher (spawned in
         // `Backend::bind_context`) is responsible for that; we only echo the

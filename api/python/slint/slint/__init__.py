@@ -40,6 +40,7 @@ LogicalSize = native.LogicalSize
 StyledText = native.StyledText
 Timer = native.Timer
 TimerMode = native.TimerMode
+EasingCurve = native.EasingCurve
 
 
 Struct = native.PyStruct
@@ -705,6 +706,7 @@ __all__ = [
     "Component",
     "DataTransfer",
     "FilterModel",
+    "EasingCurve",
     "Image",
     "Keys",
     "ListModel",

@@ -124,6 +124,10 @@ pub struct Flickable {
     bounce: Property<AutoBool>,
     carry_momentum: Property<AutoBool>,
 
+    /// Written with the pointer velocity (logical px/sec) when a flick gesture is released.
+    /// Read in `.slint` as `release-velocity`, e.g. to seed `animate` `initial-velocity`.
+    pub release_velocity: Property<crate::api::LogicalPosition>,
+
     pub flicked: Callback<VoidArg>,
 
     data: OnceBox<FlickableData>,
@@ -557,6 +561,10 @@ struct FlickableDataInner {
     retained_velocity: Velocity,
 
     pending_flicked: bool,
+    /// The physical spring declared on `content-x`/`content-y` through an `animate` block,
+    /// captured on press before the flick bindings replace the declared ones.
+    /// `Some` means the fling springs to the limit instead of using constant deceleration.
+    declared_spring: [Option<(f32, f32, f32)>; 2],
 }
 
 impl FlickableDataInner {
@@ -1057,6 +1065,17 @@ impl FlickableDataInner {
 
     /// `release_time` is when the pointer was released, on the clock of the tracked samples.
     fn animate(&mut self, flick: Pin<&Flickable>, flick_rc: &ItemRc, release_time: Instant) {
+        let estimated_velocity = self
+            .capture_events
+            .is_some()
+            .then(|| self.velocity_rb.estimate_velocity(release_time))
+            .flatten()
+            .map(|v| v.velocity);
+        let release_velocity = estimated_velocity.unwrap_or_default();
+        Flickable::FIELD_OFFSETS
+            .release_velocity()
+            .apply_pin(flick)
+            .set(crate::api::LogicalPosition::new(release_velocity.x, release_velocity.y));
         if self.capture_events.is_some() && Flickable::reduced_motion(flick_rc) {
             let released_at = LogicalPoint::from_lengths(flick.content_x(), flick.content_y());
             let target = self.scroll_to(flick, flick_rc, -released_at, ScrollBehavior::Instant);
@@ -1068,8 +1087,6 @@ impl FlickableDataInner {
                 LogicalPoint::new(flick.content_x().get(), flick.content_y().get()),
                 &geo,
             );
-            let estimated_velocity =
-                self.velocity_rb.estimate_velocity(release_time).map(|v| v.velocity);
 
             // The release simulation generic over the Dimension
             let release_simulation = |dimension: Dimension,
@@ -1102,6 +1119,37 @@ impl FlickableDataInner {
                     retained_velocity,
                     flick.carry_momentum(),
                 );
+                let spring = self.declared_spring[match dimension {
+                    Dimension::X => 0,
+                    Dimension::Y => 1,
+                }];
+                if let Some((damping_ratio, stiffness, mass)) = spring {
+                    use crate::animations::simulations::Parameter;
+                    use crate::animations::simulations::spring::{
+                        PhysicalSpringParameters, PhysicalSpringToLimit,
+                    };
+                    const DECELERATION: f32 = 2000.;
+                    let velocity = velocity + carried_velocity;
+                    let start_value = content.get().0 as f32;
+                    let stop = start_value + velocity * velocity.abs() / (2.0 * DECELERATION);
+                    let lower_limit = Self::flick_limits(flick_rc, -1., dimension);
+                    let target = Box::pin(Property::new(0.));
+                    target.set_binding(move || stop.clamp(lower_limit.as_ref().get().min(0.), 0.));
+                    let simulation =
+                        Rc::new_cyclic(|weak: &Weak<RefCell<PhysicalSpringToLimit>>| {
+                            content.set_physic_animation_value(weak.clone());
+                            RefCell::new(
+                                PhysicalSpringParameters::new(
+                                    damping_ratio,
+                                    stiffness,
+                                    mass,
+                                    velocity,
+                                )
+                                .simulation(start_value, target),
+                            )
+                        });
+                    return Some(simulation as Rc<RefCell<dyn PositionSimulation>>);
+                }
                 let limit = Self::flick_limits(flick_rc, velocity, dimension);
                 let simulation = Self::set_simulation(
                     &content,
@@ -1267,8 +1315,28 @@ impl FlickableData {
                 inner.capture_momentum();
                 inner.running_animation = None;
                 let content_x = (Flickable::FIELD_OFFSETS.content_x()).apply_pin(flick);
-                content_x.remove_binding(); // Stop animation by removing the binding
                 let content_y = (Flickable::FIELD_OFFSETS.content_y()).apply_pin(flick);
+                // Capture a declared physical spring before removing the declared
+                // bindings, so `animate` can feed the release velocity into it.
+                // `declared_animation()` is `None` once a previous gesture removed
+                // the binding — keep the previously captured spring in that case.
+                for (prop, slot) in
+                    [content_x, content_y].into_iter().zip(inner.declared_spring.iter_mut())
+                {
+                    if let Some(anim) = prop.declared_animation() {
+                        *slot = if let crate::animations::EasingCurve::PhysicalSpring {
+                            damping_ratio,
+                            stiffness,
+                            mass,
+                        } = anim.easing
+                        {
+                            Some((damping_ratio, stiffness, mass))
+                        } else {
+                            None
+                        };
+                    }
+                }
+                content_x.remove_binding(); // Stop animation by removing the binding
                 content_y.remove_binding(); // Stop animation by removing the binding
 
                 if inner.capture_events.is_some() {

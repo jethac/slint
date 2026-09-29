@@ -66,7 +66,7 @@ export component CheckBox {
                 ]
             }
 
-             animate background, border_width {
+             animate background, border_width { enabled: !MaterialPalette.reduced-motion;
                 duration: MaterialAnimations.opacity_duration;
                 easing: MaterialAnimations.opacity_easing;
              }

@@ -6,7 +6,7 @@ export component X inherits Rectangle {
     animate a { easing: spring; }
     property <float> b;
     animate b { easing: spring(); }
-//                      >    <error{The spring curve needs a single number literal argument}
+//                      >    <error{The spring curve needs between 1 and 3 arguments}
     property <float> c;
     animate c { easing: spring(0.0); }
     property <float> d;
@@ -21,7 +21,8 @@ export component X inherits Rectangle {
 //                             ><error{The bounce argument to spring curve must be between -1 and 1}
     property <float> h;
     animate h { easing: spring(0, 0); }
-//                      >    <error{The spring curve needs a single number literal argument}
+//                             ^warning{A spring with damping ratio 0 oscillates forever and never settles}
+//                                ^^error{The stiffness argument to spring must be positive}
     property <float> i;
     animate i { easing: spring(50%); }
 //                      >    <error{The spring curve needs a single number literal argument}
@@ -31,4 +32,19 @@ export component X inherits Rectangle {
     property <float> k;
     animate k { easing: spring("string"); }
 //                      >    <error{The spring curve needs a single number literal argument}
+    property <float> l;
+    animate l { easing: spring(0.8, 300); duration: 1s; }
+//                                                  > <warning{'duration' is ignored on a physical spring: springs run until they settle}
+    property <float> m;
+    animate m { easing: spring(0.8, 300, 0.5); iteration-count: 2; direction: alternate; }
+//                                                              ><warning{'iteration-count' is ignored on a physical spring: springs run until they settle}
+//                                                                            >        <^warning{'direction' is ignored on a physical spring: springs run until they settle}
+    property <float> n;
+    animate n { easing: spring(0.8, 300, 0.5, 1); }
+//                      >    <error{Too many arguments for spring curve}
+    property <float> o;
+    animate o { easing: spring(0.5); duration: 1s; }
+    property <float> p;
+    animate p { easing: spring(-0.5, 300); }
+//                             >  <error{The damping ratio argument to spring must be non-negative}
 }
