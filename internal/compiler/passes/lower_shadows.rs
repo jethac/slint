@@ -103,6 +103,21 @@ fn create_box_shadow_element(
         }
     }
 
+    // A shaped sibling casts a shadow of that shape: bind the outline
+    // properties through.
+    for property_name in ["shape", "shape-fit"] {
+        if sibling_element.borrow().is_binding_set(property_name, true) {
+            element.set_binding(
+                SmolStr::new_static(property_name),
+                Expression::PropertyReference(NamedReference::new(
+                    sibling_element,
+                    SmolStr::new_static(property_name),
+                ))
+                .into(),
+            );
+        }
+    }
+
     Some(element)
 }
 
@@ -242,6 +257,17 @@ pub fn lower_shadow_properties(
                 ) {
                     prepend_inner_shadow_child(&root, inner_elem);
                 }
+            }
+        }
+
+        for elevation_prop in ["elevation", "ambient-shadow-color", "spot-shadow-color"] {
+            if let Some(binding) =
+                elem.borrow().bindings.binding_cell_including_synthetic(elevation_prop)
+            {
+                diag.push_warning(
+                    format!("The {elevation_prop} property is not yet implemented and is ignored"),
+                    &*binding.borrow(),
+                );
             }
         }
 

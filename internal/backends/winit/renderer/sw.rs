@@ -61,6 +61,12 @@ impl TargetPixel for SoftBufferPixel {
         *self = x.into();
     }
 
+    fn lerp_from(&mut self, src: Self, mask: u8) {
+        let mut x = PremultipliedRgbaColor::from(*self);
+        x.lerp_from(PremultipliedRgbaColor::from(src), mask);
+        *self = x.into();
+    }
+
     fn from_rgb(r: u8, g: u8, b: u8) -> Self {
         Self(0xff000000 | ((r as u32) << 16) | ((g as u32) << 8) | (b as u32))
     }

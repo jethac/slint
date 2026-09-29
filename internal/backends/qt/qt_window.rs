@@ -1,7 +1,7 @@
 // Copyright © SixtyFPS GmbH <info@slint.dev>
 // SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0
 
-// cSpell: ignore frameless qbrush qdrag qimage qpointf qreal qvariant qwidgetsize svgz Nesw qsize qstring
+// cSpell: ignore frameless qbrush qdrag qimage qpointf qreal qrect qvariant qwidgetsize svgz Nesw qsize qstring
 
 use cpp::*;
 use i_slint_common::sharedfontique::HashedBlob;
@@ -867,6 +867,53 @@ impl ItemRenderer for QtItemRenderer<'_> {
         size: LogicalSize,
         _: &CachedRenderingData,
     ) {
+        let outline = rect.outline();
+        if let i_slint_core::graphics::ElementOutline::Shape { .. } = outline {
+            // An arbitrary shape is drawn as a painter path: filled with the
+            // background and stroked with the border.
+            let qrect: qttypes::QRectF = check_geometry!(size);
+            let fill_brush: qttypes::QBrush =
+                into_qbrush(rect.background(), qrect.width, qrect.height);
+            let stroke_brush: qttypes::QBrush =
+                into_qbrush(rect.border_color(), qrect.width, qrect.height);
+            let stroke_width: f32 = rect.border_width().get();
+            let mut painter_path = QPainterPath::default();
+            painter_path.set_fill_rule(match outline.fill_rule() {
+                FillRule::Evenodd => key_generated::Qt_FillRule_OddEvenFill,
+                _ => key_generated::Qt_FillRule_WindingFill,
+            });
+            outline.for_each_path(LogicalRect::from_size(size).to_f32(), &mut |el| {
+                fn qp(p: i_slint_core::graphics::OutlinePoint) -> qttypes::QPointF {
+                    qttypes::QPointF { x: p.x as _, y: p.y as _ }
+                }
+                match el {
+                    i_slint_core::graphics::OutlinePathEl::MoveTo(p) => painter_path.move_to(qp(p)),
+                    i_slint_core::graphics::OutlinePathEl::LineTo(p) => painter_path.line_to(qp(p)),
+                    i_slint_core::graphics::OutlinePathEl::CurveTo(c0, c1, p) => {
+                        painter_path.cubic_to(qp(c0), qp(c1), qp(p))
+                    }
+                    i_slint_core::graphics::OutlinePathEl::Close => painter_path.close(),
+                }
+            });
+            let painter: &mut QPainterPtr = &mut self.painter;
+            cpp! { unsafe [
+                    painter as "QPainterPtr*",
+                    mut painter_path as "QPainterPath",
+                    fill_brush as "QBrush",
+                    stroke_brush as "QBrush",
+                    stroke_width as "float"] {
+                (*painter)->save();
+                auto cleanup = qScopeGuard([&] { (*painter)->restore(); });
+                if (stroke_width > 0) {
+                    (*painter)->setPen(QPen(stroke_brush, stroke_width));
+                } else {
+                    (*painter)->setPen(Qt::NoPen);
+                }
+                (*painter)->setBrush(fill_brush);
+                (*painter)->drawPath(painter_path);
+            }}
+            return;
+        }
         Self::draw_rectangle_impl(
             &mut self.painter,
             check_geometry!(size),
@@ -951,7 +998,7 @@ impl ItemRenderer for QtItemRenderer<'_> {
         let pos = qttypes::QPoint { x: offset.x as _, y: offset.y as _ };
         let mut painter_path = QPainterPath::default();
 
-        painter_path.set_fill_rule(match path.fill_rule() {
+        painter_path.set_fill_rule(match path.effective_fill_rule() {
             FillRule::Evenodd => key_generated::Qt_FillRule_OddEvenFill,
             FillRule::Nonzero | _ => key_generated::Qt_FillRule_WindingFill,
         });
@@ -1127,7 +1174,11 @@ impl ItemRenderer for QtItemRenderer<'_> {
         }
     }
 
-    fn combine_clip(&mut self, rect: LogicalRect, radius: LogicalBorderRadius) -> bool {
+    fn combine_clip(
+        &mut self,
+        rect: LogicalRect,
+        outline: &i_slint_core::graphics::ElementOutline,
+    ) -> bool {
         let clip_rect = qttypes::QRectF {
             x: rect.min_x() as _,
             y: rect.min_y() as _,
@@ -1135,25 +1186,67 @@ impl ItemRenderer for QtItemRenderer<'_> {
             height: rect.height() as _,
         };
         let painter: &mut QPainterPtr = &mut self.painter;
-        let top_left_radius = radius.top_left;
-        let top_right_radius = radius.top_right;
-        let bottom_left_radius = radius.bottom_left;
-        let bottom_right_radius = radius.bottom_right;
-        cpp! { unsafe [
-                painter as "QPainterPtr*",
-                clip_rect as "QRectF",
-                top_left_radius as "float",
-                top_right_radius as "float",
-                bottom_right_radius as "float",
-                bottom_left_radius as "float"] -> bool as "bool" {
-            if (top_left_radius <= 0 && top_right_radius <= 0 && bottom_right_radius <= 0 && bottom_left_radius <= 0) {
-                (*painter)->setClipRect(clip_rect, Qt::IntersectClip);
-            } else {
-                QPainterPath path = to_painter_path(clip_rect, top_left_radius, top_right_radius, bottom_right_radius, bottom_left_radius);
-                (*painter)->setClipPath(path, Qt::IntersectClip);
+        if let i_slint_core::graphics::ElementOutline::Rectangle(radius) = outline {
+            let top_left_radius = radius.top_left;
+            let top_right_radius = radius.top_right;
+            let bottom_left_radius = radius.bottom_left;
+            let bottom_right_radius = radius.bottom_right;
+            cpp! { unsafe [
+                    painter as "QPainterPtr*",
+                    clip_rect as "QRectF",
+                    top_left_radius as "float",
+                    top_right_radius as "float",
+                    bottom_right_radius as "float",
+                    bottom_left_radius as "float"] -> bool as "bool" {
+                if (top_left_radius <= 0 && top_right_radius <= 0 && bottom_right_radius <= 0 && bottom_left_radius <= 0) {
+                    (*painter)->setClipRect(clip_rect, Qt::IntersectClip);
+                } else {
+                    QPainterPath path = to_painter_path(clip_rect, top_left_radius, top_right_radius, bottom_right_radius, bottom_left_radius);
+                    (*painter)->setClipPath(path, Qt::IntersectClip);
+                }
+                return !(*painter)->clipBoundingRect().isEmpty();
+            }}
+        } else {
+            // Flatten the outline to polygons and clip against them.
+            let mut coordinates = Vec::<f32>::new();
+            let mut contour_sizes = Vec::<i32>::new();
+            for polygon in outline.flatten(rect, 0.25) {
+                let n = polygon.len() as i32;
+                if n > 0 {
+                    contour_sizes.push(n);
+                    coordinates.extend(polygon.iter().flat_map(|p| [p.x, p.y]));
+                }
             }
-            return !(*painter)->clipBoundingRect().isEmpty();
-        }}
+            let coordinates_ptr = coordinates.as_ptr();
+            let contour_sizes_ptr = contour_sizes.as_ptr();
+            let num_contours = contour_sizes.len() as i32;
+            let fill_rule = match outline.fill_rule() {
+                i_slint_core::items::FillRule::Evenodd => 0,
+                _ => 1,
+            };
+            cpp! { unsafe [
+                    painter as "QPainterPtr*",
+                    coordinates_ptr as "const float *",
+                    contour_sizes_ptr as "const int *",
+                    num_contours as "int",
+                    fill_rule as "int"] -> bool as "bool" {
+                QPainterPath path;
+                path.setFillRule(fill_rule == 0 ? Qt::OddEvenFill : Qt::WindingFill);
+                const float *p = coordinates_ptr;
+                for (int i = 0; i < num_contours; ++i) {
+                    const int n = contour_sizes_ptr[i];
+                    QPolygonF polygon;
+                    polygon.reserve(n);
+                    for (int j = 0; j < n; ++j) {
+                        polygon << QPointF(p[0], p[1]);
+                        p += 2;
+                    }
+                    path.addPolygon(polygon);
+                }
+                (*painter)->setClipPath(path, Qt::IntersectClip);
+                return !(*painter)->clipBoundingRect().isEmpty();
+            }}
+        }
     }
 
     fn get_current_clip(&self) -> LogicalRect {

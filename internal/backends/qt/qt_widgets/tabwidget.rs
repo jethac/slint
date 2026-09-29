@@ -355,6 +355,10 @@ impl Item for NativeTabWidget {
         geometry
     }
 
+    fn boundary_shape(self: core::pin::Pin<&Self>, _geometry: LogicalRect) -> ItemBoundaryShape {
+        Default::default()
+    }
+
     fn clips_children(self: core::pin::Pin<&Self>) -> bool {
         false
     }
@@ -605,6 +609,10 @@ impl Item for NativeTab {
         geometry: LogicalRect,
     ) -> LogicalRect {
         geometry
+    }
+
+    fn boundary_shape(self: core::pin::Pin<&Self>, _geometry: LogicalRect) -> ItemBoundaryShape {
+        Default::default()
     }
 
     fn clips_children(self: core::pin::Pin<&Self>) -> bool {

@@ -344,6 +344,19 @@ pub trait RenderBorderRectangle {
     fn border_width(self: Pin<&Self>) -> LogicalLength;
     fn border_radius(self: Pin<&Self>) -> LogicalBorderRadius;
     fn border_color(self: Pin<&Self>) -> Brush;
+    /// The element's `shape`, or the empty shape when unset: then the outline is
+    /// the rounded rectangle given by `border_radius`.
+    fn shape(self: Pin<&Self>) -> crate::graphics::Shape {
+        Default::default()
+    }
+    /// How `shape` maps into the element's bounds. Meaningless without a shape.
+    fn shape_fit(self: Pin<&Self>) -> crate::items::ShapeFit {
+        Default::default()
+    }
+    /// The element's outline: the shape when set, else the rounded rectangle.
+    fn outline(self: Pin<&Self>) -> crate::graphics::ElementOutline {
+        crate::graphics::ElementOutline::new(self.shape(), self.shape_fit(), self.border_radius())
+    }
 }
 
 /// The geometry for drawing a [`RenderBorderRectangle`] in the CSS box model, shared by
@@ -666,7 +679,13 @@ pub trait ItemRenderer {
         if clip_item.clip() {
             let (clip_rect, clip_radius) =
                 clip_content_box(size, clip_item.logical_border_radius(), clip_item.border_width());
-            let clip_region_valid = self.combine_clip(clip_rect, clip_radius);
+            let outline = match clip_item.element_outline().shape() {
+                Some((shape, fit)) => {
+                    crate::graphics::ElementOutline::Shape { shape: shape.clone(), fit }
+                }
+                None => crate::graphics::ElementOutline::Rectangle(clip_radius),
+            };
+            let clip_region_valid = self.combine_clip(clip_rect, &outline);
 
             // If clipping is enabled but the clip element is outside the visible range, then we don't
             // need to bother doing anything, not even rendering the children.
@@ -677,11 +696,14 @@ pub trait ItemRenderer {
         RenderingResult::ContinueRenderingChildren
     }
 
-    /// Clip the further call until restore_state.
-    /// (FIXME: consider removing radius and have another function that take a path instead)
+    /// Clip the further call until restore_state against `outline` fitted into `rect`.
     /// Returns a boolean indicating the state of the new clip region: true if the clip region covers
     /// an area; false if the clip region is empty.
-    fn combine_clip(&mut self, rect: LogicalRect, radius: LogicalBorderRadius) -> bool;
+    fn combine_clip(
+        &mut self,
+        rect: LogicalRect,
+        outline: &crate::graphics::ElementOutline,
+    ) -> bool;
     /// Get the current clip bounding box in the current transformed coordinate.
     fn get_current_clip(&self) -> LogicalRect;
 

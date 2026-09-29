@@ -160,6 +160,13 @@ impl Item for ComplexText {
         geometry
     }
 
+    fn boundary_shape(
+        self: core::pin::Pin<&Self>,
+        _geometry: LogicalRect,
+    ) -> crate::graphics::ItemBoundaryShape {
+        Default::default()
+    }
+
     fn clips_children(self: core::pin::Pin<&Self>) -> bool {
         false
     }
@@ -392,6 +399,13 @@ impl Item for StyledTextItem {
         geometry
     }
 
+    fn boundary_shape(
+        self: Pin<&Self>,
+        _geometry: LogicalRect,
+    ) -> crate::graphics::ItemBoundaryShape {
+        Default::default()
+    }
+
     fn clips_children(self: Pin<&Self>) -> bool {
         false
     }
@@ -579,6 +593,13 @@ impl Item for SimpleText {
         geometry: LogicalRect,
     ) -> LogicalRect {
         geometry
+    }
+
+    fn boundary_shape(
+        self: core::pin::Pin<&Self>,
+        _geometry: LogicalRect,
+    ) -> crate::graphics::ItemBoundaryShape {
+        Default::default()
     }
 
     fn clips_children(self: core::pin::Pin<&Self>) -> bool {
@@ -1336,6 +1357,13 @@ impl Item for TextInput {
         geometry: LogicalRect,
     ) -> LogicalRect {
         geometry
+    }
+
+    fn boundary_shape(
+        self: core::pin::Pin<&Self>,
+        _geometry: LogicalRect,
+    ) -> crate::graphics::ItemBoundaryShape {
+        Default::default()
     }
 
     fn clips_children(self: core::pin::Pin<&Self>) -> bool {

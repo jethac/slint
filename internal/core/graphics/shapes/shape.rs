@@ -443,6 +443,34 @@ impl crate::properties::InterpolatedPropertyValue for Shape {
     fn scalar_delta(&self, target_value: &Self) -> f32 {
         super::MORPH_CACHE.with(|c| c.borrow().morph(self, target_value).scalar_delta())
     }
+
+    /// A physical `spring(damping_ratio, stiffness)` animates a shape on a single
+    /// channel: morph progress measured in normalized anchor displacement, i.e.
+    /// the mean per-anchor displacement over the morph's match pairs divided by
+    /// the start shape's measured perimeter. The start sits at channel 0 and the
+    /// target at that displacement, so the spring's velocity is the morph's
+    /// per-anchor speed in start-perimeter fractions per second — the velocity
+    /// a mid-morph retarget carries into the new pair (design note R6).
+    fn channel_count(&self, _target_value: &Self) -> usize {
+        1
+    }
+
+    fn write_start_channels(&self, _target_value: &Self, out: &mut [f32]) {
+        debug_assert_eq!(out.len(), 1);
+        out[0] = 0.;
+    }
+
+    fn write_target_channels(&self, start_value: &Self, out: &mut [f32]) {
+        debug_assert_eq!(out.len(), 1);
+        out[0] = start_value.scalar_delta(self);
+    }
+
+    fn rebuild_from_channels(&self, target_value: &Self, channels: &[f32]) -> Self {
+        debug_assert_eq!(channels.len(), 1);
+        let distance = self.scalar_delta(target_value);
+        let t = if distance <= f32::EPSILON { 1. } else { channels[0] / distance };
+        self.morph(target_value, t)
+    }
 }
 
 /// A content-keyed cache of [Morph] instances between pairs of shapes.

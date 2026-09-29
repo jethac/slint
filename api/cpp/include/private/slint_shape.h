@@ -16,6 +16,8 @@
 /// (`graphics/shapes/ffi.rs`). Argument and output buffers are `void*` so the
 /// `Shape` POD can live in this header.
 namespace slint::cbindgen_private {
+// Defined in the generated slint_internal.h.
+struct Shape;
 extern "C" {
 void slint_shapes_polygon(const float *coords, uintptr_t coord_count, float radius, float smoothing,
                           void *out);
@@ -43,6 +45,17 @@ void slint_shape_morph(const void *from, const void *to, float progress, void *o
 void slint_shapes_path(const SharedString *d, FillRule fill_rule, void *out);
 bool slint_shape_compare_equal(const void *a, const void *b);
 void slint_shape_to_svg_path(const void *shape, SharedString *out);
+}
+/// Value equality for the `#[repr(C)]` Shape POD (outline + fill rule);
+/// morph-cache metadata (`content_hash`, `id`) is not part of the value.
+/// Needed by `Property<Shape>`'s change check in generated code.
+inline bool operator==(const Shape &a, const Shape &b)
+{
+    return slint_shape_compare_equal(&a, &b);
+}
+inline bool operator!=(const Shape &a, const Shape &b)
+{
+    return !(a == b);
 }
 }
 
@@ -323,4 +336,17 @@ inline Shape path(SharedString d, cbindgen_private::FillRule fill_rule)
 }
 
 } // namespace shapes
+
+namespace private_api {
+
+/// Reinterprets the public \ref Shape wrapper as its `#[repr(C)]` FFI twin
+/// (`cbindgen_private::Shape`), the storage type of `shape` properties on
+/// native items. The layouts match by construction; generated code uses this
+/// because a prvalue cannot be reinterpret_cast to a reference.
+inline const cbindgen_private::Shape &as_cbindgen_shape(const slint::Shape &shape)
+{
+    return *reinterpret_cast<const cbindgen_private::Shape *>(&shape);
+}
+
+} // namespace private_api
 } // namespace slint

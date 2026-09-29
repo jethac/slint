@@ -5032,7 +5032,6 @@ dependencies = [
  "num-traits",
  "skrifa 0.44.0",
  "swash",
- "zeno",
 ]
 
 [[package]]

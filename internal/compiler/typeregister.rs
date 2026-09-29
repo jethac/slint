@@ -224,6 +224,10 @@ const RESERVED_OTHER_PROPERTIES: &[(&str, Type)] = &[
     ("opacity", Type::Float32),
     ("cache-rendering-hint", Type::Bool),
     ("visible", Type::Bool), // ("enabled", Type::Bool),
+    ("shape", Type::Shape),
+    ("elevation", Type::LogicalLength),
+    ("ambient-shadow-color", Type::Color),
+    ("spot-shadow-color", Type::Color),
 ];
 
 pub const RESERVED_DROP_SHADOW_PROPERTIES: &[(&str, Type)] = &[
@@ -331,6 +335,11 @@ pub fn reserved_properties() -> impl Iterator<Item = (&'static str, Type, Proper
         .chain(std::iter::once((
             "cross-axis-self-alignment",
             Type::Enumeration(BUILTIN.enums.CrossAxisAlignment.clone()),
+            PropertyVisibility::Input,
+        )))
+        .chain(std::iter::once((
+            "shape-fit",
+            Type::Enumeration(BUILTIN.enums.ShapeFit.clone()),
             PropertyVisibility::Input,
         )))
         .chain(IntoIterator::into_iter([
@@ -525,6 +534,7 @@ impl TypeRegister {
         register.supported_property_animation_types.insert(Type::PhysicalLength.to_string());
         register.supported_property_animation_types.insert(Type::LogicalLength.to_string());
         register.supported_property_animation_types.insert(Type::Brush.to_string());
+        register.supported_property_animation_types.insert(Type::Shape.to_string());
         register.supported_property_animation_types.insert(Type::Angle.to_string());
         register.supported_property_animation_types.insert(Type::Percent.to_string());
         register

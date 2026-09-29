@@ -44,6 +44,7 @@ use i_slint_core_macros::*;
 pub struct Path {
     pub elements: Property<PathData>,
     pub fill: Property<Brush>,
+    pub shape: Property<crate::graphics::Shape>,
     pub fill_rule: Property<FillRule>,
     pub stroke: Property<Brush>,
     pub stroke_width: Property<LogicalLength>,
@@ -133,7 +134,10 @@ impl Item for Path {
         let clip = self.clip();
         if clip {
             (*backend).save_state();
-            (*backend).combine_clip(size.into(), LogicalBorderRadius::zero());
+            (*backend).combine_clip(
+                size.into(),
+                &crate::graphics::ElementOutline::Rectangle(LogicalBorderRadius::zero()),
+            );
         }
         (*backend).draw_path(self, self_rc, size);
         if clip {
@@ -151,6 +155,13 @@ impl Item for Path {
         geometry
     }
 
+    fn boundary_shape(
+        self: core::pin::Pin<&Self>,
+        _geometry: LogicalRect,
+    ) -> crate::graphics::ItemBoundaryShape {
+        Default::default()
+    }
+
     fn clips_children(self: core::pin::Pin<&Self>) -> bool {
         false
     }
@@ -164,7 +175,12 @@ impl Path {
         self: Pin<&Self>,
         self_rc: &ItemRc,
     ) -> Option<(LogicalVector, PathDataIterator)> {
-        let mut elements_iter = self.elements().iter()?;
+        let shape = self.shape();
+        let mut elements_iter = if shape.is_empty() {
+            self.elements().iter()?
+        } else {
+            PathDataIterator::from_shape(&shape)
+        };
 
         let fit = self.fit();
         if fit == ImageFit::Preserve {
@@ -192,6 +208,14 @@ impl Path {
 
         elements_iter.fit(bounds_width.get() as _, bounds_height.get() as _, maybe_viewbox, fit);
         (offset, elements_iter).into()
+    }
+
+    /// The fill rule in effect for drawing: the shape's own rule when a
+    /// `shape` is set (a shape carries its rule in its data), else the
+    /// `fill-rule` property.
+    pub fn effective_fill_rule(self: Pin<&Self>) -> FillRule {
+        let shape = self.shape();
+        if shape.is_empty() { self.fill_rule() } else { shape.fill_rule() }
     }
 
     fn sample_at(

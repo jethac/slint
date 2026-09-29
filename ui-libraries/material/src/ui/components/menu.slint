@@ -85,12 +85,12 @@ export component MenuInner {
     callback activated(index: int);
 
     // used to fix clipping of shadows
-    out property <int> elevation: 2;
+    out property <int> elevation_level: 2;
 
     menu := Elevation {
         width: 100%;
-        level: root.elevation;
-        height: layout.min_height + root.elevation * 1px;
+        level: root.elevation_level;
+        height: layout.min_height + root.elevation_level * 1px;
         border_radius: MaterialStyleMetrics.border_radius_4;
         background: MaterialPalette.surface_container;
 
@@ -123,7 +123,7 @@ export component PopupMenu inherits PopupWindow {
     close_policy: close_on_click_outside;
 
     VerticalLayout {
-        padding: inner.elevation * 1px;
+        padding: inner.elevation_level * 1px;
 
         inner := MenuInner {
             items: root.items;

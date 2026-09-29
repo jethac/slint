@@ -20,13 +20,23 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("cargo:rustc-env=HOST={}", std::env::var("HOST").unwrap());
     println!("cargo:rustc-env=OPT_LEVEL={}", std::env::var("OPT_LEVEL").unwrap());
 
-    // target/{debug|release}/build/package/out/ -> target/{debug|release}
-    let mut target_dir = PathBuf::from(std::env::var("OUT_DIR").unwrap());
-    target_dir.pop();
-    target_dir.pop();
-    target_dir.pop();
+    // OUT_DIR is target/{debug|release}/build/package/<fingerprint>/out, but
+    // cargo has moved it one level deeper before; walk up to the profile dir
+    // instead of assuming a fixed depth.
+    let out_dir = PathBuf::from(std::env::var("OUT_DIR").unwrap());
+    let target_dir = out_dir
+        .ancestors()
+        .find(|dir| {
+            matches!(dir.file_name().and_then(|name| name.to_str()), Some("debug" | "release"))
+        })
+        .expect("OUT_DIR is inside the cargo target directory");
 
-    println!("cargo:rustc-env=CPP_LIB_PATH={}/deps", target_dir.display());
+    // The directory the driver locates the built slint_cpp library under:
+    // <profile>/deps with older cargo, build/slint-cpp/<fingerprint>/out
+    // with cargo's build-dir layout (≈1.100). The lookup happens in the
+    // driver at test time: the slint-cpp crate may not be compiled yet
+    // while this build script runs.
+    println!("cargo:rustc-env=CPP_LIB_PATH={}", target_dir.display());
 
     let generated_include_dir = std::env::var_os("DEP_SLINT_CPP_GENERATED_INCLUDE_DIR")
         .expect("the slint-cpp crate needs to provide the meta-data that points to the directory with the generated includes");

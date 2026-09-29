@@ -1,7 +1,7 @@
 // Copyright © SixtyFPS GmbH <info@slint.dev>
 // SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0
 
-// cSpell: ignore premultiply
+// cSpell: ignore lerped premultiply
 #![allow(clippy::identity_op)] // We use x + 0 a lot here for symmetry
 
 //! This is the module for the functions that are drawing the pixels
@@ -404,20 +404,28 @@ pub(super) fn draw_rounded_rectangle_line(
     let border = Shifted::new(rr.width.get());
     const ONE: Shifted = Shifted::ONE;
     const ZERO: Shifted = Shifted(0);
-    let anti_alias = |x1: Shifted, x2: Shifted, process_pixel: &mut dyn FnMut(usize, u32)| {
+    // The anti-aliased interval boundaries are kept in signed Shifted units so
+    // that a ramp clipped by the span can start at a negative coordinate: the
+    // coverage of the first drawn pixel then stays identical to an unclipped
+    // render of the same line.
+    let anti_alias = |x1: i32, x2: i32, process_pixel: &mut dyn FnMut(usize, u32)| {
         // x1 and x2 are the coordinate on the top and bottom of the intersection of the pixel
         // line and the curve.
         // `process_pixel` be called for the coordinate in the array and a coverage between 0..255
         // This algorithm just go linearly which is not perfect, but good enough.
-        for x in x1.floor()..x2.ceil() {
+        for x in (x1 >> 4)..((x2 + Shifted::ONE.0 as i32 - 1) >> 4) {
+            if x < 0 {
+                continue;
+            }
             // the coverage is basically how much of the pixel should be used
-            let cov = ((ONE + Shifted::new(x) - x1).0 << 8) / (ONE + x2 - x1).0;
+            let cov = (((Shifted::ONE.0 as i32 + (x << 4) - x1) << 8)
+                / (Shifted::ONE.0 as i32 + x2 - x1)) as u32;
             process_pixel(x as usize, cov);
         }
     };
     let rev = |x: Shifted| {
-        (Shifted::new(width) + Shifted::new(rr.right_clip.get() + extra_right_clip))
-            .saturating_sub(x)
+        (((width + rr.right_clip.get() as usize + extra_right_clip as usize) as i32) << 4)
+            - x.0 as i32
     };
     let calculate_xxxx = |r: i16, y: i16| {
         let r = Shifted::new(r);
@@ -456,30 +464,27 @@ pub(super) fn draw_rounded_rectangle_line(
         };
         (x1, x2, x3, x4, rev(x5), rev(x6), rev(x7), rev(x8))
     };
-    anti_alias(
-        x1.saturating_sub(Shifted::new(rr.left_clip.get() + extra_left_clip)),
-        x2.saturating_sub(Shifted::new(rr.left_clip.get() + extra_left_clip)),
-        &mut |x, cov| {
-            if x >= width {
-                return;
-            }
-            let c = if border == ZERO { rr.inner_color } else { rr.border_color };
-            let col = PremultipliedRgbaColor {
-                alpha: (((c.alpha as u32) * cov as u32) / 255) as u8,
-                red: (((c.red as u32) * cov as u32) / 255) as u8,
-                green: (((c.green as u32) * cov as u32) / 255) as u8,
-                blue: (((c.blue as u32) * cov as u32) / 255) as u8,
-            };
-            line_buffer[x].blend(col);
-        },
-    );
+    let left_clip_shift = ((rr.left_clip.get() + extra_left_clip) as i32) << 4;
+    anti_alias(x1.0 as i32 - left_clip_shift, x2.0 as i32 - left_clip_shift, &mut |x, cov| {
+        if x >= width {
+            return;
+        }
+        let c = if border == ZERO { rr.inner_color } else { rr.border_color };
+        let col = PremultipliedRgbaColor {
+            alpha: (((c.alpha as u32) * cov as u32) / 255) as u8,
+            red: (((c.red as u32) * cov as u32) / 255) as u8,
+            green: (((c.green as u32) * cov as u32) / 255) as u8,
+            blue: (((c.blue as u32) * cov as u32) / 255) as u8,
+        };
+        line_buffer[x].blend(col);
+    });
     if y < rr.width {
         // up or down border (x2 .. x7)
         let l = x2
             .ceil()
             .saturating_sub((rr.left_clip.get() + extra_left_clip) as u32)
             .min(width as u32) as usize;
-        let r = x7.floor().min(width as u32) as usize;
+        let r = (x7 >> 4).max(0).min(width as i32) as usize;
         if l < r {
             TargetPixel::blend_slice(&mut line_buffer[l..r], rr.border_color)
         }
@@ -500,8 +505,8 @@ pub(super) fn draw_rounded_rectangle_line(
             }
             // 4. anti-aliasing for the contents (x3 .. x4)
             anti_alias(
-                x3.saturating_sub(Shifted::new(rr.left_clip.get() + extra_left_clip)),
-                x4.saturating_sub(Shifted::new(rr.left_clip.get() + extra_left_clip)),
+                x3.0 as i32 - left_clip_shift,
+                x4.0 as i32 - left_clip_shift,
                 &mut |x, cov| {
                     if x >= width {
                         return;
@@ -517,7 +522,7 @@ pub(super) fn draw_rounded_rectangle_line(
                 .ceil()
                 .saturating_sub((rr.left_clip.get() + extra_left_clip) as u32)
                 .min(width as u32);
-            let end = x5.floor().min(width as u32);
+            let end = (x5 >> 4).max(0).min(width as i32) as u32;
             if begin < end {
                 TargetPixel::blend_slice(
                     &mut line_buffer[begin as usize..end as usize],
@@ -535,10 +540,12 @@ pub(super) fn draw_rounded_rectangle_line(
                 line_buffer[x].blend(col)
             });
             // 7. border x6 .. x7
-            if ONE + x6 <= x7 {
+            if Shifted::ONE.0 as i32 + x6 <= x7 {
                 TargetPixel::blend_slice(
-                    &mut line_buffer[x6.ceil().min(width as u32) as usize
-                        ..x7.floor().min(width as u32) as usize],
+                    &mut line_buffer[((x6 + Shifted::ONE.0 as i32 - 1) >> 4)
+                        .max(0)
+                        .min(width as i32) as usize
+                        ..(x7 >> 4).max(0).min(width as i32) as usize],
                     rr.border_color,
                 )
             }
@@ -881,6 +888,16 @@ pub trait TargetPixel: Sized + Copy {
             }
         }
     }
+    /// Sets `self` to the linear interpolation `self·(255−mask)/255 +
+    /// `src·mask/255`, per channel.
+    ///
+    /// Used by masked compositing: a span is drawn into a copy of the
+    /// destination row, then each destination pixel is lerped toward the
+    /// drawn pixel by the clip mask's coverage. For premultiplied alpha,
+    /// `lerp(d, s + d·(1−a), m) = s·m + d·(1−m·a)`, the same result as
+    /// blending a coverage-scaled source.
+    fn lerp_from(&mut self, src: Self, mask: u8);
+
     /// Create a pixel from the red, gree, blue component in the range 0..=255
     fn from_rgb(red: u8, green: u8, blue: u8) -> Self;
 
@@ -908,6 +925,14 @@ impl TargetPixel for Rgb8Pixel {
         self.b = (self.b as u16 * a / 255) as u8 + color.blue;
     }
 
+    fn lerp_from(&mut self, src: Self, mask: u8) {
+        let m = mask as u16;
+        let n = (u8::MAX - mask) as u16;
+        self.r = ((self.r as u16 * n + src.r as u16 * m) / 255) as u8;
+        self.g = ((self.g as u16 * n + src.g as u16 * m) / 255) as u8;
+        self.b = ((self.b as u16 * n + src.b as u16 * m) / 255) as u8;
+    }
+
     fn from_rgb(r: u8, g: u8, b: u8) -> Self {
         Self::new(r, g, b)
     }
@@ -921,6 +946,15 @@ impl TargetPixel for PremultipliedRgbaColor {
         self.blue = (self.blue as u16 * a / 255) as u8 + color.blue;
         self.alpha = (self.alpha as u16 + color.alpha as u16
             - (self.alpha as u16 * color.alpha as u16) / 255) as u8;
+    }
+
+    fn lerp_from(&mut self, src: Self, mask: u8) {
+        let m = mask as u16;
+        let n = (u8::MAX - mask) as u16;
+        self.red = ((self.red as u16 * n + src.red as u16 * m) / 255) as u8;
+        self.green = ((self.green as u16 * n + src.green as u16 * m) / 255) as u8;
+        self.blue = ((self.blue as u16 * n + src.blue as u16 * m) / 255) as u8;
+        self.alpha = ((self.alpha as u16 * n + src.alpha as u16 * m) / 255) as u8;
     }
 
     fn from_rgb(r: u8, g: u8, b: u8) -> Self {
@@ -956,6 +990,17 @@ impl TargetPixel for Rgb565Pixel {
         let res = expanded * a + c;
 
         self.0 = ((res >> 21) as u16 & G_MASK) | ((res >> 5) as u16 & (R_MASK | B_MASK));
+    }
+
+    fn lerp_from(&mut self, src: Self, mask: u8) {
+        // Interpolate in 8-bit space, then repack. The two round-trips are
+        // only paid on shape-clipped rows.
+        let m = mask as u16;
+        let n = (u8::MAX - mask) as u16;
+        let r = (self.red() as u16 * n + src.red() as u16 * m) / 255;
+        let g = (self.green() as u16 * n + src.green() as u16 * m) / 255;
+        let b = (self.blue() as u16 * n + src.blue() as u16 * m) / 255;
+        *self = Rgb565Pixel::from_rgb(r as u8, g as u8, b as u8);
     }
 
     fn from_rgb(r: u8, g: u8, b: u8) -> Self {
@@ -1012,6 +1057,12 @@ impl TargetPixel for Rgb565BigEndianPixel {
         // form generates tighter code.
         let mut native = Rgb565Pixel(u16::from_be(self.0));
         native.blend(color);
+        self.0 = native.0.to_be();
+    }
+
+    fn lerp_from(&mut self, src: Self, mask: u8) {
+        let mut native = Rgb565Pixel(u16::from_be(self.0));
+        native.lerp_from(Rgb565Pixel(u16::from_be(src.0)), mask);
         self.0 = native.0.to_be();
     }
 

@@ -22,7 +22,7 @@ use crate::qt_window::QPainterPtr;
 use const_field_offset::FieldOffsets;
 use core::pin::Pin;
 use cpp::{cpp, cpp_class};
-use i_slint_core::graphics::Color;
+use i_slint_core::graphics::{Color, ItemBoundaryShape};
 use i_slint_core::input::{
     FocusEvent, InputEventFilterResult, InputEventResult, KeyEventResult, MouseEvent,
 };

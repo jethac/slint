@@ -39,46 +39,46 @@ pub struct BoxShadowOptions {
     pub offset_x_inset: f32,
     /// Vertical offset in physical pixels. Only used by inset shadows.
     pub offset_y_inset: f32,
+    /// The element's `shape` when set: then the shadow silhouette is the
+    /// shape's outline (its `fill_rule` is used) instead of the rounded
+    /// rectangle described by `radius`.
+    pub shape: crate::graphics::Shape,
+    /// How `shape` maps into the shadow's geometry.
+    pub shape_fit: crate::items::ShapeFit,
+    /// `shape`'s content hash: participates in the cache key instead of the
+    /// (non-orderable) shape data itself.
+    pub shape_hash: u64,
 }
 
 impl Eq for BoxShadowOptions {}
 impl Ord for BoxShadowOptions {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        let lhs = (
-            self.width,
-            self.height,
-            self.color,
-            self.blur,
-            self.radius.top_left.to_bits(),
-            self.radius.top_right.to_bits(),
-            self.radius.bottom_right.to_bits(),
-            self.radius.bottom_left.to_bits(),
-            self.spread,
-            self.inset,
-            self.offset_x_inset.to_bits(),
-            self.offset_y_inset.to_bits(),
-        );
-        let rhs = (
-            other.width,
-            other.height,
-            other.color,
-            other.blur,
-            other.radius.top_left.to_bits(),
-            other.radius.top_right.to_bits(),
-            other.radius.bottom_right.to_bits(),
-            other.radius.bottom_left.to_bits(),
-            other.spread,
-            other.inset,
-            other.offset_x_inset.to_bits(),
-            other.offset_y_inset.to_bits(),
-        );
-        if rhs < lhs {
-            std::cmp::Ordering::Less
-        } else if lhs < rhs {
-            std::cmp::Ordering::Greater
-        } else {
-            std::cmp::Ordering::Equal
+        // Note: this chains instead of comparing tuples because tuples
+        // implement `PartialOrd` only up to twelve elements.
+        macro_rules! cmp_field {
+            ($field:ident) => {
+                self.$field.partial_cmp(&other.$field).unwrap_or(std::cmp::Ordering::Equal)
+            };
         }
+        cmp_field!(width)
+            .then_with(|| cmp_field!(height))
+            .then_with(|| cmp_field!(color))
+            .then_with(|| cmp_field!(blur))
+            .then_with(|| self.radius.top_left.to_bits().cmp(&other.radius.top_left.to_bits()))
+            .then_with(|| self.radius.top_right.to_bits().cmp(&other.radius.top_right.to_bits()))
+            .then_with(|| {
+                self.radius.bottom_right.to_bits().cmp(&other.radius.bottom_right.to_bits())
+            })
+            .then_with(|| {
+                self.radius.bottom_left.to_bits().cmp(&other.radius.bottom_left.to_bits())
+            })
+            .then_with(|| cmp_field!(spread))
+            .then_with(|| cmp_field!(inset))
+            .then_with(|| self.offset_x_inset.to_bits().cmp(&other.offset_x_inset.to_bits()))
+            .then_with(|| self.offset_y_inset.to_bits().cmp(&other.offset_y_inset.to_bits()))
+            .then_with(|| (self.shape_fit as i32).cmp(&(other.shape_fit as i32)))
+            .then_with(|| self.shape_hash.cmp(&other.shape_hash))
+            .reverse()
     }
 }
 
@@ -130,6 +130,21 @@ impl BoxShadowOptions {
         self.blur.get() / 2.
     }
 
+    /// The shadow silhouette's shape outline, or `None` when no `shape` is
+    /// set and the shadow follows the rounded rectangle described by
+    /// `radius`, `spread` and `blur`. A returned outline carries its own
+    /// fill rule.
+    pub fn element_outline(&self) -> Option<crate::graphics::ElementOutline> {
+        if self.shape.is_empty() {
+            None
+        } else {
+            Some(crate::graphics::ElementOutline::Shape {
+                shape: self.shape.clone(),
+                fit: self.shape_fit,
+            })
+        }
+    }
+
     /// Extracts the rendering specific properties from the BoxShadow item and scales the logical
     /// coordinates to physical pixels used in the BoxShadowOptions. Returns None if for example the
     /// alpha on the box shadow would imply that no shadow is to be rendered.
@@ -157,6 +172,7 @@ impl BoxShadowOptions {
         } else {
             (0., 0.)
         };
+        let shape = box_shadow.shape();
         Some(Self {
             width,
             height,
@@ -167,6 +183,9 @@ impl BoxShadowOptions {
             inset,
             offset_x_inset,
             offset_y_inset,
+            shape_hash: shape.content_hash(),
+            shape_fit: box_shadow.shape_fit(),
+            shape,
         })
     }
 }
