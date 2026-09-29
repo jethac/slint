@@ -70,7 +70,11 @@ last-ulp justification:
 
 | Golden entry | Max abs diff observed | Reason |
 | ------------ | --------------------- | ------ |
-| *(none — all entries compare bit-exact)* | | |
+| `triangle` (interpreter) | 1.19e-7 | `Shapes.rotated` rotates about the shape center in f32 where Kotlin `Matrix().apply { rotateZ(..) }` rotates about the origin with f64 trig narrowed to f32; both outputs are then re-normalized, leaving last-ulp residue |
+| `puffy` (interpreter) | 5.96e-8 | `Shapes.scaled` scales about the shape center where Kotlin `scale()` applies about the origin; re-normalized afterwards |
+| `cookie_7_sided` (interpreter) | 1.19e-7 | same `Shapes.rotated` path as `triangle` |
+| `cookie_9_sided` (interpreter) | 1.19e-7 | same `Shapes.rotated` path as `triangle` |
+| `cookie_12_sided` (interpreter) | 5.96e-8 | same `Shapes.rotated` path as `triangle` |
 
 Structure (cubic counts, feature kind/convexity/count, feature start-offset
 order, centers) is always compared exactly, tolerance or not.
