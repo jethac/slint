@@ -11,7 +11,7 @@ struct PropertyAnimation;
 namespace slint {
 template<typename T>
 class Model;
-class Shape;
+struct Shape;
 }
 
 // builtin_structs_internal.h first: it brings `using slint::language::FontVariation`
