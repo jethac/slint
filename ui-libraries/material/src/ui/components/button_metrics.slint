@@ -1,0 +1,283 @@
+// Copyright © SixtyFPS GmbH <info@slint.dev>
+// SPDX-License-Identifier: MIT
+
+import { MaterialTypography, MaterialTypeStyle } from "../styling/material_typography.slint";
+import { MaterialCornerShape } from "../styling/generated/material_shape_tokens.slint";
+import {
+    ButtonXSmallTokens,
+    ButtonSmallTokens,
+    ButtonMediumTokens,
+    ButtonLargeTokens,
+    ButtonXLargeTokens,
+    XSmallIconButtonTokens,
+    SmallIconButtonTokens,
+    MediumIconButtonTokens,
+    LargeIconButtonTokens,
+    XLargeIconButtonTokens,
+} from "../styling/generated/material_component_tokens.slint";
+
+/// The five container sizes of the Material button family — the
+/// `ToggleButtonSize` enum upstream, and the `ButtonDefaults.*ContainerHeight`
+/// buckets `contentPaddingFor`/`shapesFor`/`iconSizeFor` index into.
+export enum MaterialButtonSize {
+    extra_small,
+    small,
+    medium,
+    large,
+    extra_large,
+}
+
+/// The shape variant: `round` draws the token `container_shape_round`
+/// (stadium at these heights), `square` the token `container_shape_square`.
+/// Both morph into the smaller `pressed_container_shape` while pressed.
+export enum MaterialButtonShape {
+    round,
+    square,
+}
+
+/// The upstream `IconButtonWidthOption` — how much horizontal space sits
+/// around the icon. `uniform` is the default bucket.
+export enum IconButtonWidth {
+    narrow,
+    uniform,
+    wide,
+}
+
+/// Resolves the per-size token globals to plain values so each button
+/// component stays a thin style binding. Every function mirrors a
+/// `ButtonDefaults.*For(height)` or `IconButtonDefaults.*ContainerSize`
+/// helper in the pinned androidx sources.
+export global MaterialButtonMetrics {
+    /// A uniform `MaterialCornerShape` as a length: `full` resolves to half
+    /// the container's shortest extent (a stadium/circle at these heights).
+    public pure function corner-radius(shape: MaterialCornerShape, extent: length) -> length {
+        shape.full ? extent / 2 : shape.top-left
+    }
+
+    // --- text and toggle buttons ---
+
+    /// `Button*Tokens.container_height` per size.
+    public pure function container-height(size: MaterialButtonSize) -> length {
+        size == MaterialButtonSize.extra_small ? ButtonXSmallTokens.container_height :
+        size == MaterialButtonSize.small ? ButtonSmallTokens.container_height :
+        size == MaterialButtonSize.medium ? ButtonMediumTokens.container_height :
+        size == MaterialButtonSize.large ? ButtonLargeTokens.container_height :
+        ButtonXLargeTokens.container_height
+    }
+
+    /// Horizontal content padding. `ButtonXSmallTokens.leading_space` says
+    /// 16, but `ButtonDefaults.contentPaddingFor` hard-codes
+    /// `ExtraSmallContentPadding = PaddingValues(12, 6)` — the pinned code
+    /// wins for the extra-small bucket.
+    public pure function horizontal-padding(size: MaterialButtonSize) -> length {
+        size == MaterialButtonSize.extra_small ? 12px :
+        size == MaterialButtonSize.small ? ButtonSmallTokens.leading_space :
+        size == MaterialButtonSize.medium ? ButtonMediumTokens.leading_space :
+        size == MaterialButtonSize.large ? ButtonLargeTokens.leading_space :
+        ButtonXLargeTokens.leading_space
+    }
+
+    /// Vertical content padding — not a token at all; it only exists as the
+    /// vertical half of the `contentPaddingFor` buckets in Button.kt
+    /// (6/10/16/32/48).
+    public pure function vertical-padding(size: MaterialButtonSize) -> length {
+        size == MaterialButtonSize.extra_small ? 6px :
+        size == MaterialButtonSize.small ? 10px :
+        size == MaterialButtonSize.medium ? 16px :
+        size == MaterialButtonSize.large ? 32px :
+        48px
+    }
+
+    /// `Button*Tokens.icon_size` per size.
+    public pure function icon-size(size: MaterialButtonSize) -> length {
+        size == MaterialButtonSize.extra_small ? ButtonXSmallTokens.icon_size :
+        size == MaterialButtonSize.small ? ButtonSmallTokens.icon_size :
+        size == MaterialButtonSize.medium ? ButtonMediumTokens.icon_size :
+        size == MaterialButtonSize.large ? ButtonLargeTokens.icon_size :
+        ButtonXLargeTokens.icon_size
+    }
+
+    /// Gap between the leading icon and the label. Extra-small is another
+    /// Kotlin constant: `ButtonDefaults.ExtraSmallIconSpacing = 4.dp` where
+    /// the token says 8.
+    public pure function icon-spacing(size: MaterialButtonSize) -> length {
+        size == MaterialButtonSize.extra_small ? 4px :
+        size == MaterialButtonSize.small ? ButtonSmallTokens.icon_label_space :
+        size == MaterialButtonSize.medium ? ButtonMediumTokens.icon_label_space :
+        size == MaterialButtonSize.large ? ButtonLargeTokens.icon_label_space :
+        ButtonXLargeTokens.icon_label_space
+    }
+
+    /// `ButtonDefaults.textStyleFor` — the label style per size, used by the
+    /// upstream `ToggleButton` and applied here to every size-bucketed
+    /// button.
+    public pure function label-style(size: MaterialButtonSize) -> MaterialTypeStyle {
+        size == MaterialButtonSize.extra_small || size == MaterialButtonSize.small ? MaterialTypography.label_large :
+        size == MaterialButtonSize.medium ? MaterialTypography.title_medium :
+        size == MaterialButtonSize.large ? MaterialTypography.headline_small :
+        MaterialTypography.headline_large
+    }
+
+    /// The resting corner radius: `shape` chooses between the token
+    /// `container_shape_round` (a stadium, `corner_full`) and
+    /// `container_shape_square`.
+    public pure function resting-radius(size: MaterialButtonSize, shape: MaterialButtonShape, height: length) -> length {
+        if shape == MaterialButtonShape.round {
+            return corner-radius(ButtonSizeShapes.round(size), height);
+        }
+        return corner-radius(ButtonSizeShapes.square(size), height);
+    }
+
+    /// The pressed corner radius — `pressed_container_shape` per size.
+    /// `checkable` picks the `ToggleButton` table, which hard-codes the small
+    /// pressed shape to `RoundedCornerShape(6.dp)` where the token's
+    /// `corner_small` is 8.
+    public pure function pressed-radius(size: MaterialButtonSize, checkable: bool) -> length {
+        if checkable && size == MaterialButtonSize.small {
+            return 6px;
+        }
+        return corner-radius(ButtonSizeShapes.pressed(size), MaterialButtonMetrics.container-height(size));
+    }
+
+    /// The checked corner radius of a toggle button: the size's
+    /// `container_shape_square` (identical to `selected_container_shape_square`
+    /// in every size token; upstream uses the selected token only for small).
+    public pure function checked-radius(size: MaterialButtonSize) -> length {
+        return corner-radius(ButtonSizeShapes.square(size), MaterialButtonMetrics.container-height(size));
+    }
+
+    // --- icon buttons ---
+
+    /// `*IconButtonTokens.container_height` per size.
+    public pure function icon-container-height(size: MaterialButtonSize) -> length {
+        size == MaterialButtonSize.extra_small ? XSmallIconButtonTokens.container_height :
+        size == MaterialButtonSize.small ? SmallIconButtonTokens.container_height :
+        size == MaterialButtonSize.medium ? MediumIconButtonTokens.container_height :
+        size == MaterialButtonSize.large ? LargeIconButtonTokens.container_height :
+        XLargeIconButtonTokens.container_height
+    }
+
+    /// `IconButtonDefaults.*ContainerSize(widthOption)`: icon size plus the
+    /// leading/trailing space of the chosen width option. The `uniform`
+    /// option's fields are named `default_leading_space` in every size token
+    /// except `LargeIconButtonTokens`, which spells them `uniform_*`.
+    public pure function icon-container-width(size: MaterialButtonSize, width: IconButtonWidth) -> length {
+        let icon = MaterialButtonMetrics.icon-container-icon-size(size);
+        size == MaterialButtonSize.extra_small ? icon + 2 * (width == IconButtonWidth.narrow ? XSmallIconButtonTokens.narrow_leading_space : width == IconButtonWidth.wide ? XSmallIconButtonTokens.wide_leading_space : XSmallIconButtonTokens.default_leading_space) :
+        size == MaterialButtonSize.small ? icon + 2 * (width == IconButtonWidth.narrow ? SmallIconButtonTokens.narrow_leading_space : width == IconButtonWidth.wide ? SmallIconButtonTokens.wide_leading_space : SmallIconButtonTokens.default_leading_space) :
+        size == MaterialButtonSize.medium ? icon + 2 * (width == IconButtonWidth.narrow ? MediumIconButtonTokens.narrow_leading_space : width == IconButtonWidth.wide ? MediumIconButtonTokens.wide_leading_space : MediumIconButtonTokens.default_leading_space) :
+        size == MaterialButtonSize.large ? icon + 2 * (width == IconButtonWidth.narrow ? LargeIconButtonTokens.narrow_leading_space : width == IconButtonWidth.wide ? LargeIconButtonTokens.wide_leading_space : LargeIconButtonTokens.uniform_leading_space) :
+        icon + 2 * (width == IconButtonWidth.narrow ? XLargeIconButtonTokens.narrow_leading_space : width == IconButtonWidth.wide ? XLargeIconButtonTokens.wide_leading_space : XLargeIconButtonTokens.default_leading_space)
+    }
+
+    /// `*IconButtonTokens.icon_size` per size.
+    public pure function icon-container-icon-size(size: MaterialButtonSize) -> length {
+        size == MaterialButtonSize.extra_small ? XSmallIconButtonTokens.icon_size :
+        size == MaterialButtonSize.small ? SmallIconButtonTokens.icon_size :
+        size == MaterialButtonSize.medium ? MediumIconButtonTokens.icon_size :
+        size == MaterialButtonSize.large ? LargeIconButtonTokens.icon_size :
+        XLargeIconButtonTokens.icon_size
+    }
+
+    /// Resting icon-button radius: `container_shape_round`/`_square`.
+    public pure function icon-resting-radius(size: MaterialButtonSize, shape: MaterialButtonShape, height: length) -> length {
+        if shape == MaterialButtonShape.round {
+            return corner-radius(IconButtonSizeShapes.round(size), height);
+        }
+        return corner-radius(IconButtonSizeShapes.square(size), height);
+    }
+
+    /// `pressed_container_shape` per icon-button size.
+    public pure function icon-pressed-radius(size: MaterialButtonSize) -> length {
+        return corner-radius(IconButtonSizeShapes.pressed(size), MaterialButtonMetrics.icon-container-height(size));
+    }
+
+    /// The checked icon-button radius: `shape` round selects
+    /// `selected_container_shape_round`, square selects
+    /// `selected_container_shape_square` (a circle in every size token).
+    public pure function icon-checked-radius(size: MaterialButtonSize, shape: MaterialButtonShape, height: length) -> length {
+        if shape == MaterialButtonShape.round {
+            return corner-radius(IconButtonSizeShapes.selected-round(size), height);
+        }
+        return corner-radius(IconButtonSizeShapes.selected-square(size), height);
+    }
+
+    /// The outlined icon button's border width. Upstream reads
+    /// `SmallIconButtonTokens.outlined_outline_width` for every size — the
+    /// per-size `outlined_outline_width` fields in the larger size tokens are
+    /// not referenced by `outlinedIconButtonBorder`.
+    public pure function icon-outline-width() -> length {
+        SmallIconButtonTokens.outlined_outline_width
+    }
+
+    /// The outlined text/toggle button border width — the same upstream
+    /// constant (`ButtonDefaults.outlinedButtonBorder` reads
+    /// `ButtonSmallTokens.OutlinedOutlineWidth` for every size).
+    public pure function button-outline-width() -> length {
+        ButtonSmallTokens.outlined_outline_width
+    }
+}
+
+/// Per-size token-global accessors for text/toggle buttons, kept separate so
+/// `MaterialButtonMetrics` reads as the upstream `*For(height)` helpers.
+global ButtonSizeShapes {
+    public pure function round(size: MaterialButtonSize) -> MaterialCornerShape {
+        size == MaterialButtonSize.extra_small ? ButtonXSmallTokens.container_shape_round :
+        size == MaterialButtonSize.small ? ButtonSmallTokens.container_shape_round :
+        size == MaterialButtonSize.medium ? ButtonMediumTokens.container_shape_round :
+        size == MaterialButtonSize.large ? ButtonLargeTokens.container_shape_round :
+        ButtonXLargeTokens.container_shape_round
+    }
+    public pure function square(size: MaterialButtonSize) -> MaterialCornerShape {
+        size == MaterialButtonSize.extra_small ? ButtonXSmallTokens.container_shape_square :
+        size == MaterialButtonSize.small ? ButtonSmallTokens.container_shape_square :
+        size == MaterialButtonSize.medium ? ButtonMediumTokens.container_shape_square :
+        size == MaterialButtonSize.large ? ButtonLargeTokens.container_shape_square :
+        ButtonXLargeTokens.container_shape_square
+    }
+    public pure function pressed(size: MaterialButtonSize) -> MaterialCornerShape {
+        size == MaterialButtonSize.extra_small ? ButtonXSmallTokens.pressed_container_shape :
+        size == MaterialButtonSize.small ? ButtonSmallTokens.pressed_container_shape :
+        size == MaterialButtonSize.medium ? ButtonMediumTokens.pressed_container_shape :
+        size == MaterialButtonSize.large ? ButtonLargeTokens.pressed_container_shape :
+        ButtonXLargeTokens.pressed_container_shape
+    }
+}
+
+global IconButtonSizeShapes {
+    public pure function round(size: MaterialButtonSize) -> MaterialCornerShape {
+        size == MaterialButtonSize.extra_small ? XSmallIconButtonTokens.container_shape_round :
+        size == MaterialButtonSize.small ? SmallIconButtonTokens.container_shape_round :
+        size == MaterialButtonSize.medium ? MediumIconButtonTokens.container_shape_round :
+        size == MaterialButtonSize.large ? LargeIconButtonTokens.container_shape_round :
+        XLargeIconButtonTokens.container_shape_round
+    }
+    public pure function square(size: MaterialButtonSize) -> MaterialCornerShape {
+        size == MaterialButtonSize.extra_small ? XSmallIconButtonTokens.container_shape_square :
+        size == MaterialButtonSize.small ? SmallIconButtonTokens.container_shape_square :
+        size == MaterialButtonSize.medium ? MediumIconButtonTokens.container_shape_square :
+        size == MaterialButtonSize.large ? LargeIconButtonTokens.container_shape_square :
+        XLargeIconButtonTokens.container_shape_square
+    }
+    public pure function pressed(size: MaterialButtonSize) -> MaterialCornerShape {
+        size == MaterialButtonSize.extra_small ? XSmallIconButtonTokens.pressed_container_shape :
+        size == MaterialButtonSize.small ? SmallIconButtonTokens.pressed_container_shape :
+        size == MaterialButtonSize.medium ? MediumIconButtonTokens.pressed_container_shape :
+        size == MaterialButtonSize.large ? LargeIconButtonTokens.pressed_container_shape :
+        XLargeIconButtonTokens.pressed_container_shape
+    }
+    public pure function selected-round(size: MaterialButtonSize) -> MaterialCornerShape {
+        size == MaterialButtonSize.extra_small ? XSmallIconButtonTokens.selected_container_shape_round :
+        size == MaterialButtonSize.small ? SmallIconButtonTokens.selected_container_shape_round :
+        size == MaterialButtonSize.medium ? MediumIconButtonTokens.selected_container_shape_round :
+        size == MaterialButtonSize.large ? LargeIconButtonTokens.selected_container_shape_round :
+        XLargeIconButtonTokens.selected_container_shape_round
+    }
+    public pure function selected-square(size: MaterialButtonSize) -> MaterialCornerShape {
+        size == MaterialButtonSize.extra_small ? XSmallIconButtonTokens.selected_container_shape_square :
+        size == MaterialButtonSize.small ? SmallIconButtonTokens.selected_container_shape_square :
+        size == MaterialButtonSize.medium ? MediumIconButtonTokens.selected_container_shape_square :
+        size == MaterialButtonSize.large ? LargeIconButtonTokens.selected_container_shape_square :
+        XLargeIconButtonTokens.selected_container_shape_square
+    }
+}

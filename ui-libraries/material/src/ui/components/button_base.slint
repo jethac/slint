@@ -1,0 +1,216 @@
+// Copyright © SixtyFPS GmbH <info@slint.dev>
+// SPDX-License-Identifier: MIT
+
+import { Elevation } from "./elevation.slint";
+import { Icon } from "./icon.slint";
+import { MaterialText } from "./material_text.slint";
+import { FocusRing, StateLayerArea } from "./state_layer.slint";
+import { MaterialAnimations } from "../styling/material_animations.slint";
+import { MaterialPalette } from "../styling/material_palette.slint";
+import { MaterialTypeStyle, MaterialTypography } from "../styling/material_typography.slint";
+
+/// The shared interaction+decoration shell behind every button style:
+/// the 48dp touch-target slot with the visual container centered in it
+/// (upstream `minimumInteractiveComponentSize`), the shape-morph on
+/// press/selection, the state layer + bounded ripple clipped to the live
+/// corner radius, the inset focus ring, shape-clipped hit testing, and the
+/// animated elevation.
+///
+/// A style component supplies the already-resolved values (container
+/// extents, resting/pressed/checked radii, colors for the enabled and
+/// disabled states, border, elevation table, and the content metrics); this
+/// component owns the state machine.
+export component MaterialButtonBase {
+    // Resolved geometry.
+    in property <length> container_height;
+    /// `<= 0` stretches the container across the component (text buttons);
+    /// a positive value centers a fixed-width container (icon buttons).
+    in property <length> container_width: 0px;
+    in property <length> resting_radius;
+    in property <length> pressed_radius;
+    in property <length> checked_radius;
+    /// `ButtonDefaults.MinWidth` — 58px for plain buttons, 0 for toggles.
+    in property <length> min_button_width;
+    /// Reserve at least 48x48 of layout space around the container —
+    /// upstream `Modifier.minimumInteractiveComponentSize`. Turned off by
+    /// the parity harness, which composes the same scenes with
+    /// `LocalMinimumInteractiveComponentSize provides 0.dp`.
+    in property <bool> enforce_touch_target: true;
+
+    // Resolved style.
+    in property <color> container_color;
+    in property <color> content_color;
+    /// Disabled container/content colors with their alpha already applied.
+    in property <color> disabled_container_color;
+    in property <color> disabled_content_color;
+    in property <color> border_color;
+    /// Disabled-state border color; defaults to `border_color`.
+    in property <color> disabled_border_color;
+    /// The unchecked border width; the border disappears while checked,
+    /// matching `OutlinedToggleButtonDefaults.border`.
+    in property <length> border_width;
+    // The `*ButtonElevation` table as M3 elevation levels.
+    in property <int> elevation_default: 0;
+    in property <int> elevation_pressed: 0;
+    in property <int> elevation_hovered: 0;
+    in property <int> elevation_focused: 0;
+    in property <int> elevation_disabled: 0;
+    /// `ToggleButton` morphs with the fast spatial spec while `Button` and
+    /// the icon buttons use the default effects spec (`shapeByInteraction`
+    /// in the pinned sources).
+    in property <bool> fast_spatial;
+
+    // Content.
+    in property <string> text;
+    in property <image> icon;
+    /// Icon drawn while checked (icon buttons only; upstream keeps the same
+    /// icon, so this defaults to `icon` in the callers).
+    in property <image> checked_icon;
+    in property <length> padding_horizontal;
+    in property <length> padding_vertical;
+    in property <length> icon_size;
+    in property <length> icon_spacing;
+    in property <MaterialTypeStyle> label_style: MaterialTypography.label_large;
+    /// Centered-icon layout (icon buttons) instead of the padded text row.
+    in property <bool> icon_button;
+    /// See `StateLayerArea.clip_ripple` — false draws unbounded ink.
+    in property <bool> clip_ripple: true;
+
+    // State.
+    in property <bool> enabled: true;
+    in property <bool> checkable;
+    in-out property <bool> checked;
+    in property <string> tooltip;
+
+    callback clicked;
+    out property <bool> has_focus <=> area.has_focus;
+    out property <bool> pressed <=> area.effective_pressed;
+    out property <bool> has_hover <=> area.effective_hover;
+    /// The live, animating corner radius — traced by the parity harness.
+    out property <length> container_radius <=> container.border_radius;
+
+    property <length> touch: root.enforce_touch_target ? 48px : 0px;
+    property <length> box_width: root.container_width > 0px ? root.container_width : root.width;
+    property <length> box_height: root.container_height;
+
+    min_width: max(root.min_button_width, root.touch,
+        root.icon_button ? root.container_width : area.min_width);
+    min_height: max(root.touch, root.container_height);
+    preferred_width: root.min_width;
+    preferred_height: root.min_height;
+
+    // `shapeByInteraction`: pressed wins, then checked, then the resting
+    // shape — `pressedShape` is drawn even while checked.
+    property <length> target_radius:
+        area.effective_pressed ? root.pressed_radius :
+        (root.checkable && root.checked ? root.checked_radius : root.resting_radius);
+    animate target_radius {
+        easing: root.fast_spatial ? MaterialAnimations.fast-spatial-spring : MaterialAnimations.default-effects-spring;
+        enabled: !MaterialPalette.reduced-motion;
+    }
+
+    property <color> current_container_color: root.enabled ? root.container_color : root.disabled_container_color;
+    property <color> current_content_color: root.enabled ? root.content_color : root.disabled_content_color;
+
+    // `animateBorderStrokeAsState`: the width follows the fast spatial spec,
+    // the color the fast effects spec.
+    property <length> current_border_width: root.checkable && root.checked ? 0px : root.border_width;
+    property <color> current_border_color: root.enabled ? root.border_color : root.disabled_border_color;
+    animate current_border_width {
+        easing: MaterialAnimations.fast-spatial-spring;
+        enabled: !MaterialPalette.reduced-motion;
+    }
+    animate current_border_color {
+        easing: MaterialAnimations.fast-effects-spring;
+        enabled: !MaterialPalette.reduced-motion;
+    }
+
+    // Last interaction wins for elevation, like `animateElevation`.
+    property <int> current_level: !root.enabled ? root.elevation_disabled :
+        area.effective_pressed ? root.elevation_pressed :
+        area.effective_hover ? root.elevation_hovered :
+        area.has_focus ? root.elevation_focused :
+        root.elevation_default;
+
+    container := Elevation {
+        x: (root.width - root.box_width) / 2;
+        y: (root.height - root.box_height) / 2;
+        width: root.box_width;
+        height: root.box_height;
+        border_radius: root.target_radius;
+        background: root.current_container_color;
+        level: root.current_level;
+    }
+
+    // The border draws above the container fill and under the state layer,
+    // like `Surface`'s `Modifier.border` between `background` and `clip`.
+    if root.current_border_width > 0px : border_layer := Rectangle {
+        x: container.x;
+        y: container.y;
+        width: container.width;
+        height: container.height;
+        background: transparent;
+        border_width: root.current_border_width;
+        border_color: root.current_border_color;
+        border_radius: root.target_radius;
+    }
+
+    area := StateLayerArea {
+        x: container.x;
+        y: container.y;
+        width: container.width;
+        height: container.height;
+        enabled: root.enabled;
+        color: root.current_content_color;
+        border_radius: root.target_radius;
+        hit_radius: root.resting_radius;
+        tooltip: root.tooltip;
+        display_background: false;
+        focus_ring: true;
+        clip_ripple: root.clip_ripple;
+
+        clicked() => {
+            // A click counts only when the press landed inside the clipped
+            // shape — or came from the keyboard, which is always inside.
+            if !area.pointer_inside && !area.enter_pressed {
+                return;
+            }
+            if root.checkable {
+                root.checked = !root.checked;
+            }
+            root.clicked();
+        }
+
+        layout := HorizontalLayout {
+            padding_left: root.icon_button ? 0px : root.padding_horizontal;
+            padding_right: root.icon_button ? 0px : root.padding_horizontal;
+            padding_top: root.icon_button ? 0px : root.padding_vertical;
+            padding_bottom: root.icon_button ? 0px : root.padding_vertical;
+            spacing: root.icon_spacing;
+            alignment: center;
+
+            if root.icon.width > 0 && root.icon.height > 0 : Icon {
+                source: root.checked ? root.checked_icon : root.icon;
+                colorize: root.current_content_color;
+                width: root.icon_size;
+            }
+
+            if !root.icon_button && root.text != "" : MaterialText {
+                text: root.text;
+                style: root.label_style;
+                color: root.current_content_color;
+                overflow: elide;
+                vertical_alignment: center;
+            }
+        }
+    }
+
+    // The inset ring follows the live shape — including mid-morph.
+    if area.has_focus && root.enabled : FocusRing {
+        x: container.x;
+        y: container.y;
+        width: container.width;
+        height: container.height;
+        border_radius: root.target_radius;
+    }
+}

@@ -1,33 +1,77 @@
 // Copyright © SixtyFPS GmbH <info@slint.dev>
 // SPDX-License-Identifier: MIT
 
-import { BaseButton } from "./base_button.slint";
-import { MaterialTypography } from "../styling/material_typography.slint";
+import { MaterialButtonBase } from "./button_base.slint";
+import { MaterialButtonMetrics, MaterialButtonShape, MaterialButtonSize } from "./button_metrics.slint";
 import { MaterialPalette } from "../styling/material_palette.slint";
+import { TextButtonTokens } from "../styling/generated/material_component_tokens.slint";
 
+/// The lowest-emphasis button — the upstream `TextButton`. There is no text
+/// toggle upstream, so `checkable` isn't offered here.
 export component TextButton {
-    in property <image> icon <=> base.icon;
-    in property <string> text <=> base.text;
-    in property <bool> enabled <=> base.enabled;
-    in property <string> tooltip <=> base.tooltip;
+    in property <string> text;
+    /// An optional leading icon.
+    in property <image> icon;
+    /// One of the five container heights (32/40/56/96/136).
+    in property <MaterialButtonSize> size: MaterialButtonSize.small;
+    /// `round` is the resting stadium shape; `square` the squarer variant.
+    in property <MaterialButtonShape> button_shape: MaterialButtonShape.round;
+    in property <bool> enabled: true;
+    /// Swap the label color for dark surfaces (snackbars and the like).
     in property <bool> inverse;
+    in property <string> tooltip;
+    /// Reserve a 48x48 touch target around the visual (default on).
+    in property <bool> enforce_touch_target: true;
 
     callback clicked <=> base.clicked;
 
-    accessible-role: button;
-    accessible-enabled: root.enabled;
+    out property <bool> has_focus <=> base.has_focus;
+    out property <bool> pressed <=> base.pressed;
+    out property <bool> has_hover <=> base.has_hover;
+    /// The live corner radius — for the parity harness's motion trace.
+    out property <length> container_radius <=> base.container_radius;
+
     accessible-label: root.text == "" ? root.tooltip : root.text;
+    accessible-role: AccessibleRole.button;
+    accessible-enabled: root.enabled;
     accessible-action-default => { base.clicked(); }
 
-    base := BaseButton {
-        border_radius: root.height / 2;
-        color: root.inverse ? MaterialPalette.inverse_primary : MaterialPalette.primary;
-    }
+    min_width: base.min_width;
+    min_height: base.min_height;
+    preferred_width: base.preferred_width;
+    preferred_height: base.preferred_height;
 
-    states [
-        disabled when !root.enabled : {
-            base.color: MaterialPalette.on_surface;
-            base.transparent_background: true;
-        }
-    ]
+    base := MaterialButtonBase {
+        width: 100%;
+        height: 100%;
+        enabled: root.enabled;
+        tooltip: root.tooltip;
+        enforce_touch_target: root.enforce_touch_target;
+
+        container_height: MaterialButtonMetrics.container-height(root.size);
+        resting_radius: MaterialButtonMetrics.resting-radius(root.size, root.button_shape, self.container_height);
+        pressed_radius: MaterialButtonMetrics.pressed-radius(root.size, false);
+        checked_radius: MaterialButtonMetrics.checked-radius(root.size);
+        min_button_width: 58px; // `ButtonDefaults.MinWidth`
+
+        container_color: transparent;
+        // `defaultTextButtonColors` hard-codes `ColorSchemeKeyTokens.Primary`
+        // ("TODO replace with the token value once it's corrected" upstream).
+        content_color: root.inverse ? MaterialPalette.inverse_primary : MaterialPalette.primary;
+        disabled_container_color: transparent;
+        disabled_content_color: TextButtonTokens.disabled_label_color.with_alpha(TextButtonTokens.disabled_label_opacity);
+        elevation_default: 0;
+        elevation_pressed: 0;
+        elevation_hovered: 0;
+        elevation_focused: 0;
+        elevation_disabled: 0;
+
+        text: root.text;
+        icon: root.icon;
+        padding_horizontal: MaterialButtonMetrics.horizontal-padding(root.size);
+        padding_vertical: MaterialButtonMetrics.vertical-padding(root.size);
+        icon_size: MaterialButtonMetrics.icon-size(root.size);
+        icon_spacing: MaterialButtonMetrics.icon-spacing(root.size);
+        label_style: MaterialButtonMetrics.label-style(root.size);
+    }
 }
