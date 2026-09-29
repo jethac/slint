@@ -349,5 +349,14 @@ inline const cbindgen_private::Shape &as_cbindgen_shape(const slint::Shape &shap
     return *reinterpret_cast<const cbindgen_private::Shape *>(&shape);
 }
 
+template<>
+inline void Property<slint::Shape>::set_animated_value(
+        const slint::Shape &new_value,
+        const cbindgen_private::PropertyAnimation &animation_data) const
+{
+    cbindgen_private::slint_property_set_animated_value_shape(
+            &inner, &as_cbindgen_shape(get()), &as_cbindgen_shape(new_value), &animation_data);
+}
+
 } // namespace private_api
 } // namespace slint

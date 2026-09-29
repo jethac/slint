@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0
 
 use super::*;
-use crate::graphics::{Brush, Color};
+use crate::graphics::{Brush, Color, Shape};
 use crate::items::PropertyAnimation;
 use core::ffi::c_void;
 
@@ -284,6 +284,24 @@ pub unsafe extern "C" fn slint_property_set_animated_value_brush(
     animation_data: &PropertyAnimation,
 ) {
     c_set_animated_value(handle, from.clone(), to.clone(), animation_data);
+}
+
+/// Internal function to set up a property animation to the specified target value for a `Shape` property.
+/// `from`/`to` are `const Shape*`: `void*` like `graphics/shapes/ffi.rs` because
+/// `Shape` is generated into `slint_internal.h`, which this header doesn't include.
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn slint_property_set_animated_value_shape(
+    handle: &PropertyHandleOpaque,
+    from: *const c_void,
+    to: *const c_void,
+    animation_data: &PropertyAnimation,
+) {
+    c_set_animated_value(
+        handle,
+        unsafe { &*from.cast::<Shape>() }.clone(),
+        unsafe { &*to.cast::<Shape>() }.clone(),
+        animation_data,
+    );
 }
 
 /// Internal function to set up a property animation to the specified target value for a `[FontVariation]` property.
