@@ -36,7 +36,8 @@ void slint_shapes_pill(float width, float height, float smoothing, void *out);
 void slint_shapes_pill_star(int32_t num_vertices_per_radius, float width, float height,
                             float inner_radius_ratio, float radius, float smoothing, void *out);
 void slint_shapes_custom(const float *coords, uintptr_t coord_count, const float *roundings,
-                         uintptr_t rounding_count, int32_t repetitions, bool mirror, void *out);
+                         uintptr_t rounding_count, int32_t repetitions, float center_x,
+                         float center_y, bool mirror, void *out);
 void slint_shape_normalized(const void *shape, void *out);
 void slint_shape_rotated(const void *shape, float degrees, void *out);
 void slint_shape_scaled(const void *shape, float scale_x, float scale_y, void *out);
@@ -307,13 +308,13 @@ inline Shape pill_star(int num_vertices_per_radius, float width, float height,
 
 inline Shape custom(const std::shared_ptr<slint::Model<LogicalPosition>> &vertices,
                     const std::shared_ptr<slint::Model<language::CornerRounding>> &roundings,
-                    int repetitions, bool mirror)
+                    int repetitions, const LogicalPosition &center, bool mirror)
 {
     auto flat = internal::flatten_points(vertices);
     auto flat_r = internal::flatten_roundings(roundings);
     Shape result;
     cbindgen_private::slint_shapes_custom(flat.data(), flat.size(), flat_r.data(), flat_r.size(),
-                                          repetitions, mirror, &result);
+                                          repetitions, center.x, center.y, mirror, &result);
     return result;
 }
 

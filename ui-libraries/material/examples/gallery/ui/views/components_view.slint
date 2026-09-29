@@ -39,6 +39,7 @@ import {
 
 import { ActionsView } from "./actions_view.slint";
 import { NavigationView } from "./navigation_view.slint";
+import { ShapesView } from "./shapes_view.slint";
 import { MainWindowAdapter } from "../main_window_adapter.slint";
 
 export component ComponentsView {
@@ -66,6 +67,18 @@ export component ComponentsView {
                 MainWindowAdapter.show_background = self.content_y != 0;
             }
         }
+
+        ScrollView {
+            content_height: shapes_view.height;
+
+            shapes_view := ShapesView {
+                width: 100%;
+            }
+
+            changed content_y => {
+                MainWindowAdapter.show_background = self.content_y != 0;
+            }
+        }
     }
 
     if MainWindowAdapter.break_layout : ScrollView {
@@ -75,6 +88,7 @@ export component ComponentsView {
 
             NavigationView {}
             ActionsView {}
+            ShapesView {}
         }
 
         changed content_y => {

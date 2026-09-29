@@ -5848,9 +5848,16 @@ fn compile_builtin_function_call(
             )
         }
         BuiltinFunction::ShapesCustom => {
-            let [v, r, reps, mirror] =
-                [a.next().unwrap(), a.next().unwrap(), a.next().unwrap(), a.next().unwrap()];
-            format!("slint::shapes::custom({v}, {r}, static_cast<int>({reps}), {mirror})")
+            let [v, r, reps, center, mirror] = [
+                a.next().unwrap(),
+                a.next().unwrap(),
+                a.next().unwrap(),
+                a.next().unwrap(),
+                a.next().unwrap(),
+            ];
+            format!(
+                "slint::shapes::custom({v}, {r}, static_cast<int>({reps}), {center}, {mirror})"
+            )
         }
         BuiltinFunction::ShapesNormalized => {
             let s = a.next().unwrap();

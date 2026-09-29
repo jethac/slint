@@ -419,7 +419,7 @@ declare_builtin_function_types!(
     ShapesStar: (Type::Int32, Type::Float32, Type::Struct(crate::typeregister::builtin_structs::CornerRounding()), Type::Struct(crate::typeregister::builtin_structs::CornerRounding())) -> Type::Shape,
     ShapesPill: (Type::Float32, Type::Float32, Type::Float32) -> Type::Shape,
     ShapesPillStar: (Type::Int32, Type::Float32, Type::Float32, Type::Float32, Type::Struct(crate::typeregister::builtin_structs::CornerRounding())) -> Type::Shape,
-    ShapesCustom: (Type::Array(Arc::new(Type::Struct(crate::typeregister::logical_point_type()))), Type::Array(Arc::new(Type::Struct(crate::typeregister::builtin_structs::CornerRounding()))), Type::Int32, Type::Bool) -> Type::Shape,
+    ShapesCustom: (Type::Array(Arc::new(Type::Struct(crate::typeregister::logical_point_type()))), Type::Array(Arc::new(Type::Struct(crate::typeregister::builtin_structs::CornerRounding()))), Type::Int32, Type::Struct(crate::typeregister::logical_point_type()), Type::Bool) -> Type::Shape,
     ShapesNormalized: (Type::Shape) -> Type::Shape,
     ShapesRotated: (Type::Shape, Type::Angle) -> Type::Shape,
     ShapesScaled: (Type::Shape, Type::Float32, Type::Float32) -> Type::Shape,
