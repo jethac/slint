@@ -86,7 +86,9 @@
       "enabled": null,
       "height": 72.0,
       "kind": "rect",
+      "level": null,
       "radius": 24.0,
+      "shape": null,
       "slint_overrides": {
         "radius": 8
       },
