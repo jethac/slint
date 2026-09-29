@@ -497,8 +497,9 @@ fn slint_case(scene: &Scene) -> String {
             "filled-icon-button" => "FilledIconButton",
             "tonal-icon-button" => "TonalIconButton",
             "outlined-icon-button" => "OutlineIconButton",
-            // `surface` imports `Elevation`/`MaterialShapes` below instead.
-            "rect" | "surface" => continue,
+            // `surface` imports `Elevation`/`MaterialShapes` below instead;
+            // `rect`/`elevated-rect` are plain `Rectangle`s — no import.
+            "rect" | "surface" | "elevated-rect" => continue,
             other => panic!("unknown widget kind {other:?}"),
         };
         imports.push(component);
@@ -810,6 +811,7 @@ fn slint_canvas(s: &mut String, scene: &Scene) {
                     w.elevation.unwrap_or(0.0) as i64,
                 )
                 .unwrap();
+                continue;
             }
             "rect" => {
                 let radius = w
