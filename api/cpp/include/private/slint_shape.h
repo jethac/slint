@@ -53,7 +53,10 @@ inline bool operator==(const Shape &a, const Shape &b)
 {
     return slint_shape_compare_equal(&a, &b);
 }
-inline bool operator!=(const Shape &a, const Shape &b) { return !(a == b); }
+inline bool operator!=(const Shape &a, const Shape &b)
+{
+    return !(a == b);
+}
 }
 
 namespace slint {
