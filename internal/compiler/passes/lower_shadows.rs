@@ -1,8 +1,9 @@
 // Copyright © SixtyFPS GmbH <info@slint.dev>
 // SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0
 
-//! Pass that lowers synthetic `drop-shadow-*` and `inner-shadow-*` properties to proper shadow elements.
-// At the moment only shadows on `Rectangle` elements are supported.
+//! Pass that lowers synthetic `drop-shadow-*`, `inner-shadow-*` and `elevation`
+//! properties to proper shadow elements.
+//! At the moment only shadows on `Rectangle` elements are supported.
 
 use crate::diagnostics::BuildDiagnostics;
 use crate::expression_tree::BindingExpression;
@@ -35,52 +36,26 @@ impl ShadowKind {
     }
 }
 
-// Creates a new BoxShadow element holding the supplied bindings, sized to follow `sibling_element`'s geometry.
-fn create_box_shadow_element(
-    shadow_property_bindings: HashMap<SmolStr, BindingExpression>,
+fn check_shadow_on_rectangle(
+    shadow_property_bindings: &HashMap<SmolStr, BindingExpression>,
     sibling_element: &ElementRc,
-    kind: ShadowKind,
-    type_register: &TypeRegister,
     diag: &mut BuildDiagnostics,
-) -> Option<Element> {
+) -> bool {
     if matches!(sibling_element.borrow().builtin_type(), Some(b) if b.name != "Rectangle") {
         for (shadow_prop_name, shadow_prop_binding) in shadow_property_bindings {
             diag.push_error(
                 format!("The {shadow_prop_name} property is only supported on Rectangle elements right now"),
-                &shadow_prop_binding,
+                shadow_prop_binding,
             );
         }
-        return None;
+        return false;
     }
+    true
+}
 
-    let prefix = kind.prefix();
-    let id_suffix = match kind {
-        ShadowKind::Drop => "shadow",
-        ShadowKind::Inner => "inner-shadow",
-    };
-
-    let mut bindings: crate::object_tree::BindingsMap = shadow_property_bindings
-        .into_iter()
-        .map(|(shadow_prop_name, expr)| {
-            (shadow_prop_name.strip_prefix(prefix).unwrap().into(), expr.into())
-        })
-        .collect();
-
-    if matches!(kind, ShadowKind::Inner) {
-        bindings.insert(
-            SmolStr::new_static("inset"),
-            RefCell::new(Expression::BoolLiteral(true).into()),
-        );
-    }
-
-    let mut element = Element {
-        id: format_smolstr!("{}-{}", sibling_element.borrow().id, id_suffix),
-        base_type: type_register.lookup_builtin_element("BoxShadow").unwrap(),
-        enclosing_component: sibling_element.borrow().enclosing_component.clone(),
-        bindings: bindings.into(),
-        ..Default::default()
-    };
-
+// Binds the outline that casts the shadow — the border radii, or the `shape`
+// when set — through from the element to the shadow element.
+fn bind_outline_bindings(element: &mut Element, sibling_element: &ElementRc) {
     for property_name in super::border_radius::BORDER_RADIUS_PROPERTIES {
         let source_property = if sibling_element.borrow().is_binding_set(property_name, true) {
             Some(SmolStr::new_static(property_name))
@@ -117,6 +92,91 @@ fn create_box_shadow_element(
             );
         }
     }
+}
+
+// Creates a new BoxShadow element holding the supplied bindings, sized to follow `sibling_element`'s geometry.
+fn create_box_shadow_element(
+    shadow_property_bindings: HashMap<SmolStr, BindingExpression>,
+    sibling_element: &ElementRc,
+    kind: ShadowKind,
+    type_register: &TypeRegister,
+    diag: &mut BuildDiagnostics,
+) -> Option<Element> {
+    if !check_shadow_on_rectangle(&shadow_property_bindings, sibling_element, diag) {
+        return None;
+    }
+
+    let prefix = kind.prefix();
+    let id_suffix = match kind {
+        ShadowKind::Drop => "shadow",
+        ShadowKind::Inner => "inner-shadow",
+    };
+
+    let mut bindings: crate::object_tree::BindingsMap = shadow_property_bindings
+        .into_iter()
+        .map(|(shadow_prop_name, expr)| {
+            (shadow_prop_name.strip_prefix(prefix).unwrap().into(), expr.into())
+        })
+        .collect();
+
+    if matches!(kind, ShadowKind::Inner) {
+        bindings.insert(
+            SmolStr::new_static("inset"),
+            RefCell::new(Expression::BoolLiteral(true).into()),
+        );
+    }
+
+    let mut element = Element {
+        id: format_smolstr!("{}-{}", sibling_element.borrow().id, id_suffix),
+        base_type: type_register.lookup_builtin_element("BoxShadow").unwrap(),
+        enclosing_component: sibling_element.borrow().enclosing_component.clone(),
+        bindings: bindings.into(),
+        ..Default::default()
+    };
+
+    bind_outline_bindings(&mut element, sibling_element);
+
+    Some(element)
+}
+
+// Creates a new ElevationShadow element holding the supplied bindings, sized to
+// follow `sibling_element`'s geometry. The `elevation`/`ambient-shadow-color`/
+// `spot-shadow-color` names match the item's properties directly.
+fn create_elevation_shadow_element(
+    mut shadow_property_bindings: HashMap<SmolStr, BindingExpression>,
+    sibling_element: &ElementRc,
+    type_register: &TypeRegister,
+    diag: &mut BuildDiagnostics,
+) -> Option<Element> {
+    if !check_shadow_on_rectangle(&shadow_property_bindings, sibling_element, diag) {
+        return None;
+    }
+
+    let mut bindings: crate::object_tree::BindingsMap =
+        shadow_property_bindings.drain().map(|(name, expr)| (name, expr.into())).collect();
+
+    // The umbra shows through translucent casters, so the item tracks the
+    // caster's opacity.
+    bindings.insert(
+        SmolStr::new_static("caster-alpha"),
+        RefCell::new(
+            Expression::PropertyReference(NamedReference::new(
+                sibling_element,
+                SmolStr::new_static("opacity"),
+            ))
+            .into(),
+        ),
+    );
+
+    let mut element = Element {
+        id: format_smolstr!("{}-elevation-shadow", sibling_element.borrow().id),
+        base_type: type_register.lookup_builtin_element("ElevationShadow").unwrap(),
+        enclosing_component: sibling_element.borrow().enclosing_component.clone(),
+        bindings: bindings.into(),
+        ..Default::default()
+    };
+
+    bind_outline_bindings(&mut element, sibling_element);
 
     Some(element)
 }
@@ -137,17 +197,16 @@ fn prepend_inner_shadow_child(parent: &ElementRc, inner_elem: Element) {
     parent.borrow_mut().children.insert(0, inner_rc);
 }
 
-// For a repeated element with a drop shadow, the shadow becomes the new root so it renders below the repeated
-// element. This is only used for drop shadows; inner shadows on a repeated root are prepended as a child instead.
+// For a repeated element with a shadow, the shadow becomes the new root so it renders below the repeated
+// element. This is only used for beneath-the-element shadows (drop, elevation); inner shadows on a
+// repeated root are prepended as a child instead.
 fn inject_shadow_element_in_repeated_element(
     shadow_property_bindings: HashMap<SmolStr, BindingExpression>,
     repeated_element: &ElementRc,
+    element_with_shadow_property: &ElementRc,
     type_register: &TypeRegister,
     diag: &mut BuildDiagnostics,
 ) {
-    let element_with_shadow_property =
-        &repeated_element.borrow().base_type.as_component().root_element.clone();
-
     let shadow_element = match create_box_shadow_element(
         shadow_property_bindings,
         element_with_shadow_property,
@@ -165,11 +224,34 @@ fn inject_shadow_element_in_repeated_element(
     );
 }
 
+fn inject_elevation_shadow_in_repeated_element(
+    shadow_property_bindings: HashMap<SmolStr, BindingExpression>,
+    repeated_element: &ElementRc,
+    element_with_shadow_property: &ElementRc,
+    type_register: &TypeRegister,
+    diag: &mut BuildDiagnostics,
+) {
+    let shadow_element = match create_elevation_shadow_element(
+        shadow_property_bindings,
+        element_with_shadow_property,
+        type_register,
+        diag,
+    ) {
+        Some(element) => element,
+        None => return,
+    };
+
+    crate::object_tree::inject_element_as_repeated_element(
+        repeated_element,
+        Element::make_rc(shadow_element),
+    );
+}
+
 fn take_shadow_property_bindings(
     element: &ElementRc,
-    kind: ShadowKind,
+    property_list: &[(&'static str, crate::langtype::Type)],
 ) -> HashMap<SmolStr, BindingExpression> {
-    kind.property_list()
+    property_list
         .iter()
         .flat_map(|(shadow_property_name, _)| {
             let shadow_property_name = SmolStr::new(shadow_property_name);
@@ -190,7 +272,7 @@ pub fn lower_shadow_properties(
 ) {
     for kind in [ShadowKind::Drop, ShadowKind::Inner] {
         for (shadow_prop_name, shadow_prop_binding) in
-            take_shadow_property_bindings(&component.root_element, kind)
+            take_shadow_property_bindings(&component.root_element, kind.property_list())
         {
             diag.push_warning(
                 format!("The {shadow_prop_name} property cannot be used on the root element, the shadow will not be visible"),
@@ -198,76 +280,90 @@ pub fn lower_shadow_properties(
             );
         }
     }
+    for (prop_name, binding) in take_shadow_property_bindings(
+        &component.root_element,
+        crate::typeregister::RESERVED_ELEVATION_SHADOW_PROPERTIES,
+    ) {
+        diag.push_warning(
+            format!("The {prop_name} property cannot be used on the root element, the shadow will not be visible"),
+            &binding,
+        );
+    }
 
     recurse_elem_including_sub_components_no_borrow(component, &(), &mut |elem, _| {
-        // Repeater handling: drop shadow becomes the new root (so it renders underneath); inner
-        // shadow is prepended as a child of the repeater's root rectangle (so it renders above
-        // the background but below the rectangle's original children).
+        // Repeater handling: beneath-the-element shadows become the new root (elevation first so
+        // drop shadows wrap outside it); inner shadow is prepended as a child of the repeater's
+        // root rectangle (so it renders above the background but below the rectangle's original
+        // children).
         if elem.borrow().repeated.is_some() {
-            // Take both binding sets up front, then release every Rc clone before
+            // Take every binding set up front, then release every Rc clone before
             // `inject_element_as_repeated_element`, which asserts the component has strong_count == 2.
-            let (drop_shadow_properties, inner_shadow_properties) = {
+            let (drop_shadow_properties, inner_shadow_properties, elevation_shadow_properties) = {
                 let component = elem.borrow().base_type.as_component().clone();
-                let drop = take_shadow_property_bindings(&component.root_element, ShadowKind::Drop);
-                let inner =
-                    take_shadow_property_bindings(&component.root_element, ShadowKind::Inner);
-                (drop, inner)
+                let drop = take_shadow_property_bindings(
+                    &component.root_element,
+                    ShadowKind::Drop.property_list(),
+                );
+                let inner = take_shadow_property_bindings(
+                    &component.root_element,
+                    ShadowKind::Inner.property_list(),
+                );
+                let elevation = take_shadow_property_bindings(
+                    &component.root_element,
+                    crate::typeregister::RESERVED_ELEVATION_SHADOW_PROPERTIES,
+                );
+                (drop, inner, elevation)
             };
 
+            // The bindings were taken from the component's root rectangle,
+            // which keeps pointing at the shadowed element through the
+            // injections.
+            let shadowed_element = elem.borrow().base_type.as_component().root_element.clone();
+            if !elevation_shadow_properties.is_empty() {
+                inject_elevation_shadow_in_repeated_element(
+                    elevation_shadow_properties,
+                    elem,
+                    &shadowed_element,
+                    type_register,
+                    diag,
+                );
+            }
             if !drop_shadow_properties.is_empty() {
                 inject_shadow_element_in_repeated_element(
                     drop_shadow_properties,
                     elem,
+                    &shadowed_element,
                     type_register,
                     diag,
                 );
-                // After injection the original rectangle is a child of the new shadow root.
-                // Prepend the inner BoxShadow as a child of that rectangle.
-                if !inner_shadow_properties.is_empty() {
-                    let rect_child = elem
-                        .borrow()
-                        .base_type
-                        .as_component()
-                        .root_element
-                        .borrow()
-                        .children
-                        .first()
-                        .cloned();
-                    if let Some(rect_child) = rect_child
-                        && let Some(inner_elem) = create_box_shadow_element(
-                            inner_shadow_properties,
-                            &rect_child,
-                            ShadowKind::Inner,
-                            type_register,
-                            diag,
-                        )
-                    {
-                        prepend_inner_shadow_child(&rect_child, inner_elem);
+            }
+            if !inner_shadow_properties.is_empty() {
+                // The rectangle is now nested inside the injected shadow
+                // roots: descend to the actual element.
+                let mut rect_child = elem.borrow().base_type.as_component().root_element.clone();
+                loop {
+                    let first = rect_child.borrow().children.first().cloned();
+                    match first {
+                        Some(c)
+                            if matches!(
+                                c.borrow().builtin_type(),
+                                Some(b) if b.name == "BoxShadow" || b.name == "ElevationShadow"
+                            ) =>
+                        {
+                            rect_child = c;
+                        }
+                        _ => break,
                     }
                 }
-            } else if !inner_shadow_properties.is_empty() {
-                // No drop shadow: prepend inner shadow as a child of the repeater root rectangle.
-                let root = elem.borrow().base_type.as_component().root_element.clone();
                 if let Some(inner_elem) = create_box_shadow_element(
                     inner_shadow_properties,
-                    &root,
+                    &rect_child,
                     ShadowKind::Inner,
                     type_register,
                     diag,
                 ) {
-                    prepend_inner_shadow_child(&root, inner_elem);
+                    prepend_inner_shadow_child(&rect_child, inner_elem);
                 }
-            }
-        }
-
-        for elevation_prop in ["elevation", "ambient-shadow-color", "spot-shadow-color"] {
-            if let Some(binding) =
-                elem.borrow().bindings.binding_cell_including_synthetic(elevation_prop)
-            {
-                diag.push_warning(
-                    format!("The {elevation_prop} property is not yet implemented and is ignored"),
-                    &*binding.borrow(),
-                );
             }
         }
 
@@ -277,11 +373,18 @@ pub fn lower_shadow_properties(
             std::mem::replace(&mut elem.children, new_children)
         };
 
-        // For each child: drop shadow renders BEFORE (underneath); inner shadow is prepended as
-        // the child's first child (above background, below the original child content).
+        // For each child: drop shadow renders first (outermost beneath), then the elevation
+        // shadow, then the element; inner shadow is prepended as the child's first child (above
+        // background, below the original child content).
         for child in old_children {
-            let drop_shadow_properties = take_shadow_property_bindings(&child, ShadowKind::Drop);
-            let inner_shadow_properties = take_shadow_property_bindings(&child, ShadowKind::Inner);
+            let drop_shadow_properties =
+                take_shadow_property_bindings(&child, ShadowKind::Drop.property_list());
+            let inner_shadow_properties =
+                take_shadow_property_bindings(&child, ShadowKind::Inner.property_list());
+            let elevation_shadow_properties = take_shadow_property_bindings(
+                &child,
+                crate::typeregister::RESERVED_ELEVATION_SHADOW_PROPERTIES,
+            );
 
             if !drop_shadow_properties.is_empty()
                 && let Some(mut shadow_elem) = create_box_shadow_element(
@@ -295,6 +398,19 @@ pub fn lower_shadow_properties(
                 shadow_elem.geometry_props.clone_from(&child.borrow().geometry_props);
                 // Sort the shadow with the same z as its element: ties keep declaration
                 // order and the shadow is inserted right before its element, so it stays beneath.
+                shadow_elem.z_order = child.borrow().z_order.clone();
+                elem.borrow_mut().children.push(ElementRc::new(shadow_elem.into()));
+            }
+
+            if !elevation_shadow_properties.is_empty()
+                && let Some(mut shadow_elem) = create_elevation_shadow_element(
+                    elevation_shadow_properties,
+                    &child,
+                    type_register,
+                    diag,
+                )
+            {
+                shadow_elem.geometry_props.clone_from(&child.borrow().geometry_props);
                 shadow_elem.z_order = child.borrow().z_order.clone();
                 elem.borrow_mut().children.push(ElementRc::new(shadow_elem.into()));
             }

@@ -2331,6 +2331,24 @@ fn build(l: &mut Loader) {
         BoxShadow: BoxShadow
     }
 
+    item! { ElevationShadow: Empty {
+        in property <length> border-top-left-radius;
+        in property <length> border-top-right-radius;
+        in property <length> border-bottom-left-radius;
+        in property <length> border-bottom-right-radius;
+        in property <shape> shape;
+        in property <ShapeFit> shape-fit;
+        in property <length> elevation;
+        in property <color> ambient-shadow-color;
+        in property <color> spot-shadow-color;
+        in property <float> caster-alpha;
+    } }
+
+    element! {
+        @is_internal @expands_to_parent_geometry
+        ElevationShadow: ElevationShadow
+    }
+
     item! { TextInput {
         /// The text rendered and editable by the user.
         /// \default ""
