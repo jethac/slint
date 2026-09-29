@@ -85,6 +85,9 @@ export component StateLayer {
     // MaterialShapes live in the normalized (0,0)-(1,1) space; see Elevation.
     shape-fit: ShapeFit.normalized;
 
+    // MaterialShapes live in the normalized (0,0)-(1,1) space; see Elevation.
+    shape-fit: ShapeFit.normalized;
+
     property <float> state_layer_opacity;
 
     Rectangle {
@@ -247,6 +250,11 @@ export component StateLayerArea inherits FocusTouchArea {
     out property <bool> effective_pressed: (root.pressed && root.pointer_inside) || root.enter_pressed || root.simulate_press;
     /// `has_hover` limited to pointer positions inside the shape.
     out property <bool> effective_hover: (root.has_hover && root.point_inside(root.mouse_x, root.mouse_y)) || root.simulate_hover;
+
+    // MaterialShapes live in the normalized (0,0)-(1,1) space; see Elevation.
+    // This binds TouchArea's own `shape-fit`, so shape hit-testing matches
+    // the rendered outline.
+    shape-fit: ShapeFit.normalized;
 
     // MaterialShapes live in the normalized (0,0)-(1,1) space; see Elevation.
     // This binds TouchArea's own `shape-fit`, so shape hit-testing matches
