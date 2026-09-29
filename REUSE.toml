@@ -407,7 +407,11 @@ SPDX-FileCopyrightText = "Copyright (c) 2020-2024 Paweł Kuna <https://github.co
 SPDX-License-Identifier = "MIT"
 
 [[annotations]]
-path = ["ui-libraries/material/src/ui/icons/**.svg", "ui-libraries/material/examples/gallery/ui/icons/**.svg"]
+path = [
+  "ui-libraries/material/src/ui/icons/**.svg",
+  "ui-libraries/material/examples/gallery/ui/icons/**.svg",
+  "ui-libraries/material/parity/compose/src/test/resources/icons/**.svg",
+]
 precedence = "aggregate"
 SPDX-FileCopyrightText = "Material Icons <https://github.com/material-icons/material-icons/blob/master/LICENSE>"
 SPDX-License-Identifier = "Apache-2.0"

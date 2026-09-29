@@ -1,0 +1,460 @@
+// Copyright © SixtyFPS GmbH <info@slint.dev>
+// SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0
+
+// Scene: toggle-buttons — generated from `ui-libraries/material/parity/scenes/toggle-buttons.json`
+// (edit the scene, regenerate with `cargo run -p material-parity-generator`).
+//PARITY=static
+//SIZE=966x1248
+//TRACE_ELEMENTS=button0,button1,button2,button3,button4,button5,button6,button7,button8,button9,button10,button11,button12,button13,button14,button15,button16,button17,button18,button19,button20,button21,button22,button23,button24,button25,button26,button27,button28,button29,button30,button31,button32,button33,button34,button35,button36,button37,button38,button39
+//MASK_DECOR=button10@0,2000
+//MASK_DECOR=button11@0,2000
+//MASK_DECOR=button12@0,2000
+//MASK_DECOR=button13@0,2000
+//MASK_DECOR=button14@0,2000
+//MASK_DECOR=button30@0,2000
+//MASK_DECOR=button31@0,2000
+//MASK_DECOR=button32@0,2000
+//MASK_DECOR=button33@0,2000
+//MASK_DECOR=button34@0,2000
+//XFAIL_TEXT=issue #28: Slint ceils text layout widths where Compose keeps fractional advances
+//DENSITIES=1,2
+import "../../fonts/Roboto-VariableFont.ttf";
+import { ElevatedButton, FilledButton, IconButtonWidth, MaterialButtonShape, MaterialButtonSize, MaterialPalette, MaterialTheme, MaterialWindow, OutlineButton, TonalButton } from "@material";
+
+export component TestCase inherits MaterialWindow {
+    init => {
+        // The scene pins seed #6750A4, tonal-spot, spec2025, light, contrast 0
+        // (all the library defaults; restated here so a default change can't
+        // silently move the parity baseline).
+        MaterialTheme.seed-color = #6750A4;
+        MaterialTheme.dark = false;
+        MaterialTheme.contrast-level = 0;
+        MaterialTheme.use-platform-color = false;
+        MaterialTheme.plain-family = "Roboto";
+        MaterialTheme.brand-family = "Roboto";
+        // Compose builds its scene scheme from the same seed — use the
+        // runtime-generated scheme, not the static expressive table.
+        MaterialPalette.dynamic = true;
+    }
+
+    button0 := FilledButton {
+        x: 16px;
+        y: 120px;
+        text: "OK";
+        size: MaterialButtonSize.extra_small;
+        checkable: true;
+        width: 45px;
+        enforce_touch_target: false;
+    }
+
+    button1 := FilledButton {
+        x: 206px;
+        y: 112px;
+        text: "OK";
+        size: MaterialButtonSize.small;
+        checkable: true;
+        width: 53px;
+        enforce_touch_target: false;
+    }
+
+    button2 := FilledButton {
+        x: 396px;
+        y: 96px;
+        text: "OK";
+        size: MaterialButtonSize.medium;
+        checkable: true;
+        width: 71px;
+        enforce_touch_target: false;
+    }
+
+    button3 := FilledButton {
+        x: 586px;
+        y: 56px;
+        text: "OK";
+        size: MaterialButtonSize.large;
+        checkable: true;
+        width: 128px;
+        enforce_touch_target: false;
+    }
+
+    button4 := FilledButton {
+        x: 776px;
+        y: 16px;
+        text: "OK";
+        size: MaterialButtonSize.extra_large;
+        checkable: true;
+        width: 170px;
+        enforce_touch_target: false;
+    }
+
+    button5 := TonalButton {
+        x: 16px;
+        y: 272px;
+        text: "OK";
+        size: MaterialButtonSize.extra_small;
+        checkable: true;
+        width: 45px;
+        enforce_touch_target: false;
+    }
+
+    button6 := TonalButton {
+        x: 206px;
+        y: 264px;
+        text: "OK";
+        size: MaterialButtonSize.small;
+        checkable: true;
+        width: 53px;
+        enforce_touch_target: false;
+    }
+
+    button7 := TonalButton {
+        x: 396px;
+        y: 248px;
+        text: "OK";
+        size: MaterialButtonSize.medium;
+        checkable: true;
+        width: 71px;
+        enforce_touch_target: false;
+    }
+
+    button8 := TonalButton {
+        x: 586px;
+        y: 208px;
+        text: "OK";
+        size: MaterialButtonSize.large;
+        checkable: true;
+        width: 128px;
+        enforce_touch_target: false;
+    }
+
+    button9 := TonalButton {
+        x: 776px;
+        y: 168px;
+        text: "OK";
+        size: MaterialButtonSize.extra_large;
+        checkable: true;
+        width: 170px;
+        enforce_touch_target: false;
+    }
+
+    button10 := ElevatedButton {
+        x: 16px;
+        y: 424px;
+        text: "OK";
+        size: MaterialButtonSize.extra_small;
+        checkable: true;
+        width: 45px;
+        enforce_touch_target: false;
+    }
+
+    button11 := ElevatedButton {
+        x: 206px;
+        y: 416px;
+        text: "OK";
+        size: MaterialButtonSize.small;
+        checkable: true;
+        width: 53px;
+        enforce_touch_target: false;
+    }
+
+    button12 := ElevatedButton {
+        x: 396px;
+        y: 400px;
+        text: "OK";
+        size: MaterialButtonSize.medium;
+        checkable: true;
+        width: 71px;
+        enforce_touch_target: false;
+    }
+
+    button13 := ElevatedButton {
+        x: 586px;
+        y: 360px;
+        text: "OK";
+        size: MaterialButtonSize.large;
+        checkable: true;
+        width: 128px;
+        enforce_touch_target: false;
+    }
+
+    button14 := ElevatedButton {
+        x: 776px;
+        y: 320px;
+        text: "OK";
+        size: MaterialButtonSize.extra_large;
+        checkable: true;
+        width: 170px;
+        enforce_touch_target: false;
+    }
+
+    button15 := OutlineButton {
+        x: 16px;
+        y: 576px;
+        text: "OK";
+        size: MaterialButtonSize.extra_small;
+        checkable: true;
+        width: 45px;
+        enforce_touch_target: false;
+    }
+
+    button16 := OutlineButton {
+        x: 206px;
+        y: 568px;
+        text: "OK";
+        size: MaterialButtonSize.small;
+        checkable: true;
+        width: 53px;
+        enforce_touch_target: false;
+    }
+
+    button17 := OutlineButton {
+        x: 396px;
+        y: 552px;
+        text: "OK";
+        size: MaterialButtonSize.medium;
+        checkable: true;
+        width: 71px;
+        enforce_touch_target: false;
+    }
+
+    button18 := OutlineButton {
+        x: 586px;
+        y: 512px;
+        text: "OK";
+        size: MaterialButtonSize.large;
+        checkable: true;
+        width: 128px;
+        enforce_touch_target: false;
+    }
+
+    button19 := OutlineButton {
+        x: 776px;
+        y: 472px;
+        text: "OK";
+        size: MaterialButtonSize.extra_large;
+        checkable: true;
+        width: 170px;
+        enforce_touch_target: false;
+    }
+
+    button20 := FilledButton {
+        x: 16px;
+        y: 760px;
+        text: "OK";
+        size: MaterialButtonSize.extra_small;
+        checkable: true;
+        checked: true;
+        width: 45px;
+        enforce_touch_target: false;
+    }
+
+    button21 := FilledButton {
+        x: 206px;
+        y: 752px;
+        text: "OK";
+        size: MaterialButtonSize.small;
+        checkable: true;
+        checked: true;
+        width: 53px;
+        enforce_touch_target: false;
+    }
+
+    button22 := FilledButton {
+        x: 396px;
+        y: 736px;
+        text: "OK";
+        size: MaterialButtonSize.medium;
+        checkable: true;
+        checked: true;
+        width: 71px;
+        enforce_touch_target: false;
+    }
+
+    button23 := FilledButton {
+        x: 586px;
+        y: 696px;
+        text: "OK";
+        size: MaterialButtonSize.large;
+        checkable: true;
+        checked: true;
+        width: 128px;
+        enforce_touch_target: false;
+    }
+
+    button24 := FilledButton {
+        x: 776px;
+        y: 656px;
+        text: "OK";
+        size: MaterialButtonSize.extra_large;
+        checkable: true;
+        checked: true;
+        width: 170px;
+        enforce_touch_target: false;
+    }
+
+    button25 := TonalButton {
+        x: 16px;
+        y: 912px;
+        text: "OK";
+        size: MaterialButtonSize.extra_small;
+        checkable: true;
+        checked: true;
+        width: 45px;
+        enforce_touch_target: false;
+    }
+
+    button26 := TonalButton {
+        x: 206px;
+        y: 904px;
+        text: "OK";
+        size: MaterialButtonSize.small;
+        checkable: true;
+        checked: true;
+        width: 53px;
+        enforce_touch_target: false;
+    }
+
+    button27 := TonalButton {
+        x: 396px;
+        y: 888px;
+        text: "OK";
+        size: MaterialButtonSize.medium;
+        checkable: true;
+        checked: true;
+        width: 71px;
+        enforce_touch_target: false;
+    }
+
+    button28 := TonalButton {
+        x: 586px;
+        y: 848px;
+        text: "OK";
+        size: MaterialButtonSize.large;
+        checkable: true;
+        checked: true;
+        width: 128px;
+        enforce_touch_target: false;
+    }
+
+    button29 := TonalButton {
+        x: 776px;
+        y: 808px;
+        text: "OK";
+        size: MaterialButtonSize.extra_large;
+        checkable: true;
+        checked: true;
+        width: 170px;
+        enforce_touch_target: false;
+    }
+
+    button30 := ElevatedButton {
+        x: 16px;
+        y: 1064px;
+        text: "OK";
+        size: MaterialButtonSize.extra_small;
+        checkable: true;
+        checked: true;
+        width: 45px;
+        enforce_touch_target: false;
+    }
+
+    button31 := ElevatedButton {
+        x: 206px;
+        y: 1056px;
+        text: "OK";
+        size: MaterialButtonSize.small;
+        checkable: true;
+        checked: true;
+        width: 53px;
+        enforce_touch_target: false;
+    }
+
+    button32 := ElevatedButton {
+        x: 396px;
+        y: 1040px;
+        text: "OK";
+        size: MaterialButtonSize.medium;
+        checkable: true;
+        checked: true;
+        width: 71px;
+        enforce_touch_target: false;
+    }
+
+    button33 := ElevatedButton {
+        x: 586px;
+        y: 1000px;
+        text: "OK";
+        size: MaterialButtonSize.large;
+        checkable: true;
+        checked: true;
+        width: 128px;
+        enforce_touch_target: false;
+    }
+
+    button34 := ElevatedButton {
+        x: 776px;
+        y: 960px;
+        text: "OK";
+        size: MaterialButtonSize.extra_large;
+        checkable: true;
+        checked: true;
+        width: 170px;
+        enforce_touch_target: false;
+    }
+
+    button35 := OutlineButton {
+        x: 16px;
+        y: 1216px;
+        text: "OK";
+        size: MaterialButtonSize.extra_small;
+        checkable: true;
+        checked: true;
+        width: 45px;
+        enforce_touch_target: false;
+    }
+
+    button36 := OutlineButton {
+        x: 206px;
+        y: 1208px;
+        text: "OK";
+        size: MaterialButtonSize.small;
+        checkable: true;
+        checked: true;
+        width: 53px;
+        enforce_touch_target: false;
+    }
+
+    button37 := OutlineButton {
+        x: 396px;
+        y: 1192px;
+        text: "OK";
+        size: MaterialButtonSize.medium;
+        checkable: true;
+        checked: true;
+        width: 71px;
+        enforce_touch_target: false;
+    }
+
+    button38 := OutlineButton {
+        x: 586px;
+        y: 1152px;
+        text: "OK";
+        size: MaterialButtonSize.large;
+        checkable: true;
+        checked: true;
+        width: 128px;
+        enforce_touch_target: false;
+    }
+
+    button39 := OutlineButton {
+        x: 776px;
+        y: 1112px;
+        text: "OK";
+        size: MaterialButtonSize.extra_large;
+        checkable: true;
+        checked: true;
+        width: 170px;
+        enforce_touch_target: false;
+    }
+
+}

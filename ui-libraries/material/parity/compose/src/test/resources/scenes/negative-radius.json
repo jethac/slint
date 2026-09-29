@@ -82,19 +82,25 @@
   "type": "canvas",
   "widgets": [
     {
+      "checkable": null,
+      "checked": null,
       "color": "primary-container",
+      "corner": null,
       "enabled": null,
       "height": 72.0,
+      "icon": null,
       "kind": "rect",
       "level": null,
       "radius": 24.0,
       "shape": null,
+      "size": null,
       "slint_overrides": {
         "radius": 8
       },
       "state": null,
       "text": null,
       "width": 120.0,
+      "width_option": null,
       "x": 40.0,
       "y": 24.0
     }

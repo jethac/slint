@@ -79,13 +79,14 @@ class RenderTest(private val sceneName: String, private val density: Int) {
         val tracer = Tracer()
         tracer.noteDensity(density.toFloat())
 
-        // Press emissions the scene's `pressed` widgets registered. The sink
-        // runs them right after its first presented frame — the same point
-        // the Slint driver dispatches //ACTION= (just after the pre-press
-        // baseline frame). Synchronous tryEmit: a coroutine-resume race
-        // would land the press either before frame 0 (ink in the baseline)
-        // or too late.
-        val emitPress = java.util.concurrent.CopyOnWriteArrayList<Runnable>()
+        // Press emissions the scene's `pressed` widgets and timed `actions`
+        // registered, each tagged with its dispatch time (frame index). The
+        // sink runs each due one right after the frame it lands on — `0`s
+        // fire after frame 0, the same point the Slint driver dispatches
+        // untimed //ACTION= (just after the pre-press baseline frame).
+        // Synchronous tryEmit: a coroutine-resume race would land the press
+        // either before frame 0 (ink in the baseline) or too late.
+        val emitPress = java.util.concurrent.CopyOnWriteArrayList<Pair<Long, Runnable>>()
         val host = ComposeView(paparazzi.context)
         host.setContent { SceneContent(scene, robotoFamily(), tracer, emitPress) }
 
@@ -99,9 +100,9 @@ class RenderTest(private val sceneName: String, private val density: Int) {
         val fps = if (motion) 1000 else 20
 
         frames.setSink(java.util.function.BiConsumer { index, image ->
-            if (index == 0) {
-                emitPress.forEach { it.run() }
-            }
+            val due = emitPress.filter { index.toLong() >= it.first }
+            due.forEach { it.second.run() }
+            emitPress.removeAll(due.toSet())
             if (motion && index.toLong() in wanted) {
                 FrameSink.writeFrame(outDir.resolve("frame_${index}ms.png"), image)
             }
@@ -194,9 +195,14 @@ class RenderTest(private val sceneName: String, private val density: Int) {
             xdpi = 160 * density,
             ydpi = 160 * density,
             density = d,
-            // Without LANDSCAPE layoutlib swaps the screen dims for any
-            // scene wider than tall (portrait is the default).
-            orientation = com.android.resources.ScreenOrientation.LANDSCAPE,
+            // layoutlib swaps the screen dims whenever they disagree with
+            // the requested orientation — match the scene's aspect instead
+            // of forcing one.
+            orientation = if (h > w) {
+                com.android.resources.ScreenOrientation.PORTRAIT
+            } else {
+                com.android.resources.ScreenOrientation.LANDSCAPE
+            },
             softButtons = false,
         )
     }

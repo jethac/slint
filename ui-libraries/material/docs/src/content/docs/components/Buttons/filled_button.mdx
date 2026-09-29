@@ -22,18 +22,70 @@ export component Example inherits Window {
 ```
 </CodeSnippetMD>
 
-A `FilledButton` is a button with a solid background color that represents the primary action in a user interface. It's the most prominent button style and should be used sparingly.
+A `FilledButton` is a button with a solid background color that represents the primary action in a user interface.
+It's the most prominent button style and should be used sparingly.
+
+`FilledButton` can also act as a toggle button: set `checkable` and the button springs between its resting shape and its selected shape whenever `checked` changes.
+
+<CodeSnippetMD imagePath="/src/assets/generated/filledbutton-sizes.png" scale="3" imageWidth="400" imageHeight="300" imageAlt="">
+```slint
+import { FilledButton, MaterialButtonSize, MaterialButtonShape } from "@material";
+export component Example inherits Window {
+    width: 380px;
+    height: 280px;
+    background: transparent;
+    VerticalLayout {
+        padding: 20px;
+        spacing: 12px;
+        alignment: center;
+        for s in [MaterialButtonSize.extra-small, MaterialButtonSize.small, MaterialButtonSize.medium, MaterialButtonSize.large, MaterialButtonSize.extra-large]: HorizontalLayout {
+            spacing: 12px;
+            alignment: center;
+            FilledButton { text: "OK"; size: s; }
+            FilledButton { text: "OK"; size: s; button-shape: MaterialButtonShape.square; }
+            FilledButton { text: "OK"; size: s; checkable: true; checked: true; }
+        }
+    }
+}
+```
+</CodeSnippetMD>
 
 ## Properties
+
+### button-shape
+<SlintProperty propName="button-shape" typeName="enum" enumName="MaterialButtonShape" defaultValue="MaterialButtonShape.round">
+The resting container shape: `round` for the fully rounded stadium, `square` for the smaller rounded corner.
+</SlintProperty>
+
+### checkable
+<SlintProperty propName="checkable" typeName="bool">
+Whether the button toggles between a checked and an unchecked state when clicked.
+</SlintProperty>
+
+### checked
+<SlintProperty propName="checked" typeName="bool" propertyVisibility="in-out">
+Whether the button is currently checked.
+The container shape, color, and elevation animate when it changes.
+</SlintProperty>
 
 ### enabled
 <SlintProperty propName="enabled" typeName="bool" defaultValue="true">
 Whether the button is enabled and can be interacted with.
 </SlintProperty>
 
+### enforce-touch-target
+<SlintProperty propName="enforce-touch-target" typeName="bool" defaultValue="true">
+Whether the button extends its touch target to at least 48px when its visual container is smaller.
+</SlintProperty>
+
 ### icon
 <SlintProperty propName="icon" typeName="image">
-An optional icon displayed on the button.
+An optional icon displayed before the text label.
+</SlintProperty>
+
+### size
+<SlintProperty propName="size" typeName="enum" enumName="MaterialButtonSize" defaultValue="MaterialButtonSize.small">
+The size bucket, from `extra-small` (32px) through `extra-large` (136px).
 </SlintProperty>
 
 ### text

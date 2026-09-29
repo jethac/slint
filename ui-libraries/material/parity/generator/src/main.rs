@@ -99,6 +99,12 @@ struct Action {
     x: f64,
     #[serde(default)]
     y: f64,
+    /// Dispatch time within the frame sequence (ms). `0` fires right after
+    /// the pre-gesture baseline frame, as before; a later value lets a
+    /// gesture sequence play out across the timed frames (e.g. a press held
+    /// until a mid-sequence release).
+    #[serde(default)]
+    at: f64,
 }
 
 #[derive(serde::Deserialize, serde::Serialize)]
@@ -116,16 +122,39 @@ struct Widget {
     radius: Option<f64>,
     #[serde(default)]
     text: Option<String>,
+    /// Named icon for `icon-button` kinds or a leading icon on a text
+    /// button: the stem of an svg under `src/ui/icons/` (e.g. `check` for
+    /// `Icons.check`). The generator copies the svg into the Compose
+    /// resources so both sides rasterize the identical path.
+    #[serde(default)]
+    icon: Option<String>,
     #[serde(default)]
     enabled: Option<bool>,
     /// Interaction state the widget starts in: `enabled` (default),
     /// `disabled`, `hovered`, `focused`, or `pressed`. The Compose side sets
-    /// the interaction source directly; the Slint side gets pointer actions
-    /// derived from it (see `widget_actions`).
+    /// the interaction source directly; the Slint side gets `simulate_*`
+    /// properties for hover/press and `key:Tab` actions for focus (see
+    /// `button_props`/`widget_actions`).
     #[serde(default)]
     state: Option<String>,
     #[serde(default)]
     color: Option<String>,
+    /// Button size bucket: `xs`, `s`, `m`, `l`, `xl` (default `s`, the
+    /// upstream `MinHeight`/`smallContainerSize` bucket).
+    #[serde(default)]
+    size: Option<String>,
+    /// Button container corners: `round` (default stadium) or `square`.
+    #[serde(default)]
+    corner: Option<String>,
+    /// Renders the toggle variant of the widget (`checkable` on the Slint
+    /// side, `*ToggleButton` composables upstream).
+    #[serde(default)]
+    checkable: Option<bool>,
+    #[serde(default)]
+    checked: Option<bool>,
+    /// Icon-button container width: `narrow`, `uniform` (default), `wide`.
+    #[serde(default)]
+    width_option: Option<String>,
     /// M3 elevation level (0–5) for `surface` widgets: the Slint side sets
     /// `Elevation.level`, the Compose side sets `Modifier.shadow`'s dp.
     #[serde(default)]
@@ -166,6 +195,24 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             &serde_json::to_string_pretty(&resolved_scene(&scene, &case_rel))?,
             check,
         )?;
+        // Icons the scene uses: the svg is copied next to the font so the
+        // Compose side rasterizes literally the same path the Slint
+        // `Icons.<name>` image does.
+        for w in &scene.widgets {
+            if let Some(icon) = &w.icon {
+                let src = repo_root
+                    .join("ui-libraries/material/src/ui/icons")
+                    .join(format!("{icon}.svg"));
+                let dst = resources_dir
+                    .parent()
+                    .unwrap()
+                    .join("icons")
+                    .join(format!("{icon}.svg"));
+                let svg = std::fs::read_to_string(&src)
+                    .map_err(|e| format!("{}: {e}", src.display()))?;
+                emit_or_check(&dst, &svg, check)?;
+            }
+        }
         scene_names.push(scene.name.clone());
     }
     emit_or_check(&resources_dir.join("index.txt"), &(scene_names.join("\n") + "\n"), check)?;
@@ -396,6 +443,9 @@ fn slint_case(scene: &Scene) -> String {
     for a in scene.actions.iter().chain(widget_actions(scene).iter()) {
         if let Some(key) = a.kind.strip_prefix("key:") {
             writeln!(s, "//ACTION=key:{key}").unwrap();
+        } else if a.at > 0.0 {
+            writeln!(s, "//ACTION={}@{}:{},{}", a.kind, a.at as i64, a.x as i64, a.y as i64)
+                .unwrap();
         } else {
             writeln!(s, "//ACTION={}:{},{}", a.kind, a.x as i64, a.y as i64).unwrap();
         }
@@ -430,8 +480,34 @@ fn slint_case(scene: &Scene) -> String {
     .unwrap();
 
     let mut imports = vec!["MaterialPalette", "MaterialTheme", "MaterialWindow"];
-    if scene.widgets.iter().any(|w| w.kind == "filled-button") {
-        imports.push("FilledButton");
+    let mut needs_icons = false;
+    for w in &scene.widgets {
+        let component = match w.kind.as_str() {
+            "filled-button" => "FilledButton",
+            "tonal-button" => "TonalButton",
+            "elevated-button" => "ElevatedButton",
+            "outlined-button" => "OutlineButton",
+            "text-button" => "TextButton",
+            "icon-button" => "IconButton",
+            "filled-icon-button" => "FilledIconButton",
+            "tonal-icon-button" => "TonalIconButton",
+            "outlined-icon-button" => "OutlineIconButton",
+            // `surface` imports `Elevation`/`MaterialShapes` below instead.
+            "rect" | "surface" => continue,
+            other => panic!("unknown widget kind {other:?}"),
+        };
+        imports.push(component);
+        if w.icon.is_some() {
+            needs_icons = true;
+        }
+        if w.size.is_some() || w.corner.is_some() || w.width_option.is_some() {
+            imports.push("MaterialButtonSize");
+            imports.push("MaterialButtonShape");
+            imports.push("IconButtonWidth");
+        }
+    }
+    if needs_icons {
+        imports.push("Icons");
     }
     if scene.widgets.iter().any(|w| w.kind == "surface") {
         imports.push("Elevation");
@@ -444,6 +520,7 @@ fn slint_case(scene: &Scene) -> String {
         }
     }
     imports.sort();
+    imports.dedup();
     // The Compose side renders text in the variable Roboto under
     // `compose/src/test/resources/fonts/roboto.ttf` — the same file, kept
     // byte-identical by the staleness check above. Import the shared copy
@@ -482,14 +559,12 @@ fn slint_case(scene: &Scene) -> String {
 /// side. Emitted as `//ACTION=` markers plus passed through in the resolved
 /// scene's `actions` so both sides drive the same gesture.
 ///
-/// Slint material buttons take keyboard focus only via Tab navigation —
-/// pointer presses don't steal focus (the FocusScope is size zero). The
-/// pointer determines hover and press: a `pressed` widget's pointer is over
-/// it, so it is necessarily also hovered (pressed wins visually on both
-/// sides); a `focused` widget gets `key:Tab` steps to reach it in the
-/// scene's declaration order. Keyboard actions come first since they don't
-/// move the pointer; the held `press` is emitted last — nothing after it may
-/// move the pointer or the press is cancelled.
+/// `hovered`/`pressed` go through the widget's `simulate_*` properties (see
+/// `button_props`) — the single pointer could only hold one widget in the
+/// state at a time. Slint material buttons take keyboard focus only via
+/// Tab navigation — pointer presses don't steal focus (the FocusScope is
+/// size zero) — so a `focused` widget gets `key:Tab` steps to reach it in
+/// the scene's declaration order.
 fn widget_actions(scene: &Scene) -> Vec<Action> {
     let mut actions = Vec::new();
     // Tab steps walk the focusable widgets in declaration order, starting
@@ -503,22 +578,39 @@ fn widget_actions(scene: &Scene) -> Vec<Action> {
         }
         if w.state.as_deref() == Some("focused") {
             for _ in tabs_emitted..=ordinal {
-                actions.push(Action { kind: "key:Tab".into(), x: 0.0, y: 0.0 });
+                actions.push(Action { kind: "key:Tab".into(), x: 0.0, y: 0.0, at: 0.0 });
             }
             tabs_emitted = ordinal + 1;
         }
         ordinal += 1;
     }
+    // A motion scene animates the state change through its timed frames, so
+    // `hovered`/`pressed` must be a real pointer gesture — a `simulate_*`
+    // property would bind the state at construction and the morph's first
+    // frame would already be flat. The point lands inside every size
+    // bucket's drawn container (XS is 40x32 with a 48dp touch area).
+    if !scene.times.is_empty() {
+        for w in &scene.widgets {
+            let kind = match w.state.as_deref() {
+                Some("pressed") => "press",
+                Some("hovered") => "move",
+                _ => continue,
+            };
+            actions.push(Action {
+                kind: kind.into(),
+                x: w.x + 20.0,
+                y: w.y + 16.0,
+                at: 0.0,
+            });
+        }
+    }
     for w in &scene.widgets {
-        let (x, y) = (w.x + 40.0, w.y + 20.0);
         match w
             .state
             .as_deref()
             .unwrap_or(if w.enabled == Some(false) { "disabled" } else { "enabled" })
         {
-            "hovered" => actions.push(Action { kind: "move".into(), x, y }),
-            "pressed" => actions.push(Action { kind: "press".into(), x, y }),
-            "enabled" | "disabled" | "focused" => {}
+            "hovered" | "pressed" | "enabled" | "disabled" | "focused" => {}
             other => panic!("unknown widget state {other:?}"),
         }
     }
@@ -529,65 +621,117 @@ fn widget_num(v: &serde_json::Value) -> f64 {
     v.as_f64().unwrap_or_else(|| panic!("expected number, got {v}"))
 }
 
+/// `xs`/`s`/`m`/`l`/`xl` → the `MaterialButtonSize` enum variant.
+fn size_variant(size: &str) -> &'static str {
+    match size {
+        "xs" => "extra_small",
+        "s" => "small",
+        "m" => "medium",
+        "l" => "large",
+        "xl" => "extra_large",
+        other => panic!("unknown button size {other:?}"),
+    }
+}
+
+/// The shared property lines every button-family component takes. A
+/// `slint_overrides` entry shadows the widget's authored value — the
+/// negative scenes use it to inject a defect only the Slint side renders.
+fn button_props(w: &Widget, timed: bool) -> String {
+    let mut p = String::new();
+    let over = &w.slint_overrides;
+    let bool_over = |k: &str, authored: Option<bool>| -> bool {
+        over.get(k).and_then(|v| v.as_bool()).unwrap_or(authored.unwrap_or(false))
+    };
+    if let Some(text) = &w.text {
+        writeln!(p, "        text: \"{text}\";").unwrap();
+    }
+    let size = over
+        .get("size")
+        .and_then(|v| v.as_str())
+        .map(str::to_string)
+        .or_else(|| w.size.clone());
+    if let Some(size) = size {
+        writeln!(p, "        size: MaterialButtonSize.{};", size_variant(&size)).unwrap();
+    }
+    let corner = over
+        .get("corner")
+        .and_then(|v| v.as_str())
+        .map(str::to_string)
+        .or_else(|| w.corner.clone());
+    if corner.as_deref() == Some("square") {
+        p.push_str("        button_shape: MaterialButtonShape.square;\n");
+    }
+    if bool_over("checkable", w.checkable) {
+        p.push_str("        checkable: true;\n");
+    }
+    if bool_over("checked", w.checked) {
+        p.push_str("        checked: true;\n");
+    }
+    if bool_over("inline", None) {
+        p.push_str("        inline: true;\n");
+    }
+    let width = over
+        .get("width_option")
+        .and_then(|v| v.as_str())
+        .map(str::to_string)
+        .or_else(|| w.width_option.clone());
+    if let Some(width) = width {
+        writeln!(p, "        width_option: IconButtonWidth.{width};").unwrap();
+    }
+    let icon = over
+        .get("icon")
+        .and_then(|v| v.as_str())
+        .map(str::to_string)
+        .or_else(|| w.icon.clone());
+    if let Some(icon) = icon {
+        writeln!(p, "        icon: Icons.{icon};").unwrap();
+    }
+    if !bool_over("enabled", w.enabled.or(Some(true))) {
+        p.push_str("        enabled: false;\n");
+    }
+    // Pin the drawn width when the scene does (Compose sets `Modifier.width`
+    // the same way) — the corner band's drift term only stays tight when
+    // text-metric drift can't widen the traced bounds.
+    if let Some(width) = w.width {
+        writeln!(p, "        width: {width}px;").unwrap();
+    }
+    // A declared `state` maps to the per-widget state hook — the same
+    // interaction the Compose side emits on the widget's
+    // `InteractionSource`; a pointer-driven `move`/`press` could only ever
+    // hold one widget in the state at a time. Timed scenes get the gesture
+    // from `widget_actions` instead so the morph animates on camera.
+    if !timed {
+        match w.state.as_deref() {
+            Some("hovered") => p.push_str("        simulate_hover: true;\n"),
+            Some("pressed") => p.push_str("        simulate_press: true;\n"),
+            _ => {}
+        }
+    }
+    // The Compose side sets `LocalMinimumInteractiveComponentSize` to 0 —
+    // the scene coordinates place the drawn component on both sides.
+    if !bool_over("enforce_touch_target", None) {
+        p.push_str("        enforce_touch_target: false;\n");
+    }
+    p
+}
+
 fn slint_canvas(s: &mut String, scene: &Scene) {
-    // Buttons are named `button{n}` by count of filled buttons, not widget
-    // index — a backdrop `rect` ahead of a button leaves `button0` intact.
+    // Buttons are named `button{n}` by count of button-family widgets, not
+    // widget index — a backdrop `rect` ahead of a button leaves `button0`
+    // intact.
     let mut buttons = 0;
     let mut surfaces = 0;
     for w in scene.widgets.iter() {
-        match w.kind.as_str() {
-            "filled-button" => {
-                let i = buttons;
-                buttons += 1;
-                writeln!(
-                    s,
-                    "    button{i} := FilledButton {{\n        x: {}px;\n        y: {}px;\n        text: \"{}\";\n{}    }}\n",
-                    w.x as i64,
-                    w.y as i64,
-                    w.text.as_deref().unwrap_or_default(),
-                    if w.enabled == Some(false) {
-                        "        enabled: false;\n".to_string()
-                    } else {
-                        String::new()
-                    }
-                )
-                .unwrap();
-                if let Some(cover) = w.slint_overrides.get("cover") {
-                    // `slint_overrides.cover` paints a rectangle over the
-                    // whole button: an opaque one masks the real fill and
-                    // every state layer, a translucent one adds a second
-                    // overlay. `label` redraws the button text on top so
-                    // the defect stays in the button's body.
-                    let fill = cover["fill"].as_str().unwrap_or("primary");
-                    let fill_expr = if fill.starts_with('#') {
-                        fill.to_lowercase()
-                    } else {
-                        format!("MaterialPalette.{}", fill.replace('-', "_"))
-                    };
-                    let label = if cover["label"].as_bool().unwrap_or(true) {
-                        let label_fill = cover["label_fill"]
-                            .as_str()
-                            .unwrap_or("on-primary")
-                            .replace('-', "_");
-                        format!(
-                            "        Text {{\n            text: \"{}\";\n            color: MaterialPalette.{label_fill};\n            font-family: \"Roboto\";\n            font-weight: 500;\n            font-size: 14px;\n            horizontal-alignment: center;\n            vertical-alignment: center;\n        }}\n",
-                            w.text.as_deref().unwrap_or_default()
-                        )
-                    } else {
-                        String::new()
-                    };
-                    let cover_radius = cover["radius"]
-                        .as_f64()
-                        .map(|r| format!("{r}px"))
-                        .unwrap_or_else(|| format!("button{i}.height / 2"));
-                    writeln!(
-                        s,
-                        "    // Deliberate defect (scene `slint_overrides.cover`).\n    Rectangle {{\n        x: button{i}.x;\n        y: button{i}.y;\n        width: button{i}.width;\n        height: button{i}.height;\n        border-radius: {cover_radius};\n        background: {fill_expr};\n        opacity: {};\n{label}    }}\n",
-                        cover["opacity"].as_f64().unwrap_or(1.0),
-                    )
-                    .unwrap();
-                }
-            }
+        let component = match w.kind.as_str() {
+            "filled-button" => "FilledButton",
+            "tonal-button" => "TonalButton",
+            "elevated-button" => "ElevatedButton",
+            "outlined-button" => "OutlineButton",
+            "text-button" => "TextButton",
+            "icon-button" => "IconButton",
+            "filled-icon-button" => "FilledIconButton",
+            "tonal-icon-button" => "TonalIconButton",
+            "outlined-icon-button" => "OutlineIconButton",
             "surface" => {
                 let i = surfaces;
                 surfaces += 1;
@@ -643,6 +787,7 @@ fn slint_canvas(s: &mut String, scene: &Scene) {
                     )
                     .unwrap();
                 }
+                continue;
             }
             "rect" => {
                 let radius = w
@@ -662,8 +807,64 @@ fn slint_canvas(s: &mut String, scene: &Scene) {
                     w.color.as_deref().unwrap_or("primary").replace('-', "_")
                 )
                 .unwrap();
+                continue;
             }
             other => panic!("unknown widget kind {other:?}"),
+        };
+        let i = buttons;
+        buttons += 1;
+        writeln!(
+            s,
+            "    button{i} := {component} {{\n        x: {}px;\n        y: {}px;\n{}    }}\n",
+            w.x as i64,
+            w.y as i64,
+            button_props(w, !scene.times.is_empty()),
+        )
+        .unwrap();
+        // `TRACE_PROPS` reads properties on the test-case root — forward the
+        // widget's live values through. `container_radius` is the corner
+        // morph's animated value, which every button component exposes.
+        if i == 0 {
+            for prop in &scene.trace_props {
+                let ty = match prop.as_str() {
+                    "container_radius" => "length",
+                    other => panic!("no forwarding type known for trace prop {other:?}"),
+                };
+                writeln!(s, "    out property <{ty}> {prop}: button{i}.{prop};\n").unwrap();
+            }
+        }
+        if let Some(cover) = w.slint_overrides.get("cover") {
+            // `slint_overrides.cover` paints a rectangle over the whole
+            // widget: an opaque one masks the real fill and every state
+            // layer (and the focus ring, drawn last), a translucent one
+            // adds a second overlay. `label` redraws the button text on
+            // top so the defect stays in the button's body.
+            let fill = cover["fill"].as_str().unwrap_or("primary");
+            let fill_expr = if fill.starts_with('#') {
+                fill.to_lowercase()
+            } else {
+                format!("MaterialPalette.{}", fill.replace('-', "_"))
+            };
+            let label = if cover["label"].as_bool().unwrap_or(true) {
+                let label_fill =
+                    cover["label_fill"].as_str().unwrap_or("on-primary").replace('-', "_");
+                format!(
+                    "        Text {{\n            text: \"{}\";\n            color: MaterialPalette.{label_fill};\n            font-family: \"Roboto\";\n            font-weight: 500;\n            font-size: 14px;\n            horizontal-alignment: center;\n            vertical-alignment: center;\n        }}\n",
+                    w.text.as_deref().unwrap_or_default()
+                )
+            } else {
+                String::new()
+            };
+            let cover_radius = cover["radius"]
+                .as_f64()
+                .map(|r| format!("{r}px"))
+                .unwrap_or_else(|| format!("button{i}.height / 2"));
+            writeln!(
+                s,
+                "    // Deliberate defect (scene `slint_overrides.cover`).\n    Rectangle {{\n        x: button{i}.x;\n        y: button{i}.y;\n        width: button{i}.width;\n        height: button{i}.height;\n        border-radius: {cover_radius};\n        background: {fill_expr};\n        opacity: {};\n{label}    }}\n",
+                cover["opacity"].as_f64().unwrap_or(1.0),
+            )
+            .unwrap();
         }
     }
 }

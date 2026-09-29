@@ -3,6 +3,7 @@ ABGR
 accentify
 accum
 actionchip
+ACTUALS
 adipiscing
 Adressliste
 aiohttp
@@ -255,6 +256,7 @@ fexceptions
 figsize
 fileaccess
 filledbutton
+fillediconbutton
 filterchip
 Fira
 FLASHMODE
@@ -295,8 +297,8 @@ gethighcontrast
 getifs
 getpid
 getrandom
-ghostish
 Ghostish
+ghostish
 globalfun
 globallogic
 Globus
@@ -339,6 +341,7 @@ htmlparser
 httparse
 hvac
 hypot
+iconbutton
 iconbuttonitem
 iconfont
 IDXGI
@@ -547,6 +550,8 @@ optipng
 ospi
 Ostromentsky
 othercomp
+outlinebutton
+outlineiconbutton
 ovmf
 PAKE
 Pantone
@@ -777,8 +782,10 @@ Tlink
 Tlinkall
 tmgrammar
 toctree
+toggleable
 tomllib
 tonalbutton
+tonaliconbutton
 toolkits
 toolong
 TOPLEVEL
@@ -789,6 +796,7 @@ transcendentals
 trippable
 trunc
 tungstenite
+tweens
 typealias
 typedoc
 typeregister
@@ -815,6 +823,7 @@ unpic
 Unpremul
 unpremultiply
 unsendable
+untimed
 usbc
 usecases
 userconfig
@@ -864,8 +873,8 @@ wordlike
 WQXGA
 writeback
 WRONLY
-Wsmeans
 wsmeans
+Wsmeans
 xbuild
 xcarchive
 xcassets
@@ -878,10 +887,8 @@ Xiaolin
 xlib
 xmark
 XOPQ
-XOPQ
 Xrgb
 xshell
-XTRA
 XTRA
 xxaaxx
 YOPQ

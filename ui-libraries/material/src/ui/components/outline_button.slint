@@ -1,42 +1,94 @@
 // Copyright © SixtyFPS GmbH <info@slint.dev>
 // SPDX-License-Identifier: MIT
 
-import { BaseButton } from "./base_button.slint";
-import { MaterialTypography } from "../styling/material_typography.slint";
-import { MaterialPalette } from "../styling/material_palette.slint";
+import { MaterialButtonBase } from "./button_base.slint";
+import { MaterialButtonMetrics, MaterialButtonShape, MaterialButtonSize } from "./button_metrics.slint";
+import { OutlinedButtonTokens } from "../styling/generated/material_component_tokens.slint";
 
+/// A medium-emphasis button with a 1px border — the upstream
+/// `OutlinedButton`, or `OutlinedToggleButton` when `checkable`.
 export component OutlineButton {
-    in property <image> icon <=> base.icon;
-    in property <string> text <=> base.text;
-    in property <bool> enabled <=> base.enabled;
-    in property <string> tooltip <=> base.tooltip;
+    in property <string> text;
+    /// An optional leading icon.
+    in property <image> icon;
+    /// One of the five container heights (32/40/56/96/136).
+    in property <MaterialButtonSize> size: MaterialButtonSize.small;
+    /// `round` is the resting stadium shape; `square` the squarer variant.
+    in property <MaterialButtonShape> button_shape: MaterialButtonShape.round;
+    /// Turn the button into a toggle: `checked` becomes the selected state.
+    in property <bool> checkable;
+    in-out property <bool> checked;
+    in property <bool> enabled: true;
+    in property <string> tooltip;
+    /// Reserve a 48x48 touch target around the visual (default on).
+    in property <bool> enforce_touch_target: true;
+    /// See `MaterialButtonBase.simulate_hover` / `simulate_press` —
+    /// the parity harness's per-widget state hook.
+    in property <bool> simulate_hover;
+    in property <bool> simulate_press;
 
     callback clicked <=> base.clicked;
 
-    accessible-role: button;
-    accessible-enabled: root.enabled;
+    out property <bool> has_focus <=> base.has_focus;
+    out property <bool> pressed <=> base.pressed;
+    out property <bool> has_hover <=> base.has_hover;
+    /// The live corner radius — for the parity harness's motion trace.
+    out property <length> container_radius <=> base.container_radius;
+
     accessible-label: root.text == "" ? root.tooltip : root.text;
+    accessible-role: AccessibleRole.button;
+    accessible-enabled: root.enabled;
+    accessible-checkable: root.checkable;
+    accessible-checked <=> root.checked;
     accessible-action-default => { base.clicked(); }
 
-    base := BaseButton {
-        border_radius: border.border_radius;
-        color: MaterialPalette.primary;
-    }
+    min_width: base.min_width;
+    min_height: base.min_height;
+    preferred_width: base.preferred_width;
+    preferred_height: base.preferred_height;
 
-    border := Rectangle {
-        border_radius: root.height / 2;
-        border_width: 1px;
-        border_color: MaterialPalette.outline;
+    base := MaterialButtonBase {
         width: 100%;
         height: 100%;
-    }
+        checkable: root.checkable;
+        checked <=> root.checked;
+        enabled: root.enabled;
+        tooltip: root.tooltip;
+        enforce_touch_target: root.enforce_touch_target;
+        simulate_hover: root.simulate_hover;
+        simulate_press: root.simulate_press;
 
-    states [
-        disabled when !root.enabled : {
-            base.color: MaterialPalette.on_surface;
-            base.transparent_background: true;
-            border.border_color: MaterialPalette.on_surface;
-            border.opacity: MaterialPalette.state_layer_opacity_hover;
-        }
-    ]
+        container_height: MaterialButtonMetrics.container-height(root.size);
+        resting_radius: MaterialButtonMetrics.resting-radius(root.size, root.button_shape, self.container_height);
+        pressed_radius: MaterialButtonMetrics.pressed-radius(root.size, root.checkable);
+        checked_radius: MaterialButtonMetrics.checked-radius(root.size);
+        min_button_width: root.checkable ? 0px : 58px; // `ButtonDefaults.MinWidth`
+        fast_spatial: root.checkable;
+
+        container_color: root.checked ? OutlinedButtonTokens.selected_container_color : transparent;
+        content_color: root.checked ? OutlinedButtonTokens.selected_label_text_color : OutlinedButtonTokens.label_text_color;
+        // `OutlinedToggleButtonDefaults`: the disabled selected container is
+        // `DisabledOutlineColor @ DisabledContainerOpacity`, transparent
+        // otherwise.
+        disabled_container_color: root.checkable && root.checked ?
+            OutlinedButtonTokens.disabled_outline_color.with_alpha(OutlinedButtonTokens.disabled_container_opacity) : transparent;
+        disabled_content_color: OutlinedButtonTokens.disabled_label_text_color.with_alpha(OutlinedButtonTokens.disabled_label_text_opacity);
+        border_color: OutlinedButtonTokens.outline_color;
+        disabled_border_color: OutlinedButtonTokens.disabled_outline_color.with_alpha(OutlinedButtonTokens.disabled_container_opacity);
+        border_width: MaterialButtonMetrics.button-outline-width();
+        elevation_default: 0;
+        elevation_pressed: 0;
+        elevation_hovered: 0;
+        elevation_focused: 0;
+        elevation_disabled: 0;
+
+        text: root.text;
+        icon: root.icon;
+        checked_icon: root.icon;
+        padding_horizontal: MaterialButtonMetrics.horizontal-padding(root.size);
+        padding_vertical: MaterialButtonMetrics.vertical-padding(root.size);
+        icon_size: MaterialButtonMetrics.icon-size(root.size);
+        icon_spacing: MaterialButtonMetrics.icon-spacing(root.size);
+        label_style: MaterialButtonMetrics.label-style(root.size, root.checkable);
+    }
 }
