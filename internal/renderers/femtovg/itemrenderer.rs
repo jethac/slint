@@ -724,6 +724,7 @@ impl<'a, R: femtovg::Renderer + TextureImporter> ItemRenderer for GLItemRenderer
     /// (`i_slint_core::graphics::shadow`). Each layer is tessellated into an
     /// A8 mask bounded by the shadow's extent in device space, tinted to the
     /// layer's color, and drawn as a premultiplied image.
+    #[allow(clippy::unnecessary_cast)] // Coord
     fn draw_elevation_shadow(
         &mut self,
         shadow_item: Pin<&i_slint_core::items::ElevationShadow>,
@@ -734,7 +735,7 @@ impl<'a, R: femtovg::Renderer + TextureImporter> ItemRenderer for GLItemRenderer
 
         let geom = LogicalRect::from(size);
         let scale_factor = self.scale_factor.get();
-        let z = shadow_item.elevation().get() * scale_factor;
+        let z = shadow_item.elevation().get() as f32 * scale_factor;
         if z < shadow::MIN_HEIGHT {
             return;
         }
