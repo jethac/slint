@@ -58,6 +58,7 @@ Baselining
 baudrate
 bdata
 Belappetit
+Berlow
 beziers
 bezpath
 BGRA
@@ -310,6 +311,9 @@ glyphclusters
 gnueabihf
 goldens
 GRAD
+googlefonts
+googlesans
+googlesansflex
 grcov
 Grimme
 Grotesk
@@ -344,6 +348,7 @@ iconbuttonitem
 iconfont
 IDXGI
 idxgiadapter
+Ilya
 imac
 imafc
 imageprop
@@ -536,6 +541,7 @@ nullopt
 numpy
 NUMS
 Nunito
+nushu
 NVIC
 nvim
 O_WRONLY
@@ -548,6 +554,7 @@ Olguin's
 opsz
 optipng
 ospi
+Ostromentsky
 othercomp
 ovmf
 pagefind
@@ -642,6 +649,7 @@ Ringbuffer
 rlib
 rlibs
 Roboto
+robotoflex
 RODATA
 roundings
 roundoff
@@ -652,6 +660,7 @@ rspolib
 rsvg
 rtkapplcdms
 rtti
+Ruderman
 rustattr
 rustembedded
 rustls
@@ -727,6 +736,7 @@ strs
 struc
 structprop
 structval
+Strukov
 strvalue
 styleable
 styledprop
@@ -769,6 +779,7 @@ theglobalprop
 thirdparty
 thumbsup
 thumbv
+tifinagh
 tikv
 timepickerpopup
 Tisch
@@ -834,6 +845,7 @@ verts
 VGWGPU
 viewports
 virt
+Vlachou
 vlayout
 vref
 vscodeversion
@@ -883,8 +895,10 @@ xfixes
 Xiaolin
 xlib
 xmark
+XOPQ
 Xrgb
 xshell
+XTRA
 xxaaxx
 YOPQ
 YTAS
@@ -893,6 +907,7 @@ YTFI
 YTLC
 YTUC
 yoyo
+Yury
 zaimoku
 Zbuild
 zephyrproject
