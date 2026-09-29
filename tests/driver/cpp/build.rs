@@ -20,11 +20,16 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("cargo:rustc-env=HOST={}", std::env::var("HOST").unwrap());
     println!("cargo:rustc-env=OPT_LEVEL={}", std::env::var("OPT_LEVEL").unwrap());
 
-    // target/{debug|release}/build/package/out/ -> target/{debug|release}
-    let mut target_dir = PathBuf::from(std::env::var("OUT_DIR").unwrap());
-    target_dir.pop();
-    target_dir.pop();
-    target_dir.pop();
+    // OUT_DIR is target/{debug|release}/build/package/<fingerprint>/out, but
+    // cargo has moved it one level deeper before; walk up to the profile dir
+    // instead of assuming a fixed depth.
+    let out_dir = PathBuf::from(std::env::var("OUT_DIR").unwrap());
+    let target_dir = out_dir
+        .ancestors()
+        .find(|dir| {
+            matches!(dir.file_name().and_then(|name| name.to_str()), Some("debug" | "release"))
+        })
+        .expect("OUT_DIR is inside the cargo target directory");
 
     println!("cargo:rustc-env=CPP_LIB_PATH={}/deps", target_dir.display());
 
