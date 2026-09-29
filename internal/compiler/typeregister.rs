@@ -238,6 +238,15 @@ pub const RESERVED_DROP_SHADOW_PROPERTIES: &[(&str, Type)] = &[
     ("drop-shadow-color", Type::Color),
 ];
 
+/// The element-level properties lowered to an `ElevationShadow` element. They
+/// are also listed in `RESERVED_OTHER_PROPERTIES` so every element accepts
+/// them; this subset is what `lower_shadows` consumes.
+pub const RESERVED_ELEVATION_SHADOW_PROPERTIES: &[(&str, Type)] = &[
+    ("elevation", Type::LogicalLength),
+    ("ambient-shadow-color", Type::Color),
+    ("spot-shadow-color", Type::Color),
+];
+
 pub const RESERVED_INNER_SHADOW_PROPERTIES: &[(&str, Type)] = &[
     ("inner-shadow-offset-x", Type::LogicalLength),
     ("inner-shadow-offset-y", Type::LogicalLength),

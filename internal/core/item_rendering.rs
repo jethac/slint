@@ -648,6 +648,12 @@ pub trait ItemRenderer {
         _self_rc: &ItemRc,
         _size: LogicalSize,
     );
+    fn draw_elevation_shadow(
+        &mut self,
+        elevation_shadow: Pin<&ElevationShadow>,
+        _self_rc: &ItemRc,
+        _size: LogicalSize,
+    );
     fn visit_opacity(
         &mut self,
         opacity_item: Pin<&Opacity>,
