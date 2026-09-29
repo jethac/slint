@@ -186,12 +186,20 @@ pub unsafe extern "C" fn slint_shapes_custom(
     roundings: *const f32,
     rounding_count: usize,
     repetitions: i32,
+    center_x: f32,
+    center_y: f32,
     mirror: bool,
     out: *mut c_void,
 ) {
     let vertices = unsafe { flat_to_points(coords, coord_count) };
     let roundings = unsafe { flat_to_roundings(roundings, rounding_count) };
-    let shape = api::custom_shape(&vertices, &roundings, repetitions, mirror);
+    let shape = api::custom_shape(
+        &vertices,
+        &roundings,
+        repetitions,
+        crate::api::LogicalPosition::new(center_x, center_y),
+        mirror,
+    );
     unsafe { core::ptr::write(out as *mut Shape, shape) };
 }
 

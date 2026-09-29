@@ -5551,9 +5551,14 @@ fn compile_builtin_function_call(
             quote!(slint::shapes::pill_star(#n as usize, #w as f32, #h as f32, #ir as f32, #r))
         }
         BuiltinFunction::ShapesCustom => {
-            let [v, r, reps, mirror] =
-                [a.next().unwrap(), a.next().unwrap(), a.next().unwrap(), a.next().unwrap()];
-            quote!(slint::shapes::custom(&#v, &#r, #reps as i32, #mirror))
+            let [v, r, reps, center, mirror] = [
+                a.next().unwrap(),
+                a.next().unwrap(),
+                a.next().unwrap(),
+                a.next().unwrap(),
+                a.next().unwrap(),
+            ];
+            quote!(slint::shapes::custom(&#v, &#r, #reps as i32, #center, #mirror))
         }
         BuiltinFunction::ShapesNormalized => {
             let s = a.next().unwrap();
