@@ -25,6 +25,9 @@ export component TestCase inherits Rectangle {
         width: 40phx;
         height: 40phx;
         shape: root.square ? root.rect40 : root.circle;
+        // fill stretches the unit circle's tight bounds to the 40x40 area:
+        // the corners fall outside the outline.
+        shape-fit: ShapeFit.fill;
         clicked => { clicks += 1; }
     }
 

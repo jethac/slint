@@ -104,6 +104,15 @@ struct ShapeFeature
 /// floats per cubic (anchor0, control0, control1, anchor1).
 struct Shape
 {
+    /// Copies the `#[repr(C)]` FFI twin (`cbindgen_private::Shape`), the
+    /// storage type of `shape` properties on native items — the layouts
+    /// match by construction, so binding a native `shape` property to a
+    /// `Property<Shape>` assigns through here.
+    Shape(const cbindgen_private::Shape &other)
+    {
+        *this = *reinterpret_cast<const Shape *>(&other);
+    }
+    Shape() = default;
     /// The cubic Bézier outline: 8 floats per cubic.
     const SharedVector<float> &cubics() const { return cubics_; }
     /// The feature segmentation of the outline.
