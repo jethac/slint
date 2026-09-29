@@ -1,0 +1,493 @@
+{
+  "name": "toggle-buttons",
+  "type": "canvas",
+  "parity": "static",
+  "size": [
+    966,
+    1248
+  ],
+  "densities": [
+    1,
+    2
+  ],
+  "theme": {
+    "seed": "6750A4",
+    "variant": "tonal-spot",
+    "spec": "spec2025",
+    "platform": "phone",
+    "dark": false,
+    "contrast": 0.0
+  },
+  "fonts": {
+    "plain": "Roboto",
+    "brand": "Roboto"
+  },
+  "widgets": [
+    {
+      "kind": "filled-button",
+      "x": 16,
+      "y": 120,
+      "text": "OK",
+      "size": "xs",
+      "checkable": true,
+      "width": 45
+    },
+    {
+      "kind": "filled-button",
+      "x": 206,
+      "y": 112,
+      "text": "OK",
+      "size": "s",
+      "checkable": true,
+      "width": 53
+    },
+    {
+      "kind": "filled-button",
+      "x": 396,
+      "y": 96,
+      "text": "OK",
+      "size": "m",
+      "checkable": true,
+      "width": 71
+    },
+    {
+      "kind": "filled-button",
+      "x": 586,
+      "y": 56,
+      "text": "OK",
+      "size": "l",
+      "checkable": true,
+      "width": 128
+    },
+    {
+      "kind": "filled-button",
+      "x": 776,
+      "y": 16,
+      "text": "OK",
+      "size": "xl",
+      "checkable": true,
+      "width": 170
+    },
+    {
+      "kind": "tonal-button",
+      "x": 16,
+      "y": 272,
+      "text": "OK",
+      "size": "xs",
+      "checkable": true,
+      "width": 45
+    },
+    {
+      "kind": "tonal-button",
+      "x": 206,
+      "y": 264,
+      "text": "OK",
+      "size": "s",
+      "checkable": true,
+      "width": 53
+    },
+    {
+      "kind": "tonal-button",
+      "x": 396,
+      "y": 248,
+      "text": "OK",
+      "size": "m",
+      "checkable": true,
+      "width": 71
+    },
+    {
+      "kind": "tonal-button",
+      "x": 586,
+      "y": 208,
+      "text": "OK",
+      "size": "l",
+      "checkable": true,
+      "width": 128
+    },
+    {
+      "kind": "tonal-button",
+      "x": 776,
+      "y": 168,
+      "text": "OK",
+      "size": "xl",
+      "checkable": true,
+      "width": 170
+    },
+    {
+      "kind": "elevated-button",
+      "x": 16,
+      "y": 424,
+      "text": "OK",
+      "size": "xs",
+      "checkable": true,
+      "width": 45
+    },
+    {
+      "kind": "elevated-button",
+      "x": 206,
+      "y": 416,
+      "text": "OK",
+      "size": "s",
+      "checkable": true,
+      "width": 53
+    },
+    {
+      "kind": "elevated-button",
+      "x": 396,
+      "y": 400,
+      "text": "OK",
+      "size": "m",
+      "checkable": true,
+      "width": 71
+    },
+    {
+      "kind": "elevated-button",
+      "x": 586,
+      "y": 360,
+      "text": "OK",
+      "size": "l",
+      "checkable": true,
+      "width": 128
+    },
+    {
+      "kind": "elevated-button",
+      "x": 776,
+      "y": 320,
+      "text": "OK",
+      "size": "xl",
+      "checkable": true,
+      "width": 170
+    },
+    {
+      "kind": "outlined-button",
+      "x": 16,
+      "y": 576,
+      "text": "OK",
+      "size": "xs",
+      "checkable": true,
+      "width": 45
+    },
+    {
+      "kind": "outlined-button",
+      "x": 206,
+      "y": 568,
+      "text": "OK",
+      "size": "s",
+      "checkable": true,
+      "width": 53
+    },
+    {
+      "kind": "outlined-button",
+      "x": 396,
+      "y": 552,
+      "text": "OK",
+      "size": "m",
+      "checkable": true,
+      "width": 71
+    },
+    {
+      "kind": "outlined-button",
+      "x": 586,
+      "y": 512,
+      "text": "OK",
+      "size": "l",
+      "checkable": true,
+      "width": 128
+    },
+    {
+      "kind": "outlined-button",
+      "x": 776,
+      "y": 472,
+      "text": "OK",
+      "size": "xl",
+      "checkable": true,
+      "width": 170
+    },
+    {
+      "kind": "filled-button",
+      "x": 16,
+      "y": 760,
+      "text": "OK",
+      "size": "xs",
+      "checkable": true,
+      "checked": true,
+      "width": 45
+    },
+    {
+      "kind": "filled-button",
+      "x": 206,
+      "y": 752,
+      "text": "OK",
+      "size": "s",
+      "checkable": true,
+      "checked": true,
+      "width": 53
+    },
+    {
+      "kind": "filled-button",
+      "x": 396,
+      "y": 736,
+      "text": "OK",
+      "size": "m",
+      "checkable": true,
+      "checked": true,
+      "width": 71
+    },
+    {
+      "kind": "filled-button",
+      "x": 586,
+      "y": 696,
+      "text": "OK",
+      "size": "l",
+      "checkable": true,
+      "checked": true,
+      "width": 128
+    },
+    {
+      "kind": "filled-button",
+      "x": 776,
+      "y": 656,
+      "text": "OK",
+      "size": "xl",
+      "checkable": true,
+      "checked": true,
+      "width": 170
+    },
+    {
+      "kind": "tonal-button",
+      "x": 16,
+      "y": 912,
+      "text": "OK",
+      "size": "xs",
+      "checkable": true,
+      "checked": true,
+      "width": 45
+    },
+    {
+      "kind": "tonal-button",
+      "x": 206,
+      "y": 904,
+      "text": "OK",
+      "size": "s",
+      "checkable": true,
+      "checked": true,
+      "width": 53
+    },
+    {
+      "kind": "tonal-button",
+      "x": 396,
+      "y": 888,
+      "text": "OK",
+      "size": "m",
+      "checkable": true,
+      "checked": true,
+      "width": 71
+    },
+    {
+      "kind": "tonal-button",
+      "x": 586,
+      "y": 848,
+      "text": "OK",
+      "size": "l",
+      "checkable": true,
+      "checked": true,
+      "width": 128
+    },
+    {
+      "kind": "tonal-button",
+      "x": 776,
+      "y": 808,
+      "text": "OK",
+      "size": "xl",
+      "checkable": true,
+      "checked": true,
+      "width": 170
+    },
+    {
+      "kind": "elevated-button",
+      "x": 16,
+      "y": 1064,
+      "text": "OK",
+      "size": "xs",
+      "checkable": true,
+      "checked": true,
+      "width": 45
+    },
+    {
+      "kind": "elevated-button",
+      "x": 206,
+      "y": 1056,
+      "text": "OK",
+      "size": "s",
+      "checkable": true,
+      "checked": true,
+      "width": 53
+    },
+    {
+      "kind": "elevated-button",
+      "x": 396,
+      "y": 1040,
+      "text": "OK",
+      "size": "m",
+      "checkable": true,
+      "checked": true,
+      "width": 71
+    },
+    {
+      "kind": "elevated-button",
+      "x": 586,
+      "y": 1000,
+      "text": "OK",
+      "size": "l",
+      "checkable": true,
+      "checked": true,
+      "width": 128
+    },
+    {
+      "kind": "elevated-button",
+      "x": 776,
+      "y": 960,
+      "text": "OK",
+      "size": "xl",
+      "checkable": true,
+      "checked": true,
+      "width": 170
+    },
+    {
+      "kind": "outlined-button",
+      "x": 16,
+      "y": 1216,
+      "text": "OK",
+      "size": "xs",
+      "checkable": true,
+      "checked": true,
+      "width": 45
+    },
+    {
+      "kind": "outlined-button",
+      "x": 206,
+      "y": 1208,
+      "text": "OK",
+      "size": "s",
+      "checkable": true,
+      "checked": true,
+      "width": 53
+    },
+    {
+      "kind": "outlined-button",
+      "x": 396,
+      "y": 1192,
+      "text": "OK",
+      "size": "m",
+      "checkable": true,
+      "checked": true,
+      "width": 71
+    },
+    {
+      "kind": "outlined-button",
+      "x": 586,
+      "y": 1152,
+      "text": "OK",
+      "size": "l",
+      "checkable": true,
+      "checked": true,
+      "width": 128
+    },
+    {
+      "kind": "outlined-button",
+      "x": 776,
+      "y": 1112,
+      "text": "OK",
+      "size": "xl",
+      "checkable": true,
+      "checked": true,
+      "width": 170
+    }
+  ],
+  "trace_elements": [
+    "button0",
+    "button1",
+    "button2",
+    "button3",
+    "button4",
+    "button5",
+    "button6",
+    "button7",
+    "button8",
+    "button9",
+    "button10",
+    "button11",
+    "button12",
+    "button13",
+    "button14",
+    "button15",
+    "button16",
+    "button17",
+    "button18",
+    "button19",
+    "button20",
+    "button21",
+    "button22",
+    "button23",
+    "button24",
+    "button25",
+    "button26",
+    "button27",
+    "button28",
+    "button29",
+    "button30",
+    "button31",
+    "button32",
+    "button33",
+    "button34",
+    "button35",
+    "button36",
+    "button37",
+    "button38",
+    "button39"
+  ],
+  "trace_props": [],
+  "xfail_text": "issue #28: Slint ceils text layout widths where Compose keeps fractional advances",
+  "mask_decor": {
+    "button30": [
+      0,
+      2000
+    ],
+    "button31": [
+      0,
+      2000
+    ],
+    "button32": [
+      0,
+      2000
+    ],
+    "button33": [
+      0,
+      2000
+    ],
+    "button34": [
+      0,
+      2000
+    ],
+    "button10": [
+      0,
+      2000
+    ],
+    "button11": [
+      0,
+      2000
+    ],
+    "button12": [
+      0,
+      2000
+    ],
+    "button13": [
+      0,
+      2000
+    ],
+    "button14": [
+      0,
+      2000
+    ]
+  }
+}

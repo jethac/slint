@@ -1,0 +1,47 @@
+{
+    "name": "negative-button-press-morph",
+    "type": "canvas",
+    "parity": "negative",
+    "negative_note": "the covering rectangle repaints the pressed button at its resting 28px radius \u2014 a corner that fails to morph on press must fail",
+    "size": [
+        240,
+        96
+    ],
+    "densities": [
+        1,
+        2
+    ],
+    "theme": {
+        "seed": "6750A4",
+        "variant": "tonal-spot",
+        "spec": "spec2025",
+        "platform": "phone",
+        "dark": false,
+        "contrast": 0.0
+    },
+    "fonts": {
+        "plain": "Roboto",
+        "brand": "Roboto"
+    },
+    "widgets": [
+        {
+            "kind": "filled-button",
+            "x": 16,
+            "y": 20,
+            "text": "Label",
+            "size": "m",
+            "state": "pressed",
+            "slint_overrides": {
+                "cover": {
+                    "fill": "primary",
+                    "radius": 28
+                }
+            },
+            "width": 86
+        }
+    ],
+    "trace_elements": [
+        "button0"
+    ],
+    "trace_props": []
+}

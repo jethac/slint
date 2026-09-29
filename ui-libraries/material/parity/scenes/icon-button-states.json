@@ -1,0 +1,170 @@
+{
+    "name": "icon-button-states",
+    "type": "canvas",
+    "parity": "static",
+    "size": [
+        368,
+        240
+    ],
+    "densities": [
+        1,
+        2
+    ],
+    "theme": {
+        "seed": "6750A4",
+        "variant": "tonal-spot",
+        "spec": "spec2025",
+        "platform": "phone",
+        "dark": false,
+        "contrast": 0.0
+    },
+    "fonts": {
+        "plain": "Roboto",
+        "brand": "Roboto"
+    },
+    "widgets": [
+        {
+            "kind": "icon-button",
+            "x": 16,
+            "y": 16,
+            "icon": "check",
+            "size": "s"
+        },
+        {
+            "kind": "icon-button",
+            "x": 104,
+            "y": 16,
+            "icon": "check",
+            "size": "s",
+            "state": "hovered"
+        },
+        {
+            "kind": "icon-button",
+            "x": 192,
+            "y": 16,
+            "icon": "check",
+            "size": "s",
+            "state": "pressed"
+        },
+        {
+            "kind": "icon-button",
+            "x": 280,
+            "y": 16,
+            "icon": "check",
+            "size": "s",
+            "enabled": false
+        },
+        {
+            "kind": "filled-icon-button",
+            "x": 16,
+            "y": 72,
+            "icon": "check",
+            "size": "s"
+        },
+        {
+            "kind": "filled-icon-button",
+            "x": 104,
+            "y": 72,
+            "icon": "check",
+            "size": "s",
+            "state": "hovered"
+        },
+        {
+            "kind": "filled-icon-button",
+            "x": 192,
+            "y": 72,
+            "icon": "check",
+            "size": "s",
+            "state": "pressed"
+        },
+        {
+            "kind": "filled-icon-button",
+            "x": 280,
+            "y": 72,
+            "icon": "check",
+            "size": "s",
+            "enabled": false
+        },
+        {
+            "kind": "tonal-icon-button",
+            "x": 16,
+            "y": 128,
+            "icon": "check",
+            "size": "s"
+        },
+        {
+            "kind": "tonal-icon-button",
+            "x": 104,
+            "y": 128,
+            "icon": "check",
+            "size": "s",
+            "state": "hovered"
+        },
+        {
+            "kind": "tonal-icon-button",
+            "x": 192,
+            "y": 128,
+            "icon": "check",
+            "size": "s",
+            "state": "pressed"
+        },
+        {
+            "kind": "tonal-icon-button",
+            "x": 280,
+            "y": 128,
+            "icon": "check",
+            "size": "s",
+            "enabled": false
+        },
+        {
+            "kind": "outlined-icon-button",
+            "x": 16,
+            "y": 184,
+            "icon": "check",
+            "size": "s"
+        },
+        {
+            "kind": "outlined-icon-button",
+            "x": 104,
+            "y": 184,
+            "icon": "check",
+            "size": "s",
+            "state": "hovered"
+        },
+        {
+            "kind": "outlined-icon-button",
+            "x": 192,
+            "y": 184,
+            "icon": "check",
+            "size": "s",
+            "state": "pressed"
+        },
+        {
+            "kind": "outlined-icon-button",
+            "x": 280,
+            "y": 184,
+            "icon": "check",
+            "size": "s",
+            "enabled": false
+        }
+    ],
+    "trace_elements": [
+        "button0",
+        "button1",
+        "button2",
+        "button3",
+        "button4",
+        "button5",
+        "button6",
+        "button7",
+        "button8",
+        "button9",
+        "button10",
+        "button11",
+        "button12",
+        "button13",
+        "button14",
+        "button15"
+    ],
+    "trace_props": []
+}

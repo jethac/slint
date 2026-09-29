@@ -4,6 +4,9 @@
 pluginManagement {
     repositories {
         google()
+        // Google's read-only mirror of Maven Central: repo.maven.apache.org
+        // rate-limits build agents, the mirror does not.
+        maven("https://maven-central.storage-download.googleapis.com/maven2/")
         mavenCentral()
         gradlePluginPortal()
     }
@@ -12,6 +15,7 @@ pluginManagement {
 dependencyResolutionManagement {
     repositories {
         google()
+        maven("https://maven-central.storage-download.googleapis.com/maven2/")
         mavenCentral()
     }
 }

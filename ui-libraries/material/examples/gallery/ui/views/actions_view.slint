@@ -31,6 +31,9 @@ import {
     ModalBottomSheet,
     MaterialText,
     MaterialStyleMetrics,
+    MaterialButtonSize,
+    MaterialButtonShape,
+    IconButtonWidth,
     HorizontalDivider,
     VerticalDivider,
     Badge,
@@ -50,6 +53,18 @@ import { MainWindowAdapter } from "../main_window_adapter.slint";
 import { FilledIcons, OutlinedIcons } from "../icons.slint";
 
 export component ActionsView {
+    property <[MaterialButtonSize]> button_sizes: [
+        MaterialButtonSize.extra_small,
+        MaterialButtonSize.small,
+        MaterialButtonSize.medium,
+        MaterialButtonSize.large,
+        MaterialButtonSize.extra_large,
+    ];
+    property <[MaterialButtonShape]> button_shapes: [MaterialButtonShape.round, MaterialButtonShape.square];
+    property <[string]> shape_labels: ["round", "square"];
+    property <[IconButtonWidth]> icon_widths: [IconButtonWidth.narrow, IconButtonWidth.uniform, IconButtonWidth.wide];
+    property <[string]> width_labels: ["narrow", "uniform", "wide"];
+
     layout := VerticalLayout {
         alignment: start;
         spacing: MaterialStyleMetrics.spacing_8;
@@ -61,110 +76,219 @@ export component ActionsView {
             ComponentCard {
                 title: "Common buttons";
 
-                HorizontalLayout {
-                    alignment: center;
+                VerticalLayout {
+                    spacing: MaterialStyleMetrics.spacing_4;
 
-                    Grid {
-                        spacing-horizontal: MaterialStyleMetrics.spacing_4;
+                    // Rows: shape x size; columns: the five styles.
+                    for shape[shape_i] in root.button_shapes: HorizontalLayout {
+                        alignment: center;
+                        spacing: MaterialStyleMetrics.spacing_8;
 
-                        ElevatedButton {
-                            text: "Elevated";
-                            row: 0;
-                            col: 0;
+                        MaterialText {
+                            text: shape_labels[shape_i];
+                            width: 48px;
+                            vertical_alignment: center;
                         }
 
-                        ElevatedButton {
-                            icon: FilledIcons.add;
-                            text: "Icon";
-                            row: 0;
-                            col: 1;
+                        for size[size_i] in root.button_sizes: Grid {
+                            spacing-horizontal: MaterialStyleMetrics.spacing_4;
+
+                            FilledButton {
+                                text: "Filled";
+                                size: size;
+                                button_shape: shape;
+                                row: 0;
+                                col: size_i;
+                            }
+
+                            TonalButton {
+                                text: "Tonal";
+                                size: size;
+                                button_shape: shape;
+                                row: 0;
+                                col: size_i + 1;
+                            }
+
+                            ElevatedButton {
+                                text: "Elevated";
+                                size: size;
+                                button_shape: shape;
+                                row: 0;
+                                col: size_i + 2;
+                            }
+
+                            OutlineButton {
+                                text: "Outlined";
+                                size: size;
+                                button_shape: shape;
+                                row: 0;
+                                col: size_i + 3;
+                            }
+
+                            TextButton {
+                                text: "Text";
+                                size: size;
+                                button_shape: shape;
+                                row: 0;
+                                col: size_i + 4;
+                            }
+                        }
+                    }
+
+                    // With a leading icon.
+                    HorizontalLayout {
+                        alignment: center;
+                        spacing: MaterialStyleMetrics.spacing_8;
+
+                        MaterialText {
+                            text: "icon";
+                            width: 48px;
+                            vertical_alignment: center;
                         }
 
-                        ElevatedButton {
-                            text: "Elevated";
-                            enabled: false;
-                            row: 0;
-                            col: 2;
+                        for size[size_i] in root.button_sizes: Grid {
+                            FilledButton {
+                                icon: FilledIcons.add;
+                                text: "Filled";
+                                size: size;
+                                row: 0;
+                                col: size_i;
+                            }
+
+                            TonalButton {
+                                icon: FilledIcons.add;
+                                text: "Tonal";
+                                size: size;
+                                row: 0;
+                                col: size_i + 1;
+                            }
+
+                            ElevatedButton {
+                                icon: FilledIcons.add;
+                                text: "Elevated";
+                                size: size;
+                                row: 0;
+                                col: size_i + 2;
+                            }
+
+                            OutlineButton {
+                                icon: FilledIcons.add;
+                                text: "Outlined";
+                                size: size;
+                                row: 0;
+                                col: size_i + 3;
+                            }
+
+                            TextButton {
+                                icon: FilledIcons.add;
+                                text: "Text";
+                                size: size;
+                                row: 0;
+                                col: size_i + 4;
+                            }
+                        }
+                    }
+
+                    // Toggle buttons (the four styles that support selection).
+                    HorizontalLayout {
+                        alignment: center;
+                        spacing: MaterialStyleMetrics.spacing_8;
+
+                        MaterialText {
+                            text: "toggle";
+                            width: 48px;
+                            vertical_alignment: center;
                         }
 
-                        FilledButton {
-                            text: "Filled";
-                            row: 1;
-                            col: 0;
+                        for size[size_i] in root.button_sizes: Grid {
+                            FilledButton {
+                                text: "Filled";
+                                size: size;
+                                checkable: true;
+                                checked: Math.mod(size_i, 2) == 1;
+                                row: 0;
+                                col: size_i;
+                            }
+
+                            TonalButton {
+                                text: "Tonal";
+                                size: size;
+                                checkable: true;
+                                checked: Math.mod(size_i, 2) == 0;
+                                row: 0;
+                                col: size_i + 1;
+                            }
+
+                            ElevatedButton {
+                                text: "Elevated";
+                                size: size;
+                                checkable: true;
+                                row: 0;
+                                col: size_i + 2;
+                            }
+
+                            OutlineButton {
+                                text: "Outlined";
+                                size: size;
+                                checkable: true;
+                                checked: Math.mod(size_i, 2) == 1;
+                                row: 0;
+                                col: size_i + 3;
+                            }
+                        }
+                    }
+
+                    // Disabled.
+                    HorizontalLayout {
+                        alignment: center;
+                        spacing: MaterialStyleMetrics.spacing_8;
+
+                        MaterialText {
+                            text: "off";
+                            width: 48px;
+                            vertical_alignment: center;
                         }
 
-                        FilledButton {
-                            icon: FilledIcons.add;
-                            text: "Icon";
-                            row: 1;
-                            col: 1;
-                        }
+                        for size[size_i] in root.button_sizes: Grid {
+                            FilledButton {
+                                text: "Filled";
+                                size: size;
+                                enabled: false;
+                                row: 0;
+                                col: size_i;
+                            }
 
-                        FilledButton {
-                            text: "Filled";
-                            enabled: false;
-                            row: 1;
-                            col: 2;
-                        }
+                            TonalButton {
+                                text: "Tonal";
+                                size: size;
+                                enabled: false;
+                                row: 0;
+                                col: size_i + 1;
+                            }
 
-                        TonalButton {
-                            text: "Filled tonal";
-                            row: 2;
-                            col: 0;
-                        }
+                            ElevatedButton {
+                                text: "Elevated";
+                                size: size;
+                                enabled: false;
+                                row: 0;
+                                col: size_i + 2;
+                            }
 
-                        TonalButton {
-                            icon: FilledIcons.add;
-                            text: "Icon";
-                            row: 2;
-                            col: 1;
-                        }
+                            OutlineButton {
+                                text: "Outlined";
+                                size: size;
+                                enabled: false;
+                                row: 0;
+                                col: size_i + 3;
+                            }
 
-                        TonalButton {
-                            text: "Filled tonal";
-                            enabled: false;
-                            row: 2;
-                            col: 2;
-                        }
-
-                        OutlineButton {
-                            text: "Outlined";
-                            row: 3;
-                            col: 0;
-                        }
-
-                        OutlineButton {
-                            icon: FilledIcons.add;
-                            text: "Icon";
-                            row: 3;
-                            col: 1;
-                        }
-
-                        OutlineButton {
-                            text: "Outlined";
-                            enabled: false;
-                            row: 3;
-                            col: 2;
-                        }
-
-                        TextButton {
-                            text: "Text";
-                            row: 4;
-                            col: 0;
-                        }
-
-                        TextButton {
-                            icon: FilledIcons.add;
-                            text: "Icon";
-                            row: 4;
-                            col: 1;
-                        }
-
-                        TextButton {
-                            text: "Text";
-                            enabled: false;
-                            row: 4;
-                            col: 2;
+                            TextButton {
+                                text: "Text";
+                                size: size;
+                                enabled: false;
+                                row: 0;
+                                col: size_i + 4;
+                            }
                         }
                     }
                 }
@@ -222,33 +346,101 @@ export component ActionsView {
             ComponentCard {
                 title: "Icon buttons";
 
-                Vertical {
+                VerticalLayout {
+                    spacing: MaterialStyleMetrics.spacing_4;
+
+                    // Rows: width option x size; columns: the four styles.
+                    for width[w_i] in root.icon_widths: HorizontalLayout {
+                        alignment: center;
+                        spacing: MaterialStyleMetrics.spacing_8;
+
+                        MaterialText {
+                            text: width_labels[w_i];
+                            width: 48px;
+                            vertical_alignment: center;
+                        }
+
+                        for size[size_i] in root.button_sizes: Grid {
+                            spacing-horizontal: MaterialStyleMetrics.spacing_4;
+
+                            IconButton {
+                                icon: OutlinedIcons.settings;
+                                tooltip: "standard";
+                                size: size;
+                                width_option: width;
+                                row: 0;
+                                col: size_i;
+                            }
+
+                            FilledIconButton {
+                                icon: OutlinedIcons.settings;
+                                size: size;
+                                width_option: width;
+                                row: 0;
+                                col: size_i + 1;
+                            }
+
+                            TonalIconButton {
+                                icon: OutlinedIcons.settings;
+                                size: size;
+                                width_option: width;
+                                row: 0;
+                                col: size_i + 2;
+                            }
+
+                            OutlineIconButton {
+                                icon: OutlinedIcons.settings;
+                                size: size;
+                                width_option: width;
+                                row: 0;
+                                col: size_i + 3;
+                            }
+                        }
+                    }
+
+                    // Square and toggles (uniform width).
                     HorizontalLayout {
                         alignment: center;
                         spacing: MaterialStyleMetrics.spacing_8;
 
-                        default_ib := IconButton {
-                            checkable: true;
-                            icon: OutlinedIcons.settings;
-                            checked_icon: FilledIcons.settings;
+                        MaterialText {
+                            text: "square";
+                            width: 48px;
+                            vertical_alignment: center;
                         }
 
-                        filled_ib := FilledIconButton {
-                            icon: OutlinedIcons.settings;
-                            checkable: true;
-                            checked_icon: FilledIcons.settings;
-                        }
+                        for size[size_i] in root.button_sizes: Grid {
+                            IconButton {
+                                icon: OutlinedIcons.settings;
+                                size: size;
+                                button_shape: MaterialButtonShape.square;
+                                row: 0;
+                                col: size_i;
+                            }
 
-                        tonal_ib := TonalIconButton {
-                            checkable: true;
-                            icon: OutlinedIcons.settings;
-                            checked_icon: FilledIcons.settings;
-                        }
+                            FilledIconButton {
+                                icon: OutlinedIcons.settings;
+                                size: size;
+                                button_shape: MaterialButtonShape.square;
+                                row: 0;
+                                col: size_i + 1;
+                            }
 
-                        outline_ib := OutlineIconButton {
-                            checkable: true;
-                            icon: OutlinedIcons.settings;
-                            checked_icon: FilledIcons.settings;
+                            TonalIconButton {
+                                icon: OutlinedIcons.settings;
+                                size: size;
+                                button_shape: MaterialButtonShape.square;
+                                row: 0;
+                                col: size_i + 2;
+                            }
+
+                            OutlineIconButton {
+                                icon: OutlinedIcons.settings;
+                                size: size;
+                                button_shape: MaterialButtonShape.square;
+                                row: 0;
+                                col: size_i + 3;
+                            }
                         }
                     }
 
@@ -256,33 +448,98 @@ export component ActionsView {
                         alignment: center;
                         spacing: MaterialStyleMetrics.spacing_8;
 
-                        IconButton {
-                            icon: OutlinedIcons.settings;
-                            checked_icon: FilledIcons.settings;
-                            checked: default_ib.checked;
-                            enabled: false;
+                        MaterialText {
+                            text: "toggle";
+                            width: 48px;
+                            vertical_alignment: center;
                         }
 
+                        for size[size_i] in root.button_sizes: Grid {
+                            IconButton {
+                                icon: OutlinedIcons.settings;
+                                checked_icon: FilledIcons.settings;
+                                checkable: true;
+                                checked: Math.mod(size_i, 2) == 1;
+                                size: size;
+                                row: 0;
+                                col: size_i;
+                            }
 
-                        FilledIconButton {
-                            icon: OutlinedIcons.settings;
-                            checked_icon: FilledIcons.settings;
-                            checked: filled_ib.checked;
-                            enabled: false;
+                            FilledIconButton {
+                                icon: OutlinedIcons.settings;
+                                checked_icon: FilledIcons.settings;
+                                checkable: true;
+                                checked: Math.mod(size_i, 2) == 0;
+                                size: size;
+                                row: 0;
+                                col: size_i + 1;
+                            }
+
+                            TonalIconButton {
+                                icon: OutlinedIcons.settings;
+                                checked_icon: FilledIcons.settings;
+                                checkable: true;
+                                checked: Math.mod(size_i, 2) == 1;
+                                size: size;
+                                row: 0;
+                                col: size_i + 2;
+                            }
+
+                            OutlineIconButton {
+                                icon: OutlinedIcons.settings;
+                                checked_icon: FilledIcons.settings;
+                                checkable: true;
+                                checked: Math.mod(size_i, 2) == 0;
+                                size: size;
+                                row: 0;
+                                col: size_i + 3;
+                            }
+                        }
+                    }
+
+                    // Disabled.
+                    HorizontalLayout {
+                        alignment: center;
+                        spacing: MaterialStyleMetrics.spacing_8;
+
+                        MaterialText {
+                            text: "off";
+                            width: 48px;
+                            vertical_alignment: center;
                         }
 
-                        TonalIconButton {
-                            icon: OutlinedIcons.settings;
-                            checked_icon: FilledIcons.settings;
-                            checked: tonal_ib.checked;
-                            enabled: false;
-                        }
+                        for size[size_i] in root.button_sizes: Grid {
+                            IconButton {
+                                icon: OutlinedIcons.settings;
+                                size: size;
+                                enabled: false;
+                                row: 0;
+                                col: size_i;
+                            }
 
-                        OutlineIconButton {
-                            icon: OutlinedIcons.settings;
-                            checked_icon: FilledIcons.settings;
-                            checked: outline_ib.checked;
-                            enabled: false;
+                            FilledIconButton {
+                                icon: OutlinedIcons.settings;
+                                size: size;
+                                enabled: false;
+                                row: 0;
+                                col: size_i + 1;
+                            }
+
+                            TonalIconButton {
+                                icon: OutlinedIcons.settings;
+                                size: size;
+                                enabled: false;
+                                row: 0;
+                                col: size_i + 2;
+                            }
+
+                            OutlineIconButton {
+                                icon: OutlinedIcons.settings;
+                                size: size;
+                                enabled: false;
+                                row: 0;
+                                col: size_i + 3;
+                            }
                         }
                     }
                 }

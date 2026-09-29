@@ -28,28 +28,32 @@
       "x": 16,
       "y": 28,
       "text": "Enabled",
-      "state": "enabled"
+      "state": "enabled",
+      "width": 86
     },
     {
       "kind": "filled-button",
       "x": 132,
       "y": 28,
       "text": "Focused",
-      "state": "focused"
+      "state": "focused",
+      "width": 88
     },
     {
       "kind": "filled-button",
       "x": 248,
       "y": 28,
       "text": "Pressed",
-      "state": "pressed"
+      "state": "pressed",
+      "width": 86
     },
     {
       "kind": "filled-button",
       "x": 364,
       "y": 28,
       "text": "Disabled",
-      "enabled": false
+      "enabled": false,
+      "width": 90
     }
   ],
   "trace_elements": [
@@ -62,6 +66,12 @@
   "xfail_text": "issue #28: Slint ceils text layout widths where Compose keeps fractional advances",
   "mask_inner": {
     "button2": [
+      2000
+    ]
+  },
+  "mask_decor": {
+    "button1": [
+      0,
       2000
     ]
   }

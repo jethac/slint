@@ -25,6 +25,14 @@ export component Elevation {
         root.level == 4 ? ElevationTokens.level4 :
         ElevationTokens.level5;
 
+    // `animateElevation` tweens between *Elevation values (120ms/150ms
+    // incoming/outgoing upstream — one spec covers both here).
+    animate shadow_height {
+        enabled: !MaterialPalette.reduced-motion;
+        duration: 150ms;
+        easing: cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
     // The `elevation`/`ambient-shadow-color`/`spot-shadow-color` bindings are
     // lowered to an `ElevationShadow` sibling that casts the Android ambient +
     // spot shadow for this rectangle's outline (its `shape`, or the border

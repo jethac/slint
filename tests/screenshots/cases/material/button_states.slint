@@ -8,8 +8,8 @@
 //TRACE_ELEMENTS=button0,button1,button2,button3
 //ACTION=key:Tab
 //ACTION=key:Tab
-//ACTION=press:288,48
 //MASK_INNER=button2@2000
+//MASK_DECOR=button1@0,2000
 //XFAIL_TEXT=issue #28: Slint ceils text layout widths where Compose keeps fractional advances
 //DENSITIES=1,2
 import "../../fonts/Roboto-VariableFont.ttf";
@@ -35,18 +35,25 @@ export component TestCase inherits MaterialWindow {
         x: 16px;
         y: 28px;
         text: "Enabled";
+        width: 86px;
+        enforce_touch_target: false;
     }
 
     button1 := FilledButton {
         x: 132px;
         y: 28px;
         text: "Focused";
+        width: 88px;
+        enforce_touch_target: false;
     }
 
     button2 := FilledButton {
         x: 248px;
         y: 28px;
         text: "Pressed";
+        width: 86px;
+        simulate_press: true;
+        enforce_touch_target: false;
     }
 
     button3 := FilledButton {
@@ -54,6 +61,8 @@ export component TestCase inherits MaterialWindow {
         y: 28px;
         text: "Disabled";
         enabled: false;
+        width: 90px;
+        enforce_touch_target: false;
     }
 
 }

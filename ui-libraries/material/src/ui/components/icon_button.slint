@@ -1,62 +1,95 @@
 // Copyright © SixtyFPS GmbH <info@slint.dev>
 // SPDX-License-Identifier: MIT
 
-import { Elevation } from "./elevation.slint";
-import { BaseButton } from "./base_button.slint";
-import { MaterialTypography } from "../styling/material_typography.slint";
+import { MaterialButtonBase } from "./button_base.slint";
+import { IconButtonWidth, MaterialButtonMetrics, MaterialButtonShape, MaterialButtonSize } from "./button_metrics.slint";
 import { MaterialPalette } from "../styling/material_palette.slint";
-import { MaterialStyleMetrics } from "../styling/material_style_metrics.slint";
+import { StandardIconButtonTokens } from "../styling/generated/material_component_tokens.slint";
 
+/// A bare icon button — the upstream `IconButton`/`IconToggleButton` with
+/// the token-recommended (vibrant) colors.
 export component IconButton {
     in property <image> icon;
+    /// The icon drawn while checked (defaults to `icon`).
     in property <image> checked_icon: root.icon;
+    /// Turn the button into a toggle: `checked` becomes the selected state.
     in property <bool> checkable;
-    in_out property <bool> checked;
-    in property <string> tooltip <=> base.tooltip;
-    in property <bool> enabled <=> base.enabled;
+    in-out property <bool> checked;
+    in property <bool> enabled: true;
+    in property <string> tooltip;
+    /// Swap the icon color for dark surfaces.
     in property <bool> inverse;
-    in property <bool> inline: false;
+    /// No 48dp touch target and unbounded ink — for densely packed rows.
+    in property <bool> inline;
+    /// Color the icon with the error role.
     in property <bool> has_error;
+    /// One of the five container sizes.
+    in property <MaterialButtonSize> size: MaterialButtonSize.small;
+    /// `round` is the resting shape; `square` the squarer variant.
+    in property <MaterialButtonShape> button_shape: MaterialButtonShape.round;
+    /// `narrow`, `uniform` or `wide` spacing around the icon.
+    in property <IconButtonWidth> width_option: IconButtonWidth.uniform;
+    /// Reserve a 48x48 touch target around the visual (default on).
+    in property <bool> enforce_touch_target: true;
+    /// See `MaterialButtonBase.simulate_hover` / `simulate_press` —
+    /// the parity harness's per-widget state hook.
+    in property <bool> simulate_hover;
+    in property <bool> simulate_press;
 
-    callback clicked();
+    callback clicked <=> base.clicked;
 
-    accessible-role: button;
+    out property <bool> has_focus <=> base.has_focus;
+    out property <bool> pressed <=> base.pressed;
+    out property <bool> has_hover <=> base.has_hover;
+    /// The live corner radius — for the parity harness's motion trace.
+    out property <length> container_radius <=> base.container_radius;
+
+    accessible-role: AccessibleRole.button;
     accessible-enabled: root.enabled;
     accessible-label: root.tooltip;
     accessible-checkable: root.checkable;
-    accessible-checked: root.checked;
+    accessible-checked <=> root.checked;
     accessible-action-default => { base.clicked(); }
 
-    base := BaseButton {
-        icon: root.checked ? root.checked_icon : root.icon;
-        border_radius: self.height / 2;
-        color: root.has_error ? MaterialPalette.error : root.inverse ? MaterialPalette.inverse_on_surface : MaterialPalette.on_surface_variant;
-        button_horizontal_padding: 0;
-        button_vertical_padding: 0;
-        width: self.height;
-        display_background: false;
-        icon_size: root.inline ? MaterialStyleMetrics.icon_size_18 : MaterialStyleMetrics.icon_size_24;
-        min_layout_width: root.inline ? MaterialStyleMetrics.icon_size_18 : MaterialStyleMetrics.size_40;
-        min_layout_height: self.min_layout_width;
+    min_width: base.min_width;
+    min_height: base.min_height;
+    preferred_width: base.preferred_width;
+    preferred_height: base.preferred_height;
+
+    base := MaterialButtonBase {
+        width: 100%;
+        height: 100%;
+        icon_button: true;
+        checkable: root.checkable;
+        checked <=> root.checked;
+        enabled: root.enabled;
+        tooltip: root.tooltip;
+        enforce_touch_target: root.enforce_touch_target && !root.inline;
+        simulate_hover: root.simulate_hover;
+        simulate_press: root.simulate_press;
         clip_ripple: !root.inline;
 
-        clicked => {
-            root.toggle();
-            root.clicked();
-        }
+        container_height: MaterialButtonMetrics.icon-container-height(root.size);
+        container_width: MaterialButtonMetrics.icon-container-width(root.size, root.width_option);
+        resting_radius: MaterialButtonMetrics.icon-resting-radius(root.size, root.button_shape, self.container_height);
+        pressed_radius: MaterialButtonMetrics.icon-pressed-radius(root.size);
+        checked_radius: MaterialButtonMetrics.icon-checked-radius(root.size, root.button_shape, self.container_height);
+        min_button_width: 0px;
+
+        container_color: transparent;
+        content_color: root.has_error ? MaterialPalette.error :
+            root.inverse ? MaterialPalette.inverse_on_surface :
+            root.checked ? StandardIconButtonTokens.selected_color : StandardIconButtonTokens.color;
+        disabled_container_color: transparent;
+        disabled_content_color: StandardIconButtonTokens.disabled_color.with_alpha(StandardIconButtonTokens.disabled_opacity);
+        elevation_default: 0;
+        elevation_pressed: 0;
+        elevation_hovered: 0;
+        elevation_focused: 0;
+        elevation_disabled: 0;
+
+        icon: root.icon;
+        checked_icon: root.checked_icon;
+        icon_size: MaterialButtonMetrics.icon-container-icon-size(root.size);
     }
-
-    function toggle() {
-        if !root.checkable {
-            return;
-        }
-
-        root.checked = !root.checked;
-    }
-
-    states [
-        checked when root.enabled && root.checked : {
-            base.color: MaterialPalette.primary;
-        }
-    ]
 }

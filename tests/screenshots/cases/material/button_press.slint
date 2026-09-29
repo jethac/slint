@@ -7,7 +7,7 @@
 //SIZE=200x96
 //TIMES=0,60,120,200,333,500,1500,2500
 //TRACE_ELEMENTS=button0
-//ACTION=press:80,48
+//ACTION=press:60,44
 //MASK_INNER=button0@60,120,200,333,500,1500,2500
 //DENSITIES=1,2
 import "../../fonts/Roboto-VariableFont.ttf";
@@ -33,6 +33,7 @@ export component TestCase inherits MaterialWindow {
         x: 40px;
         y: 28px;
         text: "Label";
+        enforce_touch_target: false;
     }
 
 }

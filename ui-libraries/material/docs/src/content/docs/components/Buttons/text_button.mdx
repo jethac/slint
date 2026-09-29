@@ -6,39 +6,47 @@ description: TextButton API.
 import CodeSnippetMD from '@slint/common-files/src/components/CodeSnippetMD.astro';
 import SlintProperty from '@slint/common-files/src/components/SlintProperty.astro';
 
-<CodeSnippetMD imagePath="" noScreenShot scale="3" imageWidth="300" imageHeight="200" imageAlt="">
+<CodeSnippetMD imagePath="/src/assets/generated/textbutton.png" scale="3" imageWidth="200" imageHeight="140" imageAlt="">
 ```slint
 import { TextButton } from "@material";
 export component Example inherits Window {
-    width: 200px;
+    width: 160px;
     height: 100px;
     background: transparent;
-    TextButton {
-        text: "Click me";
-        width: 120px;
-        height: 40px;
-    }
+    TextButton { text: "Click me"; }
 }
 ```
 </CodeSnippetMD>
 
-A `TextButton` is a button with no background or border, displaying only text and optional icons. It's the most subtle button style and is used for tertiary actions.
+A `TextButton` is a button with no container or border, only a label.
+Use it for the lowest-emphasis actions such as dismissals in dialogs.
 
+<CodeSnippetMD imagePath="/src/assets/generated/textbutton-sizes.png" scale="3" imageWidth="940" imageHeight="460" imageAlt="">
+```slint
+import { TextButton, MaterialButtonSize, MaterialButtonShape } from "@material";
+export component Example inherits Window {
+    width: 920px;
+    height: 440px;
+    background: transparent;
+    VerticalLayout {
+        padding: 20px;
+        spacing: 12px;
+        alignment: center;
+        for s in [MaterialButtonSize.extra-small, MaterialButtonSize.small, MaterialButtonSize.medium, MaterialButtonSize.large, MaterialButtonSize.extra-large]: HorizontalLayout {
+            spacing: 12px;
+            alignment: center;
+            TextButton { text: "OK"; size: s; }
+            TextButton { text: "OK"; size: s; button-shape: MaterialButtonShape.square; }
+        }
+    }
+}
+```
+</CodeSnippetMD>
 ## Properties
 
-### text
-<SlintProperty propName="text" typeName="string">
-The text label displayed on the button.
-</SlintProperty>
-
-### icon
-<SlintProperty propName="icon" typeName="image">
-An optional icon displayed on the button.
-</SlintProperty>
-
-### tooltip
-<SlintProperty propName="tooltip" typeName="string">
-A tooltip text that appears when hovering over the button.
+### button-shape
+<SlintProperty propName="button-shape" typeName="enum" enumName="MaterialButtonShape" defaultValue="MaterialButtonShape.round">
+The resting container shape: `round` for the fully rounded stadium, `square` for the smaller rounded corner.
 </SlintProperty>
 
 ### enabled
@@ -46,9 +54,34 @@ A tooltip text that appears when hovering over the button.
 Whether the button is enabled and can be interacted with.
 </SlintProperty>
 
+### enforce-touch-target
+<SlintProperty propName="enforce-touch-target" typeName="bool" defaultValue="true">
+Whether the button extends its touch target to at least 48px when its visual container is smaller.
+</SlintProperty>
+
+### icon
+<SlintProperty propName="icon" typeName="image">
+An optional icon displayed before the text label.
+</SlintProperty>
 ### inverse
 <SlintProperty propName="inverse" typeName="bool">
-Whether to use inverse colors for the button text and icons.
+Whether to use the inverse color scheme for the button.
+</SlintProperty>
+
+
+### size
+<SlintProperty propName="size" typeName="enum" enumName="MaterialButtonSize" defaultValue="MaterialButtonSize.small">
+The size bucket, from `extra-small` (32px) through `extra-large` (136px).
+</SlintProperty>
+
+### text
+<SlintProperty propName="text" typeName="string">
+The text label displayed on the button.
+</SlintProperty>
+
+### tooltip
+<SlintProperty propName="tooltip" typeName="string">
+A tooltip text that appears when hovering over the button.
 </SlintProperty>
 
 ## Callbacks

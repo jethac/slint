@@ -13,17 +13,45 @@ import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ElevatedButton
+import androidx.compose.material3.ElevatedToggleButton
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.FilledIconButton
+import androidx.compose.material3.FilledIconToggleButton
+import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.FilledTonalIconButton
+import androidx.compose.material3.FilledTonalIconToggleButton
+import androidx.compose.material3.TonalToggleButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
+import androidx.compose.material3.IconButtonDefaults.IconButtonWidthOption
+import androidx.compose.material3.IconToggleButton
 import androidx.compose.material3.LocalMinimumInteractiveComponentSize
+import androidx.compose.material3.LocalRippleThemeConfiguration
+import androidx.compose.material3.RippleDefaults
 import androidx.compose.material3.MaterialExpressiveTheme
 import androidx.compose.material3.MotionScheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedIconButton
+import androidx.compose.material3.OutlinedIconToggleButton
+import androidx.compose.material3.OutlinedToggleButton
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.ToggleButton
+import androidx.compose.material3.ToggleButtonDefaults
 import androidx.compose.material3.Typography
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.material3.toShape
+import androidx.compose.ui.graphics.vector.path
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
@@ -34,6 +62,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Modifier
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
@@ -317,7 +346,7 @@ fun SceneContent(
     scene: Scene,
     font: FontFamily?,
     tracer: Tracer,
-    emitPress: java.util.concurrent.CopyOnWriteArrayList<Runnable>,
+    emitPress: java.util.concurrent.CopyOnWriteArrayList<Pair<Long, Runnable>>,
 ) {
     MaterialExpressiveTheme(
         colorScheme = sceneColorScheme(scene),
@@ -328,7 +357,14 @@ fun SceneContent(
         // the visual in it; the scene coordinates place the drawn component,
         // so that padding is off here — the Slint library draws the same
         // visual at the same declared bounds.
-        CompositionLocalProvider(LocalMinimumInteractiveComponentSize provides 0.dp) {
+        CompositionLocalProvider(
+            LocalMinimumInteractiveComponentSize provides 0.dp,
+            // The issue pins the M3 inset focus ring (two strokes following
+            // the container shape); upstream ships it as an opt-in ripple
+            // theme, off by default.
+            LocalRippleThemeConfiguration provides
+                RippleDefaults.InsetFocusRingRippleThemeConfiguration,
+        ) {
             FrameRecorder(scene, tracer)
             when (scene.type) {
                 "canvas" -> CanvasScene(scene, tracer, emitPress)
@@ -357,7 +393,7 @@ private fun FrameRecorder(scene: Scene, tracer: Tracer) {
 private fun CanvasScene(
     scene: Scene,
     tracer: Tracer,
-    emitPress: java.util.concurrent.CopyOnWriteArrayList<Runnable>,
+    emitPress: java.util.concurrent.CopyOnWriteArrayList<Pair<Long, Runnable>>,
 ) {
     val (w, h) = scene.sizeDp
     val density = androidx.compose.ui.platform.LocalDensity.current.density
@@ -365,29 +401,38 @@ private fun CanvasScene(
     Box(
         Modifier.testTag("scene-root").size(w.dp, h.dp).background(scheme.background),
     ) {
-        // Elements are named `button{n}`/`text:{n}` by count of filled
-        // buttons, not widget index — a backdrop `rect` ahead of a button
-        // leaves `button0` intact.
+        // Elements are named `button{n}`/`text:{n}` by count of
+        // button-family widgets, not widget index — a backdrop `rect`
+        // ahead of a button leaves `button0` intact.
         var buttons = 0
         var surfaces = 0
         scene.widgets.forEach { widget ->
-            when (widget.kind) {
-                "filled-button" -> StateButton(
+            when {
+                widget.isIconButton -> StateIconButton(
                     widget,
+                    scene,
+                    tracer,
+                    "button${buttons++}",
+                    density,
+                    emitPress,
+                )
+                widget.isButton -> StateButton(
+                    widget,
+                    scene,
                     tracer,
                     "text:${buttons}",
                     "button${buttons++}",
                     density,
                     emitPress,
                 )
-                "rect" ->
+                widget.kind == "rect" ->
                     Box(
                         Modifier.offset(widget.x.dp, widget.y.dp)
                             .size(widget.width.dp, widget.height.dp)
                             .clip(RoundedCornerShapeOrRect(widget.radius.dp))
                             .background(schemeColor(widget.color ?: "primary")),
                     )
-                "surface" -> {
+                widget.kind == "surface" -> {
                     // A clip + color surface: the shape machinery's outline
                     // and fills. Platform shadows (`Modifier.shadow`,
                     // `View.elevation`) deadlock layoutlib's hardware
@@ -411,6 +456,64 @@ private fun CanvasScene(
     }
 }
 
+/** Container height per size bucket (dp) — `ButtonDefaults` `*ContainerHeight`. */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+private fun buttonHeight(widget: Widget) = when (widget.size) {
+    "xs" -> ButtonDefaults.ExtraSmallContainerHeight
+    "s" -> ButtonDefaults.MinHeight
+    "m" -> ButtonDefaults.MediumContainerHeight
+    "l" -> ButtonDefaults.LargeContainerHeight
+    "xl" -> ButtonDefaults.ExtraLargeContainerHeight
+    else -> error("unknown button size ${widget.size}")
+}
+
+/** The size bucket's `Button*Tokens.ContainerShapeSquare` — exposed through
+ * `ToggleButtonDefaults`' per-size getters (the same token objects back the
+ * plain-button square variant upstream). */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun squareShapeFor(widget: Widget): Shape {
+    val d = ToggleButtonDefaults
+    return when (widget.size) {
+        "xs" -> d.extraSmallSquareShape
+        "s" -> d.squareShape
+        "m" -> d.mediumSquareShape
+        "l" -> d.largeSquareShape
+        "xl" -> d.extraLargeSquareShape
+        else -> error("unknown button size ${widget.size}")
+    }
+}
+
+/** The token-backed `RoundedCornerShape` corner radius in dp — covers both
+ * percentage (`corner_full` stadium) and fixed-dp token corners. `h` is the
+ * container height: it is always the smaller dimension in these scenes, so
+ * `Size(h, h)` reproduces `PercentCornerSize`'s `minDimension` exactly. */
+private fun radiusOf(shape: Shape, h: androidx.compose.ui.unit.Dp, density: Float): Float {
+    require(shape is androidx.compose.foundation.shape.RoundedCornerShape) {
+        "token shapes are RoundedCornerShape, got $shape"
+    }
+    // `toPx` takes pixel sizes: percent corners resolve against the box's px
+    // edge, dp corners convert via the density — either way the result is px.
+    val boxPx = h.value * density
+    return shape.topStart.toPx(
+        androidx.compose.ui.geometry.Size(boxPx, boxPx),
+        androidx.compose.ui.unit.Density(density),
+    ) / density
+}
+
+/** The corner radius the container springs toward, in dp — the Slint side
+ * exposes it as `container_radius`; this is the same value computed from
+ * the shapes this side hands the composable. */
+private fun radiusTarget(h: Float, resting: Shape, pressed: Shape, checked: Shape,
+    isPressed: Boolean, isChecked: Boolean, density: Float): Float {
+    val shape = when {
+        isPressed -> pressed
+        isChecked -> checked
+        else -> resting
+    }
+    return radiusOf(shape, androidx.compose.ui.unit.Dp(h), density)
+}
+
 /** A filled button in the interaction state the scene asks for. `state`
  * comes from the scene's `widgets[].state` — the Slint side drives the same
  * state through real pointer events on the mocked backend. */
@@ -432,17 +535,21 @@ class ReplayableInteractionSource : MutableInteractionSource {
         flow.tryEmit(interaction)
 }
 
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+/** Drives the widget's `state` on the interaction source — hover/focus via
+ * a launched emission, press/press+release via the frame sink's post-frame-0
+ * hook so it lands at the same moment the Slint driver dispatches
+ * `//ACTION=`. */
 @Composable
-private fun StateButton(
+private fun emitStateInteractions(
     widget: Widget,
+    scene: Scene,
     tracer: Tracer,
-    textId: String,
     elementId: String,
+    interactionSource: ReplayableInteractionSource,
+    emitPress: java.util.concurrent.CopyOnWriteArrayList<Pair<Long, Runnable>>,
+    pressOffset: Offset,
     density: Float,
-    emitPress: java.util.concurrent.CopyOnWriteArrayList<Runnable>,
 ) {
-    val interactionSource = remember { ReplayableInteractionSource() }
     when (widget.state) {
         "hovered" -> LaunchedEffect(Unit) {
             interactionSource.emit(HoverInteraction.Enter())
@@ -465,38 +572,320 @@ private fun StateButton(
         "pressed" -> {
             val press = remember {
                 Runnable {
-                    interactionSource.tryEmit(
-                        PressInteraction.Press(Offset(40f * density, 20f * density)),
-                    )
+                    interactionSource.tryEmit(PressInteraction.Press(pressOffset))
                 }
             }
             DisposableEffect(press) {
-                emitPress.add(press)
-                onDispose { emitPress.remove(press) }
+                val entry = 0L to press
+                emitPress.add(entry)
+                onDispose { emitPress.remove(entry) }
             }
         }
     }
-    Button(
-        onClick = {},
-        enabled = widget.enabled,
-        modifier = Modifier.offset(widget.x.dp, widget.y.dp).track(tracer, elementId),
-        // The Expressive button API: the base shape morphs into
-        // `ButtonShapes.pressedShape` while pressed, matching the Slint
-        // side's pressed-state shape.
-        shapes = ButtonDefaults.shapes(),
-        interactionSource = interactionSource,
-    ) {
+    // A scene-level `actions` press+release is a click: emit the press and
+    // its release at each action's `at` time (back-to-back at frame 0 when
+    // untimed — the Slint driver dispatches them at the same mock-clock
+    // beat). A `press` only applies to the widget it hit-tests inside —
+    // multi-widget scenes must not all light up; the release fires wherever
+    // the press landed.
+    val pressAction = scene.actions.firstOrNull { it.kind == "press" }
+    val releaseAction = scene.actions.firstOrNull { it.kind == "release" }
+    if (pressAction != null && widget.state != "pressed") {
+        var emitted: PressInteraction.Press? = null
+        val press = Runnable {
+            val b = tracer.elementBounds[elementId]
+            val hits = b == null ||
+                (pressAction.x * density >= b.left && pressAction.x * density <= b.right &&
+                    pressAction.y * density >= b.top && pressAction.y * density <= b.bottom)
+            if (hits) {
+                val p = PressInteraction.Press(pressOffset)
+                emitted = p
+                interactionSource.tryEmit(p)
+            }
+        }
+        DisposableEffect(press) {
+            val entry = pressAction.at to press
+            emitPress.add(entry)
+            onDispose { emitPress.remove(entry) }
+        }
+        if (releaseAction != null) {
+            val release = Runnable {
+                emitted?.let { interactionSource.tryEmit(PressInteraction.Release(it)) }
+                emitted = null
+            }
+            DisposableEffect(release) {
+                val entry = releaseAction.at to release
+                emitPress.add(entry)
+                onDispose { emitPress.remove(entry) }
+            }
+        }
+    }
+}
+
+/** A press + release pair in the scene's `actions` means a user click —
+ * on a checkable widget it toggles `checked`. */
+private fun sceneActionsClick(scene: Scene): Boolean =
+    scene.actions.any { it.kind == "press" } && scene.actions.any { it.kind == "release" }
+
+/** Loads `icons/<name>.svg` (the file the Slint `Icons.<name>` image
+ * renders) as an [ImageVector] so both sides rasterize identical path
+ * data. The icon is tinted by `Icon`/`colorize` on top, so a black fill
+ * is fine. */
+private fun sceneIcon(name: String): androidx.compose.ui.graphics.vector.ImageVector {
+    val svg = Scene::class.java.classLoader!!
+        .getResourceAsStream("icons/$name.svg")!!
+        .bufferedReader().readText()
+    val vb = Regex("""viewBox="([\d.\- ]+)"""").find(svg)!!.groupValues[1]
+        .trim().split(" ").map { it.toFloat() }
+    val builder = androidx.compose.ui.graphics.vector.ImageVector.Builder(
+        name = name,
+        defaultWidth = (vb[2] - vb[0]).dp,
+        defaultHeight = (vb[3] - vb[1]).dp,
+        viewportWidth = vb[2] - vb[0],
+        viewportHeight = vb[3] - vb[1],
+    )
+    Regex("""<path[^>]*d="([^"]+)"""").findAll(svg).forEach { m ->
+        builder.addPath(
+            androidx.compose.ui.graphics.vector.addPathNodes(m.groupValues[1]),
+            fill = androidx.compose.ui.graphics.SolidColor(Color.Black),
+        )
+    }
+    return builder.build()
+}
+
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun StateButton(
+    widget: Widget,
+    scene: Scene,
+    tracer: Tracer,
+    textId: String,
+    elementId: String,
+    density: Float,
+    emitPress: java.util.concurrent.CopyOnWriteArrayList<Pair<Long, Runnable>>,
+) {
+    val interactionSource = remember { ReplayableInteractionSource() }
+    emitStateInteractions(widget, scene, tracer, elementId, interactionSource, emitPress, Offset(40f * density, 20f * density), density)
+
+    val h = buttonHeight(widget)
+    // The real checked state on a toggle widget; a press+release action
+    // sequence flips it from the post-frame-0 hook — the same click the
+    // Slint driver's pointer events deliver. A held press (`state =
+    // "pressed"`) or a static `checked` flag is not a click.
+    var checked by remember { mutableStateOf(widget.checked) }
+    val clickToggles = widget.checkable && sceneActionsClick(scene)
+    DisposableEffect(Unit) {
+        val flip = Runnable { checked = !checked }
+        // A click completes on release — `checked` flips at its `at` time.
+        val at = scene.actions.firstOrNull { it.kind == "release" }?.at ?: 0L
+        val entry = at to flip
+        if (clickToggles) {
+            emitPress.add(entry)
+        }
+        onDispose { emitPress.remove(entry) }
+    }
+
+    val shapes = buttonShapesFor(widget, h)
+    // alpha18's `ToggleButton` has no size parameter (it predates
+    // `ToggleButtonSize`) — `shapesFor(h)` still buckets the morph shapes
+    // per height, and `Modifier.height(h)` overrides the container's
+    // `defaultMinSize(MinHeight)` exactly. The label style is overridden on
+    // the `Text` below since alpha18's composable hard-codes `labelLarge`.
+    val toggleShapes = ToggleButtonDefaults.shapesFor(h).let {
+        if (widget.corner == "square") it.copy(shape = squareShapeFor(widget)) else it
+    }
+    // `Modifier.height` is exact (not `heightIn`): an extra-small 32dp
+    // button is below the composable's internal `defaultMinSize(40dp)` —
+    // incoming fixed constraints clamp it correctly.
+    val modifier = Modifier.offset(widget.x.dp, widget.y.dp)
+        .height(h)
+        // A scene may pin the drawn width so the comparator's corner band
+        // isn't loosened by text-metric width drift between the engines.
+        .then(if (widget.width > 0f) Modifier.width(widget.width.dp) else Modifier)
+        .track(tracer, elementId)
+    val iconVector = widget.icon?.let { sceneIcon(it) }
+    // Plain buttons use `labelLarge` at every height (alpha18 hard-codes it
+    // inside `ProvideContentColorTextStyle`); toggles take
+    // `textStyleFor(height)` upstream — the alpha18 composable can't, so the
+    // style is pinned on the `Text` itself.
+    val labelStyle = if (widget.checkable) {
+        ButtonDefaults.textStyleFor(h)
+    } else {
+        androidx.compose.material3.MaterialTheme.typography.labelLarge
+    }
+    val content: @Composable androidx.compose.foundation.layout.RowScope.() -> Unit = {
+        if (iconVector != null) {
+            Icon(
+                iconVector,
+                contentDescription = null,
+                modifier = Modifier.size(ButtonDefaults.iconSizeFor(h)),
+            )
+            Spacer(Modifier.width(ButtonDefaults.iconSpacingFor(h)))
+        }
         Text(
             widget.text ?: "",
+            style = labelStyle,
             modifier = Modifier.trackText(tracer, textId, density),
             onTextLayout = recordTextLayout(
                 tracer,
                 textId,
                 LocalDensity.current,
                 androidx.compose.ui.platform.LocalFontFamilyResolver.current,
-                androidx.compose.material3.LocalTextStyle.current.fontFamily,
+                labelStyle.fontFamily,
             ),
         )
+    }
+
+    // The corner-radius trace: `AnimatedShapeState` inside the composables
+    // is internal, so the probe animates the radius with the spec the
+    // MotionScheme hands it (and this side's frames verify the real shape
+    // pixels land on the same curve).
+    val pressed by interactionSource.collectIsPressedAsState()
+    val motionScheme = androidx.compose.material3.MaterialTheme.motionScheme
+    val spec = if (widget.checkable) {
+        // ToggleButton.kt: `MotionSchemeKeyTokens.FastSpatial` for the morph.
+        motionScheme.fastSpatialSpec<Float>()
+    } else {
+        // Button/IconButton: `MotionSchemeKeyTokens.DefaultEffects`.
+        motionScheme.defaultEffectsSpec<Float>()
+    }
+    val activeShapes = if (widget.checkable) {
+        Triple(toggleShapes.shape, toggleShapes.pressedShape, toggleShapes.checkedShape)
+    } else {
+        Triple(shapes.shape, shapes.pressedShape, shapes.pressedShape)
+    }
+    val radius by animateFloatAsState(
+        targetValue = radiusTarget(
+            h.value, activeShapes.first, activeShapes.second, activeShapes.third,
+            pressed, widget.checkable && checked, density,
+        ),
+        animationSpec = spec,
+        label = "container_radius",
+    )
+    tracer.propGetters["container_radius"] = { radius.toDouble() }
+
+    val pressInk = pressInkMarker(widget, emitPress)
+
+    when {
+        widget.checkable -> when (widget.kind) {
+            "filled-button" -> ToggleButton(
+                checked = checked,
+                onCheckedChange = {},
+                modifier = modifier,
+                enabled = widget.enabled,
+                shapes = toggleShapes,
+                contentPadding = ButtonDefaults.contentPaddingFor(h, hasStartIcon = iconVector != null),
+                interactionSource = interactionSource,
+                content = content,
+            )
+            "tonal-button" -> TonalToggleButton(
+                checked = checked,
+                onCheckedChange = {},
+                modifier = modifier,
+                enabled = widget.enabled,
+                shapes = toggleShapes,
+                contentPadding = ButtonDefaults.contentPaddingFor(h, hasStartIcon = iconVector != null),
+                interactionSource = interactionSource,
+                content = content,
+            )
+            "elevated-button" -> ElevatedToggleButton(
+                checked = checked,
+                onCheckedChange = {},
+                modifier = modifier,
+                enabled = widget.enabled,
+                shapes = toggleShapes,
+                contentPadding = ButtonDefaults.contentPaddingFor(h, hasStartIcon = iconVector != null),
+                interactionSource = interactionSource,
+                content = content,
+            )
+            "outlined-button" -> OutlinedToggleButton(
+                checked = checked,
+                onCheckedChange = {},
+                modifier = modifier,
+                enabled = widget.enabled,
+                shapes = toggleShapes,
+                contentPadding = ButtonDefaults.contentPaddingFor(h, hasStartIcon = iconVector != null),
+                interactionSource = interactionSource,
+                content = content,
+            )
+            else -> error("no toggle variant for ${widget.kind}")
+        }
+        else -> when (widget.kind) {
+            "filled-button" -> Button(
+                onClick = {},
+                enabled = widget.enabled,
+                modifier = modifier,
+                shapes = shapes,
+                contentPadding = ButtonDefaults.contentPaddingFor(h, hasStartIcon = iconVector != null),
+                interactionSource = interactionSource,
+                content = content,
+            )
+            "tonal-button" -> FilledTonalButton(
+                onClick = {},
+                enabled = widget.enabled,
+                modifier = modifier,
+                shapes = shapes,
+                contentPadding = ButtonDefaults.contentPaddingFor(h, hasStartIcon = iconVector != null),
+                interactionSource = interactionSource,
+                content = content,
+            )
+            "elevated-button" -> ElevatedButton(
+                onClick = {},
+                enabled = widget.enabled,
+                modifier = modifier,
+                shapes = shapes,
+                contentPadding = ButtonDefaults.contentPaddingFor(h, hasStartIcon = iconVector != null),
+                interactionSource = interactionSource,
+                content = content,
+            )
+            "outlined-button" -> OutlinedButton(
+                onClick = {},
+                enabled = widget.enabled,
+                modifier = modifier,
+                shapes = shapes,
+                contentPadding = ButtonDefaults.contentPaddingFor(h, hasStartIcon = iconVector != null),
+                interactionSource = interactionSource,
+                content = content,
+            )
+            "text-button" -> TextButton(
+                onClick = {},
+                enabled = widget.enabled,
+                modifier = modifier,
+                shapes = shapes,
+                contentPadding = ButtonDefaults.contentPaddingFor(h, hasStartIcon = iconVector != null),
+                interactionSource = interactionSource,
+                content = content,
+            )
+            else -> error("unknown text button kind ${widget.kind}")
+        }
+    }
+
+    if (pressInk.value) {
+        PressInkOverlay(
+            widget,
+            tracer,
+            elementId,
+            density,
+            // The ink is clipped to the live morph radius — the same spring
+            // curve the widget's internal AnimatedShapeState follows — so it
+            // stays inside the drawn arc mid-morph like upstream's own clip.
+            RoundedCornerShape(radius.dp),
+            buttonInkColor(widget, checked),
+        )
+    }
+}
+
+/** `ButtonShapes` for a text-button widget: `shapesFor` buckets the pressed
+ * shape per height; `square` swaps the resting stadium for the size's
+ * `ContainerShapeSquare` token. */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun buttonShapesFor(widget: Widget, h: Dp): androidx.compose.material3.ButtonShapes {
+    val base = ButtonDefaults.shapesFor(h)
+    return if (widget.corner == "square") {
+        base.copy(shape = squareShapeFor(widget))
+    } else {
+        base
     }
 }
 
@@ -635,4 +1024,373 @@ private fun SpringMotionScene(scene: Scene, tracer: Tracer) {
                 .track(tracer, "thumb"),
         )
     }
+}
+
+/** `IconButtonDefaults.*ContainerSize(widthOption)` for the widget's size
+ * bucket and width option. */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun iconContainerSize(widget: Widget): androidx.compose.ui.unit.DpSize = when (widget.size) {
+    "xs" -> IconButtonDefaults.extraSmallContainerSize(iconWidthOption(widget))
+    "s" -> IconButtonDefaults.smallContainerSize(iconWidthOption(widget))
+    "m" -> IconButtonDefaults.mediumContainerSize(iconWidthOption(widget))
+    "l" -> IconButtonDefaults.largeContainerSize(iconWidthOption(widget))
+    "xl" -> IconButtonDefaults.extraLargeContainerSize(iconWidthOption(widget))
+    else -> error("unknown button size ${widget.size}")
+}
+
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+private fun iconWidthOption(widget: Widget) = when (widget.widthOption) {
+    "narrow" -> IconButtonDefaults.IconButtonWidthOption.Narrow
+    "uniform" -> IconButtonDefaults.IconButtonWidthOption.Uniform
+    "wide" -> IconButtonDefaults.IconButtonWidthOption.Wide
+    else -> error("unknown width option ${widget.widthOption}")
+}
+
+/** `IconButtonDefaults.*IconSize` for the size bucket. */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+private fun iconSize(widget: Widget) = when (widget.size) {
+    "xs" -> IconButtonDefaults.extraSmallIconSize
+    "s" -> IconButtonDefaults.smallIconSize
+    "m" -> IconButtonDefaults.mediumIconSize
+    "l" -> IconButtonDefaults.largeIconSize
+    "xl" -> IconButtonDefaults.extraLargeIconSize
+    else -> error("unknown button size ${widget.size}")
+}
+
+/** Resting shape of an icon button: the size's `ContainerShapeRound` or
+ * `ContainerShapeSquare` token (`IconButtonDefaults.*{Round,Square}Shape`). */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun iconRestingShape(widget: Widget): Shape {
+    val d = IconButtonDefaults
+    return when {
+        widget.corner == "square" -> when (widget.size) {
+            "xs" -> d.extraSmallSquareShape
+            "s" -> d.smallSquareShape
+            "m" -> d.mediumSquareShape
+            "l" -> d.largeSquareShape
+            "xl" -> d.extraLargeSquareShape
+            else -> error("unknown button size ${widget.size}")
+        }
+        else -> when (widget.size) {
+            "xs" -> d.extraSmallRoundShape
+            "s" -> d.smallRoundShape
+            "m" -> d.mediumRoundShape
+            "l" -> d.largeRoundShape
+            "xl" -> d.extraLargeRoundShape
+            else -> error("unknown button size ${widget.size}")
+        }
+    }
+}
+
+/** Pressed shape per size (`IconButtonDefaults.*PressedShape`). */
+@Composable
+private fun iconPressedShape(widget: Widget): Shape = when (widget.size) {
+    "xs" -> IconButtonDefaults.extraSmallPressedShape
+    "s" -> IconButtonDefaults.smallPressedShape
+    "m" -> IconButtonDefaults.mediumPressedShape
+    "l" -> IconButtonDefaults.largePressedShape
+    "xl" -> IconButtonDefaults.extraLargePressedShape
+    else -> error("unknown button size ${widget.size}")
+}
+
+/** Checked shape of an icon toggle: the size's `SelectedContainerShapeRound`
+ * or `SelectedContainerShapeSquare`. */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun iconCheckedShape(widget: Widget): Shape {
+    val d = IconButtonDefaults
+    return when {
+        widget.corner == "square" -> when (widget.size) {
+            "xs" -> d.extraSmallSelectedSquareShape
+            "s" -> d.smallSelectedSquareShape
+            "m" -> d.mediumSelectedSquareShape
+            "l" -> d.largeSelectedSquareShape
+            "xl" -> d.extraLargeSelectedSquareShape
+            else -> error("unknown button size ${widget.size}")
+        }
+        else -> when (widget.size) {
+            "xs" -> d.extraSmallSelectedRoundShape
+            "s" -> d.smallSelectedRoundShape
+            "m" -> d.mediumSelectedRoundShape
+            "l" -> d.largeSelectedRoundShape
+            "xl" -> d.extraLargeSelectedRoundShape
+            else -> error("unknown button size ${widget.size}")
+        }
+    }
+}
+
+/** An icon button in any style/state — the `standard`/`filled`/`tonal`/
+ * `outlined` container, its `narrow`/`uniform`/`wide` container size, the
+ * round/square shape, and the `*ToggleButton` checked variants. Standard
+ * and outlined pick up `LocalContentColor` upstream — the scene uses the
+ * `*Vibrant*` color variants so the reference matches the Slint side's
+ * token-pinned colors. */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun StateIconButton(
+    widget: Widget,
+    scene: Scene,
+    tracer: Tracer,
+    elementId: String,
+    density: Float,
+    emitPress: java.util.concurrent.CopyOnWriteArrayList<Pair<Long, Runnable>>,
+) {
+    val interactionSource = remember { ReplayableInteractionSource() }
+    val containerSize = iconContainerSize(widget)
+    emitStateInteractions(
+        widget,
+        scene,
+        tracer,
+        elementId,
+        interactionSource,
+        emitPress,
+        Offset(containerSize.width.value * density / 2f, containerSize.height.value * density / 2f),
+        density,
+    )
+
+    var checked by remember { mutableStateOf(widget.checked) }
+    val clickToggles = widget.checkable && sceneActionsClick(scene)
+    DisposableEffect(Unit) {
+        val flip = Runnable { checked = !checked }
+        // A click completes on release — `checked` flips at its `at` time.
+        val at = scene.actions.firstOrNull { it.kind == "release" }?.at ?: 0L
+        val entry = at to flip
+        if (clickToggles) {
+            emitPress.add(entry)
+        }
+        onDispose { emitPress.remove(entry) }
+    }
+
+    val shapes = IconButtonDefaults.shapes(
+        shape = iconRestingShape(widget),
+        pressedShape = iconPressedShape(widget),
+    )
+    val toggleShapes = IconButtonDefaults.toggleableShapes(
+        shape = iconRestingShape(widget),
+        pressedShape = iconPressedShape(widget),
+        checkedShape = iconCheckedShape(widget),
+    )
+    val modifier = Modifier.offset(widget.x.dp, widget.y.dp)
+        .size(containerSize)
+        .track(tracer, elementId)
+    val iconVector = sceneIcon(widget.icon ?: "check")
+    val content: @Composable () -> Unit = {
+        Icon(iconVector, contentDescription = null, modifier = Modifier.size(iconSize(widget)))
+    }
+
+    // Same corner-radius probe as the text buttons — the composable's
+    // AnimatedShapeState is internal; the trace re-derives it.
+    val pressed by interactionSource.collectIsPressedAsState()
+    val spec = androidx.compose.material3.MaterialTheme.motionScheme.defaultEffectsSpec<Float>()
+    val radius by animateFloatAsState(
+        targetValue = radiusTarget(
+            containerSize.height.value,
+            iconRestingShape(widget), iconPressedShape(widget), iconCheckedShape(widget),
+            pressed, widget.checkable && checked, density,
+        ),
+        animationSpec = spec,
+        label = "container_radius",
+    )
+    tracer.propGetters["container_radius"] = { radius.toDouble() }
+
+    val pressInk = pressInkMarker(widget, emitPress)
+
+    when {
+        widget.checkable -> when (widget.kind) {
+            "icon-button" -> IconToggleButton(
+                checked = checked,
+                onCheckedChange = {},
+                modifier = modifier,
+                enabled = widget.enabled,
+                shapes = toggleShapes,
+                colors = IconButtonDefaults.iconToggleButtonVibrantColors(),
+                interactionSource = interactionSource,
+                content = content,
+            )
+            "filled-icon-button" -> FilledIconToggleButton(
+                checked = checked,
+                onCheckedChange = {},
+                modifier = modifier,
+                enabled = widget.enabled,
+                shapes = toggleShapes,
+                interactionSource = interactionSource,
+                content = content,
+            )
+            "tonal-icon-button" -> FilledTonalIconToggleButton(
+                checked = checked,
+                onCheckedChange = {},
+                modifier = modifier,
+                enabled = widget.enabled,
+                shapes = toggleShapes,
+                interactionSource = interactionSource,
+                content = content,
+            )
+            "outlined-icon-button" -> OutlinedIconToggleButton(
+                checked = checked,
+                onCheckedChange = {},
+                modifier = modifier,
+                enabled = widget.enabled,
+                shapes = toggleShapes,
+                colors = IconButtonDefaults.outlinedIconToggleButtonVibrantColors(),
+                // The default border factory keys on `LocalContentColor`;
+                // the vibrant factory uses the spec's `OutlineColor` token.
+                border = IconButtonDefaults.outlinedIconToggleButtonVibrantBorder(widget.enabled, checked),
+                interactionSource = interactionSource,
+                content = content,
+            )
+            else -> error("no icon toggle variant for ${widget.kind}")
+        }
+        else -> when (widget.kind) {
+            "icon-button" -> IconButton(
+                onClick = {},
+                shapes = shapes,
+                modifier = modifier,
+                enabled = widget.enabled,
+                colors = IconButtonDefaults.iconButtonVibrantColors(),
+                interactionSource = interactionSource,
+                content = content,
+            )
+            "filled-icon-button" -> FilledIconButton(
+                onClick = {},
+                shapes = shapes,
+                modifier = modifier,
+                enabled = widget.enabled,
+                interactionSource = interactionSource,
+                content = content,
+            )
+            "tonal-icon-button" -> FilledTonalIconButton(
+                onClick = {},
+                shapes = shapes,
+                modifier = modifier,
+                enabled = widget.enabled,
+                interactionSource = interactionSource,
+                content = content,
+            )
+            "outlined-icon-button" -> OutlinedIconButton(
+                onClick = {},
+                shapes = shapes,
+                modifier = modifier,
+                enabled = widget.enabled,
+                colors = IconButtonDefaults.outlinedIconButtonVibrantColors(),
+                // Same `LocalContentColor`-vs-token split as the toggle.
+                border = IconButtonDefaults.outlinedIconButtonVibrantBorder(widget.enabled),
+                interactionSource = interactionSource,
+                content = content,
+            )
+            else -> error("unknown icon button kind ${widget.kind}")
+        }
+    }
+
+    if (pressInk.value) {
+        PressInkOverlay(
+            widget,
+            tracer,
+            elementId,
+            density,
+            // Live morph radius — see the button overlay above.
+            RoundedCornerShape(radius.dp),
+            iconInkColor(widget, checked),
+        )
+    }
+}
+
+/** `StateTokens.PressedStateLayerOpacity` — internal upstream, pinned here
+ * by reference: 0.1 of the content color at the held-press settle. */
+private const val PRESSED_STATE_LAYER_ALPHA = 0.1f
+
+/** The content color a widget's ripple tints its container with — the same
+ * color object family the dispatch below picks for the composable. */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun buttonInkColor(widget: Widget, checked: Boolean): Color {
+    val b = ButtonDefaults
+    val t = ToggleButtonDefaults
+    return when {
+        widget.checkable -> when (widget.kind) {
+            "filled-button" -> t.toggleButtonColors()
+            "tonal-button" -> t.tonalToggleButtonColors()
+            "elevated-button" -> t.elevatedToggleButtonColors()
+            "outlined-button" -> t.outlinedToggleButtonColors()
+            else -> error("no toggle variant for ${widget.kind}")
+        }.let { if (checked) it.checkedContentColor else it.contentColor }
+        else -> when (widget.kind) {
+            "filled-button" -> b.buttonColors().contentColor
+            "tonal-button" -> b.filledTonalButtonColors().contentColor
+            "elevated-button" -> b.elevatedButtonColors().contentColor
+            "outlined-button" -> b.outlinedButtonColors().contentColor
+            "text-button" -> b.textButtonColors().contentColor
+            else -> error("unknown text button kind ${widget.kind}")
+        }
+    }
+}
+
+/** Same for the icon-button variants: vibrant where the spec keys on
+ * `LocalContentColor`, the defaults elsewhere. */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun iconInkColor(widget: Widget, checked: Boolean): Color {
+    val d = IconButtonDefaults
+    return when {
+        widget.checkable -> when (widget.kind) {
+            "icon-button" -> d.iconToggleButtonVibrantColors()
+            "filled-icon-button" -> d.filledIconToggleButtonColors()
+            "tonal-icon-button" -> d.filledTonalIconToggleButtonColors()
+            "outlined-icon-button" -> d.outlinedIconToggleButtonVibrantColors()
+            else -> error("no icon toggle variant for ${widget.kind}")
+        }.let { if (checked) it.checkedContentColor else it.contentColor }
+        else -> when (widget.kind) {
+            "icon-button" -> d.iconButtonVibrantColors().contentColor
+            "filled-icon-button" -> d.filledIconButtonColors().contentColor
+            "tonal-icon-button" -> d.filledTonalIconButtonColors().contentColor
+            "outlined-icon-button" -> d.outlinedIconButtonVibrantColors().contentColor
+            else -> error("unknown icon button kind ${widget.kind}")
+        }
+    }
+}
+
+/** Flips once the frame-sink press lands — the same slot the bare `Press`
+ * emit uses, after the baseline frame 0. On a device the held ripple
+ * settles to its ink; layoutlib never advances that animator, so the
+ * [PressInkOverlay] reproduces the settled visual instead. */
+@Composable
+private fun pressInkMarker(
+    widget: Widget,
+    emitPress: java.util.concurrent.CopyOnWriteArrayList<Pair<Long, Runnable>>,
+): androidx.compose.runtime.State<Boolean> {
+    val show = remember { mutableStateOf(false) }
+    if (widget.state != "pressed") {
+        return show
+    }
+    val mark = remember { Runnable { show.value = true } }
+    DisposableEffect(mark) {
+        val entry = 0L to mark
+        emitPress.add(entry)
+        onDispose { emitPress.remove(entry) }
+    }
+    return show
+}
+
+/** The settled held-press ink: the content color at
+ * [PRESSED_STATE_LAYER_ALPHA] inside the live (pressed) shape, drawn over
+ * the widget's tracked bounds. Painting over the content is exact rather
+ * than approximate: the ink color is the content color, so glyph pixels
+ * keep their tone. */
+@Composable
+private fun PressInkOverlay(
+    widget: Widget,
+    tracer: Tracer,
+    elementId: String,
+    density: Float,
+    shape: Shape,
+    color: Color,
+) {
+    val b = tracer.elementBounds[elementId] ?: return
+    Box(
+        Modifier.offset((b.left / density).dp, (b.top / density).dp)
+            .size((b.width / density).dp, (b.height / density).dp)
+            .clip(shape)
+            .background(color.copy(alpha = PRESSED_STATE_LAYER_ALPHA)),
+    )
 }

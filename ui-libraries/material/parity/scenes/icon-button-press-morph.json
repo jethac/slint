@@ -1,0 +1,66 @@
+{
+    "name": "icon-button-press-morph",
+    "type": "canvas",
+    "parity": "motion",
+    "size": [
+        128,
+        112
+    ],
+    "densities": [
+        1,
+        2
+    ],
+    "theme": {
+        "seed": "6750A4",
+        "variant": "tonal-spot",
+        "spec": "spec2025",
+        "platform": "phone",
+        "dark": false,
+        "contrast": 0.0
+    },
+    "fonts": {
+        "plain": "Roboto",
+        "brand": "Roboto"
+    },
+    "times": [
+        0,
+        15,
+        30,
+        60,
+        120,
+        200,
+        333,
+        500,
+        800,
+        1500
+    ],
+    "widgets": [
+        {
+            "kind": "filled-icon-button",
+            "x": 36,
+            "y": 28,
+            "icon": "check",
+            "size": "m",
+            "state": "pressed"
+        }
+    ],
+    "trace_elements": [
+        "button0"
+    ],
+    "trace_props": [
+        "container_radius"
+    ],
+    "mask_inner": {
+        "button0": [
+            15,
+            30,
+            60,
+            120,
+            200,
+            333,
+            500,
+            800,
+            1500
+        ]
+    }
+}

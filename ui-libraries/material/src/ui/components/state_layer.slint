@@ -3,6 +3,7 @@
 
 import { MaterialAnimations } from "../styling/material_animations.slint";
 import { MaterialPalette } from "../styling/material_palette.slint";
+import { MaterialFocusIndicator, MaterialFocusRing } from "../styling/generated/material_state_tokens.slint";
 import { ToolTip } from "./tooltip.slint";
 import { MaterialWindowAdapter } from "./material_window.slint";
 
@@ -76,6 +77,10 @@ export component StateLayer {
     in property <bool> pressed;
     in property <bool> has_focus;
     in property <bool> has_hover;
+    /// When true, focus is communicated by a `FocusRing` the caller draws
+    /// and the opacity layer is skipped — the `InsetRing` ripple theme
+    /// upstream (`RippleThemeConfiguration.Focus.InsetRing`).
+    in property <bool> focus_ring;
 
     // MaterialShapes live in the normalized (0,0)-(1,1) space; see Elevation.
     shape-fit: ShapeFit.normalized;
@@ -114,7 +119,7 @@ export component StateLayer {
         disabled when !root.enabled && root.display_background : {
             root.state_layer_opacity: MaterialPalette.state_layer_opacity_focus;
         }
-        focus when root.enabled && root.has_focus : {
+        focus when root.enabled && root.has_focus && !root.focus_ring : {
             root.state_layer_opacity: MaterialPalette.state_layer_opacity_focus;
         }
         hover when root.enabled && root.has_hover && !MaterialWindowAdapter.disable_hover : {
@@ -123,6 +128,46 @@ export component StateLayer {
     ]
 
     animate state_layer_opacity { enabled: !MaterialPalette.reduced-motion; duration: MaterialAnimations.opacity_duration; easing: MaterialAnimations.opacity_easing; }
+}
+
+/// The M3 inset focus ring (`RippleThemeConfiguration.Focus.InsetRing`):
+/// two strokes drawn just inside the component's outline — an outer
+/// `secondary` stroke flush to the edge and a thicker `on_secondary` stroke
+/// one `inner_stroke_inset` behind it. `border_radius` follows the
+/// component's current shape, so the ring morphs with it mid-animation.
+/// This is a decoration only — place it over the container, after the state
+/// layer, and show it while the component has keyboard focus.
+export component FocusRing {
+    in property <length> border_radius;
+    property <MaterialFocusRing> ring: MaterialFocusIndicator.ring;
+
+    // Upstream `BorderLogic` insets each stroke from the element edge by its
+    // own inset and draws the inner stroke first: the inner band covers
+    // `inner_stroke_inset..+inner_stroke_width` and the outer
+    // `outer_stroke_inset..+outer_stroke_width` on top of it.
+    Rectangle {
+        property <length> inset: root.ring.inner_stroke_inset;
+        x: inset;
+        y: inset;
+        width: parent.width - 2 * inset;
+        height: parent.height - 2 * inset;
+        background: transparent;
+        border_width: root.ring.inner_stroke_width;
+        border_radius: max(0px, root.border_radius - inset);
+        border_color: MaterialPalette.on_secondary;
+    }
+
+    Rectangle {
+        property <length> inset: root.ring.outer_stroke_inset;
+        x: inset;
+        y: inset;
+        width: parent.width - 2 * inset;
+        height: parent.height - 2 * inset;
+        background: transparent;
+        border_width: root.ring.outer_stroke_width;
+        border_radius: max(0px, root.border_radius - inset);
+        border_color: MaterialPalette.secondary;
+    }
 }
 
 export component FocusTouchArea inherits TouchArea {
@@ -183,6 +228,25 @@ export component StateLayerArea inherits FocusTouchArea {
     in property <bool> transparent_background;
     in property <bool> display_background: true;
     in property <bool> clip_ripple: true;
+    /// See `StateLayer.focus_ring`.
+    in property <bool> focus_ring;
+    /// Uniform corner radius used for the hit test. Upstream clips the
+    /// component to its shape, so presses and hovers in the corner dead
+    /// zones outside the shape never reach it; `0` keeps the plain
+    /// rectangle behavior for unshaped surfaces.
+    in property <length> hit_radius: 0px;
+    /// Whether the current press landed inside the hit shape. Reset on the
+    /// next `down` event; keyboard activation is always inside.
+    out property <bool> pointer_inside: true;
+    /// Test hook: drive the hover/press state layers without pointer input —
+    /// a single pointer cannot hold several widgets in a state at once,
+    /// while upstream's per-widget `InteractionSource` can.
+    in property <bool> simulate_hover;
+    in property <bool> simulate_press;
+    /// `pressed` limited to pointer-downs that started inside the shape.
+    out property <bool> effective_pressed: (root.pressed && root.pointer_inside) || root.enter_pressed || root.simulate_press;
+    /// `has_hover` limited to pointer positions inside the shape.
+    out property <bool> effective_hover: (root.has_hover && root.point_inside(root.mouse_x, root.mouse_y)) || root.simulate_hover;
 
     // MaterialShapes live in the normalized (0,0)-(1,1) space; see Elevation.
     // This binds TouchArea's own `shape-fit`, so shape hit-testing matches
@@ -191,7 +255,31 @@ export component StateLayerArea inherits FocusTouchArea {
 
     property <bool> popup_open;
 
-    if !root.enabled || (root.enabled && (root.has_focus || root.pressed || root.enter_pressed || root.has_hover)) : StateLayer {
+    /// Hit test against the uniform-radius rounded rect this component is
+    /// clipped to: a point inside the bounds is dead only when it falls in a
+    /// corner zone outside the corner circle.
+    public pure function point_inside(x: length, y: length) -> bool {
+        let r = Math.min(root.hit_radius, Math.min(root.width, root.height) / 2);
+        if r <= 0px {
+            return true;
+        }
+        if (x >= r && x <= root.width - r) || (y >= r && y <= root.height - r) {
+            return true;
+        }
+        let cx = x < r ? r : root.width - r;
+        let cy = y < r ? r : root.height - r;
+        let dx = x - cx;
+        let dy = y - cy;
+        return dx * dx + dy * dy <= r * r;
+    }
+
+    pointer-event(event) => {
+        if event.kind == PointerEventKind.down {
+            root.pointer_inside = root.point_inside(root.pressed_x, root.pressed_y);
+        }
+    }
+
+    if !root.enabled || (root.enabled && (root.has_focus || root.effective_pressed || root.effective_hover)) : StateLayer {
         width: 100%;
         height: 100%;
         background: root.transparent_background ? transparent : root.color;
@@ -199,14 +287,15 @@ export component StateLayerArea inherits FocusTouchArea {
         shape: root.shape;
         shape-fit: root.shape-fit;
         enabled: root.enabled;
-        pressed: root.pressed || root.enter_pressed;
+        pressed: root.effective_pressed;
         has_focus: root.has_focus;
-        has_hover: root.has_hover;
+        has_hover: root.effective_hover;
         display_background: root.display_background;
+        focus_ring: root.focus_ring;
     }
 
     // ripple
-    if root.enabled && (root.pressed || root.enter_pressed) : Ripple {
+    if root.enabled && root.effective_pressed : Ripple {
         pressed_x: root.pressed_x;
         pressed_y: root.pressed_y;
         width: 100%;

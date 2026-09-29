@@ -1,0 +1,45 @@
+{
+    "name": "negative-toggle-select",
+    "type": "canvas",
+    "parity": "negative",
+    "negative_note": "slint_overrides drops `checkable`, so the Slint widget renders the resting round shape while checked \u2014 a toggle that does not morph on selection must fail",
+    "size": [
+        240,
+        96
+    ],
+    "densities": [
+        1,
+        2
+    ],
+    "theme": {
+        "seed": "6750A4",
+        "variant": "tonal-spot",
+        "spec": "spec2025",
+        "platform": "phone",
+        "dark": false,
+        "contrast": 0.0
+    },
+    "fonts": {
+        "plain": "Roboto",
+        "brand": "Roboto"
+    },
+    "widgets": [
+        {
+            "kind": "filled-button",
+            "x": 16,
+            "y": 28,
+            "text": "Label",
+            "size": "s",
+            "checkable": true,
+            "checked": true,
+            "slint_overrides": {
+                "checkable": false
+            },
+            "width": 86
+        }
+    ],
+    "trace_elements": [
+        "button0"
+    ],
+    "trace_props": []
+}
