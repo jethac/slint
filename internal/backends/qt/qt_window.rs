@@ -1182,12 +1182,12 @@ impl ItemRenderer for QtItemRenderer<'_> {
             let painter: &mut QPainterPtr = &mut self.painter;
             cpp! { unsafe [
                 painter as "QPainterPtr*",
-                m11 as "float&",
-                m12 as "float&",
-                m21 as "float&",
-                m22 as "float&",
-                dx as "float&",
-                dy as "float&"] {
+                mut m11 as "float",
+                mut m12 as "float",
+                mut m21 as "float",
+                mut m22 as "float",
+                mut dx as "float",
+                mut dy as "float"] {
                 QTransform t = (*painter)->transform();
                 m11 = t.m11(); m12 = t.m12();
                 m21 = t.m21(); m22 = t.m22();
