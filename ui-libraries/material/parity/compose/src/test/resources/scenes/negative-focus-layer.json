@@ -1,6 +1,7 @@
 {
   "actions": [
     {
+      "at": 0.0,
       "kind": "key:Tab",
       "x": 0.0,
       "y": 0.0
@@ -90,11 +91,16 @@
   "type": "canvas",
   "widgets": [
     {
+      "checkable": null,
+      "checked": null,
       "color": null,
       "enabled": null,
       "height": null,
+      "icon": null,
       "kind": "filled-button",
       "radius": null,
+      "shape": null,
+      "size": null,
       "slint_overrides": {
         "cover": {
           "fill": "primary"
@@ -103,6 +109,7 @@
       "state": "focused",
       "text": "Label",
       "width": null,
+      "width_option": null,
       "x": 16.0,
       "y": 28.0
     }

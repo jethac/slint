@@ -58,6 +58,9 @@ class Action(json: JSONObject) {
     val kind: String = json.getString("kind")
     val x: Float = json.getDouble("x").toFloat()
     val y: Float = json.getDouble("y").toFloat()
+    /** Dispatch time within the frame sequence (ms); `0` fires right after
+     * the pre-gesture baseline frame, as before. */
+    val at: Long = json.optLong("at", 0)
 }
 
 class Widget(json: JSONObject) {
@@ -67,12 +70,31 @@ class Widget(json: JSONObject) {
     val width: Float = json.optDouble("width", 0.0).toFloat()
     val height: Float = json.optDouble("height", 0.0).toFloat()
     val radius: Float = json.optDouble("radius", 0.0).toFloat()
-    val text: String? = json.optString("text").takeIf { it.isNotEmpty() }
+    val text: String? = (json.opt("text") as? String)?.takeIf { it.isNotEmpty() }
+    /** Stem of an svg under `src/ui/icons/` (`check` → `icons/check.svg`),
+     * loaded as an [ImageVector] — the same path the Slint `Icons` image
+     * rasterizes. */
+    val icon: String? = (json.opt("icon") as? String)?.takeIf { it.isNotEmpty() }
     val enabled: Boolean = json.optBoolean("enabled", true)
     /** Interaction state the widget starts in: `enabled` (default),
      * `disabled`, `pressed` (pointer held), `hovered`, or `focused`. */
-    val state: String = json.optString("state", if (json.optBoolean("enabled", true)) "enabled" else "disabled")
-    val color: String? = json.optString("color").takeIf { it.isNotEmpty() }
+    val state: String = (json.opt("state") as? String)
+        ?: (if (json.optBoolean("enabled", true)) "enabled" else "disabled")
+    val color: String? = (json.opt("color") as? String)?.takeIf { it.isNotEmpty() }
+    /** Button size bucket `xs`/`s`/`m`/`l`/`xl` — maps to the container
+     * heights and [ToggleButtonSize]s; `s` is the upstream default. */
+    val size: String = (json.opt("size") as? String) ?: "s"
+    /** `round` (default stadium) or `square`. */
+    val shape: String = (json.opt("shape") as? String) ?: "round"
+    /** Toggle variant (`checkable` on the Slint side, `*ToggleButton`
+     * composables upstream). */
+    val checkable: Boolean = json.optBoolean("checkable", false)
+    val checked: Boolean = json.optBoolean("checked", false)
+    /** Icon-button container width `narrow`/`uniform`/`wide`. */
+    val widthOption: String = (json.opt("width_option") as? String) ?: "uniform"
+
+    val isIconButton: Boolean get() = kind.endsWith("icon-button")
+    val isButton: Boolean get() = isIconButton || kind.endsWith("-button")
 }
 
 /** "primary-container" → "primaryContainer" for `scheme` map lookups. */

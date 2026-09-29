@@ -1,9 +1,10 @@
 {
   "actions": [
     {
+      "at": 0.0,
       "kind": "press",
-      "x": 56.0,
-      "y": 48.0
+      "x": 36.0,
+      "y": 44.0
     }
   ],
   "case_rel": "material/button_press_dark",
@@ -109,28 +110,40 @@
   "type": "canvas",
   "widgets": [
     {
+      "checkable": null,
+      "checked": null,
       "color": "inverse-surface",
       "enabled": null,
       "height": 96.0,
+      "icon": null,
       "kind": "rect",
       "radius": 0.0,
+      "shape": null,
+      "size": null,
       "slint_overrides": {},
       "state": null,
       "text": null,
       "width": 240.0,
+      "width_option": null,
       "x": 0.0,
       "y": 0.0
     },
     {
+      "checkable": null,
+      "checked": null,
       "color": null,
       "enabled": null,
       "height": null,
+      "icon": null,
       "kind": "filled-button",
       "radius": null,
+      "shape": null,
+      "size": null,
       "slint_overrides": {},
       "state": "pressed",
       "text": "Label",
       "width": null,
+      "width_option": null,
       "x": 16.0,
       "y": 28.0
     }

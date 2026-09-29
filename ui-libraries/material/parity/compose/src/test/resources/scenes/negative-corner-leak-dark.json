@@ -1,11 +1,5 @@
 {
-  "actions": [
-    {
-      "kind": "press",
-      "x": 56.0,
-      "y": 48.0
-    }
-  ],
+  "actions": [],
   "case_rel": "material/negative_corner_leak_dark",
   "densities": [
     1,
@@ -90,11 +84,16 @@
   "type": "canvas",
   "widgets": [
     {
+      "checkable": null,
+      "checked": null,
       "color": null,
       "enabled": null,
       "height": null,
+      "icon": null,
       "kind": "filled-button",
       "radius": null,
+      "shape": null,
+      "size": null,
       "slint_overrides": {
         "cover": {
           "fill": "inverse-surface",
@@ -105,6 +104,7 @@
       "state": "pressed",
       "text": "Label",
       "width": null,
+      "width_option": null,
       "x": 16.0,
       "y": 28.0
     }

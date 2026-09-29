@@ -1,0 +1,125 @@
+{
+    "name": "button-sizes",
+    "type": "canvas",
+    "parity": "static",
+    "size": [
+        716,
+        316
+    ],
+    "densities": [
+        1,
+        2
+    ],
+    "theme": {
+        "seed": "6750A4",
+        "variant": "tonal-spot",
+        "spec": "spec2025",
+        "platform": "phone",
+        "dark": false,
+        "contrast": 0.0
+    },
+    "fonts": {
+        "plain": "Roboto",
+        "brand": "Roboto"
+    },
+    "widgets": [
+        {
+            "kind": "filled-button",
+            "x": 16,
+            "y": 128,
+            "text": "OK",
+            "size": "xs",
+            "width": 58
+        },
+        {
+            "kind": "filled-button",
+            "x": 156,
+            "y": 120,
+            "text": "OK",
+            "size": "s",
+            "width": 58
+        },
+        {
+            "kind": "filled-button",
+            "x": 296,
+            "y": 104,
+            "text": "OK",
+            "size": "m",
+            "width": 69
+        },
+        {
+            "kind": "filled-button",
+            "x": 436,
+            "y": 64,
+            "text": "OK",
+            "size": "l",
+            "width": 117
+        },
+        {
+            "kind": "filled-button",
+            "x": 576,
+            "y": 24,
+            "text": "OK",
+            "size": "xl",
+            "width": 149
+        },
+        {
+            "kind": "filled-button",
+            "x": 16,
+            "y": 268,
+            "text": "OK",
+            "size": "xs",
+            "shape": "square",
+            "width": 58
+        },
+        {
+            "kind": "filled-button",
+            "x": 156,
+            "y": 260,
+            "text": "OK",
+            "size": "s",
+            "shape": "square",
+            "width": 58
+        },
+        {
+            "kind": "filled-button",
+            "x": 296,
+            "y": 244,
+            "text": "OK",
+            "size": "m",
+            "shape": "square",
+            "width": 69
+        },
+        {
+            "kind": "filled-button",
+            "x": 436,
+            "y": 204,
+            "text": "OK",
+            "size": "l",
+            "shape": "square",
+            "width": 117
+        },
+        {
+            "kind": "filled-button",
+            "x": 576,
+            "y": 164,
+            "text": "OK",
+            "size": "xl",
+            "shape": "square",
+            "width": 149
+        }
+    ],
+    "trace_elements": [
+        "button0",
+        "button1",
+        "button2",
+        "button3",
+        "button4",
+        "button5",
+        "button6",
+        "button7",
+        "button8",
+        "button9"
+    ],
+    "trace_props": []
+}

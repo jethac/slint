@@ -1,11 +1,5 @@
 {
-  "actions": [
-    {
-      "kind": "move",
-      "x": 172.0,
-      "y": 48.0
-    }
-  ],
+  "actions": [],
   "case_rel": "material/button_hover",
   "densities": [
     1,
@@ -94,28 +88,40 @@
   "type": "canvas",
   "widgets": [
     {
+      "checkable": null,
+      "checked": null,
       "color": null,
       "enabled": null,
       "height": null,
+      "icon": null,
       "kind": "filled-button",
       "radius": null,
+      "shape": null,
+      "size": null,
       "slint_overrides": {},
       "state": "enabled",
       "text": "Enabled",
       "width": null,
+      "width_option": null,
       "x": 16.0,
       "y": 28.0
     },
     {
+      "checkable": null,
+      "checked": null,
       "color": null,
       "enabled": null,
       "height": null,
+      "icon": null,
       "kind": "filled-button",
       "radius": null,
+      "shape": null,
+      "size": null,
       "slint_overrides": {},
       "state": "hovered",
       "text": "Hovered",
       "width": null,
+      "width_option": null,
       "x": 132.0,
       "y": 28.0
     }
