@@ -1,0 +1,70 @@
+// Copyright © SixtyFPS GmbH <info@slint.dev>
+// SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0
+
+// SIZE=400x260
+// BASE_THRESHOLD=3
+// ROTATION_THRESHOLD=80  - shape rasterization anti-aliasing differs by rotation
+
+export component TestCase inherits Window {
+    width: 400px;
+    height: 260px;
+    background: #f7f7f7;
+
+    // Elevation 0dp: no shadow.
+    Rectangle {
+        x: 30px;
+        y: 30px;
+        width: 90px;
+        height: 90px;
+        background: white;
+        border-radius: 12px;
+        elevation: 0px;
+    }
+
+    // Elevation 6dp: ambient + spot shadow, top-centered light.
+    Rectangle {
+        x: 150px;
+        y: 30px;
+        width: 90px;
+        height: 90px;
+        background: white;
+        border-radius: 12px;
+        elevation: 6px;
+    }
+
+    // Elevation 24dp: stronger umbra, wider penumbra, further spot offset.
+    Rectangle {
+        x: 270px;
+        y: 30px;
+        width: 90px;
+        height: 90px;
+        background: white;
+        border-radius: 12px;
+        elevation: 24px;
+    }
+
+    // A shape casts the same Android shadow: the tessellated umbra follows
+    // the outline, not the bounding box.
+    Rectangle {
+        x: 60px;
+        y: 150px;
+        width: 100px;
+        height: 80px;
+        background: #48b;
+        shape: Shapes.circle(32);
+        elevation: 12px;
+    }
+
+    // Custom layer colors (Material light theme defaults are dark).
+    Rectangle {
+        x: 240px;
+        y: 150px;
+        width: 100px;
+        height: 80px;
+        background: white;
+        border-radius: 40px;
+        elevation: 12px;
+        ambient-shadow-color: #0006;
+        spot-shadow-color: #3048;
+    }
+}
