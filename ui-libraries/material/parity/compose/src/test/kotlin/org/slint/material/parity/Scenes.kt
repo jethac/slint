@@ -432,7 +432,7 @@ private fun CanvasScene(
                             .clip(RoundedCornerShapeOrRect(widget.radius.dp))
                             .background(schemeColor(widget.color ?: "primary")),
                     )
-                "surface" -> {
+                widget.kind == "surface" -> {
                     // A clip + color surface: the shape machinery's outline
                     // and fills. Platform shadows (`Modifier.shadow`,
                     // `View.elevation`) deadlock layoutlib's hardware
