@@ -93,7 +93,15 @@ impl InterpolatedPropertyValue for Value {
         match (self, target) {
             (Value::Number(_), Value::Number(_)) => 1,
             (Value::Brush(a), Value::Brush(b)) => a.channel_count(b),
+            (Value::Shape(a), Value::Shape(b)) => a.channel_count(b),
             _ => 0,
+        }
+    }
+
+    fn scalar_delta(&self, target: &Self) -> f32 {
+        match (self, target) {
+            (Value::Shape(a), Value::Shape(b)) => a.scalar_delta(b),
+            _ => 0.,
         }
     }
 
@@ -101,7 +109,25 @@ impl InterpolatedPropertyValue for Value {
         match (self, target) {
             (Value::Number(a), Value::Number(_)) => out[0] = *a as f32,
             (Value::Brush(a), Value::Brush(b)) => a.write_channels(b, out),
+            (Value::Shape(a), Value::Shape(b)) => a.write_channels(b, out),
             _ => debug_assert!(false, "no channels for this pair of Value"),
+        }
+    }
+
+    /// `Shape`'s channel layout is directional (0 at the start shape, the morph
+    /// displacement at the target), so its start/target encodings can't fall
+    /// through to the absolute [`write_channels`](Self::write_channels) defaults.
+    fn write_start_channels(&self, target: &Self, out: &mut [f32]) {
+        match (self, target) {
+            (Value::Shape(a), Value::Shape(b)) => a.write_start_channels(b, out),
+            _ => self.write_channels(target, out),
+        }
+    }
+
+    fn write_target_channels(&self, start: &Self, out: &mut [f32]) {
+        match (self, start) {
+            (Value::Shape(a), Value::Shape(b)) => a.write_target_channels(b, out),
+            _ => self.write_channels(start, out),
         }
     }
 
@@ -110,6 +136,9 @@ impl InterpolatedPropertyValue for Value {
             (Value::Number(_), Value::Number(_)) => Value::Number(channels[0] as f64),
             (Value::Brush(a), Value::Brush(b)) => {
                 Value::Brush(a.rebuild_from_channels(b, channels))
+            }
+            (Value::Shape(a), Value::Shape(b)) => {
+                Value::Shape(a.rebuild_from_channels(b, channels))
             }
             _ => self.clone(),
         }
