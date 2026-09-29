@@ -3770,6 +3770,7 @@ impl<T: ProcessScene> i_slint_core::item_rendering::ItemRenderer for SceneBuilde
     }
 
     #[cfg(feature = "path")]
+    #[allow(clippy::unnecessary_cast)] // Coord
     fn draw_path(
         &mut self,
         path: Pin<&i_slint_core::items::Path>,
@@ -3793,8 +3794,8 @@ impl<T: ProcessScene> i_slint_core::item_rendering::ItemRenderer for SceneBuilde
             path_iterator.iter(),
             |p| {
                 euclid::point2::<f32, LogicalPx>(
-                    p.x + offset.x + state_offset.x,
-                    p.y + offset.y + state_offset.y,
+                    p.x as f32 + offset.x as f32 + state_offset.x as f32,
+                    p.y as f32 + offset.y as f32 + state_offset.y as f32,
                 ) * scale_factor
             },
             shape_raster::FLATTEN_TOLERANCE / scale_factor.get(),
@@ -3836,7 +3837,7 @@ impl<T: ProcessScene> i_slint_core::item_rendering::ItemRenderer for SceneBuilde
         }
 
         // Stroke: outline the path, then fill the outline like a fill.
-        let stroke_width = path.stroke_width().get() * scale_factor.get();
+        let stroke_width = path.stroke_width().get() as f32 * scale_factor.get();
         let stroke_color: PremultipliedRgbaColor = self.alpha_color(path.stroke().color()).into();
         if stroke_width > 0.01 && stroke_color.alpha > 0 {
             let stroke_contours = shape_raster::stroke_to_fill(
