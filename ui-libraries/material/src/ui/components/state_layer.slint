@@ -13,6 +13,9 @@ export component Ripple {
     in property <color> color;
     in property <bool> clip_ripple: true;
 
+    // MaterialShapes live in the normalized (0,0)-(1,1) space; see Elevation.
+    shape-fit: ShapeFit.normalized;
+
     // Unbounded ink for inline surfaces (e.g. icon buttons): the circle is
     // meant to paint past the element bounds.
     if !root.clip_ripple : Rectangle {
@@ -73,6 +76,9 @@ export component StateLayer {
     in property <bool> pressed;
     in property <bool> has_focus;
     in property <bool> has_hover;
+
+    // MaterialShapes live in the normalized (0,0)-(1,1) space; see Elevation.
+    shape-fit: ShapeFit.normalized;
 
     property <float> state_layer_opacity;
 
@@ -177,6 +183,11 @@ export component StateLayerArea inherits FocusTouchArea {
     in property <bool> transparent_background;
     in property <bool> display_background: true;
     in property <bool> clip_ripple: true;
+
+    // MaterialShapes live in the normalized (0,0)-(1,1) space; see Elevation.
+    // This binds TouchArea's own `shape-fit`, so shape hit-testing matches
+    // the rendered outline.
+    shape-fit: ShapeFit.normalized;
 
     property <bool> popup_open;
 
