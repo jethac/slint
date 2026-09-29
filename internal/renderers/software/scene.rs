@@ -29,6 +29,18 @@ pub struct SceneVectors {
     pub paths: Vec<Rc<PathCommandData>>,
     /// Shape clip outlines, referenced from `SceneItem::clip`.
     pub clip_outlines: Vec<Rc<ClipOutlineData>>,
+    /// Elevation-shadow layers, swept into spans per scanline.
+    pub shadow_layers: Vec<Rc<ShadowLayerData>>,
+}
+
+/// One elevation-shadow layer to draw, in absolute physical screen
+/// coordinates.
+pub struct ShadowLayerData {
+    /// The layer: a tessellated mesh swept per scanline, or a bounded A8
+    /// mask (the blur fallback) drawn like a texture.
+    pub layer: i_slint_core::graphics::shadow::ElevationLayer,
+    /// The layer's color, alpha included.
+    pub color: Color,
 }
 
 /// A flattened path draw, in absolute physical screen coordinates
@@ -439,6 +451,10 @@ pub enum SceneCommand {
     /// conic_gradient_index is an index in the [`SceneVectors::conic_gradients`] array
     ConicGradient {
         conic_gradient_index: u16,
+    },
+    /// layer_index is an index in [`SceneVectors::shadow_layers`]
+    ShadowLayer {
+        layer_index: u16,
     },
 }
 

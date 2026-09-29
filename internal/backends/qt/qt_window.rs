@@ -1204,8 +1204,11 @@ impl ItemRenderer for QtItemRenderer<'_> {
         );
 
         let adapter = i_slint_core::window::WindowInner::from_pub(self.window).window_adapter();
-        let (light, light_radius) =
-            shadow::elevation_light(adapter.display_geometry(), adapter.size());
+        let (light, light_radius) = shadow::elevation_light(
+            adapter.display_geometry(),
+            adapter.size(),
+            self.scale_factor().get(),
+        );
         let masks = shadow::elevation_shadow_masks(
             &outline,
             geom.cast::<f32>(),
@@ -2614,6 +2617,30 @@ impl WindowAdapter for QtWindow {
                 widget_ptr->move(pos);
             }
         }};
+    }
+
+    fn display_geometry(
+        &self,
+    ) -> Option<(i_slint_core::api::PhysicalSize, i_slint_core::api::PhysicalPosition)> {
+        let widget_ptr = self.widget_ptr();
+        // `QScreen::size` is physical device pixels; widget positions are
+        // device-independent and get scaled to physical on the Rust side.
+        let screen_size = cpp! {unsafe [widget_ptr as "QWidget*"] -> qttypes::QSize as "QSize" {
+            auto handle = widget_ptr->window() ? widget_ptr->window()->windowHandle() : nullptr;
+            return handle && handle->screen() ? handle->screen()->size() : QSize();
+        }};
+        if screen_size.width <= 0 || screen_size.height <= 0 {
+            return None;
+        }
+        let pos = cpp! {unsafe [widget_ptr as "QWidget*"] -> qttypes::QPoint as "QPoint" {
+            return widget_ptr->window() ? widget_ptr->window()->mapToGlobal(QPoint(0, 0))
+                                        : widget_ptr->pos();
+        }};
+        Some((
+            i_slint_core::api::PhysicalSize::new(screen_size.width as _, screen_size.height as _),
+            i_slint_core::api::LogicalPosition::new(pos.x as _, pos.y as _)
+                .to_physical(self.window().scale_factor()),
+        ))
     }
 
     fn set_size(&self, size: i_slint_core::api::WindowSize) {

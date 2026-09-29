@@ -1659,6 +1659,12 @@ impl WinitWindowAdapter {
                     });
                 }
             }
+            WinitWindowEvent::Moved(..) => {
+                // The elevation-shadow light is derived from the display
+                // geometry — the window's monitor and its position on it —
+                // both of which a move can change.
+                self.request_redraw();
+            }
             WinitWindowEvent::ScaleFactorChanged { scale_factor, inner_size_writer } => {
                 if std::env::var("SLINT_SCALE_FACTOR").is_err() {
                     self.window().dispatch_event_with_result(
@@ -1671,6 +1677,8 @@ impl WinitWindowAdapter {
                     }
                     // TODO: otherwise send a resize event or try to keep the logical size the same.
                 }
+                // The display scale factor feeds the elevation-shadow light.
+                self.request_redraw();
             }
             WinitWindowEvent::ThemeChanged(theme) => {
                 self.set_color_scheme(match theme {
@@ -1943,6 +1951,21 @@ impl WindowAdapter for WinitWindowAdapter {
                     }
                 })
             }
+        }
+    }
+
+    fn display_geometry(&self) -> Option<(PhysicalSize, corelib::api::PhysicalPosition)> {
+        match &*self.winit_window_or_none.borrow() {
+            WinitWindowOrNone::HasWindow { window, .. } => {
+                let monitor = window.current_monitor()?;
+                let position = window.outer_position().ok()?;
+                let size = monitor.size();
+                Some((
+                    corelib::api::PhysicalSize::new(size.width, size.height),
+                    corelib::api::PhysicalPosition::new(position.x, position.y),
+                ))
+            }
+            WinitWindowOrNone::None(_) => None,
         }
     }
 

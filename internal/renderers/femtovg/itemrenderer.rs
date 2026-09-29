@@ -754,8 +754,11 @@ impl<'a, R: femtovg::Renderer + TextureImporter> ItemRenderer for GLItemRenderer
         let ctm = shadow::Affine::new(a, b, c, d, e, f);
 
         let adapter = i_slint_core::window::WindowInner::from_pub(self.window).window_adapter();
-        let (light, light_radius) =
-            shadow::elevation_light(adapter.display_geometry(), adapter.size());
+        let (light, light_radius) = shadow::elevation_light(
+            adapter.display_geometry(),
+            adapter.size(),
+            self.window.scale_factor(),
+        );
         let masks = shadow::elevation_shadow_masks(
             &outline,
             geom.cast::<f32>(),
