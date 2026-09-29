@@ -204,6 +204,7 @@ dynamiccolor
 eabi
 eabihf
 Eeprom
+embeddedfonts
 eiusmod
 ELCDIF
 elementwise
