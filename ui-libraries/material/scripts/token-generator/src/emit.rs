@@ -352,6 +352,7 @@ pub fn emit(
     path: &str,
     focus: &FocusRing,
     color_scheme_kt: &str,
+    material_shapes_kt: &str,
 ) -> Result<Vec<Output>, String> {
     let mut outputs = Vec::new();
     let head = header(commit, repo, path);
@@ -657,6 +658,13 @@ pub fn emit(
             content: s,
         });
     }
+
+    // The 35 MaterialShapes presets (`MaterialShapes.kt`) as a `shape`-valued
+    // global.
+    outputs.push(Output {
+        rel_path: "src/ui/styling/generated/material_shapes.slint".into(),
+        content: crate::material_shapes::emit_file(material_shapes_kt, &head)?,
+    });
 
     // Every remaining per-component token object.
     {

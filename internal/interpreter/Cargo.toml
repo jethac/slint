@@ -214,6 +214,7 @@ i-slint-backend-linuxkms = { workspace = true, optional = true }
 i-slint-backend-testing = { path = "../../internal/backends/testing", features = ["internal"] }
 spin_on = { workspace = true }
 tempfile = "3"
+serde_json = { workspace = true }
 
 [lints.rust]
 unexpected_cfgs = { level = "warn", check-cfg = ["cfg(slint_debug_property)"] }

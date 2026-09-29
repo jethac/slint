@@ -94,7 +94,9 @@
       "enabled": null,
       "height": null,
       "kind": "filled-button",
+      "level": null,
       "radius": null,
+      "shape": null,
       "slint_overrides": {
         "cover": {
           "fill": "inverse-surface",

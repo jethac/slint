@@ -73,6 +73,14 @@ class Widget(json: JSONObject) {
      * `disabled`, `pressed` (pointer held), `hovered`, or `focused`. */
     val state: String = json.optString("state", if (json.optBoolean("enabled", true)) "enabled" else "disabled")
     val color: String? = json.optString("color").takeIf { it.isNotEmpty() }
+    /** M3 elevation level (0–5) for `surface` widgets, mapped to
+     * `Modifier.shadow`'s dp by `elevationDp`. */
+    val level: Int = json.optInt("level", 0)
+    /** Caster outline for `surface` widgets: a `MaterialShapes` member name
+     * in kebab case (`"cookie-9-sided"` → `MaterialShapes.Cookie9Sided`), or
+     * `"rect"` (default) for `radius`'s rounded rectangle. */
+    val shape: String =
+        if (json.isNull("shape")) "rect" else json.getString("shape")
 }
 
 /** "primary-container" → "primaryContainer" for `scheme` map lookups. */

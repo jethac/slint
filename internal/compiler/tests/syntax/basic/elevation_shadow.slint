@@ -1,0 +1,36 @@
+// Copyright © SixtyFPS GmbH <info@slint.dev>
+// SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0
+
+component Foo inherits Rectangle {
+    elevation: 4px;
+//             >  <warning{The elevation property cannot be used on the root element, the shadow will not be visible}
+}
+
+component RootElevated inherits Rectangle {
+    elevation: 4px;
+//             >  <warning{The elevation property cannot be used on the root element, the shadow will not be visible}
+    spot-shadow-color: black;
+//                     >    <warning{The spot-shadow-color property cannot be used on the root element, the shadow will not be visible}
+    ambient-shadow-color: white;
+//                        >    <warning{The ambient-shadow-color property cannot be used on the root element, the shadow will not be visible}
+}
+
+export component TestCase inherits Window {
+    Rectangle {
+        elevation: 2px;
+        spot-shadow-color: black;
+        ambient-shadow-color: white;
+        Foo {}
+    }
+    RootElevated {
+        elevation: 8px;
+    }
+    Text {
+        elevation: 2px;
+//                 >  <error{The elevation property is only supported on Rectangle elements right now}
+        spot-shadow-color: black;
+//                         >    <error{The spot-shadow-color property is only supported on Rectangle elements right now}
+        ambient-shadow-color: white;
+//                            >    <error{The ambient-shadow-color property is only supported on Rectangle elements right now}
+    }
+}

@@ -139,13 +139,14 @@ pub fn pill_star_shape(
     ))
 }
 
-/// `Shapes.custom(vertices, roundings, reps, mirror)`: a polygon built from
-/// `vertices` replicated `reps` times around the origin, optionally mirrored —
-/// the `customPolygon`/`doRepeat` machinery from MaterialShapes.kt.
+/// `Shapes.custom(vertices, roundings, reps, center, mirror)`: a polygon built
+/// from `vertices` replicated `reps` times around `center`, optionally mirrored
+/// — the `customPolygon`/`doRepeat` machinery from MaterialShapes.kt.
 pub fn custom_shape(
     vertices: &ModelRc<LogicalPosition>,
     roundings: &ModelRc<CornerRounding>,
     reps: i32,
+    center: LogicalPosition,
     mirror: bool,
 ) -> Shape {
     if reps <= 0 {
@@ -156,7 +157,7 @@ pub fn custom_shape(
     shape(super::constructors::custom_polygon(
         &vertices,
         &roundings,
-        Point::ZERO,
+        Point { x: center.x, y: center.y },
         reps as usize,
         mirror,
     ))

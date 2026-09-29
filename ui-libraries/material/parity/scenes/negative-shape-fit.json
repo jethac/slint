@@ -1,0 +1,45 @@
+{
+    "name": "negative-shape-fit",
+    "type": "canvas",
+    "parity": "negative",
+    "negative_note": "the Slint side maps the cookie outline with `fill` (outline bounds stretched to the rect) while Compose's `toShape` maps the normalized (0,0)-(1,1) space — the cookie's silhouette is ~1.5px taller and its petal edges must fail the strict layer",
+    "size": [
+        200,
+        140
+    ],
+    "densities": [
+        1,
+        2
+    ],
+    "theme": {
+        "seed": "6750A4",
+        "variant": "tonal-spot",
+        "spec": "spec2025",
+        "platform": "phone",
+        "dark": false,
+        "contrast": 0.0
+    },
+    "fonts": {
+        "plain": "Roboto",
+        "brand": "Roboto"
+    },
+    "widgets": [
+        {
+            "kind": "surface",
+            "x": 68,
+            "y": 34,
+            "width": 64,
+            "height": 64,
+            "level": 0,
+            "shape": "cookie-9-sided",
+            "color": "primary-container",
+            "slint_overrides": {
+                "shape_fit": "fill"
+            }
+        }
+    ],
+    "trace_elements": [
+        "surface0"
+    ],
+    "trace_props": []
+}

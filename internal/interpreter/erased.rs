@@ -87,12 +87,20 @@ impl InterpolatedPropertyValue for Value {
         }
     }
 
+    fn scalar_delta(&self, target: &Self) -> f32 {
+        match (self, target) {
+            (Value::Shape(a), Value::Shape(b)) => a.scalar_delta(b),
+            _ => 0.0,
+        }
+    }
+
     /// A physical spring can't decompose values that don't share an animatable
     /// variant, so `0` makes such a retarget snap.
     fn channel_count(&self, target: &Self) -> usize {
         match (self, target) {
             (Value::Number(_), Value::Number(_)) => 1,
             (Value::Brush(a), Value::Brush(b)) => a.channel_count(b),
+            (Value::Shape(a), Value::Shape(b)) => a.channel_count(b),
             _ => 0,
         }
     }
@@ -101,7 +109,27 @@ impl InterpolatedPropertyValue for Value {
         match (self, target) {
             (Value::Number(a), Value::Number(_)) => out[0] = *a as f32,
             (Value::Brush(a), Value::Brush(b)) => a.write_channels(b, out),
+            (Value::Shape(a), Value::Shape(b)) => a.write_channels(b, out),
             _ => debug_assert!(false, "no channels for this pair of Value"),
+        }
+    }
+
+    /// A shape's channels are directional — the morph's progress sits at 0 on
+    /// the start and at the match displacement on the target — so the pair
+    /// methods delegate to the shape's own layout instead of `write_channels`.
+    fn write_start_channels(&self, target: &Self, out: &mut [f32]) {
+        if let (Value::Shape(a), Value::Shape(b)) = (self, target) {
+            a.write_start_channels(b, out);
+        } else {
+            self.write_channels(target, out);
+        }
+    }
+
+    fn write_target_channels(&self, start: &Self, out: &mut [f32]) {
+        if let (Value::Shape(a), Value::Shape(b)) = (self, start) {
+            a.write_target_channels(b, out);
+        } else {
+            self.write_channels(start, out);
         }
     }
 
@@ -110,6 +138,9 @@ impl InterpolatedPropertyValue for Value {
             (Value::Number(_), Value::Number(_)) => Value::Number(channels[0] as f64),
             (Value::Brush(a), Value::Brush(b)) => {
                 Value::Brush(a.rebuild_from_channels(b, channels))
+            }
+            (Value::Shape(a), Value::Shape(b)) => {
+                Value::Shape(a.rebuild_from_channels(b, channels))
             }
             _ => self.clone(),
         }

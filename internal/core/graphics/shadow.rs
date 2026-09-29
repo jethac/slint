@@ -28,6 +28,9 @@ use crate::Color;
 use crate::graphics::ElementOutline;
 use crate::graphics::shapes::Cubic;
 use crate::lengths::LogicalPx;
+use alloc::collections::VecDeque;
+use alloc::rc::Rc;
+use alloc::vec;
 use alloc::vec::Vec;
 #[allow(unused_imports)]
 use num_traits::Float;
@@ -723,7 +726,7 @@ impl ActiveEdgeList {
     }
 
     fn child(&self, node: usize, dir: usize) -> usize {
-        if node == NIL { NIL } else { self.arena[node].child[dir] }
+        if node == NIL { self.head_child[dir] } else { self.arena[node].child[dir] }
     }
     fn set_child(&mut self, node: usize, dir: usize, c: usize) {
         if node == NIL {
@@ -2387,19 +2390,17 @@ enum SpotOccluder {
     OpaquePartialUmbra,
 }
 
-/// `SkShadowTessellator::MakeSpot` (non-perspective, point light). `cubics`
-/// are the caster outline in item space, `ctm` the item→window transform.
-/// Returns the mesh plus the offset to draw it at (the canonical-light trick:
-/// the mesh is tessellated under a light centered over the path and the real
-/// light enters only through the returned offset).
-fn spot_mesh_tessellated(
+/// The occluder classification and the shadow/clip transforms shared by
+/// `SkShadowTessellator::MakeSpot` and the `drawSpotShadow` blur fallback.
+/// Returns `(shadow_ctm, clip_ctm, draw_offset, blur_radius, transparent)`.
+fn spot_transform(
     cubics: &[Cubic],
     ctm: &Affine,
     z: f32,
     light_pos: [f32; 3],
     light_radius: f32,
     caster_transparent: bool,
-) -> Option<(ShadowMesh, Vec2)> {
+) -> Option<(Affine, Affine, Vec2, f32, bool)> {
     if !(light_pos[2] >= SK_SCALAR_NEARLY_ZERO
         && light_radius.is_finite()
         && light_radius >= SK_SCALAR_NEARLY_ZERO)
@@ -2482,6 +2483,148 @@ fn spot_mesh_tessellated(
     };
 
     let outset = spot_blur_radius(z, light_pos[2], light_radius);
+    Some((shadow_ctm, clip_ctm, draw_offset, outset, transparent))
+}
+
+/// Flatten `cubics` under `transform` into the caster polygon the tessellator
+/// and the blur fallback share.
+fn flattened_polygon(cubics: &[Cubic], transform: &Affine) -> Vec<Pt> {
+    let mut t = BaseTessellator::new(bounds_of_cubics(cubics), false);
+    for (i, c) in cubics.iter().enumerate() {
+        flatten_cubic_to(&transform_cubic(c, transform), &mut t, i == 0);
+    }
+    t.finish_path_polygon();
+    t.path_polygon
+}
+
+/// `SkBlurMask::ConvertRadiusToSigma` (`kBLUR_SIGMA_SCALE` = 1/sqrt(3)).
+fn radius_to_sigma(radius: f32) -> f32 {
+    if radius > 0. { radius * (3f32).sqrt().recip() + 0.5 } else { 0. }
+}
+
+/// Rasterize `polygon`'s fill into `mask` (union via max) — the mask
+/// equivalent of `SkCanvas::drawPath` with a fill paint.
+fn fill_polygon_into(
+    polygon: &[Pt],
+    bounds: euclid::Rect<f32, LogicalPx>,
+    offset: Vec2,
+    mask: &mut [u8],
+) {
+    let n = polygon.len() as u16;
+    let index_map: Vec<u16> = (0..n).collect();
+    let mut indices = Vec::new();
+    if !triangulate_simple_polygon(polygon, &index_map, &mut indices) {
+        return;
+    }
+    let mesh = ShadowMesh { positions: polygon.to_vec(), alphas: vec![1.; polygon.len()], indices };
+    let layer = rasterize_shadow_mesh_at(&mesh, bounds, offset);
+    for (d, s) in mask.iter_mut().zip(layer.iter()) {
+        *d = (*d).max(*s);
+    }
+}
+
+/// Separable gaussian blur, the `kNormal_SkBlurStyle` mask filter.
+fn gaussian_blur_mask(mask: &mut [u8], size: euclid::Size2D<u32, LogicalPx>, sigma: f32) {
+    let radius = (3. * sigma).ceil() as i32;
+    if radius < 1 {
+        return;
+    }
+    let mut kernel = Vec::with_capacity((2 * radius + 1) as usize);
+    let mut sum = 0f32;
+    for i in -radius..=radius {
+        let w = (-0.5 * (i as f32 / sigma).powi(2)).exp();
+        kernel.push(w);
+        sum += w;
+    }
+    for w in kernel.iter_mut() {
+        *w /= sum;
+    }
+    let (w, h) = (size.width as usize, size.height as usize);
+    let mut tmp = vec![0f32; mask.len()];
+    for y in 0..h {
+        for x in 0..w {
+            let mut acc = 0.;
+            for (k, kw) in kernel.iter().enumerate() {
+                let xx = (x as i32 + k as i32 - radius).clamp(0, w as i32 - 1) as usize;
+                acc += mask[y * w + xx] as f32 * kw;
+            }
+            tmp[y * w + x] = acc;
+        }
+    }
+    for y in 0..h {
+        for x in 0..w {
+            let mut acc = 0.;
+            for (k, kw) in kernel.iter().enumerate() {
+                let yy = (y as i32 + k as i32 - radius).clamp(0, h as i32 - 1) as usize;
+                acc += tmp[yy * w + x] * kw;
+            }
+            mask[y * w + x] = acc.round().clamp(0., 255.) as u8;
+        }
+    }
+}
+
+/// The `drawAmbientShadow`/`drawSpotShadow` blur fallback the tessellators
+/// defer to when the offset polygon isn't simple (Skia draws the path —
+/// stroke-and-fill for ambient — through a gaussian-blur mask filter).
+/// `half_stroke` is how far the stroke extends outside the path, `sigma` the
+/// blur sigma, and `offset` the draw offset, all in `polygon` space. The
+/// returned bounds are already in draw space (integer pixel grid).
+fn blurred_fill_mask(
+    polygon: &[Pt],
+    half_stroke: f32,
+    sigma: f32,
+    offset: Vec2,
+) -> Option<(Vec<u8>, euclid::Rect<f32, LogicalPx>, euclid::Size2D<u32, LogicalPx>)> {
+    if polygon.len() < 3 || sigma <= 0. {
+        return None;
+    }
+    // Pad the blur skirt on a whole-pixel grid so the mask rect is integral.
+    let pad = (half_stroke.max(0.) + 3. * sigma + 1.).ceil();
+    let mut b = (f32::MAX, f32::MAX, f32::MIN, f32::MIN);
+    for p in polygon {
+        b.0 = b.0.min(p.x + offset.x);
+        b.1 = b.1.min(p.y + offset.y);
+        b.2 = b.2.max(p.x + offset.x);
+        b.3 = b.3.max(p.y + offset.y);
+    }
+    let bounds = euclid::rect(
+        b.0.floor() - pad,
+        b.1.floor() - pad,
+        b.2.ceil() - b.0.floor() + 2. * pad,
+        b.3.ceil() - b.1.floor() + 2. * pad,
+    );
+    let size = euclid::size2(bounds.width().ceil() as u32, bounds.height().ceil() as u32);
+    if size.width == 0 || size.height == 0 {
+        return None;
+    }
+    let mut mask = vec![0u8; (size.width * size.height) as usize];
+    if half_stroke > SK_SCALAR_NEARLY_ZERO {
+        let half = (b.2 - b.0).abs().min((b.3 - b.1).abs()) / 2.;
+        if let Some((outset_poly, _)) = offset_simple_polygon(polygon, half, -half_stroke) {
+            fill_polygon_into(&outset_poly, bounds, offset, &mut mask);
+        }
+    }
+    fill_polygon_into(polygon, bounds, offset, &mut mask);
+    gaussian_blur_mask(&mut mask, size, sigma);
+    Some((mask, bounds, size))
+}
+
+/// `SkShadowTessellator::MakeSpot` (non-perspective, point light). `cubics`
+/// are the caster outline in item space, `ctm` the item→window transform.
+/// Returns the mesh plus the offset to draw it at (the canonical-light trick:
+/// the mesh is tessellated under a light centered over the path and the real
+/// light enters only through the returned offset).
+fn spot_mesh_tessellated(
+    cubics: &[Cubic],
+    ctm: &Affine,
+    z: f32,
+    light_pos: [f32; 3],
+    light_radius: f32,
+    caster_transparent: bool,
+) -> Option<(ShadowMesh, Vec2)> {
+    let (shadow_ctm, clip_ctm, draw_offset, outset, transparent) =
+        spot_transform(cubics, ctm, z, light_pos, light_radius, caster_transparent)?;
+    let local_bounds = bounds_of_cubics(cubics);
     let inset = outset;
 
     let mut t = BaseTessellator::new(local_bounds, transparent);
@@ -2737,6 +2880,18 @@ pub fn shadow_local_bounds(
 /// coverage) in one accumulation pass. Coverage is computed by 4×4
 /// supersampling, matching the ~0.25px outline tolerance.
 pub fn rasterize_shadow_mesh(mesh: &ShadowMesh, bounds: euclid::Rect<f32, LogicalPx>) -> Vec<u8> {
+    rasterize_shadow_mesh_at(mesh, bounds, vec2(0., 0.))
+}
+
+/// `rasterize_shadow_mesh` with the mesh drawn at `offset`: `bounds` is the
+/// pixel grid in draw space, and each triangle is compared after adding
+/// `offset`, so fractional draw positions land inside the coverage instead of
+/// being rounded away at draw time.
+pub fn rasterize_shadow_mesh_at(
+    mesh: &ShadowMesh,
+    bounds: euclid::Rect<f32, LogicalPx>,
+    offset: Vec2,
+) -> Vec<u8> {
     let w = bounds.width().ceil() as usize;
     let h = bounds.height().ceil() as usize;
     if w == 0 || h == 0 || mesh.is_empty() {
@@ -2747,11 +2902,10 @@ pub fn rasterize_shadow_mesh(mesh: &ShadowMesh, bounds: euclid::Rect<f32, Logica
     let ox = bounds.origin.x;
     let oy = bounds.origin.y;
 
-    const SS: usize = 4; // 4×4 supersampling
     for tri in mesh.indices.as_chunks::<3>().0 {
-        let p0 = mesh.positions[tri[0] as usize];
-        let p1 = mesh.positions[tri[1] as usize];
-        let p2 = mesh.positions[tri[2] as usize];
+        let p0 = mesh.positions[tri[0] as usize] + offset;
+        let p1 = mesh.positions[tri[1] as usize] + offset;
+        let p2 = mesh.positions[tri[2] as usize] + offset;
         let a0 = mesh.alphas[tri[0] as usize];
         let a1 = mesh.alphas[tri[1] as usize];
         let a2 = mesh.alphas[tri[2] as usize];
@@ -2769,28 +2923,36 @@ pub fn rasterize_shadow_mesh(mesh: &ShadowMesh, bounds: euclid::Rect<f32, Logica
         if area.abs() < 1e-12 {
             continue;
         }
+        // Shared edges between adjacent triangles are owned by exactly one
+        // side: a sample sitting on an edge counts only for the triangle
+        // whose directed edge is "top-left" (upward or, for horizontal
+        // edges, leftward). A manifold mesh stores a shared edge in opposite
+        // directions in its two triangles, so ownership can't double-count —
+        // the same convention rasterizers use for seamless coverage.
+        let top_left = |a: Pt, b: Pt| b.y < a.y || (b.y == a.y && b.x < a.x);
+        let tl0 = top_left(p1, p2);
+        let tl1 = top_left(p2, p0);
+        let tl2 = top_left(p0, p1);
         for py in min_y..max_y {
             for px in min_x..max_x {
-                let mut c = 0f32;
-                let mut al = 0f32;
-                for sy in 0..SS {
-                    for sx in 0..SS {
-                        let x = ox + px as f32 + (sx as f32 + 0.5) / SS as f32;
-                        let y = oy + py as f32 + (sy as f32 + 0.5) / SS as f32;
-                        let q = pt(x, y);
-                        let w0 = cross(p1 - q, p2 - q) / area;
-                        let w1 = cross(p2 - q, p0 - q) / area;
-                        let w2 = cross(p0 - q, p1 - q) / area;
-                        if w0 >= -1e-6 && w1 >= -1e-6 && w2 >= -1e-6 {
-                            c += 1.;
-                            al += w0 * a0 + w1 * a1 + w2 * a2;
-                        }
-                    }
-                }
+                let (c, al) = tri_pixel_sample(
+                    p0,
+                    p1,
+                    p2,
+                    a0,
+                    a1,
+                    a2,
+                    area,
+                    tl0,
+                    tl1,
+                    tl2,
+                    ox + px as f32,
+                    oy + py as f32,
+                );
                 if c > 0. {
                     let idx = py * w + px;
-                    cov[idx] += c / (SS * SS) as f32;
-                    acc[idx] += al / (SS * SS) as f32;
+                    cov[idx] += c;
+                    acc[idx] += al;
                 }
             }
         }
@@ -2808,6 +2970,137 @@ pub fn rasterize_shadow_mesh(mesh: &ShadowMesh, bounds: euclid::Rect<f32, Logica
     out
 }
 
+/// The coverage and interpolated alpha a triangle accumulates over the pixel
+/// whose top-left corner is `(px, py)`, by 4×4 supersampling under the
+/// top-left edge-ownership rule. Returns `(coverage, alpha · coverage)`.
+#[allow(clippy::too_many_arguments)]
+fn tri_pixel_sample(
+    p0: Pt,
+    p1: Pt,
+    p2: Pt,
+    a0: f32,
+    a1: f32,
+    a2: f32,
+    area: f32,
+    tl0: bool,
+    tl1: bool,
+    tl2: bool,
+    px: f32,
+    py: f32,
+) -> (f32, f32) {
+    const SS: usize = 4; // 4×4 supersampling
+    let mut c = 0f32;
+    let mut al = 0f32;
+    for sy in 0..SS {
+        for sx in 0..SS {
+            let q = pt(px + (sx as f32 + 0.5) / SS as f32, py + (sy as f32 + 0.5) / SS as f32);
+            let w0 = cross(p1 - q, p2 - q) / area;
+            let w1 = cross(p2 - q, p0 - q) / area;
+            let w2 = cross(p0 - q, p1 - q) / area;
+            if (w0 > 1e-6 || (w0 >= -1e-6 && tl0))
+                && (w1 > 1e-6 || (w1 >= -1e-6 && tl1))
+                && (w2 > 1e-6 || (w2 >= -1e-6 && tl2))
+            {
+                c += 1.;
+                al += w0 * a0 + w1 * a1 + w2 * a2;
+            }
+        }
+    }
+    (c / (SS * SS) as f32, al / (SS * SS) as f32)
+}
+
+/// Rasterize the scanline of `mesh` drawn at `offset` covering `row`'s pixel
+/// range, which starts at `x_start` on scanline `y`, into `row` (A8 values) —
+/// the span-granularity form of [`rasterize_shadow_mesh_at`] for consumers
+/// that composite line by line: identical output, memory bounded to the row
+/// instead of the whole mesh bounds.
+pub fn rasterize_shadow_mesh_row(
+    mesh: &ShadowMesh,
+    bounds: euclid::Rect<f32, LogicalPx>,
+    offset: Vec2,
+    y: i32,
+    x_start: i32,
+    row: &mut [u8],
+    scratch: &mut ShadowRowScratch,
+) {
+    if mesh.is_empty() || row.is_empty() {
+        row.fill(0);
+        return;
+    }
+    let oy = bounds.origin.y;
+    let py = y as f32 - oy;
+    // Only pixels fully inside this scanline: y is the integer grid, so the
+    // 4×4 samples of [y, y+1) never touch another row.
+    if py < 0. || py + 1. > bounds.height() {
+        row.fill(0);
+        return;
+    }
+    scratch.cov.clear();
+    scratch.acc.clear();
+    scratch.cov.resize(row.len(), 0.);
+    scratch.acc.resize(row.len(), 0.);
+    let top_left = |a: Pt, b: Pt| b.y < a.y || (b.y == a.y && b.x < a.x);
+    for tri in mesh.indices.as_chunks::<3>().0 {
+        let p0 = mesh.positions[tri[0] as usize] + offset;
+        let p1 = mesh.positions[tri[1] as usize] + offset;
+        let p2 = mesh.positions[tri[2] as usize] + offset;
+        // Skip triangles that don't reach this scanline.
+        let tri_min_y = p0.y.min(p1.y).min(p2.y);
+        let tri_max_y = p0.y.max(p1.y).max(p2.y);
+        if tri_max_y <= y as f32 || tri_min_y >= y as f32 + 1. {
+            continue;
+        }
+        let a0 = mesh.alphas[tri[0] as usize];
+        let a1 = mesh.alphas[tri[1] as usize];
+        let a2 = mesh.alphas[tri[2] as usize];
+        let area = cross(p1 - p0, p2 - p0);
+        if area.abs() < 1e-12 {
+            continue;
+        }
+        let tl0 = top_left(p1, p2);
+        let tl1 = top_left(p2, p0);
+        let tl2 = top_left(p0, p1);
+        let min_px = p0.x.min(p1.x).min(p2.x).floor() as i32;
+        let max_px = p0.x.max(p1.x).max(p2.x).ceil() as i32;
+        let begin = (min_px.max(x_start) - x_start).max(0) as usize;
+        let end = ((max_px - x_start).min(row.len() as i32)).max(0) as usize;
+        for i in begin..end {
+            let (c, al) = tri_pixel_sample(
+                p0,
+                p1,
+                p2,
+                a0,
+                a1,
+                a2,
+                area,
+                tl0,
+                tl1,
+                tl2,
+                x_start as f32 + i as f32,
+                y as f32,
+            );
+            scratch.cov[i] += c;
+            scratch.acc[i] += al;
+        }
+    }
+    for (i, (&c, &a)) in scratch.cov.iter().zip(scratch.acc.iter()).enumerate() {
+        row[i] = if c > 1e-6 {
+            let mean = a / c;
+            (c * gauss_falloff_lut(mean).clamp(0., 1.) * 255.).round().min(255.) as u8
+        } else {
+            0
+        };
+    }
+}
+
+/// Reusable scratch for [`rasterize_shadow_mesh_row`]: two row-length
+/// coverage/alpha accumulators, allocated once per rasterizer.
+#[derive(Default)]
+pub struct ShadowRowScratch {
+    cov: Vec<f32>,
+    acc: Vec<f32>,
+}
+
 /// Where a mesh's [`rasterize_shadow_mesh`] bounds come from: the mesh's own
 /// bounding box.
 pub fn mesh_bounds(mesh: &ShadowMesh) -> euclid::Rect<f32, LogicalPx> {
@@ -2815,7 +3108,10 @@ pub fn mesh_bounds(mesh: &ShadowMesh) -> euclid::Rect<f32, LogicalPx> {
     if b.2 <= b.0 || b.3 <= b.1 {
         return euclid::Rect::zero();
     }
-    euclid::rect(b.0.floor(), b.1.floor(), (b.2 - b.0).ceil(), (b.3 - b.1).ceil())
+    // The extent is measured between the rounded endpoints: `ceil(max - min)`
+    // counts only the fractional span and can leave a partial pixel at the
+    // far edge outside the mask.
+    euclid::rect(b.0.floor(), b.1.floor(), b.2.ceil() - b.0.floor(), b.3.ceil() - b.1.floor())
 }
 
 // ---------------------------------------------------------------------------
@@ -2844,21 +3140,337 @@ pub struct ElevationShadowMasks {
     pub spot: Option<ShadowLayerMask>,
 }
 
-fn rasterized_layer(mesh_and_offset: Option<(ShadowMesh, Vec2)>) -> Option<ShadowLayerMask> {
-    let (mesh, offset) = mesh_and_offset?;
-    if mesh.is_empty() {
-        return None;
-    }
-    let bounds = mesh_bounds(&mesh);
-    let size = euclid::size2(bounds.width().ceil() as u32, bounds.height().ceil() as u32);
-    if size.width == 0 || size.height == 0 {
-        return None;
-    }
-    let mask = rasterize_shadow_mesh(&mesh, bounds);
-    Some(ShadowLayerMask { mask: mask.into(), size, rect: bounds.cast_unit().translate(offset) })
+/// The integer pixel grid covering `mesh` drawn at `offset`: the fractional
+/// part of the light offset goes into the coverage, not the rect origin
+/// (Skia keeps the shadow's fractional motion).
+fn mesh_draw_bounds(mesh: &ShadowMesh, offset: Vec2) -> euclid::Rect<f32, euclid::UnknownUnit> {
+    let b = mesh_bounds(mesh);
+    euclid::rect(
+        (b.origin.x + offset.x).floor(),
+        (b.origin.y + offset.y).floor(),
+        (b.origin.x + b.size.width + offset.x).ceil() - (b.origin.x + offset.x).floor(),
+        (b.origin.y + b.size.height + offset.y).ceil() - (b.origin.y + offset.y).floor(),
+    )
 }
 
-/// Tessellate and rasterize both layers of an elevation shadow.
+/// A tessellated shadow layer for span-granularity consumers: the mesh and
+/// its draw offset, rasterizable per scanline with
+/// [`rasterize_shadow_mesh_row`] over `bounds`.
+#[derive(Clone)]
+pub struct MeshLayer {
+    /// The tessellated shadow mesh in canonical space.
+    pub mesh: Rc<ShadowMesh>,
+    /// The draw offset applied to the mesh.
+    pub offset: Vec2,
+    /// The integer pixel bounds of the mesh drawn at `offset`.
+    pub bounds: euclid::Rect<f32, euclid::UnknownUnit>,
+}
+
+/// One elevation-shadow layer at rasterization granularity: either the
+/// tessellated mesh the software renderer sweeps into per-scanline spans, or
+/// the bounded A8 mask of the blur fallback.
+#[derive(Clone)]
+pub enum ElevationLayer {
+    /// A tessellated mesh — sweep per scanline.
+    Mesh(MeshLayer),
+    /// A bounded A8 mask — draw like a texture.
+    Mask(ShadowLayerMask),
+}
+
+/// Both layers of an elevation shadow at rasterization granularity.
+#[derive(Clone, Default)]
+pub struct ElevationShadowLayers {
+    /// The ambient layer, `None` for degenerate outlines or z < 0.1.
+    pub ambient: Option<ElevationLayer>,
+    /// The spot layer, `None` for degenerate outlines or z < 0.1.
+    pub spot: Option<ElevationLayer>,
+}
+
+/// What a layer rasterizes from: the tessellated mesh, or the blur fallback
+/// draw when the tessellator rejected the outline.
+enum LayerRecipe {
+    /// Tessellated mesh + draw offset (canonical space).
+    Mesh(Rc<ShadowMesh>, Vec2),
+    /// Blur fallback: fill `polygon` — stroked by `half_stroke` for ambient —
+    /// blurred with `sigma`, drawn at `offset`.
+    BlurFill { polygon: Vec<Pt>, half_stroke: f32, sigma: f32, offset: Vec2 },
+}
+
+impl LayerRecipe {
+    /// Rasterize the whole layer to an A8 mask.
+    fn to_mask(&self) -> Option<ShadowLayerMask> {
+        match self {
+            Self::Mesh(mesh, offset) => {
+                let bounds = mesh_draw_bounds(mesh, *offset);
+                let size =
+                    euclid::size2(bounds.width().ceil() as u32, bounds.height().ceil() as u32);
+                if size.width == 0 || size.height == 0 {
+                    return None;
+                }
+                let mask = rasterize_shadow_mesh_at(mesh, bounds.cast_unit(), *offset);
+                Some(ShadowLayerMask { mask: mask.into(), size, rect: bounds })
+            }
+            Self::BlurFill { polygon, half_stroke, sigma, offset } => {
+                let (mask, bounds, size) =
+                    blurred_fill_mask(polygon, *half_stroke, *sigma, *offset)?;
+                Some(ShadowLayerMask {
+                    mask: mask.into(),
+                    size: size.cast_unit(),
+                    rect: bounds.cast_unit(),
+                })
+            }
+        }
+    }
+
+    /// The layer at rasterization granularity: a mesh for span sweeps, a
+    /// bounded mask for the blur fallback.
+    fn to_layer(&self) -> Option<ElevationLayer> {
+        match self {
+            Self::Mesh(mesh, offset) => {
+                let bounds = mesh_draw_bounds(mesh, *offset);
+                if bounds.width() <= 0. || bounds.height() <= 0. {
+                    return None;
+                }
+                Some(ElevationLayer::Mesh(MeshLayer {
+                    mesh: Rc::clone(mesh),
+                    offset: *offset,
+                    bounds,
+                }))
+            }
+            Self::BlurFill { .. } => self.to_mask().map(ElevationLayer::Mask),
+        }
+    }
+}
+
+/// The ambient layer recipe of an elevation shadow, falling back to Skia's
+/// stroke-and-blur draw when the tessellator rejects the outline.
+fn ambient_recipe(
+    cubics: &[Cubic],
+    ctm: &Affine,
+    z: f32,
+    transparent: bool,
+) -> Option<LayerRecipe> {
+    let no_trans = ctm.without_translation();
+    let offset = vec2(ctm.tx, ctm.ty);
+    match ambient_mesh_tessellated(cubics, &no_trans, z, transparent) {
+        Some(mesh) => Some(LayerRecipe::Mesh(Rc::new(mesh), offset)),
+        None => {
+            let outset = ambient_blur_radius(z);
+            let blur_radius = 0.5 * outset * ambient_recip_alpha(z);
+            let half_stroke = 0.25 * (outset - blur_radius);
+            let polygon = flattened_polygon(cubics, &no_trans);
+            Some(LayerRecipe::BlurFill {
+                polygon,
+                half_stroke,
+                sigma: radius_to_sigma(blur_radius),
+                offset,
+            })
+        }
+    }
+}
+
+/// The spot layer recipe of an elevation shadow, falling back to Skia's
+/// transformed fill-and-blur draw when the tessellator rejects the outline.
+fn spot_recipe(
+    cubics: &[Cubic],
+    ctm: &Affine,
+    z: f32,
+    light_pos: [f32; 3],
+    light_radius: f32,
+    caster_transparent: bool,
+) -> Option<LayerRecipe> {
+    match spot_mesh_tessellated(cubics, ctm, z, light_pos, light_radius, caster_transparent) {
+        Some((mesh, offset)) => Some(LayerRecipe::Mesh(Rc::new(mesh), offset)),
+        None => {
+            let (shadow_ctm, _, draw_offset, blur_radius, _) =
+                spot_transform(cubics, ctm, z, light_pos, light_radius, caster_transparent)?;
+            let polygon = flattened_polygon(cubics, &shadow_ctm);
+            Some(LayerRecipe::BlurFill {
+                polygon,
+                half_stroke: 0.,
+                sigma: radius_to_sigma(blur_radius),
+                offset: draw_offset,
+            })
+        }
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Elevation-mask cache
+// ---------------------------------------------------------------------------
+
+/// Maximum number of cached elevation-shadow pairs (bounded LRU).
+const ELEVATION_CACHE_CAP: usize = 32;
+
+/// One cache entry: every input the layers were computed from, kept for the
+/// full verify on a hash hit, the per-layer draw recipes, and the rasterized
+/// masks once a consumer asks for them.
+struct ElevationCacheEntry {
+    /// Content hash of `cubics`, compared first.
+    cubics_hash: u64,
+    cubics: Vec<Cubic>,
+    ctm: Affine,
+    z: f32,
+    light_pos: [f32; 3],
+    light_radius: f32,
+    caster_transparent: bool,
+    /// The layers' draw recipes — the tessellated meshes survive a move
+    /// because the light offset enters only through their draw offsets.
+    ambient: Option<LayerRecipe>,
+    spot: Option<LayerRecipe>,
+    /// The rasterized masks, filled on the first `masks` request.
+    masks: core::cell::RefCell<Option<Rc<ElevationShadowMasks>>>,
+}
+
+/// A bounded least-recently-used cache of rasterized elevation shadows. The
+/// key is everything the layers depend on — the outline as rasterized
+/// cubics, the item→window transform, elevation, the window light, and
+/// caster transparency — so a move, a resize, an elevation or shape change,
+/// or a window-resize light move all miss and recompute: that is the
+/// invalidation, and no stale shadow is possible. A static element keeps its
+/// masks across repaints instead of tessellating and rasterizing both layers
+/// again on every frame. Like `MorphCache` it lives on the UI thread inside
+/// a thread-local `RefCell`.
+#[derive(Default)]
+pub struct ElevationCache {
+    /// Most-recently-used last.
+    entries: core::cell::RefCell<VecDeque<ElevationCacheEntry>>,
+    /// Number of lookups served from the cache (for tests).
+    hits: core::cell::Cell<usize>,
+}
+
+fn hash_cubics(cubics: &[Cubic]) -> u64 {
+    let mut h: u64 = 0xcbf29ce484222325;
+    for c in cubics {
+        for v in c.points {
+            h ^= v.to_bits() as u64;
+            h = h.wrapping_mul(0x100000001b3);
+        }
+    }
+    h.max(1)
+}
+
+impl ElevationCache {
+    /// A new, empty cache.
+    pub const fn new() -> Self {
+        Self { entries: core::cell::RefCell::new(VecDeque::new()), hits: core::cell::Cell::new(0) }
+    }
+
+    /// Look up (or compute and cache) the entry for the draw inputs, then
+    /// apply `f` to it.
+    fn entry<R>(
+        &self,
+        cubics: Vec<Cubic>,
+        ctm: &Affine,
+        z: f32,
+        light_pos: [f32; 3],
+        light_radius: f32,
+        caster_transparent: bool,
+        f: impl FnOnce(&ElevationCacheEntry) -> R,
+    ) -> R {
+        let compute = || ElevationCacheEntry {
+            cubics_hash: hash_cubics(&cubics),
+            ambient: ambient_recipe(&cubics, ctm, z, caster_transparent),
+            spot: spot_recipe(&cubics, ctm, z, light_pos, light_radius, caster_transparent),
+            cubics: cubics.clone(),
+            ctm: *ctm,
+            z,
+            light_pos,
+            light_radius,
+            caster_transparent,
+            masks: core::cell::RefCell::new(None),
+        };
+        let cubics_hash = hash_cubics(&cubics);
+        let mut entries = self.entries.borrow_mut();
+        if let Some(entry) = entries
+            .iter()
+            .position(|e| {
+                e.cubics_hash == cubics_hash
+                    && e.ctm == *ctm
+                    && e.z == z
+                    && e.light_pos == light_pos
+                    && e.light_radius == light_radius
+                    && e.caster_transparent == caster_transparent
+                    && e.cubics == cubics
+            })
+            .and_then(|index| entries.remove(index))
+        {
+            let out = f(&entry);
+            entries.push_back(entry);
+            self.hits.set(self.hits.get() + 1);
+            return out;
+        }
+        let entry = compute();
+        let out = f(&entry);
+        if entries.len() >= ELEVATION_CACHE_CAP {
+            entries.pop_front();
+        }
+        entries.push_back(entry);
+        out
+    }
+
+    /// The rasterized A8 masks for the draw inputs (texture consumers).
+    fn masks(
+        &self,
+        cubics: Vec<Cubic>,
+        ctm: &Affine,
+        z: f32,
+        light_pos: [f32; 3],
+        light_radius: f32,
+        caster_transparent: bool,
+    ) -> Rc<ElevationShadowMasks> {
+        self.entry(cubics, ctm, z, light_pos, light_radius, caster_transparent, |entry| {
+            if let Some(masks) = &*entry.masks.borrow() {
+                return Rc::clone(masks);
+            }
+            let masks = Rc::new(ElevationShadowMasks {
+                ambient: entry.ambient.as_ref().and_then(LayerRecipe::to_mask),
+                spot: entry.spot.as_ref().and_then(LayerRecipe::to_mask),
+            });
+            *entry.masks.borrow_mut() = Some(Rc::clone(&masks));
+            masks
+        })
+    }
+
+    /// The layers at rasterization granularity for span-compositing
+    /// consumers (the software renderer).
+    fn layers(
+        &self,
+        cubics: Vec<Cubic>,
+        ctm: &Affine,
+        z: f32,
+        light_pos: [f32; 3],
+        light_radius: f32,
+        caster_transparent: bool,
+    ) -> ElevationShadowLayers {
+        self.entry(cubics, ctm, z, light_pos, light_radius, caster_transparent, |entry| {
+            ElevationShadowLayers {
+                ambient: entry.ambient.as_ref().and_then(LayerRecipe::to_layer),
+                spot: entry.spot.as_ref().and_then(LayerRecipe::to_layer),
+            }
+        })
+    }
+
+    /// Drop all cached masks.
+    pub fn clear(&self) {
+        self.entries.borrow_mut().clear();
+    }
+
+    /// The number of lookups served from the cache (testing).
+    #[doc(hidden)]
+    pub fn hits(&self) -> usize {
+        self.hits.get()
+    }
+}
+
+crate::thread_local! {
+    /// The elevation-shadow cache used by every mask-based renderer: keyed on
+    /// the full draw input, so unchanged shadows are rasterized once.
+    static ELEVATION_CACHE: ElevationCache = const { ElevationCache::new() };
+}
+
+/// Tessellate and rasterize both layers of an elevation shadow, reusing the
+/// cached masks while every draw input is unchanged.
 ///
 /// `ctm` maps the outline's item space to the rasterization space (physical
 /// pixels for the software renderer, logical pixels for GPU renderers that
@@ -2873,18 +3485,35 @@ pub fn elevation_shadow_masks(
     light_radius: f32,
     caster_transparent: bool,
 ) -> ElevationShadowMasks {
-    ElevationShadowMasks {
-        ambient: rasterized_layer(ambient_mesh(outline, rect, ctm, z, caster_transparent)),
-        spot: rasterized_layer(spot_mesh(
-            outline,
-            rect,
-            ctm,
-            z,
-            light_pos,
-            light_radius,
-            caster_transparent,
-        )),
+    let cubics = outline_cubics(outline, rect);
+    if cubics.is_empty() || z < MIN_HEIGHT {
+        return ElevationShadowMasks::default();
     }
+    ELEVATION_CACHE
+        .with(|cache| cache.masks(cubics, ctm, z, light_pos, light_radius, caster_transparent))
+        .as_ref()
+        .clone()
+}
+
+/// Both layers of an elevation shadow at rasterization granularity (see
+/// [`ElevationLayer`]): the tessellated meshes for consumers that sweep
+/// spans per scanline, bounded masks for the blur fallback. Same inputs and
+/// cache as [`elevation_shadow_masks`].
+pub fn elevation_shadow_layers(
+    outline: &ElementOutline,
+    rect: euclid::Rect<f32, LogicalPx>,
+    ctm: &Affine,
+    z: f32,
+    light_pos: [f32; 3],
+    light_radius: f32,
+    caster_transparent: bool,
+) -> ElevationShadowLayers {
+    let cubics = outline_cubics(outline, rect);
+    if cubics.is_empty() || z < MIN_HEIGHT {
+        return ElevationShadowLayers::default();
+    }
+    ELEVATION_CACHE
+        .with(|cache| cache.layers(cubics, ctm, z, light_pos, light_radius, caster_transparent))
 }
 
 /// The elevation light for a window, in physical pixels: `display_geometry`
@@ -2893,15 +3522,27 @@ pub fn elevation_shadow_masks(
 /// `window_size` and the origin substitute (the light then sits centered on
 /// the window's top edge, as for a full-screen window).
 ///
+/// The Android constants inside [`window_light`] are logical units, so the
+/// light is resolved on the logical display and only the complete result is
+/// scaled by `scale_factor` — at density 2 the radius of a 450-logical-dp
+/// display stays 800 logical and becomes 1600 physical, instead of being
+/// measured on the physical display size.
+///
 /// Returns the light position and radius.
 pub fn elevation_light(
     display_geometry: Option<(crate::api::PhysicalSize, crate::api::PhysicalPosition)>,
     window_size: crate::api::PhysicalSize,
+    scale_factor: f32,
 ) -> ([f32; 3], f32) {
+    let sf = scale_factor.max(1e-6);
     let (dw, dh, wx, wy) = display_geometry
-        .map(|(d, p)| (d.width as f32, d.height as f32, p.x as f32, p.y as f32))
-        .unwrap_or((window_size.width as f32, window_size.height as f32, 0., 0.));
-    window_light(euclid::size2(dw, dh), euclid::point2(wx, wy))
+        .map(|(d, p)| (d.width as f32 / sf, d.height as f32 / sf, p.x as f32 / sf, p.y as f32 / sf))
+        .unwrap_or((window_size.width as f32 / sf, window_size.height as f32 / sf, 0., 0.));
+    let (mut light, radius) = window_light(euclid::size2(dw, dh), euclid::point2(wx, wy));
+    light[0] *= sf;
+    light[1] *= sf;
+    light[2] *= sf;
+    (light, radius * sf)
 }
 
 #[cfg(test)]
@@ -2927,10 +3568,37 @@ mod tests {
     #[test]
     fn elevation_light_falls_back_to_window_size() {
         let size = crate::api::PhysicalSize::new(800, 600);
-        let (light, radius) = elevation_light(None, size);
+        let (light, radius) = elevation_light(None, size, 1.);
         assert_eq!(radius, 800.);
         assert!((light[0] - 400.).abs() < 1e-4);
         assert!(light[1].abs() < 1e-4);
+    }
+
+    #[test]
+    fn elevation_light_scales_logical_display_to_physical() {
+        // The same 450×900 logical display at density 1 and 2: the light
+        // radius is 800 logical, so the physical result doubles — it must
+        // not be measured against the physical (900×1800) display size.
+        let d1 = crate::api::PhysicalSize::new(450, 900);
+        let d2 = crate::api::PhysicalSize::new(900, 1800);
+        let (l1, r1) = elevation_light(None, d1, 1.);
+        let (l2, r2) = elevation_light(None, d2, 2.);
+        assert_eq!(r1, 800.);
+        assert_eq!(r2, 1600.);
+        assert!((l2[0] - l1[0] * 2.).abs() < 1e-4, "{} vs {}", l2[0], l1[0]);
+        assert!((l2[1] - l1[1] * 2.).abs() < 1e-4);
+        assert!((l2[2] - l1[2] * 2.).abs() < 1e-4);
+
+        // With display geometry reported the same holds: logical geometry,
+        // physical answer.
+        let pos = crate::api::PhysicalPosition::new(200, 100);
+        let (d1_light, d1r) = elevation_light(Some((d1, pos)), d1, 1.);
+        let (d2_light, d2r) =
+            elevation_light(Some((d2, crate::api::PhysicalPosition::new(400, 200))), d2, 2.);
+        assert_eq!(d1r * 2., d2r);
+        for i in 0..3 {
+            assert!((d2_light[i] - d1_light[i] * 2.).abs() < 1e-4, "{i}");
+        }
     }
 
     #[test]
@@ -3077,5 +3745,121 @@ mod tests {
         assert!((amb.alpha() as f32 - 255. * 0.039).abs() < 0.51, "{}", amb.alpha());
         let spot = effective_spot_color(c, 0.5);
         assert!((spot.alpha() as f32 - 255. * 0.19 * 0.5).abs() < 0.51, "{}", spot.alpha());
+    }
+
+    #[test]
+    fn rasterize_row_matches_full_mask_row() {
+        // The per-scanline sweep must produce the same pixels as the
+        // full-mask rasterizer, including through a fractional offset.
+        let mesh = ShadowMesh {
+            positions: alloc::vec![
+                pt(0.3, 0.7),
+                pt(3.6, 0.1),
+                pt(4.1, 2.8),
+                pt(1.1, 3.9),
+                pt(0.2, 2.2),
+            ],
+            alphas: alloc::vec![0.2, 0.9, 0.5, 1.0, 0.3],
+            indices: alloc::vec![0, 1, 2, 0, 2, 3, 0, 3, 4],
+        };
+        let offset = vec2(1.37, 0.63);
+        let bounds = mesh_draw_bounds(&mesh, offset).cast_unit();
+        let full = rasterize_shadow_mesh_at(&mesh, bounds, offset);
+        let w = bounds.width().ceil() as usize;
+        let mut scratch = ShadowRowScratch::default();
+        for y in bounds.origin.y as i32..(bounds.origin.y + bounds.height()) as i32 {
+            let mut row = alloc::vec![0u8; w];
+            rasterize_shadow_mesh_row(
+                &mesh,
+                bounds,
+                offset,
+                y,
+                bounds.origin.x as i32,
+                &mut row,
+                &mut scratch,
+            );
+            let expect = &full[((y as f32 - bounds.origin.y) as usize) * w..][..w];
+            assert_eq!(row, expect, "row {y}");
+        }
+    }
+
+    #[test]
+    fn elevation_cache_hits_and_invalidates() {
+        let outline = ElementOutline::Rectangle(crate::graphics::BorderRadius::new_uniform(4.));
+        let rect = euclid::rect(0., 0., 40., 20.);
+        let ctm = Affine::scale_translate(1., 1., 10., 20.);
+        let light = [225., 0., 600.];
+        ELEVATION_CACHE.with(|c| c.clear());
+        let hits_before = ELEVATION_CACHE.with(|c| c.hits());
+
+        let m1 = elevation_shadow_masks(&outline, rect, &ctm, 8., light, 800., false);
+        assert_eq!(ELEVATION_CACHE.with(|c| c.hits()), hits_before);
+        // Same draw inputs → hit, same masks.
+        let m2 = elevation_shadow_masks(&outline, rect, &ctm, 8., light, 800., false);
+        assert_eq!(ELEVATION_CACHE.with(|c| c.hits()), hits_before + 1);
+        assert!(
+            matches!((&m1.spot, &m2.spot), (Some(a), Some(b)) if a.mask.as_ptr() == b.mask.as_ptr())
+        );
+
+        // A move changes the ctm → miss (recompute, no stale shadow).
+        let ctm_moved = Affine::scale_translate(1., 1., 11., 20.);
+        let _ = elevation_shadow_masks(&outline, rect, &ctm_moved, 8., light, 800., false);
+        assert_eq!(ELEVATION_CACHE.with(|c| c.hits()), hits_before + 1);
+        // A light change (window resize) → miss.
+        let _ = elevation_shadow_masks(&outline, rect, &ctm, 8., [400., 0., 600.], 800., false);
+        assert_eq!(ELEVATION_CACHE.with(|c| c.hits()), hits_before + 1);
+        // The span granularity view sees the same cache.
+        let _ = elevation_shadow_layers(&outline, rect, &ctm, 8., light, 800., false);
+        assert_eq!(ELEVATION_CACHE.with(|c| c.hits()), hits_before + 2);
+    }
+
+    #[test]
+    fn rasterize_counts_shared_edges_once() {
+        // A 2×2 square made of two triangles sharing the diagonal: coverage on
+        // the shared edge must be counted by exactly one triangle, not both.
+        let mesh = ShadowMesh {
+            positions: alloc::vec![pt(0., 0.), pt(2., 0.), pt(2., 2.), pt(0., 2.)],
+            alphas: alloc::vec![0.5, 0.5, 0.5, 0.5],
+            indices: alloc::vec![0, 1, 2, 0, 2, 3],
+        };
+        let mask = rasterize_shadow_mesh(&mesh, euclid::rect(0., 0., 2., 2.));
+        let expected = (gauss_falloff_lut(0.5) * 255.).round().min(255.) as u8;
+        assert_eq!(expected, 90);
+        assert_eq!(mask, alloc::vec![expected; 4], "{mask:?}");
+    }
+
+    #[test]
+    fn mesh_bounds_rounds_fractional_endpoints() {
+        // A triangle spanning (0.8, 0.8)–(1.2, 1.2): the bounds must include
+        // both boundary pixels, not the ceil of the 0.4 span.
+        let mesh = ShadowMesh {
+            positions: alloc::vec![pt(0.8, 0.8), pt(1.2, 0.8), pt(0.8, 1.2)],
+            alphas: alloc::vec![1., 1., 1.],
+            indices: alloc::vec![0, 1, 2],
+        };
+        let b = mesh_bounds(&mesh);
+        assert_eq!(b, euclid::rect(0., 0., 2., 2.));
+
+        // Same for negative origins: (−1.2, −1.2)–(−0.8, −0.8) covers
+        // pixels −2 and −1.
+        let mesh_neg = ShadowMesh {
+            positions: alloc::vec![pt(-1.2, -1.2), pt(-0.8, -1.2), pt(-1.2, -0.8)],
+            alphas: alloc::vec![1., 1., 1.],
+            indices: alloc::vec![0, 1, 2],
+        };
+        let bn = mesh_bounds(&mesh_neg);
+        assert_eq!(bn, euclid::rect(-2., -2., 2., 2.));
+
+        // And the rasterization covers the partial pixel at the far edge: a
+        // square spanning (0.8, 0.8)–(1.2, 1.2) touches all four pixels, so
+        // the (1, 1) entry a 1×1 mask would have dropped is nonzero.
+        let square = ShadowMesh {
+            positions: alloc::vec![pt(0.8, 0.8), pt(1.2, 0.8), pt(1.2, 1.2), pt(0.8, 1.2)],
+            alphas: alloc::vec![1., 1., 1., 1.],
+            indices: alloc::vec![0, 1, 2, 0, 2, 3],
+        };
+        let mask = rasterize_shadow_mesh(&square, mesh_bounds(&square));
+        assert_eq!(mask.len(), 4);
+        assert!(mask.iter().all(|&v| v > 0), "edge pixels not covered: {mask:?}");
     }
 }

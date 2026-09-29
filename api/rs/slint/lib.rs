@@ -219,7 +219,6 @@ pub use i_slint_core::api::*;
 #[doc(hidden)]
 #[deprecated(note = "Experimental type was made public by mistake")]
 pub use i_slint_core::component_factory::ComponentFactory;
-#[cfg(feature = "std")]
 pub use i_slint_core::graphics::Shape;
 #[cfg(not(target_arch = "wasm32"))]
 pub use i_slint_core::graphics::{BorrowedOpenGLTextureBuilder, BorrowedOpenGLTextureOrigin};
@@ -230,7 +229,6 @@ pub use i_slint_core::items::StandardListViewItem;
 #[doc(hidden)]
 #[deprecated(note = "Use slint::language::TableColumn instead")]
 pub use i_slint_core::items::TableColumn;
-#[cfg(feature = "std")]
 pub use i_slint_core::items::{CornerRounding, FillRule};
 pub use i_slint_core::model::{
     FilterModel, MapModel, Model, ModelError, ModelExt, ModelNotify, ModelPeer, ModelRc,
@@ -468,7 +466,6 @@ pub mod material {
 /// `.slint` code; they build [`Shape`] values that can be assigned to `shape`
 /// properties. `normalized`, `rotated`, `scaled`, `translated` and `morph` are
 /// methods on [`Shape`] itself.
-#[cfg(feature = "std")]
 pub mod shapes {
     pub use i_slint_core::graphics::shapes::{
         circle_shape as circle, custom_shape as custom, pill_shape as pill,

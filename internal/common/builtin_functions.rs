@@ -145,7 +145,7 @@ macro_rules! for_each_builtin_function {
             ShapesStar: pure fn(num_vertices_per_radius: i32, inner_radius: f32, rounding: CornerRounding, inner_rounding: CornerRounding) -> Shape
             ShapesPill: pure fn(width: f32, height: f32, smoothing: f32) -> Shape
             ShapesPillStar: pure fn(num_vertices_per_radius: i32, width: f32, height: f32, inner_radius_ratio: f32, rounding: CornerRounding) -> Shape
-            ShapesCustom: pure fn(vertices: [LogicalPosition], roundings: [CornerRounding], reps: i32, mirror: bool) -> Shape
+            ShapesCustom: pure fn(vertices: [LogicalPosition], roundings: [CornerRounding], reps: i32, center: LogicalPosition, mirror: bool) -> Shape
             ShapesNormalized: pure fn(shape: Shape) -> Shape
             ShapesRotated: pure fn(shape: Shape, angle: Angle) -> Shape
             ShapesScaled: pure fn(shape: Shape, scale_x: f32, scale_y: f32) -> Shape

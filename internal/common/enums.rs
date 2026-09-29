@@ -311,6 +311,14 @@ macro_rules! for_each_enums {
                 /// element's bounds, preserving the aspect ratio. Parts of the outline
                 /// outside the bounds are clipped when the element clips.
                 Cover,
+                /// The shape's normalized (0,0)-(1,1) coordinate space is scaled
+                /// independently in width and height to the element's bounds and the
+                /// result centered on the outline's bounding box — the mapping
+                /// Compose's `RoundedPolygon.toShape()` applies to `MaterialShapes`.
+                /// Unlike `fill`, an outline that doesn't span the full normalized
+                /// square keeps its inset; a shape not authored in normalized space
+                /// is scaled by the element's size.
+                Normalized,
             }
 
             /// This enum defines how the source image or path shall fit into an `Image` or `Path` element.

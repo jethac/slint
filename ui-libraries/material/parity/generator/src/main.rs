@@ -126,6 +126,16 @@ struct Widget {
     state: Option<String>,
     #[serde(default)]
     color: Option<String>,
+    /// M3 elevation level (0–5) for `surface` widgets: the Slint side sets
+    /// `Elevation.level`, the Compose side sets `Modifier.shadow`'s dp.
+    #[serde(default)]
+    level: Option<i64>,
+    /// Caster outline for `surface` widgets: a `MaterialShapes` global
+    /// member name in kebab case (`"cookie-9-sided"` → `MaterialShapes.
+    /// cookie-9-sided` / Compose `MaterialShapes.Cookie9Sided`), or `"rect"`
+    /// (default) for the `radius` field's rounded rectangle.
+    #[serde(default)]
+    shape: Option<String>,
     /// What this widget deliberately gets wrong on the Slint side
     /// (`negative` scenes only). Keys shadow the widget's own fields.
     #[serde(default)]
@@ -423,6 +433,16 @@ fn slint_case(scene: &Scene) -> String {
     if scene.widgets.iter().any(|w| w.kind == "filled-button") {
         imports.push("FilledButton");
     }
+    if scene.widgets.iter().any(|w| w.kind == "surface") {
+        imports.push("Elevation");
+        if scene
+            .widgets
+            .iter()
+            .any(|w| w.shape.as_deref().is_some_and(|sh| sh != "rect"))
+        {
+            imports.push("MaterialShapes");
+        }
+    }
     imports.sort();
     // The Compose side renders text in the variable Roboto under
     // `compose/src/test/resources/fonts/roboto.ttf` — the same file, kept
@@ -513,6 +533,7 @@ fn slint_canvas(s: &mut String, scene: &Scene) {
     // Buttons are named `button{n}` by count of filled buttons, not widget
     // index — a backdrop `rect` ahead of a button leaves `button0` intact.
     let mut buttons = 0;
+    let mut surfaces = 0;
     for w in scene.widgets.iter() {
         match w.kind.as_str() {
             "filled-button" => {
@@ -562,6 +583,62 @@ fn slint_canvas(s: &mut String, scene: &Scene) {
                     writeln!(
                         s,
                         "    // Deliberate defect (scene `slint_overrides.cover`).\n    Rectangle {{\n        x: button{i}.x;\n        y: button{i}.y;\n        width: button{i}.width;\n        height: button{i}.height;\n        border-radius: {cover_radius};\n        background: {fill_expr};\n        opacity: {};\n{label}    }}\n",
+                        cover["opacity"].as_f64().unwrap_or(1.0),
+                    )
+                    .unwrap();
+                }
+            }
+            "surface" => {
+                let i = surfaces;
+                surfaces += 1;
+                // A `slint_overrides.level` makes the Slint side cast the
+                // shadow of a different z than Compose renders — the
+                // negative scene's deliberate wrong-shadow defect.
+                let level = w
+                    .slint_overrides
+                    .get("level")
+                    .map(|v| widget_num(v) as i64)
+                    .unwrap_or_else(|| w.level.unwrap_or(0));
+                let outline = match w.shape.as_deref() {
+                    None | Some("rect") => {
+                        format!("border-radius: {}px;", w.radius.unwrap_or(0.) as i64)
+                    }
+                    Some(name) => format!("shape: MaterialShapes.{name};"),
+                };
+                // A `slint_overrides.shape_fit` maps the outline the wrong
+                // way on the Slint side — e.g. `fill` stretches the outline's
+                // bounds where Compose maps the normalized (0,0)-(1,1) space —
+                // the negative scene's deliberate silhouette defect.
+                let fit_override = w
+                    .slint_overrides
+                    .get("shape_fit")
+                    .and_then(|v| v.as_str())
+                    .map(|f| format!("\n        shape-fit: ShapeFit.{f};"))
+                    .unwrap_or_default();
+                writeln!(
+                    s,
+                    "    surface{i} := Elevation {{\n        x: {}px;\n        y: {}px;\n        width: {}px;\n        height: {}px;\n        level: {level};\n        {outline}{fit_override}\n        background: MaterialPalette.{};\n    }}\n",
+                    w.x as i64,
+                    w.y as i64,
+                    w.width.unwrap() as i64,
+                    w.height.unwrap() as i64,
+                    w.color.as_deref().unwrap_or("surface").replace('-', "_"),
+                )
+                .unwrap();
+                if let Some(cover) = w.slint_overrides.get("cover") {
+                    let fill = cover["fill"].as_str().unwrap_or("primary");
+                    let fill_expr = if fill.starts_with('#') {
+                        fill.to_lowercase()
+                    } else {
+                        format!("MaterialPalette.{}", fill.replace('-', "_"))
+                    };
+                    let cover_radius = cover["radius"]
+                        .as_f64()
+                        .map(|r| format!("{r}px"))
+                        .unwrap_or_else(|| "0px".to_string());
+                    writeln!(
+                        s,
+                        "    // Deliberate defect (scene `slint_overrides.cover`).\n    Rectangle {{\n        x: surface{i}.x;\n        y: surface{i}.y;\n        width: surface{i}.width;\n        height: surface{i}.height;\n        border-radius: {cover_radius};\n        background: {fill_expr};\n        opacity: {};\n    }}\n",
                         cover["opacity"].as_f64().unwrap_or(1.0),
                     )
                     .unwrap();
