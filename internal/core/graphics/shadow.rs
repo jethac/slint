@@ -219,8 +219,8 @@ const AMBIENT_GEOM_FACTOR: f32 = 64.0;
 /// `kMaxAmbientRadius = 300·(1/128)·64 = 150`.
 const MAX_AMBIENT_RADIUS: f32 = 300. * AMBIENT_HEIGHT_FACTOR * AMBIENT_GEOM_FACTOR;
 
-fn divide_and_pin(numer: f32, denom: f32, min: f32, max: f32) -> f32 {
-    (numer / denom).clamp(min, max)
+fn divide_and_pin(numerator: f32, denom: f32, min: f32, max: f32) -> f32 {
+    (numerator / denom).clamp(min, max)
 }
 
 /// `SkDrawShadowMetrics::AmbientBlurRadius` — the ambient outset `min(z/2, 150)`.
@@ -292,13 +292,13 @@ struct OffsetSegment {
     v: Vec2,
 }
 
-fn outside_interval(numer: f32, denom: f32, denom_positive: bool) -> bool {
-    (denom_positive && (numer < 0. || numer > denom))
-        || (!denom_positive && (numer > 0. || numer < denom))
+fn outside_interval(numerator: f32, denom: f32, denom_positive: bool) -> bool {
+    (denom_positive && (numerator < 0. || numerator > denom))
+        || (!denom_positive && (numerator > 0. || numerator < denom))
 }
 
-fn zero_length(v: Vec2, vdotv: f32) -> bool {
-    !(v.x.is_finite() && v.y.is_finite() && vdotv != 0.)
+fn zero_length(v: Vec2, v_dot_v: f32) -> bool {
+    !(v.x.is_finite() && v.y.is_finite() && v_dot_v != 0.)
 }
 
 /// `compute_intersection`: intersection `p` between offset segments at
@@ -309,61 +309,61 @@ fn compute_intersection(s0: OffsetSegment, s1: OffsetSegment) -> Option<(Pt, f32
     let w = s1.p0 - s0.p0;
     let mut denom = cross(v0, v1);
     let denom_positive = denom > 0.;
-    let (mut s_numer, mut t_numer);
+    let (mut s_numerator, mut t_numerator);
     if denom.abs() <= CROSS_TOLERANCE {
         // Segments are parallel; bail unless they are also collinear.
         if cross(w, v0).abs() > CROSS_TOLERANCE || cross(w, v1).abs() > CROSS_TOLERANCE {
             return None;
         }
-        let v0dotv0 = dot(v0, v0);
-        if zero_length(v0, v0dotv0) {
-            let v1dotv1 = dot(v1, v1);
-            if zero_length(v1, v1dotv1) {
+        let v0_dot_v0 = dot(v0, v0);
+        if zero_length(v0, v0_dot_v0) {
+            let v1_dot_v1 = dot(v1, v1);
+            if zero_length(v1, v1_dot_v1) {
                 if normalize(w).is_none() {
                     return Some((s0.p0, 0., 0.));
                 }
                 return None;
             }
-            t_numer = dot(v1, -w);
-            denom = v1dotv1;
-            if outside_interval(t_numer, denom, true) {
+            t_numerator = dot(v1, -w);
+            denom = v1_dot_v1;
+            if outside_interval(t_numerator, denom, true) {
                 return None;
             }
-            s_numer = 0.;
+            s_numerator = 0.;
         } else {
-            s_numer = dot(v0, w);
-            denom = v0dotv0;
-            t_numer = 0.;
-            if outside_interval(s_numer, denom, true) {
-                let v1dotv1 = dot(v1, v1);
-                if zero_length(v1, v1dotv1) {
+            s_numerator = dot(v0, w);
+            denom = v0_dot_v0;
+            t_numerator = 0.;
+            if outside_interval(s_numerator, denom, true) {
+                let v1_dot_v1 = dot(v1, v1);
+                if zero_length(v1, v1_dot_v1) {
                     return None;
                 }
-                let old_s_numer = s_numer;
-                s_numer = dot(v0, w + v1);
-                t_numer = denom;
-                if outside_interval(s_numer, denom, true) {
-                    if s_numer * old_s_numer > 0. {
+                let old_s_numerator = s_numerator;
+                s_numerator = dot(v0, w + v1);
+                t_numerator = denom;
+                if outside_interval(s_numerator, denom, true) {
+                    if s_numerator * old_s_numerator > 0. {
                         return None;
                     }
-                    s_numer = 0.;
-                    t_numer = dot(v1, -w);
-                    denom = v1dotv1;
+                    s_numerator = 0.;
+                    t_numerator = dot(v1, -w);
+                    denom = v1_dot_v1;
                 }
             }
         }
     } else {
-        s_numer = cross(w, v1);
-        if outside_interval(s_numer, denom, denom_positive) {
+        s_numerator = cross(w, v1);
+        if outside_interval(s_numerator, denom, denom_positive) {
             return None;
         }
-        t_numer = cross(w, v0);
-        if outside_interval(t_numer, denom, denom_positive) {
+        t_numerator = cross(w, v0);
+        if outside_interval(t_numerator, denom, denom_positive) {
             return None;
         }
     }
-    let local_s = s_numer / denom;
-    let local_t = t_numer / denom;
+    let local_s = s_numerator / denom;
+    let local_t = t_numerator / denom;
     Some((s0.p0 + v0 * local_s, local_s, local_t))
 }
 
@@ -796,12 +796,12 @@ impl ActiveEdgeList {
         let mut dir = 0usize;
         let mut last = 0usize;
         let mut pred = NIL;
-        let mut succ = NIL;
+        let mut next = NIL;
 
         loop {
             if curr == NIL {
                 if (pred != NIL && self.edge_intersect(pred, p0, v, index0, index1))
-                    || (succ != NIL && self.edge_intersect(succ, p0, v, index0, index1))
+                    || (next != NIL && self.edge_intersect(next, p0, v, index0, index1))
                 {
                     return false;
                 }
@@ -812,7 +812,7 @@ impl ActiveEdgeList {
                 self.arena[parent].child[dir] = new_node;
                 let curr = new_node;
                 self.arena[curr].above = pred;
-                self.arena[curr].below = succ;
+                self.arena[curr].below = next;
                 if pred != NIL {
                     if self.arena[pred].segment.p0 == self.arena[curr].segment.p0
                         && self.arena[pred].segment.v == self.arena[curr].segment.v
@@ -821,13 +821,13 @@ impl ActiveEdgeList {
                     }
                     self.arena[pred].below = curr;
                 }
-                if succ != NIL {
-                    if self.arena[succ].segment.p0 == self.arena[curr].segment.p0
-                        && self.arena[succ].segment.v == self.arena[curr].segment.v
+                if next != NIL {
+                    if self.arena[next].segment.p0 == self.arena[curr].segment.p0
+                        && self.arena[next].segment.v == self.arena[curr].segment.v
                     {
                         return false;
                     }
-                    self.arena[succ].above = curr;
+                    self.arena[next].above = curr;
                 }
                 if self.is_red(parent) {
                     let dir2 = (self.child(top, 1) == grandparent) as usize;
@@ -870,7 +870,7 @@ impl ActiveEdgeList {
             dir = (side < 0) as usize;
 
             if dir == 0 {
-                succ = curr;
+                next = curr;
             } else {
                 pred = curr;
             }
@@ -924,7 +924,7 @@ impl ActiveEdgeList {
             return false;
         }
         let pred = self.arena[found].above;
-        let succ = self.arena[found].below;
+        let next = self.arena[found].below;
         if pred != NIL {
             let f = self.arena[found].clone();
             if self.edge_intersect(pred, f.segment.p0, f.segment.v, f.index0, f.index1)
@@ -933,10 +933,10 @@ impl ActiveEdgeList {
                 return false;
             }
         }
-        if succ != NIL {
+        if next != NIL {
             let f = self.arena[found].clone();
-            if self.edge_intersect(succ, f.segment.p0, f.segment.v, f.index0, f.index1)
-                || self.edge_intersect(succ, p1, v, index1, index2)
+            if self.edge_intersect(next, f.segment.p0, f.segment.v, f.index0, f.index1)
+                || self.edge_intersect(next, p1, v, index1, index2)
             {
                 return false;
             }
@@ -1027,12 +1027,12 @@ impl ActiveEdgeList {
 
         if found != NIL {
             let pred = self.arena[found].above;
-            let succ = self.arena[found].below;
+            let next = self.arena[found].below;
             let f = self.arena[found].clone();
             if (pred != NIL
                 && self.edge_intersect(pred, f.segment.p0, f.segment.v, f.index0, f.index1))
-                || (succ != NIL
-                    && self.edge_intersect(succ, f.segment.p0, f.segment.v, f.index0, f.index1))
+                || (next != NIL
+                    && self.edge_intersect(next, f.segment.p0, f.segment.v, f.index0, f.index1))
             {
                 return false;
             }
@@ -1042,8 +1042,8 @@ impl ActiveEdgeList {
                 self.arena[found].index1 = self.arena[curr].index1;
                 self.arena[found].above = self.arena[curr].above;
                 // found->fBelow stays (keeps the original successor link)
-            } else if succ != NIL {
-                self.arena[succ].above = pred;
+            } else if next != NIL {
+                self.arena[next].above = pred;
             }
             let pred = self.arena[found].above;
             if pred != NIL {
@@ -1452,13 +1452,13 @@ fn triangulate_simple_polygon(polygon: &[Pt], index_map: &[u16], out: &mut Vec<u
     // classify vertices; reflex (incl. near-collinear) vertices go into the hash grid
     const CONVEX: u8 = 0;
     const REFLEX: u8 = 1;
-    let mut vtype = alloc::vec![CONVEX; n];
+    let mut vertex_types = alloc::vec![CONVEX; n];
     let mut v0 = polygon[0] - polygon[n - 1];
     for curr in 0..n {
         let next = (curr + 1) % n;
         let v1 = polygon[next] - polygon[curr];
         if (winding as f32) * cross(v0, v1) <= CROSS_TOLERANCE {
-            vtype[curr] = REFLEX;
+            vertex_types[curr] = REFLEX;
         }
         v0 = v1;
     }
@@ -1489,10 +1489,10 @@ fn triangulate_simple_polygon(polygon: &[Pt], index_map: &[u16], out: &mut Vec<u
     // reflex vertex go to the head, others to the tail.
     let mut convex_list: alloc::collections::VecDeque<usize> = Default::default();
     for curr in 0..n {
-        if vtype[curr] == CONVEX {
+        if vertex_types[curr] == CONVEX {
             let prev_index = (curr + n - 1) % n;
             let next = (curr + 1) % n;
-            if vtype[prev_index] == REFLEX || vtype[next] == REFLEX {
+            if vertex_types[prev_index] == REFLEX || vertex_types[next] == REFLEX {
                 convex_list.push_front(curr);
             } else {
                 convex_list.push_back(curr);
@@ -1557,15 +1557,15 @@ fn triangulate_simple_polygon(polygon: &[Pt], index_map: &[u16], out: &mut Vec<u
         out.push(index_map[p2]);
         vertex_count -= 1;
 
-        // reclassify neighbours
+        // reclassify neighbors
         next_of[p0] = next_of[ear_vertex];
         prev_of[p2] = prev_of[ear_vertex];
         for &u in &[p0, p2] {
-            if vtype[u] == REFLEX {
+            if vertex_types[u] == REFLEX {
                 let vv0 = polygon[u] - polygon[prev_of[u]];
                 let vv1 = polygon[next_of[u]] - polygon[u];
                 if (winding as f32) * cross(vv0, vv1) > CROSS_TOLERANCE {
-                    vtype[u] = CONVEX;
+                    vertex_types[u] = CONVEX;
                     // remove from grid, add to convex list tail
                     let cell = grid_cell(polygon[u]);
                     grid[cell].retain(|&x| x != u);
@@ -2938,7 +2938,7 @@ mod tests {
     }
 
     #[test]
-    fn ambient_metrics_match_skdraw_shadow_metrics() {
+    fn ambient_metrics_match_skia_shadow_metrics() {
         // AmbientBlurRadius(z) = min(z/128·64, 150); AmbientRecipAlpha(z) = 1 + z/128.
         assert!((ambient_blur_radius(128.) - 64.).abs() < 1e-4);
         assert!((ambient_blur_radius(1.) - 0.5).abs() < 1e-4);
@@ -2948,7 +2948,7 @@ mod tests {
     }
 
     #[test]
-    fn spot_metrics_match_skdraw_shadow_metrics() {
+    fn spot_metrics_match_skia_shadow_metrics() {
         // zRatio = pin(z / (lightZ − z), 0, 0.95); blur = radius·zRatio;
         // scale = pin(lightZ / (lightZ − z), 1, 1.95); offset = −zRatio·(lx,ly).
         let (blur, scale, offset) = spot_params(100., 200., -50., 800., 800.);
