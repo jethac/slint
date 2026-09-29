@@ -13,6 +13,9 @@ export component Ripple {
     in property <color> color;
     in property <bool> clip_ripple: true;
 
+    // MaterialShapes live in the normalized (0,0)-(1,1) space; see Elevation.
+    shape-fit: ShapeFit.normalized;
+
     // Unbounded ink for inline surfaces (e.g. icon buttons): the circle is
     // meant to paint past the element bounds.
     if !root.clip_ripple : Rectangle {
@@ -32,15 +35,15 @@ export component Ripple {
     }
 
     // Bounded overlay: a circle expanding from the press point until it
-    // covers the whole element, clipped to the component's shape. Renderers
-    // that don't honor border-radius in `clip` (the software renderer,
-    // issue #6) clip the circle to the rect instead — the corner ink
-    // overshoot is that documented divergence, not a substituted shape.
+    // covers the whole element, clipped to the component's outline — its
+    // `shape` when set, the border-radius rectangle otherwise.
     if root.clip_ripple : Rectangle {
         width: 100%;
         height: 100%;
         clip: true;
         border_radius: root.border_radius;
+        shape: root.shape;
+        shape-fit: root.shape-fit;
 
         ink := Rectangle {
             x: root.pressed_x - self.width / 2;
@@ -74,6 +77,9 @@ export component StateLayer {
     in property <bool> has_focus;
     in property <bool> has_hover;
 
+    // MaterialShapes live in the normalized (0,0)-(1,1) space; see Elevation.
+    shape-fit: ShapeFit.normalized;
+
     property <float> state_layer_opacity;
 
     Rectangle {
@@ -82,6 +88,8 @@ export component StateLayer {
         opacity: root.state_layer_opacity;
         background: root.background;
         border_radius: root.border_radius;
+        shape: root.shape;
+        shape-fit: root.shape-fit;
     }
 
     Rectangle {
@@ -89,6 +97,8 @@ export component StateLayer {
         height: 100%;
         clip: true;
         border_radius: root.border_radius;
+        shape: root.shape;
+        shape-fit: root.shape-fit;
 
         @children
     }
@@ -174,14 +184,20 @@ export component StateLayerArea inherits FocusTouchArea {
     in property <bool> display_background: true;
     in property <bool> clip_ripple: true;
 
+    // MaterialShapes live in the normalized (0,0)-(1,1) space; see Elevation.
+    // This binds TouchArea's own `shape-fit`, so shape hit-testing matches
+    // the rendered outline.
+    shape-fit: ShapeFit.normalized;
+
     property <bool> popup_open;
-    property <bool> has_h: root.mouse-x > 0 && root.mouse-x < root.width && root.mouse-y > 0 && root.mouse-y < root.height;
 
     if !root.enabled || (root.enabled && (root.has_focus || root.pressed || root.enter_pressed || root.has_hover)) : StateLayer {
         width: 100%;
         height: 100%;
         background: root.transparent_background ? transparent : root.color;
         border_radius: root.border_radius;
+        shape: root.shape;
+        shape-fit: root.shape-fit;
         enabled: root.enabled;
         pressed: root.pressed || root.enter_pressed;
         has_focus: root.has_focus;
@@ -196,6 +212,8 @@ export component StateLayerArea inherits FocusTouchArea {
         width: 100%;
         height: 100%;
         border_radius: root.border_radius;
+        shape: root.shape;
+        shape-fit: root.shape-fit;
         color: root.color;
         clip_ripple: root.clip_ripple;
     }

@@ -1,108 +1,43 @@
 // Copyright © SixtyFPS GmbH <info@slint.dev>
 // SPDX-License-Identifier: MIT
 
-import { Palette } from "std-widgets.slint";
-import { MaterialWindow } from "material_window.slint";
 import { MaterialPalette } from "../styling/material_palette.slint";
+import { ElevationTokens } from "../styling/generated/material_elevation_tokens.slint";
 
 export component Elevation {
     in property <brush> background;
     in property <length> border_radius;
     in property <int> level;
+    // `shape` is an element-level property: `Elevation { shape: X }` binds it
+    // on this component's root element and `root.shape` forwards it to the
+    // caster. When unset it stays empty and the caster uses `border_radius`.
+    // `shape-fit` defaults to `normalized`: the MaterialShapes coordinate
+    // space is the (0,0)-(1,1) square Compose's `RoundedPolygon.toShape()`
+    // maps onto the element — `fill` would stretch the outline's own bounds.
+    shape-fit: ShapeFit.normalized;
 
-    property <bool> dark: Palette.color_scheme == ColorScheme.dark;
+    // The M3 `level` slot mapped to its dp token (ElevationTokens.levelN).
+    property <length> shadow_height:
+        root.level <= 0 ? ElevationTokens.level0 :
+        root.level == 1 ? ElevationTokens.level1 :
+        root.level == 2 ? ElevationTokens.level2 :
+        root.level == 3 ? ElevationTokens.level3 :
+        root.level == 4 ? ElevationTokens.level4 :
+        ElevationTokens.level5;
 
-    outer_shadow := Rectangle {
+    // The `elevation`/`ambient-shadow-color`/`spot-shadow-color` bindings are
+    // lowered to an `ElevationShadow` sibling that casts the Android ambient +
+    // spot shadow for this rectangle's outline (its `shape`, or the border
+    // radius when unset).
+    caster := Rectangle {
         border_radius: root.border_radius;
+        shape: root.shape;
+        shape-fit: root.shape-fit;
+        background: root.background;
+        elevation: root.shadow_height;
+        ambient-shadow-color: MaterialPalette.shadow;
+        spot-shadow-color: MaterialPalette.shadow;
 
-        inner_shadow := Rectangle {
-            border_radius: root.border_radius;
-            background: root.background;
-
-            @children
-        }
+        @children
     }
-
-    states [
-        level_1_light when root.level == 1 && !root.dark: {
-            outer_shadow.drop_shadow_offset_y: 1px;
-            outer_shadow.drop_shadow_blur: 2px;
-            outer_shadow.drop_shadow_color: MaterialPalette.shadow_30;
-            inner_shadow.drop_shadow_offset_y: 1px;
-            inner_shadow.drop_shadow_blur: 2px;
-            inner_shadow.drop_shadow_color: MaterialPalette.shadow_15;
-        }
-        level_2_light when root.level == 2 && !root.dark: {
-            outer_shadow.drop_shadow_offset_y: 1px;
-            outer_shadow.drop_shadow_blur: 2px;
-            outer_shadow.drop_shadow_color: MaterialPalette.shadow_30;
-            inner_shadow.drop_shadow_offset_y: 2px;
-            inner_shadow.drop_shadow_blur: 6px;
-            inner_shadow.drop_shadow_color: MaterialPalette.shadow_15;
-        }
-        level_3_light when root.level == 3 && !root.dark: {
-            outer_shadow.drop_shadow_offset_y: 4px;
-            outer_shadow.drop_shadow_blur: 8px;
-            outer_shadow.drop_shadow_color: MaterialPalette.shadow_15;
-            inner_shadow.drop_shadow_offset_y: 1px;
-            inner_shadow.drop_shadow_blur: 3px;
-            inner_shadow.drop_shadow_color: MaterialPalette.shadow_30;
-        }
-        level_4_light when root.level == 4 && !root.dark: {
-            outer_shadow.drop_shadow_offset_y: 6px;
-            outer_shadow.drop_shadow_blur: 10px;
-            outer_shadow.drop_shadow_color: MaterialPalette.shadow_15;
-            inner_shadow.drop_shadow_offset_y: 2px;
-            inner_shadow.drop_shadow_blur: 3px;
-            inner_shadow.drop_shadow_color: MaterialPalette.shadow_30;
-        }
-        level_5_light when root.level == 5 && !root.dark: {
-            outer_shadow.drop_shadow_offset_y: 8px;
-            outer_shadow.drop_shadow_blur: 12px;
-            outer_shadow.drop_shadow_color: MaterialPalette.shadow_15;
-            inner_shadow.drop_shadow_offset_y: 4px;
-            inner_shadow.drop_shadow_blur: 4px;
-            inner_shadow.drop_shadow_color: MaterialPalette.shadow_30;
-        }
-        level_1_dark when root.level == 1 && root.dark: {
-            outer_shadow.drop_shadow_offset_y: 1px;
-            outer_shadow.drop_shadow_blur: 3px;
-            outer_shadow.drop_shadow_color: MaterialPalette.shadow_15;
-            inner_shadow.drop_shadow_offset_y: 1px;
-            inner_shadow.drop_shadow_blur: 2px;
-            inner_shadow.drop_shadow_color: MaterialPalette.shadow_30;
-        }
-        level_2_dark when root.level == 2 && root.dark: {
-            outer_shadow.drop_shadow_offset_y: 2px;
-            outer_shadow.drop_shadow_blur: 6px;
-            outer_shadow.drop_shadow_color: MaterialPalette.shadow_15;
-            inner_shadow.drop_shadow_offset_y: 1px;
-            inner_shadow.drop_shadow_blur: 2px;
-            inner_shadow.drop_shadow_color: MaterialPalette.shadow_30;
-        }
-        level_3_dark when root.level == 3 && root.dark: {
-            outer_shadow.drop_shadow_offset_y: 4px;
-            outer_shadow.drop_shadow_blur: 8px;
-            outer_shadow.drop_shadow_color: MaterialPalette.shadow_15;
-            inner_shadow.drop_shadow_offset_y: 1px;
-            inner_shadow.drop_shadow_blur: 3px;
-            inner_shadow.drop_shadow_color: MaterialPalette.shadow_30;
-        }
-        level_4_dark when root.level == 4 && root.dark: {
-            outer_shadow.drop_shadow_offset_y: 6px;
-            outer_shadow.drop_shadow_blur: 10px;
-            outer_shadow.drop_shadow_color: MaterialPalette.shadow_15;
-            inner_shadow.drop_shadow_offset_y: 2px;
-            inner_shadow.drop_shadow_blur: 3px;
-            inner_shadow.drop_shadow_color: MaterialPalette.shadow_30;
-        }
-        level_5_dark when root.level == 5 && root.dark: {
-            outer_shadow.drop_shadow_offset_y: 8px;
-            outer_shadow.drop_shadow_blur: 12px;
-            outer_shadow.drop_shadow_color: MaterialPalette.shadow_15;
-            inner_shadow.drop_shadow_offset_y: 4px;
-            inner_shadow.drop_shadow_blur: 4px;
-            inner_shadow.drop_shadow_color: MaterialPalette.shadow_30;
-        }
-    ]
 }

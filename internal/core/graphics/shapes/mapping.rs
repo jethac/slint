@@ -177,7 +177,18 @@ pub(crate) fn do_mapping(
     for dv in &distance_vertex_list {
         helper.add_mapping(&features1[dv.f1], dv.f1, &features2[dv.f2], dv.f2)?;
     }
-    Some(helper.mapping)
+    // The greedy filters can leave fewer than two usable pairs (e.g. morphing a
+    // mid-morph outline whose re-detected features collide with the target's):
+    // fall back to the same anchor constructions as the degenerate candidate
+    // lists above so the morph stays continuous instead of failing.
+    match helper.mapping.len() {
+        0 => Some(alloc::vec![(0., 0.), (0.5, 0.5)]),
+        1 => {
+            let (f1, f2) = helper.mapping[0];
+            Some(alloc::vec![(f1, f2), ((f1 + 0.5) % 1., (f2 + 0.5) % 1.),])
+        }
+        _ => Some(helper.mapping),
+    }
 }
 
 #[derive(Default)]

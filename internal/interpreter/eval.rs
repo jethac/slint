@@ -636,6 +636,16 @@ fn point_array_arg(
     ModelRc::from(points.as_slice())
 }
 
+fn point_arg(ctx: &mut EvalContext, e: &Expression) -> i_slint_core::api::LogicalPosition {
+    match eval_expression(ctx, e) {
+        Value::Struct(st) => i_slint_core::api::LogicalPosition::new(
+            st.get_field("x").cloned().and_then(|v| f32::try_from(v).ok()).unwrap_or_default(),
+            st.get_field("y").cloned().and_then(|v| f32::try_from(v).ok()).unwrap_or_default(),
+        ),
+        _ => Default::default(),
+    }
+}
+
 fn rounding_arg(ctx: &mut EvalContext, e: &Expression) -> i_slint_core::items::CornerRounding {
     match eval_expression(ctx, e) {
         Value::Struct(st) => i_slint_core::items::CornerRounding::new(
@@ -735,7 +745,8 @@ fn eval_shape_builtin(
             &point_array_arg(ctx, &arguments[0]),
             &rounding_array_arg(ctx, &arguments[1]),
             to_num(ctx, &arguments[2]) as i32,
-            matches!(eval_expression(ctx, &arguments[3]), Value::Bool(true)),
+            point_arg(ctx, &arguments[3]),
+            matches!(eval_expression(ctx, &arguments[4]), Value::Bool(true)),
         ),
         BuiltinFunction::ShapesNormalized => shape_arg(ctx, &arguments[0]).normalized(),
         BuiltinFunction::ShapesRotated => {

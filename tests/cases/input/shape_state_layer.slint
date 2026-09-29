@@ -1,0 +1,109 @@
+// Copyright © SixtyFPS GmbH <info@slint.dev>
+// SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0
+
+import { StateLayerArea } from "../../../ui-libraries/material/src/ui/components/state_layer.slint";
+
+export component TestCase inherits Rectangle {
+    width: 100phx;
+    height: 100phx;
+
+    in-out property <int> clicks;
+    out property <bool> hovering <=> area.has-hover;
+    in-out property <int> fit_clicks;
+    out property <bool> fit_hovering <=> area-fit.has-hover;
+    in-out property <bool> square: false;
+
+    property <shape> circle: Shapes.circle(16);
+    property <shape> rect40: Shapes.rectangle(40, 40, []);
+
+    // The material StateLayerArea is TouchArea-derived: a shape bound on the
+    // component must bound clicks and hover by the outline, not the
+    // element's bounding rectangle.
+    area := StateLayerArea {
+        x: 10phx;
+        y: 10phx;
+        width: 40phx;
+        height: 40phx;
+        shape: root.square ? root.rect40 : root.circle;
+        // fill stretches the unit circle's tight bounds to the 40x40 area:
+        // the corners fall outside the outline.
+        shape-fit: ShapeFit.fill;
+        clicked => { clicks += 1; }
+    }
+
+    // shape-fit contain in a wider rect: the unit circle is letterboxed into
+    // the middle 40x40, so points in the side bands miss even though they are
+    // inside the element's geometry.
+    area-fit := StateLayerArea {
+        x: 10phx;
+        y: 60phx;
+        width: 60phx;
+        height: 40phx;
+        shape: root.circle;
+        shape-fit: ShapeFit.contain;
+        clicked => { fit_clicks += 1; }
+    }
+
+    out property <bool> test: true;
+}
+
+/*
+```rust
+let instance = TestCase::new().unwrap();
+
+assert_eq!(instance.get_test(), true);
+
+// Inside the circle: the click reaches the area and hovers it.
+slint_testing::send_mouse_click(&instance, 30., 30.);
+assert_eq!(instance.get_clicks(), 1);
+assert_eq!(instance.get_hovering(), true);
+
+// Inside the bounding rectangle but outside the circle outline: the shape
+// bounds the input target, so no click and no hover.
+slint_testing::send_mouse_click(&instance, 12., 12.);
+assert_eq!(instance.get_clicks(), 1);
+assert_eq!(instance.get_hovering(), false);
+
+// Retarget the outline to the full square: the same corner now hits and
+// hovers — hit-testing tracks the current shape value, not a cached outline.
+instance.set_square(true);
+slint_testing::send_mouse_click(&instance, 12., 12.);
+assert_eq!(instance.get_clicks(), 2);
+assert_eq!(instance.get_hovering(), true);
+
+// shape-fit contain: the band the circle doesn't cover isn't hit-testable.
+slint_testing::send_mouse_click(&instance, 40., 80.);
+assert_eq!(instance.get_fit_clicks(), 1);
+assert_eq!(instance.get_fit_hovering(), true);
+slint_testing::send_mouse_click(&instance, 12., 80.);
+assert_eq!(instance.get_fit_clicks(), 1);
+assert_eq!(instance.get_fit_hovering(), false);
+```
+
+```cpp
+auto handle = TestCase::create();
+const TestCase &instance = *handle;
+
+assert_eq(instance.get_test(), true);
+
+slint_testing::send_mouse_click(&instance, 30., 30.);
+assert_eq(instance.get_clicks(), 1);
+assert_eq(instance.get_hovering(), true);
+
+slint_testing::send_mouse_click(&instance, 12., 12.);
+assert_eq(instance.get_clicks(), 1);
+assert_eq(instance.get_hovering(), false);
+
+instance.set_square(true);
+slint_testing::send_mouse_click(&instance, 12., 12.);
+assert_eq(instance.get_clicks(), 2);
+assert_eq(instance.get_hovering(), true);
+
+slint_testing::send_mouse_click(&instance, 40., 80.);
+assert_eq(instance.get_fit_clicks(), 1);
+assert_eq(instance.get_fit_hovering(), true);
+slint_testing::send_mouse_click(&instance, 12., 80.);
+assert_eq(instance.get_fit_clicks(), 1);
+assert_eq(instance.get_fit_hovering(), false);
+```
+*/

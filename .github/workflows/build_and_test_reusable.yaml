@@ -128,6 +128,16 @@ jobs:
               if: runner.os == 'Windows'
               shell: bash
               run: echo "CARGO_TARGET_DIR=${RUNNER_WORKSPACE//\\//}/t" >> $GITHUB_ENV
+            # --all-features resolves skia-safe to d3d+ganesh+gl+jpeg+pdf+vulkan,
+            # a feature set upstream never published prebuilt binaries for, so
+            # the download 404s and the source-build fallback dies in
+            # git-sync-deps. Point skia-bindings at the closest published
+            # tarball (a strict superset, same bindings hash). A literal URL
+            # without {tag}/{key} placeholders is used verbatim.
+            - name: Redirect skia-bindings to a published Windows binary
+              if: runner.os == 'Windows'
+              shell: bash
+              run: echo "SKIA_BINARIES_URL=https://github.com/rust-skia/skia-binaries/releases/download/0.153.3/skia-binaries-b7f043e0b1e2a850e702-x86_64-pc-windows-msvc-d3d-ganesh-gl-jpegd-jpege-pdf-svg-textlayout-vulkan.tar.gz" >> $GITHUB_ENV
             - uses: ./.github/actions/setup-rust
               with:
                   toolchain: ${{ inputs.rust_version }}
