@@ -27,7 +27,7 @@
 use crate::Color;
 use crate::graphics::ElementOutline;
 use crate::graphics::shapes::Cubic;
-use crate::lengths::{LogicalPx, LogicalSize};
+use crate::lengths::{LogicalPx};
 use alloc::vec::Vec;
 #[allow(unused_imports)]
 use num_traits::Float;
@@ -2576,8 +2576,8 @@ pub fn gauss_falloff_lut(a: f32) -> f32 {
 /// pass the window's own size and the origin — the light then sits centered on
 /// the window's top edge, exactly as for a full-screen window.
 pub fn window_light(
-    display: LogicalSize,
-    window_pos: crate::lengths::LogicalPoint,
+    display: euclid::Size2D<f32, LogicalPx>,
+    window_pos: euclid::Point2D<f32, LogicalPx>,
 ) -> ([f32; 3], f32) {
     let w = display.width.max(1.);
     let h = display.height.max(1.);
@@ -2901,7 +2901,7 @@ pub fn elevation_light(
     let (dw, dh, wx, wy) = display_geometry
         .map(|(d, p)| (d.width as f32, d.height as f32, p.x as f32, p.y as f32))
         .unwrap_or((window_size.width as f32, window_size.height as f32, 0., 0.));
-    window_light(LogicalSize::new(dw, dh), crate::lengths::LogicalPoint::new(wx, wy))
+    window_light(euclid::size2(dw, dh), euclid::point2(wx, wy))
 }
 
 #[cfg(test)]
@@ -2917,10 +2917,8 @@ mod tests {
     fn window_light_places_light_centered_above_display() {
         // Display 1600×1200, window at (100, 50):
         // zRatio = min(W,H)/450 = 2.6667, lightZ = 500·(zRatio+2)/3 ≈ 777.8.
-        let (light, radius) = window_light(
-            LogicalSize::new(1600., 1200.),
-            crate::lengths::LogicalPoint::new(100., 50.),
-        );
+        let (light, radius) =
+            window_light(euclid::size2(1600., 1200.), euclid::point2(100., 50.));
         assert_eq!(radius, 800.);
         assert!((light[0] - 700.).abs() < 1e-4, "{}", light[0]);
         assert!((light[1] - (-50.)).abs() < 1e-4, "{}", light[1]);

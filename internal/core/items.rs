@@ -2195,6 +2195,7 @@ impl Item for ElevationShadow {
         RenderingResult::ContinueRenderingChildren
     }
 
+    #[allow(clippy::unnecessary_cast)] // Coord
     fn bounding_rect(
         self: core::pin::Pin<&Self>,
         _window_adapter: &Rc<dyn WindowAdapter>,
@@ -2208,7 +2209,7 @@ impl Item for ElevationShadow {
         crate::graphics::shadow::shadow_local_bounds(
             geometry.cast(),
             &crate::graphics::shadow::Affine::IDENTITY,
-            self.elevation().get(),
+            self.elevation().get() as f32,
             [0., 0., 500.],
             800.,
         )

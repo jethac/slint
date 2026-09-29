@@ -4057,6 +4057,7 @@ impl<T: ProcessScene> i_slint_core::item_rendering::ItemRenderer for SceneBuilde
     /// A8 masks bounded by the shadow's extent — never a full-window mask —
     /// and drawn through the shared texture path, so this works identically
     /// in whole-scene and line-by-line mode.
+    #[allow(clippy::unnecessary_cast)] // Coord
     fn draw_elevation_shadow(
         &mut self,
         shadow_item: Pin<&i_slint_core::items::ElevationShadow>,
@@ -4068,7 +4069,7 @@ impl<T: ProcessScene> i_slint_core::item_rendering::ItemRenderer for SceneBuilde
             return;
         }
         let scale_factor = self.scale_factor.get();
-        let z = shadow_item.elevation().get() * scale_factor;
+        let z = shadow_item.elevation().get() as f32 * scale_factor;
         if z < shadow::MIN_HEIGHT {
             return;
         }
