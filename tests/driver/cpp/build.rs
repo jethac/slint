@@ -31,35 +31,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         })
         .expect("OUT_DIR is inside the cargo target directory");
 
-    // The directory containing the built slint_cpp library: <profile>/deps
-    // with older cargo, build/slint-cpp/<fingerprint>/out with cargo's
-    // build-dir layout (≈1.100), which emits each crate's artifacts into its
-    // own build/<package>/<fingerprint>/out directory.
-    let is_slint_cpp_lib = |dir: &Path| {
-        dir.read_dir().map(|mut entries| {
-            entries.any(|entry| {
-                entry.ok().map_or(false, |entry| {
-                    let name = entry.file_name();
-                    let name = name.to_string_lossy();
-                    name.starts_with("libslint_cpp.") || name.starts_with("slint_cpp.")
-                })
-            })
-        })
-    };
-    let cpp_lib_path = target_dir
-        .join("build")
-        .join("slint-cpp")
-        .read_dir()
-        .ok()
-        .and_then(|mut fingerprint_dirs| {
-            fingerprint_dirs.find_map(|entry| {
-                let out = entry.ok()?.path().join("out");
-                is_slint_cpp_lib(&out).unwrap_or(false).then_some(out)
-            })
-        })
-        .unwrap_or_else(|| target_dir.join("deps"));
-
-    println!("cargo:rustc-env=CPP_LIB_PATH={}", cpp_lib_path.display());
+    // The directory the driver locates the built slint_cpp library under:
+    // <profile>/deps with older cargo, build/slint-cpp/<fingerprint>/out
+    // with cargo's build-dir layout (≈1.100). The lookup happens in the
+    // driver at test time: the slint-cpp crate may not be compiled yet
+    // while this build script runs.
+    println!("cargo:rustc-env=CPP_LIB_PATH={}", target_dir.display());
 
     let generated_include_dir = std::env::var_os("DEP_SLINT_CPP_GENERATED_INCLUDE_DIR")
         .expect("the slint-cpp crate needs to provide the meta-data that points to the directory with the generated includes");

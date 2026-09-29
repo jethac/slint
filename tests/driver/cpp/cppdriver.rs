@@ -147,7 +147,7 @@ namespace slint_testing = slint::private_api::testing;
             // header.
             compiler_command.arg("-Wno-invalid-offsetof");
         }
-        compiler_command.arg(concat!("-L", env!("CPP_LIB_PATH")));
+        compiler_command.arg(format!("-L{}", cpp_lib_path().display()));
         compiler_command.arg("-lslint_cpp");
         compiler_command.arg("-o").arg(&*binary_path);
 
@@ -171,7 +171,7 @@ namespace slint_testing = slint::private_api::testing;
             // definitions and must be linked into every user.
             compiler_command.arg(dir.join("prelude.obj"));
         }
-        compiler_command.arg("/link").arg(concat!(env!("CPP_LIB_PATH"), "\\slint_cpp.dll.lib"));
+        compiler_command.arg("/link").arg(cpp_lib_path().join("slint_cpp.dll.lib"));
         let mut out_arg = std::ffi::OsString::from("/OUT:");
         out_arg.push(&*binary_path);
         compiler_command.arg(out_arg);
@@ -204,7 +204,7 @@ namespace slint_testing = slint::private_api::testing;
     }
 
     let output = cmd
-        .envs(library_search_path_env_with(env!("CPP_LIB_PATH")))
+        .envs(library_search_path_env_with(&cpp_lib_path().to_string_lossy()))
         .stdout(std::process::Stdio::piped())
         .stderr(std::process::Stdio::piped())
         .spawn()
@@ -294,6 +294,40 @@ fn build_precompiled_header(compiler: &cc::Tool) -> Result<std::path::PathBuf, S
         ));
     }
     Ok(prelude)
+}
+
+// The directory containing the built slint_cpp library: CPP_LIB_PATH
+// (the cargo profile dir) joined with deps/ on older cargo, and
+// build/slint-cpp/<fingerprint>/out on cargo's build-dir layout (≈1.100).
+// Resolved at test time because the slint-cpp crate may not be compiled
+// yet when the driver's build script runs.
+fn cpp_lib_path() -> std::path::PathBuf {
+    let profile_dir = std::path::Path::new(env!("CPP_LIB_PATH"));
+    let contains_slint_cpp = |dir: &std::path::Path| {
+        dir.read_dir()
+            .map(|mut entries| {
+                entries.any(|entry| {
+                    entry.ok().map_or(false, |entry| {
+                        let name = entry.file_name();
+                        let name = name.to_string_lossy();
+                        name.starts_with("libslint_cpp.") || name.starts_with("slint_cpp.")
+                    })
+                })
+            })
+            .unwrap_or(false)
+    };
+    let deps_dir = profile_dir.join("deps");
+    profile_dir
+        .join("build")
+        .join("slint-cpp")
+        .read_dir()
+        .ok()
+        .into_iter()
+        .flatten()
+        .filter_map(|fingerprint_dir| fingerprint_dir.ok().map(|dir| dir.path().join("out")))
+        .chain(std::iter::once(deps_dir.clone()))
+        .find(|dir| contains_slint_cpp(dir))
+        .unwrap_or(deps_dir)
 }
 
 fn library_search_path_env_with(
