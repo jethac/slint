@@ -1,7 +1,7 @@
 // Copyright © SixtyFPS GmbH <info@slint.dev>
 // SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0
 
-use i_slint_core::api::PhysicalSize;
+use i_slint_core::api::{PhysicalPosition, PhysicalSize};
 use i_slint_core::graphics::{
     FontRequest,
     euclid::{Point2D, Size2D},
@@ -507,6 +507,11 @@ impl WindowAdapter for TestingWindow {
 
     fn size(&self) -> PhysicalSize {
         if self.size.get().width == 0 { PhysicalSize::new(800, 600) } else { self.size.get() }
+    }
+
+    fn display_geometry(&self) -> Option<(PhysicalSize, PhysicalPosition)> {
+        // The testing window is the display, at the origin.
+        Some((self.size(), PhysicalPosition::new(0, 0)))
     }
 
     fn set_size(&self, size: i_slint_core::api::WindowSize) {
