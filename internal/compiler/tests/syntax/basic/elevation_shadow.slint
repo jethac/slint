@@ -1,0 +1,19 @@
+// Copyright © SixtyFPS GmbH <info@slint.dev>
+// SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0
+
+component Foo inherits Rectangle {
+    elevation: 4px;
+//             >  <warning{The elevation property is not yet implemented and is ignored}
+}
+
+export component TestCase inherits Window {
+    Rectangle {
+        elevation: 2px;
+//                 >  <warning{The elevation property is not yet implemented and is ignored}
+        spot-shadow-color: black;
+//                         >    <warning{The spot-shadow-color property is not yet implemented and is ignored}
+        ambient-shadow-color: white;
+//                            >    <warning{The ambient-shadow-color property is not yet implemented and is ignored}
+        Foo {}
+    }
+}

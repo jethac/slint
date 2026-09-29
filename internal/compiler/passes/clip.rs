@@ -98,6 +98,9 @@ fn create_clip_element(parent_elem: &ElementRc, clip_type: &ElementType) {
             );
         }
     }
+    for optional_binding in ["shape", "shape-fit"] {
+        copy_optional_binding(parent_elem, optional_binding, &clip);
+    }
     clip.borrow_mut().set_binding(
         SmolStr::new_static("clip"),
         BindingExpression::new_two_way(

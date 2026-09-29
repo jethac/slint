@@ -260,6 +260,17 @@ pub fn lower_shadow_properties(
             }
         }
 
+        for elevation_prop in ["elevation", "ambient-shadow-color", "spot-shadow-color"] {
+            if let Some(binding) =
+                elem.borrow().bindings.binding_cell_including_synthetic(elevation_prop)
+            {
+                diag.push_warning(
+                    format!("The {elevation_prop} property is not yet implemented and is ignored"),
+                    &*binding.borrow(),
+                );
+            }
+        }
+
         let old_children = {
             let mut elem = elem.borrow_mut();
             let new_children = Vec::with_capacity(elem.children.len());
