@@ -353,6 +353,17 @@ public:
         }
     }
 
+    /// Returns a std::optional that contains an easing curve if the type of this Value is
+    /// Type::Other and it holds an easing curve, otherwise an empty optional is returned.
+    std::optional<cbindgen_private::EasingCurve> to_easing_curve() const
+    {
+        if (auto *curve = cbindgen_private::slint_interpreter_value_to_easing_curve(inner)) {
+            return *curve;
+        } else {
+            return {};
+        }
+    }
+
     // template<typename T> std::optional<T> get() const;
 
     /// Constructs a new Value that holds the double \a value.
@@ -384,6 +395,12 @@ public:
 
     /// Constructs a new Value that holds the Image \a img.
     Value(const Image &img) : inner(cbindgen_private::slint_interpreter_value_new_image(&img)) { }
+
+    /// Constructs a new Value that holds the easing curve \a curve.
+    Value(const cbindgen_private::EasingCurve &curve)
+        : inner(cbindgen_private::slint_interpreter_value_new_easing_curve(&curve))
+    {
+    }
 
     /// Returns the type the variant holds.
     Type type() const { return cbindgen_private::slint_interpreter_value_type(inner); }

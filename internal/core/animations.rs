@@ -170,6 +170,20 @@ pub enum EasingCurve {
     /// A spring animation, configured via `PropertyAnimation`'s `duration`, and the passed in
     /// `bounce`
     Spring(f32),
+    /// A physical spring animation, as written `spring(damping_ratio, stiffness[, mass])` in
+    /// `.slint` and matching the `spring()` animation spec of androidx.compose.animation.core.
+    ///
+    /// The spring runs until it settles; `PropertyAnimation`'s `duration`, `iteration_count` and
+    /// `direction` do not apply to it.
+    PhysicalSpring {
+        /// The damping ratio `ζ` of the spring: `0` for no damping (oscillates forever),
+        /// `< 1` under-damped (bouncy), `1` critically damped, `> 1` over-damped.
+        damping_ratio: f32,
+        /// The spring constant `k`.
+        stiffness: f32,
+        /// The mass attached to the spring. `1` in `.slint` when unspecified.
+        mass: f32,
+    },
     // Custom(Box<dyn Fn(f32) -> f32>),
 }
 
@@ -422,10 +436,48 @@ pub fn easing_curve(curve: &EasingCurve, value: f32) -> f32 {
                 (1.0 + ease_out_bounce_curve(2.0 * value - 1.0)) / 2.0
             }
         }
-        EasingCurve::Spring(_) => {
+        EasingCurve::Spring(_) | EasingCurve::PhysicalSpring { .. } => {
             panic!("Springs are handled separately");
         }
     }
+}
+
+/// The `Spring.DefaultDisplacementThreshold` of androidx.compose.animation.core: the per-channel
+/// displacement at which a physical spring is considered settled.
+pub const SPRING_DEFAULT_DISPLACEMENT_THRESHOLD: f32 = 0.01;
+
+/// Returns the global animation duration scale: a multiplier on animation durations, where `0`
+/// makes every animation finish immediately, `1` is real-time and larger values slow animations
+/// down. This is the analogue of Android's `animator_duration_scale` / Compose's
+/// `MotionDurationScale`.
+///
+/// The value combines [`SlintContext::animation_duration_scale`](crate::SlintContext::animation_duration_scale)
+/// (written by backends from platform settings) with the `SLINT_SLOW_ANIMATIONS` environment
+/// variable. The platform *reduce-motion flag* is not folded in here: per the #5 design
+/// review, `SlintInternal.reduced-motion` stays a semantic flag, and the Material library
+/// applies Compose's scale-0 behavior to its own animations when the flag is set.
+pub fn duration_scale() -> f32 {
+    crate::context::GLOBAL_CONTEXT
+        .with(|ctx| ctx.get().map_or(1.0, |ctx| ctx.animation_duration_scale()))
+        * slow_animations_factor()
+}
+
+/// The `SLINT_SLOW_ANIMATIONS` factor, read once: the environment variable is a
+/// debugging aid and doesn't change during a process's lifetime.
+#[cfg(feature = "std")]
+fn slow_animations_factor() -> f32 {
+    static FACTOR: std::sync::OnceLock<f32> = std::sync::OnceLock::new();
+    *FACTOR.get_or_init(|| {
+        std::env::var("SLINT_SLOW_ANIMATIONS")
+            .ok()
+            .map(|val| val.parse().unwrap_or(2.0f32).max(1.0))
+            .unwrap_or(1.0)
+    })
+}
+
+#[cfg(not(feature = "std"))]
+fn slow_animations_factor() -> f32 {
+    1.0
 }
 
 /*
@@ -465,15 +517,10 @@ fn easing_test() {
 /// thread running several contexts with different clock origins would see the tick jump.
 /// Per-context animation drivers would mean reaching a context from every binding
 /// evaluation, which is a much larger change.
+///
+/// `SLINT_SLOW_ANIMATIONS` is intentionally not applied here: it is one input of
+/// [`duration_scale`], which animations read at evaluation time, so that setting it can
+/// no longer also shift the clock that timers and `animation-tick()` observe.
 pub fn update_animations(now: Instant) {
-    CURRENT_ANIMATION_DRIVER.with(|driver| {
-        #[allow(unused_mut)]
-        let mut duration = now.0;
-        #[cfg(feature = "std")]
-        if let Ok(val) = std::env::var("SLINT_SLOW_ANIMATIONS") {
-            let factor = val.parse().unwrap_or(2).max(1);
-            duration /= factor;
-        };
-        driver.update_animations(Instant(duration))
-    });
+    CURRENT_ANIMATION_DRIVER.with(|driver| driver.update_animations(now));
 }

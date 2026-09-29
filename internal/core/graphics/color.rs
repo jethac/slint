@@ -247,6 +247,28 @@ impl Color {
         <RgbaColor<f32>>::from(hsva).into()
     }
 
+    /// The color's four animation channels, `(alpha, lightness, a, b)` in Oklab —
+    /// the same decomposition androidx.compose.animation.core animates `Color` on.
+    pub(crate) fn oklab_channels(&self) -> [f32; 4] {
+        let oklab = OklabColor::from(RgbaColor::<f32>::from(*self));
+        [oklab.alpha, oklab.l, oklab.a, oklab.b]
+    }
+
+    /// Rebuild a color from `(alpha, lightness, a, b)` Oklab channels — the inverse
+    /// of [`Self::oklab_channels`]. Channels are clamped exactly like
+    /// androidx.compose.animation's `Color.VectorConverter` on the way back:
+    /// alpha to `0..=1`, lightness to `0..=1`, `a`/`b` to `-0.5..=0.5`, then the
+    /// result to sRGB gamut.
+    pub(crate) fn from_oklab_channels(channels: &[f32]) -> Self {
+        RgbaColor::from(OklabColor {
+            alpha: channels[0].clamp(0.0, 1.0),
+            l: channels[1].clamp(0.0, 1.0),
+            a: channels[2].clamp(-0.5, 0.5),
+            b: channels[3].clamp(-0.5, 0.5),
+        })
+        .into()
+    }
+
     /// Converts this color to the Oklch color space.
     ///
     /// Oklch is a perceptually uniform color space with:
@@ -424,8 +446,34 @@ impl Color {
 }
 
 impl InterpolatedPropertyValue for Color {
+    /// Interpolates in Oklab space (`alpha`, `l`, `a`, `b`) — the perceptually uniform
+    /// space androidx.compose.animation.core uses for color animations.
     fn interpolate(&self, target_value: &Self, t: f32) -> Self {
-        target_value.mix(self, t)
+        let from = OklabColor::from(RgbaColor::<f32>::from(*self));
+        let to = OklabColor::from(RgbaColor::<f32>::from(*target_value));
+        // `Color.VectorConverter`'s `convertFromVector` clamps the interpolated
+        // channels (`fastCoerceIn`) — needed for overshooting easings.
+        Self::from_oklab_channels(&[
+            from.alpha + t * (to.alpha - from.alpha),
+            from.l + t * (to.l - from.l),
+            from.a + t * (to.a - from.a),
+            from.b + t * (to.b - from.b),
+        ])
+    }
+
+    /// Color channels are `(alpha, l, a, b)` in Oklab — the same four channels
+    /// androidx.compose.animation.core animates `Color` on.
+    fn channel_count(&self, _target_value: &Self) -> usize {
+        4
+    }
+
+    fn write_channels(&self, _target_value: &Self, out: &mut [f32]) {
+        let oklab = OklabColor::from(RgbaColor::<f32>::from(*self));
+        out[..4].copy_from_slice(&[oklab.alpha, oklab.l, oklab.a, oklab.b]);
+    }
+
+    fn rebuild_from_channels(&self, _target_value: &Self, channels: &[f32]) -> Self {
+        Self::from_oklab_channels(channels)
     }
 }
 
@@ -592,65 +640,233 @@ impl From<OklabColor> for OklchColor {
     }
 }
 
-/// Convert sRGB component to linear RGB.
-fn srgb_to_linear(c: f32) -> f32 {
-    if c <= 0.04045 { c / 12.92 } else { ((c + 0.055) / 1.055).powf(2.4) }
-}
+/// androidx.compose.ui.graphics colorspace math, ported at the androidx pin
+/// (commit 23327507f7fc7d5b19d65fec4b090f60c970079b). Compose animates `Color`
+/// in Oklab via `Color.convert(ColorSpaces.Oklab)`: sRGB is first adapted to
+/// the D50 profile connection space (`Rgb.adapt`, Bradford), then converted by
+/// `Oklab.fromXyz`, whose `M1` already carries the D50→D65 adaptation. All
+/// matrices are 3x3 column-major and every multiply happens in the same order
+/// — and the same f32 width — as `mul3x3Float3`/`mul3x3`/`inverse3x3` in
+/// `ColorSpace.kt`.
+mod compose_oklab {
+    #[cfg(not(feature = "std"))]
+    #[allow(unused_imports)]
+    use num_traits::Float;
 
-/// Convert linear RGB component to sRGB.
-fn linear_to_srgb(c: f32) -> f32 {
-    if c <= 0.0031308 { c * 12.92 } else { 1.055 * c.powf(1.0 / 2.4) - 0.055 }
+    const fn mul3x3f3(m: &[f32; 9], v: [f32; 3]) -> [f32; 3] {
+        [
+            m[0] * v[0] + m[3] * v[1] + m[6] * v[2],
+            m[1] * v[0] + m[4] * v[1] + m[7] * v[2],
+            m[2] * v[0] + m[5] * v[1] + m[8] * v[2],
+        ]
+    }
+
+    const fn mul3x3(lhs: &[f32; 9], rhs: &[f32; 9]) -> [f32; 9] {
+        [
+            lhs[0] * rhs[0] + lhs[3] * rhs[1] + lhs[6] * rhs[2],
+            lhs[1] * rhs[0] + lhs[4] * rhs[1] + lhs[7] * rhs[2],
+            lhs[2] * rhs[0] + lhs[5] * rhs[1] + lhs[8] * rhs[2],
+            lhs[0] * rhs[3] + lhs[3] * rhs[4] + lhs[6] * rhs[5],
+            lhs[1] * rhs[3] + lhs[4] * rhs[4] + lhs[7] * rhs[5],
+            lhs[2] * rhs[3] + lhs[5] * rhs[4] + lhs[8] * rhs[5],
+            lhs[0] * rhs[6] + lhs[3] * rhs[7] + lhs[6] * rhs[8],
+            lhs[1] * rhs[6] + lhs[4] * rhs[7] + lhs[7] * rhs[8],
+            lhs[2] * rhs[6] + lhs[5] * rhs[7] + lhs[8] * rhs[8],
+        ]
+    }
+
+    const fn inverse3x3(m: &[f32; 9]) -> [f32; 9] {
+        let (a, b, c, d, e, f, g, h, i) = (m[0], m[3], m[6], m[1], m[4], m[7], m[2], m[5], m[8]);
+        let xa = e * i - f * h;
+        let xb = f * g - d * i;
+        let xc = d * h - e * g;
+        let det = a * xa + b * xb + c * xc;
+        [
+            xa / det,
+            xb / det,
+            xc / det,
+            (c * h - b * i) / det,
+            (a * i - c * g) / det,
+            (b * g - a * h) / det,
+            (b * f - c * e) / det,
+            (c * d - a * f) / det,
+            (a * e - b * d) / det,
+        ]
+    }
+
+    const fn mul3x3_diag(lhs: [f32; 3], rhs: &[f32; 9]) -> [f32; 9] {
+        [
+            lhs[0] * rhs[0],
+            lhs[1] * rhs[1],
+            lhs[2] * rhs[2],
+            lhs[0] * rhs[3],
+            lhs[1] * rhs[4],
+            lhs[2] * rhs[5],
+            lhs[0] * rhs[6],
+            lhs[1] * rhs[7],
+            lhs[2] * rhs[8],
+        ]
+    }
+
+    /// `ColorSpace.kt`'s `chromaticAdaptation(Adaptation.Bradford, src, dst)`.
+    const fn chromatic_adaptation(src_xyz: [f32; 3], dst_xyz: [f32; 3]) -> [f32; 9] {
+        const BRADFORD: [f32; 9] = [
+            0.8951, -0.7502, 0.0389, //
+            0.2664, 1.7135, -0.0685, //
+            -0.1614, 0.0367, 1.0296,
+        ];
+        let src_lms = mul3x3f3(&BRADFORD, src_xyz);
+        let dst_lms = mul3x3f3(&BRADFORD, dst_xyz);
+        let lms = [dst_lms[0] / src_lms[0], dst_lms[1] / src_lms[1], dst_lms[2] / src_lms[2]];
+        mul3x3(&inverse3x3(&BRADFORD), &mul3x3_diag(lms, &BRADFORD))
+    }
+
+    /// `WhitePoint.toXyz()`: xyY (Y = 1) to XYZ.
+    const fn white_point_to_xyz(x: f32, y: f32) -> [f32; 3] {
+        [x / y, 1.0, (1.0 - x - y) / y]
+    }
+
+    /// `Illuminant.D50` and `Illuminant.D65` as XYZ (from xy, like `toXyz()`).
+    const D50_XYZ: [f32; 3] = white_point_to_xyz(0.34567, 0.35850);
+    const D65_XYZ: [f32; 3] = white_point_to_xyz(0.31271, 0.32902);
+
+    /// `Rgb.kt`'s `computeXYZMatrix` for the sRGB primaries in `ColorSpaces.kt`
+    /// (`SrgbPrimaries`) under `Illuminant.D65`.
+    const fn srgb_to_xyz_d65() -> [f32; 9] {
+        const PRIMARIES: [f32; 6] = [0.640, 0.330, 0.300, 0.600, 0.150, 0.060];
+        let rx = PRIMARIES[0];
+        let ry = PRIMARIES[1];
+        let gx = PRIMARIES[2];
+        let gy = PRIMARIES[3];
+        let bx = PRIMARIES[4];
+        let by = PRIMARIES[5];
+        let wx = 0.31271f32;
+        let wy = 0.32902f32;
+
+        let one_rx_ry = (1.0 - rx) / ry;
+        let one_gx_gy = (1.0 - gx) / gy;
+        let one_bx_by = (1.0 - bx) / by;
+        let one_wx_wy = (1.0 - wx) / wy;
+
+        let rx_ry = rx / ry;
+        let gx_gy = gx / gy;
+        let bx_by = bx / by;
+        let wx_wy = wx / wy;
+
+        let by_numerator =
+            (one_wx_wy - one_rx_ry) * (gx_gy - rx_ry) - (wx_wy - rx_ry) * (one_gx_gy - one_rx_ry);
+        let by_denominator =
+            (one_bx_by - one_rx_ry) * (gx_gy - rx_ry) - (bx_by - rx_ry) * (one_gx_gy - one_rx_ry);
+        let by_lum = by_numerator / by_denominator;
+        let gy_lum = (wx_wy - rx_ry - by_lum * (bx_by - rx_ry)) / (gx_gy - rx_ry);
+        let ry_lum = 1.0 - gy_lum - by_lum;
+
+        let r_ry = ry_lum / ry;
+        let g_gy = gy_lum / gy;
+        let b_by = by_lum / by;
+
+        [
+            r_ry * rx,
+            ry_lum,
+            r_ry * (1.0 - rx - ry),
+            g_gy * gx,
+            gy_lum,
+            g_gy * (1.0 - gx - gy),
+            b_by * bx,
+            by_lum,
+            b_by * (1.0 - bx - by),
+        ]
+    }
+
+    /// `Srgb.adapt(Illuminant.D50).transform`: linear sRGB to XYZ D50.
+    const SRGB_TO_XYZ_D50: [f32; 9] =
+        mul3x3(&chromatic_adaptation(D65_XYZ, D50_XYZ), &srgb_to_xyz_d65());
+    /// `Srgb.adapt(Illuminant.D50).inverseTransform`.
+    const SRGB_FROM_XYZ_D50: [f32; 9] = inverse3x3(&SRGB_TO_XYZ_D50);
+
+    /// `Oklab.kt`'s `M1`: raw Oklab M1 times Bradford D50→D65.
+    #[allow(clippy::excessive_precision)]
+    const OKLAB_M1: [f32; 9] = mul3x3(
+        &[
+            0.8189330101,
+            0.0329845436,
+            0.0482003018, //
+            0.3618667424,
+            0.9293118715,
+            0.2643662691, //
+            -0.1288597137,
+            0.0361456387,
+            0.6338517070,
+        ],
+        &chromatic_adaptation(D50_XYZ, D65_XYZ),
+    );
+    const OKLAB_INVERSE_M1: [f32; 9] = inverse3x3(&OKLAB_M1);
+    /// `Oklab.kt`'s `M2` and `InverseM2`.
+    #[allow(clippy::excessive_precision)]
+    const OKLAB_M2: [f32; 9] = [
+        0.2104542553,
+        1.9779984951,
+        0.0259040371, //
+        0.7936177850,
+        -2.4285922050,
+        0.7827717662, //
+        -0.0040720468,
+        0.4505937099,
+        -0.8086757660,
+    ];
+    const OKLAB_INVERSE_M2: [f32; 9] = inverse3x3(&OKLAB_M2);
+
+    /// Compose's eotf/oetf functions run on `Double` (`Rgb.eotfFunc`).
+    fn srgb_eotf(c: f32) -> f32 {
+        let c = c as f64;
+        (if c <= 0.04045 { c / 12.92 } else { ((c + 0.055) / 1.055).powf(2.4) }) as f32
+    }
+
+    fn srgb_oetf(c: f32) -> f32 {
+        let c = c as f64;
+        (if c <= 0.0031308 { c * 12.92 } else { 1.055 * c.powf(1.0 / 2.4) - 0.055 }) as f32
+    }
+
+    /// `Connector.transform` sRGB→Oklab, returning `(l, a, b)`.
+    pub(super) fn srgb_to_oklab(r: f32, g: f32, b: f32) -> [f32; 3] {
+        let v = mul3x3f3(&SRGB_TO_XYZ_D50, [srgb_eotf(r), srgb_eotf(g), srgb_eotf(b)]);
+        let v = mul3x3f3(&OKLAB_M1, v);
+        let v = [v[0].cbrt(), v[1].cbrt(), v[2].cbrt()];
+        mul3x3f3(&OKLAB_M2, v)
+    }
+
+    /// `Connector.transform` Oklab→sRGB for `(l, a, b)`. The channel clamps
+    /// live inside `Oklab.toXyz`/`toXy` in Compose.
+    pub(super) fn oklab_to_srgb(l: f32, a: f32, b: f32) -> [f32; 3] {
+        let l = l.clamp(0.0, 1.0);
+        let a = a.clamp(-0.5, 0.5);
+        let b = b.clamp(-0.5, 0.5);
+        let v = mul3x3f3(&OKLAB_INVERSE_M2, [l, a, b]);
+        let v = [v[0] * v[0] * v[0], v[1] * v[1] * v[1], v[2] * v[2] * v[2]];
+        let v = mul3x3f3(&OKLAB_INVERSE_M1, v);
+        let v = mul3x3f3(&SRGB_FROM_XYZ_D50, v);
+        [srgb_oetf(v[0]), srgb_oetf(v[1]), srgb_oetf(v[2])]
+    }
 }
 
 impl From<RgbaColor<f32>> for OklabColor {
     fn from(col: RgbaColor<f32>) -> Self {
-        // Convert sRGB to linear RGB
-        let r = srgb_to_linear(col.red);
-        let g = srgb_to_linear(col.green);
-        let b = srgb_to_linear(col.blue);
-
-        // Linear RGB to LMS (using Oklab M1 matrix)
-        let l = 0.41222146 * r + 0.53633255 * g + 0.051445995 * b;
-        let m = 0.2119035 * r + 0.6806995 * g + 0.10739696 * b;
-        let s = 0.08830246 * r + 0.28171885 * g + 0.6299787 * b;
-
-        // Cube root
-        let l_ = l.cbrt();
-        let m_ = m.cbrt();
-        let s_ = s.cbrt();
-
-        // LMS' to Oklab (using M2 matrix)
-        Self {
-            l: 0.21045426 * l_ + 0.7936178 * m_ - 0.004072047 * s_,
-            a: 1.9779985 * l_ - 2.4285922 * m_ + 0.4505937 * s_,
-            b: 0.025904037 * l_ + 0.78277177 * m_ - 0.80867577 * s_,
-            alpha: col.alpha,
-        }
+        // Compose's `Color.convert(ColorSpaces.Oklab)`: sRGB adapted to D50 XYZ
+        // (Bradford), then `Oklab.fromXyz`.
+        let [l, a, b] = compose_oklab::srgb_to_oklab(col.red, col.green, col.blue);
+        Self { l, a, b, alpha: col.alpha }
     }
 }
 
 impl From<OklabColor> for RgbaColor<f32> {
     fn from(oklab: OklabColor) -> Self {
-        // Oklab to LMS' (inverse of M2 matrix)
-        let l_ = oklab.l + 0.39633778 * oklab.a + 0.21580376 * oklab.b;
-        let m_ = oklab.l - 0.105561346 * oklab.a - 0.06385417 * oklab.b;
-        let s_ = oklab.l - 0.08948418 * oklab.a - 1.2914855 * oklab.b;
-
-        // Cube to get LMS
-        let l = l_ * l_ * l_;
-        let m = m_ * m_ * m_;
-        let s = s_ * s_ * s_;
-
-        // LMS to linear RGB (inverse of M1 matrix)
-        let r = 4.0767417 * l - 3.3077116 * m + 0.23096994 * s;
-        let g = -1.268438 * l + 2.6097574 * m - 0.34131938 * s;
-        let b = -0.0041960863 * l - 0.7034186 * m + 1.7076147 * s;
-
-        // Convert linear RGB to sRGB and clamp
+        // `Oklab.toXyz` (clamping `l`/`a`/`b` internally) then XYZ D50 back into
+        // adapted sRGB; the result is clamped to the sRGB gamut.
+        let [r, g, b] = compose_oklab::oklab_to_srgb(oklab.l, oklab.a, oklab.b);
         Self {
-            red: linear_to_srgb(r).clamp(0.0, 1.0),
-            green: linear_to_srgb(g).clamp(0.0, 1.0),
-            blue: linear_to_srgb(b).clamp(0.0, 1.0),
+            red: r.clamp(0.0, 1.0),
+            green: g.clamp(0.0, 1.0),
+            blue: b.clamp(0.0, 1.0),
             alpha: oklab.alpha,
         }
     }
@@ -745,13 +961,21 @@ fn test_brighter_darker() {
 
 #[test]
 fn test_transparent_transition() {
+    // Interpolation happens in Oklab: fading from transparent black to a gray
+    // crosses darker grays, like `lerp`ing Compose's `Color` channels does —
+    // only the alpha tracks `t` 1:1.
     let color = Color::from_argb_f32(0.0, 0.0, 0.0, 0.0);
-    let interpolated = color.interpolate(&Color::from_rgb_f32(0.8, 0.8, 0.8), 0.25);
-    assert_eq!(interpolated, Color::from_argb_f32(0.25, 0.8, 0.8, 0.8));
-    let interpolated = color.interpolate(&Color::from_rgb_f32(0.8, 0.8, 0.8), 0.5);
-    assert_eq!(interpolated, Color::from_argb_f32(0.5, 0.8, 0.8, 0.8));
-    let interpolated = color.interpolate(&Color::from_rgb_f32(0.8, 0.8, 0.8), 0.75);
-    assert_eq!(interpolated, Color::from_argb_f32(0.75, 0.8, 0.8, 0.8));
+    let target = Color::from_rgb_f32(0.8, 0.8, 0.8);
+    for (t, expected) in [(0.25, 0.0961), (0.5, 0.3045), (0.75, 0.5418)] {
+        let interpolated = RgbaColor::<f32>::from(color.interpolate(&target, t));
+        assert!(
+            (interpolated.alpha - t as f32).abs() < 0.01
+                && (interpolated.red - expected).abs() < 0.01
+                && (interpolated.green - expected).abs() < 0.01
+                && (interpolated.blue - expected).abs() < 0.01,
+            "t={t}: {interpolated:?}"
+        );
+    }
 }
 
 #[test]
@@ -829,6 +1053,72 @@ fn test_rgb_to_oklch() {
     assert!(blue.lightness > 0.4 && blue.lightness < 0.5, "Blue lightness should be ~0.45");
     assert!(blue.chroma > 0.2, "Blue should have significant chroma");
     assert!(blue.hue > 250.0 && blue.hue < 280.0, "Blue hue should be around 264 degrees");
+}
+
+#[test]
+fn test_oklab_compose_reference() {
+    // Reference `(l, a, b)` values computed by `oklab_compose_reference.py` in
+    // this directory — an f32 numpy port of the pinned androidx path verbatim:
+    // `Rgb.eotfFunc` → `Srgb.adapt(D50)` → `Oklab.fromXyz` (commit
+    // 23327507f7fc7d5b19d65fec4b090f60c970079b). The
+    // same constant matrices and operation order are used here, so the (l, a,
+    // b) values are expected to agree to a few ulps; the sRGB round trip gets a
+    // wider 1e-4 bound since `toXyz` clamps out-of-gamut excursions on the way.
+    let cases = [
+        ([1.0, 0.0, 0.0], [0.627951, 0.224828, 0.125792]),
+        ([0.0, 1.0, 0.0], [0.866445, -0.233920, 0.179420]),
+        ([0.0, 0.0, 1.0], [0.451988, -0.032430, -0.311619]),
+        ([1.0, 1.0, 1.0], [0.999997, -0.000033, -0.000098]),
+        ([0.4, 0.2, 0.9], [0.505848, 0.071432, -0.234832]),
+        ([0.5, 0.5, 0.5], [0.598179, -0.000020, -0.000058]),
+        ([0.0, 1.0, 1.0], [0.905398, -0.149464, -0.039490]),
+        ([1.0, 1.0, 0.0], [0.967985, -0.071414, 0.198484]),
+    ];
+    for (rgb, lab) in cases {
+        let oklab = OklabColor::from(RgbaColor::<f32> {
+            red: rgb[0],
+            green: rgb[1],
+            blue: rgb[2],
+            alpha: 1.0,
+        });
+        for (i, expected) in [lab[0], lab[1], lab[2]].iter().enumerate() {
+            let actual = [oklab.l, oklab.a, oklab.b][i];
+            assert!(
+                (actual - expected).abs() < 1e-5,
+                "{rgb:?} channel {i}: {actual} vs {expected}"
+            );
+        }
+        // ...and back to sRGB within a ulp or two.
+        let back = RgbaColor::<f32>::from(oklab);
+        for (i, expected) in rgb.iter().enumerate() {
+            let actual = [back.red, back.green, back.blue][i];
+            assert!((actual - expected).abs() < 1e-4, "{rgb:?} sRGB {i}: {actual} vs {expected}");
+        }
+    }
+}
+
+#[test]
+fn test_interpolate_clamps_overshoot() {
+    // Overshooting easings (t > 1) must clamp the way `Color.VectorConverter`'s
+    // `convertFromVector` does: alpha 0..=1, l 0..=1, a/b ±0.5, then the result
+    // into the sRGB gamut.
+    let black = Color::from_rgb_f32(0.0, 0.0, 0.0);
+    let red = Color::from_rgb_f32(1.0, 0.0, 0.0);
+    let over = RgbaColor::<f32>::from(black.interpolate(&red, 3.0));
+    for c in [over.red, over.green, over.blue, over.alpha] {
+        assert!((0.0..=1.0).contains(&c), "out of gamut: {over:?}");
+    }
+    assert_eq!(over.alpha, 1.0);
+    // The result equals converting the clamped channels.
+    let from = OklabColor::from(RgbaColor::<f32>::from(black));
+    let to = OklabColor::from(RgbaColor::<f32>::from(red));
+    let expected = Color::from_oklab_channels(&[
+        from.alpha + 3.0 * (to.alpha - from.alpha),
+        from.l + 3.0 * (to.l - from.l),
+        from.a + 3.0 * (to.a - from.a),
+        from.b + 3.0 * (to.b - from.b),
+    ]);
+    assert_eq!(over, RgbaColor::<f32>::from(expected));
 }
 
 #[cfg(feature = "ffi")]

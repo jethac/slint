@@ -629,8 +629,8 @@ impl DeclarationNode {
         // the exported component's root_element) is also absent. Compute the
         // public-API exposure ourselves: the declaration must be reachable
         // from an exported, non-interface component's root_element (walking
-        // its `inherits` chain), the type must be `ok_for_public_api`, and
-        // the visibility must not be `private`. Mirrors the gating logic of
+        // its `inherits` chain), and the visibility must not be `private`.
+        // Mirrors the gating logic of
         // `passes::check_public_api`.
         //
         // Iterate every loaded document, not just the one containing the
@@ -656,7 +656,7 @@ impl DeclarationNode {
 /// declaration whose syntax node matches `declaration_node` (the syntax
 /// node of the `PropertyDeclaration` / `CallbackDeclaration` / `Function`
 /// being renamed), and which would be exposed in the generated Rust/C++
-/// public API: non-private visibility and a type that `ok_for_public_api`.
+/// public API: non-private visibility.
 ///
 /// Bounded by a fixed depth and by a visited-set on `Rc::as_ptr`: in a
 /// healthy program `inherits` never cycles, but the LSP runs only
@@ -681,13 +681,7 @@ fn matching_decl_in_inheritance_chain(
             && node.text_range() == declaration_node.text_range()
             && Arc::ptr_eq(&node.source_file, source_file)
         {
-            if decl.visibility == object_tree::PropertyVisibility::Private {
-                return false;
-            }
-            if !decl.property_type.ok_for_public_api() {
-                return false;
-            }
-            return true;
+            return decl.visibility != object_tree::PropertyVisibility::Private;
         }
         let base = element_borrow.base_type.clone();
         drop(element_borrow);

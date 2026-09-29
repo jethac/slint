@@ -67,6 +67,10 @@ pub struct Flickable {
     pub interactive: Property<bool>,
     pub mouse_drag_pan_enabled: Property<bool>,
 
+    /// Written with the pointer velocity (logical px/sec) when a flick gesture is released.
+    /// Read in `.slint` as `release-velocity`, e.g. to seed `animate` `initial-velocity`.
+    pub release_velocity: Property<crate::api::LogicalPosition>,
+
     pub flicked: Callback<VoidArg>,
 
     data: FlickableDataBox,
@@ -433,6 +437,11 @@ struct FlickableDataInner {
     /// This allows us to add the missing delta of the animation to the next scroll event if the user scrolls again
     /// before the animation is finished.
     running_animation: Option<(Instant, [Option<ConstantDecelerationParameters>; 2])>,
+
+    /// The physical spring declared on `content-x`/`content-y` through an `animate` block,
+    /// captured on press before the flick bindings replace the declared ones.
+    /// `Some` means the fling springs to the limit instead of using constant deceleration.
+    declared_spring: [Option<(f32, f32, f32)>; 2],
 }
 
 impl FlickableDataInner {
@@ -654,6 +663,18 @@ impl FlickableDataInner {
     }
 
     fn animate(&self, flick: Pin<&Flickable>, flick_rc: &ItemRc) {
+        let release_velocity = self
+            .velocity_rb
+            .last_time()
+            .filter(|last_time| {
+                self.capture_events.is_some()
+                    && crate::animations::current_tick().duration_since(*last_time) < MAX_DURATION
+            })
+            .map(|_| self.velocity_rb.mean_velocity())
+            .unwrap_or_default();
+        (Flickable::FIELD_OFFSETS.release_velocity()).apply_pin(flick).set(
+            crate::api::LogicalPosition::new(release_velocity.x as f32, release_velocity.y as f32),
+        );
         if let Some(last_time) = self.velocity_rb.last_time() {
             let mean_velocity = self.velocity_rb.mean_velocity();
             if self.capture_events.is_some()
@@ -665,16 +686,67 @@ impl FlickableDataInner {
 
                 let [limit_x, limit_y] = Self::flick_limits(flick_rc, mean_velocity);
 
+                for (axis, (content, limit, velocity, spring)) in [
+                    (content_x, limit_x, mean_velocity.x as f32, self.declared_spring[0]),
+                    (content_y, limit_y, mean_velocity.y as f32, self.declared_spring[1]),
+                ]
+                .into_iter()
+                .enumerate()
                 {
-                    let simulation =
-                        ConstantDecelerationParameters::new(mean_velocity.x as f32, DECELERATION);
-                    content_x.set_physic_animation_value(limit_x, simulation);
-                }
-
-                {
-                    let animation_y =
-                        ConstantDecelerationParameters::new(mean_velocity.y as f32, DECELERATION);
-                    content_y.set_physic_animation_value(limit_y, animation_y);
+                    // When the viewport's declared animation is a physical spring, feed the
+                    // release velocity into it instead of losing it; otherwise keep the
+                    // constant-deceleration flick.
+                    if let Some((damping_ratio, stiffness, mass)) = spring {
+                        // Target where the fling would naturally stop —
+                        // v² = 2·a·d — clamped into the scroll bounds, rather
+                        // than always the content edge.
+                        let stop = content.get().0 as f32
+                            + velocity * velocity.abs() / (2.0 * DECELERATION);
+                        let calculate_target = {
+                            let flick_weak = flick_rc.downgrade();
+                            move || {
+                                let limit = flick_weak
+                                    .upgrade()
+                                    .and_then(|flick_rc| {
+                                        flick_rc
+                                            .downcast::<Flickable>()
+                                            .map(move |flick| (flick_rc, flick))
+                                    })
+                                    .map(|(flick_rc, flick)| {
+                                        ensure_in_bound(
+                                            flick.as_pin_ref(),
+                                            LogicalPoint::from_lengths(
+                                                -flick.as_pin_ref().content_width(),
+                                                -flick.as_pin_ref().content_height(),
+                                            ),
+                                            &flick_rc,
+                                        )
+                                    });
+                                let edge = limit
+                                    .map(|limit| {
+                                        [limit.x_length(), limit.y_length()][axis].get() as f32
+                                    })
+                                    .unwrap_or(0.0);
+                                stop.clamp(edge.min(0.0), edge.max(0.0))
+                            }
+                        };
+                        let target = Box::pin(Property::new(0.0));
+                        target.set_binding(calculate_target);
+                        content.set_physic_animation_value(
+                            target,
+                            crate::animations::simulations::spring::PhysicalSpringParameters::new(
+                                damping_ratio,
+                                stiffness,
+                                mass,
+                                velocity,
+                            ),
+                        );
+                    } else {
+                        content.set_physic_animation_value(
+                            limit,
+                            ConstantDecelerationParameters::new(velocity, DECELERATION),
+                        );
+                    }
                 }
 
                 if mean_velocity.x != 0 as Coord || mean_velocity.y != 0 as Coord {
@@ -730,8 +802,28 @@ impl FlickableData {
                 inner.pressed_mouse_state = Some((crate::animations::current_tick(), *position));
                 inner.last_mouse_position = *position;
                 let content_x = (Flickable::FIELD_OFFSETS.content_x()).apply_pin(flick);
-                content_x.remove_binding(); // Stop animation by removing the binding
                 let content_y = (Flickable::FIELD_OFFSETS.content_y()).apply_pin(flick);
+                // Capture a declared physical spring before removing the declared
+                // bindings, so `animate` can feed the release velocity into it.
+                // `declared_animation()` is `None` once a previous gesture removed
+                // the binding — keep the previously captured spring in that case.
+                for (prop, slot) in
+                    [content_x, content_y].into_iter().zip(inner.declared_spring.iter_mut())
+                {
+                    if let Some(anim) = prop.declared_animation() {
+                        *slot = if let crate::animations::EasingCurve::PhysicalSpring {
+                            damping_ratio,
+                            stiffness,
+                            mass,
+                        } = anim.easing
+                        {
+                            Some((damping_ratio, stiffness, mass))
+                        } else {
+                            None
+                        };
+                    }
+                }
+                content_x.remove_binding(); // Stop animation by removing the binding
                 content_y.remove_binding(); // Stop animation by removing the binding
 
                 if inner.capture_events.is_some() {

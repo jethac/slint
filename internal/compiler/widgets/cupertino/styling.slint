@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0
 
 import { ColorSchemeSelector } from "color-scheme.slint";
+import { ReducedMotionSelector } from "reduced-motion.slint";
 
 export struct TextStyle {
     font-size: relative-font-size,
@@ -51,6 +52,7 @@ export global CupertinoColors {
 
 export global CupertinoPalette {
     in-out property <ColorScheme> color-scheme: ColorSchemeSelector.color-scheme;
+    in-out property <bool> reduced-motion: ReducedMotionSelector.reduced-motion;
     property <bool> dark-color-scheme: {
         if (color-scheme == ColorScheme.unknown) {
             return SlintInternal.color-scheme == ColorScheme.dark;

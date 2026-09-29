@@ -55,6 +55,10 @@ bind_java_type! {
             name = "font_scale",
             sig = () -> jfloat,
         },
+        fn animator_duration_scale {
+            name = "animator_duration_scale",
+            sig = () -> jfloat,
+        },
         fn system_color_schemes {
             name = "system_color_schemes",
             sig = () -> jint[],
@@ -151,6 +155,10 @@ bind_java_type! {
         pub static fn set_font_scale {
             sig = (font_scale: jfloat) -> (),
             fn = callback_set_font_scale,
+        },
+        pub static fn set_animator_duration_scale {
+            sig = (scale: jfloat) -> (),
+            fn = callback_set_animator_duration_scale,
         },
         pub static fn update_text {
             sig = (
@@ -540,6 +548,12 @@ impl JavaHelper {
         self.with_jni_env(|env, helper| helper.contrast(env))
     }
 
+    /// `Settings.Global.ANIMATOR_DURATION_SCALE`; Android's accessibility
+    /// "Remove animations" toggle sets it to 0.
+    pub fn animator_duration_scale(&self) -> Result<f32, jni::errors::Error> {
+        self.with_jni_env(|env, helper| helper.animator_duration_scale(env))
+    }
+
     /// The platform's Material dynamic colors, packed as
     /// `i_slint_core::material::android_system_schemes` expects; `Ok(None)`
     /// below API 31, where Android doesn't do dynamic color.
@@ -714,6 +728,26 @@ fn callback_set_font_scale<'local>(
         if let Some(w) = CURRENT_WINDOW.with_borrow(|x| x.upgrade()) {
             let ctx = i_slint_core::window::WindowInner::from_pub(&w.window).context();
             ctx.set_platform_default_font_size(Some(size));
+        }
+    })
+    .unwrap();
+    Ok(())
+}
+
+fn callback_set_animator_duration_scale<'local>(
+    _env: &mut Env<'local>,
+    _class: JClass<'local>,
+    scale: jfloat,
+) -> Result<(), jni::errors::Error> {
+    // Reject transients for the same reason as `callback_set_font_scale`.
+    if !(scale.is_finite() && scale >= 0.0) {
+        return Ok(());
+    }
+    i_slint_core::api::invoke_from_event_loop(move || {
+        if let Some(w) = CURRENT_WINDOW.with_borrow(|x| x.upgrade()) {
+            let ctx = i_slint_core::window::WindowInner::from_pub(&w.window).context();
+            ctx.set_animation_duration_scale(scale);
+            ctx.set_reduced_motion(scale == 0.0);
         }
     })
     .unwrap();

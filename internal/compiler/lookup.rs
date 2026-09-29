@@ -1073,6 +1073,17 @@ impl LookupObject for SlintInternal {
         })
         .or_else(|| {
             f(
+                "reduced-motion",
+                Expression::FunctionCall {
+                    function: BuiltinFunction::ReducedMotion.into(),
+                    arguments: Vec::new(),
+                    source_location: sl(),
+                }
+                .into(),
+            )
+        })
+        .or_else(|| {
+            f(
                 "use-24-hour-format",
                 Expression::FunctionCall {
                     function: BuiltinFunction::Use24HourFormat.into(),

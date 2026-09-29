@@ -103,6 +103,8 @@ pub enum BuiltinFunction {
     Oklch,
     ColorScheme,
     AccentColor,
+    /// `SlintInternal.reduced-motion` — whether the platform requests reduced motion.
+    ReducedMotion,
     /// `MaterialColors.color-scheme(seed-color, variant, spec-version, platform, is-dark, contrast-level)`
     MaterialColorScheme,
     /// `MaterialColors.platform-color-scheme(variant, spec-version, platform, is-dark, contrast-level)`
@@ -353,6 +355,7 @@ declare_builtin_function_types!(
         typeregister::BUILTIN.enums.ColorScheme.clone(),
     ),
     AccentColor: () -> Type::Color,
+    ReducedMotion: () -> Type::Bool,
     // (seed color, variant, spec version, platform, is dark, contrast level in -1..1)
     MaterialColorScheme: (
         Type::Color,
@@ -450,6 +453,7 @@ impl BuiltinFunction {
             BuiltinFunction::AnimationTick => false,
             BuiltinFunction::ColorScheme => false,
             BuiltinFunction::AccentColor => false,
+            BuiltinFunction::ReducedMotion => false,
             BuiltinFunction::MaterialColorScheme => false,
             BuiltinFunction::MaterialPlatformColorScheme => false,
             BuiltinFunction::MaterialSeedFromImage => false,
@@ -578,6 +582,7 @@ impl BuiltinFunction {
             BuiltinFunction::AnimationTick => true,
             BuiltinFunction::ColorScheme => true,
             BuiltinFunction::AccentColor => true,
+            BuiltinFunction::ReducedMotion => true,
             BuiltinFunction::MaterialColorScheme => true,
             BuiltinFunction::MaterialPlatformColorScheme => true,
             BuiltinFunction::MaterialSeedFromImage => true,
@@ -1031,6 +1036,16 @@ pub enum Expression {
 
     EasingCurve(EasingCurve),
 
+    /// Constructs an `EasingCurve` from possibly-runtime arguments: what the
+    /// `cubic-bezier(x1, y1, x2, y2)` and `spring(damping_ratio, stiffness[, mass])`
+    /// macros emit when an argument isn't a constant number literal.
+    EasingCurveCtor {
+        /// Which constructor the arguments feed.
+        variant: EasingCurveCtor,
+        /// The constructor's arguments, in signature order (padded with defaults).
+        args: Vec<Expression>,
+    },
+
     EmptyDataTransfer,
 
     MouseCursor(MouseCursorInner),
@@ -1267,7 +1282,7 @@ impl Expression {
             Expression::EmptyDataTransfer => Type::DataTransfer,
             Expression::StoreLocalVariable { .. } => Type::Void,
             Expression::ReadLocalVariable { ty, .. } => ty.clone(),
-            Expression::EasingCurve(_) => Type::Easing,
+            Expression::EasingCurve(_) | Expression::EasingCurveCtor { .. } => Type::Easing,
             Expression::MouseCursor(_) => Type::MouseCursor,
             Expression::LinearGradient { .. } => Type::Brush,
             Expression::RadialGradient { .. } => Type::Brush,
@@ -1361,6 +1376,7 @@ impl Expression {
             Expression::StoreLocalVariable { value, .. } => visitor(value),
             Expression::ReadLocalVariable { .. } => {}
             Expression::EasingCurve(_) => {}
+            Expression::EasingCurveCtor { args, .. } => args.iter().for_each(visitor),
             Expression::MouseCursor(cursor) => match cursor {
                 MouseCursorInner::CustomMouseCursor { image, hotspot_x, hotspot_y } => {
                     visitor(image);
@@ -1510,6 +1526,7 @@ impl Expression {
             Expression::StoreLocalVariable { value, .. } => visitor(value),
             Expression::ReadLocalVariable { .. } => {}
             Expression::EasingCurve(_) => {}
+            Expression::EasingCurveCtor { args, .. } => args.iter_mut().for_each(visitor),
             Expression::MouseCursor(cursor) => match cursor {
                 MouseCursorInner::CustomMouseCursor { image, hotspot_x, hotspot_y } => {
                     visitor(image);
@@ -1668,6 +1685,7 @@ impl Expression {
             // We only load what we store, and stores are already checked
             Expression::ReadLocalVariable { .. } => true,
             Expression::EasingCurve(_) => true,
+            Expression::EasingCurveCtor { args, .. } => args.iter().all(|a| a.is_constant(ga)),
             Expression::MouseCursor(cursor) => match cursor {
                 MouseCursorInner::BuiltIn(cursor) => cursor.is_constant(ga),
                 MouseCursorInner::CustomMouseCursor { image, hotspot_x, hotspot_y } => {
@@ -2503,8 +2521,21 @@ pub enum EasingCurve {
     EaseOutBounce,
     EaseInOutBounce,
     Spring(f32),
-    // CubicBezierNonConst([Box<Expression>; 4]),
+    /// `spring(damping_ratio, stiffness[, mass])` — a physical spring like
+    /// androidx.compose.animation.core's `spring()`, running until it settles.
+    PhysicalSpring(f32, f32, f32),
     // Custom(Box<dyn Fn(f32)->f32>),
+}
+
+/// Which `EasingCurve` constructor an [`Expression::EasingCurveCtor`] builds: the
+/// `cubic-bezier(...)` and `spring(...)` macros emit it when an argument isn't a
+/// constant number literal.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum EasingCurveCtor {
+    /// `cubic-bezier(x1, y1, x2, y2)`
+    CubicBezier,
+    /// `spring(damping_ratio, stiffness[, mass])`
+    PhysicalSpring,
 }
 
 /// The compiled `mouse-cursor` value: either a built-in cursor or a custom one built from an
@@ -2683,6 +2714,21 @@ pub fn pretty_print(f: &mut dyn std::fmt::Write, expression: &Expression) -> std
         Expression::PathData(data) => write!(f, "{data:?}"),
         Expression::EmptyDataTransfer => write!(f, "{{ }}"),
         Expression::EasingCurve(e) => write!(f, "{e:?}"),
+        Expression::EasingCurveCtor { variant, args } => {
+            write!(
+                f,
+                "{}(",
+                match variant {
+                    EasingCurveCtor::CubicBezier => "cubic-bezier",
+                    EasingCurveCtor::PhysicalSpring => "spring",
+                }
+            )?;
+            for e in args {
+                pretty_print(f, e)?;
+                write!(f, ", ")?;
+            }
+            write!(f, ")")
+        }
         Expression::MouseCursor(m) => write!(f, "{m:?}"),
         Expression::LinearGradient { angle, stops } => {
             write!(f, "@linear-gradient(")?;

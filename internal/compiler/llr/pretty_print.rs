@@ -559,6 +559,15 @@ impl<'a, T> Display for DisplayExpression<'a, T> {
                 values.iter().map(|(k, v)| format!("{}: {}", k, e(v))).join(", ")
             ),
             Expression::EasingCurve(x) => write!(f, "{x:?}"),
+            Expression::EasingCurveCtor { variant, args } => write!(
+                f,
+                "{}({})",
+                match variant {
+                    crate::expression_tree::EasingCurveCtor::CubicBezier => "cubic-bezier",
+                    crate::expression_tree::EasingCurveCtor::PhysicalSpring => "spring",
+                },
+                args.iter().map(e).join(", ")
+            ),
             Expression::MouseCursor(x) => write!(f, "{x:?}"),
             Expression::LinearGradient { angle, stops } => write!(
                 f,

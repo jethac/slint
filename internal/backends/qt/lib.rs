@@ -451,6 +451,7 @@ fn install_app_state_observer() {
         #include <QtCore/QEvent>
         #include <QtCore/QObject>
         #include <QtGui/QFontInfo>
+        #include <QtGui/QStyleHints>
         #include <QtWidgets/QApplication>
 
         struct SlintAppStateObserver : QObject {

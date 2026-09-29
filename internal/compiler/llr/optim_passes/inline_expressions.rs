@@ -64,6 +64,7 @@ fn expression_cost(exp: &Expression, ctx: &EvaluationContext) -> isize {
         Expression::Array { .. } => return isize::MAX,
         Expression::Struct { .. } => 1,
         Expression::EasingCurve(_) => 1,
+        Expression::EasingCurveCtor { .. } => 1,
         Expression::MouseCursor(_) => 1,
         Expression::LinearGradient { .. } => ALLOC_COST,
         Expression::RadialGradient { .. } => ALLOC_COST,
@@ -164,6 +165,7 @@ fn builtin_function_cost(function: &BuiltinFunction) -> isize {
         BuiltinFunction::RegisterBitmapFont => isize::MAX,
         BuiltinFunction::ColorScheme => PROPERTY_ACCESS_COST,
         BuiltinFunction::AccentColor => PROPERTY_ACCESS_COST,
+        BuiltinFunction::ReducedMotion => PROPERTY_ACCESS_COST,
         // Generating a scheme resolves all 48 dynamic colors; seed-from-image runs the
         // quantizer over the image's pixels. Both are far too heavy to inline.
         BuiltinFunction::MaterialColorScheme

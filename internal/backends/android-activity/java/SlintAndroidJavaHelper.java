@@ -30,6 +30,7 @@ import android.graphics.drawable.Drawable;
 import android.text.Editable;
 import android.text.Selection;
 import android.text.SpannableStringBuilder;
+import android.provider.Settings;
 import android.util.TypedValue;
 import android.view.inputmethod.InputMethodManager;
 import android.app.Activity;
@@ -39,6 +40,9 @@ import android.widget.ImageView;
 import android.widget.PopupWindow;
 import android.view.inputmethod.BaseInputConnection;
 import android.os.Build;
+import android.database.ContentObserver;
+import android.os.Handler;
+import android.os.Looper;
 import android.window.OnBackInvokedCallback;
 import android.window.OnBackInvokedDispatcher;
 
@@ -249,6 +253,8 @@ class SlintInputView extends View {
         int currentNightMode = newConfig.uiMode & Configuration.UI_MODE_NIGHT_MASK;
         SlintAndroidJavaHelper.setNightMode(currentNightMode);
         SlintAndroidJavaHelper.setFontScale(newConfig.fontScale);
+        SlintAndroidJavaHelper.setAnimatorDurationScale(Settings.Global.getFloat(
+                getContext().getContentResolver(), Settings.Global.ANIMATOR_DURATION_SCALE, 1f));
     }
 
     private InputHandle mCursorHandle;
@@ -463,6 +469,16 @@ public class SlintAndroidJavaHelper {
                 }
             }
         });
+        // Settings.Global.ANIMATOR_DURATION_SCALE doubles as Android's reduced-motion
+        // source ("Remove animations" sets it to 0); watch for live changes.
+        activity.getContentResolver().registerContentObserver(
+                Settings.Global.getUriFor(Settings.Global.ANIMATOR_DURATION_SCALE), false,
+                new ContentObserver(new Handler(Looper.getMainLooper())) {
+                    @Override
+                    public void onChange(boolean selfChange) {
+                        SlintAndroidJavaHelper.setAnimatorDurationScale(animator_duration_scale());
+                    }
+                });
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) {
             activity.getWindow().getDecorView().getRootView().getViewTreeObserver()
                     .addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
@@ -590,6 +606,8 @@ public class SlintAndroidJavaHelper {
     static public native void setNightMode(int nightMode);
 
     static public native void setFontScale(float fontScale);
+
+    static public native void setAnimatorDurationScale(float scale);
 
     static public native void onBackInvoked();
 
@@ -772,6 +790,13 @@ public class SlintAndroidJavaHelper {
             }
         }
         return 0;
+    }
+
+    // Settings.Global.ANIMATOR_DURATION_SCALE; the accessibility "Remove
+    // animations" toggle sets it to 0.
+    public float animator_duration_scale() {
+        return Settings.Global.getFloat(
+            mActivity.getContentResolver(), Settings.Global.ANIMATOR_DURATION_SCALE, 1f);
     }
 
     // Get the size of the window

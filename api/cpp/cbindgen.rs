@@ -522,6 +522,8 @@ fn gen_corelib(
         "ImageInner",
         "ImageCacheKey",
         "Image",
+        // Rust-internal constant; cbindgen would emit it into several private headers
+        "SPRING_DEFAULT_DISPLACEMENT_THRESHOLD",
         "Color",
         "PathData",
         "PathElement",
@@ -958,7 +960,7 @@ fn gen_corelib(
     );
     config.export.body.insert(
         "EasingCurve".to_owned(),
-        "    constexpr EasingCurve(EasingCurve::Tag tag = Tag::Linear, float a = 0, float b = 0, float c = 1, float d = 1) : tag(tag), cubic_bezier{{a,b,c,d}} { if (tag == Tag::Spring) { spring._0 = a; } }".into()
+        "    constexpr EasingCurve(EasingCurve::Tag tag = Tag::Linear, float a = 0, float b = 0, float c = 1, float d = 1) : tag(tag), cubic_bezier{{a,b,c,d}} { if (tag == Tag::Spring) { spring._0 = a; } if (tag == Tag::PhysicalSpring) { physical_spring.damping_ratio = a; physical_spring.stiffness = b; physical_spring.mass = c; } }".into()
     );
     config.export.body.insert(
         "LayoutInfo".to_owned(),

@@ -60,7 +60,7 @@ export component Ripple {
                 self.width = Math.sqrt(dx * dx + dy * dy) * 2px;
             }
 
-            animate width { duration: MaterialAnimations.ripple_duration; easing: MaterialAnimations.ripple_easing; }
+            animate width { enabled: !MaterialPalette.reduced-motion; duration: MaterialAnimations.ripple_duration; easing: MaterialAnimations.ripple_easing; }
         }
     }
 }
@@ -112,7 +112,7 @@ export component StateLayer {
         }
     ]
 
-    animate state_layer_opacity { duration: MaterialAnimations.opacity_duration; easing: MaterialAnimations.opacity_easing; }
+    animate state_layer_opacity { enabled: !MaterialPalette.reduced-motion; duration: MaterialAnimations.opacity_duration; easing: MaterialAnimations.opacity_easing; }
 }
 
 export component FocusTouchArea inherits TouchArea {

@@ -1,0 +1,118 @@
+// Copyright © SixtyFPS GmbH <info@slint.dev>
+// SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0
+
+// Physical `spring(damping-ratio, stiffness)` animations follow the Compose
+// spring math: critically damped settles without overshoot, underdamped
+// overshoots and returns, and a retargeted spring carries its velocity.
+
+export component TestCase inherits Rectangle {
+    // ζ = 1, k = 1600 (M3 default effects): approaches 100 monotonically.
+    in-out property <float> critical: 0;
+    animate critical { easing: spring(1.0, 1600); }
+
+    // ζ = 0.6, k = 800 (M3 expressive fast spatial): overshoots past 100.
+    in-out property <float> underdamped: 0;
+    animate underdamped { easing: spring(0.6, 800); }
+
+    // ζ = 2, k = 1600: overdamped — slower than critical, never overshoots.
+    in-out property <float> overdamped: 0;
+    animate overdamped { easing: spring(2.0, 1600); }
+
+    // initial-velocity launches the spring already moving; it overshoots
+    // before settling even though it is critically damped.
+    in-out property <float> launched: 0;
+    animate launched {
+        easing: spring(1.0, 1600);
+        initial-velocity: 500;
+    }
+}
+
+/*
+```rust
+fn assert_approx(value: f32, expected: f32) {
+    assert!((value - expected).abs() < 0.05, "Expected {value} to be close to {expected}");
+}
+
+let instance = TestCase::new().unwrap();
+instance.set_critical(100.0);
+instance.set_underdamped(100.0);
+instance.set_overdamped(100.0);
+instance.set_launched(0.0);
+
+slint_testing::mock_elapsed_time(25);
+// Critically damped, 25 ms in: 26.4% of the way (Compose spring math).
+assert_approx(instance.get_critical(), 26.42);
+// Overdamped is slower than critically damped.
+assert_approx(instance.get_overdamped(), 17.77);
+assert!(instance.get_overdamped() < instance.get_critical());
+// initial-velocity 500 px/s overshoots the target: at 25 ms it peaks ~4.60
+// above 0 on its way back down.
+assert_approx(instance.get_launched(), 4.60);
+
+slint_testing::mock_elapsed_time(225);
+assert_approx(instance.get_critical(), 99.95);
+// ζ = 0.6 crossed the target (~109 at 150 ms) and is coming back.
+assert_approx(instance.get_underdamped(), 99.47);
+assert!(instance.get_underdamped() < 100.0);
+assert_approx(instance.get_launched(), 0.01);
+
+slint_testing::mock_elapsed_time(750);
+assert_approx(instance.get_critical(), 100.0);
+assert_approx(instance.get_underdamped(), 100.0);
+assert_approx(instance.get_overdamped(), 100.0);
+assert_approx(instance.get_launched(), 0.0);
+```
+
+```cpp
+auto handle = TestCase::create();
+const TestCase &instance = *handle;
+instance.set_critical(100.0);
+instance.set_underdamped(100.0);
+instance.set_overdamped(100.0);
+instance.set_launched(0.0);
+
+slint_testing::mock_elapsed_time(25);
+assert(std::abs(instance.get_critical() - 26.42) < 0.05);
+assert(std::abs(instance.get_overdamped() - 17.77) < 0.05);
+assert(instance.get_overdamped() < instance.get_critical());
+assert(std::abs(instance.get_launched() - 4.60) < 0.05);
+
+slint_testing::mock_elapsed_time(225);
+assert(std::abs(instance.get_critical() - 99.95) < 0.05);
+assert(std::abs(instance.get_underdamped() - 99.47) < 0.05);
+assert(instance.get_underdamped() < 100.0);
+assert(std::abs(instance.get_launched() - 0.01) < 0.05);
+
+slint_testing::mock_elapsed_time(750);
+assert(std::abs(instance.get_critical() - 100.0) < 0.05);
+assert(std::abs(instance.get_underdamped() - 100.0) < 0.05);
+assert(std::abs(instance.get_overdamped() - 100.0) < 0.05);
+assert(std::abs(instance.get_launched() - 0.0) < 0.05);
+```
+
+```js
+var instance = new slint.TestCase({});
+instance.critical = 100.0;
+instance.underdamped = 100.0;
+instance.overdamped = 100.0;
+instance.launched = 0.0;
+
+slintlib.private_api.mock_elapsed_time(25);
+assert(Math.abs(instance.critical - 26.42) < 0.05);
+assert(Math.abs(instance.overdamped - 17.77) < 0.05);
+assert(instance.overdamped < instance.critical);
+assert(Math.abs(instance.launched - 4.60) < 0.05);
+
+slintlib.private_api.mock_elapsed_time(225);
+assert(Math.abs(instance.critical - 99.95) < 0.05);
+assert(Math.abs(instance.underdamped - 99.47) < 0.05);
+assert(instance.underdamped < 100.0);
+assert(Math.abs(instance.launched - 0.01) < 0.05);
+
+slintlib.private_api.mock_elapsed_time(750);
+assert(Math.abs(instance.critical - 100.0) < 0.05);
+assert(Math.abs(instance.underdamped - 100.0) < 0.05);
+assert(Math.abs(instance.overdamped - 100.0) < 0.05);
+assert(Math.abs(instance.launched - 0.0) < 0.05);
+```
+*/

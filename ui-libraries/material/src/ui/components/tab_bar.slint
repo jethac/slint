@@ -155,7 +155,7 @@ component BaseTabBar inherits BaseNavigation {
             background: MaterialPalette.primary;
             visible: root.current_index >= 0 && root.current_index < root.items.length;
 
-            animate x, width {
+            animate x, width { enabled: !MaterialPalette.reduced-motion;
                 duration: MaterialAnimations.standard_accelerate_duration;
                 easing: MaterialAnimations.standard_easing;
             }

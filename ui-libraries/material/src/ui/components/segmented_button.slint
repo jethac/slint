@@ -42,7 +42,7 @@ component SegmentedItemTemplate {
         text: root.text;
 
 
-        animate width { duration: MaterialAnimations.standard_accelerate_duration; easing: MaterialAnimations.standard_easing; }
+        animate width { enabled: !MaterialPalette.reduced-motion; duration: MaterialAnimations.standard_accelerate_duration; easing: MaterialAnimations.standard_easing; }
     }
 
     if !root.last : Rectangle {

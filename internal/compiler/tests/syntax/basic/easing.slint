@@ -16,7 +16,6 @@ export X := Rectangle {
     property <int> d; animate d { easing: cubic-bezier(0,0,0,0,0,0); }
 //                                                             ^error{Too many argument for bezier curve}
     property <int> e; animate e { easing: cubic-bezier(0, a, b, c); }
-//                                                        ^error{Arguments to cubic bezier curve must be number literal}
     property <int> f; animate f { easing: cubic-bezier(0,0+0,0,0,0); }
-//                                                       > <error{Arguments to cubic bezier curve must be number literal}
+//                                                               ^error{Too many argument for bezier curve}
 }

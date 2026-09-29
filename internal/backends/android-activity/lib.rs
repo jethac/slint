@@ -209,6 +209,12 @@ impl i_slint_core::platform::Platform for AndroidPlatform {
         {
             ctx.set_platform_default_font_size(Some(size));
         }
+        // Settings.Global.ANIMATOR_DURATION_SCALE doubles as Android's reduced-motion
+        // source: the accessibility "Remove animations" toggle sets it to 0.
+        if let Ok(scale) = self.window.java_helper.animator_duration_scale() {
+            ctx.set_animation_duration_scale(scale);
+            ctx.set_reduced_motion(scale == 0.0);
+        }
     }
 
     fn long_press_interval(&self, _: i_slint_core::InternalToken) -> Duration {
