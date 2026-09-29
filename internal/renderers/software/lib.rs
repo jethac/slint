@@ -19,9 +19,9 @@ mod draw_functions;
 mod fixed;
 mod fonts;
 mod minimal_software_window;
-#[cfg(feature = "path")]
-mod path;
 mod scene;
+#[doc(hidden)]
+pub mod shape_raster;
 
 use self::fonts::GlyphRenderer;
 pub use self::minimal_software_window::MinimalSoftwareWindow;
@@ -44,10 +44,10 @@ use i_slint_core::item_rendering::{
     RenderBorderRectangle, RenderImage, RenderRectangle,
 };
 use i_slint_core::item_tree::ItemTreeWeak;
-use i_slint_core::items::{ItemRc, TextOverflow, TextWrap};
+use i_slint_core::items::{FillRule, ItemRc, TextOverflow, TextWrap};
 use i_slint_core::lengths::{
-    LogicalLength, LogicalPoint, LogicalRect, LogicalSize, LogicalVector, PhysicalPx, PointLengths,
-    RectLengths, ScaleFactor, SizeLengths,
+    LogicalLength, LogicalPoint, LogicalPx, LogicalRect, LogicalSize, LogicalVector, PhysicalPx,
+    PointLengths, RectLengths, ScaleFactor, SizeLengths,
 };
 use i_slint_core::partial_renderer::{DirtyRegion, PartialRenderer, PartialRenderingState};
 use i_slint_core::renderer::RendererSealed;
@@ -109,9 +109,9 @@ impl RenderingRotation {
 }
 
 #[derive(Copy, Clone, Debug)]
-struct RotationInfo {
-    orientation: RenderingRotation,
-    screen_size: PhysicalSize,
+pub(crate) struct RotationInfo {
+    pub(crate) orientation: RenderingRotation,
+    pub(crate) screen_size: PhysicalSize,
 }
 
 /// Extension trait for euclid type to transpose coordinates (swap x and y, as well as width and height)
@@ -143,6 +143,43 @@ impl<T: Copy> Transform for euclid::Size2D<T, PhysicalPx> {
         }
         self
     }
+}
+
+/// Applies the rendering rotation to a point in continuous (sub-pixel)
+/// coordinates: cells mirror about `W − x` / `H − y`, unlike the integer
+/// pixel transform which subtracts the extra 1 of pixel indexing.
+fn transform_continuous(
+    mut p: euclid::Point2D<f32, PhysicalPx>,
+    info: RotationInfo,
+) -> euclid::Point2D<f32, PhysicalPx> {
+    if info.orientation.mirror_width() {
+        p.x = info.screen_size.width as f32 - p.x;
+    }
+    if info.orientation.mirror_height() {
+        p.y = info.screen_size.height as f32 - p.y;
+    }
+    if info.orientation.is_transpose() {
+        core::mem::swap(&mut p.x, &mut p.y);
+    }
+    p
+}
+
+/// The inverse of [`transform_continuous`]: maps a rendered point back to
+/// the frame it was drawn in before the renderer's rotation.
+fn untransform_continuous(
+    mut p: euclid::Point2D<f32, PhysicalPx>,
+    info: RotationInfo,
+) -> euclid::Point2D<f32, PhysicalPx> {
+    if info.orientation.is_transpose() {
+        core::mem::swap(&mut p.x, &mut p.y);
+    }
+    if info.orientation.mirror_height() {
+        p.y = info.screen_size.height as f32 - p.y;
+    }
+    if info.orientation.mirror_width() {
+        p.x = info.screen_size.width as f32 - p.x;
+    }
+    p
 }
 
 impl<T: Copy + NumCast + core::ops::Sub<Output = T>> Transform for euclid::Rect<T, PhysicalPx> {
@@ -881,6 +918,9 @@ impl SoftwareRenderer {
                 dirty_range_cache: Vec::new(),
                 dirty_region: Default::default(),
                 scale_factor: factor,
+                clip_mask: None,
+                mask_scratch: Vec::new(),
+                mask_row: Vec::new(),
             },
             rotation,
             #[cfg(feature = "systemfonts")]
@@ -1684,6 +1724,27 @@ fn render_window_frame_by_line(
                         let range_buffer =
                             &mut line_buffer[(begin - offset) as usize..(end - offset) as usize];
 
+                        // A shape clip applies the outline's coverage on top
+                        // of the rectangular clip: draw into a copy of the
+                        // destination, then lerp it back by the coverage.
+                        let mut mask = Vec::new();
+                        let mut scratch = Vec::new();
+                        if span.clip != 0 {
+                            let clip = &scene.vectors.clip_outlines[span.clip as usize - 1];
+                            scratch.clear();
+                            scratch.extend_from_slice(range_buffer);
+                            mask.resize(range_buffer.len(), 0);
+                            let y = scene.current_line.get() as i32;
+                            if y >= clip.y_start && y < clip.y_end {
+                                clip.rasterizer.borrow_mut().rasterize_row(
+                                    y,
+                                    begin as i32,
+                                    &mut mask,
+                                    clip.fill_rule,
+                                );
+                            }
+                        }
+
                         match span.command {
                             SceneCommand::Rectangle { color } => {
                                 TargetPixel::blend_slice(range_buffer, color);
@@ -1759,6 +1820,31 @@ fn render_window_frame_by_line(
                                     extra_left_clip,
                                     extra_right_clip,
                                 );
+                            }
+                            SceneCommand::Path { path_index } => {
+                                let data = &scene.vectors.paths[path_index as usize];
+                                let mut rasterizer = shape_raster::Rasterizer::default();
+                                rasterizer.begin(&data.contours);
+                                let mut row = Vec::new();
+                                draw_path_line(
+                                    scene.current_line.get() as i32,
+                                    range_buffer,
+                                    begin as i32,
+                                    data,
+                                    &mut rasterizer,
+                                    &mut row,
+                                );
+                            }
+                        }
+
+                        if !mask.is_empty() {
+                            for (d, (o, &m)) in range_buffer
+                                .iter_mut()
+                                .zip(scratch.iter().copied().zip(mask.iter()))
+                            {
+                                let mut px = o;
+                                px.lerp_from(*d, m);
+                                *d = px;
                             }
                         }
                     }
@@ -1862,26 +1948,14 @@ trait ProcessScene {
     fn process_linear_gradient(&mut self, geometry: PhysicalRect, gradient: LinearGradientCommand);
     fn process_radial_gradient(&mut self, geometry: PhysicalRect, gradient: RadialGradientCommand);
     fn process_conic_gradient(&mut self, geometry: PhysicalRect, gradient: ConicGradientCommand);
-    #[cfg(feature = "path")]
-    fn process_filled_path(
-        &mut self,
-        path_geometry: PhysicalRect,
-        clip_geometry: PhysicalRect,
-        commands: alloc::vec::Vec<path::Command>,
-        color: PremultipliedRgbaColor,
-    );
-    #[cfg(feature = "path")]
-    fn process_stroked_path(
-        &mut self,
-        path_geometry: PhysicalRect,
-        clip_geometry: PhysicalRect,
-        commands: alloc::vec::Vec<path::Command>,
-        color: PremultipliedRgbaColor,
-        stroke_width: f32,
-        stroke_line_cap: i_slint_core::items::LineCap,
-        stroke_line_join: i_slint_core::items::LineJoin,
-        stroke_miter_limit: f32,
-    );
+    /// Draws one flattened path (a fill, or a stroke already expanded to
+    /// fill contours), clipped to `clip_geometry`. The `data`'s contours are
+    /// in absolute physical screen coordinates, rotation applied.
+    fn process_path(&mut self, data: alloc::rc::Rc<PathCommandData>, clip_geometry: PhysicalRect);
+    /// Sets the shape clip applying to subsequent draws: a mask AND-ed per
+    /// row with everything drawn while it is set, on top of the rectangular
+    /// clip.
+    fn set_clip_outline(&mut self, clip: Option<alloc::rc::Rc<ClipOutlineData>>);
 }
 
 fn process_rectangle_impl(
@@ -2106,11 +2180,16 @@ fn process_rectangle_impl(
     }
 }
 
-struct RenderToBuffer<'a, TargetPixelBuffer> {
-    buffer: &'a mut TargetPixelBuffer,
+struct RenderToBuffer<'a, B: target_pixel_buffer::TargetPixelBuffer> {
+    buffer: &'a mut B,
     dirty_range_cache: Vec<core::ops::Range<i16>>,
     dirty_region: PhysicalRegion,
     scale_factor: ScaleFactor,
+    /// The active shape clip, masked per row on top of the rectangular clip.
+    clip_mask: Option<alloc::rc::Rc<ClipOutlineData>>,
+    /// Scratch rows for masked compositing and path coverage.
+    mask_scratch: Vec<B::TargetPixel>,
+    mask_row: Vec<u8>,
 }
 
 impl<B: target_pixel_buffer::TargetPixelBuffer> RenderToBuffer<'_, B> {
@@ -2119,6 +2198,7 @@ impl<B: target_pixel_buffer::TargetPixelBuffer> RenderToBuffer<'_, B> {
         geometry: &PhysicalRect,
         mut f: impl FnMut(i16, &mut [B::TargetPixel], i16, i16),
     ) {
+        let has_clip_mask = self.clip_mask.is_some();
         let mut line = geometry.min_y();
         while let Some(mut next) =
             region_line_ranges(&self.dirty_region, line, &mut self.dirty_range_cache)
@@ -2142,13 +2222,35 @@ impl<B: target_pixel_buffer::TargetPixelBuffer> RenderToBuffer<'_, B> {
                 };
 
                 for l in region.y_range() {
-                    f(
-                        l,
-                        &mut self.buffer.line_slice(l as usize)
-                            [region.min_x() as usize..region.max_x() as usize],
-                        extra_left_clip,
-                        extra_right_clip,
-                    );
+                    let dst = &mut self.buffer.line_slice(l as usize)
+                        [region.min_x() as usize..region.max_x() as usize];
+                    if !has_clip_mask {
+                        f(l, dst, extra_left_clip, extra_right_clip);
+                        continue;
+                    }
+                    // Masked span: draw into a copy of the destination row,
+                    // then lerp the destination toward the result by the
+                    // clip coverage. Bounded to the span's width.
+                    let clip = self.clip_mask.clone().unwrap();
+                    self.mask_row.clear();
+                    self.mask_row.resize(dst.len(), 0);
+                    if l >= clip.y_start as i16 && l < clip.y_end as i16 {
+                        clip.rasterizer.borrow_mut().rasterize_row(
+                            l as i32,
+                            region.min_x() as i32,
+                            &mut self.mask_row,
+                            clip.fill_rule,
+                        );
+                    }
+                    self.mask_scratch.clear();
+                    self.mask_scratch.extend_from_slice(dst);
+                    f(l, &mut self.mask_scratch, extra_left_clip, extra_right_clip);
+                    for (d, (s, &m)) in dst
+                        .iter_mut()
+                        .zip(self.mask_scratch.iter().copied().zip(self.mask_row.iter()))
+                    {
+                        d.lerp_from(s, m);
+                    }
                 }
             }
             if next == geometry.max_y() {
@@ -2170,6 +2272,221 @@ impl<B: target_pixel_buffer::TargetPixelBuffer> RenderToBuffer<'_, B> {
             );
         });
     }
+}
+
+/// Rasterizes `data`'s coverage for line `l` (columns start at `x_start`)
+/// into `row` and blends the brush's per-pixel color scaled by coverage.
+fn draw_path_line<P: TargetPixel>(
+    l: i32,
+    dst: &mut [P],
+    x_start: i32,
+    data: &PathCommandData,
+    rasterizer: &mut shape_raster::Rasterizer,
+    row: &mut Vec<u8>,
+) {
+    row.clear();
+    row.resize(dst.len(), 0);
+    rasterizer.rasterize_row(l, x_start, row, data.fill_rule);
+    for (i, (pix, &cov)) in dst.iter_mut().zip(row.iter()).enumerate() {
+        if cov == 0 {
+            continue;
+        }
+        let color = eval_path_brush(&data.brush, x_start + i as i32, l, data);
+        pix.blend(scale_premult(color, cov));
+    }
+}
+
+/// The premultiplied `color` scaled down by `coverage` (0..=255).
+fn scale_premult(color: PremultipliedRgbaColor, coverage: u8) -> PremultipliedRgbaColor {
+    if coverage == 255 {
+        return color;
+    }
+    let m = coverage as u16;
+    PremultipliedRgbaColor {
+        red: (color.red as u16 * m / 255) as u8,
+        green: (color.green as u16 * m / 255) as u8,
+        blue: (color.blue as u16 * m / 255) as u8,
+        alpha: (color.alpha as u16 * m / 255) as u8,
+    }
+}
+
+/// Evaluates a path's brush at the physical pixel center `(x + 0.5, y + 0.5)`,
+/// mapping the pixel back through `data.rotation` so gradient parameters stay
+/// in the frame the shape was drawn in.
+fn eval_path_brush(
+    brush: &PathBrush,
+    x: i32,
+    y: i32,
+    data: &PathCommandData,
+) -> PremultipliedRgbaColor {
+    let p = untransform_continuous(
+        euclid::point2::<f32, PhysicalPx>(x as f32 + 0.5, y as f32 + 0.5),
+        data.rotation,
+    );
+    let bounds = &data.brush_bounds;
+    match brush {
+        PathBrush::Solid(color) => *color,
+        PathBrush::LinearGradient { stops, angle_deg } => {
+            let t = linear_gradient_t(*angle_deg, bounds, p.x, p.y);
+            eval_stops(stops, t)
+        }
+        PathBrush::RadialGradient { stops, center_x, center_y, radius } => {
+            if *radius <= 0. {
+                return eval_stops(stops, 1.);
+            }
+            let dx = p.x - center_x;
+            let dy = p.y - center_y;
+            eval_stops(stops, (dx * dx + dy * dy).sqrt() / radius)
+        }
+        PathBrush::ConicGradient { stops, center_x, center_y } => {
+            let dx = p.x - center_x;
+            let dy = p.y - center_y;
+            // Angle clockwise from north, matching draw_conic_gradient.
+            let a = dy.atan2(dx) + core::f32::consts::FRAC_PI_2;
+            let t = a.rem_euclid(2. * core::f32::consts::PI) / (2. * core::f32::consts::PI);
+            eval_stops(stops, t)
+        }
+    }
+}
+
+/// The normalized gradient coordinate of point `(x, y)` for a linear
+/// gradient of `angle_deg` degrees over `bounds`. The projection direction
+/// is the same convention `process_rectangle_impl` uses: angle 0 sweeps
+/// top to bottom.
+fn linear_gradient_t(
+    angle_deg: f32,
+    bounds: &euclid::Rect<f32, PhysicalPx>,
+    x: f32,
+    y: f32,
+) -> f32 {
+    let a = angle_deg.to_radians();
+    let (dx, dy) = (a.sin(), a.cos());
+    let corners = [
+        (bounds.min_x() as f32, bounds.min_y() as f32),
+        (bounds.max_x() as f32, bounds.min_y() as f32),
+        (bounds.min_x() as f32, bounds.max_y() as f32),
+        (bounds.max_x() as f32, bounds.max_y() as f32),
+    ];
+    let mut t_min = f32::MAX;
+    let mut t_max = f32::MIN;
+    for (cx, cy) in corners {
+        let t = cx * dx + cy * dy;
+        t_min = t_min.min(t);
+        t_max = t_max.max(t);
+    }
+    if t_max - t_min < 1e-6 {
+        return 1.;
+    }
+    ((x * dx + y * dy) - t_min) / (t_max - t_min)
+}
+
+/// Converts a [`Brush`] into a path brush, baking `alpha` into the color or
+/// every stop. `bounds` is the path's physical bounding box: gradient centers
+/// and radii are resolved against it. Returns `None` for a transparent brush.
+fn path_brush(
+    brush: &i_slint_core::Brush,
+    alpha: f32,
+    bounds: euclid::Rect<f32, PhysicalPx>,
+) -> Option<PathBrush> {
+    let alpha_u8 = (alpha * 255.) as u8;
+    match brush {
+        i_slint_core::Brush::SolidColor(color) => {
+            let color = alpha_color(*color, alpha_u8);
+            if color.alpha() == 0 { None } else { Some(PathBrush::Solid(color.into())) }
+        }
+        i_slint_core::Brush::LinearGradient(g) => Some(PathBrush::LinearGradient {
+            stops: alloc::rc::Rc::new(
+                g.stops()
+                    .map(|s| {
+                        let mut s = *s;
+                        s.color = alpha_color(s.color, alpha_u8);
+                        s
+                    })
+                    .collect(),
+            ),
+            angle_deg: g.angle(),
+        }),
+        i_slint_core::Brush::RadialGradient(g) => {
+            let (w, h) = (bounds.width() as f32, bounds.height() as f32);
+            let (cx, cy) = g.center_or_default_scaled(w, h, 1.);
+            Some(PathBrush::RadialGradient {
+                stops: alloc::rc::Rc::new(
+                    g.stops()
+                        .map(|s| {
+                            let mut s = *s;
+                            s.color = alpha_color(s.color, alpha_u8);
+                            s
+                        })
+                        .collect(),
+                ),
+                center_x: bounds.min_x() as f32 + cx,
+                center_y: bounds.min_y() as f32 + cy,
+                radius: g.radius_or_default_scaled(w, h, 1.),
+            })
+        }
+        i_slint_core::Brush::ConicGradient(g) => {
+            let (w, h) = (bounds.width() as f32, bounds.height() as f32);
+            let (cx, cy) = g.center_or_default_scaled(w, h, 1.);
+            Some(PathBrush::ConicGradient {
+                stops: alloc::rc::Rc::new(
+                    g.stops()
+                        .map(|s| {
+                            let mut s = *s;
+                            s.color = alpha_color(s.color, alpha_u8);
+                            s
+                        })
+                        .collect(),
+                ),
+                center_x: bounds.min_x() as f32 + cx,
+                center_y: bounds.min_y() as f32 + cy,
+            })
+        }
+        _ => None,
+    }
+}
+
+/// The axis-aligned bounding box of `contours`, or `None` when empty.
+fn contours_bounds(contours: &[shape_raster::Contour]) -> Option<euclid::Rect<f32, PhysicalPx>> {
+    let mut min = shape_raster::Point::new(f32::MAX, f32::MAX);
+    let mut max = shape_raster::Point::new(f32::MIN, f32::MIN);
+    for c in contours {
+        for p in c {
+            min = min.min(*p);
+            max = max.max(*p);
+        }
+    }
+    (min.x <= max.x && min.y <= max.y)
+        .then(|| euclid::Rect::new(min, euclid::size2(max.x - min.x, max.y - min.y)))
+}
+
+/// Interpolates the sorted `stops` at normalized position `t`.
+fn eval_stops(stops: &[i_slint_core::graphics::GradientStop], t: f32) -> PremultipliedRgbaColor {
+    let Some(first) = stops.first() else { return Default::default() };
+    if t <= first.position {
+        return first.color.into();
+    }
+    for [s1, s2] in stops.array_windows() {
+        if t <= s2.position {
+            let f = if s2.position > s1.position {
+                ((t - s1.position) / (s2.position - s1.position)).clamp(0., 1.)
+            } else {
+                1.
+            };
+            let (c1, c2): (PremultipliedRgbaColor, PremultipliedRgbaColor) =
+                (s1.color.into(), s2.color.into());
+            let w = (f * 256.) as i32;
+            let lerp = |a: u8, b: u8| {
+                (a as i32 + ((b as i32 - a as i32) * w + 128) / 256).clamp(0, 255) as u8
+            };
+            return PremultipliedRgbaColor {
+                red: lerp(c1.red, c2.red),
+                green: lerp(c1.green, c2.green),
+                blue: lerp(c1.blue, c2.blue),
+                alpha: lerp(c1.alpha, c2.alpha),
+            };
+        }
+    }
+    stops.last().map(|s| s.color.into()).unwrap_or_default()
 }
 
 impl<B: target_pixel_buffer::TargetPixelBuffer> ProcessScene for RenderToBuffer<'_, B> {
@@ -2261,40 +2578,28 @@ impl<B: target_pixel_buffer::TargetPixelBuffer> ProcessScene for RenderToBuffer<
         });
     }
 
-    #[cfg(feature = "path")]
-    fn process_filled_path(
-        &mut self,
-        path_geometry: PhysicalRect,
-        clip_geometry: PhysicalRect,
-        commands: alloc::vec::Vec<path::Command>,
-        color: PremultipliedRgbaColor,
-    ) {
-        path::render_filled_path(&commands, &path_geometry, &clip_geometry, color, self.buffer);
+    fn process_path(&mut self, data: alloc::rc::Rc<PathCommandData>, clip_geometry: PhysicalRect) {
+        let Some(geometry) = data.bounds.round_out().cast::<i16>().intersection(&clip_geometry)
+        else {
+            return;
+        };
+        let mut rasterizer = shape_raster::Rasterizer::default();
+        rasterizer.begin(&data.contours);
+        let mut row = Vec::new();
+        self.foreach_ranges(&geometry, |line, buffer, extra_left_clip, _extra_right_clip| {
+            draw_path_line(
+                line as i32,
+                buffer,
+                geometry.min_x() as i32 + extra_left_clip as i32,
+                &data,
+                &mut rasterizer,
+                &mut row,
+            );
+        });
     }
 
-    #[cfg(feature = "path")]
-    fn process_stroked_path(
-        &mut self,
-        path_geometry: PhysicalRect,
-        clip_geometry: PhysicalRect,
-        commands: alloc::vec::Vec<path::Command>,
-        color: PremultipliedRgbaColor,
-        stroke_width: f32,
-        stroke_line_cap: i_slint_core::items::LineCap,
-        stroke_line_join: i_slint_core::items::LineJoin,
-        stroke_miter_limit: f32,
-    ) {
-        path::render_stroked_path(
-            &commands,
-            &path_geometry,
-            &clip_geometry,
-            color,
-            stroke_width,
-            stroke_line_cap,
-            stroke_line_join,
-            stroke_miter_limit,
-            self.buffer,
-        );
+    fn set_clip_outline(&mut self, clip: Option<alloc::rc::Rc<ClipOutlineData>>) {
+        self.clip_mask = clip;
     }
 }
 
@@ -2303,6 +2608,9 @@ struct PrepareScene {
     items: Vec<SceneItem>,
     vectors: SceneVectors,
     scale_factor: ScaleFactor,
+    /// The active shape clip and its index (1-based) in `clip_outlines`.
+    current_clip: Option<alloc::rc::Rc<ClipOutlineData>>,
+    current_clip_index: u16,
 }
 
 impl ProcessScene for PrepareScene {
@@ -2313,6 +2621,7 @@ impl ProcessScene for PrepareScene {
             pos: geometry.origin,
             size: geometry.size,
             z: self.items.len() as u16,
+            clip: self.current_clip_index,
             command: SceneCommand::Texture { texture_index },
         });
     }
@@ -2340,6 +2649,7 @@ impl ProcessScene for PrepareScene {
                     pos: geometry.origin,
                     size: geometry.size,
                     z: self.items.len() as u16,
+                    clip: self.current_clip_index,
                     command: SceneCommand::Texture { texture_index },
                 });
             }
@@ -2354,6 +2664,7 @@ impl ProcessScene for PrepareScene {
                     pos: geometry.origin,
                     size: geometry.size,
                     z: self.items.len() as u16,
+                    clip: self.current_clip_index,
                     command: SceneCommand::SharedBuffer { shared_buffer_index },
                 });
             }
@@ -2374,7 +2685,13 @@ impl ProcessScene for PrepareScene {
         if !size.is_empty() {
             let z = self.items.len() as u16;
             let pos = geometry.origin;
-            self.items.push(SceneItem { pos, size, z, command: SceneCommand::Rectangle { color } });
+            self.items.push(SceneItem {
+                pos,
+                size,
+                z,
+                clip: self.current_clip_index,
+                command: SceneCommand::Rectangle { color },
+            });
         }
     }
 
@@ -2387,6 +2704,7 @@ impl ProcessScene for PrepareScene {
                 pos: geometry.origin,
                 size,
                 z: self.items.len() as u16,
+                clip: self.current_clip_index,
                 command: SceneCommand::RoundedRectangle { rectangle_index },
             });
         }
@@ -2401,6 +2719,7 @@ impl ProcessScene for PrepareScene {
                 pos: geometry.origin,
                 size,
                 z: self.items.len() as u16,
+                clip: self.current_clip_index,
                 command: SceneCommand::LinearGradient { linear_gradient_index: gradient_index },
             });
         }
@@ -2414,6 +2733,7 @@ impl ProcessScene for PrepareScene {
                 pos: geometry.origin,
                 size,
                 z: self.items.len() as u16,
+                clip: self.current_clip_index,
                 command: SceneCommand::RadialGradient { radial_gradient_index },
             });
         }
@@ -2427,37 +2747,48 @@ impl ProcessScene for PrepareScene {
                 pos: geometry.origin,
                 size,
                 z: self.items.len() as u16,
+                clip: self.current_clip_index,
                 command: SceneCommand::ConicGradient { conic_gradient_index },
             });
         }
     }
 
-    #[cfg(feature = "path")]
-    fn process_filled_path(
-        &mut self,
-        _path_geometry: PhysicalRect,
-        _clip_geometry: PhysicalRect,
-        _commands: alloc::vec::Vec<path::Command>,
-        _color: PremultipliedRgbaColor,
-    ) {
-        // Path rendering is not supported in line-by-line mode (PrepareScene/render_by_line)
-        // Only works with buffer-based rendering (RenderToBuffer)
+    fn process_path(&mut self, data: alloc::rc::Rc<PathCommandData>, clip_geometry: PhysicalRect) {
+        let Some(geometry) = data.bounds.round_out().cast::<i16>().intersection(&clip_geometry)
+        else {
+            return;
+        };
+        if geometry.size.is_empty() {
+            return;
+        }
+        let path_index = self.vectors.paths.len() as u16;
+        self.vectors.paths.push(data);
+        self.items.push(SceneItem {
+            pos: geometry.origin,
+            size: geometry.size,
+            z: self.items.len() as u16,
+            clip: self.current_clip_index,
+            command: SceneCommand::Path { path_index },
+        });
     }
 
-    #[cfg(feature = "path")]
-    fn process_stroked_path(
-        &mut self,
-        _path_geometry: PhysicalRect,
-        _clip_geometry: PhysicalRect,
-        _commands: alloc::vec::Vec<path::Command>,
-        _color: PremultipliedRgbaColor,
-        _stroke_width: f32,
-        _stroke_line_cap: i_slint_core::items::LineCap,
-        _stroke_line_join: i_slint_core::items::LineJoin,
-        _stroke_miter_limit: f32,
-    ) {
-        // Path rendering is not supported in line-by-line mode (PrepareScene/render_by_line)
-        // Only works with buffer-based rendering (RenderToBuffer)
+    fn set_clip_outline(&mut self, clip: Option<alloc::rc::Rc<ClipOutlineData>>) {
+        if let Some(c) = &clip {
+            // Reuse the stored outline when the same clip is re-set.
+            self.current_clip_index = self
+                .vectors
+                .clip_outlines
+                .iter()
+                .position(|o| alloc::rc::Rc::ptr_eq(o, c))
+                .map(|i| i as u16 + 1)
+                .unwrap_or_else(|| {
+                    self.vectors.clip_outlines.push(c.clone());
+                    self.vectors.clip_outlines.len() as u16
+                });
+        } else {
+            self.current_clip_index = 0;
+        }
+        self.current_clip = clip;
     }
 }
 
@@ -2491,6 +2822,7 @@ impl<'a, T: ProcessScene> SceneBuilder<'a, T> {
                     LogicalPoint::default(),
                     (screen_size.cast() / scale_factor).cast(),
                 ),
+                clip_outline: None,
             },
             scale_factor,
             window,
@@ -2504,6 +2836,45 @@ impl<'a, T: ProcessScene> SceneBuilder<'a, T> {
         !rect.size.is_empty()
             && self.current_state.alpha > 0.01
             && self.current_state.clip.intersects(rect)
+    }
+
+    /// Forwards the state's shape clip to the processor, converted to
+    /// absolute physical screen coordinates (offset, scale and rotation
+    /// applied).
+    fn sync_clip_outline(&mut self) {
+        let clip = self.current_state.clip_outline.as_ref().map(|outline| {
+            let offset = self.current_state.offset.cast::<f32>() * self.scale_factor;
+            let rotation = self.rotation;
+            let contours: Vec<shape_raster::Contour> = outline
+                .contours
+                .iter()
+                .map(|c| {
+                    c.iter()
+                        .map(|p| {
+                            let pt = p.cast::<f32>() * self.scale_factor + offset.to_vector();
+                            transform_continuous(pt, rotation)
+                        })
+                        .collect()
+                })
+                .collect();
+            let mut y_start = i32::MAX;
+            let mut y_end = i32::MIN;
+            for c in &contours {
+                for p in c {
+                    y_start = y_start.min(p.y.floor() as i32);
+                    y_end = y_end.max(p.y.ceil() as i32);
+                }
+            }
+            let mut rasterizer = shape_raster::Rasterizer::default();
+            rasterizer.begin(&contours);
+            alloc::rc::Rc::new(ClipOutlineData {
+                fill_rule: outline.fill_rule,
+                y_start,
+                y_end,
+                rasterizer: core::cell::RefCell::new(rasterizer),
+            })
+        });
+        self.processor.set_clip_outline(clip);
     }
 
     fn draw_image_impl(
@@ -2911,11 +3282,23 @@ struct SelectionInfo {
     selection: core::ops::Range<usize>,
 }
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone)]
 struct RenderState {
     alpha: f32,
     offset: LogicalPoint,
     clip: LogicalRect,
+    /// A shape clip active on top of `clip`: contours in this state's
+    /// logical coordinate space, translated along `offset` like `clip`.
+    clip_outline: Option<alloc::rc::Rc<LogicalClipOutline>>,
+}
+
+/// A clip outline in logical coordinates; converted to physical screen
+/// coordinates when the processor is told about it.
+struct LogicalClipOutline {
+    /// The closed polylines making up the clip.
+    contours: Vec<Vec<euclid::Point2D<f32, LogicalPx>>>,
+    /// How the contours combine into coverage.
+    fill_rule: i_slint_core::items::FillRule,
 }
 
 impl<T: ProcessScene> i_slint_core::item_rendering::ItemRenderer for SceneBuilder<'_, T> {
@@ -2970,6 +3353,73 @@ impl<T: ProcessScene> i_slint_core::item_rendering::ItemRenderer for SceneBuilde
                     .round()
                     .cast()
                     .transformed(self.rotation);
+
+            if rect.outline().shape().is_some() {
+                let logical_geom = LogicalRect::from(size)
+                    .translate(self.current_state.offset.to_vector())
+                    .cast::<f32>();
+                let scale_factor = self.scale_factor;
+                let rotation = self.rotation;
+                let unrotated: Vec<shape_raster::Contour> = rect
+                    .outline()
+                    .flatten(logical_geom, shape_raster::FLATTEN_TOLERANCE / scale_factor.get())
+                    .into_iter()
+                    .map(|c| c.into_iter().map(|p| p * scale_factor).collect())
+                    .collect();
+                let Some(brush_bounds) = contours_bounds(&unrotated) else { return };
+                let contours: Vec<shape_raster::Contour> = unrotated
+                    .into_iter()
+                    .map(|c| c.into_iter().map(|p| transform_continuous(p, rotation)).collect())
+                    .collect();
+                let Some(bounds) = contours_bounds(&contours) else { return };
+                let Some(clipped_geom) = bounds.round_out().cast().intersection(&clipped) else {
+                    return;
+                };
+                let alpha = self.current_state.alpha;
+                let contours = alloc::rc::Rc::new(contours);
+                if let Some(brush) = path_brush(&rect.background(), alpha, brush_bounds) {
+                    self.processor.process_path(
+                        alloc::rc::Rc::new(PathCommandData {
+                            contours: contours.clone(),
+                            fill_rule: rect.outline().fill_rule(),
+                            brush,
+                            bounds,
+                            brush_bounds,
+                            rotation,
+                        }),
+                        clipped_geom,
+                    );
+                }
+                let border_color: PremultipliedRgbaColor =
+                    self.alpha_color(rect.border_color().color()).into();
+                let border = rect.border_width().cast() * self.scale_factor;
+                if border.get() > 0.01 && border_color.alpha > 0 {
+                    let stroke_contours = shape_raster::stroke_to_fill(
+                        &contours,
+                        border.get(),
+                        i_slint_core::items::LineCap::Butt,
+                        i_slint_core::items::LineJoin::Miter,
+                        4.,
+                    );
+                    if let Some(stroke_bounds) = contours_bounds(&stroke_contours)
+                        && let Some(stroke_clip) =
+                            stroke_bounds.round_out().cast().intersection(&clipped)
+                    {
+                        self.processor.process_path(
+                            alloc::rc::Rc::new(PathCommandData {
+                                contours: alloc::rc::Rc::new(stroke_contours),
+                                fill_rule: FillRule::Nonzero,
+                                brush: PathBrush::Solid(border_color),
+                                bounds: stroke_bounds,
+                                brush_bounds,
+                                rotation,
+                            }),
+                            stroke_clip,
+                        );
+                    }
+                }
+                return;
+            }
 
             let radius = (rect.border_radius().cast() * self.scale_factor)
                 .transformed(self.rotation)
@@ -3260,22 +3710,25 @@ impl<T: ProcessScene> i_slint_core::item_rendering::ItemRenderer for SceneBuilde
             return;
         };
 
-        let physical_geom_f32 =
-            geom.translate(self.current_state.offset.to_vector()).cast() * self.scale_factor;
-        let rounded_geom = physical_geom_f32.round();
-        let physical_geom = rounded_geom.cast().transformed(self.rotation);
-
-        let rotation = RotationInfo {
-            orientation: self.rotation.orientation,
-            screen_size: rounded_geom.size.cast::<i16>() + euclid::size2(1, 1),
-        };
-
-        let offset =
-            offset.cast() * self.scale_factor + (physical_geom_f32.origin - rounded_geom.origin);
-
-        // Convert to zeno commands
-        let zeno_commands =
-            path::convert_path_data_to_zeno(path_iterator, rotation, self.scale_factor, offset);
+        let state_offset = self.current_state.offset;
+        let scale_factor = self.scale_factor;
+        let rotation = self.rotation;
+        let unrotated = shape_raster::flatten_events(
+            path_iterator.iter(),
+            |p| {
+                euclid::point2::<f32, LogicalPx>(
+                    p.x + offset.x + state_offset.x,
+                    p.y + offset.y + state_offset.y,
+                ) * scale_factor
+            },
+            shape_raster::FLATTEN_TOLERANCE / scale_factor.get(),
+        );
+        let Some(brush_bounds) = contours_bounds(&unrotated) else { return };
+        let contours: Vec<shape_raster::Contour> = unrotated
+            .into_iter()
+            .map(|c| c.into_iter().map(|p| transform_continuous(p, rotation)).collect())
+            .collect();
+        let Some(bounds) = contours_bounds(&contours) else { return };
 
         let physical_clip =
             (self.current_state.clip.translate(self.current_state.offset.to_vector()).cast()
@@ -3284,44 +3737,53 @@ impl<T: ProcessScene> i_slint_core::item_rendering::ItemRenderer for SceneBuilde
                 .cast::<i16>()
                 .transformed(self.rotation);
 
-        // Clip the geometry - early return if nothing to draw
-        let Some(clipped_geom) = physical_geom.intersection(&physical_clip) else {
+        let Some(clipped_geom) = bounds.round_out().cast().intersection(&physical_clip) else {
             return;
         };
 
-        // Draw fill if specified
-        let fill_brush = path.fill();
-        if !fill_brush.is_transparent() {
-            let fill_color = self.alpha_color(fill_brush.color());
-            if fill_color.alpha() > 0 {
-                self.processor.process_filled_path(
-                    physical_geom,
-                    clipped_geom,
-                    zeno_commands.clone(),
-                    fill_color.into(),
-                );
-            }
+        let alpha = self.current_state.alpha;
+        let contours = alloc::rc::Rc::new(contours);
+
+        // Fill
+        if let Some(brush) = path_brush(&path.fill(), alpha, brush_bounds) {
+            self.processor.process_path(
+                alloc::rc::Rc::new(PathCommandData {
+                    contours: contours.clone(),
+                    fill_rule: path.effective_fill_rule(),
+                    brush,
+                    bounds,
+                    brush_bounds,
+                    rotation,
+                }),
+                clipped_geom,
+            );
         }
 
-        // Draw stroke if specified
-        let stroke_brush = path.stroke();
-        let stroke_width = path.stroke_width();
-        if !stroke_brush.is_transparent() && stroke_width.get() > 0 as Coord {
-            let stroke_color = self.alpha_color(stroke_brush.color());
-            if stroke_color.alpha() > 0 {
-                let physical_stroke_width = (stroke_width.cast() * self.scale_factor).get();
-                let stroke_line_cap = path.stroke_line_cap();
-                let stroke_line_join = path.stroke_line_join();
-                let stroke_miter_limit = path.stroke_miter_limit();
-                self.processor.process_stroked_path(
-                    physical_geom,
-                    clipped_geom,
-                    zeno_commands,
-                    stroke_color.into(),
-                    physical_stroke_width,
-                    stroke_line_cap,
-                    stroke_line_join,
-                    stroke_miter_limit,
+        // Stroke: outline the path, then fill the outline like a fill.
+        let stroke_width = path.stroke_width().get() * scale_factor.get();
+        let stroke_color: PremultipliedRgbaColor = self.alpha_color(path.stroke().color()).into();
+        if stroke_width > 0.01 && stroke_color.alpha > 0 {
+            let stroke_contours = shape_raster::stroke_to_fill(
+                &contours,
+                stroke_width,
+                path.stroke_line_cap(),
+                path.stroke_line_join(),
+                path.stroke_miter_limit(),
+            );
+            if let Some(stroke_bounds) = contours_bounds(&stroke_contours)
+                && let Some(stroke_clip) =
+                    stroke_bounds.round_out().cast().intersection(&physical_clip)
+            {
+                self.processor.process_path(
+                    alloc::rc::Rc::new(PathCommandData {
+                        contours: alloc::rc::Rc::new(stroke_contours),
+                        fill_rule: FillRule::Nonzero,
+                        brush: PathBrush::Solid(stroke_color),
+                        bounds: stroke_bounds,
+                        brush_bounds,
+                        rotation,
+                    }),
+                    stroke_clip,
                 );
             }
         }
@@ -3329,18 +3791,174 @@ impl<T: ProcessScene> i_slint_core::item_rendering::ItemRenderer for SceneBuilde
 
     fn draw_box_shadow(
         &mut self,
-        _box_shadow: Pin<&i_slint_core::items::BoxShadow>,
-        _: &ItemRc,
-        _size: LogicalSize,
+        box_shadow: Pin<&i_slint_core::items::BoxShadow>,
+        _self_rc: &ItemRc,
+        size: LogicalSize,
     ) {
-        // TODO
+        let geom = LogicalRect::from(size);
+        if !self.should_draw(&geom) {
+            return;
+        }
+        let color = self.alpha_color(box_shadow.color());
+        if color.alpha() == 0 {
+            return;
+        }
+
+        let outline = box_shadow.element_outline();
+        let logical_geom = geom.translate(self.current_state.offset.to_vector()).cast::<f32>();
+        let scale_factor = self.scale_factor;
+        let rotation = self.rotation;
+        let mut contours: Vec<shape_raster::Contour> = outline
+            .flatten(logical_geom, shape_raster::FLATTEN_TOLERANCE / scale_factor.get())
+            .into_iter()
+            .map(|c| {
+                c.into_iter().map(|p| transform_continuous(p * scale_factor, rotation)).collect()
+            })
+            .collect();
+        if contours.is_empty() {
+            return;
+        }
+
+        let spread = box_shadow.spread().get() * scale_factor.get();
+        let sigma = box_shadow.blur().get() * scale_factor.get() / 2.;
+        let margin = (3. * sigma).ceil() as i32 + 1;
+
+        // The shadow offset is applied in physical space so its direction
+        // rotates with the element.
+        let shifted = |contours: &mut Vec<shape_raster::Contour>| {
+            let zero = transform_continuous(euclid::point2::<f32, PhysicalPx>(0., 0.), rotation);
+            let off = transform_continuous(
+                euclid::point2::<f32, PhysicalPx>(
+                    box_shadow.offset_x().get() * scale_factor.get(),
+                    box_shadow.offset_y().get() * scale_factor.get(),
+                ),
+                rotation,
+            ) - zero.to_vector();
+            for c in contours.iter_mut() {
+                for p in c.iter_mut() {
+                    p.x += off.x;
+                    p.y += off.y;
+                }
+            }
+        };
+        let padded_bounds = |contours: &[shape_raster::Contour], pad: f32| {
+            let b = contours_bounds(contours).unwrap();
+            (
+                euclid::point2((b.min_x() - pad).floor() as i32, (b.min_y() - pad).floor() as i32),
+                euclid::size2(
+                    (b.max_x() + pad).ceil() as i32 - (b.min_x() - pad).floor() as i32,
+                    (b.max_y() + pad).ceil() as i32 - (b.min_y() - pad).floor() as i32,
+                ),
+            )
+        };
+
+        let inset = box_shadow.inset();
+        let hole_contours = if inset {
+            // The inner "hole" is the outline translated by the inset offset:
+            // the shadow ring is what the hole doesn't cover.
+            let mut h = contours.clone();
+            shifted(&mut h);
+            h
+        } else {
+            Vec::new()
+        };
+        if !inset {
+            shifted(&mut contours);
+        }
+        let off_extent = if inset {
+            (box_shadow.offset_x().get().abs() + box_shadow.offset_y().get().abs())
+                * scale_factor.get()
+        } else {
+            0.
+        };
+        let (mask_origin, mask_size) =
+            padded_bounds(&contours, spread.abs() + margin as f32 + off_extent);
+
+        let coverage = shape_raster::rasterize_spread_mask(
+            &contours,
+            if inset { 0. } else { spread },
+            mask_origin,
+            mask_size,
+            outline.fill_rule(),
+        );
+        let mut blurred = Vec::new();
+        blurred.resize(coverage.len(), 0);
+        let (w, h) = (mask_size.width.max(0) as usize, mask_size.height.max(0) as usize);
+        if inset {
+            // Ring coverage = 1 - hole, where the hole is the outline moved by
+            // the inset offset and eroded by the spread (a positive spread
+            // shrinks the hole and so thickens the shadow band). Blurring the
+            // ring and clipping to the element coverage keeps the shadow on
+            // the inside edge.
+            let hole = shape_raster::rasterize_spread_mask(
+                &hole_contours,
+                -spread,
+                mask_origin,
+                mask_size,
+                outline.fill_rule(),
+            );
+            let mut ring = alloc::vec![0u8; hole.len()];
+            for (r, h) in ring.iter_mut().zip(hole.iter()) {
+                *r = 255 - *h;
+            }
+            shape_raster::gaussian_blur(&ring, &mut blurred, w, h, sigma);
+            for (b, c) in blurred.iter_mut().zip(coverage.iter()) {
+                *b = (*b as u16 * *c as u16 / 255) as u8;
+            }
+        } else {
+            shape_raster::gaussian_blur(&coverage, &mut blurred, w, h, sigma);
+        }
+
+        let width = mask_size.width.max(0) as u32;
+        let height = mask_size.height.max(0) as u32;
+        if width == 0 || height == 0 {
+            return;
+        }
+        // The mask was rasterized in post-rotation screen space: draw it
+        // with no further rotation.
+        let args = target_pixel_buffer::DrawTextureArgs {
+            data: target_pixel_buffer::TextureDataContainer::Shared {
+                buffer: SharedBufferData::AlphaMap {
+                    data: alloc::rc::Rc::from(blurred.as_slice()),
+                    width: width as _,
+                },
+                source_rect: euclid::rect(0, 0, width as i16, height as i16),
+            },
+            colorize: Some(color),
+            alpha: color.alpha(),
+            dst_x: mask_origin.x as _,
+            dst_y: mask_origin.y as _,
+            dst_width: width as _,
+            dst_height: height as _,
+            rotation: RenderingRotation::NoRotation,
+            tiling: None,
+        };
+        let clipped =
+            (self.current_state.clip.translate(self.current_state.offset.to_vector()).cast()
+                * self.scale_factor)
+                .round()
+                .cast::<i16>()
+                .transformed(self.rotation);
+        self.processor.process_target_texture(&args, clipped.cast());
     }
 
     fn combine_clip(
         &mut self,
         other: LogicalRect,
-        _outline: &i_slint_core::graphics::ElementOutline,
+        outline: &i_slint_core::graphics::ElementOutline,
     ) -> bool {
+        if outline.is_plain_rect() {
+            self.current_state.clip_outline = None;
+        } else {
+            // Keep the flattened outline in this state's logical space; it
+            // is moved along with `clip` by `translate` and converted to
+            // physical coordinates when the processor is told about it.
+            self.current_state.clip_outline = Some(alloc::rc::Rc::new(LogicalClipOutline {
+                contours: outline.flatten(other.to_f32(), shape_raster::FLATTEN_TOLERANCE),
+                fill_rule: outline.fill_rule(),
+            }));
+            self.sync_clip_outline();
+        }
         match self.current_state.clip.intersection(&other) {
             Some(r) => {
                 self.current_state.clip = r;
@@ -3351,7 +3969,6 @@ impl<T: ProcessScene> i_slint_core::item_rendering::ItemRenderer for SceneBuilde
                 false
             }
         }
-        // TODO: apply the outline (rounded corners and shapes)
     }
 
     fn get_current_clip(&self) -> LogicalRect {
@@ -3360,7 +3977,22 @@ impl<T: ProcessScene> i_slint_core::item_rendering::ItemRenderer for SceneBuilde
 
     fn translate(&mut self, distance: LogicalVector) {
         self.current_state.offset += distance;
-        self.current_state.clip = self.current_state.clip.translate(-distance)
+        self.current_state.clip = self.current_state.clip.translate(-distance);
+        // The clip outline keeps its absolute position: shift it back the
+        // same way `clip` is shifted.
+        if let Some(outline) = &self.current_state.clip_outline {
+            let mut contours = Vec::with_capacity(outline.contours.len());
+            for c in &outline.contours {
+                contours.push(
+                    c.iter().map(|p| euclid::point2(p.x - distance.x, p.y - distance.y)).collect(),
+                );
+            }
+            self.current_state.clip_outline = Some(alloc::rc::Rc::new(LogicalClipOutline {
+                contours,
+                fill_rule: outline.fill_rule,
+            }));
+            self.sync_clip_outline();
+        }
     }
 
     fn current_transform(&self) -> i_slint_core::lengths::ItemTransform {
@@ -3381,11 +4013,12 @@ impl<T: ProcessScene> i_slint_core::item_rendering::ItemRenderer for SceneBuilde
     }
 
     fn save_state(&mut self) {
-        self.state_stack.push(self.current_state);
+        self.state_stack.push(self.current_state.clone());
     }
 
     fn restore_state(&mut self) {
         self.current_state = self.state_stack.pop().unwrap();
+        self.sync_clip_outline();
     }
 
     fn scale_factor(&self) -> ScaleFactor {

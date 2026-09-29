@@ -103,6 +103,21 @@ fn create_box_shadow_element(
         }
     }
 
+    // A shaped sibling casts a shadow of that shape: bind the outline
+    // properties through.
+    for property_name in ["shape", "shape-fit"] {
+        if sibling_element.borrow().is_binding_set(property_name, true) {
+            element.set_binding(
+                SmolStr::new_static(property_name),
+                Expression::PropertyReference(NamedReference::new(
+                    sibling_element,
+                    SmolStr::new_static(property_name),
+                ))
+                .into(),
+            );
+        }
+    }
+
     Some(element)
 }
 

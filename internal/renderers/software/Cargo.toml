@@ -28,13 +28,13 @@ systemfonts = [
   "std",
   "dep:clru",
 ]
-path = ["dep:zeno", "dep:lyon_path", "i-slint-core/path"]
+path = ["dep:lyon_path", "i-slint-core/path"]
 # Rasterizes compiler-embedded vector fonts (skrifa+swash only — no fontique,
 # parley or `std`), for MCU targets that can't use `systemfonts` but still need
 # dynamic text or variable font axes.
 embedded-vector-fonts = ["dep:skrifa", "dep:swash", "i-slint-core/shared-swash"]
-std = ["zeno?/std", "num-traits/std", "euclid/std", "i-slint-core/std", "path", "systemfonts", "swash?/std"]
-libm = ["zeno?/libm", "num-traits/libm", "euclid/libm", "i-slint-core/libm", "swash?/libm", "skrifa?/libm"]
+std = ["num-traits/std", "euclid/std", "i-slint-core/std", "path", "systemfonts", "swash?/std"]
+libm = ["num-traits/libm", "euclid/libm", "i-slint-core/libm", "swash?/libm", "skrifa?/libm"]
 
 experimental = []
 # Exposes additional APIS that aren't public but required for integration testing.
@@ -53,7 +53,6 @@ num-traits = { version = "0.2", default-features = false }
 # `systemfonts` path still gets `std` via i-slint-common's skrifa dep.
 skrifa = { workspace = true, optional = true, features = ["libm"] }
 swash = { workspace = true, optional = true, features = ["scale", "render"] }
-zeno = { version = "0.3.3", optional = true, default-features = false, features = ["eval"] }
 lyon_path = { workspace = true, optional = true }
 
 [lints.rust]
@@ -62,3 +61,10 @@ unexpected_cfgs = { level = "warn", check-cfg = ["cfg(cbindgen)", "cfg(slint_nig
 [package.metadata.docs.rs]
 rustdoc-args = ["--generate-link-to-definition"]
 features = ["experimental"]
+
+[dev-dependencies]
+criterion = "0.8"
+
+[[bench]]
+name = "shape_raster"
+harness = false

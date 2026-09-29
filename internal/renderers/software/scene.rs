@@ -12,6 +12,7 @@ use alloc::vec::Vec;
 use euclid::Length;
 use i_slint_core::Color;
 use i_slint_core::graphics::{SharedImageBuffer, TexturePixelFormat};
+use i_slint_core::items::FillRule;
 use i_slint_core::lengths::{PhysicalPx, PointLengths as _, SizeLengths as _};
 
 #[derive(Default)]
@@ -22,6 +23,78 @@ pub struct SceneVectors {
     pub linear_gradients: Vec<LinearGradientCommand>,
     pub radial_gradients: Vec<RadialGradientCommand>,
     pub conic_gradients: Vec<ConicGradientCommand>,
+    /// Flattened path draws (fills and pre-expanded strokes).
+    pub paths: Vec<Rc<PathCommandData>>,
+    /// Shape clip outlines, referenced from `SceneItem::clip`.
+    pub clip_outlines: Vec<Rc<ClipOutlineData>>,
+}
+
+/// A flattened path draw, in absolute physical screen coordinates
+/// (the renderer's rotation already applied to every point).
+pub struct PathCommandData {
+    /// Closed polylines to rasterize.
+    pub contours: Rc<Vec<crate::shape_raster::Contour>>,
+    /// How the contours combine into coverage.
+    pub fill_rule: FillRule,
+    /// The brush to fill the coverage with.
+    pub brush: PathBrush,
+    /// Bounding box of the contours in physical coordinates.
+    pub bounds: euclid::Rect<f32, PhysicalPx>,
+    /// Bounding box of the contours before the renderer's rotation: gradient
+    /// brushes resolve their center, radius, and direction in this frame so
+    /// they rotate together with the shape.
+    pub brush_bounds: euclid::Rect<f32, PhysicalPx>,
+    /// The rotation applied to `contours` — maps pixels back to the
+    /// `brush_bounds` frame when evaluating a brush.
+    pub rotation: crate::RotationInfo,
+}
+
+/// What fills a path's coverage.
+#[derive(Clone)]
+pub enum PathBrush {
+    /// A solid premultiplied color.
+    Solid(PremultipliedRgbaColor),
+    /// A multi-stop linear gradient, evaluated per pixel by projecting onto
+    /// the gradient direction over `bounds`.
+    LinearGradient {
+        /// Normalized gradient stops (position 0..1).
+        stops: Rc<Vec<i_slint_core::graphics::GradientStop>>,
+        /// The gradient's angle, in degrees, matching `Brush::LinearGradient`.
+        angle_deg: f32,
+    },
+    /// A radial gradient evaluated per pixel.
+    RadialGradient {
+        /// Normalized gradient stops.
+        stops: Rc<Vec<i_slint_core::graphics::GradientStop>>,
+        /// Center in absolute physical px.
+        center_x: f32,
+        /// Center in absolute physical px.
+        center_y: f32,
+        /// Radius in physical px.
+        radius: f32,
+    },
+    /// A conic gradient evaluated per pixel.
+    ConicGradient {
+        /// Normalized gradient stops.
+        stops: Rc<Vec<i_slint_core::graphics::GradientStop>>,
+        /// Center in absolute physical px.
+        center_x: f32,
+        /// Center in absolute physical px.
+        center_y: f32,
+    },
+}
+
+/// A shape clip outline, in absolute physical screen coordinates.
+pub struct ClipOutlineData {
+    /// How the contours combine into coverage.
+    pub fill_rule: FillRule,
+    /// Integer y-range [first, last) the clip can cover.
+    pub y_start: i32,
+    /// One past the last covered scanline.
+    pub y_end: i32,
+    /// The coverage rasterizer with the contours' edge list already loaded —
+    /// rows are rasterized through it on demand.
+    pub rasterizer: core::cell::RefCell<crate::shape_raster::Rasterizer>,
 }
 
 pub struct Scene {
@@ -263,6 +336,9 @@ pub struct SceneItem {
     pub size: PhysicalSize,
     // this is the order of the item from which it is in the item tree
     pub z: u16,
+    /// 1 + index into [`SceneVectors::clip_outlines`], or 0 for no shape clip.
+    /// The item's coverage is masked per row by the referenced clip outline.
+    pub clip: u16,
     pub command: SceneCommand,
 }
 
@@ -287,6 +363,10 @@ fn compare_scene_item(a: &SceneItem, b: &SceneItem) -> core::cmp::Ordering {
 pub enum SceneCommand {
     Rectangle {
         color: PremultipliedRgbaColor,
+    },
+    /// path_index is an index in [`SceneVectors::paths`].
+    Path {
+        path_index: u16,
     },
     /// texture_index is an index in the [`SceneVectors::textures`] array
     Texture {

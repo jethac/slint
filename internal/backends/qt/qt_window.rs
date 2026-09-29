@@ -867,6 +867,53 @@ impl ItemRenderer for QtItemRenderer<'_> {
         size: LogicalSize,
         _: &CachedRenderingData,
     ) {
+        let outline = rect.outline();
+        if let i_slint_core::graphics::ElementOutline::Shape { .. } = outline {
+            // An arbitrary shape is drawn as a painter path: filled with the
+            // background and stroked with the border.
+            let qrect: qttypes::QRectF = check_geometry!(size);
+            let fill_brush: qttypes::QBrush =
+                into_qbrush(rect.background(), qrect.width, qrect.height);
+            let stroke_brush: qttypes::QBrush =
+                into_qbrush(rect.border_color(), qrect.width, qrect.height);
+            let stroke_width: f32 = rect.border_width().get();
+            let mut painter_path = QPainterPath::default();
+            painter_path.set_fill_rule(match outline.fill_rule() {
+                FillRule::Evenodd => key_generated::Qt_FillRule_OddEvenFill,
+                _ => key_generated::Qt_FillRule_WindingFill,
+            });
+            outline.for_each_path(LogicalRect::from_size(size).to_f32(), &mut |el| {
+                fn qp(p: i_slint_core::graphics::OutlinePoint) -> qttypes::QPointF {
+                    qttypes::QPointF { x: p.x as _, y: p.y as _ }
+                }
+                match el {
+                    i_slint_core::graphics::OutlinePathEl::MoveTo(p) => painter_path.move_to(qp(p)),
+                    i_slint_core::graphics::OutlinePathEl::LineTo(p) => painter_path.line_to(qp(p)),
+                    i_slint_core::graphics::OutlinePathEl::CurveTo(c0, c1, p) => {
+                        painter_path.cubic_to(qp(c0), qp(c1), qp(p))
+                    }
+                    i_slint_core::graphics::OutlinePathEl::Close => painter_path.close(),
+                }
+            });
+            let painter: &mut QPainterPtr = &mut self.painter;
+            cpp! { unsafe [
+                    painter as "QPainterPtr*",
+                    mut painter_path as "QPainterPath",
+                    fill_brush as "QBrush",
+                    stroke_brush as "QBrush",
+                    stroke_width as "float"] {
+                (*painter)->save();
+                auto cleanup = qScopeGuard([&] { (*painter)->restore(); });
+                if (stroke_width > 0) {
+                    (*painter)->setPen(QPen(stroke_brush, stroke_width));
+                } else {
+                    (*painter)->setPen(Qt::NoPen);
+                }
+                (*painter)->setBrush(fill_brush);
+                (*painter)->drawPath(painter_path);
+            }}
+            return;
+        }
         Self::draw_rectangle_impl(
             &mut self.painter,
             check_geometry!(size),
@@ -951,7 +998,7 @@ impl ItemRenderer for QtItemRenderer<'_> {
         let pos = qttypes::QPoint { x: offset.x as _, y: offset.y as _ };
         let mut painter_path = QPainterPath::default();
 
-        painter_path.set_fill_rule(match path.fill_rule() {
+        painter_path.set_fill_rule(match path.effective_fill_rule() {
             FillRule::Evenodd => key_generated::Qt_FillRule_OddEvenFill,
             FillRule::Nonzero | _ => key_generated::Qt_FillRule_WindingFill,
         });
