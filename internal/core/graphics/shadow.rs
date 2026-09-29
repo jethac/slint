@@ -1691,7 +1691,7 @@ impl BaseTessellator {
             }
         }
         if self.path_polygon.len() > 2 {
-            self.centroid = self.centroid * (1. / (3. * self.area));
+            self.centroid *= 1. / (3. * self.area);
             self.centroid += self.path_polygon[0].to_vector();
             let n = self.path_polygon.len();
             if !self.check_convexity(
@@ -1779,7 +1779,7 @@ impl BaseTessellator {
             } else if t_num >= 0. && t_num <= denom {
                 let s_num = cross(dp, clip_v);
                 if s_num >= 0. && s_num <= denom {
-                    segment_vector = segment_vector * (s_num / denom);
+                    segment_vector *= s_num / denom;
                     return Some(umbra_point + segment_vector);
                 }
             }
@@ -2017,7 +2017,7 @@ impl BaseTessellator {
         else {
             return false;
         };
-        first_outset = first_outset * outset;
+        first_outset *= outset;
         self.first_outset = first_outset;
         self.first_point = self.path_polygon[n - 1];
         self.first_vertex_index = self.mesh.positions.len();
@@ -2057,7 +2057,7 @@ impl BaseTessellator {
             else {
                 return false;
             };
-            normal = normal * outset;
+            normal *= outset;
             self.add_arc(normal, outset, true);
             self.add_edge(
                 self.path_polygon[i],
@@ -2146,18 +2146,18 @@ impl BaseTessellator {
         // align both index sequences at a shared source-vertex index
         let mut min_index = 0;
         let mut min = penumbra_indices[0];
-        for i in 1..penumbra_indices.len() {
-            if penumbra_indices[i] < min {
-                min = penumbra_indices[i];
+        for (i, &idx) in penumbra_indices.iter().enumerate().skip(1) {
+            if idx < min {
+                min = idx;
                 min_index = i;
             }
         }
         let mut curr_penumbra = min_index;
         min_index = 0;
         min = umbra_indices[0];
-        for i in 1..umbra_indices.len() {
-            if umbra_indices[i] < min {
-                min = umbra_indices[i];
+        for (i, &idx) in umbra_indices.iter().enumerate().skip(1) {
+            if idx < min {
+                min = idx;
                 min_index = i;
             }
         }
@@ -2256,10 +2256,10 @@ impl BaseTessellator {
 
 /// `kA..kD`: cubic Bézier coefficients at `t = 5/16` (and reversed for
 /// `t = 11/16`), used for interior samples of the spot clip polygon.
-const CLIP_A: f32 = 0.32495117187;
-const CLIP_B: f32 = 0.44311523437;
-const CLIP_C: f32 = 0.20141601562;
-const CLIP_D: f32 = 0.03051757812;
+const CLIP_A: f32 = 0.324_951_17;
+const CLIP_B: f32 = 0.443_115_23;
+const CLIP_C: f32 = 0.201_416_02;
+const CLIP_D: f32 = 0.030_517_578;
 
 /// Flatten `cubic` (already transformed to draw space) through `handle_line`
 /// at [`TESSELLATION_TOLERANCE`].
@@ -2536,11 +2536,11 @@ fn spot_mesh_tessellated(
 /// (`gauss_a_to_rgba` in `SkRasterPipeline_opts.h`): evaluates
 /// `exp(-(1-a)²·4) - 0.018` as a Horner-form quartic in `a`.
 pub fn gauss_falloff(a: f32) -> f32 {
-    const C4: f32 = -2.26661229133605957031;
-    const C3: f32 = 2.89795351028442382812;
-    const C2: f32 = 0.21345567703247070312;
-    const C1: f32 = 0.15489584207534790039;
-    const C0: f32 = 0.00030726194381713867;
+    const C4: f32 = -2.266_612_3;
+    const C3: f32 = 2.897_953_5;
+    const C2: f32 = 0.213_455_68;
+    const C1: f32 = 0.154_895_84;
+    const C0: f32 = 0.000_307_261_94;
     a * (a * (a * (a * C4 + C3) + C2) + C1) + C0
 }
 
@@ -2551,11 +2551,11 @@ static GAUSS_LUT: &[f32; 256] = &{
     while i < 256 {
         let a = i as f32 / 255.;
         // const-eval of the Horner quartic
-        const C4: f32 = -2.26661229133605957031;
-        const C3: f32 = 2.89795351028442382812;
-        const C2: f32 = 0.21345567703247070312;
-        const C1: f32 = 0.15489584207534790039;
-        const C0: f32 = 0.00030726194381713867;
+        const C4: f32 = -2.266_612_3;
+        const C3: f32 = 2.897_953_5;
+        const C2: f32 = 0.213_455_68;
+        const C1: f32 = 0.154_895_84;
+        const C0: f32 = 0.000_307_261_94;
         lut[i] = a * (a * (a * (a * C4 + C3) + C2) + C1) + C0;
         i += 1;
     }
@@ -2748,7 +2748,7 @@ pub fn rasterize_shadow_mesh(mesh: &ShadowMesh, bounds: euclid::Rect<f32, Logica
     let oy = bounds.origin.y;
 
     const SS: usize = 4; // 4×4 supersampling
-    for tri in mesh.indices.chunks_exact(3) {
+    for tri in mesh.indices.as_chunks::<3>().0 {
         let p0 = mesh.positions[tri[0] as usize];
         let p1 = mesh.positions[tri[1] as usize];
         let p2 = mesh.positions[tri[2] as usize];
@@ -2907,7 +2907,6 @@ pub fn elevation_light(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::lengths::LogicalBorderRadius;
 
     fn rect_outline() -> ElementOutline {
         ElementOutline::Rectangle(Default::default())
