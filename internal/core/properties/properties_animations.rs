@@ -2198,6 +2198,163 @@ mod animation_tests {
         compo.width.handle.access(|binding| assert!(binding.is_some()));
     }
 
+    /// A mid-flight retarget of a shape spring animation keeps both position and
+    /// velocity continuous: the new morph's `from` is the outline on screen at the
+    /// retarget frame, and the outgoing spring's scalar velocity — the mean
+    /// per-anchor displacement rate — carries into the new morph (design note R6).
+    #[test]
+    fn shape_spring_retarget_keeps_position_and_velocity() {
+        use crate::graphics::shapes::Point;
+        use crate::graphics::shapes::{self, Cubic, Shape};
+
+        #[derive(Default)]
+        struct ShapeComponent {
+            shape: Property<Shape>,
+        }
+        let compo = Rc::pin(ShapeComponent::default());
+
+        let cubics_of = |s: &Shape| -> Vec<Cubic> {
+            s.cubics().as_chunks::<8>().0.iter().map(|p| Cubic { points: *p }).collect()
+        };
+        // The shape's cubic anchors, in outline order.
+        let anchors = |s: &Shape| -> Vec<Point> {
+            cubics_of(s).iter().map(|c| Point { x: c.anchor0_x(), y: c.anchor0_y() }).collect()
+        };
+        // A dense polyline of the outline (32 segments per cubic).
+        let segments = |s: &Shape| -> Vec<(Point, Point)> {
+            cubics_of(s)
+                .iter()
+                .flat_map(|c| {
+                    (0..32).map(|k| {
+                        (c.point_on_curve(k as f32 / 32.), c.point_on_curve((k + 1) as f32 / 32.))
+                    })
+                })
+                .collect()
+        };
+        let dist_to_segment = |p: Point, (a, b): (Point, Point)| -> f32 {
+            let ab = b - a;
+            let t = (((p - a).x * ab.x + (p - a).y * ab.y)
+                / (ab.x * ab.x + ab.y * ab.y).max(1e-12))
+            .clamp(0., 1.);
+            ((p - a).x - t * ab.x).hypot((p - a).y - t * ab.y)
+        };
+
+        let circle = shapes::circle_shape(8);
+        let triangle = shapes::regular_polygon(3, shapes::CornerRounding::UNROUNDED);
+        let star = shapes::star_shape(
+            5,
+            0.4,
+            shapes::CornerRounding::UNROUNDED,
+            shapes::CornerRounding::UNROUNDED,
+        );
+
+        compo.shape.set(circle);
+        let start_time = crate::animations::current_tick();
+        let tick = core::time::Duration::from_millis(16);
+
+        let spring_details = PropertyAnimation {
+            duration: 400,
+            easing: crate::animations::EasingCurve::Spring(0.6),
+            iteration_count: 1.,
+            ..PropertyAnimation::default()
+        };
+
+        // circle -> triangle spring, sampled a few frames into its fast phase.
+        set_animated_value(&compo.shape, triangle, spring_details.clone());
+        let frame = |i: u32| {
+            crate::animations::CURRENT_ANIMATION_DRIVER
+                .with(|driver| driver.update_animations(start_time + tick * i));
+            get_prop_value(&compo.shape)
+        };
+        for i in 1..8 {
+            frame(i);
+        }
+        let t = frame(8);
+
+        // The outgoing spring's scalar velocity — the mean per-anchor displacement
+        // rate normalized by the start perimeter — is what carries across.
+        let speed_before = compo.shape.handle.current_velocity().unwrap_or_default()[0];
+
+        // Retarget mid-flight to the star: the outline on screen must not jump —
+        // every anchor of the new morph's start cut lies on the previous outline.
+        set_animated_value(&compo.shape, star.clone(), spring_details.clone());
+        let t_after = get_prop_value(&compo.shape);
+        let segs = segments(&t);
+        let mut max_delta = 0f32;
+        for a in anchors(&t_after) {
+            max_delta =
+                max_delta.max(segs.iter().map(|s| dist_to_segment(a, *s)).fold(f32::MAX, f32::min));
+        }
+        assert!(max_delta <= 1e-3, "retarget moved the outline by {max_delta}");
+
+        // The mean anchor speed carries over exactly: the new spring's velocity
+        // at the retarget tick equals the outgoing spring's.
+        let speed_after = compo.shape.handle.current_velocity().unwrap_or_default()[0];
+        assert!(
+            (speed_after - speed_before).abs() <= 0.05 * speed_before,
+            "anchor speed jumped at retarget: {speed_before} -> {speed_after}"
+        );
+
+        // It still settles on the new target.
+        for i in 9..=100 {
+            frame(i);
+        }
+        assert_eq!(get_prop_value(&compo.shape), star);
+        compo.shape.handle.access(|binding| assert!(binding.is_none()));
+    }
+
+    /// `spring(damping_ratio, stiffness)` — the `PhysicalSpring` variant the
+    /// Material animations API uses — animates a `shape` on its perimeter
+    /// channel instead of snapping or producing the empty shape mid-flight.
+    #[test]
+    fn shape_physical_spring_animates_and_settles() {
+        use crate::graphics::shapes::{self, Shape};
+
+        #[derive(Default)]
+        struct ShapeComponent {
+            shape: Property<Shape>,
+        }
+        let compo = Rc::pin(ShapeComponent::default());
+
+        let circle = shapes::circle_shape(8);
+        let star = shapes::star_shape(
+            5,
+            0.4,
+            shapes::CornerRounding::UNROUNDED,
+            shapes::CornerRounding::UNROUNDED,
+        );
+
+        compo.shape.set(circle.clone());
+        let start_time = crate::animations::current_tick();
+
+        let spring_details = PropertyAnimation {
+            easing: crate::animations::EasingCurve::PhysicalSpring {
+                damping_ratio: 0.6,
+                stiffness: 200.,
+                mass: 1.,
+            },
+            iteration_count: 1.,
+            ..PropertyAnimation::default()
+        };
+        set_animated_value(&compo.shape, star.clone(), spring_details);
+
+        // Mid-flight the property holds an interpolated (non-empty) outline.
+        crate::animations::CURRENT_ANIMATION_DRIVER.with(|driver| {
+            driver.update_animations(start_time + core::time::Duration::from_millis(150))
+        });
+        let mid = get_prop_value(&compo.shape);
+        assert!(!mid.is_empty(), "physical spring produced an empty shape mid-flight");
+        assert_ne!(mid, circle);
+        assert_ne!(mid, star);
+
+        // Once settled the target is held exactly and the binding is removed.
+        crate::animations::CURRENT_ANIMATION_DRIVER.with(|driver| {
+            driver.update_animations(start_time + core::time::Duration::from_millis(20000))
+        });
+        assert_eq!(get_prop_value(&compo.shape), star);
+        compo.shape.handle.access(|binding| assert!(binding.is_none()));
+    }
+
     /// `rebuild_from_channels(write_channels(v)) == v` for every animatable type that
     /// decomposes a value pair into spring channels.
     #[test]

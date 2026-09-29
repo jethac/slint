@@ -11,6 +11,7 @@
 use super::ShapeError;
 use super::cubic::Cubic;
 use super::feature::{Feature, detect_features};
+use super::measure::Measurer;
 use super::morph::Morph;
 use super::next_shape_id;
 use super::rounded_polygon::RoundedPolygon;
@@ -442,6 +443,40 @@ impl crate::properties::InterpolatedPropertyValue for Shape {
     /// velocity across a mid-morph retarget (design note R6).
     fn scalar_delta(&self, target_value: &Self) -> f32 {
         super::MORPH_CACHE.with(|c| c.borrow().morph(self, target_value).scalar_delta())
+    }
+
+    /// A physical `spring(damping_ratio, stiffness)` animates a shape on a single
+    /// channel: the measured outline perimeter. `write_channels` records each
+    /// endpoint's perimeter and `rebuild_from_channels` maps the channel value
+    /// linearly onto the pair's morph progress, so spring displacement and
+    /// carried velocity are expressed in perimeter units. Endpoint pairs with
+    /// equal perimeters give the spring no displacement and snap.
+    fn channel_count(&self, _target_value: &Self) -> usize {
+        1
+    }
+
+    fn write_channels(&self, _target_value: &Self, out: &mut [f32]) {
+        debug_assert_eq!(out.len(), 1);
+        out[0] = self.perimeter();
+    }
+
+    fn rebuild_from_channels(&self, target_value: &Self, channels: &[f32]) -> Self {
+        debug_assert_eq!(channels.len(), 1);
+        let from = self.perimeter();
+        let to = target_value.perimeter();
+        let t =
+            if (to - from).abs() <= f32::EPSILON { 1. } else { (channels[0] - from) / (to - from) };
+        self.morph(target_value, t)
+    }
+}
+
+impl Shape {
+    /// The outline perimeter measured by `LengthMeasurer`'s default segment
+    /// count, or 0 when the polygon can't be built.
+    pub(crate) fn perimeter(&self) -> f32 {
+        let Ok(polygon) = self.polygon() else { return 0. };
+        let measurer = super::measure::LengthMeasurer::default();
+        polygon.cubics().iter().map(|c| measurer.measure_cubic(c)).sum()
     }
 }
 
