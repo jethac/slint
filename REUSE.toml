@@ -511,6 +511,24 @@ SPDX-FileCopyrightText = "Copyright 2021 Google LLC"
 SPDX-License-Identifier = "Apache-2.0"
 
 [[annotations]]
+path = ["ui-libraries/material/src/fonts/google-sans-flex/**"]
+precedence = "aggregate"
+SPDX-FileCopyrightText = "Copyright 2015 The Google Sans Flex Authors"
+SPDX-License-Identifier = "OFL-1.1"
+
+[[annotations]]
+path = ["ui-libraries/material/src/fonts/roboto-flex/**"]
+precedence = "aggregate"
+SPDX-FileCopyrightText = "Copyright 2017 The Roboto Flex Project Authors"
+SPDX-License-Identifier = "OFL-1.1"
+
+[[annotations]]
+path = ["ui-libraries/material/examples/mcu/fonts/GoogleSansFlex-subset.ttf"]
+precedence = "aggregate"
+SPDX-FileCopyrightText = "Copyright 2015 The Google Sans Flex Authors"
+SPDX-License-Identifier = "OFL-1.1"
+
+[[annotations]]
 # Vendored androidx.graphics.shapes / MaterialShapes sources (Apache-2.0,
 # upstream license headers retained without SPDX tags).
 path = ["tests/shapes/src/androidx/**"]

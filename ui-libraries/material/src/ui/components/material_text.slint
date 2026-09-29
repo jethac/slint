@@ -11,8 +11,11 @@ export component MaterialText inherits Text {
     font_size: root.style.font_size;
     font_weight: root.style.font_weight;
     letter_spacing: root.style.tracking;
-    // `line_height` stays unused: Text only has `line-height-factor`,
-    // relative to the natural line height, not the absolute sp value.
+    line_height: root.style.line_height;
+    // Compose doesn't set `FontVariation.opticalSizing` on its type-scale
+    // tokens, so `opsz` stays at the font's default instead of tracking the
+    // size. Keep parity.
+    font_optical_sizing: FontOpticalSizing.none;
     color: MaterialPalette.on_background;
     overflow: elide;
 }

@@ -546,6 +546,7 @@ static LICENSE_LOCATION_FOR_FILE: LazyLock<Vec<(regex::Regex, LicenseLocation)>>
             ("^editors/tree-sitter-slint/queries/", LicenseLocation::NoLicense), // liberal license
             // directory based matches
             ("(^|/)LICENSES/", LicenseLocation::NoLicense),
+            ("^ui-libraries/material/src/fonts/", LicenseLocation::NoLicense), // third-party fonts, REUSE.toml-annotated
             // Extension matches:
             ("\\.60$", LicenseLocation::Tag(LicenseTagStyle::cpp_style_comment_style())),
             ("\\.60\\.disabled$", LicenseLocation::Tag(LicenseTagStyle::cpp_style_comment_style())),

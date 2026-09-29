@@ -8,3 +8,6 @@ internal/compiler/tests/syntax/**/crlf-* -text
 # The anyrender command-stream goldens are compared byte-for-byte; keep LF
 # on every platform so Windows checkouts do not introduce CRLF.
 tests/screenshots/references/anyrender/**/*.json text eol=lf
+# Vendored font releases ship verbatim (upstream uses CRLF in OFL.txt);
+# keep them untouched by EOL conversion and the trailing-whitespace fixer.
+ui-libraries/material/src/fonts/** -text
