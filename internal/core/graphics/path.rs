@@ -274,7 +274,7 @@ impl PathDataIterator {
         let cubics = shape.cubics();
         if !cubics.is_empty() {
             builder.begin(lyon_path::math::point(cubics[0], cubics[1]));
-            for cubic in cubics.chunks_exact(8) {
+            for cubic in cubics.as_chunks::<8>().0 {
                 builder.cubic_bezier_to(
                     lyon_path::math::point(cubic[2], cubic[3]),
                     lyon_path::math::point(cubic[4], cubic[5]),

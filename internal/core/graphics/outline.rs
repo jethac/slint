@@ -108,12 +108,16 @@ pub fn shape_fit_transform<U>(
     let [x0, y0, x1, y1] = shape.bounds(false)?;
     let bw = x1 - x0;
     let bh = y1 - y0;
-    if !(bw > 0.) || !(bh > 0.) {
+    if bw.partial_cmp(&0.) != Some(core::cmp::Ordering::Greater)
+        || bh.partial_cmp(&0.) != Some(core::cmp::Ordering::Greater)
+    {
         return None;
     }
     let w = target.width() as f32;
     let h = target.height() as f32;
-    if !(w > 0.) || !(h > 0.) {
+    if w.partial_cmp(&0.) != Some(core::cmp::Ordering::Greater)
+        || h.partial_cmp(&0.) != Some(core::cmp::Ordering::Greater)
+    {
         return None;
     }
     let tx0 = target.origin.x as f32;
@@ -197,7 +201,7 @@ impl ElementOutline {
                 let mut contour = Vec::with_capacity(cubics.len() / 8 * 4);
                 let mut p0 = transform.transform(cubics[0], cubics[1]);
                 contour.push(p0);
-                for c in cubics.chunks_exact(8) {
+                for c in cubics.as_chunks::<8>().0 {
                     let c0 = transform.transform(c[2], c[3]);
                     let c1 = transform.transform(c[4], c[5]);
                     let p1 = transform.transform(c[6], c[7]);
@@ -257,7 +261,7 @@ impl ElementOutline {
                     )
                 };
                 let mut first = true;
-                for cubic in shape.cubics().chunks_exact(8) {
+                for cubic in shape.cubics().as_chunks::<8>().0 {
                     if first {
                         f(OutlinePathEl::MoveTo(map(cubic[0], cubic[1])));
                         first = false;
@@ -344,7 +348,7 @@ impl ElementOutline {
                 }
                 let p = transform.transform(cubics[0], cubics[1]);
                 builder.begin(euclid::point2(p.x, p.y));
-                for c in cubics.chunks_exact(8) {
+                for c in cubics.as_chunks::<8>().0 {
                     let c0 = transform.transform(c[2], c[3]);
                     let c1 = transform.transform(c[4], c[5]);
                     let p1 = transform.transform(c[6], c[7]);
@@ -555,7 +559,7 @@ fn emit_rounded_rectangle_path<U>(
 ) {
     // https://pomax.github.io/bezierinfo/#circles_cubic: a quarter circle is
     // one cubic with handle length κ·r, κ = (4/3)·tan(π/8).
-    const KAPPA: f32 = 0.552_284_75;
+    const KAPPA: f32 = 0.552_284_8;
     let x = target.min_x() as f32;
     let y = target.min_y() as f32;
     let w = target.width() as f32;

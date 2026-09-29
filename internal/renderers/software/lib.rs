@@ -2401,10 +2401,10 @@ fn linear_gradient_t(
     let a = angle_deg.to_radians();
     let (dx, dy) = (a.sin(), a.cos());
     let corners = [
-        (bounds.min_x() as f32, bounds.min_y() as f32),
-        (bounds.max_x() as f32, bounds.min_y() as f32),
-        (bounds.min_x() as f32, bounds.max_y() as f32),
-        (bounds.max_x() as f32, bounds.max_y() as f32),
+        (bounds.min_x(), bounds.min_y()),
+        (bounds.max_x(), bounds.min_y()),
+        (bounds.min_x(), bounds.max_y()),
+        (bounds.max_x(), bounds.max_y()),
     ];
     let mut t_min = f32::MAX;
     let mut t_max = f32::MIN;
@@ -2446,7 +2446,7 @@ fn path_brush(
             angle_deg: g.angle(),
         }),
         i_slint_core::Brush::RadialGradient(g) => {
-            let (w, h) = (bounds.width() as f32, bounds.height() as f32);
+            let (w, h) = (bounds.width(), bounds.height());
             let (cx, cy) = g.center_or_default_scaled(w, h, 1.);
             Some(PathBrush::RadialGradient {
                 stops: alloc::rc::Rc::new(
@@ -2458,13 +2458,13 @@ fn path_brush(
                         })
                         .collect(),
                 ),
-                center_x: bounds.min_x() as f32 + cx,
-                center_y: bounds.min_y() as f32 + cy,
+                center_x: bounds.min_x() + cx,
+                center_y: bounds.min_y() + cy,
                 radius: g.radius_or_default_scaled(w, h, 1.),
             })
         }
         i_slint_core::Brush::ConicGradient(g) => {
-            let (w, h) = (bounds.width() as f32, bounds.height() as f32);
+            let (w, h) = (bounds.width(), bounds.height());
             let (cx, cy) = g.center_or_default_scaled(w, h, 1.);
             Some(PathBrush::ConicGradient {
                 stops: alloc::rc::Rc::new(
@@ -2476,8 +2476,8 @@ fn path_brush(
                         })
                         .collect(),
                 ),
-                center_x: bounds.min_x() as f32 + cx,
-                center_y: bounds.min_y() as f32 + cy,
+                center_x: bounds.min_x() + cx,
+                center_y: bounds.min_y() + cy,
             })
         }
         _ => None,
@@ -3843,6 +3843,7 @@ impl<T: ProcessScene> i_slint_core::item_rendering::ItemRenderer for SceneBuilde
         }
     }
 
+    #[allow(clippy::unnecessary_cast)] // Coord
     fn draw_box_shadow(
         &mut self,
         box_shadow: Pin<&i_slint_core::items::BoxShadow>,
@@ -3966,8 +3967,7 @@ impl<T: ProcessScene> i_slint_core::item_rendering::ItemRenderer for SceneBuilde
                     mask_size,
                     outline.fill_rule(),
                 );
-                let mut blurred = Vec::new();
-                blurred.resize(coverage.len(), 0);
+                let mut blurred = alloc::vec![0; coverage.len()];
                 let (w, h) = (mask_size.width.max(0) as usize, mask_size.height.max(0) as usize);
                 if inset {
                     // Ring coverage = 1 - hole, where the hole is the outline
@@ -4063,6 +4063,7 @@ impl<T: ProcessScene> i_slint_core::item_rendering::ItemRenderer for SceneBuilde
         self.current_state.clip
     }
 
+    #[allow(clippy::unnecessary_cast)] // Coord
     fn translate(&mut self, distance: LogicalVector) {
         self.current_state.offset += distance;
         self.current_state.clip = self.current_state.clip.translate(-distance);

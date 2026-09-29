@@ -167,10 +167,7 @@ impl Item for NativeComboBox {
         geometry
     }
 
-    fn boundary_shape(
-        self: core::pin::Pin<&Self>,
-        _geometry: LogicalRect,
-    ) -> crate::graphics::ItemBoundaryShape {
+    fn boundary_shape(self: core::pin::Pin<&Self>, _geometry: LogicalRect) -> ItemBoundaryShape {
         Default::default()
     }
 
@@ -313,10 +310,7 @@ impl Item for NativeComboBoxPopup {
         geometry
     }
 
-    fn boundary_shape(
-        self: core::pin::Pin<&Self>,
-        _geometry: LogicalRect,
-    ) -> crate::graphics::ItemBoundaryShape {
+    fn boundary_shape(self: core::pin::Pin<&Self>, _geometry: LogicalRect) -> ItemBoundaryShape {
         Default::default()
     }
 

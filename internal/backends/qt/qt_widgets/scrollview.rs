@@ -502,10 +502,7 @@ impl Item for NativeScrollView {
         geometry
     }
 
-    fn boundary_shape(
-        self: core::pin::Pin<&Self>,
-        _geometry: LogicalRect,
-    ) -> crate::graphics::ItemBoundaryShape {
+    fn boundary_shape(self: core::pin::Pin<&Self>, _geometry: LogicalRect) -> ItemBoundaryShape {
         Default::default()
     }
 

@@ -372,6 +372,7 @@ mod tests {
                     euclid::size2(W as i16, H as i16),
                 );
                 dirty.count = 1;
+                let shadow_mask_cache = core::cell::RefCell::new(crate::ShadowMaskCache::default());
                 let mut scene = SceneBuilder::new(
                     crate::PhysicalSize::new(W as i16, H as i16),
                     ScaleFactor::new(1.),
@@ -381,8 +382,12 @@ mod tests {
                         dirty_range_cache: Vec::new(),
                         dirty_region: dirty,
                         scale_factor: ScaleFactor::new(1.),
+                        clip_mask: None,
+                        mask_scratch: Vec::new(),
+                        mask_row: Vec::new(),
                     },
                     RenderingRotation::NoRotation,
+                    &shadow_mask_cache,
                 );
                 scene.draw_text_paragraph(
                     &paragraph,

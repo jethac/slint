@@ -624,11 +624,46 @@ fn remove_parentheses_test() {
     assert_eq!(remove_parentheses("()())("), "()())(");
 }
 
+/// Whether `prop` names a `Property` stored inside a native item (as
+/// opposed to a property declared in .slint).
+fn is_native_item_property(prop: &llr::MemberReference) -> bool {
+    matches!(
+        prop,
+        llr::MemberReference::Relative {
+            local_reference: llr::LocalMemberReference {
+                reference: llr::LocalMemberIndex::Native {
+                    kind: llr::NativeMemberKind::Property,
+                    ..
+                },
+                ..
+            },
+            ..
+        }
+    )
+}
+
+/// `shape` expressions are `slint::Shape` values, but a `shape` property
+/// declared on a native item stores `slint::cbindgen_private::Shape` —
+/// the opaque FFI mirror with an identical `#[repr(C)]` layout, already
+/// punned by the `extern "C"` shape entry points taking `void *`.
+fn cast_to_private_shape(
+    value_expr: &str,
+    prop: &llr::MemberReference,
+    ctx: &EvaluationContext,
+) -> String {
+    if matches!(ctx.property_ty(prop), Type::Shape) && is_native_item_property(prop) {
+        format!("reinterpret_cast<slint::cbindgen_private::Shape &&>({value_expr})")
+    } else {
+        value_expr.into()
+    }
+}
+
 fn property_set_value_code(
     property: &llr::MemberReference,
     value_expr: &str,
     ctx: &EvaluationContext,
 ) -> String {
+    let value_expr = cast_to_private_shape(value_expr, property, ctx);
     let prop = access_member(property, ctx);
     if let Some((animation, map)) = &ctx.property_info(property).animation {
         let mut animation = (*animation).clone();
@@ -752,7 +787,11 @@ fn handle_property_init(
             )
         ));
     } else {
-        let init_expr = compile_expression(&binding_expression.expression.borrow(), ctx);
+        let init_expr = cast_to_private_shape(
+            &compile_expression(&binding_expression.expression.borrow(), ctx),
+            prop,
+            ctx,
+        );
 
         init.push(match binding_expression.kind {
             llr::BindingKind::Constant => format!("{prop_access}.set({init_expr});"),

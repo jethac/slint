@@ -23,7 +23,7 @@ When adding an item or a property, it needs to be kept in sync with different pl
 use crate::api::LogicalPosition;
 use crate::cursor::MouseCursorInner;
 use crate::data_transfer::DataTransfer;
-use crate::graphics::{Brush, Color, ElementOutline, FontRequest, Image, Shape};
+use crate::graphics::{Brush, Color, ElementOutline, FontRequest, Image, ItemBoundaryShape, Shape};
 use crate::input::{
     FocusEvent, FocusEventResult, InputEventFilterResult, InputEventResult, InternalKeyEvent,
     KeyEventResult, KeyEventType, Keys, MouseEvent,
@@ -128,6 +128,7 @@ pub enum RenderingResult {
 #[cfg_attr(not(feature = "ffi"), i_slint_core_macros::remove_extern)]
 #[vtable]
 #[repr(C)]
+#[allow(clippy::crate_in_macro_def)]
 pub struct ItemVTable {
     /// This function is called by the run-time after the memory for the item
     /// has been allocated and initialized. It will be called before any user specified
@@ -226,10 +227,8 @@ pub struct ItemVTable {
     /// else the rounded rectangle given by its corner radius. Implementations
     /// return the default (the empty shape with a zero radius), which bounds
     /// the item by its rectangle `geometry`.
-    pub boundary_shape: extern "C" fn(
-        core::pin::Pin<VRef<ItemVTable>>,
-        geometry: LogicalRect,
-    ) -> crate::graphics::ItemBoundaryShape,
+    pub boundary_shape:
+        extern "C" fn(core::pin::Pin<VRef<ItemVTable>>, geometry: LogicalRect) -> ItemBoundaryShape,
 }
 
 /// Alias for `vtable::VRef<ItemVTable>` which represent a pointer to a `dyn Item` with
@@ -325,10 +324,7 @@ impl Item for Empty {
         geometry
     }
 
-    fn boundary_shape(
-        self: core::pin::Pin<&Self>,
-        _geometry: LogicalRect,
-    ) -> crate::graphics::ItemBoundaryShape {
+    fn boundary_shape(self: core::pin::Pin<&Self>, _geometry: LogicalRect) -> ItemBoundaryShape {
         Default::default()
     }
 
@@ -438,10 +434,7 @@ impl Item for Rectangle {
         geometry
     }
 
-    fn boundary_shape(
-        self: core::pin::Pin<&Self>,
-        _geometry: LogicalRect,
-    ) -> crate::graphics::ItemBoundaryShape {
+    fn boundary_shape(self: core::pin::Pin<&Self>, _geometry: LogicalRect) -> ItemBoundaryShape {
         Default::default()
     }
 
@@ -560,10 +553,7 @@ impl Item for BasicBorderRectangle {
         geometry
     }
 
-    fn boundary_shape(
-        self: core::pin::Pin<&Self>,
-        _geometry: LogicalRect,
-    ) -> crate::graphics::ItemBoundaryShape {
+    fn boundary_shape(self: core::pin::Pin<&Self>, _geometry: LogicalRect) -> ItemBoundaryShape {
         Default::default()
     }
 
@@ -697,10 +687,7 @@ impl Item for BorderRectangle {
         self.outline().bounds(geometry)
     }
 
-    fn boundary_shape(
-        self: core::pin::Pin<&Self>,
-        _geometry: LogicalRect,
-    ) -> crate::graphics::ItemBoundaryShape {
+    fn boundary_shape(self: core::pin::Pin<&Self>, _geometry: LogicalRect) -> ItemBoundaryShape {
         self.outline().into()
     }
 
@@ -880,10 +867,7 @@ impl Item for Clip {
         self.element_outline().bounds(geometry)
     }
 
-    fn boundary_shape(
-        self: core::pin::Pin<&Self>,
-        _geometry: LogicalRect,
-    ) -> crate::graphics::ItemBoundaryShape {
+    fn boundary_shape(self: core::pin::Pin<&Self>, _geometry: LogicalRect) -> ItemBoundaryShape {
         self.element_outline().into()
     }
 
@@ -1008,10 +992,7 @@ impl Item for Opacity {
         geometry
     }
 
-    fn boundary_shape(
-        self: core::pin::Pin<&Self>,
-        _geometry: LogicalRect,
-    ) -> crate::graphics::ItemBoundaryShape {
+    fn boundary_shape(self: core::pin::Pin<&Self>, _geometry: LogicalRect) -> ItemBoundaryShape {
         Default::default()
     }
 
@@ -1147,10 +1128,7 @@ impl Item for Layer {
         geometry
     }
 
-    fn boundary_shape(
-        self: core::pin::Pin<&Self>,
-        _geometry: LogicalRect,
-    ) -> crate::graphics::ItemBoundaryShape {
+    fn boundary_shape(self: core::pin::Pin<&Self>, _geometry: LogicalRect) -> ItemBoundaryShape {
         Default::default()
     }
 
@@ -1268,10 +1246,7 @@ impl Item for Transform {
         geometry
     }
 
-    fn boundary_shape(
-        self: core::pin::Pin<&Self>,
-        _geometry: LogicalRect,
-    ) -> crate::graphics::ItemBoundaryShape {
+    fn boundary_shape(self: core::pin::Pin<&Self>, _geometry: LogicalRect) -> ItemBoundaryShape {
         Default::default()
     }
 
@@ -1474,10 +1449,7 @@ impl Item for WindowItem {
         geometry
     }
 
-    fn boundary_shape(
-        self: core::pin::Pin<&Self>,
-        _geometry: LogicalRect,
-    ) -> crate::graphics::ItemBoundaryShape {
+    fn boundary_shape(self: core::pin::Pin<&Self>, _geometry: LogicalRect) -> ItemBoundaryShape {
         Default::default()
     }
 
@@ -1903,10 +1875,7 @@ impl Item for ContextMenu {
         geometry
     }
 
-    fn boundary_shape(
-        self: core::pin::Pin<&Self>,
-        _geometry: LogicalRect,
-    ) -> crate::graphics::ItemBoundaryShape {
+    fn boundary_shape(self: core::pin::Pin<&Self>, _geometry: LogicalRect) -> ItemBoundaryShape {
         Default::default()
     }
 
@@ -2098,10 +2067,7 @@ impl Item for BoxShadow {
         }
     }
 
-    fn boundary_shape(
-        self: core::pin::Pin<&Self>,
-        _geometry: LogicalRect,
-    ) -> crate::graphics::ItemBoundaryShape {
+    fn boundary_shape(self: core::pin::Pin<&Self>, _geometry: LogicalRect) -> ItemBoundaryShape {
         Default::default()
     }
 
@@ -2305,10 +2271,7 @@ impl Item for TooltipArea {
         geometry
     }
 
-    fn boundary_shape(
-        self: core::pin::Pin<&Self>,
-        _geometry: LogicalRect,
-    ) -> crate::graphics::ItemBoundaryShape {
+    fn boundary_shape(self: core::pin::Pin<&Self>, _geometry: LogicalRect) -> ItemBoundaryShape {
         Default::default()
     }
 
