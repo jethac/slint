@@ -8,6 +8,7 @@
 #include "private/slint_models.h"
 #include "private/slint_enums_internal.h"
 #include "private/slint_builtin_structs_internal.h"
+#include "private/slint_properties.h"
 
 #include <memory>
 #include <vector>
@@ -347,6 +348,20 @@ namespace private_api {
 inline const cbindgen_private::Shape &as_cbindgen_shape(const slint::Shape &shape)
 {
     return *reinterpret_cast<const cbindgen_private::Shape *>(&shape);
+}
+
+// The `set_animated_binding` helper overload for `slint::Shape` lives in
+// slint_properties.h before the template's definition; only the
+// `set_animated_value` specialization needs the complete type and belongs
+// here. `slint::Shape` is spelled out because `private_api` pulls in
+// `cbindgen_private::Shape` through `using namespace`.
+template<>
+inline void Property<slint::Shape>::set_animated_value(
+        const slint::Shape &new_value,
+        const cbindgen_private::PropertyAnimation &animation_data) const
+{
+    cbindgen_private::slint_property_set_animated_value_shape(&inner, &get(), &new_value,
+                                                              &animation_data);
 }
 
 } // namespace private_api
