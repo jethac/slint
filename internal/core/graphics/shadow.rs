@@ -27,7 +27,7 @@
 use crate::Color;
 use crate::graphics::ElementOutline;
 use crate::graphics::shapes::Cubic;
-use crate::lengths::{LogicalPx};
+use crate::lengths::LogicalPx;
 use alloc::vec::Vec;
 #[allow(unused_imports)]
 use num_traits::Float;
@@ -2917,8 +2917,7 @@ mod tests {
     fn window_light_places_light_centered_above_display() {
         // Display 1600×1200, window at (100, 50):
         // zRatio = min(W,H)/450 = 2.6667, lightZ = 500·(zRatio+2)/3 ≈ 777.8.
-        let (light, radius) =
-            window_light(euclid::size2(1600., 1200.), euclid::point2(100., 50.));
+        let (light, radius) = window_light(euclid::size2(1600., 1200.), euclid::point2(100., 50.));
         assert_eq!(radius, 800.);
         assert!((light[0] - 700.).abs() < 1e-4, "{}", light[0]);
         assert!((light[1] - (-50.)).abs() < 1e-4, "{}", light[1]);
