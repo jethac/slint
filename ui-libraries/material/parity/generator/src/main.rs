@@ -165,6 +165,11 @@ struct Widget {
     /// (default) for the `radius` field's rounded rectangle.
     #[serde(default)]
     shape: Option<String>,
+    /// `elevated-rect` only: the elevation in dp of the Android ambient+spot
+    /// shadow — the Slint side sets a plain `Rectangle`'s `elevation`, the
+    /// Compose side `Modifier.shadow`'s dp.
+    #[serde(default)]
+    elevation: Option<f64>,
     /// What this widget deliberately gets wrong on the Slint side
     /// (`negative` scenes only). Keys shadow the widget's own fields.
     #[serde(default)]
@@ -788,6 +793,23 @@ fn slint_canvas(s: &mut String, scene: &Scene) {
                     .unwrap();
                 }
                 continue;
+            }
+            // Unlike `surface` (the Material `Elevation` component, which sets
+            // the layer colors explicitly), `elevated-rect` exercises a plain
+            // `Rectangle`'s `elevation` — the compiler-default shadow colors.
+            "elevated-rect" => {
+                writeln!(
+                    s,
+                    "    Rectangle {{\n        x: {}px;\n        y: {}px;\n        width: {}px;\n        height: {}px;\n        border-radius: {}px;\n        background: MaterialPalette.{};\n        elevation: {}px;\n    }}\n",
+                    w.x as i64,
+                    w.y as i64,
+                    w.width.unwrap() as i64,
+                    w.height.unwrap() as i64,
+                    w.radius.unwrap_or(0.0) as i64,
+                    w.color.as_deref().unwrap_or("primary").replace('-', "_"),
+                    w.elevation.unwrap_or(0.0) as i64,
+                )
+                .unwrap();
             }
             "rect" => {
                 let radius = w

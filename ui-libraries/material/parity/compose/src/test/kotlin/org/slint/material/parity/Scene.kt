@@ -103,6 +103,9 @@ class Widget(json: JSONObject) {
 
     val isIconButton: Boolean get() = kind.endsWith("icon-button")
     val isButton: Boolean get() = isIconButton || kind.endsWith("-button")
+    /** `elevated-rect` only: the elevation in dp of the Android ambient+spot
+     * shadow `Modifier.shadow` draws behind the caster. */
+    val elevation: Float = json.optDouble("elevation", 0.0).toFloat()
 }
 
 /** "primary-container" → "primaryContainer" for `scheme` map lookups. */
