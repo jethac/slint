@@ -96,13 +96,13 @@ fn strip_comments(text: &str) -> (String, Vec<(usize, String)>) {
             continue;
         }
         if chars[i] == '/' && chars.get(i + 1) == Some(&'*') {
-            let kdoc = chars.get(i + 2) == Some(&'*') && chars.get(i + 3) != Some(&'/');
-            let start = i + if kdoc { 3 } else { 2 };
+            let doc_comment = chars.get(i + 2) == Some(&'*') && chars.get(i + 3) != Some(&'/');
+            let start = i + if doc_comment { 3 } else { 2 };
             let mut j = start;
             while j + 1 < chars.len() && !(chars[j] == '*' && chars[j + 1] == '/') {
                 j += 1;
             }
-            if kdoc {
+            if doc_comment {
                 docs.push((out.len(), chars[start..j].iter().collect()));
             }
             // keep alignment with `out` offsets stable by emitting whitespace
@@ -159,7 +159,7 @@ enum T {
 
 fn expr_tokens(text: &str) -> Result<Vec<T>, String> {
     let chars: Vec<char> = text.chars().collect();
-    let mut toks = Vec::new();
+    let mut tokens = Vec::new();
     let mut i = 0;
     while i < chars.len() {
         let c = chars[i];
@@ -173,7 +173,7 @@ fn expr_tokens(text: &str) -> Result<Vec<T>, String> {
                 i += 1;
             }
             let id: String = chars[s..i].iter().collect();
-            toks.push(match id.as_str() {
+            tokens.push(match id.as_str() {
                 "true" => T::True,
                 "false" => T::False,
                 _ => T::Id(id),
@@ -189,14 +189,14 @@ fn expr_tokens(text: &str) -> Result<Vec<T>, String> {
             if chars.get(i) == Some(&'f') || chars.get(i) == Some(&'F') {
                 i += 1;
             }
-            let raw: String = chars[s..i].iter().filter(|c| c.is_ascii_digit() || **c == '.').collect();
-            toks.push(T::Num(
-                raw.parse::<f64>().map_err(|e| format!("bad number `{raw}`: {e}"))?,
-            ));
+            let raw: String =
+                chars[s..i].iter().filter(|c| c.is_ascii_digit() || **c == '.').collect();
+            tokens
+                .push(T::Num(raw.parse::<f64>().map_err(|e| format!("bad number `{raw}`: {e}"))?));
             continue;
         }
         i += 1;
-        toks.push(match c {
+        tokens.push(match c {
             '(' => T::LP,
             ')' => T::RP,
             '{' => T::LB,
@@ -210,7 +210,7 @@ fn expr_tokens(text: &str) -> Result<Vec<T>, String> {
             other => return Err(format!("unexpected char `{other}` in expression")),
         });
     }
-    Ok(toks)
+    Ok(tokens)
 }
 
 // ------------------------------------------------------------------- parse
@@ -237,11 +237,7 @@ impl<'a> P<'a> {
     }
     fn want(&mut self, t: T) -> Result<(), String> {
         let got = self.next()?;
-        if got == t {
-            Ok(())
-        } else {
-            Err(format!("expected {t:?}, got {got:?}"))
-        }
+        if got == t { Ok(()) } else { Err(format!("expected {t:?}, got {got:?}")) }
     }
     fn id(&mut self) -> Result<String, String> {
         match self.next()? {
@@ -559,7 +555,11 @@ impl<'a> P<'a> {
             self.comma();
         }
         self.want(T::RP)?;
-        Ok(Expr::Polygon { n: n.ok_or("RoundedPolygon: missing numVertices")?, rounding, per_vertex: pv })
+        Ok(Expr::Polygon {
+            n: n.ok_or("RoundedPolygon: missing numVertices")?,
+            rounding,
+            per_vertex: pv,
+        })
     }
 
     /// `<primary>` plus `.transformed(..)` / `.normalized()` / `.also {..}`.
@@ -622,20 +622,24 @@ impl<'a> P<'a> {
 
 // ------------------------------------------------------------------- emit
 
-fn fnum(n: f64) -> String {
+fn fmt_num(n: f64) -> String {
     if n.fract() == 0.0 && n.abs() < 1e15 { format!("{}", n as i64) } else { format!("{n}") }
 }
 
 fn cr_expr(c: &Cr) -> String {
-    format!("{{radius: {}, smoothing: {}}}", fnum(c.radius), fnum(c.smoothing))
+    format!("{{radius: {}, smoothing: {}}}", fmt_num(c.radius), fmt_num(c.smoothing))
 }
 
-fn emit(e: &Expr, funs: &HashMap<String, Fun>, env: &HashMap<String, f64>) -> Result<String, String> {
+fn emit(
+    e: &Expr,
+    functions: &HashMap<String, Fun>,
+    env: &HashMap<String, f64>,
+) -> Result<String, String> {
     Ok(match e {
         Expr::Custom { points, reps, mirror } => {
             let verts = points
                 .iter()
-                .map(|(x, y, _)| format!("{{x: {}px, y: {}px}}", fnum(*x), fnum(*y)))
+                .map(|(x, y, _)| format!("{{x: {}px, y: {}px}}", fmt_num(*x), fmt_num(*y)))
                 .collect::<Vec<_>>()
                 .join(", ");
             let crs = points.iter().map(|(_, _, r)| cr_expr(r)).collect::<Vec<_>>().join(", ");
@@ -646,12 +650,12 @@ fn emit(e: &Expr, funs: &HashMap<String, Fun>, env: &HashMap<String, f64>) -> Re
         Expr::Polygon { n, rounding, per_vertex } => match per_vertex {
             Some(pv) => format!(
                 "Shapes.regular-polygon-per-vertex({}, [{}])",
-                fnum(*n),
+                fmt_num(*n),
                 pv.iter().map(cr_expr).collect::<Vec<_>>().join(", ")
             ),
             None => format!(
                 "Shapes.regular-polygon({}, {})",
-                fnum(*n),
+                fmt_num(*n),
                 cr_expr(&rounding.unwrap_or(Cr { radius: 0., smoothing: 0. }))
             ),
         },
@@ -661,7 +665,7 @@ fn emit(e: &Expr, funs: &HashMap<String, Fun>, env: &HashMap<String, f64>) -> Re
                 (Some(r), None) => cr_expr(r),
                 (None, None) => cr_expr(&Cr { radius: 0., smoothing: 0. }),
             };
-            format!("Shapes.rectangle({}, {}, [{crs}])", fnum(*w), fnum(*h))
+            format!("Shapes.rectangle({}, {}, [{crs}])", fmt_num(*w), fmt_num(*h))
         }
         Expr::Circle { n } => {
             // `RoundedPolygon.circle()` defaults to 8 vertices upstream.
@@ -669,26 +673,34 @@ fn emit(e: &Expr, funs: &HashMap<String, Fun>, env: &HashMap<String, f64>) -> Re
                 Some(n) => num_value(n, env)?,
                 None => 8.,
             };
-            format!("Shapes.circle({})", fnum(n))
+            format!("Shapes.circle({})", fmt_num(n))
         }
         Expr::Star { n, inner, rounding } => {
             // `innerRounding = null` upstream -> inner vertices use `rounding`.
-            format!("Shapes.star({}, {}, {}, {})", fnum(*n), fnum(*inner), cr_expr(rounding), cr_expr(rounding))
+            format!(
+                "Shapes.star({}, {}, {}, {})",
+                fmt_num(*n),
+                fmt_num(*inner),
+                cr_expr(rounding),
+                cr_expr(rounding)
+            )
         }
         Expr::Transformed(base, m) => {
-            let inner = emit(base, funs, env)?;
+            let inner = emit(base, functions, env)?;
             match m {
-                Mat::Rot(d) => format!("Shapes.rotated({inner}, {}deg)", fnum(*d)),
-                Mat::Scale(x, y) => format!("Shapes.scaled({inner}, {}, {})", fnum(*x), fnum(*y)),
+                Mat::Rot(d) => format!("Shapes.rotated({inner}, {}deg)", fmt_num(*d)),
+                Mat::Scale(x, y) => {
+                    format!("Shapes.scaled({inner}, {}, {})", fmt_num(*x), fmt_num(*y))
+                }
             }
         }
-        Expr::Normalized(inner) => format!("Shapes.normalized({})", emit(inner, funs, env)?),
+        Expr::Normalized(inner) => format!("Shapes.normalized({})", emit(inner, functions, env)?),
         Expr::Call { name, args } => {
-            let f = funs.get(name).ok_or_else(|| format!("unknown function `{name}`"))?;
+            let f = functions.get(name).ok_or_else(|| format!("unknown function `{name}`"))?;
             let mut env = env.clone();
             // seed param defaults, then apply passed args (named or positional)
-            for (pname, default) in &f.defaults {
-                env.insert(pname.clone(), *default);
+            for (param_name, default) in &f.defaults {
+                env.insert(param_name.clone(), *default);
             }
             for (i, (an, v)) in args.iter().enumerate() {
                 let key = an
@@ -697,7 +709,7 @@ fn emit(e: &Expr, funs: &HashMap<String, Fun>, env: &HashMap<String, f64>) -> Re
                     .ok_or_else(|| format!("{name}: unmapped arg {i}"))?;
                 env.insert(key, num_value(v, &env)?);
             }
-            emit(&f.body, funs, &env)?
+            emit(&f.body, functions, &env)?
         }
     })
 }
@@ -727,9 +739,8 @@ fn kebab_case(name: &str) -> String {
 /// Parse `MaterialShapes.kt` into `(Name, KDoc, slint_expr)` in file order.
 pub fn parse(text: &str) -> Result<Vec<(String, String, String)>, String> {
     let (clean, docs) = strip_comments(text);
-    let comp = clean
-        .find("companion object")
-        .ok_or("no `companion object` in MaterialShapes.kt")?;
+    let comp =
+        clean.find("companion object").ok_or("no `companion object` in MaterialShapes.kt")?;
     let open = clean[comp..].find('{').map(|i| comp + i).ok_or("companion object body")?;
     let end = matching_brace(&clean, open)?;
     let body = &clean[open + 1..end - 1];
@@ -739,7 +750,7 @@ pub fn parse(text: &str) -> Result<Vec<(String, String, String)>, String> {
     // `public` boundaries at brace depth 0.
     let mut roundings: HashMap<String, Cr> = HashMap::new();
     let mut matrices: HashMap<String, Mat> = HashMap::new();
-    let mut funs: HashMap<String, Fun> = HashMap::new();
+    let mut functions: HashMap<String, Fun> = HashMap::new();
     let mut public: Vec<(String, String, Expr)> = Vec::new();
 
     let mut i = 0;
@@ -757,7 +768,14 @@ pub fn parse(text: &str) -> Result<Vec<(String, String, String)>, String> {
             i += ws;
             let rest = &body[i..];
             let mut matched = false;
-            for kw in ["private val ", "private var ", "public val ", "internal fun ", "private fun ", "private data class "] {
+            for kw in [
+                "private val ",
+                "private var ",
+                "public val ",
+                "internal fun ",
+                "private fun ",
+                "private data class ",
+            ] {
                 if let Some(decl) = rest.strip_prefix(kw) {
                     // find the end of the declaration: the next top-level keyword
                     // at depth 0, or end of body.
@@ -791,12 +809,14 @@ pub fn parse(text: &str) -> Result<Vec<(String, String, String)>, String> {
                         &decl_text,
                         &mut roundings,
                         &mut matrices,
-                        &mut funs,
+                        &mut functions,
                         &mut public,
                         &docs,
                         body_off + i,
                     )
-                    .map_err(|e| format!("`{kw}{}..`: {e}", decl_text.chars().take(60).collect::<String>()))?;
+                    .map_err(|e| {
+                        format!("`{kw}{}..`: {e}", decl_text.chars().take(60).collect::<String>())
+                    })?;
                     i = j;
                     matched = true;
                     break;
@@ -818,8 +838,7 @@ pub fn parse(text: &str) -> Result<Vec<(String, String, String)>, String> {
 
     let mut out = Vec::new();
     for (name, doc, expr) in &public {
-        let slint = emit(expr, &funs, &HashMap::new())
-            .map_err(|e| format!("{name}: {e}"))?;
+        let slint = emit(expr, &functions, &HashMap::new()).map_err(|e| format!("{name}: {e}"))?;
         out.push((name.clone(), doc.clone(), slint));
     }
     Ok(out)
@@ -830,7 +849,7 @@ fn handle_decl(
     decl: &str,
     roundings: &mut HashMap<String, Cr>,
     matrices: &mut HashMap<String, Mat>,
-    funs: &mut HashMap<String, Fun>,
+    functions: &mut HashMap<String, Fun>,
     public: &mut Vec<(String, String, Expr)>,
     docs: &[(usize, String)],
     off: usize,
@@ -839,12 +858,11 @@ fn handle_decl(
         "private val" => {
             // `cornerRound15 = CornerRounding(radius = .15f)` or
             // `rotateNeg45 = Matrix().apply { rotateZ(-45f) }`
-            let (name, rhs) =
-                decl.split_once('=').ok_or("private val without `=`")?;
+            let (name, rhs) = decl.split_once('=').ok_or("private val without `=`")?;
             let name = name.trim();
             let rhs = rhs.trim();
-            let toks = expr_tokens(rhs)?;
-            let mut p = P { t: &toks, i: 0, roundings, matrices };
+            let tokens = expr_tokens(rhs)?;
+            let mut p = P { t: &tokens, i: 0, roundings, matrices };
             if rhs.starts_with("CornerRounding") {
                 roundings.insert(name.to_string(), p.cr()?);
             } else if rhs.starts_with("Matrix") {
@@ -856,9 +874,7 @@ fn handle_decl(
         "private var" => {} // `_x: RoundedPolygon? = null` lazy cache
         "public val" => {
             // `Circle: RoundedPolygon\n  get() = _circle ?: circle().normalized().also { _circle = it }`
-            let (head, tail) = decl
-                .split_once(':')
-                .ok_or("public val without type")?;
+            let (head, tail) = decl.split_once(':').ok_or("public val without type")?;
             let name = head.trim().to_string();
             let tail = tail.trim();
             let tail = tail
@@ -878,10 +894,10 @@ fn handle_decl(
                 .split_once("?:")
                 .map(|(_, e)| e.trim())
                 .ok_or_else(|| format!("{name}: expected `_x ?:` in getter"))?;
-            let toks = expr_tokens(getter)?;
-            let mut p = P { t: &toks, i: 0, roundings, matrices };
+            let tokens = expr_tokens(getter)?;
+            let mut p = P { t: &tokens, i: 0, roundings, matrices };
             let expr = p.expr()?;
-            if p.i != toks.len() {
+            if p.i != tokens.len() {
                 return Err(format!("{name}: trailing tokens in getter"));
             }
             // the KDoc whose comment ended closest before this declaration
@@ -908,13 +924,13 @@ fn handle_decl(
                     }
                     // `numVertices: Int = 10`
                     if let Some((lhs, rhs)) = part.split_once('=') {
-                        let pname = lhs.split(':').next().unwrap().trim().to_string();
+                        let param_name = lhs.split(':').next().unwrap().trim().to_string();
                         let dv: f64 = rhs
                             .trim()
                             .trim_end_matches('f')
                             .parse()
                             .map_err(|e| format!("{name}: bad default `{rhs}`: {e}"))?;
-                        defaults.push((pname, dv));
+                        defaults.push((param_name, dv));
                     }
                 }
             }
@@ -923,27 +939,26 @@ fn handle_decl(
             let mut locals: HashMap<String, Mat> = matrices.clone();
             let mut body = rest.trim().strip_suffix('}').unwrap_or(rest.trim()).trim();
             while let Some(v) = body.strip_prefix("val ") {
-                let (vname, rhs) = v.split_once('=').ok_or("val without `=`")?;
-                let vname = vname.trim().to_string();
+                let (val_name, rhs) = v.split_once('=').ok_or("val without `=`")?;
+                let val_name = val_name.trim().to_string();
                 let rhs = rhs.trim();
-                let toks = expr_tokens(rhs)?;
-                let m = (P { t: &toks, i: 0, roundings, matrices: &locals }).matrix()?;
-                locals.insert(vname, m);
+                let tokens = expr_tokens(rhs)?;
+                let m = (P { t: &tokens, i: 0, roundings, matrices: &locals }).matrix()?;
+                locals.insert(val_name, m);
                 // continue after the `}` that closes `apply { .. }`
-                let close = matching_brace(rhs, rhs.find('{').ok_or("val body without `apply {`")?)?;
+                let close =
+                    matching_brace(rhs, rhs.find('{').ok_or("val body without `apply {`")?)?;
                 body = rhs[close..].trim_start();
             }
-            let ret = body
-                .strip_prefix("return")
-                .ok_or_else(|| format!("{name}: no `return`"))?
-                .trim();
-            let toks = expr_tokens(ret)?;
-            let mut p = P { t: &toks, i: 0, roundings, matrices: &locals };
+            let ret =
+                body.strip_prefix("return").ok_or_else(|| format!("{name}: no `return`"))?.trim();
+            let tokens = expr_tokens(ret)?;
+            let mut p = P { t: &tokens, i: 0, roundings, matrices: &locals };
             let expr = p.expr()?;
-            if p.i != toks.len() {
+            if p.i != tokens.len() {
                 return Err(format!("{name}: trailing tokens in body"));
             }
-            funs.insert(name, Fun { defaults, body: expr });
+            functions.insert(name, Fun { defaults, body: expr });
         }
         "private fun" | "private data class" => {} // doRepeat/customPolygon impl details
         _ => {}
