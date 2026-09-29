@@ -1370,6 +1370,13 @@ fn build(l: &mut Loader) {
         /// be reset to `false`.
         /// :::
         in property <bool> enabled: true;
+        /// The area's outline: when set, hit-testing (`clicked`, `has-hover`, and
+        /// the other pointer interactions) is bounded by the shape instead of the
+        /// element's rectangle.
+        in property <shape> shape;
+        /// How the `shape`'s own coordinate space maps into the element's bounds.
+        /// \default fill
+        in property <ShapeFit> shape-fit;
         /// Set to true when the mouse is over the `TouchArea` area.
         out property <bool> has-hover;
         /// The mouse cursor when the mouse is hovering the `TouchArea`.

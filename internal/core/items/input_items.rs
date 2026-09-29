@@ -12,7 +12,7 @@ use crate::input::{
     InternalKeyEvent, KeyEventResult, KeyEventType, Keys, MouseEvent,
 };
 use crate::item_rendering::CachedRenderingData;
-use crate::items::{ItemTreeVTable, MouseCursorInner};
+use crate::items::{ItemTreeVTable, MouseCursorInner, ShapeFit};
 use crate::layout::{LayoutInfo, Orientation};
 use crate::lengths::{LogicalLength, LogicalPoint, LogicalRect, LogicalSize, PointLengths};
 use crate::properties::PropertyTracker;
@@ -50,6 +50,11 @@ pub struct TouchArea {
     pub moved: Callback<VoidArg>,
     pub pointer_event: Callback<PointerEventArg>,
     pub scroll_event: Callback<PointerScrollEventArg, EventResult>,
+    /// The area's outline: when set, hit-testing (`clicked`, `has_hover`, …)
+    /// is bounded by the shape instead of the element's rectangle.
+    pub shape: Property<crate::graphics::Shape>,
+    /// How the `shape` maps into the element's bounds.
+    pub shape_fit: Property<ShapeFit>,
     /// FIXME: remove this
     pub cached_rendering_data: CachedRenderingData,
     /// true when we are currently grabbing the mouse
@@ -267,7 +272,11 @@ impl Item for TouchArea {
         self: core::pin::Pin<&Self>,
         _geometry: LogicalRect,
     ) -> crate::graphics::ItemBoundaryShape {
-        Default::default()
+        crate::graphics::ItemBoundaryShape {
+            shape: self.shape(),
+            fit: self.shape_fit(),
+            radius: Default::default(),
+        }
     }
 
     fn clips_children(self: core::pin::Pin<&Self>) -> bool {
