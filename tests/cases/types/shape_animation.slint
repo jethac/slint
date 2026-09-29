@@ -96,15 +96,19 @@ fn retarget_case(
     // already see the new value and never animate.
     let _ = get();
     // Fly toward the mid target until the spring is clearly moving. T sits
-    // at ~30% of the spring's ~200ms envelope — its cruise — so the 1ms speed
-    // windows (T-2..T-1 and T..T+1) stay deep inside flight on every target,
-    // away from the underdamped apex and the settled tail.
+    // at ~30% of the spring's ~200ms envelope — its cruise — so the speed
+    // windows stay deep inside flight on every target, away from the
+    // underdamped apex and the settled tail. The windows span 10ms: a 1ms
+    // frame step is smaller than the proxy's per-reading jitter on some
+    // targets (i686 read 0 there); 10ms of cruise covers ~0.03 units of
+    // travel, an order above the noise, while the spring's own drift stays
+    // under ~5% across the window.
     retarget(mid_target.clone());
-    slint_testing::mock_elapsed_time(58);
-    let t_m2 = get();
-    slint_testing::mock_elapsed_time(1);
+    slint_testing::mock_elapsed_time(49);
+    let t_lo = get();
+    slint_testing::mock_elapsed_time(10);
     let t_m1 = get();
-    let pre_speed = outline_speed(&start_from, &t_m2, &t_m1) / 0.001;
+    let pre_speed = outline_speed(&start_from, &t_lo, &t_m1) / 0.010;
     assert!(pre_speed > 0., "the spring must still be moving: {pre_speed}");
 
     retarget(final_target.clone());
@@ -118,15 +122,15 @@ fn retarget_case(
     let delta = outline_delta(&t_0, &t_m1);
     assert!(delta <= 0.08, "retarget moved the outline by {delta}");
 
-    slint_testing::mock_elapsed_time(1);
-    let t_1 = get();
+    slint_testing::mock_elapsed_time(10);
+    let t_hi = get();
     // The carried scalar speed is preserved across the retarget: the
     // outline's speed, normalized by each morph's start perimeter (R6's
     // rel_vel), matches on both sides of T. The Hausdorff proxy's jitter and
     // the two morphs' differing speed profiles add ~10% bias between windows,
     // so the bound is 15% — still 3x tighter than the least wrong rescaling
     // (half-speed lands 50% out) and far above a restart from rest (~0).
-    let post_speed = outline_speed(&t_0, &t_0, &t_1) / 0.001;
+    let post_speed = outline_speed(&t_0, &t_0, &t_hi) / 0.010;
     let rel_pre = pre_speed / perimeter(&start_from);
     let rel_post = post_speed / perimeter(&t_0);
     assert!(
@@ -251,16 +255,19 @@ auto retarget_case = [&](auto get, auto retarget, const slint::Shape &start_from
     // already see the new value and never animate.
     get();
     // Fly toward the mid target until the spring is clearly moving. T sits
-    // at ~30% of the spring's ~200ms envelope — its cruise — so the 1ms speed
-    // windows (T-2..T-1 and T..T+1) stay deep inside flight on every target,
-    // away from the underdamped apex and the settled tail.
+    // at ~30% of the spring's ~200ms envelope — its cruise — so the speed
+    // windows stay deep inside flight on every target, away from the
+    // underdamped apex and the settled tail. The windows span 10ms: a 1ms
+    // frame step is smaller than the proxy's per-reading jitter on some
+    // targets (i686 read 0 there); 10ms of cruise covers ~0.03 units of
+    // travel, an order above the noise, while the spring's own drift stays
+    // under ~5% across the window.
     retarget(mid_target);
-    slint_testing::mock_elapsed_time(58);
-    auto t_m2 = get();
-    slint_testing::mock_elapsed_time(1);
+    slint_testing::mock_elapsed_time(49);
+    auto t_lo = get();
+    slint_testing::mock_elapsed_time(10);
     auto t_m1 = get();
-    float pre_speed = outline_speed(start_from, t_m2, t_m1) / 0.001f;
-    assert(pre_speed > 0.f);
+    float pre_speed = outline_speed(start_from, t_lo, t_m1) / 0.010f;
 
     retarget(final_target);
     // The animated outline does not snap at the retarget instant: the first
@@ -270,19 +277,21 @@ auto retarget_case = [&](auto get, auto retarget, const slint::Shape &start_from
     // (≈0.04 measured on the star-bound morph); a snap to the old start or
     // the new target would sit ≥0.1 away instead.
     auto t_0 = get();
-    assert(outline_delta(t_0, t_m1) <= 0.08f);
+    float delta = outline_delta(t_0, t_m1);
 
-    slint_testing::mock_elapsed_time(1);
-    auto t_1 = get();
+    slint_testing::mock_elapsed_time(10);
+    auto t_hi = get();
     // The carried scalar speed is preserved across the retarget: the
     // outline's speed, normalized by each morph's start perimeter (R6's
     // rel_vel), matches on both sides of T. The Hausdorff proxy's jitter and
     // the two morphs' differing speed profiles add ~10% bias between windows,
     // so the bound is 15% — still 3x tighter than the least wrong rescaling
     // (half-speed lands 50% out) and far above a restart from rest (~0).
-    float post_speed = outline_speed(t_0, t_0, t_1) / 0.001f;
+    float post_speed = outline_speed(t_0, t_0, t_hi) / 0.010f;
     float rel_pre = pre_speed / perimeter(start_from);
     float rel_post = post_speed / perimeter(t_0);
+    assert(pre_speed > 0.f);
+    assert(delta <= 0.08f);
     assert(std::fabs(rel_post - rel_pre) <= 0.15f * rel_pre);
 
     slint_testing::mock_elapsed_time(3000);
