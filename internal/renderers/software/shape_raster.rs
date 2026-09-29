@@ -28,6 +28,7 @@ use alloc::vec::Vec;
 use i_slint_core::items::{FillRule, LineCap, LineJoin};
 use i_slint_core::lengths::PhysicalPx;
 #[cfg(not(feature = "std"))]
+#[allow(unused_imports)]
 use num_traits::Float;
 
 /// A rasterizer-space point: physical pixels.

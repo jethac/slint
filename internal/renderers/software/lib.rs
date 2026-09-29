@@ -746,6 +746,7 @@ pub struct SoftwareRenderer {
 }
 
 /// A bounded cache for box-shadow alpha masks: FIFO eviction.
+#[derive(Default)]
 struct ShadowMaskCache {
     masks: alloc::collections::BTreeMap<u64, Rc<[u8]>>,
     /// Insertion order of `masks`, for eviction.
