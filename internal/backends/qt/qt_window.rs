@@ -1145,6 +1145,122 @@ impl ItemRenderer for QtItemRenderer<'_> {
         }}
     }
 
+    /// The elevation shadow of an element: the Android ambient + spot model
+    /// (`i_slint_core::graphics::shadow`). Each layer is tessellated into an
+    /// A8 mask bounded by the shadow's extent in device space, tinted to the
+    /// layer's color, and drawn as a premultiplied image.
+    fn draw_elevation_shadow(
+        &mut self,
+        shadow_item: Pin<&i_slint_core::items::ElevationShadow>,
+        _self_rc: &ItemRc,
+        size: LogicalSize,
+    ) {
+        use i_slint_core::graphics::shadow;
+
+        let geom = LogicalRect::from(size);
+        let scale_factor = self.scale_factor().get();
+        let z = shadow_item.elevation().get() * scale_factor;
+        if z < shadow::MIN_HEIGHT {
+            return;
+        }
+        let caster_alpha = shadow_item.caster_alpha();
+        let ambient_color =
+            shadow::effective_ambient_color(shadow_item.ambient_shadow_color(), caster_alpha);
+        let spot_color =
+            shadow::effective_spot_color(shadow_item.spot_shadow_color(), caster_alpha);
+        if ambient_color.alpha() == 0 && spot_color.alpha() == 0 {
+            return;
+        }
+        let outline = shadow_item.element_outline();
+
+        // The painter transform maps item space to widget coordinates (logical
+        // px): scale it into device px for the mask rasterization.
+        let (mut m11, mut m12, mut m21, mut m22, mut dx, mut dy) =
+            (0f32, 0f32, 0f32, 0f32, 0f32, 0f32);
+        {
+            let painter: &mut QPainterPtr = &mut self.painter;
+            cpp! { unsafe [
+                painter as "QPainterPtr*",
+                m11 as "float&",
+                m12 as "float&",
+                m21 as "float&",
+                m22 as "float&",
+                dx as "float&",
+                dy as "float&"] {
+                QTransform t = (*painter)->transform();
+                m11 = t.m11(); m12 = t.m12();
+                m21 = t.m21(); m22 = t.m22();
+                dx = t.dx(); dy = t.dy();
+            }}
+        }
+        let ctm = shadow::Affine::new(
+            m11 * scale_factor,
+            m12 * scale_factor,
+            m21 * scale_factor,
+            m22 * scale_factor,
+            dx * scale_factor,
+            dy * scale_factor,
+        );
+
+        let adapter = i_slint_core::window::WindowInner::from_pub(self.window).window_adapter();
+        let (light, light_radius) =
+            shadow::elevation_light(adapter.display_geometry(), adapter.size());
+        let masks = shadow::elevation_shadow_masks(
+            &outline,
+            geom.cast::<f32>(),
+            &ctm,
+            z,
+            light,
+            light_radius,
+            caster_alpha < 1.,
+        );
+
+        for (layer, color) in [(masks.ambient, ambient_color), (masks.spot, spot_color)].into_iter()
+        {
+            let Some(layer) = layer else { continue };
+            if color.alpha() == 0 {
+                continue;
+            }
+            // Tint the mask: premultiplied color × coverage.
+            let mut data: Vec<u8> = Vec::with_capacity(layer.mask.len() * 4);
+            for &a in layer.mask.iter() {
+                let alpha = (u16::from(a) * u16::from(color.alpha()) + 127) / 255;
+                data.extend_from_slice(
+                    &[
+                        (u16::from(color.red()) * alpha + 127) / 255,
+                        (u16::from(color.green()) * alpha + 127) / 255,
+                        (u16::from(color.blue()) * alpha + 127) / 255,
+                        alpha,
+                    ]
+                    .map(|v| v as u8),
+                );
+            }
+            let (w, h) = (layer.size.width, layer.size.height);
+            let data_ptr = data.as_ptr();
+            // The mask was rasterized in device space: draw it back into
+            // logical widget space with no painter transform.
+            let target = qttypes::QRectF {
+                x: (layer.rect.origin.x / scale_factor) as f64,
+                y: (layer.rect.origin.y / scale_factor) as f64,
+                width: (w as f32 / scale_factor) as f64,
+                height: (h as f32 / scale_factor) as f64,
+            };
+            let painter: &mut QPainterPtr = &mut self.painter;
+            cpp! { unsafe [
+                painter as "QPainterPtr*",
+                data_ptr as "const uchar*",
+                w as "int",
+                h as "int",
+                target as "QRectF"] {
+                QImage image(data_ptr, w, h, w * 4, QImage::Format_RGBA8888_Premultiplied);
+                auto old = (*painter)->transform();
+                (*painter)->setTransform(QTransform());
+                (*painter)->drawImage(target, image);
+                (*painter)->setTransform(old);
+            }}
+        }
+    }
+
     fn visit_opacity(
         &mut self,
         opacity_item: Pin<&Opacity>,

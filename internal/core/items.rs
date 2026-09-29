@@ -2085,6 +2085,157 @@ declare_item_vtable! {
     fn slint_get_BoxShadowVTable() -> BoxShadowVTable for BoxShadow
 }
 
+/// The implementation of the `ElevationShadow` element
+#[repr(C)]
+#[derive(FieldOffsets, Default, SlintElement)]
+#[pin]
+pub struct ElevationShadow {
+    pub border_top_left_radius: Property<LogicalLength>,
+    pub border_top_right_radius: Property<LogicalLength>,
+    pub border_bottom_left_radius: Property<LogicalLength>,
+    pub border_bottom_right_radius: Property<LogicalLength>,
+    pub shape: Property<Shape>,
+    pub shape_fit: Property<ShapeFit>,
+    // Shadow specific properties
+    pub elevation: Property<LogicalLength>,
+    pub ambient_shadow_color: Property<Color>,
+    pub spot_shadow_color: Property<Color>,
+    // Bound to the caster's opacity: the umbra shows through translucent
+    // casters (Skia `DrawShadowFlags::kTransparentOccluder`).
+    pub caster_alpha: Property<f32>,
+    pub cached_rendering_data: CachedRenderingData,
+}
+
+impl ElevationShadow {
+    pub fn logical_border_radius(self: Pin<&Self>) -> LogicalBorderRadius {
+        LogicalBorderRadius::from_lengths(
+            self.border_top_left_radius(),
+            self.border_top_right_radius(),
+            self.border_bottom_right_radius(),
+            self.border_bottom_left_radius(),
+        )
+    }
+
+    /// The outline the shadow is cast for: the `shape` when set, else the
+    /// rounded rectangle given by the border radius properties.
+    pub fn element_outline(self: Pin<&Self>) -> ElementOutline {
+        ElementOutline::new(self.shape(), self.shape_fit(), self.logical_border_radius())
+    }
+}
+
+impl Item for ElevationShadow {
+    fn init(self: Pin<&Self>, _self_rc: &ItemRc) {}
+
+    fn deinit(self: Pin<&Self>, _window_adapter: &Rc<dyn WindowAdapter>) {}
+
+    fn layout_info(
+        self: Pin<&Self>,
+        _orientation: Orientation,
+        _cross_axis_constraint: Coord,
+        _window_adapter: &Rc<dyn WindowAdapter>,
+        _self_rc: &ItemRc,
+    ) -> LayoutInfo {
+        LayoutInfo { stretch: 1., ..LayoutInfo::default() }
+    }
+
+    fn input_event_filter_before_children(
+        self: Pin<&Self>,
+        _: &MouseEvent,
+        _window_adapter: &Rc<dyn WindowAdapter>,
+        _self_rc: &ItemRc,
+        _: &mut MouseCursorInner,
+    ) -> InputEventFilterResult {
+        InputEventFilterResult::ForwardAndIgnore
+    }
+
+    fn input_event(
+        self: Pin<&Self>,
+        _: &MouseEvent,
+        _window_adapter: &Rc<dyn WindowAdapter>,
+        _self_rc: &ItemRc,
+        _: &mut MouseCursorInner,
+    ) -> InputEventResult {
+        InputEventResult::EventIgnored
+    }
+
+    fn capture_key_event(
+        self: Pin<&Self>,
+        _: &InternalKeyEvent,
+        _window_adapter: &Rc<dyn WindowAdapter>,
+        _self_rc: &ItemRc,
+    ) -> KeyEventResult {
+        KeyEventResult::EventIgnored
+    }
+
+    fn key_event(
+        self: Pin<&Self>,
+        _: &InternalKeyEvent,
+        _window_adapter: &Rc<dyn WindowAdapter>,
+        _self_rc: &ItemRc,
+    ) -> KeyEventResult {
+        KeyEventResult::EventIgnored
+    }
+
+    fn focus_event(
+        self: Pin<&Self>,
+        _: &FocusEvent,
+        _window_adapter: &Rc<dyn WindowAdapter>,
+        _self_rc: &ItemRc,
+    ) -> FocusEventResult {
+        FocusEventResult::FocusIgnored
+    }
+
+    fn render(
+        self: Pin<&Self>,
+        backend: &mut ItemRendererRef,
+        self_rc: &ItemRc,
+        size: LogicalSize,
+    ) -> RenderingResult {
+        (*backend).draw_elevation_shadow(self, self_rc, size);
+        RenderingResult::ContinueRenderingChildren
+    }
+
+    fn bounding_rect(
+        self: core::pin::Pin<&Self>,
+        _window_adapter: &Rc<dyn WindowAdapter>,
+        _self_rc: &ItemRc,
+        geometry: LogicalRect,
+    ) -> LogicalRect {
+        // `GetLocalBounds`: ambient outset + spot outset and offset, in item
+        // space. The caster's window transform isn't known here, so the light
+        // is assumed at the canonical top-center — spot offsets are bounded
+        // by the 0.95 zRatio pin, which keeps this conservative in practice.
+        crate::graphics::shadow::shadow_local_bounds(
+            geometry.cast(),
+            &crate::graphics::shadow::Affine::IDENTITY,
+            self.elevation().get(),
+            [0., 0., 500.],
+            800.,
+        )
+        .cast()
+    }
+
+    fn boundary_shape(
+        self: core::pin::Pin<&Self>,
+        _geometry: LogicalRect,
+    ) -> crate::graphics::ItemBoundaryShape {
+        Default::default()
+    }
+
+    fn clips_children(self: core::pin::Pin<&Self>) -> bool {
+        false
+    }
+}
+
+impl ItemConsts for ElevationShadow {
+    const cached_rendering_data_offset: const_field_offset::FieldOffset<Self, CachedRenderingData> =
+        Self::FIELD_OFFSETS.cached_rendering_data().as_unpinned_projection();
+}
+
+declare_item_vtable! {
+    fn slint_get_ElevationShadowVTable() -> ElevationShadowVTable for ElevationShadow
+}
+
 declare_item_vtable! {
     fn slint_get_ComponentContainerVTable() -> ComponentContainerVTable for ComponentContainer
 }
