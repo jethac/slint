@@ -272,26 +272,39 @@ pub fn stroke_to_fill(
             )
         };
 
+        if closed {
+            // A closed stroke is two rings — the outward and inward offset
+            // loops — wound oppositely so the band between them fills under
+            // either fill rule. A single merged loop can't express the hole:
+            // stitching the rings into one contour replaces the edges across
+            // the wrap point with bridges and the ring loses that side.
+            for ring in [left, {
+                right.reverse();
+                right
+            }] {
+                let mut ring = ring;
+                ring.dedup_by(|a, b| (a.x - b.x).abs() < 1e-6 && (a.y - b.y).abs() < 1e-6);
+                if ring.len() >= 3 {
+                    result.push(ring);
+                }
+            }
+            continue;
+        }
+
         // Assemble: left of the start, the left offset points, left of the
         // end, the end cap, right of the end, the right offset points walked
         // back, right of the start, the start cap — one closed loop.
         let mut outline = Vec::with_capacity(left.len() + right.len() + 8);
-        if !closed {
-            outline.push(pts[0] + normal(dirs[0]) * h);
-        }
+        outline.push(pts[0] + normal(dirs[0]) * h);
         outline.extend_from_slice(&left);
-        if !closed {
-            outline.push(pts[n - 1] + normal(dirs[seg_count - 1]) * h);
-            outline.extend_from_slice(&end_cap_pts);
-            outline.push(pts[n - 1] - normal(dirs[seg_count - 1]) * h);
-        }
+        outline.push(pts[n - 1] + normal(dirs[seg_count - 1]) * h);
+        outline.extend_from_slice(&end_cap_pts);
+        outline.push(pts[n - 1] - normal(dirs[seg_count - 1]) * h);
         for p in right.iter().rev() {
             outline.push(*p);
         }
-        if !closed {
-            outline.push(pts[0] - normal(dirs[0]) * h);
-            outline.extend_from_slice(&start_cap_pts);
-        }
+        outline.push(pts[0] - normal(dirs[0]) * h);
+        outline.extend_from_slice(&start_cap_pts);
         // Remove consecutive duplicate points.
         outline.dedup_by(|a, b| (a.x - b.x).abs() < 1e-6 && (a.y - b.y).abs() < 1e-6);
         if outline.len() >= 3 {
@@ -303,7 +316,7 @@ pub fn stroke_to_fill(
 
 /// Emits the offset-join points for one side of a vertex: `n_in`/`n_out` are
 /// the inward and outward offset vectors (signed half-width normal), `d_in`
-////`d_out` the segment directions around `v`.
+/// `d_out` the segment directions around `v`.
 #[allow(clippy::too_many_arguments)]
 fn emit_join(
     out: &mut Contour,
@@ -543,7 +556,7 @@ impl Rasterizer {
 
         // Horizontal sweep: running signed coverage plus per-cell remainder.
         let mut running = left_cover;
-        for x in 0..w {
+        for (x, alpha) in alpha.iter_mut().enumerate().take(w) {
             running += self.cover[x];
             let coverage = running - self.area[x];
             let cov = coverage.abs();
@@ -556,7 +569,7 @@ impl Rasterizer {
                 }
                 _ => cov.min(1.),
             };
-            alpha[x] = (a.clamp(0., 1.) * 255.).round() as u8;
+            *alpha = (a.clamp(0., 1.) * 255.).round() as u8;
         }
     }
 }
@@ -640,7 +653,7 @@ fn accumulate_edge(
 ///   `a = 1 - (1 - a_fill)·(1 - a_ring)`;
 /// - `spread < 0` (erode): coverage where fill minus ring,
 ///   `a = a_fill·(1 - a_ring)`.
-/// `spread` is in physical pixels; `origin`/`size` bound the mask.
+///   `spread` is in physical pixels; `origin`/`size` bound the mask.
 pub fn rasterize_spread_mask(
     contours: &[Contour],
     spread: f32,
@@ -796,11 +809,11 @@ mod tests {
     /// `tolerance` (in coverage units).
     fn check(contours: &[Contour], rule: FillRule, x0: i32, y0: i32, w: usize, h: usize) {
         let grid = rasterize(contours, rule, x0, y0, w, h);
-        for y in 0..h {
-            for x in 0..w {
+        for (y, row) in grid.iter().enumerate() {
+            for (x, &alpha) in row.iter().enumerate() {
                 let expected =
                     oracle(contours, rule, (x0 + x as i32) as f32, (y0 + y as i32) as f32);
-                let got = grid[y][x] as f32 / 255.;
+                let got = alpha as f32 / 255.;
                 assert!(
                     (got - expected).abs() <= 0.03,
                     "pixel ({x},{y}): expected {expected}, got {got}"
@@ -813,10 +826,10 @@ mod tests {
     fn integer_rect_is_exact() {
         let rect = vec![vec![pt(2., 2.), pt(10., 2.), pt(10., 8.), pt(2., 8.)]];
         let grid = rasterize(&rect, FillRule::Nonzero, 0, 0, 14, 12);
-        for y in 0..12 {
-            for x in 0..14 {
+        for (y, row) in grid.iter().enumerate() {
+            for (x, &alpha) in row.iter().enumerate() {
                 let inside = (2..10).contains(&x) && (2..8).contains(&y);
-                assert_eq!(grid[y][x], if inside { 255 } else { 0 }, "at {x},{y}");
+                assert_eq!(alpha, if inside { 255 } else { 0 }, "at {x},{y}");
             }
         }
     }
@@ -896,16 +909,18 @@ mod tests {
         let closed = vec![pt(2., 2.), pt(10., 2.), pt(10., 8.), pt(2., 8.), pt(2., 2.)];
         let stroked = stroke_to_fill(&[closed], 2., LineCap::Butt, LineJoin::Miter, 4.);
         let grid = rasterize(&stroked, FillRule::Nonzero, 0, 0, 14, 12);
-        // The closing edge is the left side (x = 2): coverage straddles it.
+        // The closing edge is the left side (x = 2): the band [1, 3] covers
+        // the pixels on both sides of it.
         assert_eq!(grid[5][1], 255, "left of the closing edge");
-        assert_eq!(grid[5][3], 255, "right of the closing edge");
+        assert_eq!(grid[5][2], 255, "right of the closing edge");
+        assert_eq!(grid[5][3], 0, "past the band, on the hole boundary");
         assert_eq!(grid[5][6], 0, "inside the stroked rect");
         // The same rect without the wrap is open: no closing edge at all.
         let open = vec![pt(2., 2.), pt(10., 2.), pt(10., 8.), pt(2., 8.)];
         let stroked = stroke_to_fill(&[open], 2., LineCap::Butt, LineJoin::Miter, 4.);
         let grid = rasterize(&stroked, FillRule::Nonzero, 0, 0, 14, 12);
         assert_eq!(grid[5][1], 0, "left of the missing closing edge");
-        assert_eq!(grid[5][3], 0, "right of the missing closing edge");
+        assert_eq!(grid[5][2], 0, "right of the missing closing edge");
         assert_eq!(grid[5][6], 0, "inside the stroked rect");
     }
 
@@ -915,9 +930,9 @@ mod tests {
         // column must start at full coverage, not at zero.
         let rect = vec![vec![pt(0., 2.), pt(10., 2.), pt(10., 8.), pt(0., 8.)]];
         let grid = rasterize(&rect, FillRule::Nonzero, 5, 0, 5, 12);
-        for y in 2..8 {
-            for x in 0..5 {
-                assert_eq!(grid[y][x], 255, "at {x},{y}");
+        for (y, row) in grid.iter().enumerate().take(8).skip(2) {
+            for (x, &alpha) in row.iter().enumerate().take(5) {
+                assert_eq!(alpha, 255, "at {x},{y}");
             }
         }
         assert_eq!(grid[1][0], 0);
@@ -930,7 +945,8 @@ mod tests {
     #[test]
     fn rotated_stroke_matches_mirrored() {
         let rect = vec![pt(6., 6.), pt(26., 6.), pt(26., 54.), pt(6., 54.)];
-        let stroke = stroke_to_fill(&[rect.clone()], 2., LineCap::Butt, LineJoin::Miter, 4.);
+        let stroke =
+            stroke_to_fill(core::slice::from_ref(&rect), 2., LineCap::Butt, LineJoin::Miter, 4.);
         let base = rasterize(&stroke, FillRule::Nonzero, 0, 0, 64, 64);
         let rot: Vec<Contour> = vec![rect.iter().map(|p| pt(64. - p.x, 64. - p.y)).collect()];
         let stroke_r = stroke_to_fill(&rot, 2., LineCap::Butt, LineJoin::Miter, 4.);
