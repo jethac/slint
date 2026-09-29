@@ -24,6 +24,10 @@ export component OutlineIconButton {
     in property <IconButtonWidth> width_option: IconButtonWidth.uniform;
     /// Reserve a 48x48 touch target around the visual (default on).
     in property <bool> enforce_touch_target: true;
+    /// See `MaterialButtonBase.simulate_hover` / `simulate_press` —
+    /// the parity harness's per-widget state hook.
+    in property <bool> simulate_hover;
+    in property <bool> simulate_press;
 
     callback clicked <=> base.clicked;
 
@@ -54,6 +58,8 @@ export component OutlineIconButton {
         enabled: root.enabled;
         tooltip: root.tooltip;
         enforce_touch_target: root.enforce_touch_target;
+        simulate_hover: root.simulate_hover;
+        simulate_press: root.simulate_press;
 
         container_height: MaterialButtonMetrics.icon-container-height(root.size);
         container_width: MaterialButtonMetrics.icon-container-width(root.size, root.width_option);

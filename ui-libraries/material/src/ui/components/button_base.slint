@@ -81,6 +81,9 @@ export component MaterialButtonBase {
     in property <bool> checkable;
     in-out property <bool> checked;
     in property <string> tooltip;
+    /// See `StateLayerArea.simulate_hover` / `simulate_press`.
+    in property <bool> simulate_hover;
+    in property <bool> simulate_press;
 
     callback clicked;
     out property <bool> has_focus <=> area.has_focus;
@@ -142,19 +145,6 @@ export component MaterialButtonBase {
         level: root.current_level;
     }
 
-    // The border draws above the container fill and under the state layer,
-    // like `Surface`'s `Modifier.border` between `background` and `clip`.
-    if root.current_border_width > 0px : border_layer := Rectangle {
-        x: container.x;
-        y: container.y;
-        width: container.width;
-        height: container.height;
-        background: transparent;
-        border_width: root.current_border_width;
-        border_color: root.current_border_color;
-        border_radius: root.target_radius;
-    }
-
     area := StateLayerArea {
         x: container.x;
         y: container.y;
@@ -168,6 +158,8 @@ export component MaterialButtonBase {
         display_background: false;
         focus_ring: true;
         clip_ripple: root.clip_ripple;
+        simulate_hover: root.simulate_hover;
+        simulate_press: root.simulate_press;
 
         clicked() => {
             // A click counts only when the press landed inside the clipped
@@ -188,6 +180,9 @@ export component MaterialButtonBase {
             padding_bottom: root.icon_button ? 0px : root.padding_vertical;
             spacing: root.icon_spacing;
             alignment: center;
+            // Compose's content row is `verticalAlignment = CenterVertically`:
+            // children keep their own heights and are centered, not stretched.
+            cross_axis_alignment: center;
 
             if root.icon.width > 0 && root.icon.height > 0 : Icon {
                 source: root.checked ? root.checked_icon : root.icon;
@@ -199,10 +194,30 @@ export component MaterialButtonBase {
                 text: root.text;
                 style: root.label_style;
                 color: root.current_content_color;
-                overflow: elide;
+                // A button always sizes to its full label — `MaterialText`'s
+                // default `elide` would report a collapsible min-width.
+                overflow: clip;
+                // Compose's `Text` stays `lineHeight`-tall inside the padded
+                // content row; the layout would otherwise stretch the element
+                // to the full row height.
+                max_height: root.label_style.line_height;
                 vertical_alignment: center;
             }
         }
+    }
+
+    // `Surface`'s `Modifier.border` draws the ring inside the shape — the
+    // same inside-stroke `Rectangle.border_width` paints — over the state
+    // layer and content.
+    if root.current_border_width > 0px : border_layer := Rectangle {
+        x: container.x;
+        y: container.y;
+        width: container.width;
+        height: container.height;
+        background: transparent;
+        border_width: root.current_border_width;
+        border_color: root.current_border_color;
+        border_radius: root.target_radius;
     }
 
     // The inset ring follows the live shape — including mid-morph.

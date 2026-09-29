@@ -108,11 +108,11 @@ export global MaterialButtonMetrics {
         ButtonXLargeTokens.icon_label_space
     }
 
-    /// `ButtonDefaults.textStyleFor` — the label style per size, used by the
-    /// upstream `ToggleButton` and applied here to every size-bucketed
-    /// button.
-    public pure function label-style(size: MaterialButtonSize) -> MaterialTypeStyle {
-        size == MaterialButtonSize.extra_small || size == MaterialButtonSize.small ? MaterialTypography.label_large :
+    // `ButtonDefaults.textStyleFor` — wired only into `ToggleButton`
+    // upstream (ToggleButton.kt): plain buttons keep `labelLarge` at every
+    // height (Button.kt `ProvideContentColorTextStyle`).
+    public pure function label-style(size: MaterialButtonSize, checkable: bool) -> MaterialTypeStyle {
+        !checkable || size == MaterialButtonSize.extra_small || size == MaterialButtonSize.small ? MaterialTypography.label_large :
         size == MaterialButtonSize.medium ? MaterialTypography.title_medium :
         size == MaterialButtonSize.large ? MaterialTypography.headline_small :
         MaterialTypography.headline_large
