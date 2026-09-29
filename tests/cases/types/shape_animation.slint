@@ -1,0 +1,181 @@
+// Copyright © SixtyFPS GmbH <info@slint.dev>
+// SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0
+
+// `animate shape` morphs the element's outline through the spring easing.
+// A mid-flight retarget keeps the sampled outline continuous — the new morph
+// starts from the current interpolated shape — and carries the outgoing
+// spring's velocity. Morph results re-segment their anchors every frame, so
+// continuity and displacement are measured geometrically: the distance from
+// each anchor of one outline to a dense polyline of the other.
+
+export component TestCase inherits Rectangle {
+    in-out property <shape> morph: Shapes.circle(8);
+    animate morph { easing: spring(0.6, 800); }
+}
+
+/*
+```rust
+fn eval_cubic(c: &[f32], t: f32) -> (f32, f32) {
+    let u = 1. - t;
+    (
+        c[0] * (u * u * u) + c[2] * (3. * t * u * u) + c[4] * (3. * t * t * u)
+            + c[6] * (t * t * t),
+        c[1] * (u * u * u) + c[3] * (3. * t * u * u) + c[5] * (3. * t * t * u)
+            + c[7] * (t * t * t),
+    )
+}
+// A dense polyline of the outline (33 points per cubic, closed outlines chain).
+fn polyline(shape: &slint::Shape) -> Vec<(f32, f32)> {
+    shape
+        .cubics()
+        .as_chunks::<8>()
+        .0
+        .iter()
+        .flat_map(|c| (0..=32).map(|k| eval_cubic(c, k as f32 / 32.)))
+        .collect()
+}
+fn anchors(shape: &slint::Shape) -> Vec<(f32, f32)> {
+    shape.cubics().as_chunks::<8>().0.iter().map(|c| (c[0], c[1])).collect()
+}
+fn dist_to_polyline(p: (f32, f32), line: &[(f32, f32)]) -> f32 {
+    line.iter()
+        .zip(line.iter().skip(1))
+        .map(|(&a, &b)| {
+            let (vx, vy) = (b.0 - a.0, b.1 - a.1);
+            let (wx, wy) = (p.0 - a.0, p.1 - a.1);
+            let t = ((vx * wx + vy * wy) / (vx * vx + vy * vy).max(1e-12)).clamp(0., 1.);
+            ((wx - vx * t).powi(2) + (wy - vy * t).powi(2)).sqrt()
+        })
+        .fold(f32::MAX, f32::min)
+}
+// Symmetric Hausdorff distance between the two outlines' anchors and
+// polylines: 0 when the outlines coincide geometrically, regardless of how
+// the morph re-laid out the anchors.
+fn outline_delta(a: &slint::Shape, b: &slint::Shape) -> f32 {
+    let pa = polyline(a);
+    let pb = polyline(b);
+    let fwd = anchors(a).iter().map(|&p| dist_to_polyline(p, &pb)).fold(0., f32::max);
+    let bwd = anchors(b).iter().map(|&p| dist_to_polyline(p, &pa)).fold(0., f32::max);
+    fwd.max(bwd)
+}
+
+let instance = TestCase::new().unwrap();
+let triangle = slint::shapes::regular_polygon(3, slint::CornerRounding::UNROUNDED);
+let star = slint::shapes::star(5, 0.5, slint::CornerRounding::UNROUNDED, slint::CornerRounding::UNROUNDED);
+
+// Retarget the spring mid-flight: circle -> triangle morph is underway when
+// the target switches to the star.
+instance.set_morph(triangle.clone());
+slint_testing::mock_elapsed_time(100);
+let mid = instance.get_morph();
+slint_testing::mock_elapsed_time(16);
+let pre = instance.get_morph();
+let pre_displacement = outline_delta(&pre, &mid);
+assert!(pre_displacement > 0., "the spring must still be moving: {pre_displacement}");
+
+instance.set_morph(star.clone());
+// The animated outline does not snap at the retarget instant: every anchor
+// of the new morph's start sits on the previous outline.
+let delta = outline_delta(&instance.get_morph(), &pre);
+assert!(delta <= 1e-3, "retarget moved the outline by {delta}");
+
+slint_testing::mock_elapsed_time(16);
+let post = instance.get_morph();
+let post_displacement = outline_delta(&post, &pre);
+
+// Still moving (the spring kept its velocity rather than restarting from
+// rest or freezing): displacement the tick after retargeting stays in the
+// same range as the tick before. Only a lower bound is meaningful here —
+// the carried speed is normalized by the new morph path's perimeter, so its
+// absolute outline displacement can legitimately exceed the old path's.
+assert!(
+    post_displacement > 0.1 * pre_displacement,
+    "velocity must carry across the retarget: {post_displacement} vs {pre_displacement}"
+);
+
+// The spring settles on the new target.
+slint_testing::mock_elapsed_time(3000);
+assert_eq!(instance.get_morph(), star);
+```
+
+```cpp
+auto handle = TestCase::create();
+const TestCase &instance = *handle;
+
+auto eval_cubic = [](const float *c, float t) -> std::pair<float, float> {
+    float u = 1.f - t;
+    return { c[0] * (u * u * u) + c[2] * (3.f * t * u * u) + c[4] * (3.f * t * t * u)
+                 + c[6] * (t * t * t),
+             c[1] * (u * u * u) + c[3] * (3.f * t * u * u) + c[5] * (3.f * t * t * u)
+                 + c[7] * (t * t * t) };
+};
+auto polyline = [](const slint::Shape &shape) -> std::vector<std::pair<float, float>> {
+    std::vector<std::pair<float, float>> points;
+    const auto &cubics = shape.cubics();
+    for (size_t i = 0; i + 8 <= cubics.size(); i += 8) {
+        for (int k = 0; k <= 32; k++) {
+            points.push_back(eval_cubic(&cubics[i], k / 32.f));
+        }
+    }
+    return points;
+};
+auto anchors = [](const slint::Shape &shape) -> std::vector<std::pair<float, float>> {
+    std::vector<std::pair<float, float>> points;
+    const auto &cubics = shape.cubics();
+    for (size_t i = 0; i + 8 <= cubics.size(); i += 8) {
+        points.push_back({ cubics[i], cubics[i + 1] });
+    }
+    return points;
+};
+auto dist_to_polyline = [](std::pair<float, float> p,
+                           const std::vector<std::pair<float, float>> &line) -> float {
+    float min_dist = std::numeric_limits<float>::max();
+    for (size_t i = 0; i + 1 < line.size(); i++) {
+        float vx = line[i + 1].first - line[i].first;
+        float vy = line[i + 1].second - line[i].second;
+        float wx = p.first - line[i].first;
+        float wy = p.second - line[i].second;
+        float t = (vx * wx + vy * wy) / std::max(vx * vx + vy * vy, 1e-12f);
+        t = t < 0.f ? 0.f : (t > 1.f ? 1.f : t);
+        float dist = std::sqrt(std::pow(wx - vx * t, 2.f) + std::pow(wy - vy * t, 2.f));
+        min_dist = dist < min_dist ? dist : min_dist;
+    }
+    return min_dist;
+};
+auto outline_delta = [&](const slint::Shape &a, const slint::Shape &b) -> float {
+    auto pa = polyline(a);
+    auto pb = polyline(b);
+    float delta = 0.f;
+    for (auto p : anchors(a)) {
+        delta = std::max(delta, dist_to_polyline(p, pb));
+    }
+    for (auto p : anchors(b)) {
+        delta = std::max(delta, dist_to_polyline(p, pa));
+    }
+    return delta;
+};
+
+auto triangle = slint::shapes::regular_polygon(3, {});
+auto star = slint::shapes::star(5, 0.5f, {}, {});
+
+instance.set_morph(triangle);
+slint_testing::mock_elapsed_time(100);
+auto mid = instance.get_morph();
+slint_testing::mock_elapsed_time(16);
+auto pre = instance.get_morph();
+float pre_displacement = outline_delta(pre, mid);
+assert(pre_displacement > 0.f);
+
+instance.set_morph(star);
+assert(outline_delta(instance.get_morph(), pre) <= 1e-3f);
+
+slint_testing::mock_elapsed_time(16);
+auto post = instance.get_morph();
+float post_displacement = outline_delta(post, pre);
+
+assert(post_displacement > 0.1f * pre_displacement);
+
+slint_testing::mock_elapsed_time(3000);
+assert(instance.get_morph() == star);
+```
+*/
