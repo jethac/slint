@@ -54,7 +54,7 @@ export component TestCase inherits Rectangle {
         && Shapes.custom(
             [{x: 0px, y: 0px}, {x: 20px, y: 0px}, {x: 20px, y: 20px}],
             [{radius: 2, smoothing: 0}, {radius: 2, smoothing: 0}, {radius: 2, smoothing: 0}],
-            1, false) != unset
+            1, {x: 0px, y: 0px}, false) != unset
         && pick-shape(circle8, rounded-rect, 0) == circle8
         && pick-shape(circle8, rounded-rect, 1) == rounded-rect;
 }
