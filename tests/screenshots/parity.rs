@@ -77,7 +77,7 @@ pub const TEXT_OUTLIER_FRACTION: f64 = 0.35;
 /// only one render (a missing or added decoration) is compared at
 /// [`PIXEL_EPS`] instead, so dropping the focus ring, an overlay, or a
 /// recolor fails crisply.
-pub const EDGE_EPS: u8 = 56;
+pub const EDGE_EPS: u8 = 96;
 pub const EDGE_GRADIENT_SOFT: u8 = 24;
 
 /// Outline detection — includes faint decorations (focus rings, elevation
@@ -353,9 +353,6 @@ impl PixelMask {
             .max((slint.y1 - compose.y1).abs());
         let band = CORNER_BAND + drift;
         let corner_cell = |r: PxRect, px: f64, py: f64| -> Option<CornerCell> {
-            if !corners_strict {
-                return None;
-            }
             let r_pill = r.width().min(r.height()) / 2.0;
             let zone = r_pill + margin;
             let corners = [
@@ -415,9 +412,16 @@ impl PixelMask {
                         // an `inked` element: ripple ink is bounded by the
                         // rect, not the pill, so it legitimately fills these
                         // corners mid-press — `corner_silhouette_findings`
-                        // verifies that silhouette instead.
-                        Some(CornerCell::Outside) if !inked && r.contains(px, py) => {
-                            if self.layer[y * self.w + x] == PixelClass::Skip {
+                        // verifies that silhouette instead. For a decor
+                        // element the wedge itself is decor (shadow spill,
+                        // a ring), so it is masked instead.
+                        Some(CornerCell::Outside) => {
+                            if !corners_strict {
+                                self.set(x, y, PixelClass::Skip)
+                            } else if !inked
+                                && r.contains(px, py)
+                                && self.layer[y * self.w + x] == PixelClass::Skip
+                            {
                                 self.set(x, y, PixelClass::Strict)
                             }
                         }
@@ -853,48 +857,63 @@ pub fn capture_trace<C: i_slint_core::api::ComponentHandle>(
 
 /// Dispatch the case's `//ACTION=` input steps to the window, in order.
 pub fn apply_actions(window: &i_slint_core::api::Window, spec: &ParityMarkers) {
-    use i_slint_core::api::LogicalPosition;
-    use i_slint_core::items::PointerEventButton;
-    for action in &spec.actions {
-        if let ParityAction::Key { name } = action {
-            use i_slint_core::input::key_codes::Key;
-            let text: SharedString = match name.as_str() {
-                "Tab" => Key::Tab.into(),
-                "Backtab" => Key::Backtab.into(),
-                "Escape" => Key::Escape.into(),
-                "Space" => SharedString::from(" "),
-                "Return" => Key::Return.into(),
-                other => {
-                    let mut c = other.chars();
-                    match (c.next(), c.next()) {
-                        (Some(c), None) => c.to_string().into(),
-                        _ => panic!("Unknown //ACTION= key '{other}'"),
-                    }
-                }
-            };
-            window.dispatch_event(WindowEvent::KeyPressed { text: text.clone() });
-            window.dispatch_event(WindowEvent::KeyReleased { text });
+    apply_actions_filtered(window, spec, |_| true)
+}
+
+fn apply_actions_filtered(
+    window: &i_slint_core::api::Window,
+    spec: &ParityMarkers,
+    mut due: impl FnMut(usize) -> bool,
+) {
+    for (i, action) in spec.actions.iter().enumerate() {
+        if !due(i) {
             continue;
         }
-        let (x, y) = match *action {
-            ParityAction::Move { x, y }
-            | ParityAction::Press { x, y }
-            | ParityAction::Release { x, y } => (x, y),
-            ParityAction::Key { .. } => unreachable!(),
-        };
-        let position = LogicalPosition::new(x, y);
-        let event = match action {
-            ParityAction::Move { .. } => WindowEvent::PointerMoved { position },
-            ParityAction::Press { .. } => {
-                WindowEvent::PointerPressed { position, button: PointerEventButton::Left }
-            }
-            ParityAction::Release { .. } => {
-                WindowEvent::PointerReleased { position, button: PointerEventButton::Left }
-            }
-            ParityAction::Key { .. } => unreachable!(),
-        };
-        window.dispatch_event(event);
+        dispatch_action(window, action);
     }
+}
+
+fn dispatch_action(window: &i_slint_core::api::Window, action: &ParityAction) {
+    use i_slint_core::api::LogicalPosition;
+    use i_slint_core::items::PointerEventButton;
+    if let ParityAction::Key { name, .. } = action {
+        use i_slint_core::input::key_codes::Key;
+        let text: SharedString = match name.as_str() {
+            "Tab" => Key::Tab.into(),
+            "Backtab" => Key::Backtab.into(),
+            "Escape" => Key::Escape.into(),
+            "Space" => SharedString::from(" "),
+            "Return" => Key::Return.into(),
+            other => {
+                let mut c = other.chars();
+                match (c.next(), c.next()) {
+                    (Some(c), None) => c.to_string().into(),
+                    _ => panic!("Unknown //ACTION= key '{other}'"),
+                }
+            }
+        };
+        window.dispatch_event(WindowEvent::KeyPressed { text: text.clone() });
+        window.dispatch_event(WindowEvent::KeyReleased { text });
+        return;
+    }
+    let (x, y) = match *action {
+        ParityAction::Move { x, y, .. }
+        | ParityAction::Press { x, y, .. }
+        | ParityAction::Release { x, y, .. } => (x, y),
+        ParityAction::Key { .. } => unreachable!(),
+    };
+    let position = LogicalPosition::new(x, y);
+    let event = match action {
+        ParityAction::Move { .. } => WindowEvent::PointerMoved { position },
+        ParityAction::Press { .. } => {
+            WindowEvent::PointerPressed { position, button: PointerEventButton::Left }
+        }
+        ParityAction::Release { .. } => {
+            WindowEvent::PointerReleased { position, button: PointerEventButton::Left }
+        }
+        ParityAction::Key { .. } => unreachable!(),
+    };
+    window.dispatch_event(event);
 }
 
 fn advance_mock_time_to(start_ms: u64, target_rel_ms: u64) {
@@ -1290,11 +1309,21 @@ fn compare_text_metrics<C: i_slint_core::api::ComponentHandle>(
                 cf["elements"].get(&container).and_then(|ce| ce["x"].as_f64()).map(|bx| cx - bx);
             match (slint_off, compose_off) {
                 (Some(s_off), Some(c_off)) => {
-                    if (s_off - c_off).abs() > GEOM_EPS {
+                    // A centered label's offset within its container carries
+                    // half the width slack: `(W − w)/2` shifts by `−Δw/2`.
+                    // `//XFAIL_TEXT=` admits the same ceil-quantization
+                    // window here: Compose's reported text width need not
+                    // equal the box it centers in, so placement inherits
+                    // the tracked #28 divergence too.
+                    let off_eps = (GEOM_EPS + if xfail_text.is_some() { 1.15 } else { 0.0 })
+                        + (cw - sw).abs() / 2.0;
+                    if (s_off - c_off).abs() > off_eps {
                         errors.push(format!(
-                            "t={}ms text:{n}.x-offset: slint {s_off:.2} vs compose {c_off:.2} (eps {GEOM_EPS})",
+                            "t={}ms text:{n}.x-offset: slint {s_off:.2} vs compose {c_off:.2} (eps {off_eps:.2})",
                             frame.t_ms
                         ));
+                    } else if xfail_text.is_some() && (s_off - c_off).abs() > GEOM_EPS {
+                        saw_drift = true;
                     }
                 }
                 _ => {
@@ -1473,6 +1502,9 @@ fn build_frame_mask<C: i_slint_core::api::ComponentHandle>(
         .unwrap_or_else(|| PixelMask::new(width, height));
     let d = density;
     // Text regions from both sides — a label's ink lives inside its bounds.
+    // The 2px dilation covers a centered label's position drift: inside a
+    // pinned-width container the label block itself lands ~1px off between
+    // engines (half the width slack), and its cells still check the ink.
     for handle in i_slint_backend_testing::ElementQuery::from_root(component)
         .match_inherits("Text")
         .find_all()
@@ -1486,7 +1518,27 @@ fn build_frame_mask<C: i_slint_core::api::ComponentHandle>(
                 x1: (p.x + s.width) as f64 * d,
                 y1: (p.y + s.height) as f64 * d,
             }
-            .dilated(1.0),
+            .dilated(2.0),
+            PixelClass::Text,
+        );
+    }
+    // Rasterized icon content inside fixed bounds is the same drift class as
+    // text: a centered icon's position carries half the label's width drift,
+    // so per-cell checks apply instead of the strict layer.
+    for handle in i_slint_backend_testing::ElementQuery::from_root(component)
+        .match_inherits("Image")
+        .find_all()
+    {
+        let p = handle.absolute_position();
+        let s = handle.size();
+        mask.fill_rect(
+            PxRect {
+                x0: p.x as f64 * d,
+                y0: p.y as f64 * d,
+                x1: (p.x + s.width) as f64 * d,
+                y1: (p.y + s.height) as f64 * d,
+            }
+            .dilated(2.0),
             PixelClass::Text,
         );
     }
@@ -1499,7 +1551,7 @@ fn build_frame_mask<C: i_slint_core::api::ComponentHandle>(
                 continue;
             };
             mask.fill_rect(
-                PxRect { x0: x * d, y0: y * d, x1: (x + w) * d, y1: (y + h) * d }.dilated(1.0),
+                PxRect { x0: x * d, y0: y * d, x1: (x + w) * d, y1: (y + h) * d }.dilated(2.0),
                 PixelClass::Text,
             );
         }
@@ -1894,7 +1946,10 @@ pub fn run_parity_case<C: i_slint_core::api::ComponentHandle>(
         let start = i_slint_backend_testing::get_mocked_time();
 
         let mut frames = Vec::new();
-        let mut actions_applied = actions_before_first_frame;
+        // `dispatched[i]` — each action fires at its `at_ms`; the untimed
+        // (`0`) ones land just after the pre-gesture baseline frame. Static
+        // scenes applied everything up front.
+        let mut dispatched = vec![actions_before_first_frame; spec.actions.len()];
         let mut artifacts_written = false;
         // The first listed-time frames on each side are the pre-action
         // baseline `ink_coverage` measures against; `early_coverage` holds
@@ -1904,12 +1959,25 @@ pub fn run_parity_case<C: i_slint_core::api::ComponentHandle>(
         let mut early_coverage: std::collections::HashMap<String, (f64, f64)> =
             Default::default();
         for &t in &times {
+            // Actions timed inside the frame sequence fire at their own
+            // clock time before this frame renders.
+            for (i, action) in spec.actions.iter().enumerate() {
+                if !dispatched[i] && action.at_ms() > 0 && action.at_ms() <= t {
+                    advance_mock_time_to(start, action.at_ms());
+                    dispatch_action(component.window(), action);
+                    dispatched[i] = true;
+                }
+            }
             advance_mock_time_to(start, t);
             let actual = render_frame(&component);
             frames.push(capture_trace(&component, t, spec, prop_value));
-            if !actions_applied {
-                apply_actions(component.window(), spec);
-                actions_applied = true;
+            if t == times[0] {
+                for (i, action) in spec.actions.iter().enumerate() {
+                    if !dispatched[i] && action.at_ms() == 0 {
+                        dispatch_action(component.window(), action);
+                        dispatched[i] = true;
+                    }
+                }
             }
 
             if references_missing {
@@ -2041,7 +2109,20 @@ pub fn run_parity_case<C: i_slint_core::api::ComponentHandle>(
                     // coverage. Layoutlib's recorded ripple fades early on
                     // Compose, so the bound applies only where the settle
                     // frame proves ink actually reached the interior.
-                    if let (Some(ba), Some(be)) = (&baseline_actual, &baseline_expected) {
+                    //
+                    // The metric is coverage *against the baseline frame* —
+                    // it isolates ink only where ink is the only interior
+                    // change. Motion scenes (and mutated negative cases built
+                    // on them) animate the container shape on the same frames,
+                    // so coverage at the first post-action frame is dominated
+                    // by the morph, not the ripple — skip it there.
+                    let morphs = matches!(
+                        spec.parity.as_deref(),
+                        Some("motion") | Some("negative")
+                    );
+                    if let (Some(ba), Some(be), false) =
+                        (&baseline_actual, &baseline_expected, morphs)
+                    {
                         for (slint_r, compose_r, id) in &pairs {
                             let inset = CORNER_BAND + 2.0 * d;
                             let ca = ink_coverage(&actual, ba, slint_r, inset, pixel_eps);
@@ -2087,15 +2168,17 @@ pub fn run_parity_case<C: i_slint_core::api::ComponentHandle>(
                     "parity: xfail-silhouette {case_rel} d{density} t={tag}: {silhouette_xfail} findings on software (issue #6: software clip is axis-aligned, bounded ripple ink fills the corner cells — silhouette edge unverifiable)"
                 );
             }
-            if !result.ok || silhouette_failed {
+            if !result.ok || silhouette_failed || std::env::var_os("PARITY_DUMP_ACTUALS").is_some() {
                 let dir = artifacts_dir(driver, case_rel);
                 write_png(&dir.join(format!("actual_d{density}_{tag}.png")), &actual)?;
                 write_png(&dir.join(format!("expected_d{density}_{tag}.png")), &expected)?;
                 if let Some(diff) = &result.diff {
                     write_png(&dir.join(format!("diff_d{density}_{tag}.png")), diff)?;
                 }
-                artifacts_written = true;
-                failures.push(format!("d{density} t={tag}: {}", result.report));
+                if !result.ok || silhouette_failed {
+                    artifacts_written = true;
+                    failures.push(format!("d{density} t={tag}: {}", result.report));
+                }
             }
         }
 

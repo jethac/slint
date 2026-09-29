@@ -290,15 +290,29 @@ pub struct ParityMarkers {
     pub mask_decor: Vec<(String, u64)>,
 }
 
-/// One `//ACTION=` input step.
+/// One `//ACTION=` input step. `at_ms` is the dispatch time within the
+/// frame sequence: `0` (no `@` suffix) fires right after the pre-gesture
+/// baseline frame; a later value fires at that mock-clock time so a gesture
+/// sequence can play out across the timed frames.
 #[derive(Debug, Clone, PartialEq)]
 pub enum ParityAction {
-    Move { x: f32, y: f32 },
-    Press { x: f32, y: f32 },
-    Release { x: f32, y: f32 },
+    Move { x: f32, y: f32, at_ms: u64 },
+    Press { x: f32, y: f32, at_ms: u64 },
+    Release { x: f32, y: f32, at_ms: u64 },
     /// A named key (`Tab`, `Backtab`, `Escape`, ...) dispatched as a
     /// press+release pair; anything else is dispatched as the literal text.
-    Key { name: String },
+    Key { name: String, at_ms: u64 },
+}
+
+impl ParityAction {
+    pub fn at_ms(&self) -> u64 {
+        match *self {
+            Self::Move { at_ms, .. }
+            | Self::Press { at_ms, .. }
+            | Self::Release { at_ms, .. }
+            | Self::Key { at_ms, .. } => at_ms,
+        }
+    }
 }
 
 /// Extract the parity markers listed on [`ParityMarkers`] from a case's source.
@@ -364,19 +378,19 @@ pub fn extract_parity(source: &str) -> ParityMarkers {
 
     let mut actions = Vec::new();
     static ACTION_RX: LazyLock<Regex> = LazyLock::new(|| {
-        Regex::new(r"//ACTION=\s*([a-z]+)\s*:\s*(?:([0-9.\-]+)\s*,\s*([0-9.\-]+)|([A-Za-z]+))")
-            .unwrap()
+        Regex::new(
+            r"//ACTION=\s*([a-z]+)(?:@([0-9.]+))?\s*:\s*(?:([0-9.\-]+)\s*,\s*([0-9.\-]+)|([A-Za-z]+))",
+        )
+        .unwrap()
     });
     for m in ACTION_RX.captures_iter(source) {
+        let at_ms = m.get(2).and_then(|g| g.as_str().parse().ok()).unwrap_or(0);
+        let num = |i| m.get(i).unwrap().as_str().parse().unwrap();
         actions.push(match &m[1] {
-            "move" => ParityAction::Move { x: m[2].parse().unwrap(), y: m[3].parse().unwrap() },
-            "press" => {
-                ParityAction::Press { x: m[2].parse().unwrap(), y: m[3].parse().unwrap() }
-            }
-            "release" => {
-                ParityAction::Release { x: m[2].parse().unwrap(), y: m[3].parse().unwrap() }
-            }
-            "key" => ParityAction::Key { name: m[4].to_string() },
+            "move" => ParityAction::Move { x: num(3), y: num(4), at_ms },
+            "press" => ParityAction::Press { x: num(3), y: num(4), at_ms },
+            "release" => ParityAction::Release { x: num(3), y: num(4), at_ms },
+            "key" => ParityAction::Key { name: m[5].to_string(), at_ms },
             other => {
                 panic!("Unknown //ACTION= kind '{other}' (expected move|press|release|key)")
             }
@@ -465,7 +479,10 @@ Blah {}
     assert_eq!(m.trace_elements, ["thumb", "track"]);
     assert_eq!(
         m.actions,
-        [ParityAction::Move { x: 12.5, y: 40.0 }, ParityAction::Press { x: 30.0, y: 20.0 }]
+        [
+            ParityAction::Move { x: 12.5, y: 40.0, at_ms: 0 },
+            ParityAction::Press { x: 30.0, y: 20.0, at_ms: 0 }
+        ]
     );
     assert_eq!(m.densities, [1, 2]);
     assert_eq!(m.eps, Some(10.0));
