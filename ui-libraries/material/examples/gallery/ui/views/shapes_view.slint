@@ -1,0 +1,209 @@
+// Copyright © SixtyFPS GmbH <info@slint.dev>
+// SPDX-License-Identifier: MIT
+
+import {
+    MaterialShapes,
+    MaterialText,
+    MaterialTypography,
+    MaterialStyleMetrics,
+    MaterialPalette,
+    MaterialAnimations,
+    Elevation,
+    SegmentedButton,
+    IconButton,
+    StateLayerArea,
+    Vertical,
+    Horizontal,
+} from "../../../../src/material.slint";
+
+import { Group } from "../components/group.slint";
+import { ComponentCard } from "../components/component_card.slint";
+import { OutlinedIcons } from "../icons.slint";
+
+component ShapeTile {
+    // `shape` and `shape-fit` are element-level properties: binding them on
+    // this tile applies them to its root element, and `root.shape` /
+    // `root.shape-fit` forward them to the state layer and the fill.
+    in property <string> name;
+    in property <bool> selected;
+
+    callback activate();
+
+    VerticalLayout {
+        spacing: 4px;
+        alignment: center;
+
+        // The state layer and the press ripple clip to the tile's outline;
+        // the touch area itself hit-tests against it.
+        StateLayerArea {
+            width: 56px;
+            height: 56px;
+            shape: root.shape;
+            shape-fit: root.shape-fit;
+            color: MaterialPalette.on_secondary_container;
+            display_background: false;
+
+            clicked => { root.activate(); }
+
+            Rectangle {
+                width: 100%;
+                height: 100%;
+                shape: root.shape;
+                shape-fit: root.shape-fit;
+                background: root.selected ? MaterialPalette.primary : MaterialPalette.secondary_container;
+            }
+        }
+
+        MaterialText {
+            text: root.name;
+            style: MaterialTypography.label_small;
+            color: root.selected ? MaterialPalette.primary : MaterialPalette.on_surface_variant;
+            horizontal_alignment: center;
+        }
+    }
+}
+
+export component ShapesView {
+    in_out property <int> morph_index: 0;
+    property <int> fit_index: 0;
+    property <ShapeFit> fit: root.fit_index == 1 ? ShapeFit.contain : root.fit_index == 2 ? ShapeFit.cover : ShapeFit.fill;
+    property <bool> auto_morph: true;
+
+    // All 35 MaterialShapes, in `MaterialShapes.kt` declaration order.
+    property <[shape]> shapes: [
+        MaterialShapes.circle,
+        MaterialShapes.square,
+        MaterialShapes.slanted,
+        MaterialShapes.arch,
+        MaterialShapes.fan,
+        MaterialShapes.arrow,
+        MaterialShapes.semi-circle,
+        MaterialShapes.oval,
+        MaterialShapes.pill,
+        MaterialShapes.triangle,
+        MaterialShapes.diamond,
+        MaterialShapes.clam-shell,
+        MaterialShapes.pentagon,
+        MaterialShapes.gem,
+        MaterialShapes.sunny,
+        MaterialShapes.very-sunny,
+        MaterialShapes.cookie-4-sided,
+        MaterialShapes.cookie-6-sided,
+        MaterialShapes.cookie-7-sided,
+        MaterialShapes.cookie-9-sided,
+        MaterialShapes.cookie-12-sided,
+        MaterialShapes.ghostish,
+        MaterialShapes.clover-4-leaf,
+        MaterialShapes.clover-8-leaf,
+        MaterialShapes.burst,
+        MaterialShapes.soft-burst,
+        MaterialShapes.boom,
+        MaterialShapes.soft-boom,
+        MaterialShapes.flower,
+        MaterialShapes.puffy,
+        MaterialShapes.puffy-diamond,
+        MaterialShapes.pixel-circle,
+        MaterialShapes.pixel-triangle,
+        MaterialShapes.bun,
+        MaterialShapes.heart,
+    ];
+    property <[string]> names: [
+        "circle", "square", "slanted", "arch", "fan", "arrow", "semi-circle",
+        "oval", "pill", "triangle", "diamond", "clam-shell", "pentagon", "gem",
+        "sunny", "very-sunny", "cookie-4-sided", "cookie-6-sided",
+        "cookie-7-sided", "cookie-9-sided", "cookie-12-sided", "ghostish",
+        "clover-4-leaf", "clover-8-leaf", "burst", "soft-burst", "boom",
+        "soft-boom", "flower", "puffy", "puffy-diamond", "pixel-circle",
+        "pixel-triangle", "bun", "heart",
+    ];
+
+    out property <shape> morph_shape: root.shapes[Math.mod(root.morph_index, 35)];
+    out property <string> morph_name: root.names[Math.mod(root.morph_index, 35)];
+
+    // Every timer tick retargets the morph mid-flight; the spring carries its
+    // velocity into the new morph, so the hero keeps gliding shape to shape.
+    morph_timer := Timer {
+        interval: 700ms;
+        running: root.auto_morph;
+        triggered => { root.morph_index = Math.mod(root.morph_index + 1, 35); }
+    }
+
+    Vertical {
+        alignment: start;
+        spacing: MaterialStyleMetrics.spacing_8;
+        horizontal-stretch: 1;
+
+        Group {
+            title: "Shapes";
+
+            ComponentCard {
+                title: "Morph";
+
+                Vertical {
+                    spacing: MaterialStyleMetrics.spacing_16;
+                    alignment: center;
+
+                    Elevation {
+                        width: 160px;
+                        height: 160px;
+                        level: 3;
+                        background: MaterialPalette.primary;
+                        shape: root.morph_shape;
+                        shape-fit: root.fit;
+
+                        animate shape {
+                            enabled: !MaterialPalette.reduced-motion;
+                            easing: MaterialAnimations.default-spatial-spring;
+                        }
+                    }
+
+                    MaterialText {
+                        text: root.morph_name;
+                        style: MaterialTypography.title_medium;
+                        horizontal_alignment: center;
+                    }
+
+                    Horizontal {
+                        spacing: MaterialStyleMetrics.spacing_16;
+                        alignment: center;
+
+                        IconButton {
+                            icon: root.auto_morph ? OutlinedIcons.pause : OutlinedIcons.play_arrow;
+                            clicked => { root.auto_morph = !root.auto_morph; }
+                        }
+
+                        SegmentedButton {
+                            items: [{ text: "fill" }, { text: "contain" }, { text: "cover" }];
+                            current_index: root.fit_index;
+
+                            index_changed(index) => { root.fit_index = index; }
+                        }
+                    }
+                }
+            }
+
+            ComponentCard {
+                title: "Material shapes";
+
+                Vertical {
+                    spacing: MaterialStyleMetrics.spacing_16;
+                    alignment: center;
+
+                    for row in 5 : Horizontal {
+                        spacing: MaterialStyleMetrics.spacing_16;
+                        alignment: center;
+
+                        for col in 7 : ShapeTile {
+                            shape: root.shapes[row * 7 + col];
+                            shape-fit: root.fit;
+                            name: root.names[row * 7 + col];
+                            selected: Math.mod(root.morph_index, 35) == row * 7 + col;
+
+                            activate => { root.morph_index = row * 7 + col; }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
