@@ -4263,10 +4263,7 @@ impl<T: ProcessScene> i_slint_core::item_rendering::ItemRenderer for SceneBuilde
             // with no further rotation. The processor sweeps mesh layers
             // into per-scanline spans; blur-fallback layers carry a bounded
             // A8 mask.
-            self.processor.process_shadow_layer(
-                ShadowLayerData { layer, color: color.into() },
-                clipped.cast(),
-            );
+            self.processor.process_shadow_layer(ShadowLayerData { layer, color }, clipped.cast());
         }
     }
 
