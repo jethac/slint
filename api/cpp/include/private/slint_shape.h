@@ -336,4 +336,17 @@ inline Shape path(SharedString d, cbindgen_private::FillRule fill_rule)
 }
 
 } // namespace shapes
+
+namespace private_api {
+
+/// Reinterprets the public \ref Shape wrapper as its `#[repr(C)]` FFI twin
+/// (`cbindgen_private::Shape`), the storage type of `shape` properties on
+/// native items. The layouts match by construction; generated code uses this
+/// because a prvalue cannot be reinterpret_cast to a reference.
+inline const cbindgen_private::Shape &as_cbindgen_shape(const slint::Shape &shape)
+{
+    return *reinterpret_cast<const cbindgen_private::Shape *>(&shape);
+}
+
+} // namespace private_api
 } // namespace slint
