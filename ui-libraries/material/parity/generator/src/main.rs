@@ -228,7 +228,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         // Compose side rasterizes literally the same path the Slint
         // `Icons.<name>` image does.
         for w in &scene.widgets {
-            if let Some(icon) = &w.icon {
+            for icon in w
+                .icon
+                .iter()
+                .chain(w.nav_icon.iter())
+                .chain(w.icons.iter())
+            {
                 let src = repo_root
                     .join("ui-libraries/material/src/ui/icons")
                     .join(format!("{icon}.svg"));

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Paparazzi does not load aar resources for unit-test renders (resources.json
+     lists no aarExplodedDirs), so material3's internal getString() lookups fail.
+     Declaring the two strings the pinned SearchBarDefaults.InputField resolves
+     here gives them the same merged ids with their official default values
+     (androidx.compose.material3:material3:1.5.0-alpha18, values.xml). -->
+<resources>
+    <string name="m3c_search_bar_search">Search</string>
+    <string name="m3c_suggestions_available">Suggestions below</string>
+</resources>

@@ -1470,14 +1470,8 @@ private fun StateAppBar(widget: Widget, tracer: Tracer, tag: String) {
                     windowInsets = insets,
                     scrollBehavior = scrollBehavior,
                 )
-                "center" -> if (subtitle == null) CenterAlignedTopAppBar(
+                "center" -> CenterAlignedTopAppBar(
                     title, modifier,
-                    navigationIcon = navIcon ?: {},
-                    actions = actions,
-                    windowInsets = insets,
-                    scrollBehavior = scrollBehavior,
-                ) else CenterAlignedTopAppBar(
-                    title, subtitle, modifier,
                     navigationIcon = navIcon ?: {},
                     actions = actions,
                     windowInsets = insets,
