@@ -1,6 +1,6 @@
 {
   "actions": [],
-  "case_rel": "material/negative_toggle_select",
+  "case_rel": "material/search_bars",
   "densities": [
     1,
     2
@@ -11,10 +11,9 @@
   },
   "mask_decor": {},
   "mask_inner": {},
-  "name": "negative-toggle-select",
-  "negative_note": "slint_overrides drops `checkable`, so the Slint widget renders the resting round shape while checked — a toggle that does not morph on selection must fail",
+  "name": "search-bars",
   "params": {},
-  "parity": "negative",
+  "parity": "static",
   "scheme": {
     "background": "FFFDF7FE",
     "error": "FFA8364B",
@@ -65,8 +64,8 @@
     "tertiaryFixedDim": "FFE5B2D5"
   },
   "size": [
-    240,
-    96
+    360,
+    180
   ],
   "theme": {
     "contrast": 0.0,
@@ -78,14 +77,16 @@
   },
   "times": [],
   "trace_elements": [
-    "button0"
+    "appbar0",
+    "appbar1",
+    "appbar2"
   ],
   "trace_props": [],
   "type": "canvas",
   "widgets": [
     {
-      "checkable": true,
-      "checked": true,
+      "checkable": null,
+      "checked": null,
       "color": null,
       "content_offset": null,
       "corner": null,
@@ -94,24 +95,80 @@
       "height_offset": null,
       "icon": null,
       "icons": [],
-      "kind": "filled-button",
+      "kind": "search-bar",
       "level": null,
-      "nav_icon": null,
+      "nav_icon": "menu",
+      "placeholder": "Search",
+      "radius": null,
+      "shape": null,
+      "size": null,
+      "slint_overrides": {},
+      "state": null,
+      "subtitle": null,
+      "text": null,
+      "variant": null,
+      "width": 360.0,
+      "width_option": null,
+      "x": 0.0,
+      "y": 0.0
+    },
+    {
+      "checkable": null,
+      "checked": null,
+      "color": null,
+      "content_offset": null,
+      "corner": null,
+      "enabled": null,
+      "height": null,
+      "height_offset": null,
+      "icon": null,
+      "icons": [],
+      "kind": "search-bar",
+      "level": null,
+      "nav_icon": "menu",
       "placeholder": null,
       "radius": null,
       "shape": null,
-      "size": "s",
-      "slint_overrides": {
-        "checkable": false
-      },
+      "size": null,
+      "slint_overrides": {},
       "state": null,
       "subtitle": null,
-      "text": "Label",
+      "text": "Query",
       "variant": null,
-      "width": 86.0,
+      "width": 360.0,
       "width_option": null,
-      "x": 16.0,
-      "y": 28.0
+      "x": 0.0,
+      "y": 64.0
+    },
+    {
+      "checkable": null,
+      "checked": null,
+      "color": null,
+      "content_offset": null,
+      "corner": null,
+      "enabled": null,
+      "height": null,
+      "height_offset": null,
+      "icon": null,
+      "icons": [
+        "more_vert"
+      ],
+      "kind": "app-bar-with-search",
+      "level": null,
+      "nav_icon": "menu",
+      "placeholder": "Search",
+      "radius": null,
+      "shape": null,
+      "size": null,
+      "slint_overrides": {},
+      "state": null,
+      "subtitle": null,
+      "text": null,
+      "variant": null,
+      "width": 360.0,
+      "width_option": null,
+      "x": 0.0,
+      "y": 128.0
     }
   ]
 }

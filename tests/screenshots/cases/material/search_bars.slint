@@ -1,0 +1,54 @@
+// Copyright © SixtyFPS GmbH <info@slint.dev>
+// SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0
+
+// Scene: search-bars — generated from `ui-libraries/material/parity/scenes/search-bars.json`
+// (edit the scene, regenerate with `cargo run -p material-parity-generator`).
+//PARITY=static
+//SIZE=360x180
+//TRACE_ELEMENTS=appbar0,appbar1,appbar2
+//DENSITIES=1,2
+import "../../fonts/Roboto-VariableFont.ttf";
+import { AppBarWithSearch, Icons, MaterialPalette, MaterialTheme, MaterialWindow, SearchBar } from "@material";
+
+export component TestCase inherits MaterialWindow {
+    init => {
+        // The scene pins seed #6750A4, tonal-spot, spec2025, light, contrast 0
+        // (all the library defaults; restated here so a default change can't
+        // silently move the parity baseline).
+        MaterialTheme.seed-color = #6750A4;
+        MaterialTheme.dark = false;
+        MaterialTheme.contrast-level = 0;
+        MaterialTheme.use-platform-color = false;
+        MaterialTheme.plain-family = "Roboto";
+        MaterialTheme.brand-family = "Roboto";
+        // Compose builds its scene scheme from the same seed — use the
+        // runtime-generated scheme, not the static expressive table.
+        MaterialPalette.dynamic = true;
+    }
+
+    appbar0 := SearchBar {
+        x: 0px;
+        y: 0px;
+        placeholder-text: "Search";
+        leading-icon: Icons.menu;
+        width: 360px;
+    }
+
+    appbar1 := SearchBar {
+        x: 0px;
+        y: 64px;
+        text: "Query";
+        leading-icon: Icons.menu;
+        width: 360px;
+    }
+
+    appbar2 := AppBarWithSearch {
+        x: 0px;
+        y: 128px;
+        placeholder-text: "Search";
+        leading-icon: Icons.menu;
+        trailing-buttons: [{ icon: Icons.more_vert, enabled: true }];
+        width: 360px;
+    }
+
+}

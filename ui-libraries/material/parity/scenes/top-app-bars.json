@@ -1,0 +1,132 @@
+{
+  "actions": [],
+  "densities": [
+    1,
+    2
+  ],
+  "fonts": {
+    "brand": "Roboto",
+    "plain": "Roboto"
+  },
+  "name": "top-app-bars",
+  "params": {},
+  "parity": "static",
+  "size": [
+    360,
+    660
+  ],
+  "theme": {
+    "contrast": 0.0,
+    "dark": false,
+    "platform": "phone",
+    "seed": "6750A4",
+    "spec": "spec2025",
+    "variant": "tonal-spot"
+  },
+  "trace_elements": [
+    "appbar0",
+    "appbar1",
+    "appbar2",
+    "appbar3",
+    "appbar4",
+    "appbar5",
+    "appbar6",
+    "appbar7"
+  ],
+  "type": "canvas",
+  "widgets": [
+    {
+      "icons": [
+        "more_vert"
+      ],
+      "kind": "top-app-bar",
+      "nav_icon": "menu",
+      "text": "Small",
+      "variant": "small",
+      "width": 360,
+      "x": 0,
+      "y": 0
+    },
+    {
+      "icons": [
+        "more_vert"
+      ],
+      "kind": "top-app-bar",
+      "nav_icon": "arrow_back",
+      "text": "Centered",
+      "variant": "center",
+      "width": 360,
+      "x": 0,
+      "y": 64
+    },
+    {
+      "icons": [
+        "more_vert"
+      ],
+      "kind": "top-app-bar",
+      "nav_icon": "arrow_back",
+      "text": "Medium",
+      "variant": "medium",
+      "width": 360,
+      "x": 0,
+      "y": 128
+    },
+    {
+      "icons": [
+        "more_vert"
+      ],
+      "kind": "top-app-bar",
+      "nav_icon": "arrow_back",
+      "subtitle": "Subtitle",
+      "text": "Medium flex",
+      "variant": "medium-flexible",
+      "width": 360,
+      "x": 0,
+      "y": 240
+    },
+    {
+      "icons": [
+        "more_vert"
+      ],
+      "kind": "top-app-bar",
+      "nav_icon": "arrow_back",
+      "text": "Large",
+      "variant": "large",
+      "width": 360,
+      "x": 0,
+      "y": 376
+    },
+    {
+      "icons": [
+        "more_vert"
+      ],
+      "kind": "top-app-bar",
+      "nav_icon": "arrow_back",
+      "subtitle": "Subtitle",
+      "text": "Large flex",
+      "variant": "large-flexible",
+      "width": 360,
+      "x": 0,
+      "y": 528
+    },
+    {
+      "content_offset": 10,
+      "kind": "top-app-bar",
+      "text": "Scrolled",
+      "variant": "small",
+      "width": 360,
+      "x": 0,
+      "y": 640
+    },
+    {
+      "height_offset": -36,
+      "kind": "top-app-bar",
+      "subtitle": "Subtitle",
+      "text": "Collapsed",
+      "variant": "medium-flexible",
+      "width": 360,
+      "x": 0,
+      "y": 704
+    }
+  ]
+}

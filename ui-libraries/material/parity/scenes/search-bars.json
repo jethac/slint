@@ -1,0 +1,61 @@
+{
+  "actions": [],
+  "densities": [
+    1,
+    2
+  ],
+  "fonts": {
+    "brand": "Roboto",
+    "plain": "Roboto"
+  },
+  "name": "search-bars",
+  "params": {},
+  "parity": "static",
+  "size": [
+    360,
+    180
+  ],
+  "theme": {
+    "contrast": 0.0,
+    "dark": false,
+    "platform": "phone",
+    "seed": "6750A4",
+    "spec": "spec2025",
+    "variant": "tonal-spot"
+  },
+  "trace_elements": [
+    "appbar0",
+    "appbar1",
+    "appbar2"
+  ],
+  "type": "canvas",
+  "widgets": [
+    {
+      "kind": "search-bar",
+      "nav_icon": "menu",
+      "placeholder": "Search",
+      "width": 360,
+      "x": 0,
+      "y": 0
+    },
+    {
+      "kind": "search-bar",
+      "nav_icon": "menu",
+      "text": "Query",
+      "width": 360,
+      "x": 0,
+      "y": 64
+    },
+    {
+      "icons": [
+        "more_vert"
+      ],
+      "kind": "app-bar-with-search",
+      "nav_icon": "menu",
+      "placeholder": "Search",
+      "width": 360,
+      "x": 0,
+      "y": 128
+    }
+  ]
+}
