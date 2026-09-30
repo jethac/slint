@@ -1226,7 +1226,6 @@ fn compare_text_metrics<C: i_slint_core::api::ComponentHandle>(
     slint: &[TraceFrame],
     compose: &serde_json::Value,
     xfail_text: Option<&str>,
-    xfail_text_pixels_used: bool,
 ) -> (Vec<String>, bool) {
     let mut errors = Vec::new();
     let mut saw_drift = false;
@@ -2234,7 +2233,6 @@ pub fn run_parity_case<C: i_slint_core::api::ComponentHandle>(
                 &frames,
                 compose,
                 spec.xfail_text.as_deref(),
-                xfail_text_pixels_used,
             );
             errors.extend(metric_errors);
             xfail_text_saw_drift |= saw_drift;
