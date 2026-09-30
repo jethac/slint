@@ -51,9 +51,12 @@ struct Scene {
     mask_inner: std::collections::BTreeMap<String, Vec<u64>>,
     /// Timestamps (ms) at which an element's decoration outside its
     /// silhouette (a drop shadow, a blur) is not comparable on the
-    /// reference engine; the corner zones take the normal band.
+    /// reference engine; the corner zones take the normal band. Either a
+    /// bare timestamp list or `{"times": [...], "margin": dp}` — the
+    /// margin widens the decoration band past the default 6dp for
+    /// decorations that spill further (a big elevation shadow).
     #[serde(default)]
-    mask_decor: std::collections::BTreeMap<String, Vec<u64>>,
+    mask_decor: std::collections::BTreeMap<String, MaskDecor>,
     #[serde(default)]
     params: serde_json::Map<String, serde_json::Value>,
     #[serde(default)]
@@ -105,6 +108,31 @@ struct Action {
     /// until a mid-sequence release).
     #[serde(default)]
     at: f64,
+}
+
+/// A `mask_decor` entry: a bare timestamp list, or `times` plus a `margin`
+/// (dp) widening the element's decoration band past the 6dp default.
+#[derive(serde::Deserialize, serde::Serialize)]
+#[serde(untagged)]
+enum MaskDecor {
+    Times(Vec<u64>),
+    WithMargin { times: Vec<u64>, margin: f64 },
+}
+
+impl MaskDecor {
+    fn times(&self) -> &[u64] {
+        match self {
+            Self::Times(ts) => ts,
+            Self::WithMargin { times, .. } => times,
+        }
+    }
+
+    fn margin(&self) -> Option<f64> {
+        match self {
+            Self::Times(_) => None,
+            Self::WithMargin { margin, .. } => Some(*margin),
+        }
+    }
 }
 
 #[derive(serde::Deserialize, serde::Serialize)]
@@ -492,11 +520,15 @@ fn slint_case(scene: &Scene) -> String {
         )
         .unwrap();
     }
-    for (id, ts) in &scene.mask_decor {
+    for (id, spec) in &scene.mask_decor {
+        let margin = match spec.margin() {
+            Some(m) => format!("+{m}"),
+            None => String::new(),
+        };
         writeln!(
             s,
-            "//MASK_DECOR={id}@{}",
-            ts.iter().map(u64::to_string).collect::<Vec<_>>().join(",")
+            "//MASK_DECOR={id}{margin}@{}",
+            spec.times().iter().map(u64::to_string).collect::<Vec<_>>().join(",")
         )
         .unwrap();
     }
