@@ -1,4 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Copyright © SixtyFPS GmbH <info@slint.dev> -->
+<!-- SPDX-License-Identifier: MIT -->
 <!-- Paparazzi does not load aar resources for unit-test renders (resources.json
      lists no aarExplodedDirs), so material3's internal getString() lookups fail.
      Declaring the two strings the pinned SearchBarDefaults.InputField resolves
