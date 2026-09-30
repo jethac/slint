@@ -13,7 +13,15 @@ import { IconButton } from "./icon_button.slint";
 import { Icons } from "../icons/icons.slint";
 import { HorizontalDivider } from "./divider.slint";
 import { ListView } from "./list_view.slint";
+import { IconButtonItem } from "./bottom_app_bar.slint";
 import { MaterialAnimations } from "../styling/material_animations.slint";
+import {
+    SearchBarTokens,
+    SearchViewTokens,
+    AppBarTokens,
+    AppBarSmallTokens,
+} from "../styling/generated/material_component_tokens.slint";
+import { ShapeTokens } from "../styling/generated/material_shape_tokens.slint";
 
 component SearchTile inherits ListTile {
     in property <image> action_button_icon;
@@ -75,7 +83,7 @@ component SearchTextInput  {
             vertical_alignment: center;
             single_line: true;
             input-type: search;
-            color: MaterialPalette.on_surface;
+            color: SearchBarTokens.input_text_color;
             selection_background_color: MaterialPalette.secondary_container;
             selection_foreground_color: self.color;
              // Disable TextInput's built-in accessibility support as the component takes care of that.
@@ -115,13 +123,151 @@ component SearchTextInput  {
             width: 100%;
             height: 100%;
             text: root.placeholder_text;
-            color: MaterialPalette.on_surface_variant;
+            color: SearchBarTokens.supporting_text_color;
             vertical_alignment: center;
-            style: MaterialTypography.body_large;
+            style: SearchBarTokens.supporting_text_font;
         }
     }
 }
 
+/// Which expanded surface a `SearchBar` opens when `expanded` becomes true —
+/// `docked`, `docked-with-gap`, `full-screen` and
+/// `full-screen-contained` mirror the `ExpandedDockedSearchBar`,
+/// `ExpandedDockedSearchBarWithGap`, `ExpandedFullScreenSearchBar` and
+/// `ExpandedFullScreenContainedSearchBar` composables; `none` shows the
+/// collapsed bar only.
+export enum SearchBarExpansion { none, docked, docked-with-gap, full-screen, full-screen-contained }
+
+/// The expanded search surface shared by `SearchBar` and the exported
+/// `Expanded*SearchBar` overlay components. Anchored at the collapsed bar's
+/// position like the pin's `state.collapsedBounds.topLeft`.
+component SearchViewPopup inherits PopupWindow {
+    in property <SearchBarExpansion> expansion: SearchBarExpansion.docked;
+    /// `SearchBarDefaults.dockedDropdownGapSize` — 2.dp in the pin.
+    in property <length> dropdown-gap-size: 2px;
+    in property <string> placeholder_text;
+    in property <string> empty_text;
+    in_out property <string> text;
+    in property <[ListItem]> items;
+    in property <bool> contained;
+    /// Outer size of the popup; callers size `full-screen*` variants to the
+    /// window.
+    in property <length> expanded-width;
+    in property <length> expanded-height;
+
+    callback accepted(text: string);
+    callback edited(text: string);
+    callback action_button_clicked(index: int);
+    callback item-activated(index: int) -> bool;
+    callback closed();
+
+    property <length> item_height: MaterialStyleMetrics.size_72;
+    property <bool> full-screen: root.expansion == SearchBarExpansion.full-screen ||
+        root.expansion == SearchBarExpansion.full-screen-contained;
+    property <bool> with-gap: root.expansion == SearchBarExpansion.docked-with-gap;
+    // `docked_header_container_height` / `full_screen_header_container_height`
+    out property <length> header-height: root.full-screen ?
+        SearchViewTokens.full_screen_header_container_height :
+        SearchViewTokens.docked_header_container_height;
+    property <length> content-height: clamp(root.item_height * root.items.length,
+        3 * root.item_height, 6 * root.item_height);
+
+    // The gap variant leaves `dropdown-gap-size` between the collapsed bar
+    // and the dropdown surface.
+    y: root.with-gap ? root.dropdown-gap-size : 0px;
+    width: root.expanded-width;
+    height: root.expanded-height > 0 ? root.expanded-height : root.header-height + root.content-height;
+    close_policy: close_on_click_outside;
+
+    container := Rectangle {
+        width: 100%;
+        height: 100%;
+        background: root.contained ? MaterialPalette.surface : SearchViewTokens.container_color;
+        border_radius: root.full-screen && !root.contained ? 0px : ShapeTokens.corner_extra_large.top_left;
+        clip: true;
+
+        VerticalLayout {
+            header-row := HorizontalLayout {
+                height: root.header-height;
+                padding: MaterialStyleMetrics.padding_4;
+                spacing: MaterialStyleMetrics.spacing_4;
+
+                IconButton {
+                    icon: Icons.arrow_back;
+
+                    clicked => {
+                        root.close();
+                    }
+                }
+
+                popup_input := SearchTextInput {
+                    placeholder_text: root.placeholder_text;
+                    text: root.text;
+
+                    accepted => {
+                        root.accepted(self.text);
+                    }
+                    edited => {
+                        root.text = self.text;
+                        root.edited(self.text);
+                    }
+                    changed text => {
+                        root.text = text;
+                    }
+                }
+
+                IconButton {
+                    icon: Icons.close;
+
+                    clicked => {
+                        root.text = "";
+                        root.close();
+                    }
+                }
+            }
+
+            HorizontalDivider { }
+
+            if root.items.length == 0 : MaterialText {
+                text: root.empty_text;
+                color: SearchViewTokens.header_supporting_text_color;
+                horizontal_alignment: center;
+                style: SearchViewTokens.header_supporting_text_font;
+            }
+
+            if root.items.length == 0 : Rectangle {}
+
+            if root.items.length > 0 : ListView {
+                horizontal_stretch: 1;
+
+                for item[index] in root.items : SearchTile {
+                    text: item.text;
+                    supporting_text: item.supporting_text;
+                    avatar_icon: item.avatar_icon;
+                    avatar_text: item.avatar_text;
+                    avatar_background: item.avatar_background;
+                    avatar_foreground: item.avatar_foreground;
+                    action_button_icon: item.action_button_icon;
+
+                    clicked => {
+                        if (!root.item-activated(index)) {
+                            root.text = self.text;
+                        }
+                        root.close();
+                    }
+
+                    action_button_clicked => {
+                        root.action_button_clicked(index);
+                    }
+                }
+            }
+        }
+    }
+}
+
+/// `SearchBar` — the collapsed search bar (`SearchBar` composable with a
+/// `SearchBarState`), 56dp pill surface on `surface-container-high`. Set
+/// `expanded` to open the popup selected by `expansion`.
 export component SearchBar {
     in property <image> leading_icon: Icons.menu;
     in property <image> trailing_icon;
@@ -129,7 +275,14 @@ export component SearchBar {
     in property <color> avatar_background: #00000000;
     in property <string> placeholder_text;
     in property <string> empty_text;
+    in property <SearchBarExpansion> expansion: SearchBarExpansion.docked;
+    /// Size the `full-screen*` expansion; defaults to the bar's own size.
+    in property <length> expanded-width;
+    in property <length> expanded-height;
+    in property <length> dropdown-gap-size: 2px;
     in_out property <string> text;
+    /// `SearchBarState.isExpanded`.
+    in_out property <bool> expanded;
     in_out property <int> current_index;
     in property <[ListItem]> items;
 
@@ -140,18 +293,27 @@ export component SearchBar {
     callback key_released(event: KeyEvent) -> EventResult;
     callback item-activated(index: int) -> bool;
 
-    property <color> color: MaterialPalette.on_surface_variant;
-    property <length> item_height: MaterialStyleMetrics.size_72;
+    /// `SearchBarState.currentTransitionAnimationProgress` — driven by the
+    /// active scheme's fast-spatial spring.
+    out property <float> expanded_fraction: root.expanded ? 1 : 0;
+    animate expanded_fraction {
+        enabled: !MaterialPalette.reduced-motion;
+        easing: MaterialAnimations.fast_spatial_spring;
+    }
+
+    property <color> color: SearchBarTokens.supporting_text_color;
 
     public function close-popup() {
         popup.close();
     }
 
-    min_height: max(MaterialStyleMetrics.size_56, layout.min_height);
+    in property <color> container_color: SearchBarTokens.container_color;
+
+    min_height: max(SearchBarTokens.container_height, layout.min_height);
     forward_focus: state_layer;
 
     Rectangle {
-        background: MaterialPalette.surface_container_high;
+        background: root.container_color;
         border_radius: MaterialStyleMetrics.border_radius_28;
 
         state_layer := StateLayerArea {
@@ -164,27 +326,27 @@ export component SearchBar {
 
                 SearchIcon {
                     icon: root.leading_icon;
-                    color: root.color;
+                    color: SearchBarTokens.leading_icon_color;
                 }
 
                 MaterialText {
                     text: root.text;
-                    font_size: MaterialTypography.body_large.font_size;
-                    font_weight: MaterialTypography.body_large.font_weight;
+                    font_size: SearchBarTokens.input_text_font.font_size;
+                    font_weight: SearchBarTokens.input_text_font.font_weight;
                     vertical_alignment: center;
-                    color: MaterialPalette.on_surface;
+                    color: SearchBarTokens.input_text_color;
 
                     states [
                         placeholder when root.text == "" : {
                             text: root.placeholder_text;
-                            color: MaterialPalette.on_surface;
+                            color: SearchBarTokens.supporting_text_color;
                         }
                     ]
                 }
 
                 SearchIcon {
                     icon: root.trailing_icon;
-                    color: root.color;
+                    color: SearchBarTokens.trailing_icon_color;
                 }
 
                 if (root.avatar_icon.width > 0 && root.avatar_icon.height > 0) || root.avatar_background != #00000000 : VerticalLayout {
@@ -198,133 +360,281 @@ export component SearchBar {
             }
 
             changed has_focus => {
-                if self.has_focus {
-                    popup.show();
+                if self.has_focus && root.expansion != SearchBarExpansion.none {
+                    root.expanded = true;
                 }
             }
 
             clicked => {
-                popup.show();
+                if root.expansion != SearchBarExpansion.none {
+                    root.expanded = true;
+                }
             }
         }
     }
 
-    popup := PopupWindow {
-        x: 0;
-        y: 0;
-        width: root.width;
-        height: root.height + clamp(root.item_height * root.items.length, 3 * root.item_height, 6 * root.item_height);
-        close_policy: close_on_click_outside;
-        forward-focus: popup_input;
+    changed expanded => {
+        if root.expanded && root.expansion != SearchBarExpansion.none {
+            popup.show();
+        }
+    }
 
-        background_layer := Rectangle {
-            x: 0;
-            y: 0;
-            width: 100%;
-            height: root.height;
-            background: MaterialPalette.surface_container_high;
-            border_radius: MaterialStyleMetrics.border_radius_28;
-            clip: true;
+    popup := SearchViewPopup {
+        expansion: root.expansion;
+        dropdown-gap-size: root.dropdown-gap-size;
+        contained: root.expansion == SearchBarExpansion.full-screen-contained;
+        expanded-width: root.expanded-width > 0 ? root.expanded-width : root.width;
+        expanded-height: root.expanded-height;
+        placeholder_text: root.placeholder_text;
+        empty_text: root.empty_text;
+        text <=> root.text;
+        items: root.items;
 
-            VerticalLayout {
-                HorizontalLayout {
-                    padding: MaterialStyleMetrics.padding_4;
-                    spacing: MaterialStyleMetrics.spacing_4;
+        accepted(text) => { root.accepted(text); }
+        edited(text) => { root.edited(text); }
+        action_button_clicked(index) => { root.action_button_clicked(index); }
+        item-activated(index) => { root.item_activated(index); }
+        closed => { root.expanded = false; }
+    }
+}
 
-                    IconButton {
-                        icon: Icons.arrow_back;
+/// `AppBarWithSearch` — a single-row top app bar whose title slot is a
+/// `SearchBar`, with optional navigation icon and action buttons.
+export component AppBarWithSearch inherits Rectangle {
+    in property <image> leading_icon;
+    in property <[IconButtonItem]> trailing-buttons;
+    in property <string> placeholder_text;
+    in property <string> empty_text;
+    in property <SearchBarExpansion> expansion: SearchBarExpansion.docked;
+    in property <length> expanded-width;
+    in property <length> expanded-height;
+    in property <color> container-color: AppBarTokens.container_color;
+    /// `scrolledAppBarContainerColor` — `surface-container` while scrolled.
+    in property <color> scrolled-container-color: AppBarTokens.on_scroll_container_color;
+    in property <length> scroll-position;
+    in property <bool> scroll-enabled: true;
+    in property <bool> touch-target: true;
+    in_out property <string> text;
+    in_out property <bool> expanded;
+    in property <[ListItem]> items;
 
-                        clicked => {
-                            popup.close();
-                        }
-                    }
+    callback leading_button_clicked();
+    callback trailing_button_clicked(index: int);
+    callback accepted(text: string);
+    callback edited(text: string);
+    callback action_button_clicked(index: int);
+    callback item-activated(index: int) -> bool;
 
-                    popup_input := SearchTextInput {
-                        placeholder_text: root.placeholder_text;
-                        text: root.text;
+    out property <float> overlapped-fraction: root.scroll-position > 1px ? 1 : 0;
+    property <color> target-container-color: root.overlapped-fraction > 0 ?
+        root.scrolled-container-color : root.container-color;
 
-                        accepted => {
-                             root.accepted(self.text);
-                        }
+    min_height: max(AppBarSmallTokens.container_height, layout.min_height);
+    background: root.target-container-color;
+    animate background {
+        enabled: !MaterialPalette.reduced-motion;
+        easing: MaterialAnimations.default_effects_spring;
+    }
 
-                        edited => {
-                            root.text = self.text;
-                            root.edited(self.text);
-                        }
+    layout := HorizontalLayout {
+        padding: AppBarTokens.leading_space;
+        spacing: MaterialStyleMetrics.spacing_4;
 
-                        key_pressed(event) => {
-                             root.key_pressed(event)
-                        }
+        if root.leading_icon.width > 0 && root.leading_icon.height > 0 : IconButton {
+            icon: root.leading_icon;
+            enforce-touch-target: root.touch-target;
 
-                        key_released(event) => {
-                             root.key_released(event)
-                        }
-
-                        changed text => {
-                            root.text = text;
-                        }
-                    }
-
-                    IconButton {
-                        icon: Icons.close;
-
-                        clicked => {
-                            root.text = "";
-                            popup.close();
-                        }
-                    }
-                }
-
-                HorizontalDivider {}
-
-                if root.items.length == 0 : MaterialText {
-                    text: root.empty_text;
-                    color: root.color;
-                    horizontal_alignment: center;
-                    style: MaterialTypography.label_small;
-                }
-
-                if root.items.length == 0 : Rectangle {}
-
-                if root.items.length > 0 : ListView {
-                    horizontal_stretch: 1;
-
-                    for item[index] in root.items : SearchTile {
-                        text: item.text;
-                        supporting_text: item.supporting_text;
-                        avatar_icon: item.avatar_icon;
-                        avatar_text: item.avatar_text;
-                        avatar_background: item.avatar_background;
-                        avatar_foreground: item.avatar_foreground;
-                        action_button_icon: item.action_button_icon;
-
-                        clicked => {
-                            if (!root.item-activated(index)) {
-                                root.text = self.text;
-                            }
-                            popup.close();
-                        }
-
-                        action_button_clicked => {
-                            root.action_button_clicked(index);
-                        }
-                    }
-                }
-            }
-
-            animate height { enabled: !MaterialPalette.reduced-motion;
-                duration: MaterialAnimations.standard_accelerate_duration;
-                easing: MaterialAnimations.standard_easing;
-            }
+            clicked => { root.leading_button_clicked(); }
         }
 
-        Timer {
-            interval: 50ms;
+        search-bar := SearchBar {
+            horizontal_stretch: 1;
+            placeholder_text: root.placeholder_text;
+            empty_text: root.empty_text;
+            expansion: root.expansion;
+            expanded-width: root.expanded-width;
+            expanded-height: root.expanded-height;
+            text <=> root.text;
+            expanded <=> root.expanded;
+            items: root.items;
+            container-color: root.target-container-color;
 
-            triggered => {
-                background_layer.height = popup.height;
-                self.running = false;
-            }
+            accepted(text) => { root.accepted(text); }
+            edited(text) => { root.edited(text); }
+            action_button_clicked(index) => { root.action_button_clicked(index); }
+            item-activated(index) => { root.item_activated(index); }
         }
+
+        for item[index] in root.trailing-buttons : IconButton {
+            icon: item.icon;
+            enabled: item.enabled;
+            enforce-touch-target: root.touch-target;
+
+            clicked => { root.trailing_button_clicked(index); }
+        }
+    }
+}
+
+/// `ExpandedDockedSearchBar` — standalone docked popup. Place it where the
+/// collapsed `SearchBar` sits; it shows when `expanded` is set.
+export component ExpandedDockedSearchBar {
+    in_out property <bool> expanded;
+    in_out property <string> text;
+    in property <string> placeholder_text;
+    in property <string> empty_text;
+    in property <[ListItem]> items;
+    in property <length> expanded-width;
+    in property <length> expanded-height;
+
+    callback accepted(text: string);
+    callback edited(text: string);
+    callback action_button_clicked(index: int);
+    callback item-activated(index: int) -> bool;
+
+    changed expanded => {
+        if root.expanded { view.show(); } else { view.close(); }
+    }
+    init => {
+        if root.expanded { view.show(); }
+    }
+
+    view := SearchViewPopup {
+        expansion: SearchBarExpansion.docked;
+        expanded-width: root.expanded-width > 0 ? root.expanded-width : root.width;
+        expanded-height: root.expanded-height;
+        placeholder_text: root.placeholder_text;
+        empty_text: root.empty_text;
+        text <=> root.text;
+        items: root.items;
+
+        accepted(text) => { root.accepted(text); }
+        edited(text) => { root.edited(text); }
+        action_button_clicked(index) => { root.action_button_clicked(index); }
+        item-activated(index) => { root.item_activated(index); }
+        closed => { root.expanded = false; }
+    }
+}
+
+/// `ExpandedDockedSearchBarWithGap` — docked popup with a
+/// `dropdown-gap-size` (2dp default) between the collapsed bar and the
+/// dropdown surface.
+export component ExpandedDockedSearchBarWithGap {
+    in_out property <bool> expanded;
+    in_out property <string> text;
+    in property <string> placeholder_text;
+    in property <string> empty_text;
+    in property <[ListItem]> items;
+    in property <length> expanded-width;
+    in property <length> expanded-height;
+    in property <length> dropdown-gap-size: 2px;
+
+    callback accepted(text: string);
+    callback edited(text: string);
+    callback action_button_clicked(index: int);
+    callback item-activated(index: int) -> bool;
+
+    changed expanded => {
+        if root.expanded { view.show(); } else { view.close(); }
+    }
+    init => {
+        if root.expanded { view.show(); }
+    }
+
+    view := SearchViewPopup {
+        expansion: SearchBarExpansion.docked-with-gap;
+        dropdown-gap-size: root.dropdown-gap-size;
+        expanded-width: root.expanded-width > 0 ? root.expanded-width : root.width;
+        expanded-height: root.expanded-height;
+        placeholder_text: root.placeholder_text;
+        empty_text: root.empty_text;
+        text <=> root.text;
+        items: root.items;
+
+        accepted(text) => { root.accepted(text); }
+        edited(text) => { root.edited(text); }
+        action_button_clicked(index) => { root.action_button_clicked(index); }
+        item-activated(index) => { root.item_activated(index); }
+        closed => { root.expanded = false; }
+    }
+}
+
+/// `ExpandedFullScreenSearchBar` — full-screen search surface (72dp header,
+/// square corners).
+export component ExpandedFullScreenSearchBar {
+    in_out property <bool> expanded;
+    in_out property <string> text;
+    in property <string> placeholder_text;
+    in property <string> empty_text;
+    in property <[ListItem]> items;
+    in property <length> expanded-width;
+    in property <length> expanded-height;
+
+    callback accepted(text: string);
+    callback edited(text: string);
+    callback action_button_clicked(index: int);
+    callback item-activated(index: int) -> bool;
+
+    changed expanded => {
+        if root.expanded { view.show(); } else { view.close(); }
+    }
+    init => {
+        if root.expanded { view.show(); }
+    }
+
+    view := SearchViewPopup {
+        expansion: SearchBarExpansion.full-screen;
+        expanded-width: root.expanded-width;
+        expanded-height: root.expanded-height;
+        placeholder_text: root.placeholder_text;
+        empty_text: root.empty_text;
+        text <=> root.text;
+        items: root.items;
+
+        accepted(text) => { root.accepted(text); }
+        edited(text) => { root.edited(text); }
+        action_button_clicked(index) => { root.action_button_clicked(index); }
+        item-activated(index) => { root.item_activated(index); }
+        closed => { root.expanded = false; }
+    }
+}
+
+/// `ExpandedFullScreenContainedSearchBar` — full-screen surface with the
+/// contained colors (surface container) and rounded corners.
+export component ExpandedFullScreenContainedSearchBar {
+    in_out property <bool> expanded;
+    in_out property <string> text;
+    in property <string> placeholder_text;
+    in property <string> empty_text;
+    in property <[ListItem]> items;
+    in property <length> expanded-width;
+    in property <length> expanded-height;
+
+    callback accepted(text: string);
+    callback edited(text: string);
+    callback action_button_clicked(index: int);
+    callback item-activated(index: int) -> bool;
+
+    changed expanded => {
+        if root.expanded { view.show(); } else { view.close(); }
+    }
+    init => {
+        if root.expanded { view.show(); }
+    }
+
+    view := SearchViewPopup {
+        expansion: SearchBarExpansion.full-screen-contained;
+        contained: true;
+        expanded-width: root.expanded-width;
+        expanded-height: root.expanded-height;
+        placeholder_text: root.placeholder_text;
+        empty_text: root.empty_text;
+        text <=> root.text;
+        items: root.items;
+
+        accepted(text) => { root.accepted(text); }
+        edited(text) => { root.edited(text); }
+        action_button_clicked(index) => { root.action_button_clicked(index); }
+        item-activated(index) => { root.item_activated(index); }
+        closed => { root.expanded = false; }
     }
 }
