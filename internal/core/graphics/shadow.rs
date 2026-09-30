@@ -639,15 +639,15 @@ fn compute_radial_steps(v1: Vec2, v2: Vec2, offset: f32) -> Option<(f32, f32, us
     if !r_sin.is_finite() {
         return None;
     }
-    let theta = r_sin.atan2(r_cos);
+    let theta = crate::graphics::math::atan2f(r_sin, r_cos);
     let float_steps = (offset * theta * RECIP_PIXELS_PER_ARC_SEGMENT).abs();
     if float_steps >= u16::MAX as f32 {
         return None;
     }
     let steps = (float_steps + 0.5).floor() as usize;
     let d_theta = if steps > 0 { theta / steps as f32 } else { 0. };
-    let rot_sin = d_theta.sin();
-    let rot_cos = d_theta.cos();
+    let rot_sin = crate::graphics::math::sinf(d_theta);
+    let rot_cos = crate::graphics::math::cosf(d_theta);
     if steps > 0 && (rot_sin == 0. || rot_cos == 1.) {
         return None;
     }
@@ -2534,7 +2534,7 @@ fn gaussian_blur_mask(mask: &mut [u8], size: euclid::Size2D<u32, LogicalPx>, sig
     let mut kernel = Vec::with_capacity((2 * radius + 1) as usize);
     let mut sum = 0f32;
     for i in -radius..=radius {
-        let w = (-0.5 * (i as f32 / sigma).powi(2)).exp();
+        let w = crate::graphics::math::expf(-0.5 * (i as f32 / sigma).powi(2));
         kernel.push(w);
         sum += w;
     }

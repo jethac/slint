@@ -1350,7 +1350,7 @@ impl GlyphRenderer for SkiaItemRenderer<'_> {
         if let Some(skew_degrees) = synthesis.skew() {
             // Skia skews text left/right relative to the y-axis; a negative skew leans glyphs
             // to the right, matching the forward lean of real italic/oblique faces.
-            font.set_skew_x(-skew_degrees.to_radians().tan());
+            font.set_skew_x(-i_slint_core::graphics::math::tanf(skew_degrees.to_radians()));
         }
 
         let (glyph_ids, glyph_positions): (Vec<_>, Vec<_>) = glyphs_it
