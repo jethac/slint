@@ -3,6 +3,7 @@
 
 import { IconButton } from "./icon_button.slint";
 import { IconButtonItem } from "./bottom_app_bar.slint";
+import { IconButtonWidth, MaterialButtonMetrics, MaterialButtonSize } from "./button_metrics.slint";
 import { MaterialText } from "./material_text.slint";
 import { MaterialPalette } from "../styling/material_palette.slint";
 import { MaterialAnimations } from "../styling/material_animations.slint";
@@ -197,6 +198,7 @@ component AppBarRowLayout inherits Rectangle {
             icon: root.leading-button.icon;
             enabled: root.leading-button.enabled;
             tooltip: root.leading-button.tooltip;
+            content-color: root.navigation-icon-color;
             enforce-touch-target: root.touch-target;
 
             clicked => { root.leading-button-clicked(); }
@@ -237,21 +239,25 @@ component AppBarRowLayout inherits Rectangle {
         }
     }
 
+    property <length> icon-slot-width: root.touch-target ? MaterialStyleMetrics.size-48 :
+        MaterialButtonMetrics.icon-container-width(MaterialButtonSize.small, IconButtonWidth.uniform);
+
     actions-box := Rectangle {
         x: root.width - self.width;
         y: 0;
         width: root.trailing-buttons.length > 0 ?
-            root.trailing-buttons.length * MaterialStyleMetrics.size-48 +
+            root.trailing-buttons.length * root.icon-slot-width +
             AppBarMetrics.horizontal-padding() : 0px;
         height: 100%;
 
         for item[index] in root.trailing-buttons : IconButton {
-            x: index * MaterialStyleMetrics.size-48;
+            x: index * root.icon-slot-width;
             y: (root.layout-height - self.height) / 2;
-            width: MaterialStyleMetrics.size-48;
+            width: root.icon-slot-width;
             icon: item.icon;
             enabled: item.enabled;
             tooltip: item.tooltip;
+            content-color: root.action-icon-color;
             enforce-touch-target: root.touch-target;
 
             clicked => { root.trailing-button-clicked(index); }
@@ -299,10 +305,21 @@ component TopAppBarBase {
     /// single-row bar; the collapsed row never shrinks.
     property <length> collapsible-extent:
         root.two-rows ? root.expanded-height - root.collapsed-height : root.expanded-height;
-    out property <length> height-offset-limit: -root.collapsible-extent;
-    out property <float> collapsed-fraction: root.collapsible-extent > 0 ?
+    /// A pinned bar keeps `initialHeightOffsetLimit = 0f`; only collapsible
+    /// bars get the negative limit (`AppBar.kt` `TopAppBarState`).
+    out property <length> height-offset-limit:
+        root.scroll-behavior == TopAppBarScrollBehavior.pinned ? 0px : -root.collapsible-extent;
+    out property <float> collapsed-fraction: root.height-offset-limit != 0px ?
         min(1, max(0, root.height-offset / root.height-offset-limit)) : 0;
-    out property <float> overlapped-fraction: root.content-offset > 1px ? 1 : 0;
+    /// `TopAppBarState.overlappedFraction`: 1 when content moved but the bar's
+    /// own offset didn't (the pinned-overlap case), the height-limit fraction
+    /// for collapsible bars, else 0. `scroll-position` is the scrolled
+    /// content's offset — `isScrollingContentAtStart()` inverts it.
+    out property <float> overlapped-fraction:
+        (root.scroll-position != 0px && root.content-offset == 0px) ? 1 :
+        root.height-offset-limit != 0px ?
+            1 - (root.height-offset-limit + abs(root.content-offset))
+                .clamp(root.height-offset-limit, 0px) / root.height-offset-limit : 0;
 
     // The displayed offset: `height-offset` plus the settle animation.
     property <length> effective-offset: root.height-offset + bg.settle-offset;

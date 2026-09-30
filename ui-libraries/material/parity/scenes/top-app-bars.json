@@ -128,5 +128,6 @@
       "x": 0,
       "y": 704
     }
-  ]
+  ],
+  "xfail_text": "issue #28: Slint ceils text layout widths where Compose keeps fractional advances"
 }

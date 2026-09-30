@@ -10,6 +10,7 @@ import { StateLayerArea } from "./state_layer.slint";
 import { MaterialText } from "./material_text.slint";
 import { Icon } from "./icon.slint";
 import { IconButton } from "./icon_button.slint";
+import { MaterialButtonMetrics, IconButtonWidth, MaterialButtonSize } from "./button_metrics.slint";
 import { Icons } from "../icons/icons.slint";
 import { HorizontalDivider } from "./divider.slint";
 import { ListView } from "./list_view.slint";
@@ -47,6 +48,9 @@ component SearchIcon {
         padding_right: self.padding_left;
 
         Icon {
+            // `Icon` defaults to 24dp — the search-bar field keeps the text
+            // field's icon size.
+            width: MaterialStyleMetrics.icon_size_24;
             source: root.icon;
             colorize: root.color;
         }
@@ -269,7 +273,7 @@ component SearchViewPopup inherits PopupWindow {
 /// `SearchBarState`), 56dp pill surface on `surface-container-high`. Set
 /// `expanded` to open the popup selected by `expansion`.
 export component SearchBar {
-    in property <image> leading_icon: Icons.menu;
+    in property <image> leading_icon;
     in property <image> trailing_icon;
     in property <image> avatar_icon;
     in property <color> avatar_background: #00000000;
@@ -324,7 +328,7 @@ export component SearchBar {
                 padding: MaterialStyleMetrics.padding_4;
                 spacing: MaterialStyleMetrics.spacing_4;
 
-                SearchIcon {
+                if root.leading_icon.width > 0 && root.leading_icon.height > 0 : SearchIcon {
                     icon: root.leading_icon;
                     color: SearchBarTokens.leading_icon_color;
                 }
@@ -344,7 +348,7 @@ export component SearchBar {
                     ]
                 }
 
-                SearchIcon {
+                if root.trailing_icon.width > 0 && root.trailing_icon.height > 0 : SearchIcon {
                     icon: root.trailing_icon;
                     color: SearchBarTokens.trailing_icon_color;
                 }
@@ -413,7 +417,6 @@ export component AppBarWithSearch inherits Rectangle {
     in property <color> scrolled-container-color: AppBarTokens.on_scroll_container_color;
     in property <length> scroll-position;
     in property <bool> scroll-enabled: true;
-    in property <bool> touch-target: true;
     in_out property <string> text;
     in_out property <bool> expanded;
     in property <[ListItem]> items;
@@ -429,50 +432,81 @@ export component AppBarWithSearch inherits Rectangle {
     property <color> target-container-color: root.overlapped-fraction > 0 ?
         root.scrolled-container-color : root.container-color;
 
-    min_height: max(AppBarSmallTokens.container_height, layout.min_height);
+    min_height: max(AppBarSmallTokens.container_height, search-bar.min_height + 2 * MaterialStyleMetrics.padding_4);
+    // `AppBarContentPadding` is zero — the bar is exactly the field height
+    // plus `AppBarWithSearchVerticalPadding` (4dp) top and bottom.
+    height: max(AppBarSmallTokens.container_height,
+        search-bar.min_height + 2 * MaterialStyleMetrics.padding_4);
     background: root.target-container-color;
     animate background {
         enabled: !MaterialPalette.reduced-motion;
         easing: MaterialAnimations.default_effects_spring;
     }
 
-    layout := HorizontalLayout {
-        padding: AppBarTokens.leading_space;
-        spacing: MaterialStyleMetrics.spacing_4;
+    property <length> nav-width: root.leading_icon.width > 0 && root.leading_icon.height > 0 ?
+        MaterialStyleMetrics.padding_4 + MaterialButtonMetrics.icon-container-width(MaterialButtonSize.small, IconButtonWidth.uniform) : 0px;
+    property <length> actions-width: root.trailing-buttons.length * (
+        MaterialButtonMetrics.icon-container-width(MaterialButtonSize.small, IconButtonWidth.uniform) +
+        MaterialStyleMetrics.padding_4);
 
-        if root.leading_icon.width > 0 && root.leading_icon.height > 0 : IconButton {
+    // `Box(Modifier.padding(start = AppBarWithSearchHorizontalPadding))`.
+    if root.leading_icon.width > 0 && root.leading_icon.height > 0 : nav-box := Rectangle {
+        x: 0;
+        y: 0;
+        width: root.nav-width;
+        height: 100%;
+
+        IconButton {
+            x: MaterialStyleMetrics.padding_4;
+            y: (parent.height - self.height) / 2;
             icon: root.leading_icon;
-            enforce-touch-target: root.touch-target;
+            enforce-touch-target: false;
+            content-color: AppBarTokens.leading_icon_color;
 
             clicked => { root.leading_button_clicked(); }
         }
+    }
 
-        search-bar := SearchBar {
-            horizontal_stretch: 1;
-            placeholder_text: root.placeholder_text;
-            empty_text: root.empty_text;
-            expansion: root.expansion;
-            expanded-width: root.expanded-width;
-            expanded-height: root.expanded-height;
-            text <=> root.text;
-            expanded <=> root.expanded;
-            items: root.items;
-            container-color: root.target-container-color;
-
-            accepted(text) => { root.accepted(text); }
-            edited(text) => { root.edited(text); }
-            action_button_clicked(index) => { root.action_button_clicked(index); }
-            item-activated(index) => { root.item_activated(index); }
-        }
+    // Each action in `Box(Modifier.padding(end = AppBarWithSearchHorizontalPadding))`.
+    actions-box := Rectangle {
+        x: parent.width - self.width;
+        y: 0;
+        width: root.actions-width;
+        height: 100%;
 
         for item[index] in root.trailing-buttons : IconButton {
+            x: index * (MaterialButtonMetrics.icon-container-width(MaterialButtonSize.small, IconButtonWidth.uniform) + MaterialStyleMetrics.padding_4);
+            y: (parent.height - self.height) / 2;
             icon: item.icon;
             enabled: item.enabled;
-            enforce-touch-target: root.touch-target;
+            enforce-touch-target: false;
+            content-color: AppBarTokens.trailing_icon_color;
 
             clicked => { root.trailing_button_clicked(index); }
         }
     }
+
+    // `weight(1f)` box + `SearchBarAsTopBarPadding` (8dp) horizontal /
+    // `AppBarWithSearchVerticalPadding` (4dp) vertical on the field.
+    search-bar := SearchBar {
+        x: root.nav-width + MaterialStyleMetrics.padding_8;
+        y: (parent.height - self.height) / 2;
+        width: parent.width - root.nav-width - root.actions-width - 2 * MaterialStyleMetrics.padding_8;
+        placeholder_text: root.placeholder_text;
+        empty_text: root.empty_text;
+        expansion: root.expansion;
+        expanded-width: root.expanded-width;
+        expanded-height: root.expanded-height;
+        text <=> root.text;
+        expanded <=> root.expanded;
+        items: root.items;
+
+        accepted(text) => { root.accepted(text); }
+        edited(text) => { root.edited(text); }
+        action_button_clicked(index) => { root.action_button_clicked(index); }
+        item_activated(index) => { root.item_activated(index); }
+    }
+
 }
 
 /// `ExpandedDockedSearchBar` — standalone docked popup. Place it where the

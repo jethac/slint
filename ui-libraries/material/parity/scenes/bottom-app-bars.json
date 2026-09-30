@@ -8,6 +8,14 @@
     "brand": "Roboto",
     "plain": "Roboto"
   },
+  "mask_decor": {
+    "fab": {
+      "margin": 12,
+      "times": [
+        2000
+      ]
+    }
+  },
   "name": "bottom-app-bars",
   "params": {},
   "parity": "static",
@@ -25,7 +33,8 @@
   },
   "trace_elements": [
     "appbar0",
-    "appbar1"
+    "appbar1",
+    "fab"
   ],
   "type": "canvas",
   "widgets": [

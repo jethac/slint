@@ -23,6 +23,10 @@ export component IconButton {
     in property <bool> inline;
     /// Color the icon with the error role.
     in property <bool> has_error;
+    /// Overrides the icon tint — `iconButtonColors(contentColor)` in
+    /// Compose, which defaults to `LocalContentColor` rather than the
+    /// `StandardIconButtonTokens.Color` role.
+    in property <color> content-color: transparent;
     /// One of the five container sizes.
     in property <MaterialButtonSize> size: MaterialButtonSize.small;
     /// `round` is the resting shape; `square` the squarer variant.
@@ -79,9 +83,13 @@ export component IconButton {
         container_color: transparent;
         content_color: root.has_error ? MaterialPalette.error :
             root.inverse ? MaterialPalette.inverse_on_surface :
-            root.checked ? StandardIconButtonTokens.selected_color : StandardIconButtonTokens.color;
+            root.checked ? StandardIconButtonTokens.selected_color :
+            root.content-color.alpha > 0 ? root.content-color : StandardIconButtonTokens.color;
         disabled_container_color: transparent;
-        disabled_content_color: StandardIconButtonTokens.disabled_color.with_alpha(StandardIconButtonTokens.disabled_opacity);
+        // `iconButtonColors` derives the disabled tint from the resolved
+        // content color: `contentColor.copy(alpha = DisabledOpacity)`.
+        disabled_content_color: (root.content-color.alpha > 0 ? root.content-color :
+            StandardIconButtonTokens.disabled_color).with_alpha(StandardIconButtonTokens.disabled_opacity);
         elevation_default: 0;
         elevation_pressed: 0;
         elevation_hovered: 0;

@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: MIT
 
 import { IconButton } from "./icon_button.slint";
+import { IconButtonWidth, MaterialButtonMetrics, MaterialButtonSize } from "./button_metrics.slint";
 import { FloatingActionButton, FABStyle } from "./floating_action_button.slint";
 import { MaterialPalette } from "../styling/material_palette.slint";
 import { MaterialStyleMetrics } from "../styling/material_style_metrics.slint";
@@ -99,6 +100,9 @@ export component AppBarRow {
         icon: item.icon;
         enabled: item.enabled;
         tooltip: item.label;
+        // `iconButtonColors()` resolves to the bar's `LocalContentColor` —
+        // `contentColorFor(surfaceContainer)`.
+        content-color: MaterialPalette.on_surface;
         checkable: item.toggleable;
         checked: item.checked;
         enforce-touch-target: root.touch-target;
@@ -151,6 +155,9 @@ export component AppBarColumn {
         icon: item.icon;
         enabled: item.enabled;
         tooltip: item.label;
+        // `iconButtonColors()` resolves to the bar's `LocalContentColor` —
+        // `contentColorFor(surfaceContainer)`.
+        content-color: MaterialPalette.on_surface;
         checkable: item.toggleable;
         checked: item.checked;
         enforce-touch-target: root.touch-target;
@@ -248,20 +255,26 @@ export component BottomAppBar inherits Rectangle {
     in-out property <length> content-offset <=> scroll-state.content-offset;
     out property <float> collapsed-fraction <=> scroll-state.collapsed-fraction;
 
+    property <length> icon-slot-width: root.touch-target ? MaterialStyleMetrics.size-48 :
+        MaterialButtonMetrics.icon-container-width(MaterialButtonSize.small, IconButtonWidth.uniform);
+
     scroll-state := BottomAppBarScrollState {
         scroll-enabled: root.exit-always;
         scroll-position: root.scroll-position;
         collapsible-extent: BottomAppBarTokens.container-height;
     }
 
-    // The bar's visible height shrinks by `heightOffset` (the layout's
-    // `placeable.height + heightOffset` coerceAtLeast(0)).
-    min-height: max(0px, BottomAppBarTokens.container-height + scroll-state.effective-offset);
+    // The bar's visible band shrinks by `heightOffset` — Compose's
+    // `layoutHeight = maxLayoutHeight + heightOffset` coerceAtLeast(0) — while
+    // the content keeps the full container height and the bottom is clipped.
+    height: max(0px, BottomAppBarTokens.container-height + scroll-state.effective-offset);
     clip: true;
 
     bg := Rectangle {
+        x: 0;
+        y: 0;
         width: 100%;
-        height: 100%;
+        height: BottomAppBarTokens.container-height;
         property <length> settle-offset <=> scroll-state.settle-offset;
         animate settle-offset {
             enabled: !MaterialPalette.reduced-motion;
@@ -291,28 +304,38 @@ export component BottomAppBar inherits Rectangle {
             }
         }
 
+        // `BottomAppBarDefaults.ContentPadding` = (4, 4, 4, 0): the actions
+        // row centers in y4..container-height, not in the full band.
         actions-row := Rectangle {
             x: 4px;
-            y: (parent.height - self.height) / 2;
-            width: root.icon-buttons.length * MaterialStyleMetrics.size-48;
-            height: MaterialStyleMetrics.size-48;
+            y: 4px + (parent.height - 4px - self.height) / 2;
+            width: root.icon-buttons.length * root.icon-slot-width;
+            height: root.icon-slot-width;
 
             for item[index] in root.icon-buttons : IconButton {
-                x: index * MaterialStyleMetrics.size-48;
-                width: MaterialStyleMetrics.size-48;
+                x: index * root.icon-slot-width;
+                width: root.icon-slot-width;
                 icon: item.icon;
                 enabled: item.enabled;
                 tooltip: item.tooltip;
+                // `iconButtonColors()` resolves to the bar's
+                // `LocalContentColor` — `contentColorFor(surfaceContainer)`.
+                content-color: MaterialPalette.on_surface;
                 enforce-touch-target: root.touch-target;
 
                 clicked => { root.icon-button-clicked(index); }
             }
         }
 
+        // `fillMaxHeight().padding(top = FABVerticalPadding, end =
+        // FABHorizontalPadding)` inside the content-padded area: the box
+        // fills the inner height but only shifts the FAB — 4 + 12dp end
+        // margin, 4 + 8dp top, FAB stays 56dp.
         if root.fab-icon.width > 0 && root.fab-icon.height > 0 : fab-box := Rectangle {
-            x: parent.width - self.width - 12px;
+            x: parent.width - self.width - 4px;
+            y: 4px;
             width: MaterialStyleMetrics.size-56 + 12px;
-            height: 100%;
+            height: parent.height - 4px;
             fab := FloatingActionButton {
                 x: 0;
                 y: 8px;
@@ -352,12 +375,16 @@ export component FlexibleBottomAppBar inherits Rectangle {
         collapsible-extent: root.expanded-height;
     }
 
-    min-height: max(0px, root.expanded-height + scroll-state.effective-offset);
+    // The bar's visible band shrinks by `heightOffset` while the content keeps
+    // the full container height and the bottom is clipped — see `BottomAppBar`.
+    height: max(0px, root.expanded-height + scroll-state.effective-offset);
     clip: true;
 
     bg := Rectangle {
+        x: 0;
+        y: 0;
         width: 100%;
-        height: 100%;
+        height: root.expanded-height;
         background: root.container-color;
         animate settle-offset {
             enabled: !MaterialPalette.reduced-motion;
@@ -414,6 +441,9 @@ export component FlexibleBottomAppBar inherits Rectangle {
                     icon: item.icon;
                     enabled: item.enabled;
                     tooltip: item.label;
+                    // `iconButtonColors()` resolves to the bar's
+                    // `LocalContentColor` — `contentColorFor(surfaceContainer)`.
+                    content-color: MaterialPalette.on_surface;
                     checkable: item.toggleable;
                     checked: item.checked;
                     enforce-touch-target: root.touch-target;
@@ -440,6 +470,9 @@ export component FlexibleBottomAppBar inherits Rectangle {
                     icon: item.icon;
                     enabled: item.enabled;
                     tooltip: item.label;
+                    // `iconButtonColors()` resolves to the bar's
+                    // `LocalContentColor` — `contentColorFor(surfaceContainer)`.
+                    content-color: MaterialPalette.on_surface;
                     checkable: item.toggleable;
                     checked: item.checked;
                     enforce-touch-target: root.touch-target;

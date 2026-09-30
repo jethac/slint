@@ -660,18 +660,33 @@ private fun sceneIcon(name: String): androidx.compose.ui.graphics.vector.ImageVe
         .bufferedReader().readText()
     val vb = Regex("""viewBox="([\d.\- ]+)"""").find(svg)!!.groupValues[1]
         .trim().split(" ").map { it.toFloat() }
+    // `Icon` renders an ImageVector at its intrinsic `defaultWidth/Height`
+    // when no explicit size is given, so an icon authored on a non-24
+    // viewBox (e.g. the 960-unit Material Symbols grid) must still declare
+    // a 24dp size — the viewport maps the path data at any grid size.
+    val vpw = vb[2]
+    val vph = vb[3]
     val builder = androidx.compose.ui.graphics.vector.ImageVector.Builder(
         name = name,
-        defaultWidth = (vb[2] - vb[0]).dp,
-        defaultHeight = (vb[3] - vb[1]).dp,
-        viewportWidth = vb[2] - vb[0],
-        viewportHeight = vb[3] - vb[1],
+        defaultWidth = if (vpw >= vph) 24.dp else (24f * vpw / vph).dp,
+        defaultHeight = if (vph >= vpw) 24.dp else (24f * vph / vpw).dp,
+        viewportWidth = vpw,
+        viewportHeight = vph,
     )
+    // viewBox carries a nonzero min-x/min-y (e.g. "0 -960 960 960") while
+    // the vector viewport always starts at 0 — wrap the paths in a group
+    // that shifts them back into view.
+    if (vb[0] != 0f || vb[1] != 0f) {
+        builder.addGroup(translationX = -vb[0], translationY = -vb[1])
+    }
     Regex("""<path[^>]*d="([^"]+)"""").findAll(svg).forEach { m ->
         builder.addPath(
             androidx.compose.ui.graphics.vector.addPathNodes(m.groupValues[1]),
             fill = androidx.compose.ui.graphics.SolidColor(Color.Black),
         )
+    }
+    if (vb[0] != 0f || vb[1] != 0f) {
+        builder.clearGroup()
     }
     return builder.build()
 }
@@ -1525,7 +1540,10 @@ private fun StateAppBar(widget: Widget, tracer: Tracer, tag: String) {
                 initialContentOffset = widget.contentOffset,
             )
             val fab: (@Composable () -> Unit)? = widget.navIcon?.let { icon ->
-                { androidx.compose.material3.FloatingActionButton(onClick = {}) {
+                { androidx.compose.material3.FloatingActionButton(
+                    onClick = {},
+                    modifier = Modifier.track(tracer, "fab"),
+                ) {
                     Icon(sceneIcon(icon), contentDescription = null) } }
             }
             BottomAppBar(
