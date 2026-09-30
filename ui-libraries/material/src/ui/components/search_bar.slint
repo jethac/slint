@@ -432,7 +432,6 @@ export component AppBarWithSearch inherits Rectangle {
     property <color> target-container-color: root.overlapped-fraction > 0 ?
         root.scrolled-container-color : root.container-color;
 
-    min_height: max(AppBarSmallTokens.container_height, search-bar.min_height + 2 * MaterialStyleMetrics.padding_4);
     // `AppBarContentPadding` is zero — the bar is exactly the field height
     // plus `AppBarWithSearchVerticalPadding` (4dp) top and bottom.
     height: max(AppBarSmallTokens.container_height,
