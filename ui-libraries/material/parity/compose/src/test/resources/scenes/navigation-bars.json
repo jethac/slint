@@ -1,6 +1,6 @@
 {
   "actions": [],
-  "case_rel": "material/button_icons",
+  "case_rel": "material/navigation_bars",
   "densities": [
     1,
     2
@@ -11,7 +11,7 @@
   },
   "mask_decor": {},
   "mask_inner": {},
-  "name": "button-icons",
+  "name": "navigation-bars",
   "params": {},
   "parity": "static",
   "scheme": {
@@ -64,8 +64,8 @@
     "tertiaryFixedDim": "FFE5B2D5"
   },
   "size": [
-    716,
-    176
+    360,
+    420
   ],
   "theme": {
     "contrast": 0.0,
@@ -77,11 +77,11 @@
   },
   "times": [],
   "trace_elements": [
-    "button0",
-    "button1",
-    "button2",
-    "button3",
-    "button4"
+    "navbar0",
+    "navbar1",
+    "navbar2",
+    "navbar3",
+    "navbar4"
   ],
   "trace_props": [],
   "type": "canvas",
@@ -97,30 +97,120 @@
       "enabled": null,
       "height": null,
       "height_offset": null,
-      "icon": "check",
+      "icon": null,
       "icon_position": null,
       "icons": [],
-      "items": [],
-      "kind": "filled-button",
+      "items": [
+        {
+          "badge": "3",
+          "enabled": null,
+          "icon": "check",
+          "selected_icon": "arrow_right",
+          "text": "Inbox"
+        },
+        {
+          "badge": null,
+          "enabled": null,
+          "icon": "schedule",
+          "selected_icon": null,
+          "text": "Sent"
+        },
+        {
+          "badge": null,
+          "enabled": false,
+          "icon": "keyboard",
+          "selected_icon": null,
+          "text": "Files"
+        },
+        {
+          "badge": null,
+          "enabled": null,
+          "icon": "close",
+          "selected_icon": null,
+          "text": "Trash"
+        }
+      ],
+      "kind": "navigation-bar",
       "level": null,
       "nav_arrangement": null,
       "nav_icon": null,
       "placeholder": null,
       "radius": null,
-      "selected_index": null,
+      "selected_index": 0,
       "shape": null,
-      "side": null,
-      "size": "xs",
+      "size": null,
       "slint_overrides": {},
       "state": null,
       "subtitle": null,
-      "text": "Add",
-      "trailing_icon": null,
+      "text": null,
       "variant": null,
-      "width": 75.0,
+      "width": 360.0,
       "width_option": null,
-      "x": 16.0,
-      "y": 128.0
+      "x": 0.0,
+      "y": 0.0
+    },
+    {
+      "always_show_label": false,
+      "checkable": null,
+      "checked": null,
+      "color": null,
+      "content_offset": null,
+      "corner": null,
+      "elevation": null,
+      "enabled": null,
+      "height": null,
+      "height_offset": null,
+      "icon": null,
+      "icon_position": null,
+      "icons": [],
+      "items": [
+        {
+          "badge": null,
+          "enabled": null,
+          "icon": "check",
+          "selected_icon": null,
+          "text": "Inbox"
+        },
+        {
+          "badge": null,
+          "enabled": null,
+          "icon": "schedule",
+          "selected_icon": null,
+          "text": "Sent"
+        },
+        {
+          "badge": null,
+          "enabled": null,
+          "icon": "keyboard",
+          "selected_icon": null,
+          "text": "Files"
+        },
+        {
+          "badge": null,
+          "enabled": null,
+          "icon": "close",
+          "selected_icon": null,
+          "text": "Trash"
+        }
+      ],
+      "kind": "navigation-bar",
+      "level": null,
+      "nav_arrangement": null,
+      "nav_icon": null,
+      "placeholder": null,
+      "radius": null,
+      "selected_index": 1,
+      "shape": null,
+      "size": null,
+      "slint_overrides": {},
+      "state": null,
+      "subtitle": null,
+      "text": null,
+      "variant": null,
+      "width": 360.0,
+      "width_option": null,
+      "x": 0.0,
+      "y": 96.0
     },
     {
       "always_show_label": null,
@@ -133,30 +223,50 @@
       "enabled": null,
       "height": null,
       "height_offset": null,
-      "icon": "check",
+      "icon": null,
       "icon_position": null,
       "icons": [],
-      "items": [],
-      "kind": "filled-button",
+      "items": [
+        {
+          "badge": "3",
+          "enabled": null,
+          "icon": "check",
+          "selected_icon": "arrow_right",
+          "text": "Inbox"
+        },
+        {
+          "badge": null,
+          "enabled": null,
+          "icon": "schedule",
+          "selected_icon": null,
+          "text": "Sent"
+        },
+        {
+          "badge": null,
+          "enabled": false,
+          "icon": "keyboard",
+          "selected_icon": null,
+          "text": "Files"
+        }
+      ],
+      "kind": "short-navigation-bar",
       "level": null,
       "nav_arrangement": null,
       "nav_icon": null,
       "placeholder": null,
       "radius": null,
-      "selected_index": null,
+      "selected_index": 0,
       "shape": null,
-      "side": null,
-      "size": "s",
+      "size": null,
       "slint_overrides": {},
       "state": null,
       "subtitle": null,
-      "text": "Add",
-      "trailing_icon": null,
+      "text": null,
       "variant": null,
-      "width": 87.0,
+      "width": 360.0,
       "width_option": null,
-      "x": 156.0,
-      "y": 120.0
+      "x": 0.0,
+      "y": 192.0
     },
     {
       "always_show_label": null,
@@ -169,30 +279,50 @@
       "enabled": null,
       "height": null,
       "height_offset": null,
-      "icon": "check",
-      "icon_position": null,
+      "icon": null,
+      "icon_position": "start",
       "icons": [],
-      "items": [],
-      "kind": "filled-button",
+      "items": [
+        {
+          "badge": null,
+          "enabled": null,
+          "icon": "check",
+          "selected_icon": "arrow_right",
+          "text": "Inbox"
+        },
+        {
+          "badge": null,
+          "enabled": null,
+          "icon": "schedule",
+          "selected_icon": null,
+          "text": "Sent"
+        },
+        {
+          "badge": null,
+          "enabled": false,
+          "icon": "keyboard",
+          "selected_icon": null,
+          "text": "Files"
+        }
+      ],
+      "kind": "short-navigation-bar",
       "level": null,
-      "nav_arrangement": null,
+      "nav_arrangement": "centered",
       "nav_icon": null,
       "placeholder": null,
       "radius": null,
-      "selected_index": null,
+      "selected_index": 1,
       "shape": null,
-      "side": null,
-      "size": "m",
+      "size": null,
       "slint_overrides": {},
       "state": null,
       "subtitle": null,
-      "text": "Add",
-      "trailing_icon": null,
+      "text": null,
       "variant": null,
-      "width": 107.0,
+      "width": 360.0,
       "width_option": null,
-      "x": 296.0,
-      "y": 104.0
+      "x": 0.0,
+      "y": 272.0
     },
     {
       "always_show_label": null,
@@ -205,66 +335,57 @@
       "enabled": null,
       "height": null,
       "height_offset": null,
-      "icon": "check",
+      "icon": null,
       "icon_position": null,
       "icons": [],
-      "items": [],
-      "kind": "filled-button",
+      "items": [
+        {
+          "badge": null,
+          "enabled": null,
+          "icon": "check",
+          "selected_icon": null,
+          "text": ""
+        },
+        {
+          "badge": null,
+          "enabled": null,
+          "icon": "schedule",
+          "selected_icon": null,
+          "text": ""
+        },
+        {
+          "badge": null,
+          "enabled": null,
+          "icon": "keyboard",
+          "selected_icon": null,
+          "text": ""
+        },
+        {
+          "badge": null,
+          "enabled": null,
+          "icon": "close",
+          "selected_icon": null,
+          "text": ""
+        }
+      ],
+      "kind": "short-navigation-bar",
       "level": null,
       "nav_arrangement": null,
       "nav_icon": null,
       "placeholder": null,
       "radius": null,
-      "selected_index": null,
+      "selected_index": 2,
       "shape": null,
-      "side": null,
-      "size": "l",
+      "size": null,
       "slint_overrides": {},
       "state": null,
       "subtitle": null,
-      "text": "Add",
-      "trailing_icon": null,
+      "text": null,
       "variant": null,
-      "width": 167.0,
+      "width": 360.0,
       "width_option": null,
-      "x": 436.0,
-      "y": 64.0
-    },
-    {
-      "always_show_label": null,
-      "checkable": null,
-      "checked": null,
-      "color": null,
-      "content_offset": null,
-      "corner": null,
-      "elevation": null,
-      "enabled": null,
-      "height": null,
-      "height_offset": null,
-      "icon": "check",
-      "icon_position": null,
-      "icons": [],
-      "items": [],
-      "kind": "filled-button",
-      "level": null,
-      "nav_arrangement": null,
-      "nav_icon": null,
-      "placeholder": null,
-      "radius": null,
-      "selected_index": null,
-      "shape": null,
-      "side": null,
-      "size": "xl",
-      "slint_overrides": {},
-      "state": null,
-      "subtitle": null,
-      "text": "Add",
-      "trailing_icon": null,
-      "variant": null,
-      "width": 211.0,
-      "width_option": null,
-      "x": 576.0,
-      "y": 24.0
+      "x": 0.0,
+      "y": 352.0
     }
   ]
 }

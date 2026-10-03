@@ -92,6 +92,7 @@
   "type": "canvas",
   "widgets": [
     {
+      "always_show_label": null,
       "checkable": null,
       "checked": null,
       "color": null,
@@ -102,16 +103,20 @@
       "height": null,
       "height_offset": null,
       "icon": null,
+      "icon_position": null,
       "icons": [
         "menu",
         "check",
         "close"
       ],
+      "items": [],
       "kind": "bottom-app-bar",
       "level": null,
+      "nav_arrangement": null,
       "nav_icon": "edit",
       "placeholder": null,
       "radius": null,
+      "selected_index": null,
       "shape": null,
       "side": null,
       "size": null,
@@ -127,6 +132,7 @@
       "y": 0.0
     },
     {
+      "always_show_label": null,
       "checkable": null,
       "checked": null,
       "color": null,
@@ -137,15 +143,19 @@
       "height": null,
       "height_offset": -20.0,
       "icon": null,
+      "icon_position": null,
       "icons": [
         "menu",
         "check"
       ],
+      "items": [],
       "kind": "bottom-app-bar",
       "level": null,
+      "nav_arrangement": null,
       "nav_icon": null,
       "placeholder": null,
       "radius": null,
+      "selected_index": null,
       "shape": null,
       "side": null,
       "size": null,

@@ -90,6 +90,7 @@
   "type": "canvas",
   "widgets": [
     {
+      "always_show_label": null,
       "checkable": null,
       "checked": null,
       "color": null,
@@ -100,14 +101,18 @@
       "height": null,
       "height_offset": null,
       "icon": null,
+      "icon_position": null,
       "icons": [
         "more_vert"
       ],
+      "items": [],
       "kind": "top-app-bar",
       "level": null,
+      "nav_arrangement": null,
       "nav_icon": "menu",
       "placeholder": null,
       "radius": null,
+      "selected_index": null,
       "shape": null,
       "side": null,
       "size": null,
@@ -123,6 +128,7 @@
       "y": 0.0
     },
     {
+      "always_show_label": null,
       "checkable": null,
       "checked": null,
       "color": null,
@@ -133,14 +139,18 @@
       "height": null,
       "height_offset": null,
       "icon": null,
+      "icon_position": null,
       "icons": [
         "more_vert"
       ],
+      "items": [],
       "kind": "top-app-bar",
       "level": null,
+      "nav_arrangement": null,
       "nav_icon": "arrow_back",
       "placeholder": null,
       "radius": null,
+      "selected_index": null,
       "shape": null,
       "side": null,
       "size": null,
@@ -156,6 +166,7 @@
       "y": 64.0
     },
     {
+      "always_show_label": null,
       "checkable": null,
       "checked": null,
       "color": null,
@@ -166,14 +177,18 @@
       "height": null,
       "height_offset": null,
       "icon": null,
+      "icon_position": null,
       "icons": [
         "more_vert"
       ],
+      "items": [],
       "kind": "top-app-bar",
       "level": null,
+      "nav_arrangement": null,
       "nav_icon": "arrow_back",
       "placeholder": null,
       "radius": null,
+      "selected_index": null,
       "shape": null,
       "side": null,
       "size": null,
@@ -189,6 +204,7 @@
       "y": 128.0
     },
     {
+      "always_show_label": null,
       "checkable": null,
       "checked": null,
       "color": null,
@@ -199,14 +215,18 @@
       "height": null,
       "height_offset": null,
       "icon": null,
+      "icon_position": null,
       "icons": [
         "more_vert"
       ],
+      "items": [],
       "kind": "top-app-bar",
       "level": null,
+      "nav_arrangement": null,
       "nav_icon": "arrow_back",
       "placeholder": null,
       "radius": null,
+      "selected_index": null,
       "shape": null,
       "side": null,
       "size": null,
@@ -222,6 +242,7 @@
       "y": 240.0
     },
     {
+      "always_show_label": null,
       "checkable": null,
       "checked": null,
       "color": null,
@@ -232,14 +253,18 @@
       "height": null,
       "height_offset": null,
       "icon": null,
+      "icon_position": null,
       "icons": [
         "more_vert"
       ],
+      "items": [],
       "kind": "top-app-bar",
       "level": null,
+      "nav_arrangement": null,
       "nav_icon": "arrow_back",
       "placeholder": null,
       "radius": null,
+      "selected_index": null,
       "shape": null,
       "side": null,
       "size": null,
@@ -255,6 +280,7 @@
       "y": 376.0
     },
     {
+      "always_show_label": null,
       "checkable": null,
       "checked": null,
       "color": null,
@@ -265,14 +291,18 @@
       "height": null,
       "height_offset": null,
       "icon": null,
+      "icon_position": null,
       "icons": [
         "more_vert"
       ],
+      "items": [],
       "kind": "top-app-bar",
       "level": null,
+      "nav_arrangement": null,
       "nav_icon": "arrow_back",
       "placeholder": null,
       "radius": null,
+      "selected_index": null,
       "shape": null,
       "side": null,
       "size": null,
@@ -288,6 +318,7 @@
       "y": 528.0
     },
     {
+      "always_show_label": null,
       "checkable": null,
       "checked": null,
       "color": null,
@@ -298,12 +329,16 @@
       "height": null,
       "height_offset": null,
       "icon": null,
+      "icon_position": null,
       "icons": [],
+      "items": [],
       "kind": "top-app-bar",
       "level": null,
+      "nav_arrangement": null,
       "nav_icon": null,
       "placeholder": null,
       "radius": null,
+      "selected_index": null,
       "shape": null,
       "side": null,
       "size": null,
@@ -319,6 +354,7 @@
       "y": 640.0
     },
     {
+      "always_show_label": null,
       "checkable": null,
       "checked": null,
       "color": null,
@@ -329,12 +365,16 @@
       "height": null,
       "height_offset": -36.0,
       "icon": null,
+      "icon_position": null,
       "icons": [],
+      "items": [],
       "kind": "top-app-bar",
       "level": null,
+      "nav_arrangement": null,
       "nav_icon": null,
       "placeholder": null,
       "radius": null,
+      "selected_index": null,
       "shape": null,
       "side": null,
       "size": null,

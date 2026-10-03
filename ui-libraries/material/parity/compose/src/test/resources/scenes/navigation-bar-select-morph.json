@@ -1,36 +1,28 @@
 {
-  "actions": [
-    {
-      "at": 0.0,
-      "kind": "press",
-      "x": 60.0,
-      "y": 44.0
-    }
-  ],
-  "case_rel": "material/button_press",
+  "actions": [],
+  "case_rel": "material/navigation_bar_select_morph",
   "densities": [
-    1,
-    2
+    1
   ],
   "fonts": {
     "brand": "Roboto",
     "plain": "Roboto"
   },
   "mask_decor": {},
-  "mask_inner": {
-    "button0": [
-      60,
-      120,
-      200,
-      333,
-      500,
-      1500,
-      2500
+  "mask_inner": {},
+  "name": "navigation-bar-select-morph",
+  "negative_note": "issue #27 class: the Slint key dispatch is synchronous while the Compose `selected` state flips inside the frame pump, so identical-timestamp frames report a systematic lead during the DefaultSpatial/FastSpatial indicator expansion — a silent pass would mean the harness went blind",
+  "params": {
+    "nav_events": [
+      [
+        "select",
+        0,
+        1,
+        30
+      ]
     ]
   },
-  "name": "button-press",
-  "params": {},
-  "parity": "motion",
+  "parity": "xfail",
   "scheme": {
     "background": "FFFDF7FE",
     "error": "FFA8364B",
@@ -81,8 +73,8 @@
     "tertiaryFixedDim": "FFE5B2D5"
   },
   "size": [
-    200,
-    96
+    360,
+    160
   ],
   "theme": {
     "contrast": 0.0,
@@ -94,16 +86,20 @@
   },
   "times": [
     0,
+    30,
     60,
     120,
     200,
-    333,
-    500,
-    1500,
-    2500
+    300,
+    450,
+    650,
+    900,
+    1200,
+    1600
   ],
   "trace_elements": [
-    "button0"
+    "navbar0",
+    "navbar1"
   ],
   "trace_props": [],
   "type": "canvas",
@@ -122,27 +118,103 @@
       "icon": null,
       "icon_position": null,
       "icons": [],
-      "items": [],
-      "kind": "filled-button",
+      "items": [
+        {
+          "badge": null,
+          "enabled": null,
+          "icon": "check",
+          "selected_icon": null,
+          "text": "Inbox"
+        },
+        {
+          "badge": null,
+          "enabled": null,
+          "icon": "schedule",
+          "selected_icon": null,
+          "text": "Sent"
+        },
+        {
+          "badge": null,
+          "enabled": null,
+          "icon": "keyboard",
+          "selected_icon": null,
+          "text": "Files"
+        }
+      ],
+      "kind": "short-navigation-bar",
       "level": null,
       "nav_arrangement": null,
       "nav_icon": null,
       "placeholder": null,
       "radius": null,
-      "selected_index": null,
+      "selected_index": 0,
       "shape": null,
-      "side": null,
       "size": null,
       "slint_overrides": {},
-      "state": "pressed",
+      "state": null,
       "subtitle": null,
-      "text": "Label",
-      "trailing_icon": null,
+      "text": null,
       "variant": null,
-      "width": null,
+      "width": 360.0,
       "width_option": null,
-      "x": 40.0,
-      "y": 28.0
+      "x": 0.0,
+      "y": 0.0
+    },
+    {
+      "always_show_label": null,
+      "checkable": null,
+      "checked": null,
+      "color": null,
+      "content_offset": null,
+      "corner": null,
+      "elevation": null,
+      "enabled": null,
+      "height": null,
+      "height_offset": null,
+      "icon": null,
+      "icon_position": null,
+      "icons": [],
+      "items": [
+        {
+          "badge": null,
+          "enabled": null,
+          "icon": "check",
+          "selected_icon": null,
+          "text": "Inbox"
+        },
+        {
+          "badge": null,
+          "enabled": null,
+          "icon": "schedule",
+          "selected_icon": null,
+          "text": "Sent"
+        },
+        {
+          "badge": null,
+          "enabled": null,
+          "icon": "keyboard",
+          "selected_icon": null,
+          "text": "Files"
+        }
+      ],
+      "kind": "navigation-bar",
+      "level": null,
+      "nav_arrangement": null,
+      "nav_icon": null,
+      "placeholder": null,
+      "radius": null,
+      "selected_index": 0,
+      "shape": null,
+      "size": null,
+      "slint_overrides": {},
+      "state": null,
+      "subtitle": null,
+      "text": null,
+      "variant": null,
+      "width": 360.0,
+      "width_option": null,
+      "x": 0.0,
+      "y": 80.0
     }
   ]
 }
