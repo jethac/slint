@@ -1,0 +1,42 @@
+// Copyright © SixtyFPS GmbH <info@slint.dev>
+// SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0
+
+// Scene: progress-indeterminate — generated from `ui-libraries/material/parity/scenes/progress-indeterminate.json`
+// (edit the scene, regenerate with `cargo run -p material-parity-generator`).
+//PARITY=xfail:femtovg: femtovg tessellates stroked arcs and small round caps with a slightly different AA coverage ramp than layoutlib — a handful of isolated edge pixels diverge ~90/255 at d2 while geometry is verified identical on software and skia; a silent pass would mean the harness went blind
+//SIZE=280x130
+//TIMES=500,1250,2500
+//DENSITIES=1,2
+//PARITY_EPS=16
+import "../../fonts/Roboto-VariableFont.ttf";
+import { CircularProgressIndicator, LinearProgressIndicator, MaterialPalette, MaterialTheme, MaterialWindow } from "@material";
+
+export component TestCase inherits MaterialWindow {
+    init => {
+        // The scene pins seed #6750A4, tonal-spot, spec2025, light, contrast 0
+        // (all the library defaults; restated here so a default change can't
+        // silently move the parity baseline).
+        MaterialTheme.seed-color = #6750A4;
+        MaterialTheme.dark = false;
+        MaterialTheme.contrast-level = 0;
+        MaterialTheme.use-platform-color = false;
+        MaterialTheme.plain-family = "Roboto";
+        MaterialTheme.brand-family = "Roboto";
+        // Compose builds its scene scheme from the same seed — use the
+        // runtime-generated scheme, not the static expressive table.
+        MaterialPalette.dynamic = true;
+    }
+
+    progress0 := LinearProgressIndicator {
+        x: 20px;
+        y: 16px;
+        indeterminate: true;
+    }
+
+    progress1 := CircularProgressIndicator {
+        x: 40px;
+        y: 60px;
+        indeterminate: true;
+    }
+
+}

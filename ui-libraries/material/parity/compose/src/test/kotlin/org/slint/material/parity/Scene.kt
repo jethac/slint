@@ -115,6 +115,12 @@ class Widget(json: JSONObject) {
     val icons: List<String> =
         json.optJSONArray("icons")?.let { a -> (0 until a.length()).map(a::getString) } ?: emptyList()
     val placeholder: String? = (json.opt("placeholder") as? String)?.takeIf { it.isNotEmpty() }
+    /** Progress-indicator family: the determinate fraction (ignored when
+     * `indeterminate` is set). */
+    val progress: Float = json.optDouble("progress", 0.0).toFloat()
+    /** Progress-indicator family: renders the indeterminate variant — the
+     * no-progress `*ProgressIndicator` overloads on the Compose side. */
+    val indeterminate: Boolean = json.optBoolean("indeterminate", false)
 
     val isIconButton: Boolean get() = kind.endsWith("icon-button")
     val isButton: Boolean get() = isIconButton || kind.endsWith("-button")

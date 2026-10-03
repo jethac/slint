@@ -150,8 +150,8 @@
       11
     ],
     "needs": "springs (#5), shapes (#6)",
-    "notes": "slint component: CircularProgressIndicator",
-    "status": "partial"
+    "notes": "slint component: CircularProgressIndicator; indeterminate deprecated, replacement: LoadingIndicator",
+    "status": "done"
   },
   "CircularWavyProgressIndicator": {
     "issues": [
@@ -580,7 +580,7 @@
     ],
     "needs": "springs (#5), shapes (#6)",
     "notes": "slint component: LinearProgressIndicator",
-    "status": "partial"
+    "status": "done"
   },
   "LinearWavyProgressIndicator": {
     "issues": [

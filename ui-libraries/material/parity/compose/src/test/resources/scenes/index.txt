@@ -25,6 +25,7 @@ negative-focus-layer
 negative-hover-layer
 negative-icon-button-morph
 negative-press-overlay
+negative-progress-gap
 negative-radius
 negative-recolor
 negative-shape-fit
@@ -32,6 +33,8 @@ negative-shape-leak
 negative-thumb-offset
 negative-toggle-select
 negative-wrong-shadow
+progress-indeterminate
+progress-indicators
 search-bars
 spring-motion
 toggle-buttons
