@@ -1339,6 +1339,13 @@ fn to_kurbo_size(size: PhysicalSize) -> kurbo::Size {
 }
 
 fn phys_rect_shape(rect: PhysicalRect, radius: PhysicalBorderRadius) -> RectShape {
+    // Clamp every corner to half the shorter side like the software
+    // renderer and `ElementOutline` do. `kurbo::RoundedRect` otherwise
+    // follows the CSS overlapping-curves rule and shrinks all radii
+    // together when two corners overflow a side.
+    let radius = radius
+        .min(PhysicalBorderRadius::from_length(PhysicalLength::new(rect.width() / 2.)))
+        .min(PhysicalBorderRadius::from_length(PhysicalLength::new(rect.height() / 2.)));
     let rect = to_kurbo_rect(rect);
     if radius.is_zero() {
         return RectShape::Sharp(rect);
