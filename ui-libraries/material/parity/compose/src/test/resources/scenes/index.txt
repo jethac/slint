@@ -1,3 +1,4 @@
+badges
 bottom-app-bars
 button-focus
 button-hover
@@ -39,6 +40,8 @@ icon-buttons
 icons
 loading-indicator-motion
 loading-indicator-states
+negative-badge-offset
+negative-badge-text
 negative-button-focus-ring
 negative-button-press-morph
 negative-button-ripple-clip
@@ -81,6 +84,10 @@ split-button-sizes
 split-button-states
 split-button-styles
 spring-motion
+switch-hover
+switch-off-morph
+switch-on-morph
+switch-states
 toggle-buttons
 toggle-select-morph
 top-app-bars

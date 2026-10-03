@@ -1,154 +1,200 @@
 // Copyright © SixtyFPS GmbH <info@slint.dev>
 // SPDX-License-Identifier: MIT
 
-import { MaterialStyleMetrics } from "../styling/material_style_metrics.slint";
-import { MaterialAnimations } from "../styling/material_animations.slint";
 import { MaterialPalette } from "../styling/material_palette.slint";
-import { FocusTouchArea, StateLayer, Ripple } from "./state_layer.slint";
+import { MaterialAnimations } from "../styling/material_animations.slint";
 import { SwitchTokens } from "../styling/generated/material_component_tokens.slint";
+import { FocusTouchArea, StateLayer, Ripple, FocusRing } from "./state_layer.slint";
 import { Icon } from "./icon.slint";
 
+/// The pinned `SwitchImpl` + `ThumbNode` + `SwitchColors` —
+/// `androidx.compose.material3.Switch` at androidx/androidx@23327507f7fc:
+/// a 52x32dp `trackShape` track, a thumb whose size/offset follow
+/// `MotionSchemeKeyTokens.FastSpatial` (`SnapSpec` while pressed), an
+/// unbounded 40dp state-layer circle on the thumb, and the `InsetRing`
+/// focus indication on the track. Colors resolve instantly — the pin does
+/// not animate them.
 export component Switch {
     in_out property <bool> checked;
-    in property <bool> enabled: true;
-    in property <string> tooltip <=> touch_area.tooltip;
+    in property <bool> enabled <=> touch.enabled;
+    in property <string> tooltip <=> touch.tooltip;
+    /// The thumb's content slot (`thumbContent` upstream — one composable,
+    /// drawn in both states). `on_icon` shows while checked, `off_icon`
+    /// while unchecked; setting either gives the slot content.
     in property <image> on_icon;
     in property <image> off_icon;
-
-    property <bool> has_icon: (root.checked && root.on_icon.width > 0 && root.on_icon.height > 0) || (root.off_icon.width > 0 && root.off_icon.height > 0);
-    property <color> foreground: root.checked ? MaterialPalette.on_primary_container : MaterialPalette.surface_container_highest;
+    /// `Modifier.minimumInteractiveComponentSize` — the 48dp slot the track
+    /// is centered in. The parity harness disables it like Compose's
+    /// `LocalMinimumInteractiveComponentSize provides 0.dp`.
+    in property <bool> enforce_touch_target: true;
+    /// Test hooks: drive the state layers without pointer input — see
+    /// `StateLayerArea.simulate_*`.
+    in property <bool> simulate_hover;
+    in property <bool> simulate_press;
 
     callback checked_state_changed(checked: bool);
+    out property <bool> has_focus <=> touch.has_focus;
+    out property <bool> has_hover <=> touch.has_hover;
+    out property <bool> pressed <=> touch.pressed;
+    /// `isPressed` upstream: any held press counts, including keyboard
+    /// activation and the scene hooks.
+    out property <bool> effective_pressed: touch.pressed || touch.enter_pressed || root.simulate_press;
+    out property <bool> effective_hover: touch.has_hover || root.simulate_hover;
 
-    min_width: MaterialStyleMetrics.size_52;
-    min_height: MaterialStyleMetrics.size_32;
+    /// `hasContent` — upstream measures the *current* state's content
+    /// (`if (checked) Icon(...)` measures 0 while unchecked), so the slot
+    /// is non-empty only when the icon bound for this state is set.
+    property <bool> has_content: root.checked
+        ? (root.on_icon.width > 0 || root.on_icon.height > 0)
+        : (root.off_icon.width > 0 || root.off_icon.height > 0);
+
+    // `SwitchColors` resolves instantly — no `animateColorAsState`.
+    // Disabled values are `copy(alpha = ...).compositeOver(surface)`.
+    property <color> thumb_color: root.enabled ? (root.checked ? SwitchTokens.selected_handle_color : SwitchTokens.unselected_handle_color)
+        : (root.checked ? SwitchTokens.disabled_selected_handle_color.mix(MaterialPalette.surface, SwitchTokens.disabled_selected_handle_opacity)
+            : SwitchTokens.disabled_unselected_handle_color.mix(MaterialPalette.surface, SwitchTokens.disabled_unselected_handle_opacity));
+    property <color> track_color: root.enabled ? (root.checked ? SwitchTokens.selected_track_color : SwitchTokens.unselected_track_color)
+        : (root.checked ? SwitchTokens.disabled_selected_track_color.mix(MaterialPalette.surface, SwitchTokens.disabled_track_opacity)
+            : SwitchTokens.disabled_unselected_track_color.mix(MaterialPalette.surface, SwitchTokens.disabled_track_opacity));
+    property <color> track_border_color: !root.checked ? (root.enabled ? SwitchTokens.unselected_track_outline_color
+            : SwitchTokens.disabled_unselected_track_outline_color.mix(MaterialPalette.surface, SwitchTokens.disabled_track_opacity))
+        : transparent;
+    property <color> icon_color: root.enabled ? (root.checked ? SwitchTokens.selected_icon_color : SwitchTokens.unselected_icon_color)
+        : (root.checked ? SwitchTokens.disabled_selected_icon_color.mix(MaterialPalette.surface, SwitchTokens.disabled_selected_icon_opacity)
+            : SwitchTokens.disabled_unselected_icon_color.mix(MaterialPalette.surface, SwitchTokens.disabled_unselected_icon_opacity));
+
+    // `ThumbNode.measure`: pressed → `PressedHandleWidth`,
+    // `hasContent || checked` → `ThumbDiameter` (= `SelectedHandleWidth`),
+    // else `UncheckedThumbDiameter`.
+    out property <length> thumb_size:
+        root.effective_pressed ? SwitchTokens.pressed_handle_width
+        : root.checked || root.has_content ? SwitchTokens.selected_handle_width
+        : SwitchTokens.unselected_handle_width;
+    // `thumbPaddingStart` is `(SwitchHeight - size) / 2` where `size` is
+    // this pass's *target* — the pin divides by the resting diameter
+    // (`hasContent ? ThumbDiameter : UncheckedThumbDiameter`), not the
+    // still-animating `sizeAnim` value, so `minBound` is constant per
+    // state. `thumbPathLength` is `(SwitchWidth - ThumbDiameter) -
+    // ThumbPadding` (= 24dp) → `maxBound`; pressed pulls the thumb one
+    // outline width off the far edge.
+    out property <length> thumb_offset:
+        root.effective_pressed && root.checked ? 22px
+        : root.effective_pressed ? SwitchTokens.track_outline_width
+        : root.checked ? 24px
+        : (SwitchTokens.track_height
+            - (root.has_content ? SwitchTokens.selected_handle_width : SwitchTokens.unselected_handle_width)) / 2;
+    animate thumb_size, thumb_offset {
+        // `SnapSpec` while pressed, `MotionSchemeKeyTokens.FastSpatial`
+        // otherwise — a physical spring ignores `duration`.
+        duration: root.effective_pressed ? 0ms : 1ms;
+        easing: root.effective_pressed ? linear : MaterialAnimations.fast-spatial-spring;
+        enabled: !MaterialPalette.reduced-motion;
+    }
+
+    min_width: Math.max(SwitchTokens.track_width, root.enforce_touch_target ? 48px : 0px);
+    min_height: Math.max(SwitchTokens.track_height, root.enforce_touch_target ? 48px : 0px);
+    preferred_width: root.min_width;
+    preferred_height: root.min_height;
 
     accessible-enabled: root.enabled;
     accessible-checkable: true;
     accessible-checked <=> root.checked;
     accessible-role: switch;
-    accessible-action-default => { if(root.enabled) {touch_area.clicked();} }
-    forward_focus: touch_area;
+    accessible-action-default => { if root.enabled { touch.clicked(); } }
+    forward_focus: touch;
 
-    touch_area := FocusTouchArea {
-        enabled: root.enabled;
+    touch := FocusTouchArea {
+        x: 0;
+        y: 0;
+        width: 100%;
+        height: 100%;
 
-        background_layer := Rectangle {
-            background: root.checked ? MaterialPalette.primary : MaterialPalette.surface_container_highest;
-            border_radius: self.height / 2;
-            border_width: root.checked ? 0 : 2px;
-            border_color: MaterialPalette.outline;
+        track := Rectangle {
+            // `wrapContentSize(Alignment.Center).requiredSize(52, 32)` —
+            // the track centers inside the MICS bounds.
+            x: (parent.width - self.width) / 2;
+            y: (parent.height - self.height) / 2;
+            width: SwitchTokens.track_width;
+            height: SwitchTokens.track_height;
+            border_radius: SwitchTokens.track_shape.full ? self.height / 2 : SwitchTokens.track_shape.top_left;
+            border_width: SwitchTokens.track_outline_width;
+            border_color: root.track_border_color;
+            background: root.track_color;
+        }
 
-            state_layer := StateLayer {
-                x: indicator.x + (indicator.width - self.width) / 2;
-                width: self.height;
-                height: root.height + MaterialStyleMetrics.size_8;
-                border_radius: self.height / 2;
-                has_hover: touch_area.has_hover;
-                has_focus: touch_area.has_focus;
-                pressed: touch_area.pressed;
+        thumb := Rectangle {
+            // `Box(Alignment.CenterStart).then(ThumbElement)` — the layout
+            // offset is `offsetAnim`; the thumb is track-height centered.
+            x: track.x + root.thumb_offset;
+            y: track.y + (track.height - self.height) / 2;
+            width: root.thumb_size;
+            height: self.width;
+            border_radius: SwitchTokens.handle_shape.full ? self.width / 2 : SwitchTokens.handle_shape.top_left;
+            background: root.thumb_color;
+
+            // `SwitchDefaults.IconSize` (16dp), `LocalContentColor provides
+            // iconColor` — the slot draws whichever icon is bound for the
+            // current state.
+            if root.has_content : Icon {
+                x: (parent.width - self.width) / 2;
+                y: (parent.height - self.height) / 2;
+                width: SwitchTokens.selected_icon_size;
+                height: self.width;
+                colorize: root.icon_color;
+                source: root.checked ? root.on_icon : root.off_icon;
+            }
+        }
+
+        // The thumb's `indication`: `ripple(bounded = false, radius =
+        // StateLayerSize / 2)` — a 40dp circle centered on the thumb,
+        // painting *over* it: the recorded refs tint the thumb interior the
+        // same ~8% the track gets, so the disc sits above the thumb fill
+        // (and its icon slot). `enableFocusIndication = !useInsetRing` —
+        // under `InsetRing` focus is the track ring instead.
+        if root.enabled && (root.effective_hover || root.effective_pressed) : state_circle := Rectangle {
+            x: track.x + root.thumb_offset + root.thumb_size / 2 - self.width / 2;
+            y: track.y + (track.height - self.height) / 2;
+            width: SwitchTokens.state_layer_size;
+            height: self.width;
+            border_radius: self.width / 2;
+
+            StateLayer {
+                width: 100%;
+                height: 100%;
+                border_radius: parent.border_radius;
+                background: black;
+                display_background: false;
                 enabled: root.enabled;
-
-                // ripple
-                if root.enabled && (touch_area.pressed || touch_area.enter_pressed) : Ripple {
-                    pressed_x: touch_area.pressed_x;
-                    pressed_y: touch_area.pressed_y;
-                    width: 100%;
-                    height: 100%;
-                    border_radius: state_layer.border_radius;
-                    color: state_layer.background;
-                    clip_ripple: true;
-                }
+                pressed: root.effective_pressed;
+                has_focus: false;
+                has_hover: root.effective_hover;
+                focus_ring: true;
             }
 
-            indicator := Rectangle {
-                property <length> indicator-padding: root.checked || root.has_icon ? MaterialStyleMetrics.padding_4 : MaterialStyleMetrics.padding_8;
-
-                property <length> default_height: background_layer.height - 2 * self.indicator-padding;
-
-                x: self.indicator-padding - (self.height - self.default_height) / 2;
-                width: self.height;
-                height: self.default_height;
-                border_radius: self.height / 2;
-                background: root.checked ? MaterialPalette.primary_container : MaterialPalette.outline;
-
-                if root.has_icon : Icon {
-                    width: root.checked ? SwitchTokens.selected_icon_size : SwitchTokens.unselected_icon_size;
-                    height: self.width;
-                    source: root.checked ? root.on_icon : root.off_icon;
-                    colorize: root.foreground;
-
-                    animate colorize { enabled: !MaterialPalette.reduced-motion;
-                        duration: MaterialAnimations.opacity_duration;
-                        easing: MaterialAnimations.opacity_easing;
-                    }
-                }
-
-                animate height { enabled: !MaterialPalette.reduced-motion;
-                    duration: MaterialAnimations.emphasized_accelerate_duration;
-                    easing: MaterialAnimations.emphasized_easing;
-                }
-
-                animate background { enabled: !MaterialPalette.reduced-motion;
-                    duration: MaterialAnimations.opacity_duration;
-                    easing: MaterialAnimations.opacity_easing;
-                }
-
-                states [
-                    checked when root.checked : {
-                        x: background_layer.width - self.indicator-padding - self.width;
-
-                        in {
-                            animate x { enabled: !MaterialPalette.reduced-motion;
-                                duration: MaterialAnimations.emphasized_accelerate_duration;
-                                easing: MaterialAnimations.emphasized_easing;
-                            }
-                        }
-
-                        out {
-                            animate x { enabled: !MaterialPalette.reduced-motion;
-                                duration: MaterialAnimations.emphasized_accelerate_duration;
-                                easing: MaterialAnimations.emphasized_easing;
-                            }
-                        }
-                    }
-                ]
-            }
-
-            animate background, border_color { enabled: !MaterialPalette.reduced-motion;
-                duration: MaterialAnimations.opacity_duration;
-                easing: MaterialAnimations.opacity_easing;
+            if root.effective_pressed : Ripple {
+                width: 100%;
+                height: 100%;
+                border_radius: parent.border_radius;
+                pressed_x: touch.pressed ? touch.pressed_x - state_circle.x : self.width / 2;
+                pressed_y: touch.pressed ? touch.pressed_y - state_circle.y : self.height / 2;
+                color: black;
+                clip_ripple: true;
             }
         }
 
         clicked => {
-            root.toggle();
+            root.checked = !root.checked;
+            root.checked_state_changed(root.checked);
         }
     }
 
-    function toggle() {
-        root.checked = !root.checked;
+    // The `InsetRing` focus indication draws on the track with
+    // `focusRingShape = trackShape`.
+    if touch.has_focus && root.enabled : FocusRing {
+        x: track.x;
+        y: track.y;
+        width: track.width;
+        height: track.height;
+        border_radius: track.border_radius;
     }
-
-    changed checked => {
-        root.checked_state_changed(root.checked);
-    }
-
-    states [
-        disabled when !root.enabled : {
-           state_layer.display_background: false;
-           indicator.background: root.checked ? MaterialPalette.surface : MaterialPalette.outline.with_alpha(MaterialPalette.disable_opacity);
-           background_layer.background: (root.checked ? MaterialPalette.on_surface : MaterialPalette.surface_variant).with_alpha(MaterialPalette.state_layer_opacity_disabled);
-           background_layer.border_color: MaterialPalette.on_surface.with_alpha(MaterialPalette.state_layer_opacity_disabled);
-           foreground: root.checked ? MaterialPalette.on_surface.with_alpha(MaterialPalette.disable_opacity) : MaterialPalette.surface_container_highest;
-        }
-        pressed when touch_area.pressed: {
-            state_layer.background: indicator.background;
-            indicator.height: background_layer.height - 2px;
-            indicator.background: root.checked ? MaterialPalette.primary_container :  MaterialPalette.on_surface_variant;
-        }
-        hover when touch_area.has_hover: {
-            state_layer.background: indicator.background;
-        }
-    ]
 }
