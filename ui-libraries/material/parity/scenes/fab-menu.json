@@ -32,7 +32,7 @@
             "checked_icon": "close",
             "expanded": true,
             "alignment": "end",
-            "items": [
+            "fab_items": [
                 {
                     "icon": "check",
                     "text": "Compose"
@@ -56,7 +56,7 @@
             "checked_icon": "close",
             "expanded": true,
             "alignment": "center",
-            "items": [
+            "fab_items": [
                 {
                     "icon": "check",
                     "text": "Compose"
@@ -80,7 +80,7 @@
             "checked_icon": "close",
             "expanded": true,
             "alignment": "start",
-            "items": [
+            "fab_items": [
                 {
                     "icon": "check",
                     "text": "Compose"

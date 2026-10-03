@@ -165,12 +165,7 @@
       "elevation": null,
       "enabled": null,
       "expanded": true,
-      "fab_size": "baseline",
-      "height": null,
-      "height_offset": null,
-      "icon": "edit",
-      "icons": [],
-      "items": [
+      "fab_items": [
         {
           "enabled": null,
           "icon": "check",
@@ -187,6 +182,11 @@
           "text": "Archive"
         }
       ],
+      "fab_size": "baseline",
+      "height": null,
+      "height_offset": null,
+      "icon": "edit",
+      "icons": [],
       "kind": "fab-menu",
       "level": null,
       "nav_icon": null,
@@ -215,12 +215,7 @@
       "elevation": null,
       "enabled": null,
       "expanded": true,
-      "fab_size": "medium",
-      "height": null,
-      "height_offset": null,
-      "icon": "edit",
-      "icons": [],
-      "items": [
+      "fab_items": [
         {
           "enabled": null,
           "icon": "check",
@@ -237,6 +232,11 @@
           "text": "Archive"
         }
       ],
+      "fab_size": "medium",
+      "height": null,
+      "height_offset": null,
+      "icon": "edit",
+      "icons": [],
       "kind": "fab-menu",
       "level": null,
       "nav_icon": null,
@@ -265,12 +265,7 @@
       "elevation": null,
       "enabled": null,
       "expanded": true,
-      "fab_size": "large",
-      "height": null,
-      "height_offset": null,
-      "icon": "edit",
-      "icons": [],
-      "items": [
+      "fab_items": [
         {
           "enabled": null,
           "icon": "check",
@@ -287,6 +282,11 @@
           "text": "Archive"
         }
       ],
+      "fab_size": "large",
+      "height": null,
+      "height_offset": null,
+      "icon": "edit",
+      "icons": [],
       "kind": "fab-menu",
       "level": null,
       "nav_icon": null,

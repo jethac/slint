@@ -471,7 +471,7 @@ private fun CanvasScene(
                     )
                     // `text:<n>` enumerates text-bearing widgets in
                     // document order across the whole scene.
-                    menuTexts += widget.items.size
+                    menuTexts += widget.fabItems.size
                 }
                 widget.kind == "top-app-bar" ||
                     widget.kind == "bottom-app-bar" ||
@@ -1676,7 +1676,7 @@ private fun FabMenu(
             }
         },
     ) {
-        widget.items.forEachIndexed { i, item ->
+        widget.fabItems.forEachIndexed { i, item ->
             FloatingActionButtonMenuItem(
                 onClick = {},
                 modifier = Modifier.track(tracer, "$elementId>container$i"),

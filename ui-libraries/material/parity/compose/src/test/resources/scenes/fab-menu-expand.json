@@ -181,11 +181,7 @@
       "corner": null,
       "elevation": null,
       "enabled": null,
-      "height": null,
-      "height_offset": null,
-      "icon": "edit",
-      "icons": [],
-      "items": [
+      "fab_items": [
         {
           "enabled": null,
           "icon": "check",
@@ -202,6 +198,10 @@
           "text": "Archive"
         }
       ],
+      "height": null,
+      "height_offset": null,
+      "icon": "edit",
+      "icons": [],
       "kind": "fab-menu",
       "level": null,
       "nav_icon": null,

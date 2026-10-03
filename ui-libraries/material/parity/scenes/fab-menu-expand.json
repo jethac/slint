@@ -55,7 +55,7 @@
             "y": 248,
             "icon": "edit",
             "checked_icon": "close",
-            "items": [
+            "fab_items": [
                 {
                     "icon": "check",
                     "text": "Compose"

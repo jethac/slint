@@ -114,8 +114,8 @@ class Widget(json: JSONObject) {
      * (upstream default `Alignment.End`). */
     val alignment: String = (json.opt("alignment") as? String) ?: "end"
     /** The `fab-menu` widget's `{icon, text, enabled}` entries. */
-    val items: List<FabMenuItemSpec> =
-        json.optJSONArray("items")?.let { a -> (0 until a.length()).map { FabMenuItemSpec(a.getJSONObject(it)) } }
+    val fabItems: List<FabMenuItemSpec> =
+        json.optJSONArray("fab_items")?.let { a -> (0 until a.length()).map { FabMenuItemSpec(a.getJSONObject(it)) } }
             ?: emptyList()
     /** `top-app-bar` variant: `small` (default), `center`, `medium`,
      * `medium-flexible`, `large`, `large-flexible`, `two-rows`. */

@@ -209,9 +209,10 @@ struct Widget {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     alignment: Option<String>,
     /// The `fab-menu` widget's entries: `{icon, text, enabled}` structs —
-    /// `FloatingActionButtonMenuItem`s on both sides.
+    /// `FloatingActionButtonMenuItem`s on both sides. Named `fab_items` in
+    /// the scene JSON: `items` belongs to `button-group`'s `GroupItem` rows.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    items: Vec<FabMenuItemSpec>,
+    fab_items: Vec<FabMenuItemSpec>,
     /// M3 elevation level (0–5) for `surface` widgets: the Slint side sets
     /// `Elevation.level`, the Compose side sets `Modifier.shadow`'s dp.
     #[serde(default)]
@@ -308,7 +309,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 .chain(w.checked_icon.iter())
                 .chain(w.nav_icon.iter())
                 .chain(w.icons.iter())
-                .chain(w.items.iter().filter_map(|i| i.icon.as_ref()));
+                .chain(w.fab_items.iter().filter_map(|i| i.icon.as_ref()));
             for icon in icons {
                 let src = repo_root
                     .join("ui-libraries/material/src/ui/icons")
@@ -644,7 +645,7 @@ fn slint_case(scene: &Scene) -> String {
         }
         if w.icon.is_some()
             || w.checked_icon.is_some()
-            || w.items.iter().any(|i| i.icon.is_some())
+            || w.fab_items.iter().any(|i| i.icon.is_some())
             || w.nav_icon.is_some()
             || !w.icons.is_empty()
         {
@@ -1031,7 +1032,7 @@ fn slint_canvas(s: &mut String, scene: &Scene) {
                     }
                 }
                 let items = w
-                    .items
+                    .fab_items
                     .iter()
                     .map(|item| {
                         let icon = item
