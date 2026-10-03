@@ -47,6 +47,7 @@
       800
     ]
   },
+  "mask_shadow": {},
   "name": "fab-show-hide-morph",
   "negative_note": "issue #27: the Compose frame clock starts the show/hide animatables ~2ms after the Slint dispatch, so identical-timestamp frames report a systematic lead; on software, #6068 additionally keeps the element transform a no-op (alpha + collapse still verify)",
   "params": {},
@@ -133,7 +134,6 @@
   "type": "canvas",
   "widgets": [
     {
-      "alignment": null,
       "checkable": null,
       "checked": null,
       "checked_icon": null,
@@ -142,7 +142,6 @@
       "corner": null,
       "elevation": null,
       "enabled": null,
-      "expanded": null,
       "height": null,
       "height_offset": null,
       "icon": "add",
@@ -188,7 +187,6 @@
       "corner": null,
       "elevation": null,
       "enabled": null,
-      "expanded": null,
       "height": null,
       "height_offset": null,
       "icon": "add",

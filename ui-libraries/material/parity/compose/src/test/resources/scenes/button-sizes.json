@@ -11,6 +11,7 @@
   },
   "mask_decor": {},
   "mask_inner": {},
+  "mask_shadow": {},
   "name": "button-sizes",
   "params": {},
   "parity": "static",
@@ -92,7 +93,6 @@
   "type": "canvas",
   "widgets": [
     {
-      "alignment": null,
       "checkable": null,
       "checked": null,
       "checked_icon": null,
@@ -101,7 +101,6 @@
       "corner": null,
       "elevation": null,
       "enabled": null,
-      "expanded": null,
       "height": null,
       "height_offset": null,
       "icon": null,
@@ -138,7 +137,6 @@
       "y": 128.0
     },
     {
-      "alignment": null,
       "checkable": null,
       "checked": null,
       "checked_icon": null,
@@ -147,7 +145,6 @@
       "corner": null,
       "elevation": null,
       "enabled": null,
-      "expanded": null,
       "height": null,
       "height_offset": null,
       "icon": null,
@@ -184,7 +181,6 @@
       "y": 120.0
     },
     {
-      "alignment": null,
       "checkable": null,
       "checked": null,
       "checked_icon": null,
@@ -193,7 +189,6 @@
       "corner": null,
       "elevation": null,
       "enabled": null,
-      "expanded": null,
       "height": null,
       "height_offset": null,
       "icon": null,
@@ -230,7 +225,6 @@
       "y": 104.0
     },
     {
-      "alignment": null,
       "checkable": null,
       "checked": null,
       "checked_icon": null,
@@ -239,7 +233,6 @@
       "corner": null,
       "elevation": null,
       "enabled": null,
-      "expanded": null,
       "height": null,
       "height_offset": null,
       "icon": null,
@@ -276,7 +269,6 @@
       "y": 64.0
     },
     {
-      "alignment": null,
       "checkable": null,
       "checked": null,
       "checked_icon": null,
@@ -285,7 +277,6 @@
       "corner": null,
       "elevation": null,
       "enabled": null,
-      "expanded": null,
       "height": null,
       "height_offset": null,
       "icon": null,
@@ -322,7 +313,6 @@
       "y": 24.0
     },
     {
-      "alignment": null,
       "checkable": null,
       "checked": null,
       "checked_icon": null,
@@ -331,7 +321,6 @@
       "corner": "square",
       "elevation": null,
       "enabled": null,
-      "expanded": null,
       "height": null,
       "height_offset": null,
       "icon": null,
@@ -368,7 +357,6 @@
       "y": 268.0
     },
     {
-      "alignment": null,
       "checkable": null,
       "checked": null,
       "checked_icon": null,
@@ -377,7 +365,6 @@
       "corner": "square",
       "elevation": null,
       "enabled": null,
-      "expanded": null,
       "height": null,
       "height_offset": null,
       "icon": null,
@@ -414,7 +401,6 @@
       "y": 260.0
     },
     {
-      "alignment": null,
       "checkable": null,
       "checked": null,
       "checked_icon": null,
@@ -423,7 +409,6 @@
       "corner": "square",
       "elevation": null,
       "enabled": null,
-      "expanded": null,
       "height": null,
       "height_offset": null,
       "icon": null,
@@ -460,7 +445,6 @@
       "y": 244.0
     },
     {
-      "alignment": null,
       "checkable": null,
       "checked": null,
       "checked_icon": null,
@@ -469,7 +453,6 @@
       "corner": "square",
       "elevation": null,
       "enabled": null,
-      "expanded": null,
       "height": null,
       "height_offset": null,
       "icon": null,
@@ -506,7 +489,6 @@
       "y": 204.0
     },
     {
-      "alignment": null,
       "checkable": null,
       "checked": null,
       "checked_icon": null,
@@ -515,7 +497,6 @@
       "corner": "square",
       "elevation": null,
       "enabled": null,
-      "expanded": null,
       "height": null,
       "height_offset": null,
       "icon": null,

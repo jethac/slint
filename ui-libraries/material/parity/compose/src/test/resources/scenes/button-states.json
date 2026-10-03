@@ -33,6 +33,7 @@
       2000
     ]
   },
+  "mask_shadow": {},
   "name": "button-states",
   "params": {},
   "parity": "static",
@@ -108,7 +109,6 @@
   "type": "canvas",
   "widgets": [
     {
-      "alignment": null,
       "checkable": null,
       "checked": null,
       "checked_icon": null,
@@ -117,7 +117,6 @@
       "corner": null,
       "elevation": null,
       "enabled": null,
-      "expanded": null,
       "height": null,
       "height_offset": null,
       "icon": null,
@@ -154,7 +153,6 @@
       "y": 28.0
     },
     {
-      "alignment": null,
       "checkable": null,
       "checked": null,
       "checked_icon": null,
@@ -163,7 +161,6 @@
       "corner": null,
       "elevation": null,
       "enabled": null,
-      "expanded": null,
       "height": null,
       "height_offset": null,
       "icon": null,
@@ -200,7 +197,6 @@
       "y": 28.0
     },
     {
-      "alignment": null,
       "checkable": null,
       "checked": null,
       "checked_icon": null,
@@ -209,7 +205,6 @@
       "corner": null,
       "elevation": null,
       "enabled": null,
-      "expanded": null,
       "height": null,
       "height_offset": null,
       "icon": null,
@@ -246,7 +241,6 @@
       "y": 28.0
     },
     {
-      "alignment": null,
       "checkable": null,
       "checked": null,
       "checked_icon": null,
@@ -255,7 +249,6 @@
       "corner": null,
       "elevation": null,
       "enabled": false,
-      "expanded": null,
       "height": null,
       "height_offset": null,
       "icon": null,

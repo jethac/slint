@@ -21,6 +21,8 @@ extended-fab-pressed
 extended-fab-sizes
 extended-fab-states
 fab-hover-morph
+fab-menu-expand
+fab-menu
 fab-pressed
 fab-show-hide-morph
 fab-sizes
@@ -77,5 +79,7 @@ switch-off-morph
 switch-on-morph
 switch-states
 toggle-buttons
+toggle-fab-morph
+toggle-fab-states
 toggle-select-morph
 top-app-bars

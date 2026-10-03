@@ -11,6 +11,7 @@
   },
   "mask_decor": {},
   "mask_inner": {},
+  "mask_shadow": {},
   "name": "button-icons",
   "params": {},
   "parity": "static",
@@ -87,7 +88,6 @@
   "type": "canvas",
   "widgets": [
     {
-      "alignment": null,
       "checkable": null,
       "checked": null,
       "checked_icon": null,
@@ -96,7 +96,6 @@
       "corner": null,
       "elevation": null,
       "enabled": null,
-      "expanded": null,
       "height": null,
       "height_offset": null,
       "icon": "check",
@@ -133,7 +132,6 @@
       "y": 128.0
     },
     {
-      "alignment": null,
       "checkable": null,
       "checked": null,
       "checked_icon": null,
@@ -142,7 +140,6 @@
       "corner": null,
       "elevation": null,
       "enabled": null,
-      "expanded": null,
       "height": null,
       "height_offset": null,
       "icon": "check",
@@ -179,7 +176,6 @@
       "y": 120.0
     },
     {
-      "alignment": null,
       "checkable": null,
       "checked": null,
       "checked_icon": null,
@@ -188,7 +184,6 @@
       "corner": null,
       "elevation": null,
       "enabled": null,
-      "expanded": null,
       "height": null,
       "height_offset": null,
       "icon": "check",
@@ -225,7 +220,6 @@
       "y": 104.0
     },
     {
-      "alignment": null,
       "checkable": null,
       "checked": null,
       "checked_icon": null,
@@ -234,7 +228,6 @@
       "corner": null,
       "elevation": null,
       "enabled": null,
-      "expanded": null,
       "height": null,
       "height_offset": null,
       "icon": "check",
@@ -271,7 +264,6 @@
       "y": 64.0
     },
     {
-      "alignment": null,
       "checkable": null,
       "checked": null,
       "checked_icon": null,
@@ -280,7 +272,6 @@
       "corner": null,
       "elevation": null,
       "enabled": null,
-      "expanded": null,
       "height": null,
       "height_offset": null,
       "icon": "check",

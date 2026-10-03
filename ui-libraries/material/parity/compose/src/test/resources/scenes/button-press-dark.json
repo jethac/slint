@@ -29,6 +29,7 @@
       2500
     ]
   },
+  "mask_shadow": {},
   "name": "button-press-dark",
   "params": {},
   "parity": "motion",
@@ -110,7 +111,6 @@
   "type": "canvas",
   "widgets": [
     {
-      "alignment": null,
       "checkable": null,
       "checked": null,
       "checked_icon": null,
@@ -119,7 +119,6 @@
       "corner": null,
       "elevation": null,
       "enabled": null,
-      "expanded": null,
       "height": 96.0,
       "height_offset": null,
       "icon": null,
@@ -156,7 +155,6 @@
       "y": 0.0
     },
     {
-      "alignment": null,
       "checkable": null,
       "checked": null,
       "checked_icon": null,
@@ -165,7 +163,6 @@
       "corner": null,
       "elevation": null,
       "enabled": null,
-      "expanded": null,
       "height": null,
       "height_offset": null,
       "icon": null,

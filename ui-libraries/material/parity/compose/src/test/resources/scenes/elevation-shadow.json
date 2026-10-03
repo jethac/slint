@@ -11,6 +11,7 @@
   },
   "mask_decor": {},
   "mask_inner": {},
+  "mask_shadow": {},
   "name": "elevation-shadow",
   "negative_note": "same shadow footprint but the layoutlib-rendered reference runs ~1.3-1.6x darker through the penumbra than the pinned SkShadowUtils model; all light/alpha constants verified against dimens.xml + ThreadedRenderer at the pin (issue #6 elevation parity)",
   "params": {},
@@ -82,7 +83,6 @@
   "type": "canvas",
   "widgets": [
     {
-      "alignment": null,
       "checkable": null,
       "checked": null,
       "checked_icon": null,
@@ -91,7 +91,6 @@
       "corner": null,
       "elevation": 0.0,
       "enabled": null,
-      "expanded": null,
       "height": 64.0,
       "height_offset": null,
       "icon": null,
@@ -128,7 +127,6 @@
       "y": 16.0
     },
     {
-      "alignment": null,
       "checkable": null,
       "checked": null,
       "checked_icon": null,
@@ -137,7 +135,6 @@
       "corner": null,
       "elevation": 6.0,
       "enabled": null,
-      "expanded": null,
       "height": 64.0,
       "height_offset": null,
       "icon": null,
@@ -174,7 +171,6 @@
       "y": 16.0
     },
     {
-      "alignment": null,
       "checkable": null,
       "checked": null,
       "checked_icon": null,
@@ -183,7 +179,6 @@
       "corner": null,
       "elevation": 24.0,
       "enabled": null,
-      "expanded": null,
       "height": 64.0,
       "height_offset": null,
       "icon": null,
@@ -220,7 +215,6 @@
       "y": 16.0
     },
     {
-      "alignment": null,
       "checkable": null,
       "checked": null,
       "checked_icon": null,
@@ -229,7 +223,6 @@
       "corner": null,
       "elevation": 12.0,
       "enabled": null,
-      "expanded": null,
       "height": 64.0,
       "height_offset": null,
       "icon": null,

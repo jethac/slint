@@ -24,6 +24,7 @@
   },
   "mask_decor": {},
   "mask_inner": {},
+  "mask_shadow": {},
   "name": "negative-thumb-offset",
   "negative_note": "the thumb renders 2px ahead of its animated property — an offset element must fail the trace comparison",
   "params": {

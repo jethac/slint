@@ -11,6 +11,7 @@
   },
   "mask_decor": {},
   "mask_inner": {},
+  "mask_shadow": {},
   "name": "negative-split-button-inner-corner",
   "negative_note": "slint_overrides sets `inner_corner` to 12px where the small-bucket InnerCornerCornerSize token is 4px — a split button whose inner seam rounds wrong must fail",
   "params": {},
@@ -84,7 +85,6 @@
   "type": "canvas",
   "widgets": [
     {
-      "alignment": null,
       "checkable": true,
       "checked": null,
       "checked_icon": null,
@@ -93,7 +93,6 @@
       "corner": null,
       "elevation": null,
       "enabled": null,
-      "expanded": null,
       "height": null,
       "height_offset": null,
       "icon": "edit",

@@ -171,6 +171,7 @@ impl ElementQueryInstruction {
         element: ElementHandle,
         control_flow_after_first_match: ControlFlow<()>,
         active_popups: &[(ItemRc, ItemTreeRc)],
+        include_invisible: bool,
     ) -> (ControlFlow<()>, Vec<ElementHandle>) {
         let Some((query, tail)) = query_stack.split_first() else {
             return (control_flow_after_first_match, vec![element]);
@@ -186,11 +187,13 @@ impl ElementQueryInstruction {
                             child,
                             control_flow_after_first_match,
                             active_popups,
+                            include_invisible,
                         );
                         results.extend(sub_results);
                         next_control_flow
                     },
                     active_popups,
+                    include_invisible,
                 ) {
                     Some(_) => (ControlFlow::Break(()), results),
                     None => (ControlFlow::Continue(()), results),
@@ -204,6 +207,7 @@ impl ElementQueryInstruction {
                         element,
                         control_flow_after_first_match,
                         active_popups,
+                        include_invisible,
                     );
                     results.extend(sub_results);
                     next_control_flow
@@ -228,6 +232,7 @@ impl ElementQueryInstruction {
 pub struct ElementQuery {
     root: ElementHandle,
     query_stack: Vec<ElementQueryInstruction>,
+    include_invisible: bool,
 }
 
 impl ElementQuery {
@@ -239,6 +244,13 @@ impl ElementQuery {
     /// Applies any subsequent matches to all descendants of the results of the query up to this point.
     pub fn match_descendants(mut self) -> Self {
         self.query_stack.push(ElementQueryInstruction::MatchDescendants);
+        self
+    }
+
+    /// Descend into subtrees below `visible: false` items as well — by
+    /// default the traversal skips them, matching what a user can see.
+    pub fn include_invisible(mut self) -> Self {
+        self.include_invisible = true;
         self
     }
 
@@ -295,6 +307,7 @@ impl ElementQuery {
             self.root.clone(),
             ControlFlow::Break(()),
             &self.root.active_popups(),
+            self.include_invisible,
         )
         .1
         .into_iter()
@@ -308,6 +321,7 @@ impl ElementQuery {
             self.root.clone(),
             ControlFlow::Continue(()),
             &self.root.active_popups(),
+            self.include_invisible,
         )
         .1
     }
@@ -341,7 +355,7 @@ impl ElementHandle {
         &self,
         mut visitor: impl FnMut(ElementHandle) -> ControlFlow<R>,
     ) -> Option<R> {
-        self.visit_descendants_impl(&mut |e| visitor(e), &self.active_popups())
+        self.visit_descendants_impl(&mut |e| visitor(e), &self.active_popups(), false)
     }
 
     /// Visit all descendants of this element and call the visitor to each of them, until the visitor returns [`ControlFlow::Break`].
@@ -350,6 +364,7 @@ impl ElementHandle {
         &self,
         visitor: &mut dyn FnMut(ElementHandle) -> ControlFlow<R>,
         active_popups: &[(ItemRc, ItemTreeRc)],
+        include_invisible: bool,
     ) -> Option<R> {
         let self_item = self.item.upgrade()?;
 
@@ -361,7 +376,11 @@ impl ElementHandle {
                             item: ItemRc::new_root(popup_item_tree.clone()).downgrade(),
                             element_index: 0,
                         })
-                        .visit_descendants_impl(visitor, active_popups)
+                        .visit_descendants_impl(
+                            visitor,
+                            active_popups,
+                            include_invisible,
+                        )
                     {
                         return Some(result);
                     }
@@ -372,7 +391,7 @@ impl ElementHandle {
         visit_attached_popups(&self_item, visitor);
 
         self_item.visit_descendants(move |item_rc| {
-            if !item_rc.is_visible() {
+            if !include_invisible && !item_rc.is_visible() {
                 return ControlFlow::Continue(());
             }
 
@@ -417,6 +436,7 @@ impl ElementHandle {
         ElementQuery {
             root: self.clone(),
             query_stack: vec![ElementQueryInstruction::MatchDescendants],
+            include_invisible: false,
         }
     }
 
@@ -810,6 +830,22 @@ impl ElementHandle {
         })
     }
 
+    /// Returns the value of the element's `accessible-item-index` property, or the
+    /// nearest ancestor's — for elements nested inside a repeated child that carries
+    /// the index on its component root (e.g. a menu item's inner parts).
+    pub fn nearest_accessible_item_index(&self) -> Option<usize> {
+        let mut item = self.item.upgrade()?;
+        loop {
+            if let Some(index) = item
+                .accessible_string_property(AccessibleStringProperty::ItemIndex)
+                .and_then(|s| s.parse().ok())
+            {
+                return Some(index);
+            }
+            item = item.parent_item(ParentItemTraversalMode::StopAtPopups)?;
+        }
+    }
+
     /// Returns the value of the element's `accessible-item-count` property, if present.
     pub fn accessible_item_count(&self) -> Option<usize> {
         if self.element_index != 0 {
@@ -897,6 +933,26 @@ impl ElementHandle {
                 let g = item.geometry();
                 let p = item.map_to_window(g.origin);
                 i_slint_core::lengths::logical_position_to_api(p)
+            })
+            .unwrap_or_default()
+    }
+
+    /// Returns the element's geometry intersected with the clip regions of all its
+    /// ancestors — the bounds a user can actually see. A fully clipped element reports
+    /// a zero-size rect. This corresponds to what on-screen bounds trackers such as
+    /// Compose's `boundsInRoot` report for clipped content.
+    pub fn visible_bounds(
+        &self,
+    ) -> (i_slint_core::api::LogicalPosition, i_slint_core::api::LogicalSize) {
+        self.item
+            .upgrade()
+            .map(|item| {
+                let (clip, geometry) = item.absolute_clip_rect_and_geometry();
+                let visible = geometry.intersection(&clip).unwrap_or_default();
+                (
+                    i_slint_core::lengths::logical_position_to_api(visible.origin),
+                    i_slint_core::lengths::logical_size_to_api(visible.size),
+                )
             })
             .unwrap_or_default()
     }

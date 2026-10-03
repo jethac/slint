@@ -76,6 +76,7 @@
     }
   },
   "mask_inner": {},
+  "mask_shadow": {},
   "name": "split-button-states",
   "negative_note": "issue #6: the software renderer has no transform-rotation — the checked/checked-toggled trailing chevron stays unrotated on that driver (a real engine gap the scope isolates, not a fake)",
   "params": {},
@@ -154,7 +155,6 @@
   "type": "canvas",
   "widgets": [
     {
-      "alignment": null,
       "checkable": true,
       "checked": null,
       "checked_icon": null,
@@ -163,7 +163,6 @@
       "corner": null,
       "elevation": null,
       "enabled": null,
-      "expanded": null,
       "height": null,
       "height_offset": null,
       "icon": "edit",
@@ -200,7 +199,6 @@
       "y": 12.0
     },
     {
-      "alignment": null,
       "checkable": true,
       "checked": null,
       "checked_icon": null,
@@ -209,7 +207,6 @@
       "corner": null,
       "elevation": null,
       "enabled": null,
-      "expanded": null,
       "height": null,
       "height_offset": null,
       "icon": "edit",
@@ -246,7 +243,6 @@
       "y": 12.0
     },
     {
-      "alignment": null,
       "checkable": true,
       "checked": null,
       "checked_icon": null,
@@ -255,7 +251,6 @@
       "corner": null,
       "elevation": null,
       "enabled": null,
-      "expanded": null,
       "height": null,
       "height_offset": null,
       "icon": "edit",
@@ -292,7 +287,6 @@
       "y": 12.0
     },
     {
-      "alignment": null,
       "checkable": true,
       "checked": null,
       "checked_icon": null,
@@ -301,7 +295,6 @@
       "corner": null,
       "elevation": null,
       "enabled": null,
-      "expanded": null,
       "height": null,
       "height_offset": null,
       "icon": "edit",
@@ -338,7 +331,6 @@
       "y": 12.0
     },
     {
-      "alignment": null,
       "checkable": true,
       "checked": null,
       "checked_icon": null,
@@ -347,7 +339,6 @@
       "corner": null,
       "elevation": null,
       "enabled": false,
-      "expanded": null,
       "height": null,
       "height_offset": null,
       "icon": "edit",
@@ -384,7 +375,6 @@
       "y": 80.0
     },
     {
-      "alignment": null,
       "checkable": true,
       "checked": true,
       "checked_icon": null,
@@ -393,7 +383,6 @@
       "corner": null,
       "elevation": null,
       "enabled": null,
-      "expanded": null,
       "height": null,
       "height_offset": null,
       "icon": "edit",

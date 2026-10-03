@@ -42,6 +42,7 @@
       1500
     ]
   },
+  "mask_shadow": {},
   "name": "button-release-morph",
   "params": {},
   "parity": "motion",
@@ -126,7 +127,6 @@
   "type": "canvas",
   "widgets": [
     {
-      "alignment": null,
       "checkable": null,
       "checked": null,
       "checked_icon": null,
@@ -135,7 +135,6 @@
       "corner": null,
       "elevation": null,
       "enabled": null,
-      "expanded": null,
       "height": null,
       "height_offset": null,
       "icon": null,

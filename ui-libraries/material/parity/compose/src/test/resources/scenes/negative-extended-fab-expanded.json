@@ -11,6 +11,7 @@
   },
   "mask_decor": {},
   "mask_inner": {},
+  "mask_shadow": {},
   "name": "negative-extended-fab-expanded",
   "negative_note": "slint_overrides renders the expanded extended FAB collapsed — the 56dp square vs Compose's expanded container must not match",
   "params": {},
@@ -86,7 +87,6 @@
   "type": "canvas",
   "widgets": [
     {
-      "alignment": null,
       "checkable": null,
       "checked": null,
       "checked_icon": null,
@@ -95,7 +95,6 @@
       "corner": null,
       "elevation": null,
       "enabled": null,
-      "expanded": null,
       "height": null,
       "height_offset": null,
       "icon": "add",

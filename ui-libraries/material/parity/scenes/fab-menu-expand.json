@@ -1,0 +1,146 @@
+{
+    "name": "fab-menu-expand",
+    "type": "canvas",
+    "parity": "motion",
+    "size": [
+        200,
+        320
+    ],
+    "densities": [
+        1,
+        2
+    ],
+    "theme": {
+        "seed": "6750A4",
+        "variant": "tonal-spot",
+        "spec": "spec2025",
+        "platform": "phone",
+        "dark": false,
+        "contrast": 0.0
+    },
+    "fonts": {
+        "plain": "Roboto",
+        "brand": "Roboto"
+    },
+    "times": [
+        0,
+        50,
+        100,
+        150,
+        200,
+        300,
+        400,
+        500,
+        650,
+        800
+    ],
+    "actions": [
+        {
+            "kind": "press",
+            "at": 0,
+            "x": 44,
+            "y": 276
+        },
+        {
+            "kind": "release",
+            "at": 0,
+            "x": 44,
+            "y": 276
+        }
+    ],
+    "widgets": [
+        {
+            "kind": "fab-menu",
+            "x": 0,
+            "y": 248,
+            "icon": "edit",
+            "checked_icon": "close",
+            "fab_items": [
+                {
+                    "icon": "check",
+                    "text": "Compose"
+                },
+                {
+                    "icon": "schedule",
+                    "text": "Send"
+                },
+                {
+                    "icon": "arrow_right",
+                    "text": "Archive"
+                }
+            ]
+        }
+    ],
+    "trace_elements": [
+        "menu0",
+        "menu0>toggle",
+        "menu0>container"
+    ],
+    "trace_props": [
+        "checked_progress"
+    ],
+    "phase_tol_ms": 24,
+    "xfail_text": "issue #28: Slint ceils text layout widths where Compose keeps fractional advances",
+    "mask_shadow": {
+        "menu0": [
+            0,
+            50,
+            100,
+            150,
+            200,
+            300,
+            400,
+            500,
+            650,
+            800
+        ],
+        "menu0>toggle0": [
+            0,
+            50,
+            100,
+            150,
+            200,
+            300,
+            400,
+            500,
+            650,
+            800
+        ],
+        "menu0>container0": [
+            0,
+            50,
+            100,
+            150,
+            200,
+            300,
+            400,
+            500,
+            650,
+            800
+        ],
+        "menu0>container1": [
+            0,
+            50,
+            100,
+            150,
+            200,
+            300,
+            400,
+            500,
+            650,
+            800
+        ],
+        "menu0>container2": [
+            0,
+            50,
+            100,
+            150,
+            200,
+            300,
+            400,
+            500,
+            650,
+            800
+        ]
+    }
+}

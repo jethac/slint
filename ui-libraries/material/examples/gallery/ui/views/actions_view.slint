@@ -17,6 +17,8 @@ import {
     ExtendedFloatingActionButton,
     FabSize,
     ExtendedFabSize,
+    FloatingActionButtonMenu,
+    FabMenuSize,
     IconButton,
     Vertical,
     Horizontal,
@@ -401,6 +403,34 @@ export component ActionsView {
                             text: "Create";
                             size: ExtendedFabSize.large;
                             tooltip: "Extended large";
+                        }
+                    }
+                }
+            }
+
+            ComponentCard {
+                title: "FAB menu";
+
+                Horizontal {
+                    alignment: center;
+                    spacing: MaterialStyleMetrics.spacing_16;
+
+                    for size[index] in [FabMenuSize.baseline, FabMenuSize.medium, FabMenuSize.large]: Rectangle {
+                        width: 200px;
+                        height: 260px;
+
+                        FloatingActionButtonMenu {
+                            x: parent.width - self.width - 8px;
+                            y: parent.height - self.height - 8px;
+                            button-size: size;
+                            button-icon: FilledIcons.add;
+                            button-checked-icon: FilledIcons.close;
+                            button-tooltip: "Menu";
+                            items: [
+                                { icon: FilledIcons.check, text: "Compose", enabled: true },
+                                { icon: FilledIcons.check, text: "Send", enabled: true },
+                                { icon: FilledIcons.check, text: "Archive", enabled: true },
+                            ];
                         }
                     }
                 }

@@ -36,6 +36,7 @@
       1500
     ]
   },
+  "mask_shadow": {},
   "name": "split-button-check-rotate",
   "negative_note": "issue #27: the Compose frame clock leads the Slint mock clock by ~2-3ms, so the mid-flight icon-rotation spring diverges past the trace eps (same class as button-press-morph); on software, issue #6 (no transform-rotation) additionally keeps the chevron unrotated",
   "params": {},
@@ -122,7 +123,6 @@
   "type": "canvas",
   "widgets": [
     {
-      "alignment": null,
       "checkable": true,
       "checked": null,
       "checked_icon": null,
@@ -131,7 +131,6 @@
       "corner": null,
       "elevation": null,
       "enabled": null,
-      "expanded": null,
       "height": null,
       "height_offset": null,
       "icon": "edit",

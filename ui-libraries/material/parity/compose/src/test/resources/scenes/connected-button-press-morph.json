@@ -18,6 +18,7 @@
   },
   "mask_decor": {},
   "mask_inner": {},
+  "mask_shadow": {},
   "name": "connected-button-press-morph",
   "negative_note": "issue #27: the Compose frame clock starts the press morph ~2ms after the Slint dispatch, so identical-timestamp frames report a systematic lead in the inner-corner morph — a silent pass would mean the harness went blind",
   "params": {},
@@ -106,7 +107,6 @@
   "type": "canvas",
   "widgets": [
     {
-      "alignment": null,
       "checkable": null,
       "checked": null,
       "checked_icon": null,
@@ -115,7 +115,6 @@
       "corner": null,
       "elevation": null,
       "enabled": null,
-      "expanded": null,
       "height": null,
       "height_offset": null,
       "icon": null,

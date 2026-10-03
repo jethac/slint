@@ -39,6 +39,7 @@
     ]
   },
   "mask_inner": {},
+  "mask_shadow": {},
   "name": "switch-states",
   "negative_note": "issue #53 class: femtovg rasterizes edges via stencil+fringe with the AA band running -0.5px inside to +1.5px outside, so a border edge landing at a fractional device position covers a device-px sliver differently than coverage-integral drivers (software, skia, vello, Compose) — every switch track outline ring-diffs ~0.5-1px at d2 with a few strict pixels left in the edge slivers while track fill, thumb and geometry match; a silent pass on femtovg would mean the harness went blind",
   "params": {},
@@ -119,7 +120,6 @@
   "type": "canvas",
   "widgets": [
     {
-      "alignment": null,
       "checkable": null,
       "checked": false,
       "checked_icon": null,
@@ -128,7 +128,6 @@
       "corner": null,
       "elevation": null,
       "enabled": null,
-      "expanded": null,
       "height": null,
       "height_offset": null,
       "icon": null,
@@ -165,7 +164,6 @@
       "y": 32.0
     },
     {
-      "alignment": null,
       "checkable": null,
       "checked": true,
       "checked_icon": null,
@@ -174,7 +172,6 @@
       "corner": null,
       "elevation": null,
       "enabled": null,
-      "expanded": null,
       "height": null,
       "height_offset": null,
       "icon": null,
@@ -211,7 +208,6 @@
       "y": 32.0
     },
     {
-      "alignment": null,
       "checkable": null,
       "checked": true,
       "checked_icon": null,
@@ -220,7 +216,6 @@
       "corner": null,
       "elevation": null,
       "enabled": null,
-      "expanded": null,
       "height": null,
       "height_offset": null,
       "icon": null,
@@ -257,7 +252,6 @@
       "y": 32.0
     },
     {
-      "alignment": null,
       "checkable": null,
       "checked": false,
       "checked_icon": null,
@@ -266,7 +260,6 @@
       "corner": null,
       "elevation": null,
       "enabled": null,
-      "expanded": null,
       "height": null,
       "height_offset": null,
       "icon": null,
@@ -303,7 +296,6 @@
       "y": 32.0
     },
     {
-      "alignment": null,
       "checkable": null,
       "checked": true,
       "checked_icon": null,
@@ -312,7 +304,6 @@
       "corner": null,
       "elevation": null,
       "enabled": null,
-      "expanded": null,
       "height": null,
       "height_offset": null,
       "icon": "check",
@@ -349,7 +340,6 @@
       "y": 32.0
     },
     {
-      "alignment": null,
       "checkable": null,
       "checked": false,
       "checked_icon": null,
@@ -358,7 +348,6 @@
       "corner": null,
       "elevation": null,
       "enabled": null,
-      "expanded": null,
       "height": null,
       "height_offset": null,
       "icon": "check",
@@ -395,7 +384,6 @@
       "y": 32.0
     },
     {
-      "alignment": null,
       "checkable": null,
       "checked": true,
       "checked_icon": null,
@@ -404,7 +392,6 @@
       "corner": null,
       "elevation": null,
       "enabled": false,
-      "expanded": null,
       "height": null,
       "height_offset": null,
       "icon": null,
@@ -441,7 +428,6 @@
       "y": 32.0
     },
     {
-      "alignment": null,
       "checkable": null,
       "checked": false,
       "checked_icon": null,
@@ -450,7 +436,6 @@
       "corner": null,
       "elevation": null,
       "enabled": false,
-      "expanded": null,
       "height": null,
       "height_offset": null,
       "icon": null,

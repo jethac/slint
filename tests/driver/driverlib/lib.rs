@@ -231,7 +231,11 @@ fn test_extract_library_paths() {
 /// - `//TRACE_PROPS=p1,p2` — names of `out property`s on the case component to
 ///   record in the trace (numbers, colors, bools, strings).
 /// - `//TRACE_ELEMENTS=id1,id2` — element ids whose x/y/width/height/opacity are
-///   recorded in the trace (found with `ElementQuery::match_id`).
+///   recorded in the trace (found with `ElementQuery::match_id`). An entry of
+///   the form `parent>child` instead records every descendant of `parent`
+///   whose id ends with `::child`, indexed in tree order as
+///   `parent>child0`, `parent>child1`, … — for unnamed repeated children
+///   inside a component (e.g. menu items), which a single id can't reach.
 /// - `//TRACE_ITEMS=group0:item,group1:item` — children inside element
 ///   `group0` whose local id is `item` (one entry per repeater instance) are
 ///   recorded as `group0item0`, `group0item1`, … — the same convention the
@@ -262,6 +266,13 @@ fn test_extract_library_paths() {
 ///   optional `+N` after the id (`//MASK_DECOR=fab+12@2000`) widens the
 ///   decoration band to `N` dp for decorations that spill further than
 ///   [`DECORATION_MARGIN_DP`] — a big elevation shadow, for instance.
+/// - `//MASK_SHADOW=id@t1,t2` — at the listed timestamps an elevation
+///   shadow's spill outside the element's bounds is excluded: the
+///   reference engine and the Skia renderer draw the Android
+///   ambient + spot recipe with different light parameters, so the
+///   halo pixels are engine-divergent (the recipe itself is covered by
+///   the renderer's `draw_shadow` tests); the silhouette and interior
+///   still compare strictly. One line per element, may repeat.
 /// - `//XFAIL_TEXT=<reason>` — the text-width layer accepts Slint's
 ///   ceil-quantized text widths (the tracked divergence the reason names,
 ///   e.g. `issue #28`): `sw − unhinted advance` may land anywhere in
@@ -272,6 +283,15 @@ fn test_extract_library_paths() {
 ///   reason names the tracked gap, e.g. `issue #6` for the axis-aligned
 ///   clip). A marked case that comes back with zero findings fails — the
 ///   divergence is gone and the marker must be removed.
+/// - `//PHASE_TOL_MS=<ms>` — bound the anim-launch phase window: upstream
+///   launches per-item springs from a coroutine dispatched inside a layout
+///   pass (one frame of pipeline latency, on top of the clock offset #27
+///   tracks), while Slint starts them the instant the gating binding flips.
+///   The marker widens element and text *position* comparisons to the best
+///   Compose frame within `±<ms>` — the trajectory still has to match; only
+///   the launch quantum is tolerated. Settle frames, intrinsic metrics
+///   (`w`/`h`/`opacity`, prop values) and the strict pixel layer's
+///   disagreement band stay identical-timestamp.
 #[derive(Debug, Default, Clone, PartialEq)]
 pub struct ParityMarkers {
     /// `Some("static"|"motion"|"negative")` when a `//PARITY=` marker is present.
@@ -305,6 +325,10 @@ pub struct ParityMarkers {
     /// `(element-id, t_ms, margin)` triples from `//MASK_DECOR=` markers;
     /// `margin` is `Some(dp)` when the marker carried a `+dp` override.
     pub mask_decor: Vec<(String, u64, Option<f64>)>,
+    /// `(element-id, t_ms)` pairs from `//MASK_SHADOW=` markers.
+    pub mask_shadow: Vec<(String, u64)>,
+    /// `//PHASE_TOL_MS=` — the anim-launch phase window, 0 unless marked.
+    pub phase_tol_ms: u64,
 }
 
 /// One `//ACTION=` input step. `at_ms` is the dispatch time within the
@@ -428,7 +452,7 @@ pub fn extract_parity(source: &str) -> ParityMarkers {
 
     let mut mask_inner = Vec::new();
     static MASK_INNER_RX: LazyLock<Regex> =
-        LazyLock::new(|| Regex::new(r"//MASK_INNER=\s*([A-Za-z0-9_]+)\s*@\s*([0-9,\s]+)").unwrap());
+        LazyLock::new(|| Regex::new(r"//MASK_INNER=\s*([A-Za-z0-9_>-]+)\s*@\s*([0-9,\s]+)").unwrap());
     for m in MASK_INNER_RX.captures_iter(source) {
         for t in m[2].split(',').map(str::trim).filter(|s| !s.is_empty()) {
             mask_inner.push((
@@ -440,7 +464,7 @@ pub fn extract_parity(source: &str) -> ParityMarkers {
 
     let mut mask_decor = Vec::new();
     static MASK_DECOR_RX: LazyLock<Regex> = LazyLock::new(|| {
-        Regex::new(r"//MASK_DECOR=\s*([A-Za-z0-9_]+)(?:\s*\+\s*([0-9.]+))?\s*@\s*([0-9,\s]+)")
+        Regex::new(r"//MASK_DECOR=\s*([A-Za-z0-9_>-]+)(?:\s*\+\s*([0-9.]+))?\s*@\s*([0-9,\s]+)")
             .unwrap()
     });
     for m in MASK_DECOR_RX.captures_iter(source) {
@@ -452,6 +476,18 @@ pub fn extract_parity(source: &str) -> ParityMarkers {
                 m[1].to_string(),
                 t.parse().expect("Cannot parse //MASK_DECOR= timestamp"),
                 margin,
+            ));
+        }
+    }
+
+    let mut mask_shadow = Vec::new();
+    static MASK_SHADOW_RX: LazyLock<Regex> =
+        LazyLock::new(|| Regex::new(r"//MASK_SHADOW=\s*([A-Za-z0-9_>-]+)\s*@\s*([0-9,\s]+)").unwrap());
+    for m in MASK_SHADOW_RX.captures_iter(source) {
+        for t in m[2].split(',').map(str::trim).filter(|s| !s.is_empty()) {
+            mask_shadow.push((
+                m[1].to_string(),
+                t.parse().expect("Cannot parse //MASK_SHADOW= timestamp"),
             ));
         }
     }
@@ -493,6 +529,12 @@ pub fn extract_parity(source: &str) -> ParityMarkers {
             .collect(),
         mask_inner,
         mask_decor,
+        mask_shadow,
+        phase_tol_ms: source.find("//PHASE_TOL_MS=").map_or(0, |p| {
+            let rest = &source[p + "//PHASE_TOL_MS=".len()..];
+            let end = rest.find(char::is_whitespace).unwrap_or(rest.len());
+            rest[..end].parse().expect("Cannot parse //PHASE_TOL_MS=")
+        }),
     }
 }
 

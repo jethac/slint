@@ -11,6 +11,7 @@
   },
   "mask_decor": {},
   "mask_inner": {},
+  "mask_shadow": {},
   "name": "negative-connected-button-group",
   "negative_note": "slint_overrides force `selected_index: 0` where the reference selects item 1 (wrong item morphs to CornerFull) and force `position: middle` on the standalone leading item (inner corners rendered on both sides) — each must fail",
   "params": {},
@@ -85,7 +86,6 @@
   "type": "canvas",
   "widgets": [
     {
-      "alignment": null,
       "checkable": null,
       "checked": null,
       "checked_icon": null,
@@ -94,7 +94,6 @@
       "corner": null,
       "elevation": null,
       "enabled": null,
-      "expanded": null,
       "height": null,
       "height_offset": null,
       "icon": null,
@@ -158,7 +157,6 @@
       "y": 20.0
     },
     {
-      "alignment": null,
       "checkable": null,
       "checked": null,
       "checked_icon": null,
@@ -167,7 +165,6 @@
       "corner": null,
       "elevation": null,
       "enabled": null,
-      "expanded": null,
       "height": null,
       "height_offset": null,
       "icon": null,

@@ -1,0 +1,100 @@
+{
+  "name": "toggle-fab-morph",
+  "type": "canvas",
+  "parity": "motion",
+  "size": [
+    140,
+    140
+  ],
+  "densities": [
+    1,
+    2
+  ],
+  "theme": {
+    "seed": "6750A4",
+    "variant": "tonal-spot",
+    "spec": "spec2025",
+    "platform": "phone",
+    "dark": false,
+    "contrast": 0.0
+  },
+  "fonts": {
+    "plain": "Roboto",
+    "brand": "Roboto"
+  },
+  "times": [
+    0,
+    33,
+    66,
+    100,
+    150,
+    200,
+    300,
+    400,
+    600
+  ],
+  "actions": [
+    {
+      "kind": "press",
+      "at": 0,
+      "x": 70,
+      "y": 70
+    },
+    {
+      "kind": "release",
+      "at": 0,
+      "x": 70,
+      "y": 70
+    },
+    {
+      "kind": "move",
+      "x": 0,
+      "y": 0,
+      "at": 1
+    }
+  ],
+  "widgets": [
+    {
+      "kind": "toggle-fab",
+      "x": 30,
+      "y": 30,
+      "fab_size": "medium",
+      "icon": "edit",
+      "checked_icon": "close"
+    }
+  ],
+  "trace_elements": [
+    "button0",
+    "button0>button-bg"
+  ],
+  "trace_props": [
+    "container_radius",
+    "container_size",
+    "checked_progress"
+  ],
+  "mask_shadow": {
+    "button0": [
+      0,
+      33,
+      66,
+      100,
+      150,
+      200,
+      300,
+      400,
+      600
+    ],
+    "button0>button-bg0": [
+      0,
+      33,
+      66,
+      100,
+      150,
+      200,
+      300,
+      400,
+      600
+    ]
+  },
+  "phase_tol_ms": 16
+}

@@ -10,6 +10,7 @@
   },
   "mask_decor": {},
   "mask_inner": {},
+  "mask_shadow": {},
   "name": "negative-icon-offset",
   "negative_note": "The Slint side draws the icon at the wrong offset (shifted 20dp right) — the comparator must flag the glyph's displaced ink.",
   "params": {},
@@ -81,7 +82,6 @@
   "type": "canvas",
   "widgets": [
     {
-      "alignment": null,
       "checkable": null,
       "checked": null,
       "checked_icon": null,
@@ -90,7 +90,6 @@
       "corner": null,
       "elevation": null,
       "enabled": null,
-      "expanded": null,
       "height": null,
       "height_offset": null,
       "icon": "check",

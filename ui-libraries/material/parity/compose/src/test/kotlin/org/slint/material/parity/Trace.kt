@@ -99,6 +99,28 @@ class Tracer {
         }
         val elementsJson = JSONObject()
         for (id in elements) {
+            // `parent>child`: every tracked id `parent>child<N>`, in numeric
+            // order — the Slint harness indexes repeated children the same
+            // way. A skipped index is still emitted (an item hidden by the
+            // stagger reports zero bounds upstream, matching the Slint side
+            // pruning the invisible subtree).
+            if (id.contains('>')) {
+                val keyed = elementBounds.keys
+                    .filter {
+                        it.startsWith(id) &&
+                            it.removePrefix(id).let { s -> s.isNotEmpty() && s.all(Char::isDigit) }
+                    }
+                    .sortedBy { it.removePrefix(id).toInt() }
+                for (key in keyed) {
+                    val b = elementBounds[key] ?: continue
+                    elementsJson.put(
+                        key,
+                        boundsJson(b, density)
+                            .put("opacity", elementOpacity[key]?.toDouble() ?: 1.0),
+                    )
+                }
+                continue
+            }
             val b = elementBounds[id] ?: continue
             elementsJson.put(id, boundsJson(b, density).put("opacity", elementOpacity[id]?.toDouble() ?: 1.0))
         }

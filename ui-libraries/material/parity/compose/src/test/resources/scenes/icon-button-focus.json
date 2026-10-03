@@ -23,6 +23,7 @@
     ]
   },
   "mask_inner": {},
+  "mask_shadow": {},
   "name": "icon-button-focus",
   "params": {},
   "parity": "static",
@@ -95,7 +96,6 @@
   "type": "canvas",
   "widgets": [
     {
-      "alignment": null,
       "checkable": null,
       "checked": null,
       "checked_icon": null,
@@ -104,7 +104,6 @@
       "corner": null,
       "elevation": null,
       "enabled": null,
-      "expanded": null,
       "height": null,
       "height_offset": null,
       "icon": "check",
