@@ -1,5 +1,6 @@
 AAPI
 ABGR
+Interpolatable
 accentify
 accum
 actionchip
@@ -20,6 +21,7 @@ analogclock
 androideabi
 androidx
 animatable
+animatables
 anyrender
 APCA
 Appbar
@@ -81,6 +83,7 @@ buildcode
 builtinfunctions
 bytemuck
 calloop
+cand
 caplog
 casesensitive
 Casteljau
@@ -124,9 +127,11 @@ colprop
 commodo
 compdef
 compilerlib
+connectedbuttongroup
 consectetur
 consequat
 Constexpr
+containedloadingindicator
 contextid
 CONTEXTMENU
 contextmenuarea
@@ -241,9 +246,11 @@ EVKB
 excinfo
 expm
 expm1
+extendedfloatingactionbutton
 Exti
 EXTRAVERSION
 extversion
+fabs
 fabstyle
 Farbfeld
 fbits
@@ -270,6 +277,7 @@ flathub
 Flexbox
 flexboxes
 Flickables
+floatingactionbutton
 floatprop
 floatval
 Florian
@@ -404,6 +412,7 @@ langtype
 layoutinfo
 LBUTTONUP
 lerp
+lerped
 lerping
 letterboxed
 libasound
@@ -457,6 +466,7 @@ Literata
 Llff
 Lmaterial
 LOADADDR
+loadingindicator
 LOWORD
 lpfn
 lpsz
@@ -636,6 +646,7 @@ rasterizing
 RBUTTONUP
 Recip
 recompiles
+recompositions
 rects
 redoable
 REFR
@@ -696,6 +707,7 @@ sharedvector
 shiki
 shikijs
 Shmelt
+showhide
 signalsafe
 signum
 SIGUSR
@@ -826,9 +838,12 @@ udisksctl
 udivdi
 uintptr
 ullamco
+unauthored
 unclipped
+uncoerced
 Uncontained
 UNDISPATCHED
+unfocus
 unfocusable
 unhinted
 unicodes
@@ -843,6 +858,7 @@ unparseable
 unpic
 Unpremul
 unpremultiply
+unrequested
 unrotated
 unsendable
 untimed
@@ -906,6 +922,7 @@ xcassets
 xcent
 xchg
 xcrun
+xfail
 xfer
 xfixes
 Xiaolin
