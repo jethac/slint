@@ -32,6 +32,8 @@ icon-buttons
 icons
 loading-indicator-motion
 loading-indicator-states
+material-text-behaviors
+material-text-styles
 negative-badge-offset
 negative-badge-text
 negative-button-focus-ring

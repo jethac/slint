@@ -315,6 +315,35 @@ struct Widget {
     /// Single-select groups: the checked item (`-1` selects none).
     #[serde(default)]
     selected_index: Option<i64>,
+    /// `material-text` type-role name in kebab case — `"body-large"` →
+    /// `MaterialTypography.body_large` / upstream `MaterialTheme.typography.
+    /// bodyLarge`; the `-emphasized` suffix selects the emphasized set.
+    /// Unset uses the component's own default (`body_large`, matching
+    /// upstream `LocalTextStyle`).
+    #[serde(default)]
+    style: Option<String>,
+    /// `material-text` line clamps — upstream `maxLines`/`minLines`.
+    #[serde(default)]
+    max_lines: Option<i64>,
+    #[serde(default)]
+    min_lines: Option<i64>,
+    /// `material-text` overflow handling — `clip` (the upstream default)
+    /// or `elide` (`TextOverflow.Ellipsis`).
+    #[serde(default)]
+    overflow: Option<String>,
+    /// `material-text` `softWrap` upstream — `wrap: word-wrap`/`no-wrap`
+    /// on the Slint side; unset leaves the component's default.
+    #[serde(default)]
+    soft_wrap: Option<bool>,
+    /// `material-text` decoration — `underline` or `line-through`
+    /// (`TextDecoration.Underline`/`LineThrough` upstream,
+    /// `font-underline`/`font-strikeout` on the Slint side).
+    #[serde(default)]
+    text_decoration: Option<String>,
+    /// `material-text` horizontal alignment — `start` (default), `center`,
+    /// or `end`.
+    #[serde(default)]
+    text_align: Option<String>,
 }
 
 /// One item of a `connected-button-group`: the label, an optional leading
@@ -750,6 +779,7 @@ fn slint_case(scene: &Scene) -> String {
             "connected-button" => "ConnectedButton",
             "connected-button-group" => "ConnectedButtonGroup",
             "vertical-connected-button-group" => "VerticalConnectedButtonGroup",
+            "material-text" => "MaterialText",
             other => panic!("unknown widget kind {other:?}"),
         };
         imports.push(component);
@@ -758,6 +788,9 @@ fn slint_case(scene: &Scene) -> String {
         }
         if w.kind.starts_with("connected-button") || w.kind == "vertical-connected-button-group" {
             imports.push("ConnectedButtonPosition");
+        }
+        if w.kind == "material-text" && w.style.is_some() {
+            imports.push("MaterialTypography");
         }
         if w.icon.is_some()
             || w.checked_icon.is_some()
@@ -1282,6 +1315,7 @@ fn slint_canvas(s: &mut String, scene: &Scene) {
     let mut dividers = 0;
     let mut badges = 0;
     let mut badged_boxes = 0;
+    let mut texts = 0;
     for w in scene.widgets.iter() {
         let component = match w.kind.as_str() {
             "filled-button" => "FilledButton",
@@ -1587,6 +1621,12 @@ fn slint_canvas(s: &mut String, scene: &Scene) {
                 .unwrap();
                 continue;
             }
+            "material-text" => {
+                let i = texts;
+                texts += 1;
+                material_text_widget(s, w, i);
+                continue;
+            }
             other => panic!("unknown widget kind {other:?}"),
         };
         let i = buttons;
@@ -1865,6 +1905,72 @@ fn connected_group_widget(s: &mut String, w: &Widget, i: usize, scene: &Scene) {
         )
         .unwrap();
     }
+}
+
+/// One `MaterialText` — named `text{n}` in scene order. `style` selects
+/// the `MaterialTypography` type-role token; every other authored field
+/// maps to the same-name `Text` prop, with `slint_overrides` shadowing as
+/// usual for the negative scenes.
+fn material_text_widget(s: &mut String, w: &Widget, i: usize) {
+    let over = &w.slint_overrides;
+    let mut p = String::new();
+    writeln!(p, "        text: {:?};", w.text.as_deref().unwrap_or_default()).unwrap();
+    let style = over
+        .get("style")
+        .and_then(|v| v.as_str())
+        .map(str::to_string)
+        .or_else(|| w.style.clone());
+    if let Some(style) = style {
+        writeln!(p, "        style: MaterialTypography.{};", style.replace('-', "_")).unwrap();
+    }
+    let color = over
+        .get("color")
+        .and_then(|v| v.as_str())
+        .map(str::to_string)
+        .or_else(|| w.color.clone());
+    if let Some(color) = color {
+        writeln!(p, "        color: MaterialPalette.{};", color.replace('-', "_")).unwrap();
+    }
+    if let Some(width) = w.width {
+        writeln!(p, "        width: {width}px;").unwrap();
+    }
+    if let Some(max_lines) = w.max_lines {
+        writeln!(p, "        max-lines: {max_lines};").unwrap();
+    }
+    if let Some(min_lines) = w.min_lines {
+        writeln!(p, "        min-lines: {min_lines};").unwrap();
+    }
+    match w.overflow.as_deref() {
+        None => {}
+        Some("clip") => p.push_str("        overflow: clip;\n"),
+        Some("elide") => p.push_str("        overflow: elide;\n"),
+        Some(other) => panic!("unknown material-text overflow {other:?}"),
+    }
+    if let Some(soft_wrap) = w.soft_wrap {
+        let wrap = if soft_wrap { "word-wrap" } else { "no-wrap" };
+        writeln!(p, "        wrap: {wrap};").unwrap();
+    }
+    match w.text_decoration.as_deref() {
+        None => {}
+        Some("underline") => p.push_str("        font-underline: true;\n"),
+        Some("line-through") => p.push_str("        font-strikeout: true;\n"),
+        Some(other) => panic!("unknown material-text text_decoration {other:?}"),
+    }
+    match w.text_align.as_deref() {
+        None => {}
+        Some(align @ ("start" | "center" | "end")) => {
+            writeln!(p, "        horizontal-alignment: {align};").unwrap();
+        }
+        Some(other) => panic!("unknown material-text text_align {other:?}"),
+    }
+    writeln!(
+        s,
+        "    text{i} := MaterialText {{\n        x: {}px;\n        y: {}px;\n{}    }}\n",
+        w.x as i64,
+        w.y as i64,
+        p,
+    )
+    .unwrap();
 }
 
 fn slint_spring_motion(s: &mut String, scene: &Scene) {

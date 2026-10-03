@@ -1,0 +1,270 @@
+{
+    "name": "material-text-styles",
+    "type": "canvas",
+    "parity": "xfail",
+    "size": [
+        640,
+        540
+    ],
+    "densities": [
+        1,
+        2
+    ],
+    "theme": {
+        "seed": "6750A4",
+        "variant": "tonal-spot",
+        "spec": "spec2025",
+        "platform": "phone",
+        "dark": false,
+        "contrast": 0.0
+    },
+    "fonts": {
+        "plain": "Roboto",
+        "brand": "Roboto"
+    },
+    "trace_elements": [
+        "text0",
+        "text1",
+        "text2",
+        "text3",
+        "text4",
+        "text5",
+        "text6",
+        "text7",
+        "text8",
+        "text9",
+        "text10",
+        "text11",
+        "text12",
+        "text13",
+        "text14",
+        "text15",
+        "text16",
+        "text17",
+        "text18",
+        "text19",
+        "text20",
+        "text21",
+        "text22",
+        "text23",
+        "text24",
+        "text25",
+        "text26",
+        "text27",
+        "text28",
+        "text29"
+    ],
+    "widgets": [
+        {
+            "kind": "material-text",
+            "x": 16,
+            "y": 8,
+            "text": "Display large",
+            "style": "display-large"
+        },
+        {
+            "kind": "material-text",
+            "x": 340,
+            "y": 8,
+            "text": "Display large",
+            "style": "display-large-emphasized"
+        },
+        {
+            "kind": "material-text",
+            "x": 16,
+            "y": 86,
+            "text": "Display medium",
+            "style": "display-medium"
+        },
+        {
+            "kind": "material-text",
+            "x": 340,
+            "y": 86,
+            "text": "Display medium",
+            "style": "display-medium-emphasized"
+        },
+        {
+            "kind": "material-text",
+            "x": 16,
+            "y": 149,
+            "text": "Display small",
+            "style": "display-small"
+        },
+        {
+            "kind": "material-text",
+            "x": 340,
+            "y": 149,
+            "text": "Display small",
+            "style": "display-small-emphasized"
+        },
+        {
+            "kind": "material-text",
+            "x": 16,
+            "y": 200,
+            "text": "Headline large",
+            "style": "headline-large"
+        },
+        {
+            "kind": "material-text",
+            "x": 340,
+            "y": 200,
+            "text": "Headline large",
+            "style": "headline-large-emphasized"
+        },
+        {
+            "kind": "material-text",
+            "x": 16,
+            "y": 246,
+            "text": "Headline medium",
+            "style": "headline-medium"
+        },
+        {
+            "kind": "material-text",
+            "x": 340,
+            "y": 246,
+            "text": "Headline medium",
+            "style": "headline-medium-emphasized"
+        },
+        {
+            "kind": "material-text",
+            "x": 16,
+            "y": 286,
+            "text": "Headline small",
+            "style": "headline-small"
+        },
+        {
+            "kind": "material-text",
+            "x": 340,
+            "y": 286,
+            "text": "Headline small",
+            "style": "headline-small-emphasized"
+        },
+        {
+            "kind": "material-text",
+            "x": 16,
+            "y": 321,
+            "text": "Title large",
+            "style": "title-large"
+        },
+        {
+            "kind": "material-text",
+            "x": 340,
+            "y": 321,
+            "text": "Title large",
+            "style": "title-large-emphasized"
+        },
+        {
+            "kind": "material-text",
+            "x": 16,
+            "y": 354,
+            "text": "Title medium",
+            "style": "title-medium"
+        },
+        {
+            "kind": "material-text",
+            "x": 340,
+            "y": 354,
+            "text": "Title medium",
+            "style": "title-medium-emphasized"
+        },
+        {
+            "kind": "material-text",
+            "x": 16,
+            "y": 379,
+            "text": "Title small",
+            "style": "title-small"
+        },
+        {
+            "kind": "material-text",
+            "x": 340,
+            "y": 379,
+            "text": "Title small",
+            "style": "title-small-emphasized"
+        },
+        {
+            "kind": "material-text",
+            "x": 16,
+            "y": 401,
+            "text": "Body large",
+            "style": "body-large"
+        },
+        {
+            "kind": "material-text",
+            "x": 340,
+            "y": 401,
+            "text": "Body large",
+            "style": "body-large-emphasized"
+        },
+        {
+            "kind": "material-text",
+            "x": 16,
+            "y": 426,
+            "text": "Body medium",
+            "style": "body-medium"
+        },
+        {
+            "kind": "material-text",
+            "x": 340,
+            "y": 426,
+            "text": "Body medium",
+            "style": "body-medium-emphasized"
+        },
+        {
+            "kind": "material-text",
+            "x": 16,
+            "y": 448,
+            "text": "Body small",
+            "style": "body-small"
+        },
+        {
+            "kind": "material-text",
+            "x": 340,
+            "y": 448,
+            "text": "Body small",
+            "style": "body-small-emphasized"
+        },
+        {
+            "kind": "material-text",
+            "x": 16,
+            "y": 468,
+            "text": "Label large",
+            "style": "label-large"
+        },
+        {
+            "kind": "material-text",
+            "x": 340,
+            "y": 468,
+            "text": "Label large",
+            "style": "label-large-emphasized"
+        },
+        {
+            "kind": "material-text",
+            "x": 16,
+            "y": 490,
+            "text": "Label medium",
+            "style": "label-medium"
+        },
+        {
+            "kind": "material-text",
+            "x": 340,
+            "y": 490,
+            "text": "Label medium",
+            "style": "label-medium-emphasized"
+        },
+        {
+            "kind": "material-text",
+            "x": 16,
+            "y": 510,
+            "text": "Label small",
+            "style": "label-small"
+        },
+        {
+            "kind": "material-text",
+            "x": 340,
+            "y": 510,
+            "text": "Label small",
+            "style": "label-small-emphasized"
+        }
+    ],
+    "negative_note": "Compose keeps text at its natural font metrics \u2014 the node bounds stay asc+desc and the baseline sits at the natural ascent regardless of lineHeight \u2014 while slint's `line-height` hard-sets the line box and parley splits the leading half above/half below, so element h differs by the lineHeight-vs-natural gap and glyph ink lands ~1-3px off vertically inside its cells. Parley also appends letter-spacing after the trailing cluster (+up to one tracking unit of advance vs Compose)."
+}

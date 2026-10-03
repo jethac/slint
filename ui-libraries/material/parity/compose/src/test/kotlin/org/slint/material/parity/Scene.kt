@@ -163,6 +163,26 @@ class Widget(json: JSONObject) {
     /** `*-divider` line thickness in dp — `DividerDefaults.Thickness` when
      * unset; `0` is the upstream `Dp.Hairline` (one physical pixel). */
     val thickness: Float = json.optDouble("thickness", 1.0).toFloat()
+    /** `material-text` type-role name in kebab case (`"body-large"` →
+     * `MaterialTheme.typography.bodyLarge`, `-emphasized` suffix for the
+     * emphasized set); unset = the composable default (`bodyLarge` via
+     * `LocalTextStyle`). */
+    val style: String? = (json.opt("style") as? String)?.takeIf { it.isNotEmpty() }
+    /** `material-text` line clamps — upstream `maxLines` (default
+     * `Int.MAX_VALUE`) / `minLines` (default 1). */
+    val maxLines: Int = json.optInt("max_lines", Int.MAX_VALUE)
+    val minLines: Int = json.optInt("min_lines", 1)
+    /** `material-text` overflow — `clip` (upstream `TextOverflow.Clip`
+     * default) or `elide` (`Ellipsis`). */
+    val overflow: String = (json.opt("overflow") as? String) ?: "clip"
+    /** `material-text` `softWrap` upstream. */
+    val softWrap: Boolean = json.optBoolean("soft_wrap", true)
+    /** `material-text` decoration — `underline` or `line-through`
+     * (`TextDecoration.Underline`/`LineThrough`). */
+    val textDecoration: String? =
+        (json.opt("text_decoration") as? String)?.takeIf { it.isNotEmpty() }
+    /** `material-text` alignment — `start` (default), `center`, or `end`. */
+    val textAlign: String = (json.opt("text_align") as? String) ?: "start"
 
     val isFab: Boolean get() = kind == "fab" || kind == "extended-fab"
     val isSplitButton: Boolean get() = kind.endsWith("split-button")
