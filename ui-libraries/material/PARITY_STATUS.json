@@ -53,15 +53,15 @@
     ],
     "needs": "none",
     "notes": "slint component: Badge",
-    "status": "partial"
+    "status": "done"
   },
   "BadgedBox": {
     "issues": [
       11
     ],
     "needs": "none",
-    "notes": "slint component: Badge",
-    "status": "partial"
+    "notes": "slint component: BadgedBox",
+    "status": "done"
   },
   "BasicAlertDialog": {
     "issues": [
