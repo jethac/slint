@@ -1990,8 +1990,8 @@ private fun StateNavBar(
         ) {
             // alpha18's bar Layout measures `content` as a single measurable
             // under this harness (the whole lambda is one placeable), so the
-            // arrangement policies — which divide `measurables` — see one
-            // child spanning the bar. One Row child preserves the pinned
+            // arrangement policies — which divide the item children — see
+            // one child spanning the bar. One Row child preserves the pinned
             // math: EqualWeight → weight(1f) cells filling the bar
             // (EqualWeightContentMeasurePolicy at the #3 pin); Centered →
             // widthIn(min..max) cells in a centered Row
