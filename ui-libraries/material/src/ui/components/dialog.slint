@@ -71,6 +71,7 @@ export component FullscreenDialog inherits PopupWindow {
 
                 for action[index] in root.actions : TextButton {
                     text: action;
+                    expressive: false;
 
                     clicked => {
                         root.action_clicked(index);
@@ -221,6 +222,7 @@ export component AlertDialogContent inherits Rectangle {
                 for index in root.actions.length : measure_action := TextButton {
                     text: root.actions[root.actions.length - 1 - index];
                     enforce_touch_target: root.action_enforce_touch_target;
+                    expressive: false;
                 }
             }
 
@@ -297,6 +299,7 @@ export component AlertDialogContent inherits Rectangle {
 
                     for action_label[index] in root.actions : icon_action := TextButton {
                         text: action_label;
+                        expressive: false;
                         enforce_touch_target: root.action_enforce_touch_target;
                         simulate_hover: index == root.action_simulate_hover;
                         simulate_press: index == root.action_simulate_press;
@@ -343,6 +346,7 @@ export component AlertDialogContent inherits Rectangle {
                     for index in root.actions.length : action := TextButton {
                         text: root.actions[root.actions.length - 1 - index];
                         enforce_touch_target: root.action_enforce_touch_target;
+                        expressive: false;
                         simulate_hover: root.actions.length - 1 - index == root.action_simulate_hover;
                         simulate_press: root.actions.length - 1 - index == root.action_simulate_press;
 

@@ -1829,7 +1829,7 @@ fn dialog_widget(s: &mut String, w: &Widget, i: usize, scene: &Scene) {
             content.push_str("            // align(End) on the actions box\n            HorizontalLayout {\n                alignment: end;\n                spacing: 8px;\n");
             writeln!(
                 content,
-                "                for action_text[index] in [{labels}] : action := TextButton {{\n                    text: action_text;\n                    enforce_touch_target: false;\n{hover}{press}                }}\n",
+                "                for action_text[index] in [{labels}] : action := TextButton {{\n                    text: action_text;\n                    enforce_touch_target: false;\n                    // The mirror renders the stable `TextButton` overload.\n                    expressive: false;\n{hover}{press}                }}\n",
                 hover = hover
                     .map(|i| format!("                    simulate_hover: index == {i};\n"))
                     .unwrap_or_default(),

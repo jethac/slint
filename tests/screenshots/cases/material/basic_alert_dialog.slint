@@ -69,6 +69,8 @@ export component TestCase inherits MaterialWindow {
                 for action_text[index] in ["Dismiss"] : action := TextButton {
                     text: action_text;
                     enforce_touch_target: false;
+                    // The mirror renders the stable `TextButton` overload.
+                    expressive: false;
                 }
 
             }
