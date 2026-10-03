@@ -9,9 +9,27 @@
 import "fonts/google-sans-flex/GoogleSansFlex[GRAD,ROND,opsz,slnt,wdth,wght].ttf";
 
 // components
-export { AppBar, SmallAppBar, MediumAppBar, LargeAppBar }  from "./ui/components/app_bar.slint";
+export {
+    CenterAlignedTopAppBar,
+    LargeFlexibleTopAppBar,
+    LargeTopAppBar,
+    MediumFlexibleTopAppBar,
+    MediumTopAppBar,
+    TopAppBar,
+    TopAppBarScrollBehavior,
+    TwoRowsTopAppBar,
+} from "./ui/components/app_bar.slint";
 export { Badge } from "./ui/components/badge.slint";
-export { BottomAppBar } from "./ui/components/bottom_app_bar.slint";
+export {
+    BottomAppBar,
+    FlexibleBottomAppBar,
+    AppBarRow,
+    AppBarColumn,
+    AppBarItem,
+    AppBarOverflowIndicator,
+    IconButtonItem,
+    BottomAppBarArrangement
+} from "./ui/components/bottom_app_bar.slint";
 export { MaterialButtonSize, MaterialButtonShape, IconButtonWidth } from "./ui/components/button_metrics.slint";
 export { CheckState, CheckBox, CheckBoxTile } from "./ui/components/check_box.slint";
 export { ActionChip, FilterChip, InputChip } from "./ui/components/chip.slint";
@@ -46,7 +64,15 @@ export { NavigationDrawer, ModalNavigationDrawer } from "./ui/components/navigat
 export { NavigationRail } from "./ui/components/navigation_rail.slint";
 export { CircularProgressIndicator, LinearProgressIndicator } from "./ui/components/progress_indicator.slint";
 export { RadioButton, RadioButtonTile } from "./ui/components/radio_button.slint";
-export { SearchBar } from "./ui/components/search_bar.slint";
+export {
+    SearchBar,
+    AppBarWithSearch,
+    ExpandedDockedSearchBar,
+    ExpandedDockedSearchBarWithGap,
+    ExpandedFullScreenSearchBar,
+    ExpandedFullScreenContainedSearchBar,
+    SearchBarExpansion
+} from "./ui/components/search_bar.slint";
 export { ScrollView } from "./ui/components/scroll_view.slint";
 export { Slider } from "./ui/components/slider.slint";
 export { SnackBar } from "./ui/components/snack_bar.slint";

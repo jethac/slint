@@ -18,13 +18,18 @@ import {
     TabBar,
     SecondaryTabBar,
     SearchBar,
+    AppBarWithSearch,
+    FlexibleBottomAppBar,
+    BottomAppBarArrangement,
     MaterialText,
     Vertical,
     ListItem,
-    AppBar,
-    SmallAppBar,
-    MediumAppBar,
-    LargeAppBar,
+    TopAppBar,
+    CenterAlignedTopAppBar,
+    MediumTopAppBar,
+    MediumFlexibleTopAppBar,
+    LargeTopAppBar,
+    LargeFlexibleTopAppBar,
     CheckBoxTile,
     CheckState,
     ActionChip,
@@ -43,7 +48,6 @@ import {
 
 import { Group } from "../components/group.slint";
 import { ComponentCard } from "../components/component_card.slint";
-import { MainWindowAdapter } from "../main_window_adapter.slint";
 import { MainWindowAdapter } from "../main_window_adapter.slint";
 import { FilledIcons, OutlinedIcons } from "../icons.slint";
 
@@ -83,6 +87,17 @@ export component NavigationView {
                         }
                     }
 
+                    AppBarWithSearch {
+                        leading-icon: FilledIcons.menu;
+                        placeholder-text: "Search color";
+                        empty_text: "No search history.";
+                        items: NavigationViewAdapter.search_items;
+
+                        edited(text) => {
+                            NavigationViewAdapter.search(text);
+                        }
+                    }
+
                     MaterialText {
                         text: "Select a color";
                         horizontal_alignment: center;
@@ -112,6 +127,21 @@ export component NavigationView {
                         },
                     ];
                     fab_icon:  OutlinedIcons.add;
+                }
+            }
+
+            ComponentCard {
+                title: "Flexible bottom app bar";
+
+                FlexibleBottomAppBar {
+                    width: 100%;
+                    arrangement: BottomAppBarArrangement.space-between;
+                    items: [
+                        { icon: OutlinedIcons.search, label: "Search", enabled: true },
+                        { icon: OutlinedIcons.favorite, label: "Favorite", enabled: true },
+                        { icon: OutlinedIcons.add, label: "Add", enabled: true },
+                        { icon: OutlinedIcons.more_vert, label: "More", enabled: true },
+                    ];
                 }
             }
 
@@ -271,36 +301,56 @@ export component NavigationView {
                 title: "Top app bars";
 
                 Vertical {
-                    AppBar {
-                        leading_button: { icon: FilledIcons.menu, enabled: true };
-                        trailing_button: { icon: FilledIcons.account_circle, enabled: true };
+                    CenterAlignedTopAppBar {
+                        leading-button: { icon: FilledIcons.menu, enabled: true };
+                        trailing-buttons: [
+                            { icon: FilledIcons.account_circle, enabled: true },
+                        ];
                         title: "Product";
-                        show_background: true;
                     }
 
-                    SmallAppBar {
-                        leading_button: { icon: FilledIcons.menu, enabled: true };
-                        show_background: true;
+                    TopAppBar {
+                        leading-button: { icon: FilledIcons.menu, enabled: true };
                         title: "Small";
-                        trailing_buttons: [
+                        trailing-buttons: [
                             { icon: FilledIcons.calendar_month, enabled: true },
                             { icon: FilledIcons.more_vert, enabled: true },
                         ];
                     }
 
-                    MediumAppBar {
-                        leading_button: { icon: FilledIcons.menu, enabled: true };
+                    MediumTopAppBar {
+                        leading-button: { icon: FilledIcons.menu, enabled: true };
                         title: "Medium";
-                        trailing_buttons: [
+                        trailing-buttons: [
                             { icon: FilledIcons.calendar_month, enabled: true },
                             { icon: FilledIcons.more_vert, enabled: true },
                         ];
                     }
 
-                    LargeAppBar {
-                        leading_button: { icon: FilledIcons.menu, enabled: true };
+                    MediumFlexibleTopAppBar {
+                        leading-button: { icon: FilledIcons.menu, enabled: true };
+                        title: "Medium flexible";
+                        subtitle: "With subtitle";
+                        trailing-buttons: [
+                            { icon: FilledIcons.calendar_month, enabled: true },
+                            { icon: FilledIcons.more_vert, enabled: true },
+                        ];
+                    }
+
+                    LargeTopAppBar {
+                        leading-button: { icon: FilledIcons.menu, enabled: true };
                         title: "Large";
-                        trailing_buttons: [
+                        trailing-buttons: [
+                            { icon: FilledIcons.calendar_month, enabled: true },
+                            { icon: FilledIcons.more_vert, enabled: true },
+                        ];
+                    }
+
+                    LargeFlexibleTopAppBar {
+                        leading-button: { icon: FilledIcons.menu, enabled: true };
+                        title: "Large flexible";
+                        subtitle: "With subtitle";
+                        trailing-buttons: [
                             { icon: FilledIcons.calendar_month, enabled: true },
                             { icon: FilledIcons.more_vert, enabled: true },
                         ];

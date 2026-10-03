@@ -482,11 +482,15 @@ fn flatten_rounded_rectangle<U>(
         // Number of segments for the quarter arc: sagitta of a chord of
         // angle θ in a circle of radius r is r(1 - cos(θ/2)) <= tolerance.
         let angle = 0.5 * core::f32::consts::PI;
-        let max_step = 2. * (1. - (tolerance / r).min(1.)).clamp(-1., 1.).acos();
+        let max_step =
+            2. * crate::graphics::math::acosf((1. - (tolerance / r).min(1.)).clamp(-1., 1.));
         let segments = (angle / max_step.max(f32::EPSILON)).ceil().max(1.) as usize;
         for i in 0..=segments {
             let a = a0 + angle * (i as f32 / segments as f32);
-            contour.push(OutlinePoint::new(cx + r * a.cos(), cy + r * a.sin()));
+            contour.push(OutlinePoint::new(
+                cx + r * crate::graphics::math::cosf(a),
+                cy + r * crate::graphics::math::sinf(a),
+            ));
         }
     }
     // Repeat the start point: the explicit wrap marks the contour as closed.

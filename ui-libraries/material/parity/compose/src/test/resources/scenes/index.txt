@@ -1,3 +1,4 @@
+bottom-app-bars
 button-focus
 button-hover
 button-icons
@@ -8,6 +9,7 @@ button-release-morph
 button-sizes
 button-states
 button-styles
+elevation-shadow
 elevation-surfaces
 icon-button-focus
 icon-button-press-morph
@@ -36,7 +38,9 @@ negative-shape-leak
 negative-thumb-offset
 negative-toggle-select
 negative-wrong-shadow
+search-bars
 segmented-list
 spring-motion
 toggle-buttons
 toggle-select-morph
+top-app-bars

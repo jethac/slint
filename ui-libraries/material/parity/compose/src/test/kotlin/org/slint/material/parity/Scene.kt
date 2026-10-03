@@ -122,10 +122,28 @@ class Widget(json: JSONObject) {
     /** Icon stem used as the 56x56 `leading_image` source — both sides
      * rasterize the identical svg path clipped to the image shape. */
     val leadingImage: String? = (json.opt("leading_image") as? String)?.takeIf { it.isNotEmpty() }
+    /** `top-app-bar` variant: `small` (default), `center`, `medium`,
+     * `medium-flexible`, `large`, `large-flexible`, `two-rows`. */
+    val variant: String = (json.opt("variant") as? String) ?: "small"
+    val subtitle: String? = (json.opt("subtitle") as? String)?.takeIf { it.isNotEmpty() }
+    /** `TopAppBarState.heightOffset`/`BottomAppBarState.heightOffset` —
+     * negative values render a partially collapsed bar. */
+    val heightOffset: Float = json.optDouble("height_offset", 0.0).toFloat()
+    /** `TopAppBarState.contentOffset` — positive values mark the content
+     * overlapped, flipping the single-row bar to its scrolled color. */
+    val contentOffset: Float = json.optDouble("content_offset", 0.0).toFloat()
+    val navIcon: String? = (json.opt("nav_icon") as? String)?.takeIf { it.isNotEmpty() }
+    /** `top-app-bar` action / `bottom-app-bar` icon-button icon stems. */
+    val icons: List<String> =
+        json.optJSONArray("icons")?.let { a -> (0 until a.length()).map(a::getString) } ?: emptyList()
+    val placeholder: String? = (json.opt("placeholder") as? String)?.takeIf { it.isNotEmpty() }
 
     val isIconButton: Boolean get() = kind.endsWith("icon-button")
     val isButton: Boolean get() = isIconButton || kind.endsWith("-button")
     val isListItem: Boolean get() = kind == "list-item" || kind == "segmented-list-item"
+    /** `elevated-rect` only: the elevation in dp of the Android ambient+spot
+     * shadow `Modifier.shadow` draws behind the caster. */
+    val elevation: Float = json.optDouble("elevation", 0.0).toFloat()
 }
 
 /** "primary-container" → "primaryContainer" for `scheme` map lookups. */
