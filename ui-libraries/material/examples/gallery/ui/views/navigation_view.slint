@@ -8,7 +8,11 @@ import {
     SegmentedListItem,
     ListView,
     NavigationBar,
-    BottomAppBar,
+    HorizontalFloatingToolbar,
+    VerticalFloatingToolbar,
+    FloatingToolbarColorStyle,
+    FloatingToolbarVerticalFabPosition,
+    IconButton,
     NavigationDrawer,
     TextButton,
     ModalNavigationDrawer,
@@ -106,32 +110,50 @@ export component NavigationView {
             }
 
             ComponentCard {
-                title: "Bottom app bar";
+                title: "Floating toolbars";
 
-                BottomAppBar {
-                    icon_buttons: [
-                        {
-                            icon: OutlinedIcons.more_vert,
-                            enabled: true,
+                Horizontal {
+                    alignment: center;
+                    spacing: MaterialStyleMetrics.spacing_16;
 
-                        },
-                        {
-                            icon: OutlinedIcons.search,
-                            enabled: true,
-                            tooltip: "Search"
-                        },
-                        {
-                            icon: OutlinedIcons.favorite,
-                            enabled: true,
-                            tooltip: "Favorite"
-                        },
-                    ];
-                    fab_icon:  OutlinedIcons.add;
+                    HorizontalFloatingToolbar {
+                        fab-icon: OutlinedIcons.add;
+
+                        IconButton {
+                            icon: OutlinedIcons.check;
+                        }
+
+                        IconButton {
+                            icon: OutlinedIcons.edit;
+                        }
+
+                        IconButton {
+                            icon: OutlinedIcons.more_vert;
+                        }
+                    }
+
+                    VerticalFloatingToolbar {
+                        color-style: FloatingToolbarColorStyle.vibrant;
+                        fab-icon: OutlinedIcons.edit;
+                        fab-position: FloatingToolbarVerticalFabPosition.bottom;
+
+                        IconButton {
+                            icon: OutlinedIcons.check;
+                        }
+
+                        IconButton {
+                            icon: OutlinedIcons.favorite;
+                        }
+
+                        IconButton {
+                            icon: OutlinedIcons.search;
+                        }
+                    }
                 }
             }
 
             ComponentCard {
-                title: "Flexible bottom app bar";
+                title: "Docked toolbar";
 
                 FlexibleBottomAppBar {
                     width: 100%;

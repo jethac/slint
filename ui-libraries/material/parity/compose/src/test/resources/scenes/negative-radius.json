@@ -83,12 +83,14 @@
   "widgets": [
     {
       "alignment": null,
+      "arrangement": null,
       "avatar": null,
       "body_color": null,
       "checkable": null,
       "checked": null,
       "checked_icon": null,
       "color": "primary-container",
+      "color_style": null,
       "content_color": null,
       "content_offset": null,
       "corner": null,
@@ -97,6 +99,9 @@
       "elevation": null,
       "enabled": null,
       "expanded": null,
+      "expanded_height": null,
+      "fab_icon": null,
+      "fab_position": null,
       "gestures": null,
       "height": 72.0,
       "height_offset": null,
@@ -109,6 +114,7 @@
       "items": [],
       "kind": "rect",
       "label_width": null,
+      "leading_icons": [],
       "leading_image": null,
       "level": null,
       "multi_select": null,
@@ -133,6 +139,7 @@
       "slint_overrides": {
         "radius": 8
       },
+      "spacing": null,
       "state": null,
       "subtitle": null,
       "supporting": null,
@@ -142,6 +149,7 @@
       "thickness": null,
       "toggle": null,
       "trailing_icon": null,
+      "trailing_icons": [],
       "trailing_text": null,
       "variant": null,
       "vertical": null,

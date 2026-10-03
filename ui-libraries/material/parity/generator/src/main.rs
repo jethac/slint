@@ -21,7 +21,9 @@ use std::collections::BTreeSet;
 use std::fmt::Write as _;
 use std::path::{Path, PathBuf};
 
-use material_color_utils::dynamiccolor::{DynamicScheme, MaterialDynamicColors, Platform, SpecVersion};
+use material_color_utils::dynamiccolor::{
+    DynamicScheme, MaterialDynamicColors, Platform, SpecVersion,
+};
 use material_color_utils::hct::Hct;
 use material_color_utils::scheme;
 
@@ -302,15 +304,43 @@ struct Widget {
     #[serde(default)]
     nav_icon: Option<String>,
     /// `top-app-bar` action / `bottom-app-bar` icon-button icon stems,
-    /// rendered left to right.
+    /// rendered left to right. For the floating toolbars these are the
+    /// center `content` icons.
     #[serde(default)]
     icons: Vec<String>,
+    /// `leading-items`/`trailing-items` icon stems of the floating toolbars
+    /// — the upstream `leadingContent`/`trailingContent` slots.
+    #[serde(default)]
+    leading_icons: Vec<String>,
+    #[serde(default)]
+    trailing_icons: Vec<String>,
+    /// `*FloatingToolbar` FAB icon stem (the `floatingActionButton` slot).
+    #[serde(default)]
+    fab_icon: Option<String>,
+    /// FAB slot position: `start`/`end` on the horizontal toolbar,
+    /// `top`/`bottom` on the vertical one.
+    #[serde(default)]
+    fab_position: Option<String>,
+    /// Expansion state — `*FloatingToolbar`'s `expanded` input (`false`
+    /// starts collapsed) and `extended-fab`'s `expanded` upstream.
+    #[serde(default)]
+    expanded: Option<bool>,
+    /// `FloatingToolbarColorStyle` — `standard` (default) or `vibrant`.
+    #[serde(default)]
+    color_style: Option<String>,
+    /// `flexible-bottom-app-bar` arrangement: `space-between` (default) or
+    /// `spaced` (the `FlexibleFixedHorizontalArrangement` token spacing).
+    #[serde(default)]
+    arrangement: Option<String>,
+    /// `flexible-bottom-app-bar` `spacing` for the `spaced` arrangement.
+    #[serde(default)]
+    spacing: Option<f64>,
+    /// `flexible-bottom-app-bar` `expandedHeight`.
+    #[serde(default)]
+    expanded_height: Option<f64>,
     /// `search-bar`/`app-bar-with-search` placeholder text.
     #[serde(default)]
     placeholder: Option<String>,
-    /// `extended-fab` expansion state (`expanded` upstream).
-    #[serde(default)]
-    expanded: Option<bool>,
     /// `fab`/`extended-fab` visibility — `visible` on
     /// `Modifier.animateFloatingActionButton` upstream.
     #[serde(default)]
@@ -454,7 +484,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             .map_err(|e| format!("{}: {e}", path.display()))?;
         let case_rel = format!("material/{}", scene.name.replace('-', "_"));
 
-        emit_or_check(&cases_dir.join(format!("{}.slint", scene.name.replace('-', "_"))), &slint_case(&scene), check)?;
+        emit_or_check(
+            &cases_dir.join(format!("{}.slint", scene.name.replace('-', "_"))),
+            &slint_case(&scene),
+            check,
+        )?;
         emit_or_check(
             &resources_dir.join(format!("{}.json", scene.name)),
             &serde_json::to_string_pretty(&resolved_scene(&scene, &case_rel))?,
@@ -472,18 +506,21 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 .chain(w.icons.iter())
                 .chain(w.trailing_icon.iter())
                 .chain(w.leading_image.iter())
-                .chain(w.items.iter().flat_map(|item| item.icon.iter().chain(item.checked_icon.iter())))
+                .chain(
+                    w.items
+                        .iter()
+                        .flat_map(|item| item.icon.iter().chain(item.checked_icon.iter())),
+                )
+                .chain(w.fab_icon.iter())
+                .chain(w.leading_icons.iter())
+                .chain(w.trailing_icons.iter())
             {
                 let src = repo_root
                     .join("ui-libraries/material/src/ui/icons")
                     .join(format!("{icon}.svg"));
-                let dst = resources_dir
-                    .parent()
-                    .unwrap()
-                    .join("icons")
-                    .join(format!("{icon}.svg"));
-                let svg = std::fs::read_to_string(&src)
-                    .map_err(|e| format!("{}: {e}", src.display()))?;
+                let dst = resources_dir.parent().unwrap().join("icons").join(format!("{icon}.svg"));
+                let svg =
+                    std::fs::read_to_string(&src).map_err(|e| format!("{}: {e}", src.display()))?;
                 emit_or_check(&dst, &svg, check)?;
             }
         }
@@ -493,11 +530,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // The Compose harness renders text in the same font the Slint driver
     // registers (the variable Roboto in `tests/screenshots/fonts/`).
-    let font_src =
-        repo_root.join("tests/screenshots/fonts/Roboto-VariableFont.ttf");
+    let font_src = repo_root.join("tests/screenshots/fonts/Roboto-VariableFont.ttf");
     let font_dst = parity_dir.join("compose/src/test/resources/fonts/roboto.ttf");
-    let font = std::fs::read(&font_src)
-        .map_err(|e| format!("{}: {e}", font_src.display()))?;
+    let font = std::fs::read(&font_src).map_err(|e| format!("{}: {e}", font_src.display()))?;
     if check {
         let on_disk = std::fs::read(&font_dst)
             .map_err(|e| format!("{}: {e} (regenerate)", font_dst.display()))?;
@@ -514,10 +549,18 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 /// Writes `content` at `path`, or — in `--check` mode — fails when `path`
 /// doesn't hold exactly `content`.
-fn emit_or_check(path: &Path, content: &str, check: bool) -> Result<(), Box<dyn std::error::Error>> {
+fn emit_or_check(
+    path: &Path,
+    content: &str,
+    check: bool,
+) -> Result<(), Box<dyn std::error::Error>> {
     if check {
-        let on_disk = std::fs::read_to_string(path)
-            .map_err(|e| format!("{}: {e} (regenerate with `cargo run -p material-parity-generator`)", path.display()))?;
+        let on_disk = std::fs::read_to_string(path).map_err(|e| {
+            format!(
+                "{}: {e} (regenerate with `cargo run -p material-parity-generator`)",
+                path.display()
+            )
+        })?;
         if on_disk != content {
             return Err(format!(
                 "{} is stale — regenerate with `cargo run -p material-parity-generator`",
@@ -649,10 +692,7 @@ fn scheme_argbs(theme: &Theme) -> serde_json::Map<String, serde_json::Value> {
     roles
         .into_iter()
         .map(|(name, color)| {
-            (
-                name.to_string(),
-                format!("{:08X}", dynamic.get_argb(&color) as u64 as u32).into(),
-            )
+            (name.to_string(), format!("{:08X}", dynamic.get_argb(&color) as u64 as u32).into())
         })
         .collect()
 }
@@ -700,12 +740,8 @@ fn slint_case(scene: &Scene) -> String {
         kind => writeln!(s, "//PARITY={kind}").unwrap(),
     }
     if let Some(eps) = scene.parity_eps {
-        writeln!(
-            s,
-            "// {}",
-            scene.parity_eps_reason.as_deref().unwrap_or("(undocumented)")
-        )
-        .unwrap();
+        writeln!(s, "// {}", scene.parity_eps_reason.as_deref().unwrap_or("(undocumented)"))
+            .unwrap();
         writeln!(s, "//PARITY_EPS={eps}").unwrap();
     }
     writeln!(s, "//SIZE={}x{}", scene.size[0], scene.size[1]).unwrap();
@@ -745,11 +781,8 @@ fn slint_case(scene: &Scene) -> String {
     let trace_items = item_containers
         .iter()
         .map(|c| {
-            let locals = scene
-                .trace_items
-                .get(c)
-                .cloned()
-                .unwrap_or_else(|| vec!["item".to_string()]);
+            let locals =
+                scene.trace_items.get(c).cloned().unwrap_or_else(|| vec!["item".to_string()]);
             format!("{c}:{}", locals.join("+"))
         })
         .collect::<Vec<_>>()
@@ -859,6 +892,9 @@ fn slint_case(scene: &Scene) -> String {
                 other => panic!("unknown top-app-bar variant {other:?}"),
             },
             "bottom-app-bar" => "BottomAppBar",
+            "flexible-bottom-app-bar" => "FlexibleBottomAppBar",
+            "horizontal-floating-toolbar" => "HorizontalFloatingToolbar",
+            "vertical-floating-toolbar" => "VerticalFloatingToolbar",
             "search-bar" => "SearchBar",
             "app-bar-with-search" => "AppBarWithSearch",
             "drag-handle" => "BottomSheetDragHandle",
@@ -885,7 +921,26 @@ fn slint_case(scene: &Scene) -> String {
         if w.kind.starts_with("connected-button") || w.kind == "vertical-connected-button-group" {
             imports.push("ConnectedButtonPosition");
         }
-
+        match w.kind.as_str() {
+            "horizontal-floating-toolbar" => {
+                imports.push("FloatingToolbarColorStyle");
+                imports.push("FloatingToolbarHorizontalFabPosition");
+                if !w.icons.is_empty() {
+                    imports.push("IconButton");
+                }
+            }
+            "vertical-floating-toolbar" => {
+                imports.push("FloatingToolbarColorStyle");
+                imports.push("FloatingToolbarVerticalFabPosition");
+                if !w.icons.is_empty() {
+                    imports.push("IconButton");
+                }
+            }
+            "flexible-bottom-app-bar" => {
+                imports.push("BottomAppBarArrangement");
+            }
+            _ => {}
+        }
         if w.icon.is_some()
             || w.trailing_icon.is_some()
             || w.leading_image.is_some()
@@ -894,6 +949,9 @@ fn slint_case(scene: &Scene) -> String {
             || !w.icons.is_empty()
             || w.kind.ends_with("split-button")
             || w.items.iter().any(|item| item.icon.is_some() || item.checked_icon.is_some())
+            || w.fab_icon.is_some()
+            || !w.leading_icons.is_empty()
+            || !w.trailing_icons.is_empty()
         {
             needs_icons = true;
         }
@@ -914,19 +972,11 @@ fn slint_case(scene: &Scene) -> String {
     }
     if scene.widgets.iter().any(|w| w.kind == "surface") {
         imports.push("Elevation");
-        if scene
-            .widgets
-            .iter()
-            .any(|w| w.shape.as_deref().is_some_and(|sh| sh != "rect"))
-        {
+        if scene.widgets.iter().any(|w| w.shape.as_deref().is_some_and(|sh| sh != "rect")) {
             imports.push("MaterialShapes");
         }
     }
-    if scene
-        .widgets
-        .iter()
-        .any(|w| w.slint_overrides.contains_key("sheet_shape"))
-    {
+    if scene.widgets.iter().any(|w| w.slint_overrides.contains_key("sheet_shape")) {
         imports.push("ShapeTokens");
     }
     imports.sort();
@@ -1007,13 +1057,12 @@ fn widget_actions(scene: &Scene) -> Vec<Action> {
         }
         if w.state.as_deref() == Some("focused") {
             // Focused split halves: `leading` is the first of the pair.
-            let target = if w.kind.ends_with("split-button")
-                && w.side.as_deref() == Some("trailing")
-            {
-                ordinal + 1
-            } else {
-                ordinal
-            };
+            let target =
+                if w.kind.ends_with("split-button") && w.side.as_deref() == Some("trailing") {
+                    ordinal + 1
+                } else {
+                    ordinal
+                };
             for _ in tabs_emitted..=target {
                 actions.push(Action {
                     kind: "key:Tab".into(),
@@ -1091,11 +1140,11 @@ fn widget_actions(scene: &Scene) -> Vec<Action> {
         }
     }
     for w in &scene.widgets {
-        match w
-            .state
-            .as_deref()
-            .unwrap_or(if w.enabled == Some(false) { "disabled" } else { "enabled" })
-        {
+        match w.state.as_deref().unwrap_or(if w.enabled == Some(false) {
+            "disabled"
+        } else {
+            "enabled"
+        }) {
             "hovered" | "pressed" | "enabled" | "disabled" | "focused" | "dragged" => {}
             other => panic!("unknown widget state {other:?}"),
         }
@@ -1131,11 +1180,8 @@ fn button_props(w: &Widget, timed: bool) -> String {
     if let Some(text) = &w.text {
         writeln!(p, "        text: \"{text}\";").unwrap();
     }
-    let size = over
-        .get("size")
-        .and_then(|v| v.as_str())
-        .map(str::to_string)
-        .or_else(|| w.size.clone());
+    let size =
+        over.get("size").and_then(|v| v.as_str()).map(str::to_string).or_else(|| w.size.clone());
     if let Some(size) = size {
         writeln!(p, "        size: MaterialButtonSize.{};", size_variant(&size)).unwrap();
     }
@@ -1164,11 +1210,8 @@ fn button_props(w: &Widget, timed: bool) -> String {
     if let Some(width) = width {
         writeln!(p, "        width_option: IconButtonWidth.{width};").unwrap();
     }
-    let icon = over
-        .get("icon")
-        .and_then(|v| v.as_str())
-        .map(str::to_string)
-        .or_else(|| w.icon.clone());
+    let icon =
+        over.get("icon").and_then(|v| v.as_str()).map(str::to_string).or_else(|| w.icon.clone());
     if let Some(icon) = icon {
         writeln!(p, "        icon: Icons.{icon};").unwrap();
     }
@@ -1214,11 +1257,8 @@ fn split_button_props(w: &Widget, timed: bool) -> String {
     if let Some(text) = &w.text {
         writeln!(p, "        text: \"{text}\";").unwrap();
     }
-    let size = over
-        .get("size")
-        .and_then(|v| v.as_str())
-        .map(str::to_string)
-        .or_else(|| w.size.clone());
+    let size =
+        over.get("size").and_then(|v| v.as_str()).map(str::to_string).or_else(|| w.size.clone());
     if let Some(size) = size {
         writeln!(p, "        size: MaterialButtonSize.{};", size_variant(&size)).unwrap();
     }
@@ -1228,11 +1268,8 @@ fn split_button_props(w: &Widget, timed: bool) -> String {
     if bool_over("checked", w.checked) {
         p.push_str("        checked: true;\n");
     }
-    let icon = over
-        .get("icon")
-        .and_then(|v| v.as_str())
-        .map(str::to_string)
-        .or_else(|| w.icon.clone());
+    let icon =
+        over.get("icon").and_then(|v| v.as_str()).map(str::to_string).or_else(|| w.icon.clone());
     if let Some(icon) = icon {
         writeln!(p, "        icon: Icons.{icon};").unwrap();
     }
@@ -1288,8 +1325,13 @@ fn on_color_role(role: &str) -> &str {
         "error" => "on_error",
         "error-container" => "on_error_container",
         "inverse-surface" => "inverse_on_surface",
-        "surface" | "surface-bright" | "surface-dim" | "surface-container"
-        | "surface-container-high" | "surface-container-highest" | "surface-container-low"
+        "surface"
+        | "surface-bright"
+        | "surface-dim"
+        | "surface-container"
+        | "surface-container-high"
+        | "surface-container-highest"
+        | "surface-container-low"
         | "surface-container-lowest" => "on_surface",
         "surface-variant" => "on_surface_variant",
         other => panic!("no content-color role known for {other:?}"),
@@ -1323,32 +1365,21 @@ fn fab_props(w: &Widget, timed: bool) -> String {
             writeln!(p, "        tooltip: \"{text}\";").unwrap();
         }
     }
-    let size = over
-        .get("size")
-        .and_then(|v| v.as_str())
-        .map(str::to_string)
-        .or_else(|| w.size.clone());
+    let size =
+        over.get("size").and_then(|v| v.as_str()).map(str::to_string).or_else(|| w.size.clone());
     if let Some(size) = size {
         let en = if extended { "ExtendedFabSize" } else { "FabSize" };
         writeln!(p, "        size: {en}.{size};").unwrap();
     }
-    let icon = over
-        .get("icon")
-        .and_then(|v| v.as_str())
-        .map(str::to_string)
-        .or_else(|| w.icon.clone());
+    let icon =
+        over.get("icon").and_then(|v| v.as_str()).map(str::to_string).or_else(|| w.icon.clone());
     if let Some(icon) = icon {
         writeln!(p, "        icon: Icons.{icon};").unwrap();
     }
     if let Some(color) = &w.color {
         let role = color.replace('-', "_");
         writeln!(p, "        container_color: MaterialPalette.{role};").unwrap();
-        writeln!(
-            p,
-            "        content_color: MaterialPalette.{};",
-            on_color_role(color)
-        )
-        .unwrap();
+        writeln!(p, "        content_color: MaterialPalette.{};", on_color_role(color)).unwrap();
     }
     let variant = over
         .get("variant")
@@ -1447,10 +1478,7 @@ fn list_props(w: &Widget, timed: bool, segmented: bool) -> String {
         over.get(k).and_then(|v| v.as_bool()).unwrap_or(authored.unwrap_or(false))
     };
     let str_over = |k: &str, authored: &Option<String>| -> Option<String> {
-        over.get(k)
-            .and_then(|v| v.as_str())
-            .map(str::to_string)
-            .or_else(|| authored.clone())
+        over.get(k).and_then(|v| v.as_str()).map(str::to_string).or_else(|| authored.clone())
     };
     if let Some(text) = str_over("text", &w.text) {
         writeln!(p, "        text: \"{text}\";").unwrap();
@@ -1524,7 +1552,9 @@ fn list_props(w: &Widget, timed: bool, segmented: bool) -> String {
     // the generated case flips it so a press+release action animates the
     // morph, like `checkable`'s self-toggle.
     if bool_over("selectable", w.selectable) {
-        p.push_str("        clicked => {\n            self.selected = !self.selected;\n        }\n");
+        p.push_str(
+            "        clicked => {\n            self.selected = !self.selected;\n        }\n",
+        );
     }
     p
 }
@@ -1582,7 +1612,7 @@ fn slint_canvas(s: &mut String, scene: &Scene) {
                 .unwrap();
                 continue;
             }
-           "filled-split-button" => "FilledSplitButton",
+            "filled-split-button" => "FilledSplitButton",
             "tonal-split-button" => "TonalSplitButton",
             "elevated-split-button" => "ElevatedSplitButton",
             "outlined-split-button" => "OutlineSplitButton",
@@ -1650,7 +1680,8 @@ fn slint_canvas(s: &mut String, scene: &Scene) {
             "list-item" | "segmented-list-item" => {
                 let i = items;
                 items += 1;
-                let component = if w.kind == "list-item" { "ListTile" } else { "SegmentedListItem" };
+                let component =
+                    if w.kind == "list-item" { "ListTile" } else { "SegmentedListItem" };
                 writeln!(
                     s,
                     "    item{i} := {component} {{\n        x: {}px;\n        y: {}px;\n{}    }}\n",
@@ -1691,7 +1722,13 @@ fn slint_canvas(s: &mut String, scene: &Scene) {
                 .unwrap();
                 continue;
             }
-            "top-app-bar" | "bottom-app-bar" | "search-bar" | "app-bar-with-search" => {
+            "top-app-bar"
+            | "bottom-app-bar"
+            | "search-bar"
+            | "app-bar-with-search"
+            | "horizontal-floating-toolbar"
+            | "vertical-floating-toolbar"
+            | "flexible-bottom-app-bar" => {
                 let i = appbars;
                 appbars += 1;
                 appbar_widget(s, w, i);
@@ -1740,24 +1777,17 @@ fn slint_canvas(s: &mut String, scene: &Scene) {
                     .map(str::to_string)
                     .or_else(|| w.color.clone());
                 let colorize_prop = color
-                    .map(|c| format!("\n        colorize: MaterialPalette.{};", c.replace('-', "_")))
+                    .map(|c| {
+                        format!("\n        colorize: MaterialPalette.{};", c.replace('-', "_"))
+                    })
                     .unwrap_or_default();
                 // No `width`/`height` authored → the icon takes the
                 // source's natural size (`defaultSizeFor` upstream).
                 let size_prop = |v: Option<f64>, name: &str| {
-                    v.map(|v| format!("\n        {name}: {v}px;"))
-                        .unwrap_or_default()
+                    v.map(|v| format!("\n        {name}: {v}px;")).unwrap_or_default()
                 };
-                let width = w
-                    .slint_overrides
-                    .get("width")
-                    .map(widget_num)
-                    .or(w.width);
-                let height = w
-                    .slint_overrides
-                    .get("height")
-                    .map(widget_num)
-                    .or(w.height);
+                let width = w.slint_overrides.get("width").map(widget_num).or(w.width);
+                let height = w.slint_overrides.get("height").map(widget_num).or(w.height);
                 let x = w.slint_overrides.get("x").map(widget_num).unwrap_or(w.x);
                 let y = w.slint_overrides.get("y").map(widget_num).unwrap_or(w.y);
                 writeln!(
@@ -1785,14 +1815,9 @@ fn slint_canvas(s: &mut String, scene: &Scene) {
                 // is the divider's own `thickness` (`DividerDefaults.
                 // Thickness` upstream when unset). `slint_overrides` shadow
                 // the authored values for the negative scenes.
-                let thickness = w
-                    .slint_overrides
-                    .get("thickness")
-                    .map(widget_num)
-                    .or(w.thickness);
-                let thickness_prop = thickness
-                    .map(|t| format!("\n        thickness: {t}px;"))
-                    .unwrap_or_default();
+                let thickness = w.slint_overrides.get("thickness").map(widget_num).or(w.thickness);
+                let thickness_prop =
+                    thickness.map(|t| format!("\n        thickness: {t}px;")).unwrap_or_default();
                 let color = w
                     .slint_overrides
                     .get("color")
@@ -1830,7 +1855,12 @@ fn slint_canvas(s: &mut String, scene: &Scene) {
                     .map(str::to_string)
                     .or_else(|| w.color.clone());
                 let container_prop = container
-                    .map(|c| format!("\n        container_color: MaterialPalette.{};", c.replace('-', "_")))
+                    .map(|c| {
+                        format!(
+                            "\n        container_color: MaterialPalette.{};",
+                            c.replace('-', "_")
+                        )
+                    })
                     .unwrap_or_default();
                 let text_prop = w
                     .text
@@ -1858,7 +1888,12 @@ fn slint_canvas(s: &mut String, scene: &Scene) {
                     .map(str::to_string)
                     .or_else(|| w.color.clone());
                 let container_prop = container
-                    .map(|c| format!("\n        badge_container_color: MaterialPalette.{};", c.replace('-', "_")))
+                    .map(|c| {
+                        format!(
+                            "\n        badge_container_color: MaterialPalette.{};",
+                            c.replace('-', "_")
+                        )
+                    })
                     .unwrap_or_default();
                 let badge_text = w
                     .slint_overrides
@@ -1881,12 +1916,8 @@ fn slint_canvas(s: &mut String, scene: &Scene) {
                 continue;
             }
             "rect" => {
-                let radius = w
-                    .slint_overrides
-                    .get("radius")
-                    .map(widget_num)
-                    .or(w.radius)
-                    .unwrap_or(0.0);
+                let radius =
+                    w.slint_overrides.get("radius").map(widget_num).or(w.radius).unwrap_or(0.0);
                 writeln!(
                     s,
                     "    Rectangle {{\n        x: {}px;\n        y: {}px;\n        width: {}px;\n        height: {}px;\n        border-radius: {}px;\n        background: MaterialPalette.{};\n    }}\n",
@@ -1933,6 +1964,44 @@ fn slint_canvas(s: &mut String, scene: &Scene) {
     }
     sheet_trace_forwards(s, scene);
     sheet_op_timers(s, scene);
+
+    // In a timed scene a `press` hit-testing a floating toolbar's bounds
+    // flips its `expanded` — the Compose harness applies the same hit-test
+    // and toggles on the same dispatch beat.
+    if !scene.times.is_empty() && scene.widgets.iter().any(|w| w.kind.ends_with("floating-toolbar"))
+    {
+        writeln!(
+            s,
+            "    TouchArea {{\n        pointer-event(event) => {{\n            if event.kind == PointerEventKind.down {{"
+        )
+        .unwrap();
+        let mut appbars = 0;
+        for w in &scene.widgets {
+            if !matches!(
+                w.kind.as_str(),
+                "top-app-bar"
+                    | "bottom-app-bar"
+                    | "search-bar"
+                    | "app-bar-with-search"
+                    | "horizontal-floating-toolbar"
+                    | "vertical-floating-toolbar"
+                    | "flexible-bottom-app-bar"
+            ) {
+                continue;
+            }
+            let i = appbars;
+            appbars += 1;
+            if !w.kind.ends_with("floating-toolbar") {
+                continue;
+            }
+            writeln!(
+                s,
+                "                if self.mouse-x >= appbar{i}.x && self.mouse-x <= appbar{i}.x + appbar{i}.width &&\n                    self.mouse-y >= appbar{i}.y && self.mouse-y <= appbar{i}.y + appbar{i}.height {{\n                    appbar{i}.expanded = !appbar{i}.expanded;\n                }}"
+            )
+            .unwrap();
+        }
+        writeln!(s, "            }}\n        }}\n    }}\n").unwrap();
+    }
 }
 
 /// The Slint property type of a `//TRACE_PROPS=` name: `container_radius`,
@@ -1971,8 +2040,7 @@ fn emit_button_cover(s: &mut String, w: &Widget, i: usize) {
             format!("MaterialPalette.{}", fill.replace('-', "_"))
         };
         let label = if cover["label"].as_bool().unwrap_or(true) {
-            let label_fill =
-                cover["label_fill"].as_str().unwrap_or("on-primary").replace('-', "_");
+            let label_fill = cover["label_fill"].as_str().unwrap_or("on-primary").replace('-', "_");
             format!(
                 "        Text {{\n            text: \"{}\";\n            color: MaterialPalette.{label_fill};\n            font-family: \"Roboto\";\n            font-weight: 500;\n            font-size: 14px;\n            horizontal-alignment: center;\n            vertical-alignment: center;\n        }}\n",
                 w.text.as_deref().unwrap_or_default()
@@ -2006,22 +2074,15 @@ fn connected_button_widget(s: &mut String, w: &Widget, i: usize, scene: &Scene) 
         .or_else(|| w.position.clone())
         .unwrap_or_else(|| "middle".to_string());
     writeln!(p, "        position: ConnectedButtonPosition.{position};").unwrap();
-    let vertical = over
-        .get("vertical")
-        .and_then(|v| v.as_bool())
-        .or(w.vertical)
-        .unwrap_or(false);
+    let vertical = over.get("vertical").and_then(|v| v.as_bool()).or(w.vertical).unwrap_or(false);
     if vertical {
         p.push_str("        vertical: true;\n");
     }
     if let Some(text) = &w.text {
         writeln!(p, "        text: \"{text}\";").unwrap();
     }
-    let icon = over
-        .get("icon")
-        .and_then(|v| v.as_str())
-        .map(str::to_string)
-        .or_else(|| w.icon.clone());
+    let icon =
+        over.get("icon").and_then(|v| v.as_str()).map(str::to_string).or_else(|| w.icon.clone());
     if let Some(icon) = icon {
         writeln!(p, "        icon: Icons.{icon};").unwrap();
     }
@@ -2033,19 +2094,11 @@ fn connected_button_widget(s: &mut String, w: &Widget, i: usize, scene: &Scene) 
     if let Some(icon) = checked_icon {
         writeln!(p, "        checked_icon: Icons.{icon};").unwrap();
     }
-    let checked = over
-        .get("checked")
-        .and_then(|v| v.as_bool())
-        .or(w.checked)
-        .unwrap_or(false);
+    let checked = over.get("checked").and_then(|v| v.as_bool()).or(w.checked).unwrap_or(false);
     if checked {
         p.push_str("        checked: true;\n");
     }
-    let enabled = over
-        .get("enabled")
-        .and_then(|v| v.as_bool())
-        .or(w.enabled)
-        .unwrap_or(true);
+    let enabled = over.get("enabled").and_then(|v| v.as_bool()).or(w.enabled).unwrap_or(true);
     if !enabled {
         p.push_str("        enabled: false;\n");
     }
@@ -2067,9 +2120,7 @@ fn connected_button_widget(s: &mut String, w: &Widget, i: usize, scene: &Scene) 
     writeln!(
         s,
         "    button{i} := ConnectedButton {{\n        x: {}px;\n        y: {}px;\n{}    }}\n",
-        w.x as i64,
-        w.y as i64,
-        p,
+        w.x as i64, w.y as i64, p,
     )
     .unwrap();
     if i == 0 {
@@ -2120,11 +2171,8 @@ fn connected_group_widget(s: &mut String, w: &Widget, i: usize, scene: &Scene) {
     if w.multi_select.unwrap_or(false) {
         p.push_str("        multi_select: true;\n");
     }
-    let selected = over
-        .get("selected_index")
-        .map(|v| widget_num(v) as i64)
-        .or(w.selected_index)
-        .unwrap_or(-1);
+    let selected =
+        over.get("selected_index").map(|v| widget_num(v) as i64).or(w.selected_index).unwrap_or(-1);
     writeln!(p, "        selected_index: {selected};").unwrap();
     if let Some(spacing) = over.get("between_space").map(widget_num) {
         writeln!(p, "        between_space: {spacing}px;").unwrap();
@@ -2161,9 +2209,7 @@ fn connected_group_widget(s: &mut String, w: &Widget, i: usize, scene: &Scene) {
     writeln!(
         s,
         "    group{i} := {component} {{\n        x: {}px;\n        y: {}px;\n{}    }}\n",
-        w.x as i64,
-        w.y as i64,
-        p,
+        w.x as i64, w.y as i64, p,
     )
     .unwrap();
     if let Some(cover) = w.slint_overrides.get("cover") {
@@ -2180,7 +2226,6 @@ fn connected_group_widget(s: &mut String, w: &Widget, i: usize, scene: &Scene) {
         )
         .unwrap();
     }
-
 }
 
 fn slint_spring_motion(s: &mut String, scene: &Scene) {
@@ -2225,6 +2270,9 @@ fn appbar_widget(s: &mut String, w: &Widget, i: usize) {
             other => panic!("unknown top-app-bar variant {other:?}"),
         },
         "bottom-app-bar" => "BottomAppBar",
+        "flexible-bottom-app-bar" => "FlexibleBottomAppBar",
+        "horizontal-floating-toolbar" => "HorizontalFloatingToolbar",
+        "vertical-floating-toolbar" => "VerticalFloatingToolbar",
         "search-bar" => "SearchBar",
         "app-bar-with-search" => "AppBarWithSearch",
         other => panic!("unknown app-bar kind {other:?}"),
@@ -2247,17 +2295,66 @@ fn appbar_widget(s: &mut String, w: &Widget, i: usize) {
         match w.kind.as_str() {
             "bottom-app-bar" => writeln!(p, "        fab-icon: Icons.{icon};").unwrap(),
             "search-bar" => writeln!(p, "        leading-icon: Icons.{icon};").unwrap(),
-            "app-bar-with-search" => {
-                writeln!(p, "        leading-icon: Icons.{icon};").unwrap()
-            }
-            _ => {
-                writeln!(
-                    p,
-                    "        leading-button: {{ icon: Icons.{icon}, enabled: true }};"
-                )
-                .unwrap()
-            }
+            "app-bar-with-search" => writeln!(p, "        leading-icon: Icons.{icon};").unwrap(),
+            _ => writeln!(p, "        leading-button: {{ icon: Icons.{icon}, enabled: true }};")
+                .unwrap(),
         }
+    }
+    let items_list = |icons: &[String]| {
+        icons
+            .iter()
+            .map(|ic| format!("{{ icon: Icons.{ic}, enabled: true }}"))
+            .collect::<Vec<_>>()
+            .join(", ")
+    };
+    if !w.leading_icons.is_empty() {
+        writeln!(p, "        leading-items: [{}];", items_list(&w.leading_icons)).unwrap();
+    }
+    if !w.trailing_icons.is_empty() {
+        writeln!(p, "        trailing-items: [{}];", items_list(&w.trailing_icons)).unwrap();
+    }
+    if let Some(icon) = &w.fab_icon {
+        writeln!(p, "        fab-icon: Icons.{icon};").unwrap();
+        if let Some(pos) = &w.fab_position {
+            let e = if w.kind == "horizontal-floating-toolbar" {
+                format!("FloatingToolbarHorizontalFabPosition.{pos}")
+            } else {
+                format!("FloatingToolbarVerticalFabPosition.{pos}")
+            };
+            writeln!(p, "        fab-position: {e};").unwrap();
+        }
+    }
+    // As in `button_props`, `slint_overrides` shadows the authored value —
+    // the negative toolbar scenes inject a defect only the Slint side
+    // renders.
+    let over = &w.slint_overrides;
+    let expanded = over.get("expanded").and_then(|v| v.as_bool()).or(w.expanded);
+    if let Some(expanded) = expanded {
+        writeln!(p, "        expanded: {expanded};").unwrap();
+    }
+    let style = over
+        .get("color_style")
+        .and_then(|v| v.as_str())
+        .map(str::to_string)
+        .or_else(|| w.color_style.clone());
+    if let Some(style) = style {
+        writeln!(p, "        color-style: FloatingToolbarColorStyle.{style};").unwrap();
+    }
+    let arrangement = over
+        .get("arrangement")
+        .and_then(|v| v.as_str())
+        .map(str::to_string)
+        .or_else(|| w.arrangement.clone());
+    if let Some(arrangement) = arrangement {
+        writeln!(p, "        arrangement: BottomAppBarArrangement.{arrangement};").unwrap();
+    }
+    let spacing = over.get("spacing").map(|v| widget_num(v)).or(w.spacing);
+    if let Some(spacing) = spacing {
+        writeln!(p, "        spacing: {spacing}px;").unwrap();
+    }
+    let expanded_height = over.get("expanded_height").map(|v| widget_num(v)).or(w.expanded_height);
+    if let Some(expanded_height) = expanded_height {
+        writeln!(p, "        expanded-height: {expanded_height}px;").unwrap();
     }
     if !w.icons.is_empty() {
         match w.kind.as_str() {
@@ -2270,6 +2367,12 @@ fn appbar_widget(s: &mut String, w: &Widget, i: usize) {
                     .join(", ");
                 writeln!(p, "        icon-buttons: [{items}];").unwrap();
             }
+            "flexible-bottom-app-bar" => {
+                writeln!(p, "        items: [{}];", items_list(&w.icons)).unwrap();
+            }
+            // The floating toolbars take their center `content` as
+            // `IconButton` children below.
+            "horizontal-floating-toolbar" | "vertical-floating-toolbar" => {}
             "search-bar" => {
                 if let Some(ic) = w.icons.first() {
                     writeln!(p, "        trailing-icon: Icons.{ic};").unwrap();
@@ -2304,10 +2407,20 @@ fn appbar_widget(s: &mut String, w: &Widget, i: usize) {
     if w.kind != "search-bar" && w.kind != "app-bar-with-search" {
         p.push_str("        touch-target: false;\n");
     }
+    let mut children = String::new();
+    if w.kind == "horizontal-floating-toolbar" || w.kind == "vertical-floating-toolbar" {
+        for ic in &w.icons {
+            writeln!(
+                children,
+                "        IconButton {{ icon: Icons.{ic}; enforce-touch-target: false; }}"
+            )
+            .unwrap();
+        }
+    }
     writeln!(
         s,
-        "    appbar{i} := {component} {{\n        x: {}px;\n        y: {}px;\n{}    }}\n",
-        w.x as i64, w.y as i64, p,
+        "    appbar{i} := {component} {{\n        x: {}px;\n        y: {}px;\n{}{}    }}\n",
+        w.x as i64, w.y as i64, p, children,
     )
     .unwrap();
 }
@@ -2316,11 +2429,7 @@ fn appbar_widget(s: &mut String, w: &Widget, i: usize) {
 /// measured size is identical on both sides.
 fn sheet_content_rect(w: &Widget) -> String {
     let h = w.sheet_height.unwrap_or(120.0);
-    let color = w
-        .content_color
-        .as_deref()
-        .unwrap_or("tertiary-container")
-        .replace('-', "_");
+    let color = w.content_color.as_deref().unwrap_or("tertiary-container").replace('-', "_");
     format!(
         "            Rectangle {{\n                height: {h}px;\n                background: MaterialPalette.{color};\n            }}\n",
         h = h as i64,
@@ -2432,10 +2541,9 @@ fn sheet_widget(s: &mut String, w: &Widget, i: usize, scene: &Scene) {
             let shape_override = over
                 .get("sheet_shape")
                 .map(|v| format!("\n            sheet-shape: {};", corner_shape_expr(v)));
-            let color_override = over
-                .get("container_color")
-                .and_then(|v| v.as_str())
-                .map(|c| format!("\n            container-color: MaterialPalette.{};", c.replace('-', "_")));
+            let color_override = over.get("container_color").and_then(|v| v.as_str()).map(|c| {
+                format!("\n            container-color: MaterialPalette.{};", c.replace('-', "_"))
+            });
             let skip_partial = over
                 .get("skip_partial")
                 .and_then(|v| v.as_bool())
@@ -2462,11 +2570,7 @@ fn sheet_widget(s: &mut String, w: &Widget, i: usize, scene: &Scene) {
             .unwrap();
         }
         "bottom-sheet-scaffold" => {
-            let body_color = w
-                .body_color
-                .as_deref()
-                .unwrap_or("surface")
-                .replace('-', "_");
+            let body_color = w.body_color.as_deref().unwrap_or("surface").replace('-', "_");
             let shape_override = over
                 .get("sheet_shape")
                 .map(|v| format!("\n            sheet-shape: {};", corner_shape_expr(v)));
@@ -2520,8 +2624,7 @@ fn sheet_widget(s: &mut String, w: &Widget, i: usize, scene: &Scene) {
                         // `ParitySheet` tracks `AnchoredDraggableState`'s
                         // bound-crossing `currentValue`; `SheetWidget`
                         // reports `SheetState.currentValue` = `settledValue`.
-                        let src = if prop == "current-value"
-                            && sheet_needs_gesture_replay(w, scene)
+                        let src = if prop == "current-value" && sheet_needs_gesture_replay(w, scene)
                         {
                             "anchor_current".to_string()
                         } else {
@@ -2535,7 +2638,9 @@ fn sheet_widget(s: &mut String, w: &Widget, i: usize, scene: &Scene) {
                         )
                         .unwrap();
                     }
-                    "dragging" | "is-visible" | "has-expanded-state"
+                    "dragging"
+                    | "is-visible"
+                    | "has-expanded-state"
                     | "has-partially-expanded-state" => {
                         writeln!(
                             handlers,
@@ -2604,11 +2709,8 @@ const SHEET_OPS: [&str; 4] = ["show", "hide", "expand", "partial-expand"];
 /// the motion is meant to begin (the Compose runnable launches the same
 /// `animateTo` there, ~2 ms of coroutine dispatch later).
 fn sheet_op_timers(s: &mut String, scene: &Scene) {
-    let ops: Vec<&Action> = scene
-        .actions
-        .iter()
-        .filter(|a| SHEET_OPS.contains(&a.kind.as_str()))
-        .collect();
+    let ops: Vec<&Action> =
+        scene.actions.iter().filter(|a| SHEET_OPS.contains(&a.kind.as_str())).collect();
     if ops.is_empty() {
         return;
     }
