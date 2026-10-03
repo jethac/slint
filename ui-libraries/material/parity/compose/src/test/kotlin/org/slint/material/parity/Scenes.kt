@@ -532,7 +532,7 @@ private fun CanvasScene(
         var dividers = 0
         var badges = 0
         var badgedBoxes = 0
-        var navbars = 0
+        var nav_bars = 0
         // `text:{n}` spans every text node in scene order — group items
         // interleave with the standalone widgets' labels. Bases are
         // precomputed per widget so recompositions can't renumber them.
@@ -643,7 +643,7 @@ private fun CanvasScene(
                     StateAppBar(widget, tracer, "appbar${appbars++}")
                 widget.kind == "navigation-bar" ||
                     widget.kind == "short-navigation-bar" ->
-                    StateNavBar(widget, scene, tracer, "navbar${navbars++}", emitPress)
+                    StateNavBar(widget, scene, tracer, "navbar${nav_bars++}", emitPress)
                 widget.kind == "rect" ->
                     Box(
                         Modifier.offset(widget.x.dp, widget.y.dp)
