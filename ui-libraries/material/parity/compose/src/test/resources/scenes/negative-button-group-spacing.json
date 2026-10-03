@@ -86,42 +86,73 @@
     {
       "checkable": null,
       "checked": null,
+      "checked_icon": null,
       "color": null,
       "content_offset": null,
       "corner": null,
+      "current_index": null,
       "elevation": null,
       "enabled": null,
+      "expanded_ratio": null,
       "height": null,
       "height_offset": null,
       "icon": null,
       "icons": [],
       "items": [
         {
-          "text": "Day"
+          "checked": null,
+          "checked_icon": null,
+          "disabled": null,
+          "enabled": null,
+          "icon": null,
+          "state": null,
+          "text": "Day",
+          "weight": null
         },
         {
-          "text": "Week"
+          "checked": null,
+          "checked_icon": null,
+          "disabled": null,
+          "enabled": null,
+          "icon": null,
+          "state": null,
+          "text": "Week",
+          "weight": null
         },
         {
-          "text": "Month"
+          "checked": null,
+          "checked_icon": null,
+          "disabled": null,
+          "enabled": null,
+          "icon": null,
+          "state": null,
+          "text": "Month",
+          "weight": null
         }
       ],
       "kind": "button-group",
       "level": null,
+      "multi_select": null,
       "nav_icon": null,
       "placeholder": null,
+      "position": null,
+      "press_index": null,
       "radius": null,
+      "selected_index": null,
+      "selection": null,
       "shape": null,
       "side": null,
       "size": null,
       "slint_overrides": {
         "spacing": 0
       },
+      "spacing": null,
       "state": null,
       "subtitle": null,
       "text": null,
       "trailing_icon": null,
       "variant": null,
+      "vertical": null,
       "width": null,
       "width_option": null,
       "x": 16.0,

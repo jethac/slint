@@ -9,7 +9,40 @@
     "brand": "Roboto",
     "plain": "Roboto"
   },
-  "mask_decor": {},
+  "mask_decor": {
+    "group0": [
+      0,
+      2000
+    ],
+    "group0item0": [
+      0,
+      2000
+    ],
+    "group0item1": [
+      0,
+      2000
+    ],
+    "group0item2": [
+      0,
+      2000
+    ],
+    "group1": [
+      0,
+      2000
+    ],
+    "group1item0": [
+      0,
+      2000
+    ],
+    "group1item1": [
+      0,
+      2000
+    ],
+    "group1item2": [
+      0,
+      2000
+    ]
+  },
   "mask_inner": {},
   "name": "button-group-toggle",
   "params": {},
@@ -79,12 +112,12 @@
   "trace_elements": [
     "group0",
     "group1",
-    "button0",
-    "button1",
-    "button2",
-    "button4",
-    "button5",
-    "button6"
+    "group0item0",
+    "group0item1",
+    "group0item2",
+    "group1item0",
+    "group1item1",
+    "group1item2"
   ],
   "trace_props": [],
   "type": "canvas",
@@ -92,11 +125,14 @@
     {
       "checkable": null,
       "checked": null,
+      "checked_icon": null,
       "color": null,
       "content_offset": null,
       "corner": null,
+      "current_index": null,
       "elevation": null,
       "enabled": null,
+      "expanded_ratio": null,
       "height": null,
       "height_offset": null,
       "icon": null,
@@ -104,31 +140,56 @@
       "items": [
         {
           "checked": true,
-          "text": "Day"
+          "checked_icon": null,
+          "disabled": null,
+          "enabled": null,
+          "icon": null,
+          "state": null,
+          "text": "Day",
+          "weight": null
         },
         {
-          "text": "Week"
+          "checked": null,
+          "checked_icon": null,
+          "disabled": null,
+          "enabled": null,
+          "icon": null,
+          "state": null,
+          "text": "Week",
+          "weight": null
         },
         {
           "checked": true,
-          "text": "Month"
+          "checked_icon": null,
+          "disabled": null,
+          "enabled": null,
+          "icon": null,
+          "state": null,
+          "text": "Month",
+          "weight": null
         }
       ],
       "kind": "button-group",
       "level": null,
+      "multi_select": null,
       "nav_icon": null,
       "placeholder": null,
+      "position": null,
+      "press_index": null,
       "radius": null,
+      "selected_index": null,
       "selection": "multiple",
       "shape": null,
       "side": null,
       "size": null,
       "slint_overrides": {},
+      "spacing": null,
       "state": null,
       "subtitle": null,
       "text": null,
       "trailing_icon": null,
       "variant": null,
+      "vertical": null,
       "width": null,
       "width_option": null,
       "x": 16.0,
@@ -137,43 +198,71 @@
     {
       "checkable": null,
       "checked": null,
+      "checked_icon": null,
       "color": null,
       "content_offset": null,
       "corner": null,
       "current_index": 1,
       "elevation": null,
       "enabled": null,
+      "expanded_ratio": null,
       "height": null,
       "height_offset": null,
       "icon": null,
       "icons": [],
       "items": [
         {
-          "text": "Day"
+          "checked": null,
+          "checked_icon": null,
+          "disabled": null,
+          "enabled": null,
+          "icon": null,
+          "state": null,
+          "text": "Day",
+          "weight": null
         },
         {
           "checked": true,
-          "text": "Week"
+          "checked_icon": null,
+          "disabled": null,
+          "enabled": null,
+          "icon": null,
+          "state": null,
+          "text": "Week",
+          "weight": null
         },
         {
-          "text": "Month"
+          "checked": null,
+          "checked_icon": null,
+          "disabled": null,
+          "enabled": null,
+          "icon": null,
+          "state": null,
+          "text": "Month",
+          "weight": null
         }
       ],
       "kind": "button-group",
       "level": null,
+      "multi_select": null,
       "nav_icon": null,
       "placeholder": null,
+      "position": null,
+      "press_index": null,
       "radius": null,
+      "selected_index": null,
       "selection": "single",
       "shape": null,
       "side": null,
       "size": null,
       "slint_overrides": {},
+      "spacing": null,
       "state": null,
       "subtitle": null,
       "text": null,
       "trailing_icon": null,
       "variant": null,
+      "vertical": null,
       "width": null,
       "width_option": null,
       "x": 16.0,

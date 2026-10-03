@@ -91,8 +91,10 @@
       "color": null,
       "content_offset": null,
       "corner": null,
+      "current_index": null,
       "elevation": null,
       "enabled": null,
+      "expanded_ratio": null,
       "height": null,
       "height_offset": null,
       "icon": null,
@@ -102,25 +104,31 @@
           "checked": null,
           "checked_icon": null,
           "disabled": null,
+          "enabled": null,
           "icon": null,
           "state": null,
-          "text": "Day"
+          "text": "Day",
+          "weight": null
         },
         {
           "checked": null,
           "checked_icon": null,
           "disabled": null,
+          "enabled": null,
           "icon": null,
           "state": null,
-          "text": "Week"
+          "text": "Week",
+          "weight": null
         },
         {
           "checked": null,
           "checked_icon": null,
           "disabled": null,
+          "enabled": null,
           "icon": null,
           "state": null,
-          "text": "Month"
+          "text": "Month",
+          "weight": null
         }
       ],
       "kind": "connected-button-group",
@@ -129,14 +137,17 @@
       "nav_icon": null,
       "placeholder": null,
       "position": null,
+      "press_index": null,
       "radius": null,
       "selected_index": 1,
+      "selection": null,
       "shape": null,
       "side": null,
       "size": null,
       "slint_overrides": {
         "selected_index": 0
       },
+      "spacing": null,
       "state": null,
       "subtitle": null,
       "text": null,
@@ -155,8 +166,10 @@
       "color": null,
       "content_offset": null,
       "corner": null,
+      "current_index": null,
       "elevation": null,
       "enabled": null,
+      "expanded_ratio": null,
       "height": null,
       "height_offset": null,
       "icon": null,
@@ -168,14 +181,17 @@
       "nav_icon": null,
       "placeholder": null,
       "position": "start",
+      "press_index": null,
       "radius": null,
       "selected_index": null,
+      "selection": null,
       "shape": null,
       "side": null,
       "size": null,
       "slint_overrides": {
         "position": "middle"
       },
+      "spacing": null,
       "state": null,
       "subtitle": null,
       "text": "Start",

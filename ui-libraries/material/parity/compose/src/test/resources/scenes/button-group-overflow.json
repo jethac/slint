@@ -78,12 +78,12 @@
   "times": [],
   "trace_elements": [
     "group0",
-    "button0",
-    "button1",
-    "button2",
-    "button3",
-    "button4",
-    "button5"
+    "group0item0",
+    "group0item1",
+    "group0item2",
+    "group0item3",
+    "group0item4",
+    "group0item5"
   ],
   "trace_props": [
     "g0i0_w",
@@ -95,46 +95,91 @@
     {
       "checkable": null,
       "checked": null,
+      "checked_icon": null,
       "color": null,
       "content_offset": null,
       "corner": null,
+      "current_index": null,
       "elevation": null,
       "enabled": null,
+      "expanded_ratio": null,
       "height": null,
       "height_offset": null,
       "icon": null,
       "icons": [],
       "items": [
         {
-          "text": "Day"
+          "checked": null,
+          "checked_icon": null,
+          "disabled": null,
+          "enabled": null,
+          "icon": null,
+          "state": null,
+          "text": "Day",
+          "weight": null
         },
         {
-          "text": "Week"
+          "checked": null,
+          "checked_icon": null,
+          "disabled": null,
+          "enabled": null,
+          "icon": null,
+          "state": null,
+          "text": "Week",
+          "weight": null
         },
         {
-          "text": "Month"
+          "checked": null,
+          "checked_icon": null,
+          "disabled": null,
+          "enabled": null,
+          "icon": null,
+          "state": null,
+          "text": "Month",
+          "weight": null
         },
         {
-          "text": "Quarter"
+          "checked": null,
+          "checked_icon": null,
+          "disabled": null,
+          "enabled": null,
+          "icon": null,
+          "state": null,
+          "text": "Quarter",
+          "weight": null
         },
         {
-          "text": "Year"
+          "checked": null,
+          "checked_icon": null,
+          "disabled": null,
+          "enabled": null,
+          "icon": null,
+          "state": null,
+          "text": "Year",
+          "weight": null
         }
       ],
       "kind": "button-group",
       "level": null,
+      "multi_select": null,
       "nav_icon": null,
       "placeholder": null,
+      "position": null,
+      "press_index": null,
       "radius": null,
+      "selected_index": null,
+      "selection": null,
       "shape": null,
       "side": null,
       "size": null,
       "slint_overrides": {},
+      "spacing": null,
       "state": null,
       "subtitle": null,
       "text": null,
       "trailing_icon": null,
       "variant": null,
+      "vertical": null,
       "width": 288.0,
       "width_option": null,
       "x": 16.0,
