@@ -21,9 +21,7 @@ use std::collections::BTreeSet;
 use std::fmt::Write as _;
 use std::path::{Path, PathBuf};
 
-use material_color_utils::dynamiccolor::{
-    DynamicScheme, MaterialDynamicColors, Platform, SpecVersion,
-};
+use material_color_utils::dynamiccolor::{DynamicScheme, MaterialDynamicColors, Platform, SpecVersion};
 use material_color_utils::hct::Hct;
 use material_color_utils::scheme;
 
@@ -358,11 +356,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             .map_err(|e| format!("{}: {e}", path.display()))?;
         let case_rel = format!("material/{}", scene.name.replace('-', "_"));
 
-        emit_or_check(
-            &cases_dir.join(format!("{}.slint", scene.name.replace('-', "_"))),
-            &slint_case(&scene),
-            check,
-        )?;
+        emit_or_check(&cases_dir.join(format!("{}.slint", scene.name.replace('-', "_"))), &slint_case(&scene), check)?;
         emit_or_check(
             &resources_dir.join(format!("{}.json", scene.name)),
             &serde_json::to_string_pretty(&resolved_scene(&scene, &case_rel))?,
@@ -379,18 +373,18 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 .chain(w.nav_icon.iter())
                 .chain(w.icons.iter())
                 .chain(w.trailing_icon.iter())
-                .chain(
-                    w.items
-                        .iter()
-                        .flat_map(|item| item.icon.iter().chain(item.checked_icon.iter())),
-                )
+                .chain(w.items.iter().flat_map(|item| item.icon.iter().chain(item.checked_icon.iter())))
             {
                 let src = repo_root
                     .join("ui-libraries/material/src/ui/icons")
                     .join(format!("{icon}.svg"));
-                let dst = resources_dir.parent().unwrap().join("icons").join(format!("{icon}.svg"));
-                let svg =
-                    std::fs::read_to_string(&src).map_err(|e| format!("{}: {e}", src.display()))?;
+                let dst = resources_dir
+                    .parent()
+                    .unwrap()
+                    .join("icons")
+                    .join(format!("{icon}.svg"));
+                let svg = std::fs::read_to_string(&src)
+                    .map_err(|e| format!("{}: {e}", src.display()))?;
                 emit_or_check(&dst, &svg, check)?;
             }
         }
@@ -400,9 +394,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // The Compose harness renders text in the same font the Slint driver
     // registers (the variable Roboto in `tests/screenshots/fonts/`).
-    let font_src = repo_root.join("tests/screenshots/fonts/Roboto-VariableFont.ttf");
+    let font_src =
+        repo_root.join("tests/screenshots/fonts/Roboto-VariableFont.ttf");
     let font_dst = parity_dir.join("compose/src/test/resources/fonts/roboto.ttf");
-    let font = std::fs::read(&font_src).map_err(|e| format!("{}: {e}", font_src.display()))?;
+    let font = std::fs::read(&font_src)
+        .map_err(|e| format!("{}: {e}", font_src.display()))?;
     if check {
         let on_disk = std::fs::read(&font_dst)
             .map_err(|e| format!("{}: {e} (regenerate)", font_dst.display()))?;
@@ -419,18 +415,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 /// Writes `content` at `path`, or — in `--check` mode — fails when `path`
 /// doesn't hold exactly `content`.
-fn emit_or_check(
-    path: &Path,
-    content: &str,
-    check: bool,
-) -> Result<(), Box<dyn std::error::Error>> {
+fn emit_or_check(path: &Path, content: &str, check: bool) -> Result<(), Box<dyn std::error::Error>> {
     if check {
-        let on_disk = std::fs::read_to_string(path).map_err(|e| {
-            format!(
-                "{}: {e} (regenerate with `cargo run -p material-parity-generator`)",
-                path.display()
-            )
-        })?;
+        let on_disk = std::fs::read_to_string(path)
+            .map_err(|e| format!("{}: {e} (regenerate with `cargo run -p material-parity-generator`)", path.display()))?;
         if on_disk != content {
             return Err(format!(
                 "{} is stale — regenerate with `cargo run -p material-parity-generator`",
@@ -562,7 +550,10 @@ fn scheme_argbs(theme: &Theme) -> serde_json::Map<String, serde_json::Value> {
     roles
         .into_iter()
         .map(|(name, color)| {
-            (name.to_string(), format!("{:08X}", dynamic.get_argb(&color) as u64 as u32).into())
+            (
+                name.to_string(),
+                format!("{:08X}", dynamic.get_argb(&color) as u64 as u32).into(),
+            )
         })
         .collect()
 }
@@ -640,25 +631,10 @@ fn slint_case(scene: &Scene) -> String {
         let mut plain = Vec::new();
         for id in &scene.trace_elements {
             let stem = id.trim_end_matches(|c: char| c.is_ascii_digit());
-            // `<container><local><i>`: the stem is the container plus one of
-            // its declared `trace_items` locals (`action`, `radio-item`, …).
-            // A bare `item` suffix keeps the original heuristic for scenes
-            // that don't declare `trace_items`.
-            let declared = scene.trace_items.iter().find_map(|(c, locals)| {
-                locals
-                    .iter()
-                    .filter_map(|l| stem.strip_suffix(l.as_str()))
-                    .find(|rest| *rest == c.as_str())
-                    .map(|_| c)
-            });
-            match declared.cloned().or_else(|| {
-                (stem.len() > "item".len() && stem.ends_with("item") && stem.len() < id.len())
-                    .then(|| stem[..stem.len() - "item".len()].to_string())
-            }) {
-                Some(c) => {
-                    containers.insert(c);
-                }
-                None => plain.push(id),
+            if stem.len() > "item".len() && stem.ends_with("item") && stem.len() < id.len() {
+                containers.insert(stem[..stem.len() - "item".len()].to_string());
+            } else {
+                plain.push(id);
             }
         }
         (containers, plain)
@@ -670,8 +646,11 @@ fn slint_case(scene: &Scene) -> String {
     let trace_items = item_containers
         .iter()
         .map(|c| {
-            let locals =
-                scene.trace_items.get(c).cloned().unwrap_or_else(|| vec!["item".to_string()]);
+            let locals = scene
+                .trace_items
+                .get(c)
+                .cloned()
+                .unwrap_or_else(|| vec!["item".to_string()]);
             format!("{c}:{}", locals.join("+"))
         })
         .collect::<Vec<_>>()
@@ -801,7 +780,11 @@ fn slint_case(scene: &Scene) -> String {
     }
     if scene.widgets.iter().any(|w| w.kind == "surface") {
         imports.push("Elevation");
-        if scene.widgets.iter().any(|w| w.shape.as_deref().is_some_and(|sh| sh != "rect")) {
+        if scene
+            .widgets
+            .iter()
+            .any(|w| w.shape.as_deref().is_some_and(|sh| sh != "rect"))
+        {
             imports.push("MaterialShapes");
         }
     }
@@ -871,12 +854,13 @@ fn widget_actions(scene: &Scene) -> Vec<Action> {
         }
         if w.state.as_deref() == Some("focused") {
             // Focused split halves: `leading` is the first of the pair.
-            let target =
-                if w.kind.ends_with("split-button") && w.side.as_deref() == Some("trailing") {
-                    ordinal + 1
-                } else {
-                    ordinal
-                };
+            let target = if w.kind.ends_with("split-button")
+                && w.side.as_deref() == Some("trailing")
+            {
+                ordinal + 1
+            } else {
+                ordinal
+            };
             for _ in tabs_emitted..=target {
                 actions.push(Action { kind: "key:Tab".into(), x: 0.0, y: 0.0, at: 0.0 });
             }
@@ -939,11 +923,11 @@ fn widget_actions(scene: &Scene) -> Vec<Action> {
         }
     }
     for w in &scene.widgets {
-        match w.state.as_deref().unwrap_or(if w.enabled == Some(false) {
-            "disabled"
-        } else {
-            "enabled"
-        }) {
+        match w
+            .state
+            .as_deref()
+            .unwrap_or(if w.enabled == Some(false) { "disabled" } else { "enabled" })
+        {
             "hovered" | "pressed" | "enabled" | "disabled" | "focused" => {}
             other => panic!("unknown widget state {other:?}"),
         }
@@ -979,8 +963,11 @@ fn button_props(w: &Widget, timed: bool) -> String {
     if let Some(text) = &w.text {
         writeln!(p, "        text: \"{text}\";").unwrap();
     }
-    let size =
-        over.get("size").and_then(|v| v.as_str()).map(str::to_string).or_else(|| w.size.clone());
+    let size = over
+        .get("size")
+        .and_then(|v| v.as_str())
+        .map(str::to_string)
+        .or_else(|| w.size.clone());
     if let Some(size) = size {
         writeln!(p, "        size: MaterialButtonSize.{};", size_variant(&size)).unwrap();
     }
@@ -1009,8 +996,11 @@ fn button_props(w: &Widget, timed: bool) -> String {
     if let Some(width) = width {
         writeln!(p, "        width_option: IconButtonWidth.{width};").unwrap();
     }
-    let icon =
-        over.get("icon").and_then(|v| v.as_str()).map(str::to_string).or_else(|| w.icon.clone());
+    let icon = over
+        .get("icon")
+        .and_then(|v| v.as_str())
+        .map(str::to_string)
+        .or_else(|| w.icon.clone());
     if let Some(icon) = icon {
         writeln!(p, "        icon: Icons.{icon};").unwrap();
     }
@@ -1056,8 +1046,11 @@ fn split_button_props(w: &Widget, timed: bool) -> String {
     if let Some(text) = &w.text {
         writeln!(p, "        text: \"{text}\";").unwrap();
     }
-    let size =
-        over.get("size").and_then(|v| v.as_str()).map(str::to_string).or_else(|| w.size.clone());
+    let size = over
+        .get("size")
+        .and_then(|v| v.as_str())
+        .map(str::to_string)
+        .or_else(|| w.size.clone());
     if let Some(size) = size {
         writeln!(p, "        size: MaterialButtonSize.{};", size_variant(&size)).unwrap();
     }
@@ -1067,8 +1060,11 @@ fn split_button_props(w: &Widget, timed: bool) -> String {
     if bool_over("checked", w.checked) {
         p.push_str("        checked: true;\n");
     }
-    let icon =
-        over.get("icon").and_then(|v| v.as_str()).map(str::to_string).or_else(|| w.icon.clone());
+    let icon = over
+        .get("icon")
+        .and_then(|v| v.as_str())
+        .map(str::to_string)
+        .or_else(|| w.icon.clone());
     if let Some(icon) = icon {
         writeln!(p, "        icon: Icons.{icon};").unwrap();
     }
@@ -1383,8 +1379,12 @@ fn slint_canvas(s: &mut String, scene: &Scene) {
                 continue;
             }
             "rect" => {
-                let radius =
-                    w.slint_overrides.get("radius").map(widget_num).or(w.radius).unwrap_or(0.0);
+                let radius = w
+                    .slint_overrides
+                    .get("radius")
+                    .map(widget_num)
+                    .or(w.radius)
+                    .unwrap_or(0.0);
                 writeln!(
                     s,
                     "    Rectangle {{\n        x: {}px;\n        y: {}px;\n        width: {}px;\n        height: {}px;\n        border-radius: {}px;\n        background: MaterialPalette.{};\n    }}\n",
@@ -1463,7 +1463,8 @@ fn emit_button_cover(s: &mut String, w: &Widget, i: usize) {
             format!("MaterialPalette.{}", fill.replace('-', "_"))
         };
         let label = if cover["label"].as_bool().unwrap_or(true) {
-            let label_fill = cover["label_fill"].as_str().unwrap_or("on-primary").replace('-', "_");
+            let label_fill =
+                cover["label_fill"].as_str().unwrap_or("on-primary").replace('-', "_");
             format!(
                 "        Text {{\n            text: \"{}\";\n            color: MaterialPalette.{label_fill};\n            font-family: \"Roboto\";\n            font-weight: 500;\n            font-size: 14px;\n            horizontal-alignment: center;\n            vertical-alignment: center;\n        }}\n",
                 w.text.as_deref().unwrap_or_default()
@@ -1497,15 +1498,22 @@ fn connected_button_widget(s: &mut String, w: &Widget, i: usize, scene: &Scene) 
         .or_else(|| w.position.clone())
         .unwrap_or_else(|| "middle".to_string());
     writeln!(p, "        position: ConnectedButtonPosition.{position};").unwrap();
-    let vertical = over.get("vertical").and_then(|v| v.as_bool()).or(w.vertical).unwrap_or(false);
+    let vertical = over
+        .get("vertical")
+        .and_then(|v| v.as_bool())
+        .or(w.vertical)
+        .unwrap_or(false);
     if vertical {
         p.push_str("        vertical: true;\n");
     }
     if let Some(text) = &w.text {
         writeln!(p, "        text: \"{text}\";").unwrap();
     }
-    let icon =
-        over.get("icon").and_then(|v| v.as_str()).map(str::to_string).or_else(|| w.icon.clone());
+    let icon = over
+        .get("icon")
+        .and_then(|v| v.as_str())
+        .map(str::to_string)
+        .or_else(|| w.icon.clone());
     if let Some(icon) = icon {
         writeln!(p, "        icon: Icons.{icon};").unwrap();
     }
@@ -1517,11 +1525,19 @@ fn connected_button_widget(s: &mut String, w: &Widget, i: usize, scene: &Scene) 
     if let Some(icon) = checked_icon {
         writeln!(p, "        checked_icon: Icons.{icon};").unwrap();
     }
-    let checked = over.get("checked").and_then(|v| v.as_bool()).or(w.checked).unwrap_or(false);
+    let checked = over
+        .get("checked")
+        .and_then(|v| v.as_bool())
+        .or(w.checked)
+        .unwrap_or(false);
     if checked {
         p.push_str("        checked: true;\n");
     }
-    let enabled = over.get("enabled").and_then(|v| v.as_bool()).or(w.enabled).unwrap_or(true);
+    let enabled = over
+        .get("enabled")
+        .and_then(|v| v.as_bool())
+        .or(w.enabled)
+        .unwrap_or(true);
     if !enabled {
         p.push_str("        enabled: false;\n");
     }
@@ -1543,7 +1559,9 @@ fn connected_button_widget(s: &mut String, w: &Widget, i: usize, scene: &Scene) 
     writeln!(
         s,
         "    button{i} := ConnectedButton {{\n        x: {}px;\n        y: {}px;\n{}    }}\n",
-        w.x as i64, w.y as i64, p,
+        w.x as i64,
+        w.y as i64,
+        p,
     )
     .unwrap();
     if i == 0 {
@@ -1594,8 +1612,11 @@ fn connected_group_widget(s: &mut String, w: &Widget, i: usize, scene: &Scene) {
     if w.multi_select.unwrap_or(false) {
         p.push_str("        multi_select: true;\n");
     }
-    let selected =
-        over.get("selected_index").map(|v| widget_num(v) as i64).or(w.selected_index).unwrap_or(-1);
+    let selected = over
+        .get("selected_index")
+        .map(|v| widget_num(v) as i64)
+        .or(w.selected_index)
+        .unwrap_or(-1);
     writeln!(p, "        selected_index: {selected};").unwrap();
     if let Some(spacing) = over.get("between_space").map(widget_num) {
         writeln!(p, "        between_space: {spacing}px;").unwrap();
@@ -1632,7 +1653,9 @@ fn connected_group_widget(s: &mut String, w: &Widget, i: usize, scene: &Scene) {
     writeln!(
         s,
         "    group{i} := {component} {{\n        x: {}px;\n        y: {}px;\n{}    }}\n",
-        w.x as i64, w.y as i64, p,
+        w.x as i64,
+        w.y as i64,
+        p,
     )
     .unwrap();
     if let Some(cover) = w.slint_overrides.get("cover") {
@@ -1715,9 +1738,16 @@ fn appbar_widget(s: &mut String, w: &Widget, i: usize) {
         match w.kind.as_str() {
             "bottom-app-bar" => writeln!(p, "        fab-icon: Icons.{icon};").unwrap(),
             "search-bar" => writeln!(p, "        leading-icon: Icons.{icon};").unwrap(),
-            "app-bar-with-search" => writeln!(p, "        leading-icon: Icons.{icon};").unwrap(),
-            _ => writeln!(p, "        leading-button: {{ icon: Icons.{icon}, enabled: true }};")
-                .unwrap(),
+            "app-bar-with-search" => {
+                writeln!(p, "        leading-icon: Icons.{icon};").unwrap()
+            }
+            _ => {
+                writeln!(
+                    p,
+                    "        leading-button: {{ icon: Icons.{icon}, enabled: true }};"
+                )
+                .unwrap()
+            }
         }
     }
     if !w.icons.is_empty() {
@@ -1772,6 +1802,7 @@ fn appbar_widget(s: &mut String, w: &Widget, i: usize) {
     )
     .unwrap();
 }
+
 
 /// Escapes a string for embedding in a generated `.slint` string literal.
 fn slint_str(text: &str) -> String {
