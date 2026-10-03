@@ -9,7 +9,7 @@ use super::cubic::Cubic;
 use super::feature::Feature;
 use super::mapping::ProgressableFeature;
 use super::rounded_polygon::RoundedPolygon;
-use super::utils::{DISTANCE_EPSILON, Point, positive_modulo};
+use super::utils::{DISTANCE_EPSILON, Point, TWO_PI, find_minimum, k_atan2, positive_modulo};
 use alloc::rc::Rc;
 use alloc::vec::Vec;
 
@@ -78,6 +78,48 @@ impl LengthMeasurer {
         }
 
         (1., total)
+    }
+}
+
+/// Measures each cubic by the angle it spans around the polygon's center.
+/// Port of `AngleMeasurer`.
+pub struct AngleMeasurer {
+    center_x: f32,
+    center_y: f32,
+}
+
+impl AngleMeasurer {
+    /// A measurer reporting the angle each cubic sweeps as seen from
+    /// `(center_x, center_y)`.
+    pub fn new(center_x: f32, center_y: f32) -> Self {
+        Self { center_x, center_y }
+    }
+
+    /// `angle(x, y) = (atan2(y, x) + 2π) mod 2π` from `Utils.kt`.
+    fn angle(&self, x: f32, y: f32) -> f32 {
+        positive_modulo(k_atan2(y - self.center_y, x - self.center_x) + TWO_PI, TWO_PI)
+    }
+}
+
+impl Measurer for AngleMeasurer {
+    /// The measurement for a given cubic is the difference in angles between the
+    /// start and end points (first and last anchors) of the cubic.
+    fn measure_cubic(&self, cubic: &Cubic) -> f32 {
+        let m = positive_modulo(
+            self.angle(cubic.anchor1_x(), cubic.anchor1_y())
+                - self.angle(cubic.anchor0_x(), cubic.anchor0_y()),
+            TWO_PI,
+        );
+        // Avoid an empty cubic to measure almost TwoPi
+        if m > TWO_PI - DISTANCE_EPSILON { 0. } else { m }
+    }
+
+    fn find_cubic_cut_point(&self, cubic: &Cubic, m: f32) -> f32 {
+        let angle0 = self.angle(cubic.anchor0_x(), cubic.anchor0_y());
+        find_minimum(0., 1., 1e-5, &|t: f32| {
+            let curve_point = cubic.point_on_curve(t);
+            (positive_modulo(self.angle(curve_point.x, curve_point.y) - angle0, TWO_PI) - m).abs()
+        })
     }
 }
 
@@ -375,7 +417,7 @@ impl MeasuredPolygon {
             .iter()
             .map(|(f, ix)| {
                 ProgressableFeature::new(
-                    positive_modulo((outline_progress[*ix] + outline_progress[ix + 1]) / 2., 1.),
+                    (outline_progress[*ix] + outline_progress[ix + 1]) / 2.,
                     f.clone(),
                 )
             })
