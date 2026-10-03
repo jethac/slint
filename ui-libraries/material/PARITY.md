@@ -74,11 +74,13 @@ Token objects: ButtonGroupSmallTokens, ConnectedButtonGroupSmallTokens
 
 Sizes: small
 
-States: pressed, selected
+States: disabled, focused, hovered, pressed, selected
 
 | Component | Source | Status | Issues | Needs | Notes |
 |---|---|---|---|---|---|
 | ButtonGroup | ButtonGroup.kt | missing | #5, #9, #10 | springs (#5), shapes (#6) | - |
+| ConnectedButtonGroup | ButtonGroup.kt, ButtonGroupSamples.kt | partial | #10 | springs (#5), shapes (#6) | slint components: ConnectedButtonGroup, ConnectedButton; parity cases: connected-button-groups, connected-button-morph, connected-button-press-morph, negative-connected-button-group |
+| VerticalConnectedButtonGroup | ButtonGroup.kt, ButtonGroupSamples.kt | partial | #10 | springs (#5), shapes (#6) | slint component: VerticalConnectedButtonGroup |
 
 ### Buttons
 
@@ -382,10 +384,11 @@ States: disabled, selected, focused, hovered, pressed, unselected
 
 | Component | Source | Status | Issues | Needs | Notes |
 |---|---|---|---|---|---|
-| MultiChoiceSegmentedButtonRow | SegmentedButton.kt | missing | #10 | springs (#5), shapes (#6) | - |
-| MultiChoiceSegmentedButtonRowScope | SegmentedButton.kt | missing | #10 | springs (#5), shapes (#6) | - |
-| SingleChoiceSegmentedButtonRow | SegmentedButton.kt | missing | #10 | springs (#5), shapes (#6) | - |
-| SingleChoiceSegmentedButtonRowScope | SegmentedButton.kt | missing | #10 | springs (#5), shapes (#6) | - |
+| MultiChoiceSegmentedButtonRow | SegmentedButton.kt | missing | #10 | springs (#5), shapes (#6) | Expressive mapping → ConnectedButtonGroup |
+| MultiChoiceSegmentedButtonRowScope | SegmentedButton.kt | missing | #10 | springs (#5), shapes (#6) | Expressive mapping → ConnectedButtonGroup |
+| SingleChoiceSegmentedButtonRow | SegmentedButton.kt | missing | #10 | springs (#5), shapes (#6) | Expressive mapping → ConnectedButtonGroup |
+| SingleChoiceSegmentedButtonRowScope | SegmentedButton.kt | missing | #10 | springs (#5), shapes (#6) | Expressive mapping → ConnectedButtonGroup |
+| SegmentedButton | SegmentedButton.kt | partial | #11 | - | slint component: SegmentedButton; deprecated by the Expressive mapping → ConnectedButtonGroup |
 
 ### Slider
 

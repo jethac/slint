@@ -1444,6 +1444,15 @@ pub fn outline_to_skia_path(
 }
 
 pub fn to_skia_rrect(rect: &PhysicalRect, radius: &PhysicalBorderRadius) -> skia_safe::RRect {
+    // Clamp every corner to half the shorter side like the software
+    // renderer and `ElementOutline` do. `SkRRect` otherwise follows the
+    // CSS overlapping-curves rule and shrinks all radii together when two
+    // corners overflow a side.
+    let clamped = radius
+        .clone()
+        .min(PhysicalBorderRadius::from_length(PhysicalLength::new(rect.width() / 2.)))
+        .min(PhysicalBorderRadius::from_length(PhysicalLength::new(rect.height() / 2.)));
+    let radius = &clamped;
     if let Some(radius) = radius.as_uniform() {
         skia_safe::RRect::new_rect_xy(to_skia_rect(rect), radius, radius)
     } else {

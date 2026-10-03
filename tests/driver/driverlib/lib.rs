@@ -232,6 +232,15 @@ fn test_extract_library_paths() {
 ///   record in the trace (numbers, colors, bools, strings).
 /// - `//TRACE_ELEMENTS=id1,id2` — element ids whose x/y/width/height/opacity are
 ///   recorded in the trace (found with `ElementQuery::match_id`).
+/// - `//TRACE_ITEMS=group0:item,group1:item` — children inside element
+///   `group0` whose local id is `item` (one entry per repeater instance) are
+///   recorded as `group0item0`, `group0item1`, … — the same convention the
+///   Compose emitter uses for repeated container items. Use it for repeated
+///   children, which share one qualified id and so cannot be named in
+///   `//TRACE_ELEMENTS=`. When a container can emit items under more than
+///   one element id (e.g. two mutually exclusive `for` loops), the alternates
+///   are joined with `+` — `group0:item+radio_item` — and recorded under the
+///   first name.
 /// - `//ACTION=move:x,y` / `//ACTION=press:x,y` / `//ACTION=release:x,y` —
 ///   pointer input dispatched to the window before the case is rendered, in
 ///   declaration order (logical coordinates).
@@ -287,6 +296,10 @@ pub struct ParityMarkers {
     /// `//MASK_INNER=` silhouette findings an expected divergence rather
     /// than a failure; zero findings re-arms the check.
     pub xfail_silhouette: Option<String>,
+    /// `(container-id, local-child-ids)` pairs from `//TRACE_ITEMS=`
+    /// markers: the container's repeated children with any listed local id
+    /// are recorded as `<container-id><first-id><i>` in tree order.
+    pub trace_items: Vec<(String, Vec<String>)>,
     /// `(element-id, t_ms)` pairs from `//MASK_INNER=` markers.
     pub mask_inner: Vec<(String, u64)>,
     /// `(element-id, t_ms, margin)` triples from `//MASK_DECOR=` markers;
@@ -464,6 +477,20 @@ pub fn extract_parity(source: &str) -> ParityMarkers {
             let end = rest.find('\n').unwrap_or(rest.len());
             rest[..end].trim().to_string()
         }),
+        trace_items: csv("//TRACE_ITEMS=")
+            .into_iter()
+            .map(|entry| {
+                entry
+                    .split_once(':')
+                    .map(|(container, locals)| {
+                        (
+                            container.to_string(),
+                            locals.split('+').map(str::to_string).collect::<Vec<_>>(),
+                        )
+                    })
+                    .unwrap_or_else(|| panic!("Cannot parse //TRACE_ITEMS= entry '{entry}' (expected <container>:<child-id>)"))
+            })
+            .collect(),
         mask_inner,
         mask_decor,
     }
