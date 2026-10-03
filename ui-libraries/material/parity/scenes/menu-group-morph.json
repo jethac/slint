@@ -1,0 +1,91 @@
+{
+  "name": "menu-group-morph",
+  "type": "canvas",
+  "parity": "motion",
+  "size": [
+    260,
+    220
+  ],
+  "densities": [
+    1,
+    2
+  ],
+  "theme": {
+    "seed": "6750A4",
+    "variant": "tonal-spot",
+    "spec": "spec2025",
+    "platform": "phone",
+    "dark": false,
+    "contrast": 0.0
+  },
+  "fonts": {
+    "plain": "Roboto",
+    "brand": "Roboto"
+  },
+  "times": [
+    0,
+    15,
+    30,
+    60,
+    120,
+    200,
+    333,
+    500,
+    800,
+    1500
+  ],
+  "widgets": [
+    {
+      "kind": "menu-group",
+      "x": 16,
+      "y": 16,
+      "label": "Section",
+      "items": [
+        {
+          "text": "First",
+          "icon": "edit"
+        },
+        {
+          "text": "Second"
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "kind": "move",
+      "x": 60,
+      "y": 34
+    },
+    {
+      "kind": "move",
+      "x": 0,
+      "y": 0,
+      "at": 300
+    }
+  ],
+  "trace_elements": [
+    "menu0"
+  ],
+  "trace_props": [
+    "container_radius"
+  ],
+  "mask_decor": {
+    "menu0": {
+      "times": [
+        0,
+        15,
+        30,
+        60,
+        120,
+        200,
+        333,
+        500,
+        800,
+        1500
+      ],
+      "margin": 16
+    }
+  },
+  "xfail_text": "software: issue #28: Slint ceils text layout widths where Compose keeps fractional advances"
+}

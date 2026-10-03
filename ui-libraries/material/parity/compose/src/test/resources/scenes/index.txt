@@ -15,6 +15,10 @@ icon-button-focus
 icon-button-press-morph
 icon-button-states
 icon-buttons
+menu-group-morph
+menu-groups
+menu-items
+menu-select-morph
 negative-button-focus-ring
 negative-button-press-morph
 negative-button-ripple-clip
@@ -24,6 +28,11 @@ negative-corner-leak
 negative-focus-layer
 negative-hover-layer
 negative-icon-button-morph
+negative-menu-focus
+negative-menu-gap
+negative-menu-kind
+negative-menu-shape
+negative-menu-variant
 negative-press-overlay
 negative-radius
 negative-recolor

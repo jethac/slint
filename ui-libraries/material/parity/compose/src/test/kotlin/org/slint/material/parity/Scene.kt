@@ -121,6 +121,60 @@ class Widget(json: JSONObject) {
     /** `elevated-rect` only: the elevation in dp of the Android ambient+spot
      * shadow `Modifier.shadow` draws behind the caster. */
     val elevation: Float = json.optDouble("elevation", 0.0).toFloat()
+
+    // ---- menu family -------------------------------------------------
+
+    /** Menu item kind: `standard` (default), `selectable`, `checkable`. */
+    val itemKind: String = (json.opt("item_kind") as? String) ?: "standard"
+    /** `menu`/`menu-popup`/`menu-group` item models. */
+    val items: List<MenuItem> =
+        json.optJSONArray("items")?.let { a -> (0 until a.length()).map { MenuItem(a.getJSONObject(it)) } }
+            ?: emptyList()
+    /** `menu-popup` group models. */
+    val groups: List<MenuGroup> =
+        json.optJSONArray("groups")?.let { a -> (0 until a.length()).map { MenuGroup(a.getJSONObject(it)) } }
+            ?: emptyList()
+    /** `menu-item`/`menu-group` shape position: `standalone` (default),
+     * `leading`, `middle`, `trailing`. */
+    val position: String = (json.opt("position") as? String) ?: "standalone"
+    val selected: Boolean = json.optBoolean("selected", false)
+    val selectedIcon: String? = (json.opt("selected_icon") as? String)?.takeIf { it.isNotEmpty() }
+    val trailingIcon: String? = (json.opt("trailing_icon") as? String)?.takeIf { it.isNotEmpty() }
+    val trailingText: String? = (json.opt("trailing_text") as? String)?.takeIf { it.isNotEmpty() }
+    val supportingText: String? = (json.opt("supporting_text") as? String)?.takeIf { it.isNotEmpty() }
+    /** `menu-group`/`menu-group-label` label text. */
+    val label: String? = (json.opt("label") as? String)?.takeIf { it.isNotEmpty() }
+    /** `menu` only: hide the leading `first-index` items. */
+    val firstIndex: Int = json.optInt("first_index", 0)
+
+    val isMenu: Boolean get() =
+        kind == "menu" || kind == "menu-popup" || kind == "menu-group" ||
+            kind == "menu-item" || kind == "menu-divider" || kind == "menu-group-label"
+}
+
+/** One entry of a menu `items`/`groups[].items` model — the slots of
+ * `DropdownMenuItemContent`. */
+class MenuItem(json: JSONObject) {
+    val text: String = json.optString("text", "")
+    val icon: String? = (json.opt("icon") as? String)?.takeIf { it.isNotEmpty() }
+    val selectedIcon: String? = (json.opt("selected_icon") as? String)?.takeIf { it.isNotEmpty() }
+    val trailingIcon: String? = (json.opt("trailing_icon") as? String)?.takeIf { it.isNotEmpty() }
+    val trailingText: String? = (json.opt("trailing_text") as? String)?.takeIf { it.isNotEmpty() }
+    val supportingText: String? = (json.opt("supporting_text") as? String)?.takeIf { it.isNotEmpty() }
+    val selected: Boolean = json.optBoolean("selected", false)
+    val checked: Boolean = json.optBoolean("checked", false)
+    val enabled: Boolean = json.optBoolean("enabled", true)
+    /** `hovered`/`pressed`/`focused` — emitted on the item's own
+     * `InteractionSource`. */
+    val state: String? = json.opt("state") as? String
+}
+
+/** One entry of a menu `groups` model (`DropdownMenuGroup` + label). */
+class MenuGroup(json: JSONObject) {
+    val label: String = json.optString("label", "")
+    val items: List<MenuItem> =
+        json.optJSONArray("items")?.let { a -> (0 until a.length()).map { MenuItem(a.getJSONObject(it)) } }
+            ?: emptyList()
 }
 
 /** "primary-container" → "primaryContainer" for `scheme` map lookups. */

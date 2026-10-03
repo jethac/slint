@@ -1854,6 +1854,22 @@ pub fn run_parity_case<C: i_slint_core::api::ComponentHandle>(
     let pixel_eps = spec.eps.map(|e| e as u8).unwrap_or(PIXEL_EPS);
     let negative = kind == "negative";
     let xfail = kind == "xfail";
+    // `//XFAIL_TEXT=` accepts the same driver scope `//PARITY=xfail:` uses:
+    // `software: <reason>` relaxes the text layer only on that driver — the
+    // software rasterizer's hinting can drift where skia's does not. An
+    // unscoped marker applies on every driver.
+    let xfail_text: Option<&str> = spec.xfail_text.as_deref().and_then(|v| {
+        const DRIVERS: &[&str] = &["software", "skia", "femtovg", "interpreter"];
+        match v.split_once(':') {
+            Some((scope, reason))
+                if !scope.is_empty()
+                    && scope.split(',').all(|d| DRIVERS.contains(&d.trim())) =>
+            {
+                scope.split(',').map(str::trim).any(|d| d == driver).then(|| reason.trim())
+            }
+            _ => Some(v),
+        }
+    });
     let references_missing = !refs_dir(case_rel).join("d1").is_dir();
 
     if references_missing {
@@ -2053,7 +2069,7 @@ pub fn run_parity_case<C: i_slint_core::api::ComponentHandle>(
             // constant logical-px error per advance, so its device-px
             // magnitude scales with the scene density: at 2x a barely-1dp
             // shift lands ~2 device px inside the cell.
-            let text_cell_eps = if spec.xfail_text.is_some() {
+            let text_cell_eps = if xfail_text.is_some() {
                 TEXT_CELL_EPS * 1.25 * *density as f64
             } else {
                 TEXT_CELL_EPS
@@ -2232,7 +2248,7 @@ pub fn run_parity_case<C: i_slint_core::api::ComponentHandle>(
                 &component,
                 &frames,
                 compose,
-                spec.xfail_text.as_deref(),
+                xfail_text,
             );
             errors.extend(metric_errors);
             xfail_text_saw_drift |= saw_drift;
@@ -2265,7 +2281,7 @@ pub fn run_parity_case<C: i_slint_core::api::ComponentHandle>(
         }
     }
 
-    if let Some(reason) = &spec.xfail_text {
+    if let Some(reason) = &xfail_text {
         // The marker covers both the trace layer (width/center drift) and
         // the pixel layer (the relaxed per-cell mean it feeds) — only flag
         // it stale when neither consumer needed it at any density.

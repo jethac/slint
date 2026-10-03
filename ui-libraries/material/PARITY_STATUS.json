@@ -134,8 +134,8 @@
       11
     ],
     "needs": "springs (#5), shapes (#6)",
-    "notes": "",
-    "status": "missing"
+    "notes": "slint component: MenuItemContent (item-kind: checkable) in MenuInner/PopupMenu; tokens: generated component tokens; springs via active motion scheme",
+    "status": "partial"
   },
   "Checkbox": {
     "issues": [
@@ -234,7 +234,7 @@
       11
     ],
     "needs": "springs (#5), shapes (#6)",
-    "notes": "slint component: DropDownMenu/PopupMenu",
+    "notes": "slint component: PopupMenu/MenuInner (flat items); tokens: generated component tokens; springs via active motion scheme",
     "status": "partial"
   },
   "DropdownMenuGroup": {
@@ -242,15 +242,15 @@
       11
     ],
     "needs": "springs (#5), shapes (#6)",
-    "notes": "",
-    "status": "missing"
+    "notes": "slint component: MenuGroupContent (MenuGroup model); tokens: generated component tokens; springs via active motion scheme",
+    "status": "partial"
   },
   "DropdownMenuItem": {
     "issues": [
       11
     ],
     "needs": "springs (#5), shapes (#6)",
-    "notes": "slint component: MenuItem in DropDownMenu",
+    "notes": "slint component: MenuItemContent (MenuItem struct); tokens: generated component tokens; springs via active motion scheme",
     "status": "partial"
   },
   "DropdownMenuItemLegacy": {
@@ -258,16 +258,16 @@
       11
     ],
     "needs": "springs (#5), shapes (#6)",
-    "notes": "",
-    "status": "missing"
+    "notes": "deprecated at pin; covered by MenuItemContent (item-kind: standard); tokens: generated component tokens; springs via active motion scheme",
+    "status": "partial"
   },
   "DropdownMenuPopup": {
     "issues": [
       11
     ],
     "needs": "springs (#5), shapes (#6)",
-    "notes": "",
-    "status": "missing"
+    "notes": "slint component: MenuPopupContent (grouped items with gaps); tokens: generated component tokens; springs via active motion scheme",
+    "status": "partial"
   },
   "ElevatedAssistChip": {
     "issues": [
@@ -354,16 +354,16 @@
       11
     ],
     "needs": "springs (#5), shapes (#6)",
-    "notes": "",
-    "status": "missing"
+    "notes": "slint component: DropDownMenu + PopupMenu exposed/match-anchor-width; tokens: generated component tokens; springs via active motion scheme",
+    "status": "partial"
   },
   "ExposedDropdownMenuBoxScope": {
     "issues": [
       11
     ],
     "needs": "springs (#5), shapes (#6)",
-    "notes": "",
-    "status": "missing"
+    "notes": "slint component: DropDownMenu (menuAnchor role folded into the component); tokens: generated component tokens; springs via active motion scheme",
+    "status": "partial"
   },
   "ExtendedFloatingActionButton": {
     "issues": [
@@ -912,8 +912,8 @@
       11
     ],
     "needs": "springs (#5), shapes (#6)",
-    "notes": "",
-    "status": "missing"
+    "notes": "slint component: MenuItemContent (item-kind: selectable); tokens: generated component tokens; springs via active motion scheme",
+    "status": "partial"
   },
   "ShortNavigationBar": {
     "issues": [

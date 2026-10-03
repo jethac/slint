@@ -1,0 +1,50 @@
+// Copyright © SixtyFPS GmbH <info@slint.dev>
+// SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0
+
+// Scene: menu-select-morph — generated from `ui-libraries/material/parity/scenes/menu-select-morph.json`
+// (edit the scene, regenerate with `cargo run -p material-parity-generator`).
+//PARITY=motion
+//SIZE=220x96
+//TIMES=0,15,30,60,120,200,333,500,800,1500
+//TRACE_PROPS=container_radius
+//TRACE_ELEMENTS=menu0
+//ACTION=press:60,52
+//ACTION=release:60,52
+//ACTION=move@1:0,0
+//MASK_INNER=menu0@15,30,60,120,200,333,500,800,1500
+//DENSITIES=1,2
+import "../../fonts/Roboto-VariableFont.ttf";
+import { Icons, MaterialPalette, MaterialTheme, MaterialWindow, MenuItemContent, MenuItemKind, MenuShapePosition, MenuVariant } from "@material";
+
+export component TestCase inherits MaterialWindow {
+    init => {
+        // The scene pins seed #6750A4, tonal-spot, spec2025, light, contrast 0
+        // (all the library defaults; restated here so a default change can't
+        // silently move the parity baseline).
+        MaterialTheme.seed-color = #6750A4;
+        MaterialTheme.dark = false;
+        MaterialTheme.contrast-level = 0;
+        MaterialTheme.use-platform-color = false;
+        MaterialTheme.plain-family = "Roboto";
+        MaterialTheme.brand-family = "Roboto";
+        // Compose builds its scene scheme from the same seed — use the
+        // runtime-generated scheme, not the static expressive table.
+        MaterialPalette.dynamic = true;
+    }
+
+    menu0 := MenuItemContent {
+        x: 20px;
+        y: 20px;
+        width: 180px;
+        text: "Toggle";
+        trailing-text: "F4";
+        icon: Icons.remove;
+        selected-icon: Icons.check;
+        item-kind: MenuItemKind.checkable;
+        variant: MenuVariant.standard;
+        shape-position: MenuShapePosition.standalone;
+    }
+
+    out property <length> container_radius: menu0.container-radius-top-left;
+
+}
