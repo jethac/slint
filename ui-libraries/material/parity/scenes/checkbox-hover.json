@@ -1,51 +1,52 @@
 {
-  "name": "checkbox-hover",
-  "type": "canvas",
-  "parity": "static",
-  "size": [
-    96,
-    96
-  ],
-  "densities": [
-    1,
-    2
-  ],
-  "theme": {
-    "seed": "6750A4",
-    "variant": "tonal-spot",
-    "spec": "spec2025",
-    "platform": "phone",
-    "dark": false,
-    "contrast": 0.0
-  },
-  "fonts": {
-    "plain": "Roboto",
-    "brand": "Roboto"
-  },
-  "widgets": [
-    {
-      "kind": "checkbox",
-      "x": 16,
-      "y": 36,
-      "check_state": "unchecked"
+    "name": "checkbox-hover",
+    "type": "canvas",
+    "parity": "xfail:femtovg",
+    "size": [
+        96,
+        96
+    ],
+    "densities": [
+        1,
+        2
+    ],
+    "theme": {
+        "seed": "6750A4",
+        "variant": "tonal-spot",
+        "spec": "spec2025",
+        "platform": "phone",
+        "dark": false,
+        "contrast": 0.0
     },
-    {
-      "kind": "checkbox",
-      "x": 56,
-      "y": 36,
-      "check_state": "unchecked",
-      "state": "hovered"
-    }
-  ],
-  "trace_elements": [
-    "button0",
-    "button1"
-  ],
-  "trace_props": [],
-  "mask_decor": {
-    "button1": [
-      0,
-      2000
-    ]
-  }
+    "fonts": {
+        "plain": "Roboto",
+        "brand": "Roboto"
+    },
+    "widgets": [
+        {
+            "kind": "checkbox",
+            "x": 16,
+            "y": 36,
+            "check_state": "unchecked"
+        },
+        {
+            "kind": "checkbox",
+            "x": 56,
+            "y": 36,
+            "check_state": "unchecked",
+            "state": "hovered"
+        }
+    ],
+    "trace_elements": [
+        "button0",
+        "button1"
+    ],
+    "trace_props": [],
+    "mask_decor": {
+        "button1": [
+            0,
+            2000
+        ]
+    },
+    "negative_note": "issue #53 class: femtovg rasterizes the check/stroke outlines via stencil+fringe with the AA band running ~0.5px inside to ~1.5px outside, so 2x-rendered edge pixels land a few channels past eps"
 }

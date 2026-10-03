@@ -3,7 +3,7 @@
 
 // Scene: tri-checkbox-states — generated from `ui-libraries/material/parity/scenes/tri-checkbox-states.json`
 // (edit the scene, regenerate with `cargo run -p material-parity-generator`).
-//PARITY=static
+//PARITY=xfail:femtovg: issue #53 class: femtovg rasterizes the check/stroke outlines via stencil+fringe with the AA band running ~0.5px inside to ~1.5px outside, so 2x-rendered edge pixels land a few channels past eps
 //SIZE=200x96
 //TRACE_ELEMENTS=button0,button1,button2,button3
 //ACTION=key:Tab

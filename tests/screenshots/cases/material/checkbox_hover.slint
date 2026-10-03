@@ -3,7 +3,7 @@
 
 // Scene: checkbox-hover — generated from `ui-libraries/material/parity/scenes/checkbox-hover.json`
 // (edit the scene, regenerate with `cargo run -p material-parity-generator`).
-//PARITY=static
+//PARITY=xfail:femtovg: issue #53 class: femtovg rasterizes the check/stroke outlines via stencil+fringe with the AA band running ~0.5px inside to ~1.5px outside, so 2x-rendered edge pixels land a few channels past eps
 //SIZE=96x96
 //TRACE_ELEMENTS=button0,button1
 //MASK_DECOR=button1@0,2000
