@@ -30,8 +30,9 @@
   },
   "mask_inner": {},
   "name": "tri-checkbox-states",
+  "negative_note": "issue #53 class: femtovg rasterizes the check/stroke outlines via stencil+fringe with the AA band running ~0.5px inside to ~1.5px outside, so 2x-rendered edge pixels land a few channels past eps",
   "params": {},
-  "parity": "static",
+  "parity": "xfail:femtovg",
   "scheme": {
     "background": "FFFDF7FE",
     "error": "FFA8364B",
