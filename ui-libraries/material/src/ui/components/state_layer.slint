@@ -76,24 +76,20 @@ export component Ripple {
             opacity: MaterialPalette.state_layer_opacity_press;
             background: root.color;
             // The settled circle covers the element: diameter = twice the
-            // distance from the press point to the farthest corner. `cover`
-            // stays a live binding — `init` runs before the element's final
-            // layout, and a pressed item can still resize (button-group
-            // expansion) — so the ink grows through `grow` while the cover
-            // target tracks the size directly, never trailing mid-arc.
+            // distance from the press point to the farthest corner. The
+            // target stays a live binding: `init` runs before the element's
+            // final layout, so a one-time width assignment would freeze the
+            // circle at whatever size the element had mid-layout.
             property <float> dx: Math.max(root.pressed_x / 1px, (root.width - root.pressed_x) / 1px);
             property <float> dy: Math.max(root.pressed_y / 1px, (root.height - root.pressed_y) / 1px);
             property <bool> created;
-            property <float> grow;
-            property <float> cover: Math.sqrt(dx * dx + dy * dy) * 2;
-            width: self.created ? self.grow * self.cover * 1px : 0px;
+            width: self.created ? Math.sqrt(dx * dx + dy * dy) * 2px : 0px;
 
             init => {
                 self.created = true;
-                self.grow = 1;
             }
 
-            animate grow { enabled: !MaterialPalette.reduced-motion; duration: MaterialAnimations.ripple_duration; easing: MaterialAnimations.ripple_easing; }
+            animate width { enabled: !MaterialPalette.reduced-motion; duration: MaterialAnimations.ripple_duration; easing: MaterialAnimations.ripple_easing; }
         }
     }
 }
