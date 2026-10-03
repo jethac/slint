@@ -1,4 +1,5 @@
 bottom-app-bars
+bottom-sheets
 button-focus
 button-hover
 button-icons
@@ -9,12 +10,14 @@ button-release-morph
 button-sizes
 button-states
 button-styles
+drag-handles
 elevation-shadow
 elevation-surfaces
 icon-button-focus
 icon-button-press-morph
 icon-button-states
 icon-buttons
+modal-scrim-dismiss
 negative-button-focus-ring
 negative-button-press-morph
 negative-button-ripple-clip
@@ -29,6 +32,8 @@ negative-radius
 negative-recolor
 negative-shape-fit
 negative-shape-leak
+negative-sheet-color
+negative-sheet-partial
 negative-split-button-checked-overlay
 negative-split-button-inner-corner
 negative-split-button-outer-corner
@@ -36,7 +41,16 @@ negative-split-button-spacing
 negative-thumb-offset
 negative-toggle-select
 negative-wrong-shadow
+scaffold-drag
+scaffold-ops
 search-bars
+sheet-commit-hide
+sheet-drag-expand
+sheet-drag-settle
+sheet-fling-hide
+sheet-modal-show
+sheet-ops
+sheet-scaffold
 split-button-check-morph
 split-button-check-rotate
 split-button-elevated

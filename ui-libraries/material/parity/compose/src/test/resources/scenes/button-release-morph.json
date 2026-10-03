@@ -3,18 +3,21 @@
     {
       "at": 0.0,
       "kind": "press",
+      "velocity": 0.0,
       "x": 100.0,
       "y": 56.0
     },
     {
       "at": 200.0,
       "kind": "release",
+      "velocity": 0.0,
       "x": 100.0,
       "y": 56.0
     },
     {
       "at": 201.0,
       "kind": "move",
+      "velocity": 0.0,
       "x": 0.0,
       "y": 0.0
     }
@@ -126,25 +129,34 @@
   "type": "canvas",
   "widgets": [
     {
+      "body_color": null,
       "checkable": null,
       "checked": null,
       "color": null,
+      "content_color": null,
       "content_offset": null,
       "corner": null,
       "elevation": null,
       "enabled": null,
+      "gestures": null,
       "height": null,
       "height_offset": null,
       "icon": null,
       "icons": [],
+      "initial": null,
       "kind": "filled-button",
       "level": null,
       "nav_icon": null,
+      "peek_height": null,
       "placeholder": null,
       "radius": null,
       "shape": null,
+      "sheet_elevation": null,
+      "sheet_height": null,
       "side": null,
       "size": "m",
+      "skip_hidden": null,
+      "skip_partial": null,
       "slint_overrides": {},
       "state": null,
       "subtitle": null,

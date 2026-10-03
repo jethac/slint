@@ -1,6 +1,7 @@
 // Copyright © SixtyFPS GmbH <info@slint.dev>
 // SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0
 
+use super::flickable::data_ringbuffer::VelocityRingBuffer;
 use super::{
     EventResult, FocusReasonArg, Item, ItemConsts, ItemRc, ItemRendererRef, KeyEventArg,
     PointerEvent, PointerEventArg, PointerEventButton, PointerEventKind, PointerScrollEvent,
@@ -22,7 +23,7 @@ use crate::window::{WindowAdapter, WindowInner};
 use crate::{Callback, Coord, Property};
 use alloc::{boxed::Box, rc::Rc, vec::Vec};
 use const_field_offset::FieldOffsets;
-use core::cell::Cell;
+use core::cell::{Cell, RefCell};
 use core::pin::Pin;
 use i_slint_core_macros::*;
 use vtable::{VRcMapped, VWeakMapped};
@@ -888,10 +889,19 @@ pub struct SwipeGestureHandler {
     pub pressed_position: Property<LogicalPosition>,
     pub current_position: Property<LogicalPosition>,
     pub swiping: Property<bool>,
+    /// Written with the pointer velocity (logical px/sec) when a swipe gesture is released,
+    /// before `swiped` fires. Read in `.slint` as `release-velocity`, e.g. to seed
+    /// `animate` `initial-velocity`.
+    pub release_velocity: Property<LogicalPosition>,
 
-    // true when the cursor is pressed down and we haven't cancelled yet for another reason
-    pressed: Cell<bool>,
-    // capture_events: Cell<bool>,
+    /// `true` while the pointer is held down on the gesture area and the gesture
+    /// has not been cancelled, regardless of whether the swipe was recognized yet.
+    pub pressed: Property<bool>,
+    // internal mirror of `pressed` for reads that must not register a dependency
+    pressed_flag: Cell<bool>,
+    // the pointer position of the previous move event, for the velocity ring buffer
+    last_position: Cell<LogicalPoint>,
+    velocity_rb: RefCell<VelocityRingBuffer<5>>,
     /// FIXME: remove this
     pub cached_rendering_data: CachedRenderingData,
 }
@@ -915,11 +925,11 @@ impl Item for SwipeGestureHandler {
         self: Pin<&Self>,
         event: &MouseEvent,
         _window_adapter: &Rc<dyn WindowAdapter>,
-        _self_rc: &ItemRc,
+        self_rc: &ItemRc,
         _: &mut MouseCursorInner,
     ) -> InputEventFilterResult {
         if !self.enabled() {
-            if self.pressed.get() {
+            if self.pressed_flag.get() {
                 self.cancel_impl();
             }
             return InputEventFilterResult::ForwardAndIgnore;
@@ -931,7 +941,13 @@ impl Item for SwipeGestureHandler {
                     .pressed_position()
                     .apply_pin(self)
                     .set(crate::lengths::logical_position_to_api(*position));
-                self.pressed.set(true);
+                Self::FIELD_OFFSETS.pressed().apply_pin(self).set(true);
+                self.pressed_flag.set(true);
+                // The velocity ring buffer tracks window coordinates: an item
+                // that itself moves with the pointer (a dragged sheet, a
+                // scrolling strip) still reports the pointer's real velocity.
+                self.last_position.set(self_rc.map_to_window(*position));
+                *self.velocity_rb.borrow_mut() = VelocityRingBuffer::default();
                 InputEventFilterResult::DelayForwarding(
                     super::flickable::FORWARD_DELAY.as_millis() as _
                 )
@@ -944,14 +960,15 @@ impl Item for SwipeGestureHandler {
                 if self.swiping() {
                     InputEventFilterResult::Intercept
                 } else {
-                    self.pressed.set(false);
+                    Self::FIELD_OFFSETS.pressed().apply_pin(self).set(false);
+                    self.pressed_flag.set(false);
                     InputEventFilterResult::ForwardEvent
                 }
             }
             MouseEvent::Moved { position, .. } => {
                 if self.swiping() {
                     InputEventFilterResult::Intercept
-                } else if !self.pressed.get() {
+                } else if !self.pressed_flag.get() {
                     InputEventFilterResult::ForwardEvent
                 } else if self.is_over_threshold(position) {
                     InputEventFilterResult::Intercept
@@ -977,7 +994,7 @@ impl Item for SwipeGestureHandler {
         self: Pin<&Self>,
         event: &MouseEvent,
         _window_adapter: &Rc<dyn WindowAdapter>,
-        _self_rc: &ItemRc,
+        self_rc: &ItemRc,
         _: &mut MouseCursorInner,
     ) -> InputEventResult {
         match event {
@@ -987,12 +1004,32 @@ impl Item for SwipeGestureHandler {
                 InputEventResult::EventIgnored
             }
             MouseEvent::Released { position, .. } => {
-                if !self.pressed.get() && !self.swiping() {
+                if !self.pressed_flag.get() && !self.swiping() {
                     return InputEventResult::EventIgnored;
                 }
                 self.current_position.set(crate::lengths::logical_position_to_api(*position));
-                self.pressed.set(false);
+                Self::FIELD_OFFSETS.pressed().apply_pin(self).set(false);
+                self.pressed_flag.set(false);
                 if self.swiping() {
+                    // Same staleness rule as `Flickable.release_velocity`: the
+                    // mean velocity only counts when the last move sample is
+                    // younger than `MAX_DURATION`.
+                    let release_velocity = self
+                        .velocity_rb
+                        .borrow()
+                        .last_time()
+                        .filter(|last_time| {
+                            crate::animations::current_tick().duration_since(*last_time)
+                                < super::flickable::MAX_DURATION
+                        })
+                        .map(|_| self.velocity_rb.borrow().mean_velocity())
+                        .unwrap_or_default();
+                    Self::FIELD_OFFSETS.release_velocity().apply_pin(self).set(
+                        crate::api::LogicalPosition::new(
+                            release_velocity.x as f32,
+                            release_velocity.y as f32,
+                        ),
+                    );
                     Self::FIELD_OFFSETS.swiping().apply_pin(self).set(false);
                     Self::FIELD_OFFSETS.swiped().apply_pin(self).call(&());
                     InputEventResult::EventAccepted
@@ -1001,10 +1038,16 @@ impl Item for SwipeGestureHandler {
                 }
             }
             MouseEvent::Moved { position, .. } => {
-                if !self.pressed.get() {
+                if !self.pressed_flag.get() {
                     return InputEventResult::EventAccepted;
                 }
                 self.current_position.set(crate::lengths::logical_position_to_api(*position));
+                let window_position = self_rc.map_to_window(*position);
+                self.velocity_rb.borrow_mut().push(
+                    crate::animations::current_tick(),
+                    window_position - self.last_position.get(),
+                );
+                self.last_position.set(window_position);
                 let mut swiping = self.swiping();
                 if !swiping && self.is_over_threshold(position) {
                     Self::FIELD_OFFSETS.swiping().apply_pin(self).set(true);
@@ -1090,10 +1133,12 @@ impl SwipeGestureHandler {
     }
 
     fn cancel_impl(self: Pin<&Self>) {
-        if !self.pressed.replace(false) {
+        *self.velocity_rb.borrow_mut() = VelocityRingBuffer::default();
+        if !self.pressed_flag.replace(false) {
             debug_assert!(!self.swiping());
             return;
         }
+        Self::FIELD_OFFSETS.pressed().apply_pin(self).set(false);
         if self.swiping() {
             Self::FIELD_OFFSETS.swiping().apply_pin(self).set(false);
             Self::FIELD_OFFSETS.cancelled().apply_pin(self).call(&());

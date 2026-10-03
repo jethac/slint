@@ -1,0 +1,102 @@
+{
+  "name": "scaffold-ops",
+  "type": "canvas",
+  "parity": "motion",
+  "size": [
+    360,
+    240
+  ],
+  "densities": [
+    1,
+    2
+  ],
+  "theme": {
+    "seed": "6750A4",
+    "variant": "tonal-spot",
+    "spec": "spec2025",
+    "platform": "phone",
+    "dark": false,
+    "contrast": 0.0
+  },
+  "fonts": {
+    "plain": "Roboto",
+    "brand": "Roboto"
+  },
+  "times": [
+    200,
+    320,
+    500,
+    640,
+    800,
+    940,
+    1150,
+    1450
+  ],
+  "trace_elements": [
+    "sheet0",
+    "sheet-pill0",
+    "sheet-surface0",
+    "sheet-content0"
+  ],
+  "trace_props": [
+    "sheet-offset",
+    "current-value",
+    "target-value",
+    "is-visible"
+  ],
+  "actions": [
+    {
+      "kind": "expand",
+      "at": 200
+    },
+    {
+      "kind": "partial-expand",
+      "at": 500
+    },
+    {
+      "kind": "hide",
+      "at": 800
+    },
+    {
+      "kind": "show",
+      "at": 1150
+    }
+  ],
+  "widgets": [
+    {
+      "kind": "bottom-sheet-scaffold",
+      "x": 0,
+      "y": 0,
+      "width": 360,
+      "height": 240,
+      "sheet_height": 100,
+      "peek_height": 56,
+      "initial": "partially-expanded",
+      "skip_hidden": false,
+      "body_color": "surface",
+      "content_color": "tertiary-container",
+      "sheet_elevation": 0
+    }
+  ],
+  "mask_decor": {
+    "sheet-pill0": [
+      200,
+      320,
+      500,
+      640,
+      800,
+      940,
+      1150,
+      1450
+    ],
+    "sheet-content0": [
+      320
+    ],
+    "sheet0": [
+      320
+    ],
+    "sheet-surface0": [
+      320
+    ]
+  }
+}
