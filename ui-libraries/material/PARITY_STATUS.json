@@ -110,8 +110,8 @@
       10
     ],
     "needs": "springs (#5), shapes (#6)",
-    "notes": "",
-    "status": "missing"
+    "notes": "connected variants: slint components ConnectedButtonGroup, ConnectedButton, VerticalConnectedButtonGroup; parity cases: connected-button-groups, connected-button-morph, connected-button-press-morph, negative-connected-button-group; standard variant pending (#10)",
+    "status": "partial"
   },
   "Card": {
     "issues": [
@@ -686,16 +686,16 @@
       10
     ],
     "needs": "springs (#5), shapes (#6)",
-    "notes": "",
-    "status": "missing"
+    "notes": "Expressive mapping -> ConnectedButtonGroup; slint SegmentedButton deprecated",
+    "status": "partial"
   },
   "MultiChoiceSegmentedButtonRowScope": {
     "issues": [
       10
     ],
     "needs": "springs (#5), shapes (#6)",
-    "notes": "",
-    "status": "missing"
+    "notes": "Expressive mapping -> ConnectedButtonGroup; slint SegmentedButton deprecated",
+    "status": "partial"
   },
   "NavigationBar": {
     "issues": [
@@ -939,16 +939,16 @@
       10
     ],
     "needs": "springs (#5), shapes (#6)",
-    "notes": "",
-    "status": "missing"
+    "notes": "Expressive mapping -> ConnectedButtonGroup; slint SegmentedButton deprecated",
+    "status": "partial"
   },
   "SingleChoiceSegmentedButtonRowScope": {
     "issues": [
       10
     ],
     "needs": "springs (#5), shapes (#6)",
-    "notes": "",
-    "status": "missing"
+    "notes": "Expressive mapping -> ConnectedButtonGroup; slint SegmentedButton deprecated",
+    "status": "partial"
   },
   "Slider": {
     "issues": [

@@ -20,9 +20,9 @@
         {
             "kind": "short-navigation-bar",
             "x": 0, "y": 0, "width": 360,
-            "selected_index": 0,
-            "slint_overrides": { "selected_index": 2 },
-            "items": [
+            "nav_selected_index": 0,
+            "slint_overrides": { "nav_selected_index": 2 },
+            "rail_items": [
                 { "text": "Inbox", "icon": "check" },
                 { "text": "Sent", "icon": "schedule" },
                 { "text": "Files", "icon": "keyboard" }
@@ -32,9 +32,9 @@
             "kind": "short-navigation-bar",
             "x": 0, "y": 96, "width": 360,
             "nav_arrangement": "centered",
-            "selected_index": 0,
+            "nav_selected_index": 0,
             "slint_overrides": { "nav_arrangement": "equal-weight" },
-            "items": [
+            "rail_items": [
                 { "text": "Inbox", "icon": "check" },
                 { "text": "Sent", "icon": "schedule" },
                 { "text": "Files", "icon": "keyboard" }

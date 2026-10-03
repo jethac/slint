@@ -26,8 +26,14 @@ import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ButtonGroupDefaults
+import androidx.compose.material3.ToggleButtonShapes
 import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.ElevatedToggleButton
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -93,6 +99,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -111,6 +118,9 @@ import androidx.compose.ui.layout.boundsInRoot
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -446,8 +456,44 @@ private fun CanvasScene(
         var surfaces = 0
         var appbars = 0
         var nav_bars = 0
-        scene.widgets.forEach { widget ->
+        var groups = 0
+        // `text:{n}` spans every text node in scene order — group items
+        // interleave with the standalone widgets' labels. Bases are
+        // precomputed per widget so recompositions can't renumber them.
+        var texts = 0
+        val textBases = scene.widgets.map { w ->
+            (texts).also {
+                texts += when {
+                    w.kind == "connected-button-group" ||
+                        w.kind == "vertical-connected-button-group" -> w.items.size
+                    w.kind == "connected-button" || w.isButton -> 1
+                    else -> 0
+                }
+            }
+        }
+        scene.widgets.forEachIndexed { widgetIndex, widget ->
+            val textBase = textBases[widgetIndex]
             when {
+                widget.kind == "connected-button" -> StateConnectedButton(
+                    widget,
+                    scene,
+                    tracer,
+                    "text:$textBase",
+                    "button${buttons++}",
+                    density,
+                    emitPress,
+                )
+                widget.kind == "connected-button-group" ||
+                    widget.kind == "vertical-connected-button-group" ->
+                    StateConnectedGroup(
+                        widget,
+                        scene,
+                        tracer,
+                        "group${groups++}",
+                        density,
+                        emitPress,
+                        textBase,
+                    )
                 widget.isIconButton -> StateIconButton(
                     widget,
                     scene,
@@ -469,7 +515,7 @@ private fun CanvasScene(
                     widget,
                     scene,
                     tracer,
-                    "text:${buttons}",
+                    "text:$textBase",
                     "button${buttons++}",
                     density,
                     emitPress,
@@ -621,8 +667,35 @@ private fun emitStateInteractions(
     emitPress: java.util.concurrent.CopyOnWriteArrayList<Pair<Long, Runnable>>,
     pressOffset: Offset,
     density: Float,
+) = emitStateInteractions(
+    widget.state,
+    scene,
+    tracer,
+    elementId,
+    interactionSource,
+    emitPress,
+    pressOffset,
+    density,
+    null,
+)
+
+/** The state-driven version — also usable per item (a connected-button
+ * group's `items[].state`), where `onRelease` runs at the click's release
+ * `at` time when this item was the one pressed (the single/multi-select
+ * flip). */
+@Composable
+private fun emitStateInteractions(
+    state: String,
+    scene: Scene,
+    tracer: Tracer,
+    elementId: String,
+    interactionSource: ReplayableInteractionSource,
+    emitPress: java.util.concurrent.CopyOnWriteArrayList<Pair<Long, Runnable>>,
+    pressOffset: Offset,
+    density: Float,
+    onRelease: Runnable?,
 ) {
-    when (widget.state) {
+    when (state) {
         "hovered" -> LaunchedEffect(Unit) {
             interactionSource.emit(HoverInteraction.Enter())
         }
@@ -662,7 +735,7 @@ private fun emitStateInteractions(
     // the press landed.
     val pressAction = scene.actions.firstOrNull { it.kind == "press" }
     val releaseAction = scene.actions.firstOrNull { it.kind == "release" }
-    if (pressAction != null && widget.state != "pressed") {
+    if (pressAction != null && state != "pressed") {
         var emitted: PressInteraction.Press? = null
         val press = Runnable {
             val b = tracer.elementBounds[elementId]
@@ -682,7 +755,10 @@ private fun emitStateInteractions(
         }
         if (releaseAction != null) {
             val release = Runnable {
-                emitted?.let { interactionSource.tryEmit(PressInteraction.Release(it)) }
+                emitted?.let {
+                    interactionSource.tryEmit(PressInteraction.Release(it))
+                    onRelease?.run()
+                }
                 emitted = null
             }
             DisposableEffect(release) {
@@ -1744,9 +1820,16 @@ private fun iconInkColor(widget: Widget, checked: Boolean): Color {
 private fun pressInkMarker(
     widget: Widget,
     emitPress: java.util.concurrent.CopyOnWriteArrayList<Pair<Long, Runnable>>,
+): androidx.compose.runtime.State<Boolean> = pressInkMarker(widget.state, emitPress)
+
+/** The state-driven version — usable per group item. */
+@Composable
+private fun pressInkMarker(
+    state: String,
+    emitPress: java.util.concurrent.CopyOnWriteArrayList<Pair<Long, Runnable>>,
 ): androidx.compose.runtime.State<Boolean> {
     val show = remember { mutableStateOf(false) }
-    if (widget.state != "pressed") {
+    if (state != "pressed") {
         return show
     }
     val mark = remember { Runnable { show.value = true } }
@@ -1961,7 +2044,7 @@ private fun StateNavBar(
     emitPress: java.util.concurrent.CopyOnWriteArrayList<Pair<Long, Runnable>>,
 ) {
     val barOrdinal = tag.removePrefix("navbar").toInt()
-    var selectedIndex by remember { mutableStateOf(widget.selectedIndex) }
+    var selectedIndex by remember { mutableStateOf(widget.navSelectedIndex) }
     scene.params.optJSONArray("nav_events")?.let { events ->
         for (i in 0 until events.length()) {
             val ev = events.getJSONArray(i)
@@ -1998,7 +2081,7 @@ private fun StateNavBar(
             // (CenteredContentMeasurePolicy: padding =
             // ((100-10*(count+3))/2)% of the bar per side, item min width
             // (W-2*pad)/count, max W/count).
-            val n = maxOf(widget.items.size, 1)
+            val n = maxOf(widget.railItems.size, 1)
             val barW = widget.width
             Row(
                 modifier = if (widget.navArrangement == "centered")
@@ -2011,7 +2094,7 @@ private fun StateNavBar(
                 val pad = ((100f - 10f * (n + 3)) / 2f / 100f * barW).roundToInt()
                 val itemMinW = ((barW - pad * 2) / n).toInt().dp
                 val itemMaxW = (barW / n).toInt().dp
-                widget.items.forEachIndexed { i, item ->
+                widget.railItems.forEachIndexed { i, item ->
                     ShortNavigationBarItem(
                         selected = i == selectedIndex,
                         onClick = {},
@@ -2031,7 +2114,7 @@ private fun StateNavBar(
             modifier = base,
             windowInsets = insets,
         ) {
-            widget.items.forEachIndexed { i, item ->
+            widget.railItems.forEachIndexed { i, item ->
                 NavigationBarItem(
                     selected = i == selectedIndex,
                     onClick = {},
@@ -2057,5 +2140,346 @@ private fun NavItemIcon(item: RailItem, i: Int, selectedIndex: Int) {
         }
     } else {
         Icon(sceneIcon(stem), contentDescription = null)
+    }
+}
+
+/** `ButtonGroupDefaults.connected{Leading,Middle,Trailing}ButtonShapes()`
+ * for a `connected-button`'s `position`, or the `VerticalButtonGroupSample`
+ * shapes: the middle shape with `CornerSize(100)` caps on the first/last
+ * item and the uniform `ToggleButtonDefaults.pressedShape` (6dp). */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun connectedShapesFor(position: String, vertical: Boolean): ToggleButtonShapes {
+    if (vertical) {
+        val middle = ButtonGroupDefaults.connectedMiddleButtonShapes()
+        val resting = (middle.shape as RoundedCornerShape).let {
+            when (position) {
+                "start" -> it.copy(topStart = CornerSize(100), topEnd = CornerSize(100))
+                "end" -> it.copy(bottomStart = CornerSize(100), bottomEnd = CornerSize(100))
+                else -> it
+            }
+        }
+        return ToggleButtonShapes(
+            shape = resting,
+            pressedShape = ToggleButtonDefaults.pressedShape,
+            checkedShape = ButtonGroupDefaults.connectedButtonCheckedShape,
+        )
+    }
+    return when (position) {
+        "start" -> ButtonGroupDefaults.connectedLeadingButtonShapes()
+        "end" -> ButtonGroupDefaults.connectedTrailingButtonShapes()
+        else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
+    }
+}
+
+/** One corner of a token-backed `RoundedCornerShape` in dp — `radiusOf`'s
+ * per-corner counterpart for the connected-button morph trace. `h` is the
+ * container height: always the smaller dimension here, so `Size(h,h)`
+ * reproduces `PercentCornerSize`'s `minDimension` exactly. */
+private fun cornerRadiusOf(corner: androidx.compose.foundation.shape.CornerSize,
+    h: androidx.compose.ui.unit.Dp, density: Float): Float {
+    val boxPx = h.value * density
+    return corner.toPx(
+        androidx.compose.ui.geometry.Size(boxPx, boxPx),
+        androidx.compose.ui.unit.Density(density),
+    ) / density
+}
+
+/** The live per-corner morph radii (dp) of a connected item's shape —
+ * upstream's internal `AnimatedShapeState` animates each corner
+ * separately; these four `animateFloatAsState`s reproduce it for the
+ * `corner_*` trace props and the press-ink clip. */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun connectedCorners(
+    shapes: ToggleButtonShapes,
+    pressed: Boolean,
+    checked: Boolean,
+    h: Float,
+    density: Float,
+): List<Float> {
+    val spec = androidx.compose.material3.MaterialTheme.motionScheme.fastSpatialSpec<Float>()
+    val active = when {
+        pressed -> shapes.pressedShape
+        checked -> shapes.checkedShape
+        else -> shapes.shape
+    }
+    require(active is RoundedCornerShape) { "connected shapes are RoundedCornerShape, got $active" }
+    val box = androidx.compose.ui.unit.Dp(h)
+    val tl by animateFloatAsState(
+        cornerRadiusOf(active.topStart, box, density), spec, label = "corner_tl",
+    )
+    val tr by animateFloatAsState(
+        cornerRadiusOf(active.topEnd, box, density), spec, label = "corner_tr",
+    )
+    val br by animateFloatAsState(
+        cornerRadiusOf(active.bottomEnd, box, density), spec, label = "corner_br",
+    )
+    val bl by animateFloatAsState(
+        cornerRadiusOf(active.bottomStart, box, density), spec, label = "corner_bl",
+    )
+    return listOf(tl, tr, br, bl)
+}
+
+/** A `ConnectedButton` — one `ToggleButton` of a connected button group —
+ * in the interaction state the scene asks for. Exposes the per-corner
+ * morph values as `corner_top_left`/`corner_top_right`/
+ * `corner_bottom_right`/`corner_bottom_left` trace props. */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun StateConnectedButton(
+    widget: Widget,
+    scene: Scene,
+    tracer: Tracer,
+    textId: String,
+    elementId: String,
+    density: Float,
+    emitPress: java.util.concurrent.CopyOnWriteArrayList<Pair<Long, Runnable>>,
+) {
+    val interactionSource = remember { ReplayableInteractionSource() }
+    emitStateInteractions(
+        widget,
+        scene,
+        tracer,
+        elementId,
+        interactionSource,
+        emitPress,
+        Offset(40f * density, 20f * density),
+        density,
+    )
+
+    var checked by remember { mutableStateOf(widget.checked) }
+    val clickToggles = sceneActionsClick(scene)
+    DisposableEffect(Unit) {
+        val flip = Runnable { checked = !checked }
+        val at = scene.actions.firstOrNull { it.kind == "release" }?.at ?: 0L
+        val entry = at to flip
+        if (clickToggles) {
+            emitPress.add(entry)
+        }
+        onDispose { emitPress.remove(entry) }
+    }
+
+    val h = ToggleButtonDefaults.MinHeight
+    val shapes = connectedShapesFor(widget.position, widget.vertical)
+    val modifier = Modifier.offset(widget.x.dp, widget.y.dp)
+        .height(h)
+        .then(if (widget.width > 0f) Modifier.width(widget.width.dp) else Modifier)
+        .track(tracer, elementId)
+    val iconVector = widget.icon?.let { sceneIcon(it) }
+    val checkedIconVector = widget.icon?.let { sceneIcon(widget.checkedIcon ?: it) }
+    // The pin's `ToggleButton(icon=)` slot sizes the icon through
+    // `iconSizeFor` (20dp at 40dp height); alpha18's composable predates
+    // that slot, so the size is pinned on the `Icon` itself.
+    val labelStyle = ButtonDefaults.textStyleFor(h)
+    val content: @Composable androidx.compose.foundation.layout.RowScope.() -> Unit = {
+        if (iconVector != null) {
+            Icon(
+                if (checked) checkedIconVector!! else iconVector,
+                contentDescription = null,
+                modifier = Modifier.size(ButtonDefaults.iconSizeFor(h)),
+            )
+            Spacer(Modifier.width(ButtonDefaults.iconSpacingFor(h)))
+        }
+        Text(
+            widget.text ?: "",
+            style = labelStyle,
+            modifier = Modifier.trackText(tracer, textId, density),
+            onTextLayout = recordTextLayout(
+                tracer,
+                textId,
+                LocalDensity.current,
+                androidx.compose.ui.platform.LocalFontFamilyResolver.current,
+                labelStyle.fontFamily,
+            ),
+        )
+    }
+
+    val pressed by interactionSource.collectIsPressedAsState()
+    val (tl, tr, br, bl) = connectedCorners(shapes, pressed, checked, h.value, density)
+    tracer.propGetters["corner_top_left"] = { tl.toDouble() }
+    tracer.propGetters["corner_top_right"] = { tr.toDouble() }
+    tracer.propGetters["corner_bottom_right"] = { br.toDouble() }
+    tracer.propGetters["corner_bottom_left"] = { bl.toDouble() }
+
+    val pressInk = pressInkMarker(widget, emitPress)
+
+    ToggleButton(
+        checked = checked,
+        onCheckedChange = {},
+        modifier = modifier,
+        enabled = widget.enabled,
+        shapes = shapes,
+        contentPadding = ButtonDefaults.contentPaddingFor(h),
+        interactionSource = interactionSource,
+        content = content,
+    )
+
+    if (pressInk.value) {
+        PressInkOverlay(
+            widget,
+            tracer,
+            elementId,
+            density,
+            RoundedCornerShape(
+                topStart = tl.dp,
+                topEnd = tr.dp,
+                bottomEnd = br.dp,
+                bottomStart = bl.dp,
+            ),
+            connectedInkColor(checked),
+        )
+    }
+}
+
+/** The content color the ink tints — `ToggleButtonDefaults.toggleButtonColors()`. */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun connectedInkColor(checked: Boolean): Color =
+    ToggleButtonDefaults.toggleButtonColors()
+        .let { if (checked) it.checkedContentColor else it.contentColor }
+
+/** A `connected-button-group`/`vertical-connected-button-group` — the
+ * upstream samples' `FlowRow`/`Column` of `ToggleButton`s with the
+ * position's connected shapes. Items are tagged `group{n}item{i}`
+ * (Compose-side only — repeater items carry no Slint id) so the press
+ * action's hit-test reaches the right `InteractionSource`. */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun StateConnectedGroup(
+    widget: Widget,
+    scene: Scene,
+    tracer: Tracer,
+    tag: String,
+    density: Float,
+    emitPress: java.util.concurrent.CopyOnWriteArrayList<Pair<Long, Runnable>>,
+    textBase: Int,
+) {
+    val vertical = widget.kind == "vertical-connected-button-group"
+    var selectedIndex by remember { mutableStateOf(widget.selectedIndex) }
+    val checkedStates = remember {
+        mutableStateListOf(*widget.items.map { it.checked }.toTypedArray())
+    }
+    val containerModifier = Modifier.offset(widget.x.dp, widget.y.dp)
+        .then(if (widget.width > 0f) Modifier.width(widget.width.dp) else Modifier)
+        .track(tracer, tag)
+    val lastIndex = widget.items.size - 1
+
+    val itemsContent: @Composable () -> Unit = {
+        widget.items.forEachIndexed { index, item ->
+            val position = when {
+                index == 0 -> "start"
+                index == lastIndex -> "end"
+                else -> "middle"
+            }
+            val itemTag = "${tag}item$index"
+            val interactionSource = remember { ReplayableInteractionSource() }
+            if (!item.disabled) {
+                emitStateInteractions(
+                    item.state,
+                    scene,
+                    tracer,
+                    itemTag,
+                    interactionSource,
+                    emitPress,
+                    Offset(40f * density, 20f * density),
+                    density,
+                    Runnable {
+                        if (widget.multiSelect) {
+                            checkedStates[index] = !checkedStates[index]
+                        } else {
+                            selectedIndex = index
+                        }
+                    },
+                )
+            }
+            val checked = if (widget.multiSelect) checkedStates[index] else selectedIndex == index
+            val h = ToggleButtonDefaults.MinHeight
+            val shapes = connectedShapesFor(position, vertical)
+            val iconVector = item.icon?.let { sceneIcon(it) }
+            val checkedIconVector = item.icon?.let { sceneIcon(item.checkedIcon ?: it) }
+            val labelStyle = ButtonDefaults.textStyleFor(h)
+            val pressed by interactionSource.collectIsPressedAsState()
+            val (tl, tr, br, bl) = connectedCorners(shapes, pressed, checked, h.value, density)
+            val pressInk = pressInkMarker(item.state, emitPress)
+
+            // The Box keeps the ink overlay out of the FlowRow/Column's
+            // child count — the scene-level PressInkOverlay offsets from
+            // root bounds, which only composes correctly outside a layout.
+            Box(Modifier.track(tracer, itemTag)) {
+                ToggleButton(
+                    checked = checked,
+                    onCheckedChange = {},
+                    // The samples' single-select items carry Role.RadioButton;
+                    // multi-select keeps ToggleButton's own Role.Checkbox.
+                    modifier =
+                        if (widget.multiSelect) Modifier
+                        else Modifier.semantics { role = Role.RadioButton },
+                    enabled = !item.disabled,
+                    shapes = shapes,
+                    contentPadding = ButtonDefaults.contentPaddingFor(h),
+                    interactionSource = interactionSource,
+                ) {
+                    if (iconVector != null) {
+                        Icon(
+                            if (checked) checkedIconVector!! else iconVector,
+                            contentDescription = null,
+                            modifier = Modifier.size(ButtonDefaults.iconSizeFor(h)),
+                        )
+                        Spacer(Modifier.width(ButtonDefaults.iconSpacingFor(h)))
+                    }
+                    val textId = "text:${textBase + index}"
+                    Text(
+                        item.text ?: "",
+                        style = labelStyle,
+                        modifier = Modifier.trackText(tracer, textId, density),
+                        onTextLayout = recordTextLayout(
+                            tracer,
+                            textId,
+                            LocalDensity.current,
+                            androidx.compose.ui.platform.LocalFontFamilyResolver.current,
+                            labelStyle.fontFamily,
+                        ),
+                    )
+                }
+
+                if (pressInk.value) {
+                    Box(
+                        Modifier.matchParentSize()
+                            .clip(
+                                RoundedCornerShape(
+                                    topStart = tl.dp,
+                                    topEnd = tr.dp,
+                                    bottomEnd = br.dp,
+                                    bottomStart = bl.dp,
+                                ),
+                            )
+                            .background(
+                                connectedInkColor(checked)
+                                    .copy(alpha = PRESSED_STATE_LAYER_ALPHA),
+                            ),
+                    )
+                }
+            }
+        }
+    }
+
+    if (vertical) {
+        // `Column(verticalArrangement = spacedBy((-6).dp))` — each item
+        // pulls up 6dp over the previous one; later items paint over.
+        Column(
+            modifier = containerModifier,
+            verticalArrangement = Arrangement.spacedBy((-6).dp),
+        ) {
+            itemsContent()
+        }
+    } else {
+        FlowRow(
+            modifier = containerModifier,
+            horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween),
+            verticalArrangement = Arrangement.spacedBy(2.dp),
+        ) {
+            itemsContent()
+        }
     }
 }

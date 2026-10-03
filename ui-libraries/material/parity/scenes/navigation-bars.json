@@ -28,8 +28,8 @@
             "x": 0,
             "y": 0,
             "width": 360,
-            "selected_index": 0,
-            "items": [
+            "nav_selected_index": 0,
+            "rail_items": [
                 {
                     "text": "Inbox",
                     "icon": "check",
@@ -56,9 +56,9 @@
             "x": 0,
             "y": 96,
             "width": 360,
-            "selected_index": 1,
+            "nav_selected_index": 1,
             "always_show_label": false,
-            "items": [
+            "rail_items": [
                 {
                     "text": "Inbox",
                     "icon": "check"
@@ -82,8 +82,8 @@
             "x": 0,
             "y": 192,
             "width": 360,
-            "selected_index": 0,
-            "items": [
+            "nav_selected_index": 0,
+            "rail_items": [
                 {
                     "text": "Inbox",
                     "icon": "check",
@@ -107,8 +107,8 @@
             "y": 272,
             "width": 360,
             "nav_arrangement": "centered",
-            "selected_index": 1,
-            "items": [
+            "nav_selected_index": 1,
+            "rail_items": [
                 {
                     "text": "Inbox",
                     "icon": "check",
@@ -130,8 +130,8 @@
             "x": 0,
             "y": 352,
             "width": 360,
-            "selected_index": 2,
-            "items": [
+            "nav_selected_index": 2,
+            "rail_items": [
                 {
                     "text": "",
                     "icon": "check"

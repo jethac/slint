@@ -28,8 +28,8 @@
             "y": 0,
             "width": 360,
             "icon_position": "start",
-            "selected_index": 0,
-            "items": [
+            "nav_selected_index": 0,
+            "rail_items": [
                 {
                     "text": "Inbox",
                     "icon": "check",
@@ -54,8 +54,8 @@
             "width": 360,
             "nav_arrangement": "centered",
             "icon_position": "start",
-            "selected_index": 1,
-            "items": [
+            "nav_selected_index": 1,
+            "rail_items": [
                 {
                     "text": "Inbox",
                     "icon": "check",
