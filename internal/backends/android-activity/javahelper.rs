@@ -1,6 +1,11 @@
 // Copyright © SixtyFPS GmbH <info@slint.dev>
 // SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0
 
+// `jni-macros`' `bind_java_type` expansion still calls `AtomicBool::fetch_update`,
+// renamed to `try_update` and deprecated on newer toolchains (jni 0.22.4 is the
+// latest release).
+#![allow(deprecated)]
+
 // cSpell: ignore dalvik jboolean jfloat jint
 #![allow(
     deprecated,
