@@ -163,6 +163,19 @@ class Widget(json: JSONObject) {
     /** `*-divider` line thickness in dp — `DividerDefaults.Thickness` when
      * unset; `0` is the upstream `Dp.Hairline` (one physical pixel). */
     val thickness: Float = json.optDouble("thickness", 1.0).toFloat()
+    /** `*-text-field` kinds: the floating label (`label` slot). */
+    val label: String? = (json.opt("label") as? String)?.takeIf { it.isNotEmpty() }
+    /** `*-text-field`: `isError` upstream / `has_error` on the Slint side. */
+    val error: Boolean = json.optBoolean("error", false)
+    /** `*-text-field`: `prefix`/`suffix` affix slots. */
+    val prefix: String? = (json.opt("prefix") as? String)?.takeIf { it.isNotEmpty() }
+    val suffix: String? = (json.opt("suffix") as? String)?.takeIf { it.isNotEmpty() }
+    /** `*-text-field`: `TextFieldLabelPosition.Above` upstream /
+     * `label_above` on the Slint side. */
+    val labelAbove: Boolean = json.optBoolean("label_above", false)
+    /** `*-secure-text-field`: `TextObfuscationMode` upstream / `obscure`
+     * on the Slint side — `false` reveals the text. */
+    val obscure: Boolean = json.optBoolean("obscure", true)
 
     val isFab: Boolean get() = kind == "fab" || kind == "extended-fab"
     val isSplitButton: Boolean get() = kind.endsWith("split-button")

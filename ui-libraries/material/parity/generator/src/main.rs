@@ -93,6 +93,14 @@ struct Scene {
     /// Why `parity_eps` is set — required when it is.
     #[serde(default)]
     parity_eps_reason: Option<String>,
+    /// `//TEXT_DILATE=<dp>` — extra logical-px dilation of the Text /
+    /// TextInput ink mask, for structure whose position derives from a
+    /// measured text width (an outlined field's label-notch edge).
+    #[serde(default)]
+    text_dilate: Option<f64>,
+    /// Why `text_dilate` is set — required when it is.
+    #[serde(default)]
+    text_dilate_reason: Option<String>,
 }
 
 #[derive(serde::Deserialize, serde::Serialize)]
@@ -269,6 +277,25 @@ struct Widget {
     /// upstream `text` composable; 0/unset sizes the slot to the text.
     #[serde(default)]
     label_width: Option<f64>,
+    /// `*-text-field` kinds: the floating label text (`label` slot).
+    #[serde(default)]
+    label: Option<String>,
+    /// `*-text-field`: `isError` upstream / `has_error` on the Slint side.
+    #[serde(default)]
+    error: Option<bool>,
+    /// `*-text-field`: `prefix`/`suffix` affix slots — plain text both sides.
+    #[serde(default)]
+    prefix: Option<String>,
+    #[serde(default)]
+    suffix: Option<String>,
+    /// `*-text-field`: `TextFieldLabelPosition.Above` upstream /
+    /// `label_above` on the Slint side.
+    #[serde(default)]
+    label_above: Option<bool>,
+    /// `*-secure-text-field`: `TextObfuscationMode` upstream / `obscure`
+    /// on the Slint side — `false` reveals the text.
+    #[serde(default)]
+    obscure: Option<bool>,
     /// Caster outline for `surface` widgets: a `MaterialShapes` global
     /// member name in kebab case (`"cookie-9-sided"` → `MaterialShapes.
     /// cookie-9-sided` / Compose `MaterialShapes.Cookie9Sided`), or `"rect"`
@@ -611,6 +638,15 @@ fn slint_case(scene: &Scene) -> String {
         .unwrap();
         writeln!(s, "//PARITY_EPS={eps}").unwrap();
     }
+    if let Some(dp) = scene.text_dilate {
+        writeln!(
+            s,
+            "// {}",
+            scene.text_dilate_reason.as_deref().unwrap_or("(undocumented)")
+        )
+        .unwrap();
+        writeln!(s, "//TEXT_DILATE={dp}").unwrap();
+    }
     writeln!(s, "//SIZE={}x{}", scene.size[0], scene.size[1]).unwrap();
     if !scene.times.is_empty() {
         writeln!(
@@ -750,6 +786,10 @@ fn slint_case(scene: &Scene) -> String {
             "connected-button" => "ConnectedButton",
             "connected-button-group" => "ConnectedButtonGroup",
             "vertical-connected-button-group" => "VerticalConnectedButtonGroup",
+            "text-field" => "TextField",
+            "outlined-text-field" => "OutlinedTextField",
+            "secure-text-field" => "SecureTextField",
+            "outlined-secure-text-field" => "OutlinedSecureTextField",
             other => panic!("unknown widget kind {other:?}"),
         };
         imports.push(component);
@@ -762,6 +802,7 @@ fn slint_case(scene: &Scene) -> String {
         if w.icon.is_some()
             || w.checked_icon.is_some()
             || w.nav_icon.is_some()
+            || w.trailing_icon.is_some()
             || !w.icons.is_empty()
             || w.kind.ends_with("split-button")
             || w.items.iter().any(|item| item.icon.is_some() || item.checked_icon.is_some())
@@ -857,7 +898,12 @@ fn widget_actions(scene: &Scene) -> Vec<Action> {
             // does not consume focus ordinals.
             continue;
         }
-        if w.state.as_deref() == Some("focused") {
+        // `*-text-field` binds `simulate_focus` instead (see
+        // `text_field_props`) — a real Tab focus would add a blinking caret
+        // the Compose side never shows for `FocusInteraction.Focus`. The
+        // widget still consumes its focus ordinal so later focused widgets
+        // keep the right Tab count.
+        if w.state.as_deref() == Some("focused") && !w.kind.ends_with("text-field") {
             // Focused split halves: `leading` is the first of the pair.
             let target = if w.kind.ends_with("split-button")
                 && w.side.as_deref() == Some("trailing")
@@ -1270,6 +1316,67 @@ fn switch_props(w: &Widget, timed: bool) -> String {
     p
 }
 
+/// Property lines for the `*-text-field` kinds. `text` is the entered
+/// value, `label` the floating label, `subtitle` the supporting text and
+/// `icon`/`trailing_icon` the adornment slots. `state: "focused"` binds
+/// `simulate_focus` — the decoration (label morph, indicator/outline
+/// thickness and color) reads it identically to a real focus change, and
+/// there is no caret to blink out of phase with the Compose snapshot.
+/// `slint_overrides` shadow the authored values for negative scenes.
+fn text_field_props(w: &Widget) -> String {
+    let mut p = String::new();
+    let over = &w.slint_overrides;
+    let bool_over = |k: &str, authored: Option<bool>| -> bool {
+        over.get(k).and_then(|v| v.as_bool()).unwrap_or(authored.unwrap_or(false))
+    };
+    if let Some(text) = &w.text {
+        writeln!(p, "        text: \"{text}\";").unwrap();
+    }
+    if let Some(label) = &w.label {
+        writeln!(p, "        label: \"{label}\";").unwrap();
+    }
+    if let Some(placeholder) = &w.placeholder {
+        writeln!(p, "        placeholder: \"{placeholder}\";").unwrap();
+    }
+    if let Some(supporting) = &w.subtitle {
+        writeln!(p, "        supporting_text: \"{supporting}\";").unwrap();
+    }
+    if let Some(prefix) = &w.prefix {
+        writeln!(p, "        prefix: \"{prefix}\";").unwrap();
+    }
+    if let Some(suffix) = &w.suffix {
+        writeln!(p, "        suffix: \"{suffix}\";").unwrap();
+    }
+    if let Some(icon) = &w.icon {
+        writeln!(p, "        leading_icon: Icons.{icon};").unwrap();
+    }
+    if let Some(icon) = &w.trailing_icon {
+        writeln!(p, "        trailing_icon: Icons.{icon};").unwrap();
+    }
+    if let Some(width) = w.width {
+        writeln!(p, "        width: {}px;", width as i64).unwrap();
+    }
+    if let Some(height) = w.height {
+        writeln!(p, "        height: {}px;", height as i64).unwrap();
+    }
+    if w.enabled == Some(false) || bool_over("disabled", None) {
+        p.push_str("        enabled: false;\n");
+    }
+    if bool_over("error", w.error) {
+        p.push_str("        has_error: true;\n");
+    }
+    if bool_over("label_above", w.label_above) {
+        p.push_str("        label_above: true;\n");
+    }
+    if w.kind.contains("secure") && !w.obscure.unwrap_or(true) {
+        p.push_str("        obscure: false;\n");
+    }
+    if w.state.as_deref() == Some("focused") {
+        p.push_str("        simulate_focus: true;\n");
+    }
+    p
+}
+
 fn slint_canvas(s: &mut String, scene: &Scene) {
     // Buttons are named `button{n}` by count of button-family widgets, not
     // widget index — a backdrop `rect` ahead of a button leaves `button0`
@@ -1282,6 +1389,7 @@ fn slint_canvas(s: &mut String, scene: &Scene) {
     let mut dividers = 0;
     let mut badges = 0;
     let mut badged_boxes = 0;
+    let mut fields = 0;
     for w in scene.widgets.iter() {
         let component = match w.kind.as_str() {
             "filled-button" => "FilledButton",
@@ -1456,6 +1564,26 @@ fn slint_canvas(s: &mut String, scene: &Scene) {
                     size_prop(width, "width"),
                     size_prop(height, "height"),
                     colorize_prop,
+                )
+                .unwrap();
+                continue;
+            }
+            "text-field" | "outlined-text-field" | "secure-text-field"
+            | "outlined-secure-text-field" => {
+                let component = match w.kind.as_str() {
+                    "text-field" => "TextField",
+                    "outlined-text-field" => "OutlinedTextField",
+                    "secure-text-field" => "SecureTextField",
+                    _ => "OutlinedSecureTextField",
+                };
+                let i = fields;
+                fields += 1;
+                writeln!(
+                    s,
+                    "    field{i} := {component} {{\n        x: {}px;\n        y: {}px;\n{}    }}\n",
+                    w.x as i64,
+                    w.y as i64,
+                    text_field_props(w),
                 )
                 .unwrap();
                 continue;

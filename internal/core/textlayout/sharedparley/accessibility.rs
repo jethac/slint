@@ -184,8 +184,9 @@ impl CachedTextInputAccessibilityState {
 
 /// Maps a byte offset in the text the input *displays* back to one in the text it *holds*.
 ///
-/// A password field displays [`crate::items::PASSWORD_CHARACTER`] per character, and that character
-/// is three bytes in UTF-8 where the ones it stands in for are often one, so the two run out of step
+/// A password field displays its mask character ([`crate::items::TextInput::mask_character`])
+/// per character, and that character is often three bytes in UTF-8 where the ones it stands in
+/// for are often one, so the two run out of step
 /// as soon as anything past the first character is selected. The offsets an assistive technology
 /// hands back index the displayed text, while `TextInput::set-selection-offsets` indexes the held
 /// text, so they have to be converted on the way through.
@@ -202,7 +203,7 @@ fn to_actual_offset(text_input: Pin<&crate::items::TextInput>, displayed_offset:
     let unmasked = text_input.text_with_preedit().0;
     unmasked
         .char_indices()
-        .nth(displayed_offset / crate::items::PASSWORD_CHARACTER.len_utf8())
+        .nth(displayed_offset / text_input.mask_character().len_utf8())
         .map_or(unmasked.len(), |(offset, _)| offset)
 }
 
@@ -231,7 +232,7 @@ fn selection_offsets(
 
     // Last, so the offsets end up indexing the masked string the layout was shaped from.
     if text_input.is_password() {
-        let mask_char_len = crate::items::PASSWORD_CHARACTER.len_utf8();
+        let mask_char_len = text_input.mask_character().len_utf8();
         let to_masked = |actual_offset: usize| -> usize {
             visible_pre_mask[..actual_offset.min(visible_pre_mask.len())].chars().count()
                 * mask_char_len

@@ -1680,6 +1680,7 @@ fn build_frame_mask<C: i_slint_core::api::ComponentHandle>(
     inner_masked: &[String],
     decor_masked: &[(String, f64)],
     png_mask: Option<&SharedPixelBuffer<Rgba8Pixel>>,
+    text_dilate: f64,
     density: f64,
     width: u32,
     height: u32,
@@ -1693,10 +1694,20 @@ fn build_frame_mask<C: i_slint_core::api::ComponentHandle>(
     // The 2px dilation covers a centered label's position drift: inside a
     // pinned-width container the label block itself lands ~1px off between
     // engines (half the width slack), and its cells still check the ink.
-    for handle in i_slint_backend_testing::ElementQuery::from_root(component)
-        .match_inherits("Text")
-        .find_all()
-    {
+    // `TextInput` joins for the same reason: the text a field renders is the
+    // engine's own rasterization (caret included), so its glyph edges carry
+    // the same tolerated drift class as `Text` — its bounds are the input's
+    // content box, which a per-cell mean still verifies for ink coverage.
+    // `//TEXT_DILATE=` adds case-declared room for structure that tracks a
+    // measured text width — an outlined field's label-notch edge lands at
+    // `label bounds + 4dp`, outside the built-in 2px when the engines'
+    // glyph metrics disagree by a fraction of a px.
+    let text_dilation = 2.0 + text_dilate * d;
+    for kind in ["Text", "TextInput"] {
+        for handle in i_slint_backend_testing::ElementQuery::from_root(component)
+            .match_inherits(kind)
+            .find_all()
+        {
         let p = handle.absolute_position();
         let s = handle.size();
         mask.fill_rect(
@@ -1706,9 +1717,10 @@ fn build_frame_mask<C: i_slint_core::api::ComponentHandle>(
                 x1: (p.x + s.width) as f64 * d,
                 y1: (p.y + s.height) as f64 * d,
             }
-            .dilated(2.0),
+            .dilated(text_dilation),
             PixelClass::Text,
         );
+        }
     }
     // Rasterized icon content inside fixed bounds is the same drift class as
     // text: a centered icon's position carries half the label's width drift,
@@ -2202,6 +2214,7 @@ pub fn run_parity_case<C: i_slint_core::api::ComponentHandle>(
                 &inner_masked,
                 &decor_masked,
                 png_mask.as_ref(),
+                spec.text_dilate.unwrap_or(0.0),
                 *density as f64,
                 actual.width(),
                 actual.height(),

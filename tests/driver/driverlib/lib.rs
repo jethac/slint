@@ -267,6 +267,13 @@ fn test_extract_library_paths() {
 ///   e.g. `issue #28`): `sw − unhinted advance` may land anywhere in
 ///   `(−0.15, 1.15]`. Without the marker the bound is 0.5 px —
 ///   `(−0.15, 0.65]`. A drift past a whole pixel fails either way.
+/// - `//TEXT_DILATE=<dp>` — widens the `Text`/`TextInput` ink mask by `dp`
+///   logical px on top of the built-in 2 device px, for cases whose
+///   structure derives from a measured text width (an outlined text
+///   field's label-notch edge, which tracks `labelWidth`). The engines'
+///   glyph metrics differ by a fraction of a px, so a notch edge can sit
+///   a device px off while every ink cell still verifies. Only use with
+///   a comment on the case explaining why.
 /// - `//XFAIL_SILHOUETTE=<reason>` — on the software driver the
 ///   `//MASK_INNER=` silhouette findings are an expected divergence (the
 ///   reason names the tracked gap, e.g. `issue #6` for the axis-aligned
@@ -296,6 +303,10 @@ pub struct ParityMarkers {
     /// `//MASK_INNER=` silhouette findings an expected divergence rather
     /// than a failure; zero findings re-arms the check.
     pub xfail_silhouette: Option<String>,
+    /// `//TEXT_DILATE=<dp>` — extra logical-px dilation of the `Text` /
+    /// `TextInput` ink mask, for structure whose position derives from a
+    /// measured text width (see the marker docs above).
+    pub text_dilate: Option<f64>,
     /// `(container-id, local-child-ids)` pairs from `//TRACE_ITEMS=`
     /// markers: the container's repeated children with any listed local id
     /// are recorded as `<container-id><first-id><i>` in tree order.
@@ -476,6 +487,12 @@ pub fn extract_parity(source: &str) -> ParityMarkers {
             let rest = &source[p + "//XFAIL_SILHOUETTE=".len()..];
             let end = rest.find('\n').unwrap_or(rest.len());
             rest[..end].trim().to_string()
+        }),
+        text_dilate: source.find("//TEXT_DILATE=").map(|p| {
+            let rest = &source[p + "//TEXT_DILATE=".len()..];
+            rest.find(char::is_whitespace)
+                .and_then(|end| rest[..end].parse().ok())
+                .expect("Cannot parse //TEXT_DILATE=")
         }),
         trace_items: csv("//TRACE_ITEMS=")
             .into_iter()

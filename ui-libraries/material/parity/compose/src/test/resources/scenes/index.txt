@@ -63,7 +63,9 @@ negative-split-button-spacing
 negative-thumb-offset
 negative-toggle-select
 negative-wrong-shadow
+outlined-text-field-states
 search-bars
+secure-text-fields
 split-button-check-morph
 split-button-check-rotate
 split-button-elevated
@@ -76,6 +78,8 @@ switch-hover
 switch-off-morph
 switch-on-morph
 switch-states
+text-field-adornments
+text-field-states
 toggle-buttons
 toggle-select-morph
 top-app-bars
