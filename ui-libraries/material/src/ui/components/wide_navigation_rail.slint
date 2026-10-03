@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MIT
 
 import { NavigationItem } from "../items/navigation_item.slint";
-import { FloatingActionButton, FABStyle } from "./floating_action_button.slint";
+import { FloatingActionButton } from "./floating_action_button.slint";
 import { MaterialStyleMetrics } from "../styling/material_style_metrics.slint";
 import { MaterialPalette } from "../styling/material_palette.slint";
 import { MaterialAnimations } from "../styling/material_animations.slint";
@@ -521,7 +521,6 @@ component RailHeader inherits Rectangle {
         if root.fab-icon.width > 0 : HorizontalLayout {
             alignment: start;
             fab := FloatingActionButton {
-                style: FABStyle.standard;
                 icon: root.fab-icon;
                 clicked => { root.fab-clicked(); }
             }

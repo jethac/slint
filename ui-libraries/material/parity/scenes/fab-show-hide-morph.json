@@ -1,0 +1,99 @@
+{
+  "name": "fab-show-hide-morph",
+  "type": "canvas",
+  "parity": "xfail",
+  "negative_note": "issue #27: the Compose frame clock starts the show/hide animatables ~2ms after the Slint dispatch, so identical-timestamp frames report a systematic lead; on software, #6068 additionally keeps the element transform a no-op (alpha + collapse still verify)",
+  "size": [
+    240,
+    120
+  ],
+  "densities": [
+    1,
+    2
+  ],
+  "theme": {
+    "seed": "6750A4",
+    "variant": "tonal-spot",
+    "spec": "spec2025",
+    "platform": "phone",
+    "dark": false,
+    "contrast": 0.0
+  },
+  "fonts": {
+    "plain": "Roboto",
+    "brand": "Roboto"
+  },
+  "times": [
+    0,
+    60,
+    120,
+    200,
+    333,
+    500,
+    800,
+    1500
+  ],
+  "widgets": [
+    {
+      "kind": "fab",
+      "x": 16,
+      "y": 32,
+      "icon": "add",
+      "toggle": "shown"
+    },
+    {
+      "kind": "fab",
+      "x": 104,
+      "y": 16,
+      "icon": "add",
+      "size": "large",
+      "toggle": "shown",
+      "alignment": "top_start"
+    }
+  ],
+  "actions": [
+    {
+      "kind": "press",
+      "x": 44,
+      "y": 60
+    },
+    {
+      "kind": "release",
+      "x": 44,
+      "y": 60,
+      "at": 200
+    },
+    {
+      "kind": "move",
+      "x": 0,
+      "y": 0,
+      "at": 201
+    }
+  ],
+  "trace_elements": [
+    "button0",
+    "button1"
+  ],
+  "trace_props": [
+    "show_scale",
+    "show_alpha"
+  ],
+  "mask_inner": {
+    "button0": [
+      60,
+      120,
+      200,
+      333,
+      500,
+      800
+    ],
+    "button1": [
+      60,
+      120,
+      200,
+      333,
+      500,
+      800
+    ]
+  }
+}

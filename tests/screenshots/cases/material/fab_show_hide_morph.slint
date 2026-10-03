@@ -1,0 +1,58 @@
+// Copyright © SixtyFPS GmbH <info@slint.dev>
+// SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0
+
+// Scene: fab-show-hide-morph — generated from `ui-libraries/material/parity/scenes/fab-show-hide-morph.json`
+// (edit the scene, regenerate with `cargo run -p material-parity-generator`).
+//PARITY=xfail: issue #27: the Compose frame clock starts the show/hide animatables ~2ms after the Slint dispatch, so identical-timestamp frames report a systematic lead; on software, #6068 additionally keeps the element transform a no-op (alpha + collapse still verify)
+//SIZE=240x120
+//TIMES=0,60,120,200,333,500,800,1500
+//TRACE_PROPS=show_scale,show_alpha
+//TRACE_ELEMENTS=button0,button1
+//ACTION=press:44,60
+//ACTION=release@200:44,60
+//ACTION=move@201:0,0
+//MASK_INNER=button0@60,120,200,333,500,800
+//MASK_INNER=button1@60,120,200,333,500,800
+//DENSITIES=1,2
+import "../../fonts/Roboto-VariableFont.ttf";
+import { ExtendedFabSize, FabAlignment, FabElevation, FabSize, FloatingActionButton, IconButtonWidth, Icons, MaterialButtonShape, MaterialButtonSize, MaterialPalette, MaterialTheme, MaterialWindow } from "@material";
+
+export component TestCase inherits MaterialWindow {
+    init => {
+        // The scene pins seed #6750A4, tonal-spot, spec2025, light, contrast 0
+        // (all the library defaults; restated here so a default change can't
+        // silently move the parity baseline).
+        MaterialTheme.seed-color = #6750A4;
+        MaterialTheme.dark = false;
+        MaterialTheme.contrast-level = 0;
+        MaterialTheme.use-platform-color = false;
+        MaterialTheme.plain-family = "Roboto";
+        MaterialTheme.brand-family = "Roboto";
+        // Compose builds its scene scheme from the same seed — use the
+        // runtime-generated scheme, not the static expressive table.
+        MaterialPalette.dynamic = true;
+    }
+
+    button0 := FloatingActionButton {
+        x: 16px;
+        y: 32px;
+        icon: Icons.add;
+        clicked => { self.shown = !self.shown; }
+        enforce_touch_target: false;
+    }
+
+    out property <float> show_scale: button0.show_scale;
+
+    out property <float> show_alpha: button0.show_alpha;
+
+    button1 := FloatingActionButton {
+        x: 104px;
+        y: 16px;
+        size: FabSize.large;
+        icon: Icons.add;
+        alignment: FabAlignment.top_start;
+        clicked => { self.shown = !self.shown; }
+        enforce_touch_target: false;
+    }
+
+}

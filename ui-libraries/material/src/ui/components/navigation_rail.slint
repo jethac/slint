@@ -7,7 +7,7 @@
 // the `NarrowContainerWidth` rail whose items stack a top icon over a label.
 
 import { NavigationItem } from "../items/navigation_item.slint";
-import { FloatingActionButton, FABStyle } from "./floating_action_button.slint";
+import { FloatingActionButton } from "./floating_action_button.slint";
 import { MaterialStyleMetrics } from "../styling/material_style_metrics.slint";
 import { MaterialPalette } from "../styling/material_palette.slint";
 import { MaterialAnimations } from "../styling/material_animations.slint";
@@ -311,7 +311,6 @@ export component NavigationRail inherits BaseNavigation {
                         alignment: center;
                         headerfab := FloatingActionButton {
                             icon: root.fab-icon;
-                            style: FABStyle.standard;
                             clicked => { root.fab-clicked(); }
                         }
                     }

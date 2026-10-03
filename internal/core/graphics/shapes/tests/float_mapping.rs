@@ -75,12 +75,23 @@ fn multiple_point_test() {
     });
 }
 
+// The packaged graphics-shapes (1.0.1) `validateProgress` accepts a single
+// wrap of the progress sequence — these inputs drop once and are therefore
+// valid mappings.
 #[test]
-fn target_double_wrap_throws() {
-    assert!(DoubleMapper::new(&[(0., 0.), (0.3, 0.6), (0.6, 0.3), (0.9, 0.9)]).is_none());
+fn target_single_wrap_allowed() {
+    assert!(DoubleMapper::new(&[(0., 0.), (0.3, 0.6), (0.6, 0.3), (0.9, 0.9)]).is_some());
 }
 
 #[test]
-fn source_double_wrap_throws() {
-    assert!(DoubleMapper::new(&[(0., 0.), (0.6, 0.3), (0.3, 0.6), (0.9, 0.9)]).is_none());
+fn source_single_wrap_allowed() {
+    assert!(DoubleMapper::new(&[(0., 0.), (0.6, 0.3), (0.3, 0.6), (0.9, 0.9)]).is_some());
+}
+
+#[test]
+fn source_multiple_wraps_throw() {
+    // Two drops exceed the single wrap `validateProgress` permits.
+    assert!(
+        DoubleMapper::new(&[(0., 0.), (0.6, 0.3), (0.5, 0.6), (0.9, 0.9), (0.8, 0.95)]).is_none()
+    );
 }
