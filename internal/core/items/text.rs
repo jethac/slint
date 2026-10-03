@@ -768,14 +768,13 @@ fn text_layout_info(
                 }
             }
             .ceil();
-            if let min_lines @ 1.. = text.min_lines() {
-                if let Some(line_height) = window_adapter
+            if let min_lines @ 1.. = text.min_lines()
+                && let Some(line_height) = window_adapter
                     .renderer()
                     .text_line_height(text.font_request(self_rc))
                     .map(|h| h.get())
-                {
-                    h = h.max(line_height * min_lines as Coord).ceil();
-                }
+            {
+                h = h.max(line_height * min_lines as Coord).ceil();
             }
             LayoutInfo { min: h, preferred: h, ..LayoutInfo::default() }
         }
