@@ -119,9 +119,35 @@ class Widget(json: JSONObject) {
      * overlapped, flipping the single-row bar to its scrolled color. */
     val contentOffset: Float = json.optDouble("content_offset", 0.0).toFloat()
     val navIcon: String? = (json.opt("nav_icon") as? String)?.takeIf { it.isNotEmpty() }
-    /** `top-app-bar` action / `bottom-app-bar` icon-button icon stems. */
+    /** `top-app-bar` action / `bottom-app-bar` icon-button icon stems; for
+     * the floating toolbars these are the center `content` icons. */
     val icons: List<String> =
         json.optJSONArray("icons")?.let { a -> (0 until a.length()).map(a::getString) } ?: emptyList()
+    /** `*FloatingToolbar` `leadingContent`/`trailingContent` icon stems. */
+    val leadingIcons: List<String> =
+        json.optJSONArray("leading_icons")?.let { a -> (0 until a.length()).map(a::getString) }
+            ?: emptyList()
+    val trailingIcons: List<String> =
+        json.optJSONArray("trailing_icons")?.let { a -> (0 until a.length()).map(a::getString) }
+            ?: emptyList()
+    /** `*FloatingToolbar` FAB icon stem (the `floatingActionButton` slot). */
+    val fabIcon: String? = (json.opt("fab_icon") as? String)?.takeIf { it.isNotEmpty() }
+    /** FAB slot position: `start`/`end` horizontal, `top`/`bottom` vertical. */
+    val fabPosition: String? =
+        (json.opt("fab_position") as? String)?.takeIf { it.isNotEmpty() }
+    /** Expansion state — `*FloatingToolbar`'s `expanded` input and
+     * `extended-fab`'s `expanded` upstream. */
+    val expanded: Boolean = json.optBoolean("expanded", true)
+    /** `FloatingToolbarColorStyle` — `standard` (default) or `vibrant`. */
+    val colorStyle: String = (json.opt("color_style") as? String) ?: "standard"
+    /** `flexible-bottom-app-bar` arrangement: `space-between` (default) or
+     * `spaced` (the `FlexibleFixedHorizontalArrangement` token spacing). */
+    val arrangement: String =
+        (json.opt("arrangement") as? String) ?: "space-between"
+    /** `flexible-bottom-app-bar` item gap for the `spaced` arrangement. */
+    val spacing: Float = json.optDouble("spacing", 32.0).toFloat()
+    /** `flexible-bottom-app-bar` `expandedHeight` — `0` uses the default. */
+    val expandedHeight: Float = json.optDouble("expanded_height", 0.0).toFloat()
     val placeholder: String? = (json.opt("placeholder") as? String)?.takeIf { it.isNotEmpty() }
     /** `*-split-button` kinds only: which half carries `state` and receives
      * the scripted pointer gesture — `leading` or `trailing`. */
@@ -145,8 +171,6 @@ class Widget(json: JSONObject) {
     val multiSelect: Boolean = json.optBoolean("multi_select", false)
     /** Single-select groups: the checked item (`-1` selects none). */
     val selectedIndex: Int = json.optInt("selected_index", -1)
-    /** `extended-fab` expansion state (`expanded` upstream). */
-    val expanded: Boolean = json.optBoolean("expanded", true)
     /** `fab`/`extended-fab` visibility — `visible` on
      * `Modifier.animateFloatingActionButton` upstream. */
     val shown: Boolean = json.optBoolean("shown", true)

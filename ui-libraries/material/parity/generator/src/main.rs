@@ -240,15 +240,43 @@ struct Widget {
     #[serde(default)]
     nav_icon: Option<String>,
     /// `top-app-bar` action / `bottom-app-bar` icon-button icon stems,
-    /// rendered left to right.
+    /// rendered left to right. For the floating toolbars these are the
+    /// center `content` icons.
     #[serde(default)]
     icons: Vec<String>,
+    /// `leading-items`/`trailing-items` icon stems of the floating toolbars
+    /// — the upstream `leadingContent`/`trailingContent` slots.
+    #[serde(default)]
+    leading_icons: Vec<String>,
+    #[serde(default)]
+    trailing_icons: Vec<String>,
+    /// `*FloatingToolbar` FAB icon stem (the `floatingActionButton` slot).
+    #[serde(default)]
+    fab_icon: Option<String>,
+    /// FAB slot position: `start`/`end` on the horizontal toolbar,
+    /// `top`/`bottom` on the vertical one.
+    #[serde(default)]
+    fab_position: Option<String>,
+    /// Expansion state — `*FloatingToolbar`'s `expanded` input (`false`
+    /// starts collapsed) and `extended-fab`'s `expanded` upstream.
+    #[serde(default)]
+    expanded: Option<bool>,
+    /// `FloatingToolbarColorStyle` — `standard` (default) or `vibrant`.
+    #[serde(default)]
+    color_style: Option<String>,
+    /// `flexible-bottom-app-bar` arrangement: `space-between` (default) or
+    /// `spaced` (the `FlexibleFixedHorizontalArrangement` token spacing).
+    #[serde(default)]
+    arrangement: Option<String>,
+    /// `flexible-bottom-app-bar` `spacing` for the `spaced` arrangement.
+    #[serde(default)]
+    spacing: Option<f64>,
+    /// `flexible-bottom-app-bar` `expandedHeight`.
+    #[serde(default)]
+    expanded_height: Option<f64>,
     /// `search-bar`/`app-bar-with-search` placeholder text.
     #[serde(default)]
     placeholder: Option<String>,
-    /// `extended-fab` expansion state (`expanded` upstream).
-    #[serde(default)]
-    expanded: Option<bool>,
     /// `fab`/`extended-fab` visibility — `visible` on
     /// `Modifier.animateFloatingActionButton` upstream.
     #[serde(default)]
@@ -376,6 +404,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 .chain(w.icons.iter())
                 .chain(w.trailing_icon.iter())
                 .chain(w.items.iter().flat_map(|item| item.icon.iter().chain(item.checked_icon.iter())))
+                .chain(w.fab_icon.iter())
+                .chain(w.leading_icons.iter())
+                .chain(w.trailing_icons.iter())
             {
                 let src = repo_root
                     .join("ui-libraries/material/src/ui/icons")
@@ -745,6 +776,9 @@ fn slint_case(scene: &Scene) -> String {
                 other => panic!("unknown top-app-bar variant {other:?}"),
             },
             "bottom-app-bar" => "BottomAppBar",
+            "flexible-bottom-app-bar" => "FlexibleBottomAppBar",
+            "horizontal-floating-toolbar" => "HorizontalFloatingToolbar",
+            "vertical-floating-toolbar" => "VerticalFloatingToolbar",
             "search-bar" => "SearchBar",
             "app-bar-with-search" => "AppBarWithSearch",
             "connected-button" => "ConnectedButton",
@@ -759,12 +793,35 @@ fn slint_case(scene: &Scene) -> String {
         if w.kind.starts_with("connected-button") || w.kind == "vertical-connected-button-group" {
             imports.push("ConnectedButtonPosition");
         }
+        match w.kind.as_str() {
+            "horizontal-floating-toolbar" => {
+                imports.push("FloatingToolbarColorStyle");
+                imports.push("FloatingToolbarHorizontalFabPosition");
+                if !w.icons.is_empty() {
+                    imports.push("IconButton");
+                }
+            }
+            "vertical-floating-toolbar" => {
+                imports.push("FloatingToolbarColorStyle");
+                imports.push("FloatingToolbarVerticalFabPosition");
+                if !w.icons.is_empty() {
+                    imports.push("IconButton");
+                }
+            }
+            "flexible-bottom-app-bar" => {
+                imports.push("BottomAppBarArrangement");
+            }
+            _ => {}
+        }
         if w.icon.is_some()
             || w.checked_icon.is_some()
             || w.nav_icon.is_some()
             || !w.icons.is_empty()
             || w.kind.ends_with("split-button")
             || w.items.iter().any(|item| item.icon.is_some() || item.checked_icon.is_some())
+            || w.fab_icon.is_some()
+            || !w.leading_icons.is_empty()
+            || !w.trailing_icons.is_empty()
         {
             needs_icons = true;
         }
@@ -1397,7 +1454,9 @@ fn slint_canvas(s: &mut String, scene: &Scene) {
                 .unwrap();
                 continue;
             }
-            "top-app-bar" | "bottom-app-bar" | "search-bar" | "app-bar-with-search" => {
+            "top-app-bar" | "bottom-app-bar" | "search-bar" | "app-bar-with-search" |
+            "horizontal-floating-toolbar" | "vertical-floating-toolbar" |
+            "flexible-bottom-app-bar" => {
                 let i = appbars;
                 appbars += 1;
                 appbar_widget(s, w, i);
@@ -1618,6 +1677,49 @@ fn slint_canvas(s: &mut String, scene: &Scene) {
         }
         emit_button_cover(s, w, i);
     }
+
+    // In a timed scene a `press` hit-testing a floating toolbar's bounds
+    // flips its `expanded` — the Compose harness applies the same hit-test
+    // and toggles on the same dispatch beat.
+    if !scene.times.is_empty()
+        && scene
+            .widgets
+            .iter()
+            .any(|w| w.kind.ends_with("floating-toolbar"))
+    {
+        writeln!(
+            s,
+            "    TouchArea {{\n        pointer-event(event) => {{\n            if event.kind == PointerEventKind.down {{"
+        )
+        .unwrap();
+        let mut appbars = 0;
+        for w in &scene.widgets {
+            if !matches!(
+                w.kind.as_str(),
+                "top-app-bar"
+                    | "bottom-app-bar"
+                    | "search-bar"
+                    | "app-bar-with-search"
+                    | "horizontal-floating-toolbar"
+                    | "vertical-floating-toolbar"
+                    | "flexible-bottom-app-bar"
+            ) {
+                continue;
+            }
+            let i = appbars;
+            appbars += 1;
+            if !w.kind.ends_with("floating-toolbar") {
+                continue;
+            }
+            writeln!(
+                s,
+                "                if self.mouse-x >= appbar{i}.x && self.mouse-x <= appbar{i}.x + appbar{i}.width &&\n                    self.mouse-y >= appbar{i}.y && self.mouse-y <= appbar{i}.y + appbar{i}.height {{\n                    appbar{i}.expanded = !appbar{i}.expanded;\n                }}"
+            )
+            .unwrap();
+        }
+        writeln!(s, "            }}\n        }}\n    }}\n").unwrap();
+    }
+
 }
 
 /// The Slint property type of a `//TRACE_PROPS=` name: `container_radius`,
@@ -1867,6 +1969,7 @@ fn connected_group_widget(s: &mut String, w: &Widget, i: usize, scene: &Scene) {
     }
 }
 
+
 fn slint_spring_motion(s: &mut String, scene: &Scene) {
     let p = &scene.params;
     let get = |k: &str| widget_num(&p[k]);
@@ -1909,6 +2012,9 @@ fn appbar_widget(s: &mut String, w: &Widget, i: usize) {
             other => panic!("unknown top-app-bar variant {other:?}"),
         },
         "bottom-app-bar" => "BottomAppBar",
+        "flexible-bottom-app-bar" => "FlexibleBottomAppBar",
+        "horizontal-floating-toolbar" => "HorizontalFloatingToolbar",
+        "vertical-floating-toolbar" => "VerticalFloatingToolbar",
         "search-bar" => "SearchBar",
         "app-bar-with-search" => "AppBarWithSearch",
         other => panic!("unknown app-bar kind {other:?}"),
@@ -1943,6 +2049,67 @@ fn appbar_widget(s: &mut String, w: &Widget, i: usize) {
             }
         }
     }
+    let items_list = |icons: &[String]| {
+        icons.iter()
+            .map(|ic| format!("{{ icon: Icons.{ic}, enabled: true }}"))
+            .collect::<Vec<_>>()
+            .join(", ")
+    };
+    if !w.leading_icons.is_empty() {
+        writeln!(p, "        leading-items: [{}];", items_list(&w.leading_icons)).unwrap();
+    }
+    if !w.trailing_icons.is_empty() {
+        writeln!(p, "        trailing-items: [{}];", items_list(&w.trailing_icons)).unwrap();
+    }
+    if let Some(icon) = &w.fab_icon {
+        writeln!(p, "        fab-icon: Icons.{icon};").unwrap();
+        if let Some(pos) = &w.fab_position {
+            let e = if w.kind == "horizontal-floating-toolbar" {
+                format!("FloatingToolbarHorizontalFabPosition.{pos}")
+            } else {
+                format!("FloatingToolbarVerticalFabPosition.{pos}")
+            };
+            writeln!(p, "        fab-position: {e};").unwrap();
+        }
+    }
+    // As in `button_props`, `slint_overrides` shadows the authored value —
+    // the negative toolbar scenes inject a defect only the Slint side
+    // renders.
+    let over = &w.slint_overrides;
+    let expanded = over
+        .get("expanded")
+        .and_then(|v| v.as_bool())
+        .or(w.expanded);
+    if let Some(expanded) = expanded {
+        writeln!(p, "        expanded: {expanded};").unwrap();
+    }
+    let style = over
+        .get("color_style")
+        .and_then(|v| v.as_str())
+        .map(str::to_string)
+        .or_else(|| w.color_style.clone());
+    if let Some(style) = style {
+        writeln!(p, "        color-style: FloatingToolbarColorStyle.{style};").unwrap();
+    }
+    let arrangement = over
+        .get("arrangement")
+        .and_then(|v| v.as_str())
+        .map(str::to_string)
+        .or_else(|| w.arrangement.clone());
+    if let Some(arrangement) = arrangement {
+        writeln!(p, "        arrangement: BottomAppBarArrangement.{arrangement};").unwrap();
+    }
+    let spacing = over.get("spacing").map(|v| widget_num(v)).or(w.spacing);
+    if let Some(spacing) = spacing {
+        writeln!(p, "        spacing: {spacing}px;").unwrap();
+    }
+    let expanded_height = over
+        .get("expanded_height")
+        .map(|v| widget_num(v))
+        .or(w.expanded_height);
+    if let Some(expanded_height) = expanded_height {
+        writeln!(p, "        expanded-height: {expanded_height}px;").unwrap();
+    }
     if !w.icons.is_empty() {
         match w.kind.as_str() {
             "bottom-app-bar" => {
@@ -1954,6 +2121,12 @@ fn appbar_widget(s: &mut String, w: &Widget, i: usize) {
                     .join(", ");
                 writeln!(p, "        icon-buttons: [{items}];").unwrap();
             }
+            "flexible-bottom-app-bar" => {
+                writeln!(p, "        items: [{}];", items_list(&w.icons)).unwrap();
+            }
+            // The floating toolbars take their center `content` as
+            // `IconButton` children below.
+            "horizontal-floating-toolbar" | "vertical-floating-toolbar" => {}
             "search-bar" => {
                 if let Some(ic) = w.icons.first() {
                     writeln!(p, "        trailing-icon: Icons.{ic};").unwrap();
@@ -1988,10 +2161,20 @@ fn appbar_widget(s: &mut String, w: &Widget, i: usize) {
     if w.kind != "search-bar" && w.kind != "app-bar-with-search" {
         p.push_str("        touch-target: false;\n");
     }
+    let mut children = String::new();
+    if w.kind == "horizontal-floating-toolbar" || w.kind == "vertical-floating-toolbar" {
+        for ic in &w.icons {
+            writeln!(
+                children,
+                "        IconButton {{ icon: Icons.{ic}; enforce-touch-target: false; }}"
+            )
+            .unwrap();
+        }
+    }
     writeln!(
         s,
-        "    appbar{i} := {component} {{\n        x: {}px;\n        y: {}px;\n{}    }}\n",
-        w.x as i64, w.y as i64, p,
+        "    appbar{i} := {component} {{\n        x: {}px;\n        y: {}px;\n{}{}    }}\n",
+        w.x as i64, w.y as i64, p, children,
     )
     .unwrap();
 }
