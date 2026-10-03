@@ -514,6 +514,7 @@ private fun CanvasScene(
         var sheets = 0
         var vhandles = 0
         var groups = 0
+        var icons = 0
         var dividers = 0
         // `text:{n}` spans every text node in scene order — group items
         // interleave with the standalone widgets' labels. Bases are
@@ -658,6 +659,44 @@ private fun CanvasScene(
                         ParitySheet(widget, scene, tracer, emitPress, tag)
                     } else {
                         SheetWidget(widget, scene, tracer, emitPress, tag)
+                    }
+                }
+                widget.kind == "icon" -> {
+                    // The bare `Icon` takes its painter's intrinsic size
+                    // (or `DefaultIconSizeModifier`'s 24dp when the
+                    // painter has none); `width`/`height` apply upstream's
+                    // `modifier` size and `color` applies `tint`. The
+                    // default tint is `LocalContentColor` — provided here
+                    // as `onSurface`, the content color a `Surface` gives
+                    // (the same value as the Slint default `on_background`
+                    // at the pin).
+                    val tag = "icon${icons++}"
+                    CompositionLocalProvider(
+                        androidx.compose.material3.LocalContentColor provides
+                            scheme.onSurface,
+                    ) {
+                        Icon(
+                            sceneIcon(widget.icon ?: "check"),
+                            contentDescription = null,
+                            modifier = Modifier.offset(widget.x.dp, widget.y.dp)
+                                .then(
+                                    if (widget.width > 0) {
+                                        Modifier.width(widget.width.dp)
+                                    } else {
+                                        Modifier
+                                    },
+                                )
+                                .then(
+                                    if (widget.height > 0) {
+                                        Modifier.height(widget.height.dp)
+                                    } else {
+                                        Modifier
+                                    },
+                                )
+                                .track(tracer, tag),
+                            tint = widget.color?.let { schemeColor(it) }
+                                ?: androidx.compose.material3.LocalContentColor.current,
+                        )
                     }
                 }
                 widget.kind == "divider" || widget.kind == "horizontal-divider" ||
@@ -987,9 +1026,16 @@ private fun sceneIcon(name: String): androidx.compose.ui.graphics.vector.ImageVe
     if (vb[0] != 0f || vb[1] != 0f) {
         builder.addGroup(translationX = -vb[0], translationY = -vb[1])
     }
-    Regex("""<path[^>]*d="([^"]+)"""").findAll(svg).forEach { m ->
+    // Google Material Icon exports carry a viewport-sized `fill="none"`
+    // bounds path that resvg skips — honoring the attribute keeps the
+    // ImageVector identical to what the Slint side rasterizes.
+    Regex("""<path[^>]*>""").findAll(svg).forEach { m ->
+        val tag = m.value
+        if (tag.contains("""fill="none"""")) return@forEach
+        val d = Regex("""d="([^"]+)"""").find(tag)?.groupValues?.get(1)
+            ?: return@forEach
         builder.addPath(
-            androidx.compose.ui.graphics.vector.addPathNodes(m.groupValues[1]),
+            androidx.compose.ui.graphics.vector.addPathNodes(d),
             fill = androidx.compose.ui.graphics.SolidColor(Color.Black),
         )
     }
@@ -1331,14 +1377,15 @@ private fun schemeColor(role: String): Color =
             "onTertiary" -> scheme.onTertiary
             "tertiaryContainer" -> scheme.tertiaryContainer
             "onTertiaryContainer" -> scheme.onTertiaryContainer
-            "background" -> scheme.background
-            "onBackground" -> scheme.onBackground
             "surface" -> scheme.surface
             "onSurface" -> scheme.onSurface
             "surfaceVariant" -> scheme.surfaceVariant
-            "surfaceTint" -> scheme.surfaceTint
+            "onSurfaceVariant" -> scheme.onSurfaceVariant
             "inverseSurface" -> scheme.inverseSurface
             "inverseOnSurface" -> scheme.inverseOnSurface
+            "background" -> scheme.background
+            "onBackground" -> scheme.onBackground
+            "surfaceTint" -> scheme.surfaceTint
             "error" -> scheme.error
             "onError" -> scheme.onError
             "errorContainer" -> scheme.errorContainer
