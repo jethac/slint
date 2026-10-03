@@ -101,6 +101,7 @@
       "placeholder": null,
       "radius": null,
       "shape": "cookie-9-sided",
+      "side": null,
       "size": null,
       "slint_overrides": {
         "shape_fit": "fill"
@@ -108,6 +109,7 @@
       "state": null,
       "subtitle": null,
       "text": null,
+      "trailing_icon": null,
       "variant": null,
       "width": 64.0,
       "width_option": null,

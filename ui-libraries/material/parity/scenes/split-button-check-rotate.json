@@ -1,0 +1,81 @@
+{
+  "name": "split-button-check-rotate",
+  "type": "canvas",
+  "parity": "xfail",
+  "size": [
+    200,
+    96
+  ],
+  "densities": [
+    1,
+    2
+  ],
+  "theme": {
+    "seed": "6750A4",
+    "variant": "tonal-spot",
+    "spec": "spec2025",
+    "platform": "phone",
+    "dark": false,
+    "contrast": 0.0
+  },
+  "fonts": {
+    "plain": "Roboto",
+    "brand": "Roboto"
+  },
+  "times": [
+    0,
+    15,
+    30,
+    60,
+    120,
+    200,
+    333,
+    500,
+    800,
+    1500
+  ],
+  "widgets": [
+    {
+      "kind": "filled-split-button",
+      "x": 24,
+      "y": 28,
+      "size": "s",
+      "checkable": true,
+      "width": 170,
+      "icon": "edit"
+    }
+  ],
+  "actions": [
+    {
+      "kind": "press",
+      "x": 126,
+      "y": 48
+    },
+    {
+      "kind": "release",
+      "x": 126,
+      "y": 48,
+      "at": 1
+    }
+  ],
+  "trace_elements": [
+    "button0"
+  ],
+  "trace_props": [
+    "trailing_icon_rotation"
+  ],
+  "mask_inner": {
+    "button0": [
+      15,
+      30,
+      60,
+      120,
+      200,
+      333,
+      500,
+      800,
+      1500
+    ]
+  },
+  "negative_note": "issue #27: the Compose frame clock leads the Slint mock clock by ~2-3ms, so the mid-flight icon-rotation spring diverges past the trace eps (same class as button-press-morph); on software, issue #6 (no transform-rotation) additionally keeps the chevron unrotated"
+}

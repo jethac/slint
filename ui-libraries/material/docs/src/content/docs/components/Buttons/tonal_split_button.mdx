@@ -1,0 +1,121 @@
+---
+title: TonalSplitButton
+description: TonalSplitButton API.
+---
+
+import CodeSnippetMD from '@slint/common-files/src/components/CodeSnippetMD.astro';
+import SlintProperty from '@slint/common-files/src/components/SlintProperty.astro';
+
+<CodeSnippetMD imagePath="/src/assets/generated/tonalsplitbutton.png" scale="3" imageWidth="300" imageHeight="200" imageAlt="">
+```slint
+import { TonalSplitButton } from "@material";
+export component Example inherits Window {
+    width: 300px;
+    height: 200px;
+    background: transparent;
+    TonalSplitButton {
+        text: "My Button";
+        menu_items: [
+          { text: "Item one" },
+          { text: "Item two" },
+          { text: "Item three" },
+        ];
+    }
+}
+```
+</CodeSnippetMD>
+
+A `TonalSplitButton` pairs a tonal leading action with a trailing menu button in one container.
+Clicking the leading half runs the primary action; clicking the trailing half toggles `checked` — with
+`menu_items` set, that opens the menu, morphs the trailing button to a stadium and rotates its icon 180°.
+
+<CodeSnippetMD imagePath="/src/assets/generated/tonalsplitbutton-sizes.png" scale="3" imageWidth="500" imageHeight="300" imageAlt="">
+```slint
+import { TonalSplitButton, MaterialButtonSize } from "@material";
+export component Example inherits Window {
+    width: 480px;
+    height: 280px;
+    background: transparent;
+    VerticalLayout {
+        padding: 20px;
+        spacing: 12px;
+        alignment: center;
+        for s in [MaterialButtonSize.extra-small, MaterialButtonSize.small, MaterialButtonSize.medium, MaterialButtonSize.large, MaterialButtonSize.extra-large]: TonalSplitButton {
+            text: "OK";
+            size: s;
+            checked: s == MaterialButtonSize.medium;
+        }
+    }
+}
+```
+</CodeSnippetMD>
+
+## Properties
+
+### checked
+<SlintProperty propName="checked" typeName="bool" propertyVisibility="in-out">
+The trailing button's toggle state — also the menu's open state when `menu_items` is set.
+The trailing shape and icon rotation animate when it changes.
+</SlintProperty>
+
+### enabled
+<SlintProperty propName="enabled" typeName="bool" defaultValue="true">
+Whether the button is enabled and can be interacted with.
+</SlintProperty>
+
+### enforce-touch-target
+<SlintProperty propName="enforce-touch-target" typeName="bool" defaultValue="true">
+Whether the button extends its touch target to at least 48px when its visual container is smaller.
+</SlintProperty>
+
+### icon
+<SlintProperty propName="icon" typeName="image">
+An optional icon displayed before the leading half's text label.
+</SlintProperty>
+
+### leading-tooltip
+<SlintProperty propName="leading-tooltip" typeName="string">
+A tooltip text that appears when hovering over the leading half. Also its accessibility label when `text` is empty.
+</SlintProperty>
+
+### menu-items
+<SlintProperty propName="menu-items" typeName="[struct]" structName="MenuItem">
+The items of the menu the trailing button opens; empty disables the menu — the trailing half then only toggles `checked`.
+</SlintProperty>
+
+### size
+<SlintProperty propName="size" typeName="enum" enumName="MaterialButtonSize" defaultValue="MaterialButtonSize.small">
+The size bucket, from `extra-small` (32px) through `extra-large` (136px).
+</SlintProperty>
+
+### text
+<SlintProperty propName="text" typeName="string">
+The text label displayed on the leading half.
+</SlintProperty>
+
+### trailing-checkable
+<SlintProperty propName="trailing-checkable" typeName="bool" defaultValue="true">
+Whether the trailing half toggles `checked` when clicked — the upstream checkable `TrailingButton` overload.
+With `menu_items` set the trailing half is always checkable.
+</SlintProperty>
+
+### trailing-icon
+<SlintProperty propName="trailing-icon" typeName="image" defaultValue="Icons.keyboard_arrow_down">
+The trailing half's icon, rotated 180° while `checked`.
+</SlintProperty>
+
+### trailing-tooltip
+<SlintProperty propName="trailing-tooltip" typeName="string">
+A tooltip text that appears when hovering over the trailing half, and its accessibility label.
+</SlintProperty>
+
+## Callbacks
+
+### leading-clicked()
+Invoked when the leading half is clicked.
+
+### trailing-clicked()
+Invoked when the trailing half is clicked — `checked` has already toggled.
+
+### menu-activated(index: int)
+Invoked with the selected index when a menu item is activated; the menu closes and `checked` returns to false.

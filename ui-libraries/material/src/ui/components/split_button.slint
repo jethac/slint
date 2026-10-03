@@ -1,0 +1,679 @@
+// Copyright © SixtyFPS GmbH <info@slint.dev>
+// SPDX-License-Identifier: MIT
+
+import { MaterialButtonBase } from "./button_base.slint";
+import { MaterialButtonMetrics, MaterialButtonSize } from "./button_metrics.slint";
+import { MaterialCornerRadii } from "./state_layer.slint";
+import { MenuItem } from "../items/menu_item.slint";
+import { PopupMenu } from "./menu.slint";
+import { Icons } from "../icons/icons.slint";
+import { MaterialTypography } from "../styling/material_typography.slint";
+import {
+    SplitButtonXSmallTokens,
+    SplitButtonSmallTokens,
+    SplitButtonMediumTokens,
+    SplitButtonLargeTokens,
+    SplitButtonXLargeTokens,
+    FilledButtonTokens,
+    TonalButtonTokens,
+    ElevatedButtonTokens,
+    OutlinedButtonTokens,
+} from "../styling/generated/material_component_tokens.slint";
+
+/// Resolves the five `SplitButton*Tokens` rows to plain values, mirroring
+/// `SplitButtonDefaults.*For(buttonHeight)` in the pinned androidx sources
+/// (`SplitButton.kt`). Where upstream delegates to `ButtonDefaults` the
+/// matching `MaterialButtonMetrics` function is reused.
+export global SplitButtonMetrics {
+    /// `SplitButton*Tokens.container_height`.
+    public pure function container-height(size: MaterialButtonSize) -> length {
+        size == MaterialButtonSize.extra_small ? SplitButtonXSmallTokens.container_height :
+        size == MaterialButtonSize.small ? SplitButtonSmallTokens.container_height :
+        size == MaterialButtonSize.medium ? SplitButtonMediumTokens.container_height :
+        size == MaterialButtonSize.large ? SplitButtonLargeTokens.container_height :
+        SplitButtonXLargeTokens.container_height
+    }
+
+    /// `SplitButtonDefaults.Spacing` — `BetweenSpace` is 2px in every row.
+    public pure function between-space(size: MaterialButtonSize) -> length {
+        size == MaterialButtonSize.extra_small ? SplitButtonXSmallTokens.between_space :
+        size == MaterialButtonSize.small ? SplitButtonSmallTokens.between_space :
+        size == MaterialButtonSize.medium ? SplitButtonMediumTokens.between_space :
+        size == MaterialButtonSize.large ? SplitButtonLargeTokens.between_space :
+        SplitButtonXLargeTokens.between_space
+    }
+
+    /// `inner_corner_corner_size` — the resting inner corners of both halves.
+    public pure function inner-corner(size: MaterialButtonSize) -> length {
+        size == MaterialButtonSize.extra_small ? SplitButtonXSmallTokens.inner_corner_corner_size :
+        size == MaterialButtonSize.small ? SplitButtonSmallTokens.inner_corner_corner_size :
+        size == MaterialButtonSize.medium ? SplitButtonMediumTokens.inner_corner_corner_size :
+        size == MaterialButtonSize.large ? SplitButtonLargeTokens.inner_corner_corner_size :
+        SplitButtonXLargeTokens.inner_corner_corner_size
+    }
+
+    /// `inner_pressed_corner_corner_size` — the inner corners while pressed.
+    /// (`inner_hovered_corner_corner_size` exists in the tokens but is
+    /// unreferenced upstream at the pin.)
+    public pure function inner-pressed-corner(size: MaterialButtonSize) -> length {
+        size == MaterialButtonSize.extra_small ? SplitButtonXSmallTokens.inner_pressed_corner_corner_size :
+        size == MaterialButtonSize.small ? SplitButtonSmallTokens.inner_pressed_corner_corner_size :
+        size == MaterialButtonSize.medium ? SplitButtonMediumTokens.inner_pressed_corner_corner_size :
+        size == MaterialButtonSize.large ? SplitButtonLargeTokens.inner_pressed_corner_corner_size :
+        SplitButtonXLargeTokens.inner_pressed_corner_corner_size
+    }
+
+    /// `leadingButtonContentPaddingFor` — leading half, leading side.
+    public pure function leading-pad-start(size: MaterialButtonSize) -> length {
+        size == MaterialButtonSize.extra_small ? SplitButtonXSmallTokens.leading_button_leading_space :
+        size == MaterialButtonSize.small ? SplitButtonSmallTokens.leading_button_leading_space :
+        size == MaterialButtonSize.medium ? SplitButtonMediumTokens.leading_button_leading_space :
+        size == MaterialButtonSize.large ? SplitButtonLargeTokens.leading_button_leading_space :
+        SplitButtonXLargeTokens.leading_button_leading_space
+    }
+
+    /// `leadingButtonContentPaddingFor` — leading half, trailing side.
+    public pure function leading-pad-end(size: MaterialButtonSize) -> length {
+        size == MaterialButtonSize.extra_small ? SplitButtonXSmallTokens.leading_button_trailing_space :
+        size == MaterialButtonSize.small ? SplitButtonSmallTokens.leading_button_trailing_space :
+        size == MaterialButtonSize.medium ? SplitButtonMediumTokens.leading_button_trailing_space :
+        size == MaterialButtonSize.large ? SplitButtonLargeTokens.leading_button_trailing_space :
+        SplitButtonXLargeTokens.leading_button_trailing_space
+    }
+
+    /// `trailingButtonContentPaddingFor` — equal on both sides in every row.
+    public pure function trailing-pad(size: MaterialButtonSize) -> length {
+        size == MaterialButtonSize.extra_small ? SplitButtonXSmallTokens.trailing_button_leading_space :
+        size == MaterialButtonSize.small ? SplitButtonSmallTokens.trailing_button_leading_space :
+        size == MaterialButtonSize.medium ? SplitButtonMediumTokens.trailing_button_leading_space :
+        size == MaterialButtonSize.large ? SplitButtonLargeTokens.trailing_button_leading_space :
+        SplitButtonXLargeTokens.trailing_button_leading_space
+    }
+
+    /// `trailingButtonIconSizeFor`.
+    public pure function trailing-icon-size(size: MaterialButtonSize) -> length {
+        size == MaterialButtonSize.extra_small ? SplitButtonXSmallTokens.trailing_icon_size :
+        size == MaterialButtonSize.small ? SplitButtonSmallTokens.trailing_icon_size :
+        size == MaterialButtonSize.medium ? SplitButtonMediumTokens.trailing_icon_size :
+        size == MaterialButtonSize.large ? SplitButtonLargeTokens.trailing_icon_size :
+        SplitButtonXLargeTokens.trailing_icon_size
+    }
+}
+
+/// The upstream `SplitButtonLayout`: two buttons 2px apart sharing one
+/// outline, the leading one taking the primary action, the trailing one the
+/// related secondary action — classically a toggle that opens a menu, its
+/// inner corners morphing into a stadium while the chevron flips.
+///
+/// A style component supplies the resolved colors, border and elevation
+/// table; this component owns the measure policy (trailing gets width
+/// priority, both halves get equal height) and the state machine.
+component SplitButtonBase {
+    in property <MaterialButtonSize> size: MaterialButtonSize.small;
+    in property <string> text;
+    in property <image> icon;
+    in property <image> trailing_icon;
+    in property <bool> enabled: true;
+    /// Whether the trailing button is the checkable overload — morphing to
+    /// the checked stadium, drawing the selection overlay and flipping the
+    /// icon. With a non-empty `menu_items` it is always checkable and
+    /// `checked` is the menu's open state.
+    in property <bool> trailing_checkable: true;
+    in-out property <bool> checked;
+    /// The `DropdownMenu` content anchored below the button. Empty keeps it
+    /// a bare toggle.
+    in property <[MenuItem]> menu_items;
+    /// Tooltip + accessibility label for the icon-only trailing button.
+    in property <string> trailing_tooltip;
+    in property <string> leading_tooltip;
+    /// Reserve a 48x48 touch target around the whole component — upstream
+    /// applies `minimumInteractiveComponentSize` on the layout, not on the
+    /// two halves.
+    in property <bool> enforce_touch_target: true;
+    /// Per-side test hooks — see `MaterialButtonBase`.
+    in property <bool> leading_simulate_hover;
+    in property <bool> leading_simulate_press;
+    in property <bool> trailing_simulate_hover;
+    in property <bool> trailing_simulate_press;
+    /// Token overrides — the parity harness's negative scenes inject the
+    /// defect through these; the defaults are the generated token values.
+    in property <length> spacing: -1px;
+    in property <length> inner_corner: -1px;
+    in property <length> inner_pressed_corner: -1px;
+    in property <length> outer_corner: -1px;
+    /// `TrailingButton`'s checked overlay — the parity negative scene turns
+    /// it off.
+    in property <bool> checked_overlay: true;
+
+    // Resolved style, shared by both halves.
+    in property <color> container_color;
+    in property <color> content_color;
+    in property <color> disabled_container_color;
+    in property <color> disabled_content_color;
+    in property <color> border_color;
+    in property <color> disabled_border_color;
+    in property <length> border_width;
+    in property <int> elevation_default: 0;
+    in property <int> elevation_pressed: 0;
+    in property <int> elevation_hovered: 0;
+    in property <int> elevation_focused: 0;
+    in property <int> elevation_disabled: 0;
+
+    callback leading_clicked;
+    callback trailing_clicked;
+    callback menu_activated(index: int);
+
+    out property <bool> leading_has_focus <=> leading.has_focus;
+    out property <bool> trailing_has_focus <=> trailing.has_focus;
+    out property <bool> leading_pressed <=> leading.pressed;
+    out property <bool> trailing_pressed <=> trailing.pressed;
+    /// The live inner corner of each half — the parity harness's morph
+    /// traces.
+    out property <length> leading_inner_radius <=> leading.corner_tr;
+    out property <length> trailing_inner_radius <=> trailing.corner_tl;
+    /// The trailing icon's live rotation — the chevron flip trace.
+    out property <angle> trailing_icon_rotation <=> trailing.live_icon_rotation;
+
+    property <length> container_height: SplitButtonMetrics.container-height(root.size);
+    property <length> resolved_spacing: root.spacing >= 0px ? root.spacing : SplitButtonMetrics.between-space(root.size);
+    // `OuterCornerSize` — `ShapeDefaults.CornerFull`, i.e. half the shorter
+    /// side; the halves are always at least as wide as they are tall.
+    property <length> outer: root.outer_corner >= 0px ? root.outer_corner : root.container_height / 2;
+    property <length> inner: root.inner_corner >= 0px ? root.inner_corner : SplitButtonMetrics.inner-corner(root.size);
+    property <length> inner_pressed: root.inner_pressed_corner >= 0px ? root.inner_pressed_corner : SplitButtonMetrics.inner-pressed-corner(root.size);
+    /// `trailing_inner_selected_corner_corner_size_percent` is 50 in every
+    /// row — the checked trailing stadium equals `outer`.
+    property <length> touch: root.enforce_touch_target ? 48px : 0px;
+    /// The trailing button is checkable when asked or when it drives a menu.
+    property <bool> trailing_is_checkable: root.trailing_checkable || root.menu_items.length > 0;
+
+    // The measure policy: the trailing button keeps its preferred width and
+    /// the leading one gets what is left (`SplitButtonLayout`'s
+    /// `measurePolicy`), the spacing sits between them, both are the same
+    /// height and centered vertically.
+    property <length> trailing_width: trailing.min_width;
+    property <length> leading_width:
+        Math.min(leading.min_width, Math.max(0px, root.width - root.trailing_width - root.resolved_spacing));
+
+    min_width: max(root.touch, leading.min_width + root.resolved_spacing + root.trailing_width);
+    min_height: max(root.touch, root.container_height);
+    preferred_width: root.min_width;
+    preferred_height: root.min_height;
+
+    accessible-role: groupbox;
+
+    leading := MaterialButtonBase {
+        x: 0px;
+        y: (root.height - root.container_height) / 2;
+        height: root.container_height;
+        width: root.leading_width;
+
+        accessible-role: button;
+        accessible-enabled: root.enabled;
+        accessible-label: root.text != "" ? root.text : root.leading_tooltip;
+
+        enabled: root.enabled;
+        tooltip: root.leading_tooltip;
+        enforce_touch_target: false;
+        simulate_hover: root.leading_simulate_hover;
+        simulate_press: root.leading_simulate_press;
+
+        container_height: root.container_height;
+        min_button_width: 48px; // `LeadingButtonMinWidth`
+        shaped_corners: true;
+        resting_corners: { top_left: root.outer, top_right: root.inner, bottom_right: root.inner, bottom_left: root.outer };
+        pressed_corners: { top_left: root.outer, top_right: root.inner_pressed, bottom_right: root.inner_pressed, bottom_left: root.outer };
+        checked_corners: { top_left: root.outer, top_right: root.inner, bottom_right: root.inner, bottom_left: root.outer };
+
+        container_color: root.container_color;
+        content_color: root.content_color;
+        disabled_container_color: root.disabled_container_color;
+        disabled_content_color: root.disabled_content_color;
+        border_color: root.border_color;
+        disabled_border_color: root.disabled_border_color;
+        border_width: root.border_width;
+        elevation_default: root.elevation_default;
+        elevation_pressed: root.elevation_pressed;
+        elevation_hovered: root.elevation_hovered;
+        elevation_focused: root.elevation_focused;
+        elevation_disabled: root.elevation_disabled;
+
+        text: root.text;
+        icon: root.icon;
+        checked_icon: root.icon;
+        padding_start: SplitButtonMetrics.leading-pad-start(root.size);
+        padding_end: SplitButtonMetrics.leading-pad-end(root.size);
+        icon_size: MaterialButtonMetrics.icon-size(root.size);
+        icon_spacing: MaterialButtonMetrics.icon-spacing(root.size);
+        // Both halves' `ProvideContentColorTextStyle` is hard-coded to
+        /// `labelLarge` upstream — no per-size text style on a split button.
+        label_style: MaterialTypography.label_large;
+
+        clicked => {
+            root.leading_clicked();
+        }
+    }
+
+    trailing := MaterialButtonBase {
+        x: leading.width + root.resolved_spacing;
+        y: (root.height - root.container_height) / 2;
+        height: root.container_height;
+        width: root.trailing_width;
+
+        accessible-role: button;
+        accessible-enabled: root.enabled;
+        accessible-label: root.trailing_tooltip;
+        accessible-checkable: root.trailing_is_checkable;
+        accessible-checked <=> root.checked;
+
+        enabled: root.enabled;
+        tooltip: root.trailing_tooltip;
+        enforce_touch_target: false;
+        simulate_hover: root.trailing_simulate_hover;
+        simulate_press: root.trailing_simulate_press;
+
+        container_height: root.container_height;
+        min_button_width: 48px; // `TrailingButtonMinWidth`
+        shaped_corners: true;
+        resting_corners: { top_left: root.inner, top_right: root.outer, bottom_right: root.outer, bottom_left: root.inner };
+        pressed_corners: { top_left: root.inner_pressed, top_right: root.outer, bottom_right: root.outer, bottom_left: root.inner_pressed };
+        // `TrailingCheckedShape = CircleShape` — 50% of the short side.
+        checked_corners: { top_left: root.outer, top_right: root.outer, bottom_right: root.outer, bottom_left: root.outer };
+        checkable: root.trailing_is_checkable;
+        checked <=> root.checked;
+        checked_overlay: root.checked_overlay;
+        optical_center: true;
+
+        container_color: root.container_color;
+        content_color: root.content_color;
+        disabled_container_color: root.disabled_container_color;
+        disabled_content_color: root.disabled_content_color;
+        border_color: root.border_color;
+        disabled_border_color: root.disabled_border_color;
+        border_width: root.border_width;
+        elevation_default: root.elevation_default;
+        elevation_pressed: root.elevation_pressed;
+        elevation_hovered: root.elevation_hovered;
+        elevation_focused: root.elevation_focused;
+        elevation_disabled: root.elevation_disabled;
+
+        icon: root.trailing_icon;
+        checked_icon: root.trailing_icon;
+        padding_start: SplitButtonMetrics.trailing-pad(root.size);
+        padding_end: SplitButtonMetrics.trailing-pad(root.size);
+        icon_size: SplitButtonMetrics.trailing-icon-size(root.size);
+        icon_rotation: root.trailing_is_checkable && root.checked ? 180deg : 0deg;
+
+        clicked => {
+            root.trailing_clicked();
+        }
+    }
+
+    menu := PopupMenu {
+        x: 0px;
+        y: root.height;
+        items: root.menu_items;
+
+        activated(index) => {
+            root.checked = false;
+            root.menu_activated(index);
+        }
+    }
+
+    // `checked` is the menu's `expanded` state; the popup's own dismissal
+    // (outside click) resets it like `onDismissRequest` does upstream.
+    init => {
+        if root.checked && root.menu_items.length > 0 {
+            menu.show();
+        }
+    }
+
+    property <bool> menu_open: menu.is-open;
+    changed menu_open => {
+        if !self.menu_open && root.menu_items.length > 0 {
+            root.checked = false;
+        }
+    }
+
+    changed checked => {
+        if root.menu_items.length > 0 {
+            if root.checked {
+                menu.show();
+            } else {
+                menu.close();
+            }
+        }
+    }
+}
+
+/// A high-emphasis split button — `SplitButtonDefaults.LeadingButton` +
+/// `TrailingButton`, the filled `Button` colors on both halves.
+export component FilledSplitButton {
+    in property <string> text;
+    in property <image> icon;
+    /// The trailing menu icon — the upstream samples use
+    /// `Icons.Filled.KeyboardArrowDown`, flipped 180° while checked.
+    in property <image> trailing_icon: Icons.keyboard_arrow_down;
+    in property <MaterialButtonSize> size: MaterialButtonSize.small;
+    in property <bool> enabled: true;
+    /// The checkable trailing overload (`TrailingButton(checked, ...)`);
+    /// `false` gives the plain `TrailingButton(onClick)` variant.
+    in property <bool> trailing_checkable: true;
+    /// `checked` is the trailing toggle state — with `menu_items` set it is
+    /// also the menu's open state.
+    in-out property <bool> checked;
+    in property <[MenuItem]> menu_items;
+    in property <string> leading_tooltip;
+    /// Tooltip and accessibility label of the icon-only trailing button —
+    /// upstream sets `contentDescription` + a `TooltipBox` for a11y.
+    in property <string> trailing_tooltip;
+    in property <bool> enforce_touch_target: true;
+    in property <bool> leading_simulate_hover;
+    in property <bool> leading_simulate_press;
+    in property <bool> trailing_simulate_hover;
+    in property <bool> trailing_simulate_press;
+    /// Token overrides — the parity harness's negative scenes inject the
+    /// defect through these; the defaults are the generated token values.
+    in property <length> spacing: -1px;
+    in property <length> inner_corner: -1px;
+    in property <length> inner_pressed_corner: -1px;
+    in property <length> outer_corner: -1px;
+    /// `TrailingButton`'s checked overlay.
+    in property <bool> checked_overlay: true;
+
+    callback leading_clicked <=> base.leading_clicked;
+    callback trailing_clicked <=> base.trailing_clicked;
+    callback menu_activated <=> base.menu_activated;
+
+    out property <bool> leading_has_focus <=> base.leading_has_focus;
+    out property <bool> trailing_has_focus <=> base.trailing_has_focus;
+    out property <bool> leading_pressed <=> base.leading_pressed;
+    out property <bool> trailing_pressed <=> base.trailing_pressed;
+    /// The live morphing inner radii — parity motion traces.
+    out property <length> leading_inner_radius <=> base.leading_inner_radius;
+    out property <length> trailing_inner_radius <=> base.trailing_inner_radius;
+    out property <angle> trailing_icon_rotation <=> base.trailing_icon_rotation;
+
+    min_width: base.min_width;
+    min_height: base.min_height;
+    preferred_width: base.preferred_width;
+    preferred_height: base.preferred_height;
+
+    base := SplitButtonBase {
+        width: 100%;
+        height: 100%;
+        size: root.size;
+        text: root.text;
+        icon: root.icon;
+        trailing_icon: root.trailing_icon;
+        enabled: root.enabled;
+        trailing_checkable: root.trailing_checkable;
+        checked <=> root.checked;
+        menu_items: root.menu_items;
+        leading_tooltip: root.leading_tooltip;
+        trailing_tooltip: root.trailing_tooltip;
+        enforce_touch_target: root.enforce_touch_target;
+        leading_simulate_hover: root.leading_simulate_hover;
+        leading_simulate_press: root.leading_simulate_press;
+        trailing_simulate_hover: root.trailing_simulate_hover;
+        trailing_simulate_press: root.trailing_simulate_press;
+        spacing: root.spacing;
+        inner_corner: root.inner_corner;
+        inner_pressed_corner: root.inner_pressed_corner;
+        outer_corner: root.outer_corner;
+        checked_overlay: root.checked_overlay;
+
+        container_color: FilledButtonTokens.container_color;
+        content_color: FilledButtonTokens.label_text_color;
+        disabled_container_color: FilledButtonTokens.disabled_container_color.with_alpha(FilledButtonTokens.disabled_container_opacity);
+        disabled_content_color: FilledButtonTokens.disabled_label_text_color.with_alpha(FilledButtonTokens.disabled_label_text_opacity);
+        elevation_default: 0;
+        elevation_pressed: 0;
+        elevation_hovered: 1;
+        elevation_focused: 0;
+        elevation_disabled: 0;
+    }
+}
+
+/// A medium-emphasis split button — the `TonalLeadingButton` /
+/// `TonalTrailingButton` pair upstream (`FilledTonalButton` colors).
+export component TonalSplitButton {
+    in property <string> text;
+    in property <image> icon;
+    in property <image> trailing_icon: Icons.keyboard_arrow_down;
+    in property <MaterialButtonSize> size: MaterialButtonSize.small;
+    in property <bool> enabled: true;
+    in property <bool> trailing_checkable: true;
+    in-out property <bool> checked;
+    in property <[MenuItem]> menu_items;
+    in property <string> leading_tooltip;
+    in property <string> trailing_tooltip;
+    in property <bool> enforce_touch_target: true;
+    in property <bool> leading_simulate_hover;
+    in property <bool> leading_simulate_press;
+    in property <bool> trailing_simulate_hover;
+    in property <bool> trailing_simulate_press;
+    /// Token overrides — the parity harness's negative scenes inject the
+    /// defect through these; the defaults are the generated token values.
+    in property <length> spacing: -1px;
+    in property <length> inner_corner: -1px;
+    in property <length> inner_pressed_corner: -1px;
+    in property <length> outer_corner: -1px;
+    /// `TrailingButton`'s checked overlay.
+    in property <bool> checked_overlay: true;
+
+    callback leading_clicked <=> base.leading_clicked;
+    callback trailing_clicked <=> base.trailing_clicked;
+    callback menu_activated <=> base.menu_activated;
+
+    out property <bool> leading_has_focus <=> base.leading_has_focus;
+    out property <bool> trailing_has_focus <=> base.trailing_has_focus;
+    out property <bool> leading_pressed <=> base.leading_pressed;
+    out property <bool> trailing_pressed <=> base.trailing_pressed;
+    out property <length> leading_inner_radius <=> base.leading_inner_radius;
+    out property <length> trailing_inner_radius <=> base.trailing_inner_radius;
+    out property <angle> trailing_icon_rotation <=> base.trailing_icon_rotation;
+
+    min_width: base.min_width;
+    min_height: base.min_height;
+    preferred_width: base.preferred_width;
+    preferred_height: base.preferred_height;
+
+    base := SplitButtonBase {
+        width: 100%;
+        height: 100%;
+        size: root.size;
+        text: root.text;
+        icon: root.icon;
+        trailing_icon: root.trailing_icon;
+        enabled: root.enabled;
+        trailing_checkable: root.trailing_checkable;
+        checked <=> root.checked;
+        menu_items: root.menu_items;
+        leading_tooltip: root.leading_tooltip;
+        trailing_tooltip: root.trailing_tooltip;
+        enforce_touch_target: root.enforce_touch_target;
+        leading_simulate_hover: root.leading_simulate_hover;
+        leading_simulate_press: root.leading_simulate_press;
+        trailing_simulate_hover: root.trailing_simulate_hover;
+        trailing_simulate_press: root.trailing_simulate_press;
+        spacing: root.spacing;
+        inner_corner: root.inner_corner;
+        inner_pressed_corner: root.inner_pressed_corner;
+        outer_corner: root.outer_corner;
+        checked_overlay: root.checked_overlay;
+
+        container_color: TonalButtonTokens.container_color;
+        content_color: TonalButtonTokens.label_text_color;
+        disabled_container_color: TonalButtonTokens.disabled_container_color.with_alpha(TonalButtonTokens.disabled_container_opacity);
+        disabled_content_color: TonalButtonTokens.disabled_label_text_color.with_alpha(TonalButtonTokens.disabled_label_text_opacity);
+        elevation_default: 0;
+        elevation_pressed: 0;
+        elevation_hovered: 1;
+        elevation_focused: 0;
+        elevation_disabled: 0;
+    }
+}
+
+/// The tonal split button with a shadow — `ElevatedLeadingButton` /
+/// `ElevatedTrailingButton`.
+export component ElevatedSplitButton {
+    in property <string> text;
+    in property <image> icon;
+    in property <image> trailing_icon: Icons.keyboard_arrow_down;
+    in property <MaterialButtonSize> size: MaterialButtonSize.small;
+    in property <bool> enabled: true;
+    in property <bool> trailing_checkable: true;
+    in-out property <bool> checked;
+    in property <[MenuItem]> menu_items;
+    in property <string> leading_tooltip;
+    in property <string> trailing_tooltip;
+    in property <bool> enforce_touch_target: true;
+    in property <bool> leading_simulate_hover;
+    in property <bool> leading_simulate_press;
+    in property <bool> trailing_simulate_hover;
+    in property <bool> trailing_simulate_press;
+    /// Token overrides — the parity harness's negative scenes inject the
+    /// defect through these; the defaults are the generated token values.
+    in property <length> spacing: -1px;
+    in property <length> inner_corner: -1px;
+    in property <length> inner_pressed_corner: -1px;
+    in property <length> outer_corner: -1px;
+    /// `TrailingButton`'s checked overlay.
+    in property <bool> checked_overlay: true;
+
+    callback leading_clicked <=> base.leading_clicked;
+    callback trailing_clicked <=> base.trailing_clicked;
+    callback menu_activated <=> base.menu_activated;
+
+    out property <bool> leading_has_focus <=> base.leading_has_focus;
+    out property <bool> trailing_has_focus <=> base.trailing_has_focus;
+    out property <bool> leading_pressed <=> base.leading_pressed;
+    out property <bool> trailing_pressed <=> base.trailing_pressed;
+    out property <length> leading_inner_radius <=> base.leading_inner_radius;
+    out property <length> trailing_inner_radius <=> base.trailing_inner_radius;
+    out property <angle> trailing_icon_rotation <=> base.trailing_icon_rotation;
+
+    min_width: base.min_width;
+    min_height: base.min_height;
+    preferred_width: base.preferred_width;
+    preferred_height: base.preferred_height;
+
+    base := SplitButtonBase {
+        width: 100%;
+        height: 100%;
+        size: root.size;
+        text: root.text;
+        icon: root.icon;
+        trailing_icon: root.trailing_icon;
+        enabled: root.enabled;
+        trailing_checkable: root.trailing_checkable;
+        checked <=> root.checked;
+        menu_items: root.menu_items;
+        leading_tooltip: root.leading_tooltip;
+        trailing_tooltip: root.trailing_tooltip;
+        enforce_touch_target: root.enforce_touch_target;
+        leading_simulate_hover: root.leading_simulate_hover;
+        leading_simulate_press: root.leading_simulate_press;
+        trailing_simulate_hover: root.trailing_simulate_hover;
+        trailing_simulate_press: root.trailing_simulate_press;
+        spacing: root.spacing;
+        inner_corner: root.inner_corner;
+        inner_pressed_corner: root.inner_pressed_corner;
+        outer_corner: root.outer_corner;
+        checked_overlay: root.checked_overlay;
+
+        container_color: ElevatedButtonTokens.container_color;
+        content_color: ElevatedButtonTokens.label_text_color;
+        disabled_container_color: ElevatedButtonTokens.disabled_container_color.with_alpha(ElevatedButtonTokens.disabled_container_opacity);
+        disabled_content_color: ElevatedButtonTokens.disabled_label_text_color.with_alpha(ElevatedButtonTokens.disabled_label_text_opacity);
+        elevation_default: 1;
+        elevation_pressed: 1;
+        elevation_hovered: 2;
+        elevation_focused: 1;
+        elevation_disabled: 0;
+    }
+}
+
+/// A medium-emphasis split button with a 1px border —
+/// `OutlinedLeadingButton` / `OutlinedTrailingButton`.
+export component OutlineSplitButton {
+    in property <string> text;
+    in property <image> icon;
+    in property <image> trailing_icon: Icons.keyboard_arrow_down;
+    in property <MaterialButtonSize> size: MaterialButtonSize.small;
+    in property <bool> enabled: true;
+    in property <bool> trailing_checkable: true;
+    in-out property <bool> checked;
+    in property <[MenuItem]> menu_items;
+    in property <string> leading_tooltip;
+    in property <string> trailing_tooltip;
+    in property <bool> enforce_touch_target: true;
+    in property <bool> leading_simulate_hover;
+    in property <bool> leading_simulate_press;
+    in property <bool> trailing_simulate_hover;
+    in property <bool> trailing_simulate_press;
+    /// Token overrides — the parity harness's negative scenes inject the
+    /// defect through these; the defaults are the generated token values.
+    in property <length> spacing: -1px;
+    in property <length> inner_corner: -1px;
+    in property <length> inner_pressed_corner: -1px;
+    in property <length> outer_corner: -1px;
+    /// `TrailingButton`'s checked overlay.
+    in property <bool> checked_overlay: true;
+
+    callback leading_clicked <=> base.leading_clicked;
+    callback trailing_clicked <=> base.trailing_clicked;
+    callback menu_activated <=> base.menu_activated;
+
+    out property <bool> leading_has_focus <=> base.leading_has_focus;
+    out property <bool> trailing_has_focus <=> base.trailing_has_focus;
+    out property <bool> leading_pressed <=> base.leading_pressed;
+    out property <bool> trailing_pressed <=> base.trailing_pressed;
+    out property <length> leading_inner_radius <=> base.leading_inner_radius;
+    out property <length> trailing_inner_radius <=> base.trailing_inner_radius;
+    out property <angle> trailing_icon_rotation <=> base.trailing_icon_rotation;
+
+    min_width: base.min_width;
+    min_height: base.min_height;
+    preferred_width: base.preferred_width;
+    preferred_height: base.preferred_height;
+
+    base := SplitButtonBase {
+        width: 100%;
+        height: 100%;
+        size: root.size;
+        text: root.text;
+        icon: root.icon;
+        trailing_icon: root.trailing_icon;
+        enabled: root.enabled;
+        trailing_checkable: root.trailing_checkable;
+        checked <=> root.checked;
+        menu_items: root.menu_items;
+        leading_tooltip: root.leading_tooltip;
+        trailing_tooltip: root.trailing_tooltip;
+        enforce_touch_target: root.enforce_touch_target;
+        leading_simulate_hover: root.leading_simulate_hover;
+        leading_simulate_press: root.leading_simulate_press;
+        trailing_simulate_hover: root.trailing_simulate_hover;
+        trailing_simulate_press: root.trailing_simulate_press;
+        spacing: root.spacing;
+        inner_corner: root.inner_corner;
+        inner_pressed_corner: root.inner_pressed_corner;
+        outer_corner: root.outer_corner;
+        checked_overlay: root.checked_overlay;
+
+        container_color: transparent;
+        content_color: OutlinedButtonTokens.label_text_color;
+        disabled_container_color: transparent;
+        disabled_content_color: OutlinedButtonTokens.disabled_label_text_color.with_alpha(OutlinedButtonTokens.disabled_label_text_opacity);
+        border_color: OutlinedButtonTokens.outline_color;
+        disabled_border_color: OutlinedButtonTokens.disabled_outline_color.with_alpha(OutlinedButtonTokens.disabled_container_opacity);
+        border_width: MaterialButtonMetrics.button-outline-width();
+        elevation_default: 0;
+        elevation_pressed: 0;
+        elevation_hovered: 0;
+        elevation_focused: 0;
+        elevation_disabled: 0;
+    }
+}

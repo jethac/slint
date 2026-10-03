@@ -66,13 +66,23 @@ fn gen_software_embed_assets(generated_file: &mut impl Write) -> std::io::Result
         println!("cargo:rerun-if-changed={}", testcase.absolute_path.display());
         let module_name = testcase.identifier();
 
+        let source = std::fs::read_to_string(&testcase.absolute_path)?;
+
+        let markers = parse_markers(&source, &testcase);
+
+        // `//PARITY=` cases are driven by their dedicated `parity` test on the
+        // runtime software driver and carry no `software_embed_assets` golden
+        // (the `if exists` guard in their `sw` test never fires), so the
+        // EmbedTextures compile — the most expensive per-case codegen — is
+        // dead weight. Skip it.
+        if markers.parity.parity.is_some() {
+            continue;
+        }
+
         writeln!(
             generated_file,
             "#[path=\"{module_name}.embed.rs\"] mod r#software_embed_assets_{module_name};"
         )?;
-        let source = std::fs::read_to_string(&testcase.absolute_path)?;
-
-        let markers = parse_markers(&source, &testcase);
         let ignored =
             if testcase.is_ignored("software") || testcase.is_ignored("software-embed-assets") {
                 "#[ignore]"

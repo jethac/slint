@@ -1,0 +1,109 @@
+// Copyright © SixtyFPS GmbH <info@slint.dev>
+// SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0
+
+// Scene: split-button-states — generated from `ui-libraries/material/parity/scenes/split-button-states.json`
+// (edit the scene, regenerate with `cargo run -p material-parity-generator`).
+//PARITY=xfail:software: issue #6: the software renderer has no transform-rotation — the checked/checked-toggled trailing chevron stays unrotated on that driver (a real engine gap the scope isolates, not a fake)
+//SIZE=750x148
+//TRACE_ELEMENTS=button0,button1,button2,button3,button4,button5
+//ACTION=key:Tab
+//ACTION=key:Tab
+//ACTION=key:Tab
+//ACTION=key:Tab
+//ACTION=key:Tab
+//ACTION=key:Tab
+//ACTION=key:Tab
+//MASK_DECOR=button1+12@0,2000
+//MASK_DECOR=button2+12@0,2000
+//MASK_DECOR=button3+12@0,2000
+//DENSITIES=1,2
+import "../../fonts/Roboto-VariableFont.ttf";
+import { FilledSplitButton, IconButtonWidth, Icons, MaterialButtonShape, MaterialButtonSize, MaterialPalette, MaterialTheme, MaterialWindow } from "@material";
+
+export component TestCase inherits MaterialWindow {
+    init => {
+        // The scene pins seed #6750A4, tonal-spot, spec2025, light, contrast 0
+        // (all the library defaults; restated here so a default change can't
+        // silently move the parity baseline).
+        MaterialTheme.seed-color = #6750A4;
+        MaterialTheme.dark = false;
+        MaterialTheme.contrast-level = 0;
+        MaterialTheme.use-platform-color = false;
+        MaterialTheme.plain-family = "Roboto";
+        MaterialTheme.brand-family = "Roboto";
+        // Compose builds its scene scheme from the same seed — use the
+        // runtime-generated scheme, not the static expressive table.
+        MaterialPalette.dynamic = true;
+    }
+
+    button0 := FilledSplitButton {
+        x: 16px;
+        y: 12px;
+        size: MaterialButtonSize.medium;
+        trailing_checkable: true;
+        icon: Icons.edit;
+        trailing_icon: Icons.keyboard_arrow_down;
+        width: 138px;
+        enforce_touch_target: false;
+    }
+
+    button1 := FilledSplitButton {
+        x: 202px;
+        y: 12px;
+        size: MaterialButtonSize.medium;
+        trailing_checkable: true;
+        icon: Icons.edit;
+        trailing_icon: Icons.keyboard_arrow_down;
+        width: 138px;
+        leading_simulate_hover: true;
+        enforce_touch_target: false;
+    }
+
+    button2 := FilledSplitButton {
+        x: 388px;
+        y: 12px;
+        size: MaterialButtonSize.medium;
+        trailing_checkable: true;
+        icon: Icons.edit;
+        trailing_icon: Icons.keyboard_arrow_down;
+        width: 138px;
+        trailing_simulate_hover: true;
+        enforce_touch_target: false;
+    }
+
+    button3 := FilledSplitButton {
+        x: 574px;
+        y: 12px;
+        size: MaterialButtonSize.medium;
+        trailing_checkable: true;
+        icon: Icons.edit;
+        trailing_icon: Icons.keyboard_arrow_down;
+        width: 138px;
+        enforce_touch_target: false;
+    }
+
+    button4 := FilledSplitButton {
+        x: 202px;
+        y: 80px;
+        size: MaterialButtonSize.medium;
+        trailing_checkable: true;
+        icon: Icons.edit;
+        trailing_icon: Icons.keyboard_arrow_down;
+        enabled: false;
+        width: 138px;
+        enforce_touch_target: false;
+    }
+
+    button5 := FilledSplitButton {
+        x: 16px;
+        y: 80px;
+        size: MaterialButtonSize.medium;
+        trailing_checkable: true;
+        checked: true;
+        icon: Icons.edit;
+        trailing_icon: Icons.keyboard_arrow_down;
+        width: 138px;
+        enforce_touch_target: false;
+    }
+
+}
