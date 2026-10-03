@@ -340,6 +340,11 @@ struct Widget {
     /// `CornerSize(100)` caps on `start`/`end`, uniform 6dp pressed.
     #[serde(default)]
     vertical: Option<bool>,
+    /// `horizontal-divider`/`vertical-divider`/`divider` line thickness in
+    /// dp — `DividerDefaults.Thickness` (1dp) when unset; `0` authors the
+    /// upstream `Dp.Hairline` (one physical pixel).
+    #[serde(default)]
+    thickness: Option<f64>,
     /// `connected-button-group`/`vertical-connected-button-group` items.
     #[serde(default)]
     items: Vec<GroupItem>,
@@ -771,6 +776,9 @@ fn slint_case(scene: &Scene) -> String {
             // `surface` imports `Elevation`/`MaterialShapes` below instead;
             // `rect`/`elevated-rect` are plain `Rectangle`s — no import.
             "rect" | "surface" | "elevated-rect" => continue,
+            // `divider` is the deprecated `HorizontalDivider` alias upstream.
+            "divider" | "horizontal-divider" => "HorizontalDivider",
+            "vertical-divider" => "VerticalDivider",
             "top-app-bar" => match w.variant.as_deref().unwrap_or("small") {
                 "small" => "TopAppBar",
                 "center" => "CenterAlignedTopAppBar",
@@ -1313,7 +1321,7 @@ fn slint_canvas(s: &mut String, scene: &Scene) {
     let mut vhandles = 0usize;
     let mut drags = 0usize;
     let mut groups = 0;
-
+    let mut dividers = 0;
     for w in scene.widgets.iter() {
         let component = match w.kind.as_str() {
             "filled-button" => "FilledButton",
@@ -1465,7 +1473,49 @@ fn slint_canvas(s: &mut String, scene: &Scene) {
                 connected_group_widget(s, w, i, scene);
                 continue;
             }
-
+            "divider" | "horizontal-divider" | "vertical-divider" => {
+                let i = dividers;
+                dividers += 1;
+                let component = if w.kind == "vertical-divider" {
+                    "VerticalDivider"
+                } else {
+                    "HorizontalDivider"
+                };
+                // The band pins its long axis from the scene; the short axis
+                // is the divider's own `thickness` (`DividerDefaults.
+                // Thickness` upstream when unset). `slint_overrides` shadow
+                // the authored values for the negative scenes.
+                let thickness = w
+                    .slint_overrides
+                    .get("thickness")
+                    .map(widget_num)
+                    .or(w.thickness);
+                let thickness_prop = thickness
+                    .map(|t| format!("\n        thickness: {t}px;"))
+                    .unwrap_or_default();
+                let color = w
+                    .slint_overrides
+                    .get("color")
+                    .and_then(|v| v.as_str())
+                    .map(str::to_string)
+                    .or_else(|| w.color.clone());
+                let color_prop = color
+                    .map(|c| format!("\n        color: MaterialPalette.{};", c.replace('-', "_")))
+                    .unwrap_or_default();
+                let (width, height) = if w.kind == "vertical-divider" {
+                    (thickness.unwrap_or(1.0), w.height.unwrap())
+                } else {
+                    (w.width.unwrap(), thickness.unwrap_or(1.0))
+                };
+                writeln!(
+                    s,
+                    "    divider{i} := {component} {{\n        x: {}px;\n        y: {}px;\n        width: {width}px;\n        height: {height}px;{thickness_prop}{color_prop}\n    }}\n",
+                    w.x as i64,
+                    w.y as i64,
+                )
+                .unwrap();
+                continue;
+            }
             "rect" => {
                 let radius = w
                     .slint_overrides

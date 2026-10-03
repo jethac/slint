@@ -40,6 +40,7 @@ import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.ElevatedToggleButton
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.DividerDefaults
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.FilledIconToggleButton
 import androidx.compose.material3.FilledTonalButton
@@ -59,6 +60,7 @@ import androidx.compose.material3.RippleDefaults
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.FloatingActionButtonDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.LargeExtendedFloatingActionButton
 import androidx.compose.material3.LargeFloatingActionButton
 import androidx.compose.material3.MediumExtendedFloatingActionButton
@@ -79,6 +81,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.ToggleButton
 import androidx.compose.material3.ToggleButtonDefaults
 import androidx.compose.material3.Typography
+import androidx.compose.material3.VerticalDivider
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.material3.toShape
 import androidx.compose.material3.TopAppBar
@@ -511,6 +514,7 @@ private fun CanvasScene(
         var sheets = 0
         var vhandles = 0
         var groups = 0
+        var dividers = 0
         // `text:{n}` spans every text node in scene order — group items
         // interleave with the standalone widgets' labels. Bases are
         // precomputed per widget so recompositions can't renumber them.
@@ -654,6 +658,47 @@ private fun CanvasScene(
                         ParitySheet(widget, scene, tracer, emitPress, tag)
                     } else {
                         SheetWidget(widget, scene, tracer, emitPress, tag)
+                    }
+                }
+                widget.kind == "divider" || widget.kind == "horizontal-divider" ||
+                    widget.kind == "vertical-divider" -> {
+                    // `Divider`/`HorizontalDivider` is `fillMaxWidth().
+                    // height(thickness)`; `VerticalDivider` is
+                    // `fillMaxHeight().width(thickness)` — the band's long
+                    // axis comes from the scene's span, the short axis is
+                    // the composable's `thickness` (0 = `Dp.Hairline`).
+                    val tag = "divider${dividers++}"
+                    val color = widget.color?.let { schemeColor(it) } ?: DividerDefaults.color
+                    val thickness = widget.thickness.dp
+                    Box(
+                        Modifier.offset(widget.x.dp, widget.y.dp)
+                            .then(
+                                if (widget.kind == "vertical-divider") {
+                                    Modifier.height(widget.height.dp)
+                                } else {
+                                    Modifier.width(widget.width.dp)
+                                },
+                            ),
+                    ) {
+                        if (widget.kind == "divider") {
+                            @Suppress("DEPRECATION")
+                            androidx.compose.material3.Divider(
+                                thickness = thickness,
+                                color = color,
+                            )
+                        } else if (widget.kind == "vertical-divider") {
+                            VerticalDivider(
+                                modifier = Modifier.track(tracer, tag),
+                                thickness = thickness,
+                                color = color,
+                            )
+                        } else {
+                            HorizontalDivider(
+                                modifier = Modifier.track(tracer, tag),
+                                thickness = thickness,
+                                color = color,
+                            )
+                        }
                     }
                 }
                 widget.kind == "loading-indicator" ||

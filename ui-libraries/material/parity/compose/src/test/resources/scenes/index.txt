@@ -13,6 +13,7 @@ button-styles
 connected-button-groups
 connected-button-morph
 connected-button-press-morph
+dividers
 drag-handles
 elevation-shadow
 elevation-surfaces
@@ -39,6 +40,8 @@ negative-button-role
 negative-connected-button-group
 negative-corner-leak-dark
 negative-corner-leak
+negative-divider-color
+negative-divider-thickness
 negative-extended-fab-expanded
 negative-fab-color
 negative-fab-shadow
