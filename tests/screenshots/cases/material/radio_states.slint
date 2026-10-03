@@ -3,7 +3,7 @@
 
 // Scene: radio-states — generated from `ui-libraries/material/parity/scenes/radio-states.json`
 // (edit the scene, regenerate with `cargo run -p material-parity-generator`).
-//PARITY=static
+//PARITY=xfail:femtovg: issue #53: femtovg's stencil+fringe rasterizer runs the AA band -0.5px inside to +1.5px outside the path edge, so the radio ring/dot edges sit ~0.5px outside the coverage-integral drivers' silhouette — 8-16 strict pixels at d2 with channel diffs 11-27; trace and text layers still verify on femtovg — a silent pass would mean the harness went blind
 //SIZE=240x96
 //TRACE_ELEMENTS=button0,button1,button2,button3,button4,button5
 //ACTION=key:Tab

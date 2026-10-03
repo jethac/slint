@@ -1,7 +1,8 @@
 {
   "name": "radio-states",
   "type": "canvas",
-  "parity": "static",
+  "parity": "xfail:femtovg",
+  "negative_note": "issue #53: femtovg's stencil+fringe rasterizer runs the AA band -0.5px inside to +1.5px outside the path edge, so the radio ring/dot edges sit ~0.5px outside the coverage-integral drivers' silhouette — 8-16 strict pixels at d2 with channel diffs 11-27; trace and text layers still verify on femtovg — a silent pass would mean the harness went blind",
   "size": [
     240,
     96
