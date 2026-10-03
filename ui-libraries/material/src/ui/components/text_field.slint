@@ -3,25 +3,63 @@
 
 import { MaterialTypography } from "../styling/material_typography.slint";
 import { MaterialPalette } from "../styling/material_palette.slint";
-import { MaterialStyleMetrics } from "../styling/material_style_metrics.slint";
 import { MaterialAnimations } from "../styling/material_animations.slint";
 import { MaterialText } from "./material_text.slint";
 import { IconButton } from "./icon_button.slint";
-import { Icon } from "./icon.slint";
+import { FilledTextFieldTokens, OutlinedTextFieldTokens } from "../styling/generated/material_component_tokens.slint";
 
-export component TextField {
-    in property <string> label: placeholder_text;
-    // Deprecated: this property was unintentionally made public. Use `label` instead.
+// Shared implementation for the Material text-field family: `TextField`
+// (filled), `OutlinedTextField`, `SecureTextField` and
+// `OutlinedSecureTextField`.
+//
+// Geometry, colors and motion follow the pinned Compose sources
+// (androidx/androidx@23327507f7fc7d5b19d65fec4b090f60c970079b, material3
+// 1.5.0-alpha18):
+//  - TextField.kt / OutlinedTextField.kt / SecureTextField.kt and
+//    internal/TextFieldImpl.kt — decoration layout: `labelProgress` morphs the
+//    label from centered `bodyLarge` to `bodySmall` at the container top on
+//    `MotionSchemeKeyTokens.FastSpatial`; placeholder opacity uses FastEffects
+//    (SlowEffects when appearing on focus of an empty field); the outlined
+//    variant notches its border by `labelPlaceable.width * progress` + 4dp
+//    each side.
+//  - TextFieldDefaults.kt — `TextFieldPadding` 16, `TextFieldWithLabelVerticalPadding`
+//    8, icon slot = `LocalMinimumInteractiveComponentSize` 48 with icon 24 →
+//    `textFieldHorizontalIconPadding` 12, `AboveLabel` padding 4/4/4,
+//    `SupportingTopPadding` 4, `PrefixSuffixTextPadding` 2, `MinTextLineHeight`
+//    24 (= bodyLarge line height), `MinFocusedLabelLineHeight` 16 (=
+//    bodySmall line height), `MinSupportingTextLineHeight` 16, `MinWidth` 280,
+//    `MinHeight` 56, `minimizedLabelHalfHeight` = bodySmall.lineHeight / 2 = 8.
+//  - tokens/FilledTextFieldTokens.kt / tokens/OutlinedTextFieldTokens.kt.
+//
+// Upstream places all decoration absolutely; this file does the same.
+component TextFieldBase {
+    in property <bool> outlined;
+    in property <string> label;
+    // Deprecated: unintentionally public alias of `label`.
     in property <string> placeholder_text;
+    in property <string> placeholder;
     in property <string> supporting_text;
+    in property <string> prefix;
+    in property <string> suffix;
     in property <bool> has_error;
     in property <image> leading_icon;
     in property <image> trailing_icon;
     in property <bool> enabled: true;
     in property <bool> read_only <=> input.read_only;
+    in property <InputType> input-type;
+    // TextFieldLabelPosition.Above — the label sits above the container,
+    // always minimized; the placeholder stays visible while empty.
+    in property <bool> label_above;
+    // Parity/test hooks: drives the focused decoration without real focus.
+    in property <bool> simulate_focus;
+    in property <bool> secure;
+    in-out property <bool> obscure: true;
+    // `textObfuscationCharacter` (SecureTextField.kt) — the first char is
+    // substituted for every character while `obscure` is on. Upstream
+    // default `\u2022` (bullet).
+    in property <string> obfuscation_character: "\u{2022}";
     out property <bool> has_focus: input.has_focus;
-    in_out property <string> text <=> input.text;
-    in property <InputType> input-type <=> input.input-type;
+    in-out property <string> text <=> input.text;
 
     callback leading_icon_clicked();
     callback trailing_icon_clicked();
@@ -30,147 +68,474 @@ export component TextField {
     callback key_pressed(event: KeyEvent) -> EventResult;
     callback key_released(event: KeyEvent) -> EventResult;
 
+    // Geometry (TextFieldDefaults.kt / internal/TextFieldImpl.kt).
+    property <length> h_padding: 16px;
+    property <length> v_pad_label: 8px;
+    // The icon slot is the icon's own 24dp bounds: upstream's
+    // `minimumInteractiveComponentSize` (48dp touch target) is visual
+    // padding the drawn component leaves out — the parity harness zeroes
+    // `LocalMinimumInteractiveComponentSize` for the same reason.
+    property <length> icon_slot: 24px;
+    property <length> icon_pad: 12px;
+    property <length> label_top: 8px;
+    property <length> text_line: MaterialTypography.body_large.line_height;
+    property <length> label_line: MaterialTypography.body_small.line_height;
+    property <length> label_expanded_line: MaterialTypography.body_large.line_height;
+    property <length> support_pad: 4px;
+    property <length> support_line: 16px;
+    property <length> above_label_h: 16px + 4px;
+    property <length> support_h: root.supporting_text != "" ? root.support_pad + root.support_line : 0px;
+
     property <bool> has_leading: root.leading_icon.width > 0 && root.leading_icon.height > 0;
-    property <bool> has_trailing: root.trailing_icon.width > 0 && root.trailing_icon.height > 0;
     property <length> computed_x;
-    property <color> highlight: root.enabled && root.has_error ? MaterialPalette.error : root.has_focus ? MaterialPalette.primary : MaterialPalette.on_surface_variant;
+    property <bool> has_trailing: root.trailing_icon.width > 0 && root.trailing_icon.height > 0;
+    property <bool> has_label: root.label_text != "";
+    property <bool> has_prefix: root.prefix != "";
+    property <bool> has_suffix: root.suffix != "";
+    property <string> label_text: root.label != "" ? root.label : root.placeholder_text;
+
+    property <length> leading_w: root.has_leading ? root.icon_slot : 0px;
+    property <length> trailing_w: root.has_trailing ? root.icon_slot : 0px;
+    property <length> start_pad: root.h_padding;
+    property <length> end_pad: root.h_padding;
+    // X of the first input glyph / expanded label text inside the container.
+    // `startPadding` upstream is `TextFieldPadding - horizontalIconPadding`
+    // and `horizontalIconPadding` is 0 once the interactive-size slot is the
+    // icon's own bounds — so text just starts `h_padding` past the slot.
+    property <length> text_x: root.leading_w + root.start_pad;
+    property <length> prefix_w: root.has_prefix ? prefix_el.preferred_width + 2px : 0px;
+    property <length> suffix_w: root.has_suffix ? suffix_el.preferred_width + 2px : 0px;
+
+    property <length> container_y: root.label_above ? root.above_label_h : (root.outlined ? root.label_line / 2 : 0px);
+    property <length> container_h: max(56px, root.height - root.container_y - root.support_h);
+    // Input-line top inside the container. Filled + inside label: fixed at
+    // `topPadding + MinFocusedLabelLineHeight` = 24; otherwise the single
+    // line is vertically centered (TextFieldMeasurePolicy /
+    // OutlinedTextFieldMeasurePolicy singleLine branch).
+    property <length> text_y: (!root.outlined && root.has_label && !root.label_above
+            ? root.v_pad_label + root.label_line
+            : (root.container_h - root.text_line) / 2);
+
+    property <bool> focused: input.has_focus || root.simulate_focus;
+    // `labelProgress`: 0 = expanded label, 1 = minimized. An `Above` label
+    // never expands; `Attached` expands while unfocused and empty.
+    property <float> label_progress: root.has_label && !root.label_above && (root.focused || root.text != "") ? 1 : 0;
+    property <length> label_h: root.label_expanded_line + (root.label_line - root.label_expanded_line) * root.label_progress;
+    // Label top in container coordinates: `lerp(startY, endY, labelProgress)`
+    // — centered while expanded; topPadding 8 (filled) or -labelHeight/2 on the
+    // top border (outlined) when minimized.
+    property <length> label_end_y: root.outlined ? -root.label_h / 2 : root.label_top;
+    property <length> label_y: ((root.container_h - root.label_h) / 2) * (1 - root.label_progress) + root.label_end_y * root.label_progress;
+    // Label glyph left edge: filled morphs between `text_x` and the
+    // minimized `text_x` (box = `labelX + leftIconWidth`, glyph sits 16 in).
+    // Outlined's label placeable is the bare glyph (`labelPadding = Modifier`):
+    // `startX` = `leadingPlusPadding` = text_x, `endX` = `startPadding` = 16.
+    property <length> label_min_x: root.outlined ? root.h_padding : root.text_x;
+    property <length> label_x: root.text_x * (1 - root.label_progress) + root.label_min_x * root.label_progress;
+    // Minimized attached label glyph width — the outline cutout scales the
+    // label placeable width by `labelProgress`.
+    property <length> label_glyph_w: label_el.width;
+
+    // Colors (TextFieldColors: each slot resolves disabled → error →
+    // focused → rest; TextFieldDefaults.kt `colors()`). The filled
+    // `disabledContainerColor` is `ContainerColor` at the pin — the alpha'd
+    // `disabled_container_*` token pair is generated but unused upstream.
+    property <color> container_color: root.outlined ? transparent : FilledTextFieldTokens.container_color;
+
+    property <color> indicator_color: !root.enabled
+        ? (root.outlined
+            ? OutlinedTextFieldTokens.disabled_outline_color.with_alpha(OutlinedTextFieldTokens.disabled_outline_opacity)
+            : FilledTextFieldTokens.disabled_active_indicator_color.with_alpha(FilledTextFieldTokens.disabled_active_indicator_opacity))
+        : root.has_error ? (root.outlined ? OutlinedTextFieldTokens.error_outline_color : FilledTextFieldTokens.error_active_indicator_color)
+        : root.focused ? (root.outlined ? OutlinedTextFieldTokens.focus_outline_color : FilledTextFieldTokens.focus_active_indicator_color)
+        : (root.outlined ? OutlinedTextFieldTokens.outline_color : FilledTextFieldTokens.active_indicator_color);
+
+    property <length> indicator_w: root.enabled && root.focused
+        ? (root.outlined ? OutlinedTextFieldTokens.focus_outline_width : FilledTextFieldTokens.focus_active_indicator_height)
+        : (!root.enabled
+            ? (root.outlined ? OutlinedTextFieldTokens.disabled_outline_width : FilledTextFieldTokens.disabled_active_indicator_height)
+            : (root.outlined ? OutlinedTextFieldTokens.outline_width : FilledTextFieldTokens.active_indicator_height));
+
+    property <color> label_color: !root.enabled
+        ? (root.outlined ? OutlinedTextFieldTokens.disabled_label_color.with_alpha(OutlinedTextFieldTokens.disabled_label_opacity)
+                         : FilledTextFieldTokens.disabled_label_color.with_alpha(FilledTextFieldTokens.disabled_label_opacity))
+        : root.has_error ? (root.outlined ? OutlinedTextFieldTokens.error_label_color : FilledTextFieldTokens.error_label_color)
+        : root.focused ? (root.outlined ? OutlinedTextFieldTokens.focus_label_color : FilledTextFieldTokens.focus_label_color)
+        : (root.outlined ? OutlinedTextFieldTokens.label_color : FilledTextFieldTokens.label_color);
+
+    property <color> input_color: !root.enabled
+        ? (root.outlined ? OutlinedTextFieldTokens.disabled_input_color.with_alpha(OutlinedTextFieldTokens.disabled_input_opacity)
+                         : FilledTextFieldTokens.disabled_input_color.with_alpha(FilledTextFieldTokens.disabled_input_opacity))
+        : root.has_error ? (root.outlined ? OutlinedTextFieldTokens.error_input_color : FilledTextFieldTokens.error_input_color)
+        : root.focused ? (root.outlined ? OutlinedTextFieldTokens.focus_input_color : FilledTextFieldTokens.focus_input_color)
+        : (root.outlined ? OutlinedTextFieldTokens.input_color : FilledTextFieldTokens.input_color);
+
+    property <color> placeholder_color: !root.enabled
+        ? (root.outlined ? OutlinedTextFieldTokens.disabled_input_color.with_alpha(OutlinedTextFieldTokens.disabled_input_opacity)
+                         : FilledTextFieldTokens.disabled_input_color.with_alpha(FilledTextFieldTokens.disabled_input_opacity))
+        : FilledTextFieldTokens.input_placeholder_color;
+
+    // `leadingIconColor`/`trailingIconColor` — the disabled slot is
+    // `disabledXIconColor`@0.38, applied through the IconButton's own
+    // disabled alpha over `on_surface`.
+    property <color> leading_icon_color: root.has_error
+        ? (root.outlined ? OutlinedTextFieldTokens.error_leading_icon_color : FilledTextFieldTokens.error_leading_icon_color)
+        : root.focused ? (root.outlined ? OutlinedTextFieldTokens.focus_leading_icon_color : FilledTextFieldTokens.focus_leading_icon_color)
+        : (root.outlined ? OutlinedTextFieldTokens.leading_icon_color : FilledTextFieldTokens.leading_icon_color);
+
+    property <color> trailing_icon_color: root.has_error
+        ? (root.outlined ? OutlinedTextFieldTokens.error_trailing_icon_color : FilledTextFieldTokens.error_trailing_icon_color)
+        : root.focused ? (root.outlined ? OutlinedTextFieldTokens.focus_trailing_icon_color : FilledTextFieldTokens.focus_trailing_icon_color)
+        : (root.outlined ? OutlinedTextFieldTokens.trailing_icon_color : FilledTextFieldTokens.trailing_icon_color);
+
+    property <color> supporting_color: !root.enabled
+        ? (root.outlined ? OutlinedTextFieldTokens.disabled_supporting_color.with_alpha(OutlinedTextFieldTokens.disabled_supporting_opacity)
+                         : FilledTextFieldTokens.disabled_supporting_color.with_alpha(FilledTextFieldTokens.disabled_supporting_opacity))
+        : root.has_error ? (root.outlined ? OutlinedTextFieldTokens.error_supporting_color : FilledTextFieldTokens.error_supporting_color)
+        : root.focused ? (root.outlined ? OutlinedTextFieldTokens.focus_supporting_color : FilledTextFieldTokens.focus_supporting_color)
+        : (root.outlined ? OutlinedTextFieldTokens.supporting_color : FilledTextFieldTokens.supporting_color);
+
+    property <color> prefix_color: !root.enabled
+        ? (root.outlined ? OutlinedTextFieldTokens.input_prefix_color.with_alpha(OutlinedTextFieldTokens.disabled_input_opacity)
+                         : FilledTextFieldTokens.input_prefix_color.with_alpha(FilledTextFieldTokens.disabled_input_opacity))
+        : (root.outlined ? OutlinedTextFieldTokens.input_prefix_color : FilledTextFieldTokens.input_prefix_color);
+
+    property <color> suffix_color: !root.enabled
+        ? (root.outlined ? OutlinedTextFieldTokens.input_suffix_color.with_alpha(OutlinedTextFieldTokens.disabled_input_opacity)
+                         : FilledTextFieldTokens.input_suffix_color.with_alpha(FilledTextFieldTokens.disabled_input_opacity))
+        : (root.outlined ? OutlinedTextFieldTokens.input_suffix_color : FilledTextFieldTokens.input_suffix_color);
+
+    // `labelProgress` — MotionSchemeKeyTokens.FastSpatial.
+    animate label_progress {
+        easing: MaterialAnimations.fast-spatial-spring;
+        enabled: !MaterialPalette.reduced-motion;
+    }
 
     forward_focus: input;
     accessible-role: text-input;
     accessible-enabled: root.enabled;
+    accessible-label: root.label_text;
     accessible-value <=> text;
-    accessible-placeholder-text: placeholder_text;
+    accessible-placeholder-text: root.placeholder;
     accessible-action-set-value(v) => { text = v; edited(v); }
 
-    layout := VerticalLayout {
-        spacing: MaterialStyleMetrics.spacing_4;
+    min_width: 280px;
+    min_height: root.container_y + 56px + root.support_h;
 
-        background_layer := Rectangle {
-            border_top_left_radius: MaterialStyleMetrics.border_radius_4;
-            border_top_right_radius: MaterialStyleMetrics.border_radius_4;
-            background: MaterialPalette.surface_container_highest;
-            min_height: max(MaterialStyleMetrics.size_56, inner_layout.min_height);
+    if root.label_above && root.has_label : MaterialText {
+        x: 4px;
+        y: 0;
+        width: parent.width - 8px;
+        height: 16px;
+        text: root.label_text;
+        style: MaterialTypography.body_small;
+        color: root.label_color;
 
-            inner_layout := HorizontalLayout {
-                padding_left: root.has_leading ? MaterialStyleMetrics.padding_4 : MaterialStyleMetrics.padding_16;
-                padding_right: root.has_trailing ? MaterialStyleMetrics.padding_4 : MaterialStyleMetrics.padding_16;
-                padding_top: MaterialStyleMetrics.padding_4;
-                padding_bottom: self.padding_top;
-                spacing: MaterialStyleMetrics.spacing_2;
+        animate color {
+            easing: MaterialAnimations.fast-effects-spring;
+            enabled: !MaterialPalette.reduced-motion;
+        }
+    }
 
-                if root.has_leading : IconButton {
-                    icon: root.leading_icon;
-                    enabled: root.enabled;
+    container := Rectangle {
+        y: root.container_y;
+        width: 100%;
+        height: root.container_h;
+        border_top_left_radius: root.outlined ? 0 : FilledTextFieldTokens.container_shape.top_left;
+        border_top_right_radius: root.outlined ? 0 : FilledTextFieldTokens.container_shape.top_right;
+        background: root.outlined ? transparent : root.container_color;
 
-                    clicked => {
-                        root.leading_icon_clicked();
-                    }
-                }
+        // Clicks on the decoration outside the input focus it, matching
+        // BasicTextField's clickable area.
+        focus_touch := TouchArea {
+            width: 100%;
+            height: 100%;
+            enabled: root.enabled;
 
-                HorizontalLayout {
-                    padding_top: MaterialStyleMetrics.padding_4;
-                    padding_bottom: self.padding_top;
+            clicked => {
+                input.focus();
+            }
+        }
 
-                    Rectangle {
-                        horizontal_stretch: 1;
-                        clip: true;
-                        min_height: input.min_height;
+        // The icon slots hold composable content upstream; our API takes
+        // `image`s, so each slot is the icon's own visual bounds — the
+        // `minimumInteractiveComponentSize` padding is a touch-target
+        // concern the library leaves out of the drawn bounds (the parity
+        // harness zeroes the local on the Compose side for the same reason).
+        if root.has_leading : TouchArea {
+            x: 0;
+            y: 0;
+            width: root.icon_slot;
+            height: 100%;
+            enabled: root.enabled;
 
-                        input := TextInput {
-                            x: min(0px, max(parent.width - self.width - self.text_cursor_width, root.computed_x));
-                            width: max(parent.width - self.text-cursor-width, self.preferred-width);
-                            font_size: MaterialTypography.body_large.font_size;
-                            font_weight: MaterialTypography.body_large.font_weight;
-                            text_cursor_width: MaterialStyleMetrics.size_3;
-                            vertical_alignment: bottom;
-                            single_line: true;
-                            color: MaterialPalette.on_surface;
-                            selection_background_color: MaterialPalette.primary.with_alpha(0.5);
-                            selection_foreground_color: self.color;
-                            enabled: root.enabled;
-                             // Disable TextInput's built-in accessibility support as the component takes care of that.
-                            accessible-role: none;
+            clicked => {
+                root.leading_icon_clicked();
+            }
 
-                            cursor_position_changed(cursor_position) => {
-                                if cursor_position.x + root.computed_x < 0 {
-                                    root.computed_x = - cursor_position.x;
-                                } else if cursor-position.x + root.computed_x > parent.width - self.text-cursor-width {
-                                    root.computed_x = parent.width - cursor_position.x - self.text-cursor-width;
-                                }
-                            }
+            Image {
+                x: (parent.width - self.width) / 2;
+                y: (parent.height - self.height) / 2;
+                width: FilledTextFieldTokens.leading_icon_size;
+                height: FilledTextFieldTokens.leading_icon_size;
+                source: root.leading_icon;
+                colorize: root.enabled ? root.leading_icon_color : MaterialPalette.on_surface.with_alpha(0.38);
+            }
+        }
 
-                            accepted => {
-                                root.accepted(self.text);
-                            }
+        if root.has_trailing : TouchArea {
+            x: parent.width - self.width;
+            y: 0;
+            width: root.icon_slot;
+            height: 100%;
+            enabled: root.enabled;
 
-                            edited => {
-                                root.edited(self.text);
-                            }
+            clicked => {
+                root.trailing_icon_clicked();
+            }
 
-                            key_pressed(event) => {
-                                root.key_pressed(event)
-                            }
+            Image {
+                x: (parent.width - self.width) / 2;
+                y: (parent.height - self.height) / 2;
+                width: FilledTextFieldTokens.trailing_icon_size;
+                height: FilledTextFieldTokens.trailing_icon_size;
+                source: root.trailing_icon;
+                colorize: root.enabled ? root.trailing_icon_color : MaterialPalette.on_surface.with_alpha(0.38);
+            }
+        }
 
-                            key_released(event) => {
-                                root.key_released(event)
-                            }
-                        }
+        text_clip := Rectangle {
+            x: root.text_x;
+            width: parent.width - root.text_x - root.trailing_w - root.end_pad;
+            height: 100%;
+            clip: true;
 
-                        text_label := MaterialText {
-                            y: (parent.height - self.height) / 2;
-                            width: 100%;
-                            text: root.label;
-                            color: root.highlight;
-                            style: MaterialTypography.body_large;
-
-                            states [
-                                on_top when root.text != "" || input.has_focus : {
-                                    y: 0;
-                                    style: MaterialTypography.body_small;
-                                }
-                            ]
-
-                            animate font_size, y { enabled: !MaterialPalette.reduced-motion;
-                                 duration: MaterialAnimations.standard_fast_duration;
-                                 easing: MaterialAnimations.standard_easing;
-                            }
-                        }
-                    }
-                }
-
-                if root.trailing_icon.width > 0 && root.trailing_icon.height > 0 : IconButton {
-                    icon: root.trailing_icon;
-                    enabled: root.enabled;
-                    has_error: root.has_error;
-
-                    clicked => {
-                        root.trailing_icon_clicked();
-                    }
+            prefix_el := Text {
+                visible: root.has_prefix;
+                x: 0;
+                y: root.text_y;
+                height: root.text_line;
+                text: root.prefix;
+                font_family: MaterialTypography.body_large.font_family;
+                font_size: MaterialTypography.body_large.font_size;
+                font_weight: MaterialTypography.body_large.font_weight;
+                letter_spacing: MaterialTypography.body_large.tracking;
+                color: root.prefix_color;
+                vertical_alignment: center;
+                // `affixOpacity` — FastEffects.
+                opacity: root.focused || root.text != "" || root.label_above ? 1 : 0;
+                animate opacity {
+                    easing: MaterialAnimations.fast-effects-spring;
+                    enabled: !MaterialPalette.reduced-motion;
                 }
             }
 
-            active_indicator := Rectangle {
-                y: parent.height - self.height;
-                height: MaterialStyleMetrics.size_1;
-                background: root.highlight;
+            // Placeholder: upstream hides it while an Attached label is
+            // expanded (it would overlap the label) — `placeholderAlpha` is 0
+            // for UnfocusedEmpty unless the label is `Above`.
+            placeholder_el := Text {
+                visible: root.placeholder != "";
+                x: root.prefix_w;
+                y: root.text_y;
+                height: root.text_line;
+                text: root.placeholder;
+                font_family: MaterialTypography.body_large.font_family;
+                font_size: MaterialTypography.body_large.font_size;
+                font_weight: MaterialTypography.body_large.font_weight;
+                letter_spacing: MaterialTypography.body_large.tracking;
+                color: root.placeholder_color;
+                vertical_alignment: center;
+                opacity: root.text == "" && (root.focused || root.label_above) ? 1 : 0;
+                animate opacity {
+                    // UnfocusedEmpty→Focused shows the placeholder on
+                    // SlowEffects; hiding it on Focused→UnfocusedEmpty is
+                    // FastEffects.
+                    easing: root.text == "" && (root.focused || root.label_above)
+                        ? MaterialAnimations.slow-effects-spring
+                        : MaterialAnimations.fast-effects-spring;
+                    enabled: !MaterialPalette.reduced-motion;
+                }
+            }
 
-                animate height { enabled: !MaterialPalette.reduced-motion;
-                     duration: MaterialAnimations.standard_fast_duration;
-                     easing: MaterialAnimations.standard_easing;
+            input := TextInput {
+                x: root.prefix_w + min(0px, max(parent.width - self.width - self.text-cursor-width - root.suffix_w - root.prefix_w, root.computed_x));
+                width: max(parent.width - root.prefix_w - root.suffix_w, self.preferred-width);
+                y: root.text_y;
+                height: root.text_line;
+                font_family: MaterialTypography.body_large.font_family;
+                font_size: MaterialTypography.body_large.font_size;
+                font_weight: MaterialTypography.body_large.font_weight;
+                letter_spacing: MaterialTypography.body_large.tracking;
+                text_cursor_width: 2px;
+                vertical_alignment: center;
+                wrap: no-wrap;
+                single_line: true;
+                color: root.input_color;
+                selection_background_color: MaterialPalette.primary.with_alpha(0.4);
+                selection_foreground_color: self.color;
+                enabled: root.enabled;
+                input-type: root.secure ? (root.obscure ? InputType.password : InputType.text) : root.input-type;
+                password_character: root.secure ? root.obfuscation_character : "";
+                accessible-role: none;
+
+                cursor_position_changed(cursor_position) => {
+                    if cursor_position.x + root.computed_x + root.prefix_w < root.prefix_w {
+                        root.computed_x = - cursor_position.x;
+                    } else if cursor-position.x + root.computed_x + root.prefix_w > parent.width - root.suffix_w - self.text-cursor-width {
+                        root.computed_x = parent.width - cursor_position.x - root.suffix_w - self.text-cursor-width - root.prefix_w;
+                    }
+                }
+
+                accepted => {
+                    root.accepted(self.text);
+                }
+
+                edited => {
+                    root.edited(self.text);
+                }
+
+                key_pressed(event) => {
+                    root.key_pressed(event)
+                }
+
+                key_released(event) => {
+                    root.key_released(event)
+                }
+            }
+
+            suffix_el := Text {
+                visible: root.has_suffix;
+                x: parent.width - root.suffix_w;
+                y: root.text_y;
+                height: root.text_line;
+                text: root.suffix;
+                font_family: MaterialTypography.body_large.font_family;
+                font_size: MaterialTypography.body_large.font_size;
+                font_weight: MaterialTypography.body_large.font_weight;
+                letter_spacing: MaterialTypography.body_large.tracking;
+                color: root.suffix_color;
+                vertical_alignment: center;
+                opacity: root.focused || root.text != "" || root.label_above ? 1 : 0;
+                animate opacity {
+                    easing: MaterialAnimations.fast-effects-spring;
+                    enabled: !MaterialPalette.reduced-motion;
                 }
             }
         }
 
-        if root.supporting_text != "" : HorizontalLayout {
-            padding_left: MaterialStyleMetrics.padding_16;
-            padding_right: self.padding_left;
+        // The Attached label morphing between expanded (inside, centered) and
+        // minimized (top of the filled container / notched into the outline).
+        // Kept unconditionally present (invisible when unused) so the outline
+        // notch can read its live width.
+        label_el := Text {
+            visible: root.has_label && !root.label_above;
+            x: root.label_x;
+            y: root.label_y;
+            height: root.label_h;
+            text: root.label_text;
+            font_family: MaterialTypography.body_large.font_family;
+            font_size: MaterialTypography.body_large.font_size
+                + (MaterialTypography.body_small.font_size - MaterialTypography.body_large.font_size) * root.label_progress;
+            font_weight: MaterialTypography.body_large.font_weight;
+            letter_spacing: MaterialTypography.body_large.tracking
+                + (MaterialTypography.body_small.tracking - MaterialTypography.body_large.tracking) * root.label_progress;
+            color: root.label_color;
+            vertical_alignment: center;
 
-            supporting_text := MaterialText {
-                text: root.supporting_text;
-                style: MaterialTypography.body_small;
-                color: root.highlight;
-                opacity: root.enabled ? 1 : MaterialPalette.disable_opacity;
+            animate color {
+                easing: MaterialAnimations.fast-effects-spring;
+                enabled: !MaterialPalette.reduced-motion;
             }
+        }
+
+        // Filled: the active-indicator line animates 1dp ↔ 2dp on FastSpatial
+        // and its color on FastEffects (IndicatorLineNode).
+        if !root.outlined : active_indicator := Rectangle {
+            y: parent.height - self.height;
+            width: 100%;
+            height: root.indicator_w;
+            background: root.indicator_color;
+
+            animate height {
+                easing: MaterialAnimations.fast-spatial-spring;
+                enabled: !MaterialPalette.reduced-motion;
+            }
+            animate background {
+                easing: MaterialAnimations.fast-effects-spring;
+                enabled: !MaterialPalette.reduced-motion;
+            }
+        }
+
+        // Outlined: the border is stroked as a path so the label notch is a
+        // real gap — `outlineCutout` clips `labelPlaceable.width` + 4dp of
+        // `OutlinedTextFieldInnerPadding` on each side. Radius is
+        // `ContainerShape` (corner_extra_small) minus half the stroke.
+        if root.outlined : border_path := Path {
+            x: 0;
+            y: 0;
+            width: 100%;
+            height: 100%;
+            // Slint's Path fit subtracts `stroke_width` from the layout bounds
+            // and offsets the result by half a stroke (items/path.rs
+            // `fitted_path_events`), so the viewbox is the stroke CENTER-LINE
+            // box: commands run 0..(w-sw) x 0..(h-sw) and the stroke lands
+            // fully inside the element bounds, matching Compose's inside
+            // `border` draw.
+            viewbox_width: (self.width - self.stroke_width) / 1px;
+            viewbox_height: (self.height - self.stroke_width) / 1px;
+            stroke: root.indicator_color;
+            stroke_width: root.indicator_w;
+            fill: transparent;
+            property <length> inset: root.indicator_w / 2;
+            property <length> path_w: self.width - self.stroke_width;
+            property <length> path_h: self.height - self.stroke_width;
+            property <length> r: 4px - self.inset;
+            // `outlineCutout` (OutlinedTextField.kt): clips whenever
+            // `labelWidth * progress > 0`; the gap runs from
+            // `startPadding - innerPadding` (16-4=12) to
+            // `startPadding + labelBoxWidth*progress + innerPadding`.
+            property <bool> gap_on: root.has_label && !root.label_above && root.label_progress > 0;
+            property <length> gap_l: root.h_padding - 4px;
+            property <length> gap_r: root.h_padding + root.label_glyph_w * root.label_progress + 4px;
+            // The top edge is drawn by two legs: MoveTo(start_x) -> LineTo(r)
+            // covers r..start_x; the final LineTo(end_x) covers end_x..w-r.
+            // No gap: start at w-r so the first leg spans the whole edge.
+            property <length> start_x: self.gap_on ? max(0px, self.gap_l - self.inset) : self.path_w - self.r;
+            property <length> end_x: self.gap_on ? min(self.path_w, self.gap_r - self.inset) : self.path_w - self.r;
+
+            MoveTo { x: border_path.start_x / 1px; y: 0; }
+            LineTo { x: border_path.r / 1px; y: 0; }
+            ArcTo { x: 0; y: border_path.r / 1px; radius_x: border_path.r / 1px; radius_y: border_path.r / 1px; sweep: false; }
+            LineTo { x: 0; y: (border_path.path_h - border_path.r) / 1px; }
+            ArcTo { x: border_path.r / 1px; y: border_path.path_h / 1px; radius_x: border_path.r / 1px; radius_y: border_path.r / 1px; sweep: false; }
+            LineTo { x: (border_path.path_w - border_path.r) / 1px; y: border_path.path_h / 1px; }
+            ArcTo { x: border_path.path_w / 1px; y: (border_path.path_h - border_path.r) / 1px; radius_x: border_path.r / 1px; radius_y: border_path.r / 1px; sweep: false; }
+            LineTo { x: border_path.path_w / 1px; y: border_path.r / 1px; }
+            ArcTo { x: (border_path.path_w - border_path.r) / 1px; y: 0; radius_x: border_path.r / 1px; radius_y: border_path.r / 1px; sweep: false; }
+            LineTo { x: border_path.end_x / 1px; y: 0; }
+
+            animate stroke {
+                easing: MaterialAnimations.fast-effects-spring;
+                enabled: !MaterialPalette.reduced-motion;
+            }
+            animate stroke_width {
+                easing: MaterialAnimations.fast-effects-spring;
+                enabled: !MaterialPalette.reduced-motion;
+            }
+        }
+    }
+
+    if root.supporting_text != "" : MaterialText {
+        x: root.h_padding;
+        y: root.container_y + root.container_h + root.support_pad;
+        width: parent.width - 2 * root.h_padding;
+        height: root.support_line;
+        text: root.supporting_text;
+        style: MaterialTypography.body_small;
+        color: root.supporting_color;
+        animate color {
+            easing: MaterialAnimations.fast-effects-spring;
+            enabled: !MaterialPalette.reduced-motion;
         }
     }
 
@@ -197,15 +562,27 @@ export component TextField {
     public function paste() {
         input.paste();
     }
+}
 
-    states [
-        disabled when !root.enabled : {
-            background_layer.background: MaterialPalette.surface_container_highest.with_alpha(MaterialPalette.disable_opacity);
-            text_label.opacity: MaterialPalette.disable_opacity;
-            input.opacity: MaterialPalette.disable_opacity;
-        }
-        focused when input.has_focus : {
-            active_indicator.height: MaterialStyleMetrics.size_3;
-        }
-    ]
+/// A filled [Material text field](https://m3.material.io/components/text-fields).
+export component TextField inherits TextFieldBase {
+}
+
+/// An outlined [Material text field](https://m3.material.io/components/text-fields):
+/// the label cuts into the border when minimized.
+export component OutlinedTextField inherits TextFieldBase {
+    outlined: true;
+}
+
+/// A filled [Material secure text field](https://m3.material.io/components/text-fields)
+/// for password input. Set `obscure` false to reveal the text.
+export component SecureTextField inherits TextFieldBase {
+    secure: true;
+}
+
+/// An outlined [Material secure text field](https://m3.material.io/components/text-fields)
+/// for password input. Set `obscure` false to reveal the text.
+export component OutlinedSecureTextField inherits TextFieldBase {
+    secure: true;
+    outlined: true;
 }
