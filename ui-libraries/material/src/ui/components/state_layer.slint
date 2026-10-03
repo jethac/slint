@@ -8,8 +8,22 @@ import { MaterialCornerShape } from "../styling/generated/material_shape_tokens.
 import { ToolTip } from "./tooltip.slint";
 import { MaterialWindowAdapter } from "./material_window.slint";
 
+/// Resolved per-corner radii of one element, in top-left → bottom-left
+/// order like `RoundedCornerShape(topStart, topEnd, bottomEnd, bottomStart)`.
+/// `ShapedComponents.shaped_corners` switches the decorations below from the
+/// uniform `border_radius` to these four values.
+export struct MaterialCornerRadii {
+    top_left: length,
+    top_right: length,
+    bottom_right: length,
+    bottom_left: length,
+}
+
 export component Ripple {
     in property <length> border_radius;
+    /// Per-corner radii; used instead of `border_radius` when `shaped_corners`.
+    in property <MaterialCornerRadii> corners;
+    in property <bool> shaped_corners;
     in property <length> pressed_x;
     in property <length> pressed_y;
     in property <color> color;
@@ -44,6 +58,10 @@ export component Ripple {
         height: 100%;
         clip: true;
         border_radius: root.border_radius;
+        border-top-left-radius: root.shaped_corners ? root.corners.top_left : root.border_radius;
+        border-top-right-radius: root.shaped_corners ? root.corners.top_right : root.border_radius;
+        border-bottom-right-radius: root.shaped_corners ? root.corners.bottom_right : root.border_radius;
+        border-bottom-left-radius: root.shaped_corners ? root.corners.bottom_left : root.border_radius;
         shape: root.shape;
         shape-fit: root.shape-fit;
 
@@ -73,6 +91,9 @@ export component Ripple {
 export component StateLayer {
     in property <color> background;
     in property <length> border_radius;
+    /// Per-corner radii; used instead of `border_radius` when `shaped_corners`.
+    in property <MaterialCornerRadii> corners;
+    in property <bool> shaped_corners;
     in property <bool> display_background: true;
     in property <bool> enabled;
     in property <bool> pressed;
@@ -94,6 +115,10 @@ export component StateLayer {
         opacity: root.state_layer_opacity;
         background: root.background;
         border_radius: root.border_radius;
+        border-top-left-radius: root.shaped_corners ? root.corners.top_left : root.border_radius;
+        border-top-right-radius: root.shaped_corners ? root.corners.top_right : root.border_radius;
+        border-bottom-right-radius: root.shaped_corners ? root.corners.bottom_right : root.border_radius;
+        border-bottom-left-radius: root.shaped_corners ? root.corners.bottom_left : root.border_radius;
         shape: root.shape;
         shape-fit: root.shape-fit;
     }
@@ -103,6 +128,10 @@ export component StateLayer {
         height: 100%;
         clip: true;
         border_radius: root.border_radius;
+        border-top-left-radius: root.shaped_corners ? root.corners.top_left : root.border_radius;
+        border-top-right-radius: root.shaped_corners ? root.corners.top_right : root.border_radius;
+        border-bottom-right-radius: root.shaped_corners ? root.corners.bottom_right : root.border_radius;
+        border-bottom-left-radius: root.shaped_corners ? root.corners.bottom_left : root.border_radius;
         shape: root.shape;
         shape-fit: root.shape-fit;
 
@@ -146,6 +175,9 @@ export component FocusRing {
     /// uniform `border_radius`. `full` resolves to `min(w,h)/2` per stroke,
     /// like the tokens' `MaterialCornerShape` contract.
     in property <MaterialCornerShape> corner_radii;
+    /// Per-corner radii; used instead of `border_radius` when `shaped_corners`.
+    in property <MaterialCornerRadii> corners;
+    in property <bool> shaped_corners;
     property <MaterialFocusRing> ring: MaterialFocusIndicator.ring;
     property <bool> has_radii: root.corner_radii.full || root.corner_radii.top_left > 0px ||
         root.corner_radii.top_right > 0px || root.corner_radii.bottom_right > 0px ||
@@ -180,6 +212,10 @@ export component FocusRing {
         background: transparent;
         border_width: root.ring.inner_stroke_width;
         border_radius: max(0px, root.border_radius - inset);
+        border-top-left-radius: max(0px, (root.shaped_corners ? root.corners.top_left : root.border_radius) - inset);
+        border-top-right-radius: max(0px, (root.shaped_corners ? root.corners.top_right : root.border_radius) - inset);
+        border-bottom-right-radius: max(0px, (root.shaped_corners ? root.corners.bottom_right : root.border_radius) - inset);
+        border-bottom-left-radius: max(0px, (root.shaped_corners ? root.corners.bottom_left : root.border_radius) - inset);
         border_color: MaterialPalette.on_secondary;
         shape: root.has_radii ? root.stroke_shape(self.width, self.height, inset) : root.no_shape;
         shape-fit: ShapeFit.fill;
@@ -194,6 +230,10 @@ export component FocusRing {
         background: transparent;
         border_width: root.ring.outer_stroke_width;
         border_radius: max(0px, root.border_radius - inset);
+        border-top-left-radius: max(0px, (root.shaped_corners ? root.corners.top_left : root.border_radius) - inset);
+        border-top-right-radius: max(0px, (root.shaped_corners ? root.corners.top_right : root.border_radius) - inset);
+        border-bottom-right-radius: max(0px, (root.shaped_corners ? root.corners.bottom_right : root.border_radius) - inset);
+        border-bottom-left-radius: max(0px, (root.shaped_corners ? root.corners.bottom_left : root.border_radius) - inset);
         border_color: MaterialPalette.secondary;
         shape: root.has_radii ? root.stroke_shape(self.width, self.height, inset) : root.no_shape;
         shape-fit: ShapeFit.fill;
@@ -255,6 +295,13 @@ export component FocusTouchArea inherits TouchArea {
 export component StateLayerArea inherits FocusTouchArea {
     in property <color> color;
     in property <length> border_radius;
+    /// Per-corner radii for the visuals; used instead of `border_radius`
+    /// when `shaped_corners`.
+    in property <MaterialCornerRadii> corners;
+    in property <bool> shaped_corners;
+    /// Per-corner hit shape — the resting corners while `corners` animates.
+    /// Only consulted when `shaped_corners`.
+    in property <MaterialCornerRadii> hit_corners;
     in property <bool> transparent_background;
     in property <bool> display_background: true;
     in property <bool> clip_ripple: true;
@@ -289,6 +336,9 @@ export component StateLayerArea inherits FocusTouchArea {
     /// clipped to: a point inside the bounds is dead only when it falls in a
     /// corner zone outside the corner circle.
     public pure function point_inside(x: length, y: length) -> bool {
+        if root.shaped_corners {
+            return root.point_inside_corners(x, y);
+        }
         let r = Math.min(root.hit_radius, Math.min(root.width, root.height) / 2);
         if r <= 0px {
             return true;
@@ -303,6 +353,37 @@ export component StateLayerArea inherits FocusTouchArea {
         return dx * dx + dy * dy <= r * r;
     }
 
+    /// The per-corner variant of `point_inside`: each corner zone gets its
+    /// own radius, capped at half the shorter side like the uniform path.
+    pure function point_inside_corners(x: length, y: length) -> bool {
+        let half = Math.min(root.width, root.height) / 2;
+        let tl = Math.min(root.hit_corners.top_left, half);
+        let tr = Math.min(root.hit_corners.top_right, half);
+        let br = Math.min(root.hit_corners.bottom_right, half);
+        let bl = Math.min(root.hit_corners.bottom_left, half);
+        if x < tl && y < tl {
+            let dx = x - tl;
+            let dy = y - tl;
+            return dx * dx + dy * dy <= tl * tl;
+        }
+        if x > root.width - tr && y < tr {
+            let dx = x - (root.width - tr);
+            let dy = y - tr;
+            return dx * dx + dy * dy <= tr * tr;
+        }
+        if x > root.width - br && y > root.height - br {
+            let dx = x - (root.width - br);
+            let dy = y - (root.height - br);
+            return dx * dx + dy * dy <= br * br;
+        }
+        if x < bl && y > root.height - bl {
+            let dx = x - bl;
+            let dy = y - (root.height - bl);
+            return dx * dx + dy * dy <= bl * bl;
+        }
+        true
+    }
+
     pointer-event(event) => {
         if event.kind == PointerEventKind.down {
             root.pointer_inside = root.point_inside(root.pressed_x, root.pressed_y);
@@ -314,6 +395,8 @@ export component StateLayerArea inherits FocusTouchArea {
         height: 100%;
         background: root.transparent_background ? transparent : root.color;
         border_radius: root.border_radius;
+        corners: root.corners;
+        shaped_corners: root.shaped_corners;
         shape: root.shape;
         shape-fit: root.shape-fit;
         enabled: root.enabled;
@@ -331,6 +414,8 @@ export component StateLayerArea inherits FocusTouchArea {
         width: 100%;
         height: 100%;
         border_radius: root.border_radius;
+        corners: root.corners;
+        shaped_corners: root.shaped_corners;
         shape: root.shape;
         shape-fit: root.shape-fit;
         color: root.color;

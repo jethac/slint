@@ -110,6 +110,7 @@
       "selectable": null,
       "selected": null,
       "shape": null,
+      "side": null,
       "size": "s",
       "slint_overrides": {
         "checkable": false

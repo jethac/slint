@@ -152,6 +152,7 @@
       "selectable": null,
       "selected": null,
       "shape": null,
+      "side": null,
       "size": "m",
       "slint_overrides": {},
       "state": null,

@@ -110,6 +110,7 @@
       "selectable": null,
       "selected": null,
       "shape": "cookie-9-sided",
+      "side": null,
       "size": null,
       "slint_overrides": {
         "shape_fit": "fill"

@@ -3,10 +3,16 @@
 
 import { MaterialPalette } from "../styling/material_palette.slint";
 import { ElevationTokens } from "../styling/generated/material_elevation_tokens.slint";
+import { MaterialCornerRadii } from "./state_layer.slint";
 
 export component Elevation {
     in property <brush> background;
     in property <length> border_radius;
+    /// Per-corner radii; used instead of `border_radius` when
+    /// `shaped_corners`. The caster rectangle carries them, so the shadow
+    /// outline follows the morph too.
+    in property <MaterialCornerRadii> corners;
+    in property <bool> shaped_corners;
     in property <int> level;
     /// The animation spec for `shadow_height` changes — the default is the
     // `animateElevation` tween; the active motion scheme's springs can be
@@ -43,6 +49,10 @@ export component Elevation {
     // radius when unset).
     caster := Rectangle {
         border_radius: root.border_radius;
+        border-top-left-radius: root.shaped_corners ? root.corners.top_left : root.border_radius;
+        border-top-right-radius: root.shaped_corners ? root.corners.top_right : root.border_radius;
+        border-bottom-right-radius: root.shaped_corners ? root.corners.bottom_right : root.border_radius;
+        border-bottom-left-radius: root.shaped_corners ? root.corners.bottom_left : root.border_radius;
         shape: root.shape;
         shape-fit: root.shape-fit;
         background: root.background;

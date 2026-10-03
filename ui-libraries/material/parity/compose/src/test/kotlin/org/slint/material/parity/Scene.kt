@@ -137,9 +137,16 @@ class Widget(json: JSONObject) {
     val icons: List<String> =
         json.optJSONArray("icons")?.let { a -> (0 until a.length()).map(a::getString) } ?: emptyList()
     val placeholder: String? = (json.opt("placeholder") as? String)?.takeIf { it.isNotEmpty() }
+    /** `*-split-button` kinds only: which half carries `state` and receives
+     * the scripted pointer gesture — `leading` or `trailing`. */
+    val side: String = (json.opt("side") as? String) ?: "trailing"
+    /** `*-split-button` trailing icon stem — `keyboard_arrow_down`, the
+     * chevron the upstream samples rotate, when unset. */
+    val trailingIcon: String? = (json.opt("trailing_icon") as? String)?.takeIf { it.isNotEmpty() }
 
+    val isSplitButton: Boolean get() = kind.endsWith("split-button")
     val isIconButton: Boolean get() = kind.endsWith("icon-button")
-    val isButton: Boolean get() = isIconButton || kind.endsWith("-button")
+    val isButton: Boolean get() = isIconButton || isSplitButton || kind.endsWith("-button")
     val isListItem: Boolean get() = kind == "list-item" || kind == "segmented-list-item"
     /** `elevated-rect` only: the elevation in dp of the Android ambient+spot
      * shadow `Modifier.shadow` draws behind the caster. */
