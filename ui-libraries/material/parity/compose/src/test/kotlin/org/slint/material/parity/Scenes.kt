@@ -15,8 +15,10 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -42,6 +44,8 @@ import androidx.compose.material3.IconToggleButton
 import androidx.compose.material3.LocalMinimumInteractiveComponentSize
 import androidx.compose.material3.LocalRippleThemeConfiguration
 import androidx.compose.material3.RippleDefaults
+import androidx.compose.material3.SplitButtonDefaults
+import androidx.compose.material3.SplitButtonLayout
 import androidx.compose.material3.MaterialExpressiveTheme
 import androidx.compose.material3.MotionScheme
 import androidx.compose.material3.OutlinedButton
@@ -436,6 +440,15 @@ private fun CanvasScene(
                     widget,
                     scene,
                     tracer,
+                    "button${buttons++}",
+                    density,
+                    emitPress,
+                )
+                widget.isSplitButton -> StateSplitButton(
+                    widget,
+                    scene,
+                    tracer,
+                    "text:${buttons}",
                     "button${buttons++}",
                     density,
                     emitPress,
@@ -1392,6 +1405,299 @@ private fun StateIconButton(
             // Live morph radius — see the button overlay above.
             RoundedCornerShape(radius.dp),
             iconInkColor(widget, checked),
+        )
+    }
+}
+
+/** One corner of a token `RoundedCornerShape`, resolved in dp — the split
+ * halves' morphing corners are `CornerSize`s; `Size(h, h)` reproduces
+ * `PercentCornerSize`'s `minDimension` since the container height is the
+ * smaller dimension in these scenes. `corner` picks the side: the leading
+ * morphs its end corners (`{ it.topEnd }`), the trailing its start
+ * corners (`{ it.topStart }`). */
+private fun splitCornerDp(
+    shape: Shape,
+    corner: (androidx.compose.foundation.shape.RoundedCornerShape) -> androidx.compose.foundation.shape.CornerSize,
+    h: androidx.compose.ui.unit.Dp,
+    density: Float,
+): Float {
+    require(shape is androidx.compose.foundation.shape.RoundedCornerShape) {
+        "token shapes are RoundedCornerShape, got $shape"
+    }
+    val boxPx = h.value * density
+    return corner(shape).toPx(
+        androidx.compose.ui.geometry.Size(boxPx, boxPx),
+        androidx.compose.ui.unit.Density(density),
+    ) / density
+}
+
+/** A split button — `SplitButtonLayout`'s leading action plus the
+ * toggleable trailing menu button. `side` picks which half the authored
+ * `state` and the scripted pointer gesture target; a click on the trailing
+ * flips `checked` (the menu-open state upstream's `DropdownMenu(expanded)`
+ * mirrors). `leadingButtonShapesFor(h)`/`trailingButtonShapesFor(h)` carry
+ * the outer/inner/inner-pressed corner tokens; the trailing's checked
+ * shape is `CircleShape` — the h/2 inner target below. */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun StateSplitButton(
+    widget: Widget,
+    scene: Scene,
+    tracer: Tracer,
+    textId: String,
+    elementId: String,
+    density: Float,
+    emitPress: java.util.concurrent.CopyOnWriteArrayList<Pair<Long, Runnable>>,
+) {
+    val h = buttonHeight(widget)
+    val d = SplitButtonDefaults
+    // Sub-element ids for the pointer hit-test — internal only: they are
+    // never named by `trace_elements`, so the frame dump stays one element.
+    val leadingId = "${elementId}_leading"
+    val trailingId = "${elementId}_trailing"
+    val leadingSource = remember { ReplayableInteractionSource() }
+    val trailingSource = remember { ReplayableInteractionSource() }
+    val sideTrailing = widget.side == "trailing"
+    emitStateInteractions(
+        widget,
+        scene,
+        tracer,
+        if (sideTrailing) trailingId else leadingId,
+        if (sideTrailing) trailingSource else leadingSource,
+        emitPress,
+        Offset(h.value * density / 2f, h.value * density / 2f),
+        density,
+    )
+
+    var checked by remember { mutableStateOf(widget.checked) }
+    val clickToggles = widget.checkable && sceneActionsClick(scene)
+    DisposableEffect(Unit) {
+        // A click completes on release; it only toggles when the gesture
+        // hit the trailing half — a leading press fires `leading_clicked`
+        // upstream instead.
+        val flip = Runnable {
+            val b = tracer.elementBounds[trailingId]
+            val p = scene.actions.first { it.kind == "press" }
+            if (b == null ||
+                (p.x * density >= b.left && p.x * density <= b.right &&
+                    p.y * density >= b.top && p.y * density <= b.bottom)
+            ) {
+                checked = !checked
+            }
+        }
+        val at = scene.actions.firstOrNull { it.kind == "release" }?.at ?: 0L
+        val entry = at to flip
+        if (clickToggles) {
+            emitPress.add(entry)
+        }
+        onDispose { emitPress.remove(entry) }
+    }
+
+    // alpha18's `SplitButtonShapes` fields are nullable (`hasPressedShape`
+    // tracks it); the `*ButtonShapesFor` factories always populate them.
+    val leadingShapes = d.leadingButtonShapesFor(h)
+    val leadingRest = checkNotNull(leadingShapes.shape)
+    val leadingPress = checkNotNull(leadingShapes.pressedShape)
+    val trailingShapes = d.trailingButtonShapesFor(h)
+    val trailingRest = checkNotNull(trailingShapes.shape)
+    val trailingPress = checkNotNull(trailingShapes.pressedShape)
+
+    // Inner-corner morph probes — the same `DefaultEffects` spec
+    // (`MotionSchemeKeyTokens.DefaultEffects`) the halves' internal
+    // AnimatedShapeState animates through (SplitButton.kt `shapeByInteraction`).
+    val leadingPressed by leadingSource.collectIsPressedAsState()
+    val trailingPressed by trailingSource.collectIsPressedAsState()
+    val spec = androidx.compose.material3.MaterialTheme.motionScheme.defaultEffectsSpec<Float>()
+    val leadingInner by animateFloatAsState(
+        targetValue = splitCornerDp(
+            if (leadingPressed) leadingPress else leadingRest,
+            { it.topEnd },
+            h,
+            density,
+        ),
+        animationSpec = spec,
+        label = "leading_inner_radius",
+    )
+    val trailingInner by animateFloatAsState(
+        targetValue = when {
+            trailingPressed ->
+                splitCornerDp(trailingPress, { it.topStart }, h, density)
+            checked -> h.value / 2f
+            else -> splitCornerDp(trailingRest, { it.topStart }, h, density)
+        },
+        animationSpec = spec,
+        label = "trailing_inner_radius",
+    )
+    tracer.propGetters["leading_inner_radius"] = { leadingInner.toDouble() }
+    tracer.propGetters["trailing_inner_radius"] = { trailingInner.toDouble() }
+
+    // The samples' `animateFloatAsState(if (checked) 180f else 0f)` —
+    // `animateFloatAsState`'s default spec is `spring(dampingRatio = 1,
+    // stiffness = 1500)`, the same `spring(1, 1500)` the Slint side puts on
+    // `animated_icon_rotation`.
+    val iconRotation by animateFloatAsState(
+        targetValue = if (checked) 180f else 0f,
+        label = "trailing_icon_rotation",
+    )
+    tracer.propGetters["trailing_icon_rotation"] = { iconRotation.toDouble() }
+
+    // Both halves' content sits under `ProvideContentColorTextStyle
+    // (labelLarge)` upstream — no per-size text style on a split button.
+    val labelStyle = androidx.compose.material3.MaterialTheme.typography.labelLarge
+    val leadingContent: @Composable androidx.compose.foundation.layout.RowScope.() -> Unit = {
+        widget.icon?.let { icon ->
+            Icon(
+                sceneIcon(icon),
+                contentDescription = null,
+                modifier = Modifier.size(d.leadingButtonIconSizeFor(h)),
+            )
+            Spacer(Modifier.width(ButtonDefaults.iconSpacingFor(h)))
+        }
+        // No `Text` for an empty label: Slint drops the element entirely, so
+        // tracking one here would only report `no Slint Text element`.
+        if (!widget.text.isNullOrEmpty()) {
+            Text(
+                widget.text,
+                style = labelStyle,
+                modifier = Modifier.trackText(tracer, textId, density),
+                onTextLayout = recordTextLayout(
+                    tracer,
+                    textId,
+                    LocalDensity.current,
+                    androidx.compose.ui.platform.LocalFontFamilyResolver.current,
+                    labelStyle.fontFamily,
+                ),
+            )
+        }
+    }
+    val trailingContent: @Composable androidx.compose.foundation.layout.RowScope.() -> Unit = {
+        Icon(
+            sceneIcon(widget.trailingIcon ?: "keyboard_arrow_down"),
+            contentDescription = null,
+            modifier = Modifier
+                .size(d.trailingButtonIconSizeFor(h))
+                .graphicsLayer { rotationZ = iconRotation },
+        )
+    }
+    val pressInk = pressInkMarker(widget, emitPress)
+
+    // The halves' own floor is `SmallContainerHeight` (40dp); the samples
+    // pin the bucket's height per half — `Modifier.heightIn(size)` — so
+    // this side does the same (SplitButtonSamples.kt).
+    val leadingModifier = Modifier.heightIn(min = h).track(tracer, leadingId)
+    val trailingModifier = Modifier.heightIn(min = h).track(tracer, trailingId)
+    val modifier = Modifier.offset(widget.x.dp, widget.y.dp)
+        .then(if (widget.width > 0f) Modifier.width(widget.width.dp) else Modifier)
+        .track(tracer, elementId)
+    val leading: @Composable () -> Unit = {
+        when (widget.kind) {
+            "filled-split-button" -> d.LeadingButton(
+                onClick = {},
+                modifier = leadingModifier,
+                enabled = widget.enabled,
+                shapes = leadingShapes,
+                contentPadding = d.leadingButtonContentPaddingFor(h),
+                interactionSource = leadingSource,
+                content = leadingContent,
+            )
+            "tonal-split-button" -> d.TonalLeadingButton(
+                onClick = {},
+                modifier = leadingModifier,
+                enabled = widget.enabled,
+                shapes = leadingShapes,
+                contentPadding = d.leadingButtonContentPaddingFor(h),
+                interactionSource = leadingSource,
+                content = leadingContent,
+            )
+            "elevated-split-button" -> d.ElevatedLeadingButton(
+                onClick = {},
+                modifier = leadingModifier,
+                enabled = widget.enabled,
+                shapes = leadingShapes,
+                contentPadding = d.leadingButtonContentPaddingFor(h),
+                interactionSource = leadingSource,
+                content = leadingContent,
+            )
+            "outlined-split-button" -> d.OutlinedLeadingButton(
+                onClick = {},
+                modifier = leadingModifier,
+                enabled = widget.enabled,
+                shapes = leadingShapes,
+                contentPadding = d.leadingButtonContentPaddingFor(h),
+                interactionSource = leadingSource,
+                content = leadingContent,
+            )
+            else -> error("unknown split button kind ${widget.kind}")
+        }
+    }
+    val trailing: @Composable () -> Unit = {
+        when (widget.kind) {
+            "filled-split-button" -> d.TrailingButton(
+                checked = checked,
+                onCheckedChange = {},
+                modifier = trailingModifier,
+                enabled = widget.enabled,
+                shapes = trailingShapes,
+                contentPadding = d.trailingButtonContentPaddingFor(h),
+                interactionSource = trailingSource,
+                content = trailingContent,
+            )
+            "tonal-split-button" -> d.TonalTrailingButton(
+                checked = checked,
+                onCheckedChange = {},
+                modifier = trailingModifier,
+                enabled = widget.enabled,
+                shapes = trailingShapes,
+                contentPadding = d.trailingButtonContentPaddingFor(h),
+                interactionSource = trailingSource,
+                content = trailingContent,
+            )
+            "elevated-split-button" -> d.ElevatedTrailingButton(
+                checked = checked,
+                onCheckedChange = {},
+                modifier = trailingModifier,
+                enabled = widget.enabled,
+                shapes = trailingShapes,
+                contentPadding = d.trailingButtonContentPaddingFor(h),
+                interactionSource = trailingSource,
+                content = trailingContent,
+            )
+            "outlined-split-button" -> d.OutlinedTrailingButton(
+                checked = checked,
+                onCheckedChange = {},
+                modifier = trailingModifier,
+                enabled = widget.enabled,
+                shapes = trailingShapes,
+                contentPadding = d.trailingButtonContentPaddingFor(h),
+                interactionSource = trailingSource,
+                content = trailingContent,
+            )
+            else -> error("unknown split button kind ${widget.kind}")
+        }
+    }
+    SplitButtonLayout(
+        leadingButton = leading,
+        trailingButton = trailing,
+        modifier = modifier,
+    )
+
+    if (pressInk.value) {
+        val inkColor = when (widget.kind) {
+            "filled-split-button" -> ButtonDefaults.buttonColors().contentColor
+            "tonal-split-button" -> ButtonDefaults.filledTonalButtonColors().contentColor
+            "elevated-split-button" -> ButtonDefaults.elevatedButtonColors().contentColor
+            "outlined-split-button" -> ButtonDefaults.outlinedButtonColors().contentColor
+            else -> error("unknown split button kind ${widget.kind}")
+        }
+        PressInkOverlay(
+            widget,
+            tracer,
+            if (sideTrailing) trailingId else leadingId,
+            density,
+            // Stadium bound on the held half — `mask_inner` covers the
+            // mid-morph corner band in timed scenes.
+            RoundedCornerShape(h / 2),
+            inkColor,
         )
     }
 }

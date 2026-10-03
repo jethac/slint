@@ -103,6 +103,7 @@
       "progress": null,
       "radius": null,
       "shape": null,
+      "side": null,
       "size": "m",
       "slint_overrides": {
         "cover": {
@@ -113,6 +114,7 @@
       "state": "pressed",
       "subtitle": null,
       "text": null,
+      "trailing_icon": null,
       "variant": null,
       "width": null,
       "width_option": null,

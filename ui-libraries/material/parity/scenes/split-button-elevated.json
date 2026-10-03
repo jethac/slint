@@ -1,0 +1,50 @@
+{
+  "name": "split-button-elevated",
+  "type": "canvas",
+  "parity": "xfail",
+  "size": [
+    200,
+    80
+  ],
+  "densities": [
+    1,
+    2
+  ],
+  "theme": {
+    "seed": "6750A4",
+    "variant": "tonal-spot",
+    "spec": "spec2025",
+    "platform": "phone",
+    "dark": false,
+    "contrast": 0.0
+  },
+  "fonts": {
+    "plain": "Roboto",
+    "brand": "Roboto"
+  },
+  "widgets": [
+    {
+      "kind": "elevated-split-button",
+      "x": 16,
+      "y": 12,
+      "size": "m",
+      "checkable": true,
+      "width": 138,
+      "icon": "edit"
+    }
+  ],
+  "trace_elements": [
+    "button0"
+  ],
+  "trace_props": [],
+  "mask_decor": {
+    "button0": {
+      "margin": 12,
+      "times": [
+        0,
+        2000
+      ]
+    }
+  },
+  "negative_note": "issue #6 elevation parity: the seam between the halves shows each half's elevation shadow inside the element bounds, where //MASK_DECOR cannot reach \u2014 the engine penumbras diverge there (the decor-shadow class the dedicated elevation-shadow scene already waives)"
+}
