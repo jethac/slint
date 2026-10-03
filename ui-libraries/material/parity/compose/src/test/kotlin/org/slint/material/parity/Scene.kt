@@ -106,6 +106,11 @@ class Widget(json: JSONObject) {
      * composables upstream). */
     val checkable: Boolean = json.optBoolean("checkable", false)
     val checked: Boolean = json.optBoolean("checked", false)
+    /** `checkbox`/`tri-state-checkbox` `ToggleableState` name —
+     * `unchecked` (default), `checked`, `partially_checked`; a bare
+     * `checked: true` resolves to `checked` on both sides. */
+    val checkState: String = (json.opt("check_state") as? String)
+        ?: (if (checked) "checked" else "unchecked")
     /** Icon-button container width `narrow`/`uniform`/`wide`. */
     val widthOption: String = (json.opt("width_option") as? String) ?: "uniform"
     /** `ListItem(onClick)` overload — `selectable`/`checkable` imply it. */

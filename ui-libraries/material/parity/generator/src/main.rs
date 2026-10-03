@@ -260,6 +260,12 @@ struct Widget {
     checkable: Option<bool>,
     #[serde(default)]
     checked: Option<bool>,
+    /// `checkbox`/`tri-state-checkbox` `ToggleableState`:
+    /// `unchecked` (default), `checked`, `partially_checked` — the slint
+    /// side sets `check_state`, the Compose side `ToggleableState`. A bare
+    /// `checked: true` resolves to `checked`.
+    #[serde(default)]
+    check_state: Option<String>,
     /// Icon-button container width: `narrow`, `uniform` (default), `wide`.
     #[serde(default)]
     width_option: Option<String>,
@@ -935,6 +941,8 @@ fn slint_case(scene: &Scene) -> String {
             "extended-fab" => "ExtendedFloatingActionButton",
             "radio-button" => "RadioButton",
             "switch" => "Switch",
+            "checkbox" => "CheckBox",
+            "tri-state-checkbox" => "TriStateCheckbox",
             "material-surface" => "Surface",
             // `surface` imports `Elevation`/`MaterialShapes` below instead;
             // `rect`/`elevated-rect` are plain `Rectangle`s — no import.
@@ -1027,6 +1035,9 @@ fn slint_case(scene: &Scene) -> String {
             imports.push("ExtendedFabSize");
             imports.push("FabElevation");
             imports.push("FabAlignment");
+        }
+        if w.kind == "checkbox" || w.kind == "tri-state-checkbox" {
+            imports.push("CheckState");
         }
     }
     if needs_icons {
@@ -1218,9 +1229,12 @@ fn widget_actions(scene: &Scene) -> Vec<Action> {
             } else {
                 w.x + 20.0
             };
-            // A `radio-button`'s drawn control is a 24dp slot — aim at its
-            // center, not the button-bucket point.
-            let (x, y) = if w.kind == "radio-button" {
+            // A `radio-button`'s / `*checkbox`'s drawn control is a 24dp
+            // slot — aim at its center, not the button-bucket point.
+            let (x, y) = if matches!(
+                w.kind.as_str(),
+                "radio-button" | "checkbox" | "tri-state-checkbox"
+            ) {
                 (w.x + 12.0, w.y + 12.0)
             } else {
                 (x, w.y + 16.0)
@@ -1442,6 +1456,42 @@ fn split_button_props(w: &Widget, timed: bool) -> String {
     if over.get("checked_overlay").and_then(|v| v.as_bool()) == Some(false) {
         p.push_str("        checked_overlay: false;\n");
     }
+    if !bool_over("enforce_touch_target", None) {
+        p.push_str("        enforce_touch_target: false;\n");
+    }
+    p
+}
+
+/// `checkbox`/`tri-state-checkbox` props — the selection-control surface:
+/// `check_state` (`ToggleableState` upstream), `simulate_*` hooks and
+/// `enforce_touch_target` like `button_props`.
+fn checkbox_props(w: &Widget, timed: bool) -> String {
+    let mut p = String::new();
+    let over = &w.slint_overrides;
+    let bool_over = |k: &str, authored: Option<bool>| -> bool {
+        over.get(k).and_then(|v| v.as_bool()).unwrap_or(authored.unwrap_or(false))
+    };
+    let check_state = over
+        .get("check_state")
+        .and_then(|v| v.as_str())
+        .map(str::to_string)
+        .or_else(|| w.check_state.clone())
+        .unwrap_or_else(|| if w.checked == Some(true) { "checked".into() } else { "unchecked".into() });
+    writeln!(p, "        check_state: CheckState.{check_state};").unwrap();
+    if !bool_over("enabled", w.enabled.or(Some(true))) {
+        p.push_str("        enabled: false;\n");
+    }
+    // A declared `state` maps to the per-widget state hook — see
+    // `button_props`; timed scenes drive the gesture from `widget_actions`.
+    if !timed {
+        match w.state.as_deref() {
+            Some("hovered") => p.push_str("        simulate_hover: true;\n"),
+            Some("pressed") => p.push_str("        simulate_press: true;\n"),
+            _ => {}
+        }
+    }
+    // The Compose side sets `LocalMinimumInteractiveComponentSize` to 0 —
+    // the scene coordinates place the drawn component on both sides.
     if !bool_over("enforce_touch_target", None) {
         p.push_str("        enforce_touch_target: false;\n");
     }
@@ -1768,6 +1818,8 @@ fn slint_canvas(s: &mut String, scene: &Scene) {
             "extended-fab" => "ExtendedFloatingActionButton",
             "radio-button" => "RadioButton",
             "switch" => "Switch",
+            "checkbox" => "CheckBox",
+            "tri-state-checkbox" => "TriStateCheckbox",
             "surface" => {
                 let i = surfaces;
                 surfaces += 1;
@@ -2202,6 +2254,8 @@ fn slint_canvas(s: &mut String, scene: &Scene) {
                 radio_props(w, !scene.times.is_empty())
             } else if w.kind == "switch" {
                 switch_props(w, !scene.times.is_empty())
+            } else if w.kind == "checkbox" || w.kind == "tri-state-checkbox" {
+                checkbox_props(w, !scene.times.is_empty())
             } else {
                 button_props(w, !scene.times.is_empty())
             },
@@ -2269,6 +2323,7 @@ fn trace_prop_type(prop: &str) -> &'static str {
         | "shadow_elevation"
         | "dot_radius" => "length",
         "trailing_icon_rotation" => "angle",
+        "check_fraction" | "gravitation" => "float",
         "label_alpha" | "show_scale" | "show_alpha" | "expand_progress" => "float",
         other => panic!("no forwarding type known for trace prop {other:?}"),
     }
