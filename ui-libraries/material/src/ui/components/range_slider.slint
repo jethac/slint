@@ -1,0 +1,437 @@
+// Copyright © SixtyFPS GmbH <info@slint.dev>
+// SPDX-License-Identifier: MIT
+//
+// The Material range slider — a port of `RangeSlider`/`RangeSliderImpl`/
+// `RangeSliderState` in
+// `compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/Slider.kt`
+// at the #3 pin (`androidx/androidx@23327507f7fc7d5b19d65fec4b090f60c970079b`).
+// `slider_base.slint` documents where each value comes from.
+
+import { MaterialPalette } from "../styling/material_palette.slint";
+import { SliderTokens } from "../styling/generated/material_component_tokens.slint";
+import {
+    MaterialSliderLabel,
+    MaterialSliderLabelBehavior,
+    MaterialSliderMetrics,
+    MaterialSliderSize,
+    MaterialSliderThumb,
+    MaterialSliderTrack,
+} from "./slider_base.slint";
+
+/// A Material slider to select a value range between two thumbs — the
+/// pin's `RangeSlider`. Each thumb is focusable and reports its own
+/// semantics; taps move the nearer thumb (`compareOffsets`), drags move
+/// the pressed thumb and it cannot cross the other.
+export component RangeSlider {
+    /// `RangeSliderState.startValue`/`endValue` — clamped to each other.
+    in-out property <float> start-value;
+    in-out property <float> end-value;
+    /// `RangeSliderState.trackRange`.
+    in property <float> minimum: 0;
+    in property <float> maximum: 1;
+    in property <int> steps: 0;
+    in property <MaterialSliderSize> size: MaterialSliderSize.extra_small;
+    in property <bool> enabled: true;
+    /// `Modifier.minimumInteractiveComponentSize()` upstream.
+    in property <bool> enforce-touch-target: true;
+    /// `state.isRtl` in the pin: mirrors the track axis.
+    in property <bool> mirror;
+    /// The value indicators — one per thumb like the Views label pool.
+    in property <MaterialSliderLabelBehavior> label-behavior: MaterialSliderLabelBehavior.floating;
+    /// Test hooks, as on `Slider` — applied to the start thumb (the
+    /// nearer-thumb tap path is exercised by real pointer actions).
+    in property <bool> simulate-press;
+    in property <bool> simulate-focus;
+    /// The same states on the end thumb (`simulate-*` covers the start).
+    in property <bool> simulate-press-end;
+    in property <bool> simulate-focus-end;
+    /// `SliderDefaults.thumbTrackGapSize` — `SliderTokens.ActiveHandleLeadingSpace`.
+    in property <length> thumb-track-gap: SliderTokens.active_handle_leading_space;
+    /// `trackCornerSize`: `-1px` resolves to
+    /// `MaterialSliderMetrics.track-corner(size)`.
+    in property <length> track-corner-override: -1px;
+
+    /// `onValueChangeFinished` — pointer release and navigation key-up.
+    callback released(start: float, end: float);
+    /// `onValueChange` — the pair the interaction set.
+    callback value-changed(start: float, end: float);
+
+    out property <bool> has-focus: start-scope.has-focus || end-scope.has-focus;
+    out property <bool> has-start-focus <=> start-scope.has-focus;
+    out property <bool> has-end-focus <=> end-scope.has-focus;
+    out property <bool> start-pressed: touch.pressed && drag-start;
+    out property <bool> end-pressed: touch.pressed && !drag-start;
+    out property <bool> start-focused: start-scope.has-focus || root.simulate-focus;
+    out property <bool> end-focused: end-scope.has-focus || root.simulate-focus-end;
+    out property <bool> start-interacting: start-pressed || root.simulate-press || start-focused;
+    out property <bool> end-interacting: end-pressed || root.simulate-press-end || end-focused;
+
+    property <bool> drag-start: true;
+
+    property <length> track-h: MaterialSliderMetrics.track-height(size);
+    property <length> handle-h: MaterialSliderMetrics.handle-height(size);
+    property <length> c: track-corner-override >= 0px ? track-corner-override
+        : track-h / 2;
+    // The range `Track` never enables corner shrinking — an explicit
+    // `trackCornerSize` only replaces the `height / 2` stadium.
+    property <bool> shrink-corners: false;
+    /// `startThumbCoreWidth`/`endThumbCoreWidth` — box width minus focus
+    /// padding, `SliderTokens.handle_width`.
+    property <length> core-axis: SliderTokens.handle_width;
+    property <length> core-cross: handle-h;
+    property <length> axis-extent: root.width;
+    /// `sliderHeight` — the pin reports the max of the track and the
+    /// padded thumb boxes.
+    property <length> cross-extent: max(track-h, start-thumb.box-cross);
+    /// `RangeSliderImpl`: `trackW = sliderWidth - (startThumb.width +
+    /// endThumb.width) / 2`; `trackOffsetX = startThumb.width / 2`. The
+    /// boxes pad the live pill, so both follow the press animation.
+    /// The offsets are the pin's `Int / 2` truncations of the measured
+    /// placeable extents; `trackPlaceable[CornerSizeAlignmentLine]` is
+    /// `placeable.height / 2` — `track-h / 2`, never the drawn corner.
+    property <length> track-len: axis-extent - (start-thumb.box-axis + end-thumb.box-axis) / 2;
+    property <length> track-off-axis: start-thumb.half(start-thumb.box-axis);
+    property <length> track-off-cross: start-thumb.half(cross-extent - track-h);
+    property <length> align-c: start-thumb.half(track-h);
+    /// `coercedStartValueAsFraction`/`coercedEndValueAsFraction` — the
+    /// values coerce to `trackRange` and to each other.
+    property <float> start-fraction:
+        maximum <= minimum ? 0 : clamp((min(start-value, end-value) - minimum) / (maximum - minimum), 0, 1);
+    property <float> end-fraction:
+        maximum <= minimum ? 0 : clamp((max(start-value, end-value) - minimum) / (maximum - minimum), 0, 1);
+    property <bool> start-at-end: start-fraction <= 0 || start-fraction >= 1;
+    property <bool> end-at-end: end-fraction <= 0 || end-fraction >= 1;
+    /// `endCorrection` — `(startThumb.width - endThumb.width) / 2`; only
+    /// nonzero while a press narrows one pill and its box shrinks.
+    property <length> end-correction: start-thumb.half(start-thumb.box-axis - end-thumb.box-axis);
+    /// `fractionOffset` per thumb — the thumb box's left edge in element
+    /// coordinates (`startThumbOffsetX`/`endThumbOffsetX`). The pin
+    /// `roundToInt`s the product (with `endCorrection` inside the round
+    /// for the end thumb) — `snap-phx` is that device-pixel snap at any
+    /// density.
+    property <length> start-frac-px: steps > 0 && !start-at-end
+        ? start-thumb.snap((track-len - 2 * align-c) * start-fraction) + align-c
+        : start-thumb.snap(track-len * start-fraction);
+    property <length> end-frac-px: steps > 0 && !end-at-end
+        ? start-thumb.snap((track-len - 2 * align-c) * end-fraction + end-correction) + align-c
+        : start-thumb.snap(track-len * end-fraction + end-correction);
+    /// Pill centers in element coordinates — for the labels.
+    property <length> start-center: start-frac-px + start-thumb.box-axis / 2;
+    property <length> end-center: end-frac-px + end-thumb.box-axis / 2;
+    /// `updateMinMaxPx`: the pointer axis maps over `[startThumbWidth/2,
+    /// totalWidth - endThumbWidth/2]` — live pill extents, not the boxes.
+    property <length> pointer-len: axis-extent - (start-thumb.pill-axis + end-thumb.pill-axis) / 2;
+    /// `rawOffsetStart`/`rawOffsetEnd` — the thumbs' positions in pointer
+    /// coordinates, for `compareOffsets`.
+    property <length> start-raw: start-thumb.pill-axis / 2 + pointer-len * start-fraction;
+    property <length> end-raw: start-thumb.pill-axis / 2 + pointer-len * end-fraction;
+    // The focus ring draws outside the handle and does not widen the
+    // gap.
+    property <length> start-gap: thumb-track-gap;
+    property <length> end-gap: thumb-track-gap;
+    /// Resolved colors — `SliderColors` in the pin.
+    property <color> col-thumb: enabled ? SliderTokens.handle_color
+        : SliderTokens.disabled_handle_color.with_alpha(SliderTokens.disabled_handle_opacity);
+    property <color> col-active: enabled ? SliderTokens.active_track_color
+        : SliderTokens.disabled_active_track_color.with_alpha(SliderTokens.disabled_active_track_opacity);
+    property <color> col-inactive: enabled ? SliderTokens.inactive_track_color
+        : SliderTokens.disabled_inactive_track_color.with_alpha(SliderTokens.disabled_inactive_track_opacity);
+    property <color> col-tick-active: enabled ? SliderTokens.inactive_track_color
+        : SliderTokens.disabled_inactive_track_color.with_alpha(SliderTokens.disabled_inactive_track_opacity);
+    property <color> col-tick-inactive: enabled ? SliderTokens.active_track_color
+        : SliderTokens.disabled_active_track_color.with_alpha(SliderTokens.disabled_active_track_opacity);
+    property <color> col-stop: enabled ? SliderTokens.active_track_color
+        : SliderTokens.disabled_active_track_color.with_alpha(SliderTokens.disabled_active_track_opacity);
+    property <bool> label-shown: enabled && (label-behavior == MaterialSliderLabelBehavior.visible
+        || ((label-behavior == MaterialSliderLabelBehavior.floating
+            || label-behavior == MaterialSliderLabelBehavior.within_bounds)
+            && (touch.pressed || simulate-press || simulate-press-end)));
+
+    /// `scaleToUserValue` — a pointer axis coordinate back to a user
+    /// value, followed by the tick snap.
+    pure function axis-value(a: length) -> float {
+        let f = clamp((a - start-thumb.pill-axis / 2) / root.pointer-len, 0, 1);
+        let snapped = root.steps > 0 ? round(f * (root.steps + 1)) / (root.steps + 1) : f;
+        root.minimum + snapped * (root.maximum - root.minimum)
+    }
+    /// Pointer x in the value's axis frame (`state.isRtl` flips it).
+    pure function pointer-axis(x: length) -> length {
+        root.mirror ? root.axis-extent - x : x
+    }
+    /// `state.onDrag(isStart, offset)` in value space: the thumb value at
+    /// axis `a`, clamped against the other thumb (`coerceIn` + tick snap).
+    function set-thumb-value(start: bool, v: float) {
+        if start {
+            root.start-value = clamp(v, root.minimum, root.end-value);
+        } else {
+            root.end-value = clamp(v, root.start-value, root.maximum);
+        }
+    }
+    pure function key-delta() -> float {
+        (root.maximum - root.minimum) / (root.steps > 0 ? root.steps + 1 : 100)
+    }
+    function finish() {
+        root.released(root.start-value, root.end-value);
+    }
+
+    forward-focus: start-scope;
+
+    // `RangeSliderImpl` gives each thumb its own semantics node and focus
+    // target — two `FocusScope`s here become the two tab stops, and the
+    // same nodes carry the per-thumb a11y values (`rangeSlider{Start,End}ThumbSemantics`).
+    start-scope := FocusScope {
+        x: 0;
+        y: 0;
+        width: 0px;
+        height: 0px;
+        enabled: root.enabled;
+
+        key-pressed(event) => {
+            let sign = root.mirror ? -1 : 1;
+            let delta = root.key-delta();
+            let page = Math.clamp(floor((root.steps > 0 ? root.steps + 1 : 100) / 10), 1, 10) * delta;
+            if event.text == Key.RightArrow {
+                root.set-thumb-value(true, root.start-value + sign * delta);
+                return accept;
+            }
+            if event.text == Key.LeftArrow {
+                root.set-thumb-value(true, root.start-value - sign * delta);
+                return accept;
+            }
+            if event.text == Key.PageUp {
+                root.set-thumb-value(true, root.start-value + page);
+                return accept;
+            }
+            if event.text == Key.PageDown {
+                root.set-thumb-value(true, root.start-value - page);
+                return accept;
+            }
+            if event.text == Key.Home {
+                root.start-value = root.minimum;
+                return accept;
+            }
+            if event.text == Key.End {
+                root.start-value = root.end-value;
+                return accept;
+            }
+            reject
+        }
+        accessible-role: slider;
+        /// `Strings.SliderRangeStart`.
+        accessible-label: "Start";
+        accessible-enabled: root.enabled;
+        accessible-value: root.start-value;
+        accessible-value-minimum: root.minimum;
+        accessible-value-maximum: root.end-value;
+        accessible-value-step: (root.maximum - root.minimum) / (root.steps > 0 ? root.steps + 1 : 100);
+        accessible-action-set-value(v) => {
+            if v.is-float() {
+                root.set-thumb-value(true, v.to-float());
+            }
+        }
+        accessible-action-increment => { root.set-thumb-value(true, root.start-value + root.key-delta()); }
+        accessible-action-decrement => { root.set-thumb-value(true, root.start-value - root.key-delta()); }
+
+        key-released(event) => { return root.nav-release(event); }
+    }
+
+    end-scope := FocusScope {
+        x: 0;
+        y: 0;
+        width: 0px;
+        height: 0px;
+        enabled: root.enabled;
+
+        key-pressed(event) => {
+            let sign = root.mirror ? -1 : 1;
+            let delta = root.key-delta();
+            let page = Math.clamp(floor((root.steps > 0 ? root.steps + 1 : 100) / 10), 1, 10) * delta;
+            if event.text == Key.RightArrow {
+                root.set-thumb-value(false, root.end-value + sign * delta);
+                return accept;
+            }
+            if event.text == Key.LeftArrow {
+                root.set-thumb-value(false, root.end-value - sign * delta);
+                return accept;
+            }
+            if event.text == Key.PageUp {
+                root.set-thumb-value(false, root.end-value + page);
+                return accept;
+            }
+            if event.text == Key.PageDown {
+                root.set-thumb-value(false, root.end-value - page);
+                return accept;
+            }
+            if event.text == Key.Home {
+                root.end-value = root.start-value;
+                return accept;
+            }
+            if event.text == Key.End {
+                root.end-value = root.maximum;
+                return accept;
+            }
+            reject
+        }
+        accessible-role: slider;
+        /// `Strings.SliderRangeEnd`.
+        accessible-label: "End";
+        accessible-enabled: root.enabled;
+        accessible-value: root.end-value;
+        accessible-value-minimum: root.start-value;
+        accessible-value-maximum: root.maximum;
+        accessible-value-step: (root.maximum - root.minimum) / (root.steps > 0 ? root.steps + 1 : 100);
+        accessible-action-set-value(v) => {
+            if v.is-float() {
+                root.set-thumb-value(false, v.to-float());
+            }
+        }
+        accessible-action-increment => { root.set-thumb-value(false, root.end-value + root.key-delta()); }
+        accessible-action-decrement => { root.set-thumb-value(false, root.end-value - root.key-delta()); }
+
+        key-released(event) => { return root.nav-release(event); }
+    }
+
+    /// `rangeSliderOnKeyEvents`' KeyUp branch — the horizontal range
+    /// slider only handles left/right arrows, page keys and home/end.
+    function nav-release(event: KeyEvent) -> EventResult {
+        if event.text == Key.RightArrow || event.text == Key.LeftArrow
+            || event.text == Key.PageUp || event.text == Key.PageDown
+            || event.text == Key.Home || event.text == Key.End {
+            root.finish();
+            return accept;
+        }
+        reject
+    }
+
+    touch := TouchArea {
+        width: 100%;
+        height: 100%;
+        enabled: root.enabled;
+        // `rangeSliderPressDragModifier`: the press picks the nearer
+        // thumb (`compareOffsets`), a tap jumps it to the touch position
+        // clamped to the other thumb, and a drag follows the pointer.
+        property <length> down-axis;
+        property <bool> dragged;
+
+        pointer-event(event) => {
+            if event.kind == PointerEventKind.down && event.button == PointerEventButton.left {
+                down-axis = pointer-axis(self.mouse-x);
+                // `compareOffsets` on the pointer-space rawOffsets: the
+                // nearer thumb wins; equidistant taps go to the start
+                // thumb only when left of its rawOffset.
+                let ds = Math.abs(root.start-raw - down-axis);
+                let de = Math.abs(root.end-raw - down-axis);
+                drag-start = ds != de ? ds < de : root.start-raw > down-axis;
+                dragged = false;
+                // A tap moves the nearer thumb on pointer down.
+                root.set-thumb-value(drag-start, axis-value(down-axis));
+            }
+            if event.kind == PointerEventKind.up {
+                dragged = false;
+                root.finish();
+            }
+        }
+
+        moved => {
+            dragged = true;
+            root.set-thumb-value(drag-start, axis-value(pointer-axis(self.mouse-x)));
+        }
+    }
+
+    track := MaterialSliderTrack {
+        vertical: false;
+        flipped: root.mirror;
+        x: track-off-axis;
+        y: track-off-cross;
+        width: track-len;
+        height: track-h;
+        active-start: root.start-fraction;
+        active-end: root.end-fraction;
+        centered: false;
+        range-slider: true;
+        steps: root.steps;
+        shrink-corners: root.shrink-corners;
+        corner-size: c;
+        start-gap: root.start-gap;
+        end-gap: root.end-gap;
+        // Each thumb's live pill extent — the pin's measured
+        // `startThumbWidth`/`endThumbWidth`.
+        start-thumb-axis: start-thumb.pill-axis;
+        end-thumb-axis: end-thumb.pill-axis;
+        active-track-color: root.col-active;
+        inactive-track-color: root.col-inactive;
+        active-tick-color: root.col-tick-active;
+        inactive-tick-color: root.col-tick-inactive;
+        stop-color: root.col-stop;
+    }
+
+    start-thumb := MaterialSliderThumb {
+        handle-height: handle-h;
+        interacting: root.start-interacting;
+        focused: root.start-focused;
+        enabled: root.enabled;
+        x: mirror ? axis-extent - start-frac-px - self.box-axis : start-frac-px;
+        // `(sliderHeight - thumbPlaceable.height) / 2`.
+        y: start-thumb.half(cross-extent - self.box-cross);
+        width: self.box-axis;
+        height: self.box-cross;
+    }
+
+    end-thumb := MaterialSliderThumb {
+        handle-height: handle-h;
+        interacting: root.end-interacting;
+        focused: root.end-focused;
+        enabled: root.enabled;
+        x: mirror ? axis-extent - end-frac-px - self.box-axis : end-frac-px;
+        y: start-thumb.half(cross-extent - self.box-cross);
+        width: self.box-axis;
+        height: self.box-cross;
+    }
+
+    start-label := MaterialSliderLabel {
+        shown: root.label-shown;
+        text: round(root.start-value);
+        property <length> center-axis: mirror ? axis-extent - start-center : start-center;
+        property <length> clamped-center:
+            label-behavior == MaterialSliderLabelBehavior.within_bounds
+                ? Math.clamp(center-axis, track-off-axis + self.width / 2,
+                    track-off-axis + track-len - self.width / 2)
+                : center-axis;
+        x: clamped-center - self.width / 2;
+        y: track-off-cross + track-h / 2 - core-cross / 2
+            - MaterialSliderMetrics.label-padding - self.height;
+    }
+
+    end-label := MaterialSliderLabel {
+        shown: root.label-shown;
+        text: round(root.end-value);
+        property <length> center-axis: mirror ? axis-extent - end-center : end-center;
+        property <length> clamped-center:
+            label-behavior == MaterialSliderLabelBehavior.within_bounds
+                ? Math.clamp(center-axis, track-off-axis + self.width / 2,
+                    track-off-axis + track-len - self.width / 2)
+                : center-axis;
+        x: clamped-center - self.width / 2;
+        y: track-off-cross + track-h / 2 - core-cross / 2
+            - MaterialSliderMetrics.label-padding - self.height;
+    }
+
+    changed start-value => {
+        root.value-changed(root.start-value, root.end-value);
+    }
+    changed end-value => {
+        root.value-changed(root.start-value, root.end-value);
+    }
+
+    // `requiredSizeIn(minWidth = ThumbWidth, minHeight = TrackHeight)`
+    // plus `minimumInteractiveComponentSize` when enforcing.
+    min-width: enforce-touch-target ? 48px : SliderTokens.handle_width;
+    min-height: max(cross-extent, enforce-touch-target ? 48px : 0px);
+    preferred-width: root.min-width;
+    preferred-height: root.min-height;
+
+    // `RangeSliderImpl` itself carries no semantics — each thumb's
+    // `FocusScope` above is its own slider semantics node.
+    accessible-role: none;
+    accessible-enabled: root.enabled;
+}
