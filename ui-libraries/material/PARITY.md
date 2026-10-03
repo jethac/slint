@@ -326,7 +326,7 @@ States: active, indeterminate
 
 | Component | Source | Status | Issues | Needs | Notes |
 |---|---|---|---|---|---|
-| CircularProgressIndicator | ProgressIndicator.kt | done | #11 | springs (#5), shapes (#6) | slint component: CircularProgressIndicator; indeterminate deprecated → LoadingIndicator |
+| CircularProgressIndicator | ProgressIndicator.kt | done | #11 | springs (#5), shapes (#6) | slint component: CircularProgressIndicator; indeterminate deprecated, replacement: LoadingIndicator |
 | CircularWavyProgressIndicator | WavyProgressIndicator.kt | missing | #6, #11 | springs (#5), shapes (#6) | - |
 | LinearProgressIndicator | ProgressIndicator.kt | done | #11 | springs (#5), shapes (#6) | slint component: LinearProgressIndicator |
 | LinearWavyProgressIndicator | WavyProgressIndicator.kt | missing | #6, #11 | springs (#5), shapes (#6) | - |
