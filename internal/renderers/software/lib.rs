@@ -2113,7 +2113,7 @@ fn process_rectangle_impl(
 
     let color = if let Brush::LinearGradient(g) = &args.background {
         let angle = g.angle() + args.rotation.angle();
-        let tan = angle.to_radians().tan().abs();
+        let tan = i_slint_core::graphics::math::tanf(angle.to_radians()).abs();
         let start = if !tan.is_finite() {
             255.
         } else {
@@ -2474,7 +2474,7 @@ fn eval_path_brush(
             let dx = p.x - center_x;
             let dy = p.y - center_y;
             // Angle clockwise from north, matching draw_conic_gradient.
-            let a = dy.atan2(dx) + core::f32::consts::FRAC_PI_2;
+            let a = i_slint_core::graphics::math::atan2f(dy, dx) + core::f32::consts::FRAC_PI_2;
             let tau = 2. * core::f32::consts::PI;
             let t = (a % tau + tau) % tau / tau;
             eval_stops(stops, t)
@@ -2493,7 +2493,7 @@ fn linear_gradient_t(
     y: f32,
 ) -> f32 {
     let a = angle_deg.to_radians();
-    let (dx, dy) = (a.sin(), a.cos());
+    let (dx, dy) = (i_slint_core::graphics::math::sinf(a), i_slint_core::graphics::math::cosf(a));
     let corners = [
         (bounds.min_x(), bounds.min_y()),
         (bounds.max_x(), bounds.min_y()),

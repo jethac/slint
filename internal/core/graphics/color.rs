@@ -620,8 +620,8 @@ impl From<OklchColor> for OklabColor {
         let hue_rad = oklch.hue * core::f32::consts::PI / 180.0;
         Self {
             l: oklch.lightness,
-            a: oklch.chroma * hue_rad.cos(),
-            b: oklch.chroma * hue_rad.sin(),
+            a: oklch.chroma * crate::graphics::math::cosf(hue_rad),
+            b: oklch.chroma * crate::graphics::math::sinf(hue_rad),
             alpha: oklch.alpha,
         }
     }
@@ -633,7 +633,7 @@ impl From<OklabColor> for OklchColor {
         let hue = if chroma < 0.00001 {
             0.0
         } else {
-            let hue_rad = oklab.b.atan2(oklab.a);
+            let hue_rad = crate::graphics::math::atan2f(oklab.b, oklab.a);
             num_traits::Euclid::rem_euclid(&(hue_rad * 180.0 / core::f32::consts::PI), &360.0)
         };
         Self { lightness: oklab.l, chroma, hue, alpha: oklab.alpha }
@@ -819,19 +819,31 @@ mod compose_oklab {
     /// Compose's eotf/oetf functions run on `Double` (`Rgb.eotfFunc`).
     fn srgb_eotf(c: f32) -> f32 {
         let c = c as f64;
-        (if c <= 0.04045 { c / 12.92 } else { ((c + 0.055) / 1.055).powf(2.4) }) as f32
+        (if c <= 0.04045 {
+            c / 12.92
+        } else {
+            crate::graphics::math::pow((c + 0.055) / 1.055, 2.4)
+        }) as f32
     }
 
     fn srgb_oetf(c: f32) -> f32 {
         let c = c as f64;
-        (if c <= 0.0031308 { c * 12.92 } else { 1.055 * c.powf(1.0 / 2.4) - 0.055 }) as f32
+        (if c <= 0.0031308 {
+            c * 12.92
+        } else {
+            1.055 * crate::graphics::math::pow(c, 1.0 / 2.4) - 0.055
+        }) as f32
     }
 
     /// `Connector.transform` sRGB→Oklab, returning `(l, a, b)`.
     pub(super) fn srgb_to_oklab(r: f32, g: f32, b: f32) -> [f32; 3] {
         let v = mul3x3f3(&SRGB_TO_XYZ_D50, [srgb_eotf(r), srgb_eotf(g), srgb_eotf(b)]);
         let v = mul3x3f3(&OKLAB_M1, v);
-        let v = [v[0].cbrt(), v[1].cbrt(), v[2].cbrt()];
+        let v = [
+            crate::graphics::math::cbrtf(v[0]),
+            crate::graphics::math::cbrtf(v[1]),
+            crate::graphics::math::cbrtf(v[2]),
+        ];
         mul3x3f3(&OKLAB_M2, v)
     }
 

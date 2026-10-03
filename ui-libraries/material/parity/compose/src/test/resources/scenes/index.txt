@@ -9,6 +9,7 @@ button-release-morph
 button-sizes
 button-states
 button-styles
+elevation-shadow
 elevation-surfaces
 icon-button-focus
 icon-button-press-morph

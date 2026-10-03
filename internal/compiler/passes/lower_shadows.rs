@@ -168,6 +168,24 @@ fn create_elevation_shadow_element(
         ),
     );
 
+    // `ElevationShadow` elements only come from this lowering, so the item's
+    // `in property` defaults never apply; bind the layer colors the way
+    // `Modifier.shadow` does with `DefaultShadowColor` (opaque black).
+    for name in ["ambient-shadow-color", "spot-shadow-color"] {
+        bindings.entry(SmolStr::new_static(name)).or_insert_with(|| {
+            RefCell::new(
+                Expression::Cast {
+                    from: Box::new(Expression::NumberLiteral(
+                        0xff000000u32 as f64,
+                        crate::expression_tree::Unit::None,
+                    )),
+                    to: crate::langtype::Type::Color,
+                }
+                .into(),
+            )
+        });
+    }
+
     let mut element = Element {
         id: format_smolstr!("{}-elevation-shadow", sibling_element.borrow().id),
         base_type: type_register.lookup_builtin_element("ElevationShadow").unwrap(),

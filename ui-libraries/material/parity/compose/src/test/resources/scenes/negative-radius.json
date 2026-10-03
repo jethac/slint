@@ -87,6 +87,7 @@
       "color": "primary-container",
       "content_offset": null,
       "corner": null,
+      "elevation": null,
       "enabled": null,
       "height": 72.0,
       "height_offset": null,

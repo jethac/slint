@@ -181,6 +181,17 @@ cpp! {{
             });
         }
 
+        void moveEvent(QMoveEvent *) override {
+            if (!rust_window)
+                return;
+
+            // The elevation shadow's light stays fixed on the display, so a
+            // moved window needs a repaint.
+            rust!(Slint_moveEvent [rust_window: &QtWindow as "void*"] {
+                rust_window.request_redraw()
+            });
+        }
+
         /// If this window is a PopupWindow and the mouse event is outside of the popup, then adjust the event to map to the parent window
         /// Returns the position and the rust_window to which we need to deliver the event
         std::tuple<QPoint, void*> adjust_mouse_event_to_popup_parent(QMouseEvent *event) {

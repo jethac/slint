@@ -81,6 +81,7 @@ import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Modifier
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
@@ -454,6 +455,21 @@ private fun CanvasScene(
                             .size(widget.width.dp, widget.height.dp)
                             .clip(RoundedCornerShapeOrRect(widget.radius.dp))
                             .background(schemeColor(widget.color ?: "primary")),
+                    )
+                widget.kind == "elevated-rect" ->
+                    Box(
+                        Modifier.offset(widget.x.dp, widget.y.dp)
+                            .size(widget.width.dp, widget.height.dp)
+                            // Modifier.shadow draws the real Android
+                            // ambient+spot shadow for the shape.
+                            .shadow(
+                                widget.elevation.dp,
+                                RoundedCornerShapeOrRect(widget.radius.dp),
+                            )
+                            .background(
+                                schemeColor(widget.color ?: "primary"),
+                                RoundedCornerShapeOrRect(widget.radius.dp),
+                            ),
                     )
                 widget.kind == "surface" -> {
                     // A clip + color surface: the shape machinery's outline
