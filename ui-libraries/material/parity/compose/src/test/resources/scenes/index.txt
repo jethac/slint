@@ -32,6 +32,10 @@ icon-buttons
 icons
 loading-indicator-motion
 loading-indicator-states
+menu-group-morph
+menu-groups
+menu-items
+menu-select-morph
 negative-badge-offset
 negative-badge-text
 negative-button-focus-ring
@@ -51,6 +55,11 @@ negative-focus-layer
 negative-hover-layer
 negative-icon-button-morph
 negative-icon-offset
+negative-menu-focus
+negative-menu-gap
+negative-menu-kind
+negative-menu-shape
+negative-menu-variant
 negative-press-overlay
 negative-radius
 negative-recolor

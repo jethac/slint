@@ -26,13 +26,36 @@ export component Example inherits Window {
 ```
 </CodeSnippetMD>
 
-A "DropDownMenu" that can be opened from a TextField. The selected menu item is displayed in that field.
+A `DropDownMenu` that can be opened from a TextField — the upstream
+`ExposedDropdownMenuBox`: a read-only field anchor whose trailing arrow
+rotates while `expanded`, plus the exposed popup. The selected menu item is
+displayed in that field.
+
+The popup takes the anchor's width (`exposedDropdownSize`), items inside it
+use the 16dp `ItemContentPadding`, and the menu anchors below the field
+through the `ExposedDropdownMenuPositionProvider` placement.
 
 ## Properties
 
 ### items
 <SlintProperty propName="items" typeName="[struct]" structName="MenuItem">
 An array of menu items, each containing an icon, a text, and a trailing text.
+</SlintProperty>
+
+### groups
+<SlintProperty propName="groups" typeName="[struct]" structName="MenuGroup">
+Segmented content: when set, the popup renders `DropdownMenuPopup` groups
+instead of the flat item list.
+</SlintProperty>
+
+### variant
+<SlintProperty propName="variant" typeName="enum" enumName="MenuVariant">
+`standard` or `vibrant` token set for the popup items.
+</SlintProperty>
+
+### item-kind
+<SlintProperty propName="item-kind" typeName="enum" enumName="MenuItemKind">
+`standard`, `selectable`, or `checkable` item composable.
 </SlintProperty>
 
 ### enabled
@@ -55,7 +78,21 @@ The label text displayed above the drop down menu.
 The index of the currently selected menu item.
 </SlintProperty>
 
+### expanded
+<SlintProperty propName="expanded" typeName="bool" propertyVisibility="in-out">
+Whether the popup is open — toggled by the anchor; the menu dismisses itself
+on item activation and outside clicks.
+</SlintProperty>
+
+### match-anchor-width
+<SlintProperty propName="match-anchor-width" typeName="bool" defaultValue="true">
+`exposedDropdownSize(matchAnchorWidth)` — the menu takes the field's width.
+</SlintProperty>
+
 ## Callbacks
 
 ### selected(index: int)
 Invoked when a menu item is selected
+
+### group-activated(group: int, index: int)
+Invoked when an item inside `groups` content is clicked.

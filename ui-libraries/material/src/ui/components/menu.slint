@@ -1,148 +1,1143 @@
 // Copyright © SixtyFPS GmbH <info@slint.dev>
 // SPDX-License-Identifier: MIT
 
+import { MaterialAnimations } from "../styling/material_animations.slint";
 import { MaterialStyleMetrics } from "../styling/material_style_metrics.slint";
 import { MaterialPalette } from "../styling/material_palette.slint";
-import { Elevation } from "elevation.slint";
-import { StateLayerArea } from "./state_layer.slint";
 import { MaterialTypography } from "../styling/material_typography.slint";
-import { ListTokens } from "../styling/generated/material_component_tokens.slint";
+import { MaterialWindowAdapter } from "./material_window.slint";
+import { MaterialCornerShape, ShapeTokens } from "../styling/generated/material_shape_tokens.slint";
+import { MenuTokens, SegmentedMenuTokens } from "../styling/generated/material_component_tokens.slint";
+import {
+    MaterialMenuMetrics,
+    MenuVariant,
+    MenuItemKind,
+    MenuAnchorPosition,
+    MenuShapePosition,
+    MenuPosition,
+} from "./menu_metrics.slint";
+import { MenuItem, MenuGroup } from "../items/menu_item.slint";
+import { Elevation } from "./elevation.slint";
+import { StateLayerArea } from "./state_layer.slint";
 import { Icon } from "./icon.slint";
-import { MenuItem } from "../items/menu_item.slint";
 import { MaterialText } from "./material_text.slint";
-import { Icons } from "../icons/icons.slint";
+import { HorizontalDivider } from "./divider.slint";
+import { MaterialFocusIndicator, MaterialFocusRing } from "../styling/generated/material_state_tokens.slint";
 
-component MenuItemTemplate {
-    in property <image> icon;
+/// The `MaterialFocusRing` stroke pair drawn along an arbitrary
+/// `MaterialCornerShape` instead of a uniform border radius: `FocusRing`
+/// itself only takes `border-radius`, so each band rebuilds the rounding
+/// for its own centerline (a focus ring inside a shape is that shape shrunk
+/// by the inset distance).
+component MenuRingStroke inherits Path {
+    // A `shape:` `border-width` strokes centered on the outline edge in the
+    // software renderer but inside it on Skia, so the band is built as an
+    // explicit `Path` stroke — centered on the path in every renderer. The
+    // commands sit at the band's centerline, `inset` off the element edge;
+    // Path geometry already offsets the viewbox by half the stroke width, so
+    // `viewbox-* = size - stroke-width` keeps the mapping 1:1 and the command
+    // origin `o` is `inset - stroke-width / 2`.
+    in property <MaterialCornerShape> current-shape;
+    in property <length> inset;
+    property <float> o: (inset - self.stroke-width / 2) / 1px;
+    property <float> w: self.viewbox-width;
+    property <float> h: self.viewbox-height;
+    property <float> tl: max(0, (current-shape.top_left - inset) / 1px);
+    property <float> tr: max(0, (current-shape.top_right - inset) / 1px);
+    property <float> br: max(0, (current-shape.bottom_right - inset) / 1px);
+    property <float> bl: max(0, (current-shape.bottom_left - inset) / 1px);
+    viewbox-width: max(0, (self.width - self.stroke-width) / 1px);
+    viewbox-height: max(0, (self.height - self.stroke-width) / 1px);
+    fill: transparent;
+
+    MoveTo { x: parent.o + parent.tl; y: parent.o; }
+    LineTo { x: parent.w - parent.o - parent.tr; y: parent.o; }
+    // A zero radius collapses to a straight line to the corner (SVG arc
+    // semantics), which is exactly the square corners segmented menus get.
+    ArcTo { x: parent.w - parent.o; y: parent.o + parent.tr; radius-x: parent.tr; radius-y: parent.tr; sweep: true; }
+    LineTo { x: parent.w - parent.o; y: parent.h - parent.o - parent.br; }
+    ArcTo { x: parent.w - parent.o - parent.br; y: parent.h - parent.o; radius-x: parent.br; radius-y: parent.br; sweep: true; }
+    LineTo { x: parent.o + parent.bl; y: parent.h - parent.o; }
+    ArcTo { x: parent.o; y: parent.h - parent.o - parent.bl; radius-x: parent.bl; radius-y: parent.bl; sweep: true; }
+    LineTo { x: parent.o; y: parent.o + parent.tl; }
+    ArcTo { x: parent.o + parent.tl; y: parent.o; radius-x: parent.tl; radius-y: parent.tl; sweep: true; }
+    Close {}
+}
+
+component MenuFocusRing {
+    in property <MaterialCornerShape> current-shape;
+    property <MaterialFocusRing> ring: MaterialFocusIndicator.ring;
+
+    // Upstream draws the inner stroke first and the outer on top where their
+    // bands overlap, so `inner` must come first here too.
+    inner := MenuRingStroke {
+        x: 0;
+        y: 0;
+        width: parent.width;
+        height: parent.height;
+        current-shape: root.current-shape;
+        inset: root.ring.inner-stroke-inset + root.ring.inner-stroke-width / 2;
+        stroke-width: root.ring.inner-stroke-width;
+        stroke: MaterialPalette.on-secondary;
+    }
+
+    outer := MenuRingStroke {
+        x: 0;
+        y: 0;
+        width: parent.width;
+        height: parent.height;
+        current-shape: root.current-shape;
+        inset: root.ring.outer-stroke-inset + root.ring.outer-stroke-width / 2;
+        stroke-width: root.ring.outer-stroke-width;
+        stroke: MaterialPalette.secondary;
+    }
+}
+
+/// `DropdownMenuItemContent` — the expressive item shell shared by
+/// `DropdownMenuItem`, `SelectableDropdownMenuItem` and
+/// `CheckableDropdownMenuItem` (`item-kind`). The container surface morphs
+/// between the position-resolved `MenuItemShapes` while `selected`/`checked`
+/// (upstream `rememberAnimatedShape`, fast spatial); the container color runs
+/// on fast effects (`animatedContainerColor`).
+export component MenuItemContent {
+    in property <MenuItemKind> item-kind: MenuItemKind.standard;
+    in property <MenuVariant> variant: MenuVariant.standard;
+    /// The item's position in its group (`MenuDefaults.itemShape` index).
+    in property <MenuShapePosition> shape-position: MenuShapePosition.standalone;
     in property <string> text;
-    in property <string> trailing_text;
-    in property <bool> enabled <=> state_area.enabled;
-    in property <bool> selected;
+    in property <string> supporting-text;
+    in property <image> icon;
+    /// `selectedLeadingIcon`/`checkedLeadingIcon` — shown while the item is
+    /// active; expands the slot `AnimatedVisibility`-style when `icon` is
+    /// unset.
+    in property <image> selected-icon;
+    in property <image> trailing-icon;
+    in property <string> trailing-text;
+    in property <bool> enabled: true;
+    in-out property <bool> selected;
+    in-out property <bool> checked;
+    in property <bool> simulate-hover;
+    in property <bool> simulate-press;
+    /// Keyboard-driven focus highlight — draws the inset `FocusRing` and
+    /// suppresses the focus state layer (`InsetFocusRing` ripple theme).
+    in property <bool> menu-focused;
+    /// `contentPadding` — `< 0` falls back to the expressive default
+    /// (`DropdownMenuSelectableItemContentPadding`, 12dp on each axis).
+    /// `ItemContentPadding` for exposed menus passes `16px`/`0px`.
+    in property <length> content-padding-h: -1px;
+    in property <length> content-padding-v: -1px;
+    /// Position within the parent list for `accessible-item-*`.
+    in property <int> item-index: -1;
+    in property <int> item-count: 0;
+    callback clicked;
 
-    callback clicked();
+    out property <bool> has-hover <=> state-area.effective-hover;
+    out property <bool> has-press <=> state-area.effective-pressed;
+    out property <bool> pointer-inside <=> state-area.pointer-inside;
+    out property <bool> has-focus <=> state-area.has-focus;
+    /// Resolved values, also read by the parity harness's `//TRACE_PROPS`.
+    out property <color> container-color;
+    out property <length> container-radius-top-left;
+    out property <length> container-radius-top-right;
+    out property <length> container-radius-bottom-right;
+    out property <length> container-radius-bottom-left;
 
-    property <bool> has_icon: root.icon.width > 0 && root.icon.height > 0;
-    property <color> color: MaterialPalette.on_surface;
-    property <color> color_variant: MaterialPalette.on_surface_variant;
+    property <bool> is-active: root.item-kind == MenuItemKind.checkable ? root.checked : root.selected;
+    property <bool> has-leading: root.icon.width > 0 || root.selected-icon.width > 0;
+    property <bool> has-selected-icon: root.selected-icon.width > 0;
+    property <bool> has-trailing: root.trailing-icon.width > 0 || root.trailing-text != "";
+    property <bool> has-supporting: root.supporting-text != "";
+    property <int> slot-count: (root.has-leading ? 1 : 0) + 1 + (root.has-trailing ? 1 : 0);
 
-    min_height: max(MaterialStyleMetrics.size_56, layout.min_height);
+    property <length> pad-h: root.content-padding-h >= 0px ? root.content-padding-h : MaterialMenuMetrics.item-horizontal-padding;
+    property <length> pad-v: root.content-padding-v >= 0px ? root.content-padding-v : MaterialMenuMetrics.selectable-item-vertical-padding;
+    property <length> inset-h: MaterialMenuMetrics.selectable-item-horizontal-padding;
+    property <length> inset-v: root.has-supporting ? MaterialMenuMetrics.selectable-item-supporting-vertical-padding : 0px;
+    property <length> spacing: MaterialMenuMetrics.item-arrangement-spacing;
 
-    background_layer := Rectangle {
-        state_area := StateLayerArea {
-            color: root.color;
+    // `defaultMinSize(minWidth = ItemLeadingIconSize)` wrapping an `Icon`
+    // (LocalIconSize, 24dp): the slot measures max(20, 24) on both axes, so
+    // icon items end up taller than `SegmentedMenuTokens.Item` once the
+    // `sizeIn(minHeight)` clamps the padded content height.
+    property <length> icon-size: MaterialStyleMetrics.icon_size_24;
+    property <length> leading-slot-width: root.has-leading ?
+        Math.max(SegmentedMenuTokens.item-leading-icon-size, root.icon-size) : 0px;
+    // `AnimatedVisibility` on the leading slot: with `icon` unset the box
+    // expands (fast spatial) and fades (fast effects) on `selected`.
+    property <length> leading-width:
+        root.icon.width > 0 ? root.leading-slot-width :
+        (root.is-active && root.has-selected-icon) ? root.leading-slot-width : 0px;
+    animate leading-width {
+        easing: MaterialAnimations.fast-spatial-spring;
+        enabled: !MaterialPalette.reduced-motion;
+    }
+    property <float> leading-opacity:
+        root.icon.width > 0 || (root.is-active && root.has-selected-icon) ? 1 : 0;
+    animate leading-opacity {
+        easing: MaterialAnimations.fast-effects-spring;
+        enabled: !MaterialPalette.reduced-motion;
+    }
 
-            layout := HorizontalLayout {
-                padding_left: MaterialStyleMetrics.padding_12;
-                padding_right: self.padding_left;
-                padding_top: MaterialStyleMetrics.padding_8;
-                padding_bottom: self.padding_top;
-                spacing: MaterialStyleMetrics.spacing_12;
+    property <length> trailing-width: root.has-trailing ?
+        Math.max(SegmentedMenuTokens.item-trailing-icon-size, trailing-box.trailing-content-width) : 0px;
+    // The trailing box never animates: live and intrinsic width agree.
+    property <length> trailing-slot-width: root.trailing-width;
 
-                if root.has_icon : VerticalLayout {
-                    alignment: center;
+    // `sizeIn(minWidth = 112, maxWidth = 280)`: intrinsic row width including
+    // the content padding, plus the 4dp surface inset per side on the item.
+    // The slots are measured at their intrinsic size — the collapsed leading
+    // `AnimatedVisibility` box still reports its full content size.
+    property <length> row-intrinsic-width: Math.min(Math.max(
+        (root.has-leading ? root.leading-slot-width + root.spacing : 0px)
+            + Math.max(label-text.preferred-width,
+                root.has-supporting ? supporting-probe.preferred-width : 0px)
+            + (root.has-trailing ? root.trailing-slot-width + root.spacing : 0px)
+            + 2 * root.pad-h,
+        MaterialMenuMetrics.item-min-width), MaterialMenuMetrics.item-max-width);
+    min_width: root.row-intrinsic-width + 2 * root.inset-h;
+    // `sizeIn(minHeight = SegmentedMenuTokens.Item)` clamps the padded row:
+    // a 24dp leading icon yields `max(44, 24 + 24)` = 48dp items, a 20dp
+    // label stays at 44dp. The 2dp surface inset stacks on top.
+    min_height: Math.max(SegmentedMenuTokens.item, root.content-height + 2 * root.pad-v) + 2 * root.inset-v;
+    property <length> content-height: Math.max(
+        Math.max(root.leading-slot-width, label-text.preferred-height
+            + (root.has-supporting ? supporting-probe.preferred-height : 0px)),
+        trailing-box.trailing-content-height);
 
-                    Icon {
-                        // Upstream DropdownMenuItem wraps the leading icon in a
-                        // `defaultMinSize(ListTokens.ItemLeadingIconSize)` box (Menu.kt).
-                        width: ListTokens.item_leading_icon_size;
-                        height: self.width;
-                        source: root.icon;
-                        colorize: root.color;
-                    }
-                }
+    // Live row metrics once the item is placed: `sizeIn` clamps to 280.
+    property <length> row-width: Math.min(root.width - 2 * root.inset-h, MaterialMenuMetrics.item-max-width);
+    property <length> arrangement-width: root.row-width - 2 * root.pad-h;
+    property <length> row-height: root.height - 2 * root.inset-v;
+    // Upstream bounds the text by the full leading slot (the ghost
+    // placeable), not the animating one.
+    property <length> text-box-width: Math.max(root.arrangement-width
+        - (root.has-leading ? root.leading-slot-width + root.spacing : 0px)
+        - (root.has-trailing ? root.trailing-slot-width + root.spacing : 0px), 0px);
 
-                MaterialText {
-                    horizontal_stretch: 1;
-                    text: root.text;
-                    style: MaterialTypography.body_large;
-                    color: root.color;
-                    vertical_alignment: center;
-                }
+    // `shapeByInteraction` — morph resting ↔ selected on `selected`/`checked`.
+    property <MaterialCornerShape> resting-shape: MaterialMenuMetrics.item-shape(root.shape-position);
+    property <MaterialCornerShape> active-shape: MaterialMenuMetrics.item-selected-shape(root.shape-position);
+    property <float> shape-progress: root.is-active ? 1 : 0;
+    animate shape-progress {
+        easing: MaterialAnimations.fast-spatial-spring;
+        enabled: !MaterialPalette.reduced-motion;
+    }
+    property <MaterialCornerShape> current-shape: {
+        top_left: root.resting-shape.top_left + (root.active-shape.top_left - root.resting-shape.top_left) * root.shape-progress,
+        top_right: root.resting-shape.top_right + (root.active-shape.top_right - root.resting-shape.top_right) * root.shape-progress,
+        bottom_right: root.resting-shape.bottom_right + (root.active-shape.bottom_right - root.resting-shape.bottom_right) * root.shape-progress,
+        bottom_left: root.resting-shape.bottom_left + (root.active-shape.bottom_left - root.resting-shape.bottom_left) * root.shape-progress,
+    };
+    container-radius-top-left: root.current-shape.top_left;
+    container-radius-top-right: root.current-shape.top_right;
+    container-radius-bottom-right: root.current-shape.bottom_right;
+    container-radius-bottom-left: root.current-shape.bottom_left;
+    container-color: MaterialMenuMetrics.item-container-color(root.variant, root.item-kind, root.enabled, root.is-active);
 
-                if root.trailing_text != "" : MaterialText {
-                    text: root.trailing_text;
-                    style: MaterialTypography.body_large;
-                    color: root.color_variant;
-                    vertical_alignment: center;
-                }
+    // `accessible-role` requires a constant, so each kind gets its role via
+    // a dedicated a11y proxy (upstream: Button / Checkbox / RadioButton).
+    if root.item-kind == MenuItemKind.checkable : Rectangle {
+        width: 100%;
+        height: 100%;
+        accessible-role: checkbox;
+        accessible-label: root.text;
+        accessible-enabled: root.enabled;
+        accessible-checkable: true;
+        accessible-checked: root.checked;
+        accessible-item-index: root.item-index;
+        accessible-item-count: root.item-count;
+        accessible-action-default => {
+            if root.enabled {
+                root.checked = !root.checked;
+                root.clicked();
             }
-
-            clicked => {
+        }
+    }
+    if root.item-kind == MenuItemKind.selectable : Rectangle {
+        width: 100%;
+        height: 100%;
+        accessible-role: radio-button;
+        accessible-label: root.text;
+        accessible-enabled: root.enabled;
+        accessible-checkable: true;
+        accessible-checked: root.is-active;
+        accessible-item-index: root.item-index;
+        accessible-item-count: root.item-count;
+        accessible-action-default => {
+            if root.enabled {
+                root.clicked();
+            }
+        }
+    }
+    if root.item-kind == MenuItemKind.standard : Rectangle {
+        width: 100%;
+        height: 100%;
+        accessible-role: button;
+        accessible-label: root.text;
+        accessible-enabled: root.enabled;
+        accessible-item-index: root.item-index;
+        accessible-item-count: root.item-count;
+        accessible-action-default => {
+            if root.enabled {
                 root.clicked();
             }
         }
     }
 
-    states [
-        disabled when !root.enabled : {
-            state_area.opacity: MaterialPalette.disable_opacity;
+    container := Rectangle {
+        // `DropdownMenuSelectableItem(WithSupportText)Padding` insets the
+        // Surface itself, not just the row: h4 always, v2 with supporting
+        // text, so the container sits `inset-*` inside the item bounds.
+        x: root.inset-h;
+        y: root.inset-v;
+        width: parent.width - 2 * root.inset-h;
+        height: parent.height - 2 * root.inset-v;
+        background: root.container-color;
+        clip: true;
+        shape: Shapes.rectangle(self.width / 1px, self.height / 1px, MaterialMenuMetrics.corner-roundings(root.current-shape));
+        shape-fit: ShapeFit.fill;
+
+        animate background {
+            easing: MaterialAnimations.fast-effects-spring;
+            enabled: !MaterialPalette.reduced-motion;
         }
-        selected when root.selected : {
-            background_layer.background: MaterialPalette.surface_container_highest;
+
+        state-area := StateLayerArea {
+            x: 0;
+            y: 0;
+            width: 100%;
+            height: 100%;
+            accessible-role: none;
+            enabled: root.enabled;
+            color: MaterialMenuMetrics.item-text-color(root.variant, root.item-kind, root.enabled, root.is-active);
+            shape: container.shape;
+            shape-fit: ShapeFit.fill;
+            display-background: false;
+            clip-ripple: true;
+            focus-ring: true;
+            simulate-hover: root.simulate-hover;
+            simulate-press: root.simulate-press;
+
+            clicked() => {
+                if !state-area.pointer-inside && !state-area.enter-pressed {
+                    return;
+                }
+                if root.item-kind == MenuItemKind.checkable {
+                    root.checked = !root.checked;
+                }
+                root.clicked();
+            }
+
+            // The `MenuArrangement` row: [leading box | text box | trailing box]
+            leading-box := Rectangle {
+                x: root.pad-h;
+                y: (root.row-height - root.leading-slot-width) / 2;
+                width: root.leading-width;
+                height: root.leading-slot-width;
+                clip: true;
+
+                leading-icon := Icon {
+                    x: (parent.width - self.width) / 2;
+                    source: root.is-active && root.has-selected-icon ? root.selected-icon : root.icon;
+                    width: root.icon-size;
+                    colorize: MaterialMenuMetrics.item-leading-icon-color(root.variant, root.item-kind, root.enabled, root.is-active);
+                    opacity: root.leading-opacity;
+                }
+            }
+
+            text-box := Rectangle {
+                // `MenuArrangement`: the text sits right after the leading
+                // slot plus the arrangement spacing, or at the start — the
+                // pin never right-aligns the label.
+                x: root.pad-h
+                    + (root.has-leading ? root.leading-width + root.spacing : 0px);
+                y: (root.row-height - self.height) / 2;
+                width: root.text-box-width;
+                height: text-stack.min_height;
+                clip: true;
+
+                // `LabelWithSupportingText` — label-large over body-medium.
+                text-stack := VerticalLayout {
+                    width: 100%;
+
+                    // Slint has no "height at bound width" readback, so
+                    // labels elide at the 280dp `sizeIn` cap where upstream
+                    // would wrap.
+                    label-text := MaterialText {
+                        text: root.text;
+                        style: MaterialTypography.label-large;
+                        color: MaterialMenuMetrics.item-text-color(root.variant, root.item-kind, root.enabled, root.is-active);
+                        width: 100%;
+                        overflow: elide;
+                    }
+
+                    if root.has-supporting : MaterialText {
+                        text: root.supporting-text;
+                        style: MaterialTypography.body-medium;
+                        color: MaterialMenuMetrics.item-text-color(root.variant, root.item-kind, root.enabled, root.is-active);
+                        width: 100%;
+                        overflow: elide;
+                    }
+                }
+            }
+
+            // Conditional elements can't be referenced for metrics — a
+            // `visible: false` probe answers `preferred-*` for the row
+            // intrinsic and content-height math instead.
+            supporting-probe := MaterialText {
+                text: root.supporting-text;
+                style: MaterialTypography.body-medium;
+                width: root.text-box-width;
+                visible: false;
+            }
+
+            trailing-probe := MaterialText {
+                text: root.trailing-text;
+                style: MaterialTypography.label-large;
+                visible: false;
+            }
+
+            trailing-box := Rectangle {
+                out property <length> trailing-content-width:
+                    root.trailing-icon.width > 0 ? root.icon-size :
+                    root.trailing-text != "" ? trailing-probe.preferred-width : 0px;
+                out property <length> trailing-content-height:
+                    root.trailing-icon.width > 0 ? root.icon-size :
+                    root.trailing-text != "" ? trailing-probe.preferred-height : 0px;
+                x: root.pad-h + root.arrangement-width - root.trailing-width;
+                y: (root.row-height - self.height) / 2;
+                width: root.trailing-width;
+                height: self.trailing-content-height;
+                visible: root.has-trailing;
+                clip: true;
+
+                if root.trailing-icon.width > 0 : Icon {
+                    x: (parent.width - self.width) / 2;
+                    source: root.trailing-icon;
+                    width: root.icon-size;
+                    colorize: MaterialMenuMetrics.item-trailing-color(root.variant, root.item-kind, root.enabled, root.is-active);
+                }
+
+                trailing-text := MaterialText {
+                    visible: root.trailing-icon.width <= 0;
+                    text: root.trailing-text;
+                    style: MaterialTypography.label-large;
+                    color: MaterialMenuMetrics.item-trailing-color(root.variant, root.item-kind, root.enabled, root.is-active);
+                    horizontal-alignment: center;
+                    width: 100%;
+                }
+            }
         }
-    ]
+    }
+
+    // The inset ring follows the morphing shape (the upstream
+    // `BorderLogic`-style focus indication tracks the component outline).
+    if (root.menu-focused || state-area.has-focus) && root.enabled : MenuFocusRing {
+        // The ring hugs the Surface bounds — the same `inset-*` box as
+        // `container` — not the whole item.
+        x: root.inset-h;
+        y: root.inset-v;
+        width: parent.width - 2 * root.inset-h;
+        height: parent.height - 2 * root.inset-v;
+        current-shape: root.current-shape;
+    }
 }
 
-export component MenuInner {
-    in property <[MenuItem]> items;
-    // Entries before `first_index` are not shown, e.g. for an overflow menu
-    // whose leading entries are already visible elsewhere.
-    in property <int> first_index;
-    in_out property <int> current_index: -1;
+/// `DropdownMenuGroupLabel` — a start-aligned label inside a group:
+/// `sizeIn(112..280, minHeight = 32)` with 12dp/4dp start/end padding.
+export component MenuGroupLabel {
+    in property <string> text;
+    in property <MenuVariant> variant: MenuVariant.standard;
+    in property <bool> enabled: true;
 
-    callback activated(index: int);
+    min_width: Math.min(Math.max(label.min-width + 16px, MaterialMenuMetrics.item-min-width), MaterialMenuMetrics.item-max-width);
+    min_height: MaterialMenuMetrics.group-label-min-height;
 
-    // used to fix clipping of shadows
-    out property <int> elevation_level: 2;
+    label := MaterialText {
+        text: root.text;
+        style: MaterialTypography.label-large;
+        color: MaterialMenuMetrics.item-text-color(root.variant, MenuItemKind.standard, root.enabled, false);
+        x: MaterialMenuMetrics.group-label-start-padding;
+        y: (parent.height - self.preferred-height) / 2;
+        width: parent.width - MaterialMenuMetrics.group-label-start-padding - MaterialMenuMetrics.group-label-end-padding;
+        overflow: elide;
+    }
+}
 
-    menu := Elevation {
+/// `MenuDefaults.HorizontalDividerPadding` — a divider inset 12dp/2dp for
+/// use inside menus and menu groups.
+export component MenuDivider {
+    in property <brush> color;
+    min_width: MaterialMenuMetrics.item-min-width;
+    min_height: MaterialMenuMetrics.divider-vertical-padding * 2 + 1px;
+
+    Rectangle {
         width: 100%;
-        level: root.elevation_level;
-        height: layout.min_height + root.elevation_level * 1px;
-        border_radius: MaterialStyleMetrics.border_radius_4;
-        background: MaterialPalette.surface_container;
+        height: 100%;
+        HorizontalDivider {
+            x: MaterialMenuMetrics.divider-horizontal-padding;
+            y: MaterialMenuMetrics.divider-vertical-padding;
+            width: parent.width - 2 * MaterialMenuMetrics.divider-horizontal-padding;
+            height: 1px;
+        }
+    }
+}
 
-        layout := VerticalLayout {
-            width: root.width;
-            padding_top: MaterialStyleMetrics.padding_8;
-            padding_bottom: self.padding_top;
+/// `DropdownMenuGroup` — one surface (per-group `ContainerElevation` shadow,
+/// standard or vibrant container color) holding a `Column` of items with the
+/// group's vertical content padding. Tracks `hasBeenHovered`: the container
+/// shape morphs to `InactiveContainerShape` (fast spatial) once the pointer
+/// has entered and left the group.
+export component MenuGroupContent {
+    in property <[MenuItem]> items;
+    in property <string> label;
+    in property <MenuItemKind> item-kind: MenuItemKind.standard;
+    in property <MenuVariant> variant: MenuVariant.standard;
+    /// The group's position among the menu's groups (`MenuDefaults.groupShape`).
+    in property <MenuShapePosition> shape-position: MenuShapePosition.standalone;
+    /// Item index inside this group currently keyboard-focused (-1 = none).
+    in property <int> focused-item: -1;
+    in property <bool> simulate-hover;
+    /// `simulate_*` hooks applied to the item at this index (-1 = none) —
+    /// the parity harness drives settled interaction states through them.
+    in property <int> simulate-hover-item: -1;
+    in property <int> simulate-press-item: -1;
+    in property <length> item-content-padding-h: -1px;
+    in property <length> item-content-padding-v: -1px;
+    /// Parity-harness hook: the Compose references cannot render platform
+    /// shadows (layoutlib deadlocks on `Surface.shadowElevation`), so the
+    /// generated cases turn the group shadow off. Real usage keeps the
+    /// upstream `shadowElevation = MenuTokens.ContainerElevation`.
+    in property <bool> cast-shadow: true;
+    callback activated(index: int);
+    callback item-hovered(index: int, hovered: bool);
 
-            for item[index] in root.items : MenuItemTemplate {
-                icon: item.icon;
+    out property <bool> group-hovered: group-touch.has-hover || root.hovered-count > 0 || root.simulate-hover;
+    out property <MaterialCornerShape> current-shape;
+    /// Resolved values, also read by the parity harness's `//TRACE_PROPS`.
+    out property <length> container-radius-top-left: root.current-shape.top_left;
+    out property <length> container-radius-top-right: root.current-shape.top_right;
+    out property <length> container-radius-bottom-right: root.current-shape.bottom_right;
+    out property <length> container-radius-bottom-left: root.current-shape.bottom_left;
+
+    property <int> hovered-count;
+    property <bool> has-been-hovered;
+    property <MaterialCornerShape> resting-shape: MaterialMenuMetrics.group-shape(root.shape-position);
+    property <MaterialCornerShape> inactive-shape: MaterialMenuMetrics.group-inactive-shape(root.shape-position);
+    property <float> shape-progress: (root.has-been-hovered && !root.group-hovered) ? 1 : 0;
+    animate shape-progress {
+        easing: MaterialAnimations.fast-spatial-spring;
+        enabled: !MaterialPalette.reduced-motion;
+    }
+    current-shape: {
+        top_left: root.resting-shape.top_left + (root.inactive-shape.top_left - root.resting-shape.top_left) * root.shape-progress,
+        top_right: root.resting-shape.top_right + (root.inactive-shape.top_right - root.resting-shape.top_right) * root.shape-progress,
+        bottom_right: root.resting-shape.bottom_right + (root.inactive-shape.bottom_right - root.resting-shape.bottom_right) * root.shape-progress,
+        bottom_left: root.resting-shape.bottom_left + (root.inactive-shape.bottom_left - root.resting-shape.bottom_left) * root.shape-progress,
+    };
+
+    changed group-hovered => {
+        if root.group-hovered {
+            root.has-been-hovered = true;
+        }
+    }
+
+    min_width: column.min-width;
+    min_height: column.min-height;
+
+    surface := Elevation {
+        x: 0;
+        y: 0;
+        width: 100%;
+        height: 100%;
+        level: root.cast-shadow ? 2 : 0; // MenuTokens.ContainerElevation = 3dp
+        background: MaterialMenuMetrics.group-container-color(root.variant);
+        shape: Shapes.rectangle(self.width / 1px, self.height / 1px, MaterialMenuMetrics.corner-roundings(root.current-shape));
+        shape-fit: ShapeFit.fill;
+
+        // `hoverable(interactionSource)` on the group surface — covers the
+        // parts not already claimed by an item's own touch area.
+        group-touch := TouchArea {
+            x: 0;
+            y: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        column := VerticalLayout {
+            padding-top: MaterialMenuMetrics.group-vertical-padding;
+            padding-bottom: MaterialMenuMetrics.group-vertical-padding;
+
+            if root.label != "" : MenuGroupLabel {
+                text: root.label;
+                variant: root.variant;
+            }
+
+            for item[index] in root.items : MenuItemContent {
+                item-kind: root.item-kind;
+                variant: root.variant;
+                shape-position: MaterialMenuMetrics.shape-position(index, root.items.length);
                 text: item.text;
-                trailing_text: item.trailing_text;
-                enabled: item.enabled;
-                selected: index == root.current_index;
-                visible: index >= root.first_index;
-                height: index >= root.first_index ? self.min-height : 0px;
+                supporting-text: item.supporting-text;
+                icon: item.icon;
+                selected-icon: item.selected-icon;
+                trailing-icon: item.trailing-icon;
+                trailing-text: item.trailing-text;
+                enabled: !item.disabled;
+                selected <=> item.selected;
+                checked <=> item.checked;
+                menu-focused: root.focused-item == index;
+                simulate-hover: index == root.simulate-hover-item;
+                simulate-press: index == root.simulate-press-item;
+                content-padding-h: root.item-content-padding-h;
+                content-padding-v: root.item-content-padding-v;
 
                 clicked => {
                     root.activated(index);
+                }
+
+                changed has-hover => {
+                    root.hovered-count += self.has-hover ? 1 : -1;
+                    root.item-hovered(index, self.has-hover);
                 }
             }
         }
     }
 }
 
-export component PopupMenu inherits PopupWindow {
+/// `DropdownMenu` content: one elevated `MenuTokens.ContainerShape` surface
+/// holding the flat item column (vertical padding 8dp, `IntrinsicSize.Max`
+/// width, `verticalScroll` via `Flickable`).
+export component MenuInner {
     in property <[MenuItem]> items;
-    // Entries before `first_index` are not shown.
-    in property <int> first_index;
+    in property <MenuItemKind> item-kind: MenuItemKind.standard;
+    in property <MenuVariant> variant: MenuVariant.standard;
+    /// Item index currently keyboard-focused (-1 = none).
+    in property <int> focused-item: -1;
+    /// `simulate_*` hooks applied to the item at this index (-1 = none).
+    in property <int> simulate-hover-item: -1;
+    in property <int> simulate-press-item: -1;
+    in property <length> item-content-padding-h: -1px;
+    in property <length> item-content-padding-v: -1px;
+    /// `selected` marker applied on top of the model flag.
+    in property <int> selected-index: -1;
+    /// Entries before `first-index` are not shown, e.g. for an overflow menu
+    /// whose leading entries are already visible elsewhere.
+    in property <int> first-index: 0;
+    /// Parity-harness hook: the Compose references cannot render platform
+    /// shadows (layoutlib deadlocks on `Surface.shadowElevation`), so the
+    /// generated cases turn the surface shadow off. Real usage keeps the
+    /// upstream `shadowElevation = MenuTokens.ContainerElevation`.
+    in property <bool> cast-shadow: true;
+    callback activated(index: int);
+    callback item-hovered(index: int, hovered: bool);
+
+    /// Unclamped content extents — what the popup sizes itself to before
+    /// applying the window margin cap.
+    out property <length> intrinsic-width: column.min-width;
+    out property <length> intrinsic-height: column.min-height;
+    min_width: column.min-width;
+    min_height: column.min-height;
+
+    surface := Elevation {
+        x: 0;
+        y: 0;
+        width: 100%;
+        height: 100%;
+        level: root.cast-shadow ? 2 : 0; // MenuTokens.ContainerElevation = 3dp
+        background: MenuTokens.container-color;
+        border-radius: MenuTokens.container-shape.top-left;
+
+        flick := Flickable {
+            x: 0;
+            y: 0;
+            width: 100%;
+            height: 100%;
+            // Wider than the content's intrinsic only when the host pins the
+            // menu width — the children then stretch to the viewport, like
+            // `IntrinsicSize.Max` under bounded constraints.
+            content-width: max(column.min-width, self.width);
+            content-height: column.min-height;
+
+            column := VerticalLayout {
+                padding-top: MaterialMenuMetrics.menu-vertical-padding;
+                padding-bottom: MaterialMenuMetrics.menu-vertical-padding;
+
+                for item[index] in root.items : MenuItemContent {
+                    item-kind: root.item-kind;
+                    variant: root.variant;
+                    shape-position: MaterialMenuMetrics.shape-position(index, root.items.length);
+                    text: item.text;
+                    supporting-text: item.supporting-text;
+                    icon: item.icon;
+                    selected-icon: item.selected-icon;
+                    trailing-icon: item.trailing-icon;
+                    trailing-text: item.trailing-text;
+                    enabled: !item.disabled;
+                    selected: item.selected || index == root.selected-index;
+                    checked <=> item.checked;
+                    menu-focused: root.focused-item == index;
+                    simulate-hover: index == root.simulate-hover-item;
+                    simulate-press: index == root.simulate-press-item;
+                    content-padding-h: root.item-content-padding-h;
+                    content-padding-v: root.item-content-padding-v;
+                    item-index: index;
+                    item-count: root.items.length;
+                    visible: index >= root.first-index;
+                    height: index >= root.first-index ? self.min-height : 0px;
+
+                    clicked => {
+                        root.activated(index);
+                    }
+
+                    changed has-hover => {
+                        root.item-hovered(index, self.has-hover);
+                    }
+                }
+            }
+        }
+    }
+}
+
+/// `DropdownMenuPopup` content: the bare `Column` of groups spaced by
+/// `GroupSpacing` (2dp). Each group carries its own surface — the popup
+/// itself draws no container.
+export component MenuPopupContent {
+    in property <[MenuGroup]> groups;
+    in property <MenuItemKind> item-kind: MenuItemKind.standard;
+    in property <MenuVariant> variant: MenuVariant.standard;
+    in property <int> focused-group: -1;
+    in property <int> focused-item: -1;
+    /// `simulate_*` hooks applied to the item at (group, index) — (-1, -1) = none.
+    in property <int> simulate-hover-group: -1;
+    in property <int> simulate-hover-item: -1;
+    in property <int> simulate-press-group: -1;
+    in property <int> simulate-press-item: -1;
+    in property <length> item-content-padding-h: -1px;
+    in property <length> item-content-padding-v: -1px;
+    /// Parity-harness hook forwarded to every group — see `MenuGroupContent`.
+    in property <bool> cast-shadow: true;
+    callback group-activated(group: int, index: int);
+
+    /// Unclamped content extents.
+    out property <length> intrinsic-width: groups-layout.min-width;
+    out property <length> intrinsic-height: groups-layout.min-height;
+    min_width: groups-layout.min-width;
+    min_height: groups-layout.min-height;
+
+    flick := Flickable {
+        x: 0;
+        y: 0;
+        width: 100%;
+        height: 100%;
+        content-width: max(groups-layout.min-width, self.width);
+        content-height: groups-layout.min-height;
+
+        groups-layout := VerticalLayout {
+            spacing: MaterialMenuMetrics.group-spacing;
+
+            for group[g-index] in root.groups : MenuGroupContent {
+                items: group.items;
+                label: group.label;
+                item-kind: root.item-kind;
+                variant: root.variant;
+                shape-position: MaterialMenuMetrics.shape-position(g-index, root.groups.length);
+                focused-item: root.focused-group == g-index ? root.focused-item : -1;
+                simulate-hover-item: root.simulate-hover-group == g-index ? root.simulate-hover-item : -1;
+                simulate-press-item: root.simulate-press-group == g-index ? root.simulate-press-item : -1;
+                item-content-padding-h: root.item-content-padding-h;
+                item-content-padding-v: root.item-content-padding-v;
+                cast-shadow: root.cast-shadow;
+
+                activated(index) => {
+                    root.group-activated(g-index, index);
+                }
+            }
+        }
+    }
+}
+
+/// Anchored popup menu — the `DropdownMenu`/`DropdownMenuPopup` pair: a
+/// `PopupWindow` positioned by `MaterialMenuMetrics`' port of
+/// `DropdownMenuPositionProvider` (margin-gated candidates + `contentOffset`
+/// + `calculateTransformOrigin`), opening with the fast-spatial scale
+/// (0.8 → 1) and fast-effects fade around the computed transform origin.
+///
+/// Declare it inside the anchor element; the component's own bounds are the
+/// anchor rectangle used by the position logic (size it to the anchor or
+/// place it at the anchor's origin). `items` renders the flat
+/// `DropdownMenu` content; `groups` renders the segmented
+/// `DropdownMenuPopup` content (groups take precedence).
+///
+/// Keyboard: Up/Down move the highlight (wrapping, skipping disabled items),
+/// Return/Space activate, Escape dismisses — `forward_focus` targets the
+/// popup's navigation scope. Pointer hover also sets the highlight.
+///
+/// Dismissing programmatically via `dismiss()` plays the shrink+fade before
+/// the popup closes, like the upstream `expanded = false` transition; an
+/// outside click still closes instantly (`PopupWindow` has no
+/// close-requested hook — same documented limitation as `SearchView`).
+export component PopupMenu {
+    in property <[MenuItem]> items;
+    in property <[MenuGroup]> groups;
+    in property <MenuItemKind> item-kind: MenuItemKind.standard;
+    in property <MenuVariant> variant: MenuVariant.standard;
+    /// `MenuAnchorPosition` — upstream default `Below`.
+    in property <MenuAnchorPosition> anchor-position: MenuAnchorPosition.below;
+    /// `contentOffset` (`DpOffset`) applied to every candidate.
+    in property <Point> offset;
+    /// `ExposedDropdownMenuPositionProvider`: anchor-bottom candidates with a
+    /// 0-margin fit check, `calculateMaxHeight` height cap, `match-anchor-width`
+    /// sizing and a center transform origin.
+    in property <bool> exposed;
+    /// `exposedDropdownSize(matchAnchorWidth)` — upstream default `true`.
+    /// Only consulted when `exposed`.
+    in property <bool> match-anchor-width: true;
+    /// `contentPadding` override for the items (`< 0` = the per-kind default,
+    /// `16px` = `ItemContentPadding` for items inside exposed menus).
+    in property <length> item-content-padding-h: -1px;
+    in property <length> item-content-padding-v: -1px;
+    /// `selected` marker applied to `items[selected-index]` on top of the
+    /// model flag (drop-down selection highlight).
+    in property <int> selected-index: -1;
+    /// Entries before `first-index` are hidden (flat content only).
+    in property <int> first-index: 0;
+    /// Overrides the computed max height when positive; otherwise the menu
+    /// is capped at `window − 2 * MenuVerticalMargin`.
+    in property <length> cap-height: 0px;
+    /// `simulate_*` hooks for the parity harness — flat content applies them
+    /// to `items[index]`; grouped content to `groups[group].items[index]`.
+    in property <int> simulate-hover-item: -1;
+    in property <int> simulate-press-item: -1;
+    in property <int> simulate-hover-group: -1;
+    in property <int> simulate-press-group: -1;
 
     callback activated(index: int);
+    /// Activation inside a group: `group` indexes `groups`, `index` its items.
+    callback group-activated(group: int, index: int);
 
-    width: MaterialStyleMetrics.size_200;
-    close_policy: close_on_click_outside;
+    out property <bool> is-open <=> popup.is-open;
+    /// Resolved popup bounds in window coordinates, with the transform-origin
+    /// fractions — also read by the parity harness's `//TRACE_PROPS`.
+    out property <MenuPosition> resolved-position;
+    out property <float> open-scale: MaterialMenuMetrics.menu-closed-scale
+        + (MaterialMenuMetrics.menu-open-scale - MaterialMenuMetrics.menu-closed-scale) * root.scale-progress;
+    out property <float> open-alpha <=> root.alpha-progress;
+    /// Keyboard highlight indices for tests (-1 = none).
+    out property <int> focused-index: -1;
+    out property <int> focused-group: -1;
+    out property <int> focused-item: -1;
 
-    VerticalLayout {
-        padding: inner.elevation_level * 1px;
+    /// `expanded = true`
+    public function show() {
+        root.closing = false;
+        popup.show();
+    }
 
-        inner := MenuInner {
-            items: root.items;
-            first_index: root.first_index;
+    /// Immediate close — skips the collapse animation (`expanded` write that
+    /// the platform handles itself, e.g. anchor disposal).
+    public function close() {
+        root.closing = false;
+        popup.close();
+    }
 
-            activated(index) => {
-                root.activated(index);
+    /// `expanded = false`: shrink + fade, then remove the popup once the
+    /// fast springs settle. Outside-click auto-close stays instant — the
+    /// runtime closes the popup without notifying us.
+    public function dismiss() {
+        if !popup.is-open {
+            return;
+        }
+        root.closing = true;
+        close-timer.start();
+    }
+
+    /// Time granted to the close transition before the popup unmounts —
+    /// upstream removes it once the fast spatial/effects springs settle;
+    /// springs have no closed-form duration, this is the settle window the
+    /// expressive fast specs need.
+    in property <duration> close-settle-time: 450ms;
+
+    property <bool> closing;
+    property <float> scale-progress: popup.is-open && !root.closing ? 1 : 0;
+    property <float> alpha-progress: popup.is-open && !root.closing ? 1 : 0;
+    animate scale-progress {
+        easing: MaterialAnimations.fast-spatial-spring;
+        enabled: !MaterialPalette.reduced-motion;
+    }
+    animate alpha-progress {
+        easing: MaterialAnimations.fast-effects-spring;
+        enabled: !MaterialPalette.reduced-motion;
+    }
+
+    // Anchor bounds: this component's own rectangle in window coordinates —
+    // declare it inside the anchor so its geometry is the anchor's.
+    property <length> anchor-x: root.absolute-position.x;
+    property <length> anchor-y: root.absolute-position.y;
+    property <length> anchor-w: root.width;
+    property <length> anchor-h: root.height;
+    // `MaterialWindowAdapter.window_size` — falls back to an unbounded window
+    // so non-MaterialWindow roots take the first candidate.
+    property <length> window-w: MaterialWindowAdapter.window-width > 0px ? MaterialWindowAdapter.window-width : 1000000px;
+    property <length> window-h: MaterialWindowAdapter.window-height > 0px ? MaterialWindowAdapter.window-height : 1000000px;
+
+    // Measurement twins stay outside the popup (`visible: false` still
+    // reports intrinsic sizes; popup children aren't reachable from here).
+    property <length> menu-content-width: root.groups.length > 0 ? grouped-sizer.intrinsic-width : flat-sizer.intrinsic-width;
+    property <length> menu-content-height: root.groups.length > 0 ? grouped-sizer.intrinsic-height : flat-sizer.intrinsic-height;
+    // `exposedDropdownSize(matchAnchorWidth)`: the menu gets the anchor's
+    // width; otherwise the content intrinsic (upstream `constrainWidth` keeps
+    // the content measure otherwise).
+    property <length> menu-width: root.exposed && root.match-anchor-width ? root.anchor-w : root.menu-content-width;
+    property <length> menu-height-limit: root.cap-height > 0px ? root.cap-height
+        : root.exposed ? MaterialMenuMetrics.exposed-menu-max-height(root.anchor-y, root.anchor-h, root.window-h)
+        : root.window-h - 2 * MaterialMenuMetrics.menu-vertical-margin;
+    property <length> menu-height: Math.min(root.menu-content-height, root.menu-height-limit);
+
+    property <length> resolved-x: root.exposed ?
+        MaterialMenuMetrics.exposed-menu-x(root.anchor-x, root.anchor-w, root.menu-width, root.window-w) :
+        MaterialMenuMetrics.menu-x(root.anchor-position, root.anchor-x, root.anchor-w, root.menu-width, root.window-w, root.offset.x);
+    property <length> resolved-y: root.exposed ?
+        MaterialMenuMetrics.exposed-menu-y(root.anchor-y, root.anchor-h, root.menu-height, root.window-h) :
+        MaterialMenuMetrics.menu-y(root.anchor-position, root.anchor-y, root.anchor-h, root.menu-height, root.window-h, root.offset.y);
+    resolved-position: {
+        x: root.resolved-x,
+        y: root.resolved-y,
+        // `ExposedDropdownMenuPositionProvider.transformOrigin = Center`.
+        origin_x: root.exposed ? 0.5 : MaterialMenuMetrics.transform-origin-x(root.anchor-x, root.anchor-w, root.resolved-x, root.menu-width),
+        origin_y: root.exposed ? 0.5 : MaterialMenuMetrics.transform-origin-y(root.anchor-y, root.anchor-h, root.resolved-y, root.menu-height),
+    };
+
+    flat-sizer := MenuInner {
+        visible: false;
+        items: root.items;
+        item-kind: root.item-kind;
+        variant: root.variant;
+        item-content-padding-h: root.item-content-padding-h;
+        item-content-padding-v: root.item-content-padding-v;
+        selected-index: root.selected-index;
+        first-index: root.first-index;
+    }
+
+    grouped-sizer := MenuPopupContent {
+        visible: false;
+        groups: root.groups;
+        item-kind: root.item-kind;
+        variant: root.variant;
+        item-content-padding-h: root.item-content-padding-h;
+        item-content-padding-v: root.item-content-padding-v;
+    }
+
+    popup := PopupWindow {
+        x: root.resolved-x - root.anchor-x;
+        y: root.resolved-y - root.anchor-y;
+        width: root.menu-width;
+        height: root.menu-height;
+        // `ModalPopup` parity: outside clicks always dismiss.
+        close-policy: close-on-click-outside;
+        forward_focus: nav;
+
+        wrap := Rectangle {
+            width: 100%;
+            height: 100%;
+            transform-scale-x: root.open-scale;
+            transform-scale-y: root.open-scale;
+            transform-origin: {
+                x: root.resolved-position.origin_x * self.width,
+                y: root.resolved-position.origin_y * self.height,
+            };
+            opacity: root.alpha-progress;
+
+            // Both contents stay instantiated so `intrinsic-*` can size the
+            // popup before either exists; `visible` picks the live one.
+            flat-content := MenuInner {
+                width: 100%;
+                height: 100%;
+                visible: root.groups.length <= 0;
+                items: root.items;
+                item-kind: root.item-kind;
+                variant: root.variant;
+                focused-item: root.focused-index;
+                simulate-hover-item: root.simulate-hover-item;
+                simulate-press-item: root.simulate-press-item;
+                item-content-padding-h: root.item-content-padding-h;
+                item-content-padding-v: root.item-content-padding-v;
+                selected-index: root.selected-index;
+                first-index: root.first-index;
+
+                activated(index) => {
+                    root.activated(index);
+                    root.dismiss();
+                }
+
+                item-hovered(index, hovered) => {
+                    if hovered {
+                        root.focused-index = index;
+                    }
+                }
+            }
+
+            grouped-content := MenuPopupContent {
+                width: 100%;
+                height: 100%;
+                visible: root.groups.length > 0;
+                groups: root.groups;
+                item-kind: root.item-kind;
+                variant: root.variant;
+                item-content-padding-h: root.item-content-padding-h;
+                item-content-padding-v: root.item-content-padding-v;
+                focused-group: root.focused-group;
+                focused-item: root.focused-item;
+                simulate-hover-group: root.simulate-hover-group;
+                simulate-hover-item: root.simulate-hover-item;
+                simulate-press-group: root.simulate-press-group;
+                simulate-press-item: root.simulate-press-item;
+
+                group-activated(group, index) => {
+                    root.group-activated(group, index);
+                    root.dismiss();
+                }
+            }
+        }
+
+        nav := FocusScope {
+            x: 0;
+            y: 0;
+            width: 0px;
+            height: 0px;
+
+            key-pressed(event) => {
+                if event.text == Key.DownArrow {
+                    root.move-focus(1);
+                    return accept;
+                }
+                if event.text == Key.UpArrow {
+                    root.move-focus(-1);
+                    return accept;
+                }
+                if event.text == "\n" || event.text == " " {
+                    root.activate-focused();
+                    return accept;
+                }
+                if event.text == Key.Escape {
+                    root.dismiss();
+                    return accept;
+                }
+                reject
+            }
+        }
+    }
+
+    close-timer := Timer {
+        interval: root.close-settle-time;
+        triggered => {
+            popup.close();
+            root.closing = false;
+        }
+    }
+
+    // `forward_focus` nav: `step-*` advances one slot (wrapping through
+    // groups); the `changed` handlers below fire on every `focused-*` write
+    // and step past disabled items or empty groups — the cascade plays the
+    // role of upstream's focus walk between enabled items, bounded by
+    // `nav-guard` so a menu with no enabled item can't loop.
+    property <int> nav-guard;
+    property <int> nav-dir: 1;
+
+    function move-focus(dir: int) {
+        root.nav-dir = dir;
+        root.nav-guard = 0;
+        if root.groups.length > 0 {
+            if root.focused-group < 0 {
+                root.focused-group = 0;
+                root.focused-item = -1;
+            }
+            root.step-group-focus(dir);
+        } else {
+            root.step-item-focus(dir);
+        }
+    }
+
+    function step-item-focus(dir: int) {
+        if root.items.length <= 0 {
+            root.focused-index = -1;
+            return;
+        }
+        root.focused-index = Math.mod(root.focused-index + dir + root.items.length, root.items.length);
+    }
+
+    function step-group-focus(dir: int) {
+        if root.groups.length <= 0 || root.focused-group < 0 || root.focused-group >= root.groups.length {
+            return;
+        }
+        let count = root.groups[root.focused-group].items.length;
+        if root.focused-item + dir >= 0 && root.focused-item + dir < count {
+            root.focused-item += dir;
+            return;
+        }
+        // Crossing a group boundary: the `changed focused-group` cascade
+        // seeds the entry-edge item (and skips empty groups).
+        root.focused-group = Math.mod(root.focused-group + dir + root.groups.length, root.groups.length);
+    }
+
+    changed focused-index => {
+        if root.items.length <= 0 {
+            return;
+        }
+        root.nav-guard += 1;
+        if root.focused-index >= 0 && root.focused-index < root.items.length
+            && !root.items[root.focused-index].disabled
+            && root.nav-guard <= 2 * root.items.length + 4 {
+            root.step-item-focus(root.nav-dir);
+        }
+    }
+
+    changed focused-group => {
+        if root.groups.length <= 0 || root.focused-group < 0 || root.focused-group >= root.groups.length {
+            return;
+        }
+        root.nav-guard += 1;
+        if root.nav-guard > 4 * root.groups.length + 8 {
+            return;
+        }
+        let count = root.groups[root.focused-group].items.length;
+        if count <= 0 {
+            root.focused-group = Math.mod(root.focused-group + root.nav-dir + root.groups.length, root.groups.length);
+            return;
+        }
+        root.focused-item = root.nav-dir > 0 ? 0 : count - 1;
+        if !root.groups[root.focused-group].items[root.focused-item].disabled {
+            root.step-group-focus(root.nav-dir);
+        }
+    }
+
+    changed focused-item => {
+        if root.groups.length <= 0 || root.focused-group < 0 || root.focused-group >= root.groups.length {
+            return;
+        }
+        root.nav-guard += 1;
+        if root.nav-guard > 4 * root.groups.length + 8 {
+            return;
+        }
+        let count = root.groups[root.focused-group].items.length;
+        if root.focused-item >= 0 && root.focused-item < count
+            && !root.groups[root.focused-group].items[root.focused-item].disabled {
+            root.step-group-focus(root.nav-dir);
+        }
+    }
+
+    function activate-focused() {
+        if root.groups.length > 0 {
+            if root.focused-group >= 0 && root.focused-item >= 0 {
+                root.group-activated(root.focused-group, root.focused-item);
+                root.dismiss();
+            }
+            return;
+        }
+        if root.focused-index >= 0 && root.focused-index < root.items.length {
+            if !root.items[root.focused-index].disabled {
+                root.activated(root.focused-index);
+                root.dismiss();
             }
         }
     }

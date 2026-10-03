@@ -1,0 +1,75 @@
+{
+  "name": "negative-menu-gap",
+  "type": "canvas",
+  "parity": "negative",
+  "size": [
+    320,
+    380
+  ],
+  "densities": [
+    1,
+    2
+  ],
+  "theme": {
+    "seed": "6750A4",
+    "variant": "tonal-spot",
+    "spec": "spec2025",
+    "platform": "phone",
+    "dark": false,
+    "contrast": 0.0
+  },
+  "fonts": {
+    "plain": "Roboto",
+    "brand": "Roboto"
+  },
+  "widgets": [
+    {
+      "kind": "menu-popup",
+      "x": 16,
+      "y": 8,
+      "slint_overrides": {
+        "cover": {
+          "x": 0,
+          "y": 96,
+          "height": 10,
+          "fill": "primary"
+        }
+      },
+      "groups": [
+        {
+          "label": "Section",
+          "items": [
+            {
+              "text": "First"
+            },
+            {
+              "text": "Second"
+            }
+          ]
+        },
+        {
+          "items": [
+            {
+              "text": "Third"
+            },
+            {
+              "text": "Fourth"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "trace_elements": [
+    "menu0"
+  ],
+  "mask_decor": {
+    "menu0": {
+      "times": [
+        0,
+        2000
+      ],
+      "margin": 16
+    }
+  }
+}

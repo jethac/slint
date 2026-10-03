@@ -267,6 +267,10 @@ fn test_extract_library_paths() {
 ///   e.g. `issue #28`): `sw − unhinted advance` may land anywhere in
 ///   `(−0.15, 1.15]`. Without the marker the bound is 0.5 px —
 ///   `(−0.15, 0.65]`. A drift past a whole pixel fails either way.
+///   An optional driver scope in the `xfail:<driver>` grammar —
+///   `//XFAIL_TEXT=software: <reason>` — applies the marker only on the
+///   named drivers (e.g. when the software rasterizer's hinting drifts
+///   where skia's does not).
 /// - `//XFAIL_SILHOUETTE=<reason>` — on the software driver the
 ///   `//MASK_INNER=` silhouette findings are an expected divergence (the
 ///   reason names the tracked gap, e.g. `issue #6` for the axis-aligned
