@@ -1,39 +1,55 @@
 ---
 title: Divider
-description: Divider API.
+description: HorizontalDivider, VerticalDivider and Divider API.
 ---
 
 import CodeSnippetMD from '@slint/common-files/src/components/CodeSnippetMD.astro';
 import SlintProperty from '@slint/common-files/src/components/SlintProperty.astro';
 
-<CodeSnippetMD imagePath="" noScreenShot scale="3" imageWidth="300" imageHeight="200" imageAlt="">
+<CodeSnippetMD imagePath="/src/assets/generated/divider.png" scale="3" imageWidth="300" imageHeight="140" imageAlt="">
 ```slint
-import { VerticalDivider, HorizontalDivider, TextButton } from "@material";
+import { HorizontalDivider, VerticalDivider, MaterialText, MaterialPalette } from "@material";
 export component Example inherits Window {
-    width: 200px;
-    height: 100px;
+    width: 240px;
+    height: 120px;
 
     VerticalLayout {
+        padding: 12px;
         spacing: 8px;
-        TextButton { text: "Section 1"; }
+        MaterialText { text: "Section 1"; }
         HorizontalDivider {}
-        TextButton { text: "Section 2"; }
-        HorizontalDivider {}
-        TextButton { text: "Section 3"; }
+        MaterialText { text: "Section 2"; }
+        HorizontalDivider { color: MaterialPalette.primary; thickness: 2px; }
+        MaterialText { text: "Section 3"; }
     }
 }
 ```
 </CodeSnippetMD>
 
-A `Divider` is a thin line that groups content in lists and layouts. It provides visual separation between different sections or items in your interface.
+A divider is a thin line that groups content in lists and layouts. It provides visual separation between different sections or items in your interface.
 
 ## Components
 
 ### HorizontalDivider
-A horizontal line divider that spans the full width of its container. Perfect for separating content vertically in lists, forms, and other layouts.
+A horizontal line that spans the full width of its container — `HorizontalDivider` in `Divider.kt` upstream.
 
 ### VerticalDivider
-A vertical line divider that spans the full height of its container. Ideal for separating content horizontally in side-by-side layouts or navigation components.
+A vertical line that spans the full height of its container — `VerticalDivider` in `Divider.kt` upstream.
+
+### Divider
+Deprecated alias for `HorizontalDivider`, matching the upstream `Divider` deprecation (`ReplaceWith("HorizontalDivider(modifier, thickness, color)")`).
+
+## HorizontalDivider / VerticalDivider Properties
+
+### thickness
+<SlintProperty propName="thickness" typeName="length" defaultValue="DividerTokens.thickness">
+The thickness of the divider line — `1px` by default. `0` or a negative value draws a single physical pixel regardless of the display's scale factor, matching the upstream `Dp.Hairline`.
+</SlintProperty>
+
+### color
+<SlintProperty propName="color" typeName="color" defaultValue="DividerTokens.color">
+The color of the divider line — `MaterialPalette.outline_variant` by default.
+</SlintProperty>
 
 ## Usage
 
@@ -42,5 +58,3 @@ Dividers are commonly used to:
 - Group related content in navigation components
 - Provide visual hierarchy in complex layouts
 - Create clear boundaries between different interface areas
-
-The color of the divider is set via the "MaterialPalette.outline_variant" color.
