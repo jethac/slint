@@ -1,0 +1,41 @@
+//SIZE=720x1130
+import "../../fonts/Roboto-VariableFont.ttf";
+import { DatePicker, DateRangePicker, DatePickerDialogContent, MaterialPalette, MaterialTheme, MaterialWindow } from "@material";
+
+export component TestCase inherits MaterialWindow {
+    init => {
+        MaterialTheme.seed-color = #6750A4;
+        MaterialTheme.dark = false;
+        MaterialTheme.contrast-level = 0;
+        MaterialTheme.use-platform-color = false;
+        MaterialTheme.plain-family = "Roboto";
+        MaterialTheme.brand-family = "Roboto";
+        MaterialPalette.dynamic = true;
+    }
+
+    picker0 := DatePickerDialogContent {
+        x: 0; y: 0;
+        DatePicker {
+            title: "Select date";
+            selected_date: { day: 14, month: 3, year: 2031 };
+            displayed_date: { day: 1, month: 3, year: 2031 };
+            today: { day: 9, month: 3, year: 2031 };
+            enforce_touch_target: false;
+        }
+        enforce_touch_target: false;
+    }
+
+    range0 := DatePickerDialogContent {
+        x: 0; y: 570px;
+        DateRangePicker {
+            title: "Select dates";
+            selected_start_date: { day: 10, month: 3, year: 2031 };
+            selected_end_date: { day: 18, month: 3, year: 2031 };
+            displayed_date: { day: 1, month: 3, year: 2031 };
+            today: { day: 9, month: 3, year: 2031 };
+            months_to_show: 2;
+            enforce_touch_target: false;
+        }
+        enforce_touch_target: false;
+    }
+}

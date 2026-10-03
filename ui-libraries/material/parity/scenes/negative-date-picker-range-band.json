@@ -1,0 +1,42 @@
+{
+  "name": "negative-date-picker-range-band",
+  "type": "canvas",
+  "parity": "negative",
+  "size": [
+    500,
+    720
+  ],
+  "densities": [
+    1,
+    2
+  ],
+  "theme": {
+    "seed": "6750A4",
+    "variant": "tonal-spot",
+    "spec": "spec2025",
+    "platform": "phone",
+    "dark": false,
+    "contrast": 0.0
+  },
+  "fonts": {
+    "plain": "Roboto",
+    "brand": "Roboto"
+  },
+  "widgets": [
+    {
+      "kind": "date-range-picker",
+      "title": "Select dates",
+      "selected_start": "2031-03-14",
+      "selected_end": "2031-03-21",
+      "displayed": "2031-03",
+      "months_to_show": 3,
+      "slint_overrides": {
+        "range_band": "tertiary-container"
+      }
+    }
+  ],
+  "trace_elements": [],
+  "trace_items": {},
+  "trace_props": [],
+  "negative_note": "the range band fills with tertiary-container instead of RangeSelectionActiveIndicatorContainerColor's secondary-container"
+}

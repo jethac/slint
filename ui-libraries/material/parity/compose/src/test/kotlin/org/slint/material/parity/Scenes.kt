@@ -13,15 +13,7 @@ import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
-import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.CubicBezierEasing
-import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.TweenSpec
-import androidx.compose.animation.core.VectorConverter
-import androidx.compose.animation.core.updateTransition
-import androidx.compose.foundation.interaction.DragInteraction
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.foundation.layout.Spacer
@@ -31,6 +23,11 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.requiredWidth
+import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -51,21 +48,11 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.IconButtonDefaults.IconButtonWidthOption
 import androidx.compose.material3.IconToggleButton
-import androidx.compose.material3.LoadingIndicator
-import androidx.compose.material3.ContainedLoadingIndicator
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.LocalMinimumInteractiveComponentSize
 import androidx.compose.material3.LocalRippleThemeConfiguration
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RippleDefaults
-import androidx.compose.material3.ExtendedFloatingActionButton
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.FloatingActionButtonDefaults
-import androidx.compose.material3.LargeExtendedFloatingActionButton
-import androidx.compose.material3.LargeFloatingActionButton
-import androidx.compose.material3.MediumExtendedFloatingActionButton
-import androidx.compose.material3.MediumFloatingActionButton
-import androidx.compose.material3.SmallExtendedFloatingActionButton
-import androidx.compose.material3.SmallFloatingActionButton
-import androidx.compose.material3.animateFloatingActionButton
 import androidx.compose.material3.SplitButtonDefaults
 import androidx.compose.material3.SplitButtonLayout
 import androidx.compose.material3.MaterialExpressiveTheme
@@ -95,6 +82,7 @@ import androidx.compose.material3.BottomAppBarDefaults
 import androidx.compose.material3.rememberBottomAppBarState
 import androidx.compose.material3.SearchBar
 import androidx.compose.material3.SearchBarDefaults
+import androidx.compose.material3.Surface
 import androidx.compose.material3.AppBarWithSearch
 import androidx.compose.material3.rememberSearchBarState
 import androidx.compose.foundation.layout.WindowInsets
@@ -106,10 +94,10 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.State
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.withFrameNanos
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.draw.clip
@@ -123,14 +111,14 @@ import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.boundsInRoot
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.Dp
-import androidx.compose.foundation.interaction.Interaction
-import kotlinx.coroutines.launch
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import kotlin.math.PI
 
@@ -444,7 +432,6 @@ private fun FrameRecorder(scene: Scene, tracer: Tracer) {
     }
 }
 
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun CanvasScene(
     scene: Scene,
@@ -464,6 +451,8 @@ private fun CanvasScene(
         var surfaces = 0
         var appbars = 0
         var groups = 0
+        var dialogs = 0
+        var pickers = 0
         // `text:{n}` spans every text node in scene order — group items
         // interleave with the standalone widgets' labels. Bases are
         // precomputed per widget so recompositions can't renumber them.
@@ -474,6 +463,15 @@ private fun CanvasScene(
                     w.kind == "connected-button-group" ||
                         w.kind == "vertical-connected-button-group" -> w.items.size
                     w.kind == "connected-button" || w.isButton -> 1
+                    // The Slint side's Text elements in tree order:
+                    // title, then the text slot, then each action label
+                    // (emitted confirm-first by the flipped flow row).
+                    w.kind == "alert-dialog" ->
+                        (if (w.title != null) 1 else 0) +
+                            (if (w.text != null) 1 else 0) +
+                            w.items.size
+                    w.kind == "basic-alert-dialog" ->
+                        (if (w.title != null) 1 else 0) + w.items.size
                     else -> 0
                 }
             }
@@ -501,15 +499,6 @@ private fun CanvasScene(
                         emitPress,
                         textBase,
                     )
-                widget.isFab -> StateFab(
-                    widget,
-                    scene,
-                    tracer,
-                    "text:${buttons}",
-                    "button${buttons++}",
-                    density,
-                    emitPress,
-                )
                 widget.isIconButton -> StateIconButton(
                     widget,
                     scene,
@@ -536,6 +525,29 @@ private fun CanvasScene(
                     density,
                     emitPress,
                 )
+                widget.kind == "alert-dialog" || widget.kind == "basic-alert-dialog" ->
+                    StateAlertDialog(
+                        widget,
+                        scene,
+                        tracer,
+                        if (widget.kind == "basic-alert-dialog") {
+                            "basic${dialogs++}"
+                        } else {
+                            "dialog${dialogs++}"
+                        },
+                        density,
+                        emitPress,
+                        textBase,
+                    )
+                widget.kind == "date-picker" || widget.kind == "date-range-picker" ->
+                    StateDatePickerDialog(
+                        widget,
+                        scene,
+                        tracer,
+                        "picker${pickers++}",
+                        density,
+                        emitPress,
+                    )
                 widget.kind == "top-app-bar" ||
                     widget.kind == "bottom-app-bar" ||
                     widget.kind == "search-bar" ||
@@ -580,27 +592,6 @@ private fun CanvasScene(
                             .background(schemeColor(widget.color ?: "surface"))
                             .track(tracer, tag),
                     )
-                }
-                widget.kind == "loading-indicator" ||
-                    widget.kind == "contained-loading-indicator" -> {
-                    // The 48dp indicator draws at the scene's declared
-                    // coordinates on both sides.
-                    Box(Modifier.offset(widget.x.dp, widget.y.dp)) {
-                        if (widget.indeterminate) {
-                            if (widget.kind == "loading-indicator") {
-                                LoadingIndicator()
-                            } else {
-                                ContainedLoadingIndicator()
-                            }
-                        } else {
-                            val progress = widget.progress
-                            if (widget.kind == "loading-indicator") {
-                                LoadingIndicator(progress = { progress })
-                            } else {
-                                ContainedLoadingIndicator(progress = { progress })
-                            }
-                        }
-                    }
                 }
                 else -> error("unknown widget kind ${widget.kind}")
             }
@@ -749,17 +740,15 @@ private fun emitStateInteractions(
         // frame 0 also keeps the press off uptime 0, where a ripple's frame
         // callback would abort layoutlib.
         "pressed" -> {
-            // `emit()` suspends until every subscriber has the emission —
-            // deterministic where a frame-sink `tryEmit` is not: under a
-            // multi-density record the second pump's composition schedules
-            // the interaction collectors late for these composed-modifier
-            // nodes and the buffered press is never picked up. Awaiting one
-            // frame keeps the press off uptime 0 (a ripple's frame callback
-            // there aborts layoutlib) while still landing the ink at the
-            // same early moment the Slint driver dispatches `//ACTION=`.
-            LaunchedEffect(Unit) {
-                withFrameNanos { }
-                interactionSource.emit(PressInteraction.Press(pressOffset))
+            val press = remember {
+                Runnable {
+                    interactionSource.tryEmit(PressInteraction.Press(pressOffset))
+                }
+            }
+            DisposableEffect(press) {
+                val entry = 0L to press
+                emitPress.add(entry)
+                onDispose { emitPress.remove(entry) }
             }
         }
     }
@@ -802,33 +791,6 @@ private fun emitStateInteractions(
                 emitPress.add(entry)
                 onDispose { emitPress.remove(entry) }
             }
-        }
-    }
-    // `move` actions drive hover the way the driver's pointer move does on
-    // the Slint side: entering the widget's bounds emits
-    // `HoverInteraction.Enter`, leaving them emits `Exit` — each at the
-    // action's `at` time. Hit-tested like the press above so a pointer
-    // inside another widget never lights this one up.
-    scene.actions.filter { it.kind == "move" }.forEach { move ->
-        var hoverEnter: HoverInteraction.Enter? = null
-        val step = Runnable {
-            val b = tracer.elementBounds[elementId]
-            val inside = b == null ||
-                (move.x * density >= b.left && move.x * density <= b.right &&
-                    move.y * density >= b.top && move.y * density <= b.bottom)
-            if (inside && hoverEnter == null) {
-                val e = HoverInteraction.Enter()
-                hoverEnter = e
-                interactionSource.tryEmit(e)
-            } else if (!inside) {
-                hoverEnter?.let { interactionSource.tryEmit(HoverInteraction.Exit(it)) }
-                hoverEnter = null
-            }
-        }
-        DisposableEffect(step) {
-            val entry = move.at to step
-            emitPress.add(entry)
-            onDispose { emitPress.remove(entry) }
         }
     }
 }
@@ -1520,418 +1482,6 @@ private fun StateIconButton(
             iconInkColor(widget, checked),
         )
     }
-}
-
-/** `bottom_end` → `Alignment.BottomEnd` — `animateFloatingActionButton`'s
- * scale pivot. */
-private fun fabAlignment(name: String): androidx.compose.ui.Alignment = when (name) {
-    "top_start" -> androidx.compose.ui.Alignment.TopStart
-    "top_center" -> androidx.compose.ui.Alignment.TopCenter
-    "top_end" -> androidx.compose.ui.Alignment.TopEnd
-    "center_start" -> androidx.compose.ui.Alignment.CenterStart
-    "center" -> androidx.compose.ui.Alignment.Center
-    "center_end" -> androidx.compose.ui.Alignment.CenterEnd
-    "bottom_start" -> androidx.compose.ui.Alignment.BottomStart
-    "bottom_center" -> androidx.compose.ui.Alignment.BottomCenter
-    "bottom_end" -> androidx.compose.ui.Alignment.BottomEnd
-    else -> error("unknown fab alignment $name")
-}
-
-/** A FAB family widget — `FloatingActionButton`/`ExtendedFloatingActionButton`
- * plus the expressive S/M/L sizes (and the deprecated small FAB). `variant`
- * selects the `FloatingActionButtonElevation` table (`lowered`,
- * `bottom-app-bar`); `color` pins `containerColor` (the upstream
- * `contentColorFor` default fills the content); `toggle` flips `expanded`
- * or `shown` on a scripted click; `label_width` is `Modifier.width` on the
- * text slot. `Modifier.animateFloatingActionButton` is caller-applied
- * upstream — `shown`/`alignment`/`target_scale` land on the outer
- * modifier. */
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
-@Composable
-private fun StateFab(
-    widget: Widget,
-    scene: Scene,
-    tracer: Tracer,
-    textId: String,
-    elementId: String,
-    density: Float,
-    emitPress: java.util.concurrent.CopyOnWriteArrayList<Pair<Long, Runnable>>,
-) {
-    val interactionSource = remember { ReplayableInteractionSource() }
-    emitStateInteractions(
-        widget,
-        scene,
-        tracer,
-        elementId,
-        interactionSource,
-        emitPress,
-        Offset(20f * density, 16f * density),
-        density,
-    )
-
-    var expanded by remember { mutableStateOf(widget.expanded) }
-    var shown by remember { mutableStateOf(widget.shown) }
-    if (widget.toggle != null && sceneActionsClick(scene)) {
-        DisposableEffect(Unit) {
-            val flip = Runnable {
-                when (widget.toggle) {
-                    "expanded" -> expanded = !expanded
-                    "shown" -> shown = !shown
-                }
-            }
-            // The click completes on release — the state flips at its `at`.
-            val at = scene.actions.firstOrNull { it.kind == "release" }?.at ?: 0L
-            val entry = at to flip
-            emitPress.add(entry)
-            onDispose { emitPress.remove(entry) }
-        }
-    }
-
-    val elevation = when (widget.variant) {
-        "lowered" -> FloatingActionButtonDefaults.loweredElevation()
-        "bottom-app-bar" -> FloatingActionButtonDefaults.bottomAppBarFabElevation()
-        else -> FloatingActionButtonDefaults.elevation()
-    }
-    val containerColor = widget.color?.let { schemeColor(it) }
-        ?: FloatingActionButtonDefaults.containerColor
-
-    val modifier = Modifier.offset(widget.x.dp, widget.y.dp)
-        .animateFloatingActionButton(
-            visible = shown,
-            alignment = fabAlignment(widget.alignment),
-            targetScale = widget.targetScale,
-        )
-        .track(tracer, elementId)
-
-    // Live-value probes replicating the composables' internal animatables —
-    // the same approach as the buttons' `container_radius` probe.
-    val motionScheme = androidx.compose.material3.MaterialTheme.motionScheme
-    if (widget.kind == "fab") {
-        // `animateFloatingActionButton`'s two animatables: scale on the
-        // fast spatial spec, alpha on the fast effects spec.
-        val scaleT by animateFloatAsState(
-            targetValue = if (shown) 1f else 0f,
-            animationSpec = motionScheme.fastSpatialSpec(),
-            label = "show_scale",
-        )
-        val alphaT by animateFloatAsState(
-            targetValue = if (shown) 1f else 0f,
-            animationSpec = motionScheme.fastEffectsSpec(),
-            label = "show_alpha",
-        )
-        tracer.propGetters["show_scale"] = { scaleT.toDouble() }
-        tracer.propGetters["show_alpha"] = { alphaT.toDouble() }
-    } else {
-        // S/M/L: `updateTransition(expanded ? 1f : 0f)` — FastSpatial width
-        // lerp, FastEffects label alpha. Baseline: `AnimatedVisibility`
-        // expands the slot on FastSpatial and fades it — DefaultEffects in,
-        // FastEffects out — so the probes pick the spec by direction.
-        val expandT by animateFloatAsState(
-            targetValue = if (expanded) 1f else 0f,
-            animationSpec = if (widget.size == "baseline" && !expanded) {
-                motionScheme.defaultSpatialSpec()
-            } else {
-                motionScheme.fastSpatialSpec()
-            },
-            label = "expand_progress",
-        )
-        val alphaT by animateFloatAsState(
-            targetValue = if (expanded) 1f else 0f,
-            animationSpec = if (widget.size == "baseline" && expanded) {
-                motionScheme.defaultEffectsSpec()
-            } else {
-                motionScheme.fastEffectsSpec()
-            },
-            label = "label_alpha",
-        )
-        tracer.propGetters["expand_progress"] = { expandT.toDouble() }
-        tracer.propGetters["label_alpha"] = { alphaT.toDouble() }
-    }
-
-    // `shadow_elevation` probe — mirrors `FloatingActionButtonElevationAnimatable`
-    // (FloatingActionButton.kt at the pin) on the same interaction stream.
-    // `propGetters` keys are flat, so only `button0` registers — the same
-    // element the Slint side forwards to its case root.
-    val shadowElevation =
-        fabShadowElevationProbe(interactionSource, fabElevationLevels(widget.variant))
-    if (elementId == "button0") {
-        tracer.propGetters["shadow_elevation"] = { shadowElevation.value.toDouble() }
-    }
-
-    // The icon inside a FAB is caller content — upstream callers size it to
-    // the recommended edge (`FabBaselineTokens.IconSize`/`FabSmallTokens`
-    // 24, `FloatingActionButtonDefaults.MediumIconSize`/`FabMediumTokens` 28,
-    // `LargeIconSize` 36 — the hard-coded value, `FabLargeTokens.IconSize`
-    // marked incorrect upstream; `ExtendedFab*Tokens.IconSize` 24/24/28/32).
-    val iconEdge =
-        if (widget.kind == "fab") {
-            when (widget.size) {
-                "medium" -> 28.dp
-                "large" -> 36.dp
-                else -> 24.dp
-            }
-        } else {
-            when (widget.size) {
-                "medium" -> 28.dp
-                "large" -> 32.dp
-                else -> 24.dp
-            }
-        }
-    if (widget.kind == "fab") {
-        val content: @Composable () -> Unit = {
-            Icon(
-                sceneIcon(widget.icon ?: "check"),
-                contentDescription = widget.text,
-                modifier = Modifier.size(iconEdge),
-            )
-        }
-        when (widget.size) {
-            "small" -> SmallFloatingActionButton(
-                onClick = {},
-                modifier = modifier,
-                containerColor = containerColor,
-                elevation = elevation,
-                interactionSource = interactionSource,
-                content = content,
-            )
-            "medium" -> MediumFloatingActionButton(
-                onClick = {},
-                modifier = modifier,
-                containerColor = containerColor,
-                elevation = elevation,
-                interactionSource = interactionSource,
-                content = content,
-            )
-            "large" -> LargeFloatingActionButton(
-                onClick = {},
-                modifier = modifier,
-                containerColor = containerColor,
-                elevation = elevation,
-                interactionSource = interactionSource,
-                content = content,
-            )
-            else -> FloatingActionButton(
-                onClick = {},
-                modifier = modifier,
-                containerColor = containerColor,
-                elevation = elevation,
-                interactionSource = interactionSource,
-                content = content,
-            )
-        }
-    } else {
-        val labelModifier =
-            if (widget.labelWidth > 0f) Modifier.width(widget.labelWidth.dp) else Modifier
-        val icon = widget.icon
-        if (icon == null) {
-            // The text-only overloads take a `RowScope` content lambda.
-            val content:
-                @Composable androidx.compose.foundation.layout.RowScope.() -> Unit = {
-                    Text(
-                        widget.text ?: "",
-                        modifier = labelModifier.then(
-                            Modifier.trackText(tracer, textId, density),
-                        ),
-                        onTextLayout = recordTextLayout(
-                            tracer,
-                            textId,
-                            androidx.compose.ui.platform.LocalDensity.current,
-                            androidx.compose.ui.platform.LocalFontFamilyResolver.current,
-                            androidx.compose.material3.MaterialTheme.typography.labelLarge.fontFamily,
-                        ),
-                    )
-                }
-            when (widget.size) {
-                "small" -> SmallExtendedFloatingActionButton(
-                    onClick = {},
-                    modifier = modifier,
-                    containerColor = containerColor,
-                    elevation = elevation,
-                    interactionSource = interactionSource,
-                    content = content,
-                )
-                "medium" -> MediumExtendedFloatingActionButton(
-                    onClick = {},
-                    modifier = modifier,
-                    containerColor = containerColor,
-                    elevation = elevation,
-                    interactionSource = interactionSource,
-                    content = content,
-                )
-                "large" -> LargeExtendedFloatingActionButton(
-                    onClick = {},
-                    modifier = modifier,
-                    containerColor = containerColor,
-                    elevation = elevation,
-                    interactionSource = interactionSource,
-                    content = content,
-                )
-                else -> ExtendedFloatingActionButton(
-                    onClick = {},
-                    modifier = modifier,
-                    containerColor = containerColor,
-                    elevation = elevation,
-                    interactionSource = interactionSource,
-                    content = content,
-                )
-            }
-        } else {
-            val text: @Composable () -> Unit = {
-                Text(
-                    widget.text ?: "",
-                    modifier = labelModifier.then(
-                        Modifier.trackText(tracer, textId, density),
-                    ),
-                    onTextLayout = recordTextLayout(
-                        tracer,
-                        textId,
-                        androidx.compose.ui.platform.LocalDensity.current,
-                        androidx.compose.ui.platform.LocalFontFamilyResolver.current,
-                        androidx.compose.material3.MaterialTheme.typography.labelLarge.fontFamily,
-                    ),
-                )
-            }
-            val iconContent: @Composable () -> Unit = {
-                Icon(sceneIcon(icon), contentDescription = null, modifier = Modifier.size(iconEdge))
-            }
-            when (widget.size) {
-                "small" -> SmallExtendedFloatingActionButton(
-                    text = text,
-                    icon = iconContent,
-                    onClick = {},
-                    modifier = modifier,
-                    expanded = expanded,
-                    containerColor = containerColor,
-                    elevation = elevation,
-                    interactionSource = interactionSource,
-                )
-                "medium" -> MediumExtendedFloatingActionButton(
-                    text = text,
-                    icon = iconContent,
-                    onClick = {},
-                    modifier = modifier,
-                    expanded = expanded,
-                    containerColor = containerColor,
-                    elevation = elevation,
-                    interactionSource = interactionSource,
-                )
-                "large" -> LargeExtendedFloatingActionButton(
-                    text = text,
-                    icon = iconContent,
-                    onClick = {},
-                    modifier = modifier,
-                    expanded = expanded,
-                    containerColor = containerColor,
-                    elevation = elevation,
-                    interactionSource = interactionSource,
-                )
-                else -> ExtendedFloatingActionButton(
-                    text = text,
-                    icon = iconContent,
-                    onClick = {},
-                    modifier = modifier,
-                    expanded = expanded,
-                    containerColor = containerColor,
-                    elevation = elevation,
-                    interactionSource = interactionSource,
-                )
-            }
-        }
-    }
-}
-
-/** The four dp levels a `FloatingActionButtonElevation` variant carries, in
- * the order upstream's constructor takes them — the same values
- * `FloatingActionButtonDefaults.elevation()`/`loweredElevation()`/
- * `bottomAppBarFabElevation()` default to (FloatingActionButton.kt at the
- * pin: `FabPrimaryContainerTokens` L3/L3/L3/L4, `ElevationTokens` L1/L1/L1/L2,
- * flat 0 for bottom-app-bar). */
-private data class FabElevationLevels(
-    val defaultElevation: Dp,
-    val pressedElevation: Dp,
-    val focusedElevation: Dp,
-    val hoveredElevation: Dp,
-)
-
-private fun fabElevationLevels(variant: String?): FabElevationLevels =
-    when (variant) {
-        "lowered" -> FabElevationLevels(1.dp, 1.dp, 1.dp, 3.dp)
-        "bottom-app-bar" -> FabElevationLevels(0.dp, 0.dp, 0.dp, 0.dp)
-        else -> FabElevationLevels(6.dp, 6.dp, 6.dp, 8.dp)
-    }
-
-/** Live-value probe replicating `FloatingActionButtonElevationAnimatable`
- * (FloatingActionButton.kt at the pin) on the same `interactionSource` the
- * composable animates its shadow with: the last interaction wins; `to` runs
- * `DefaultIncomingSpec` (120 ms, `FastOutSlowInEasing`), `to == null` runs
- * the outgoing spec `Elevation.kt` picks for `from` — 120 ms for hover,
- * 150 ms for press/focus, both `CubicBezierEasing(0.4, 0, 0.6, 1)`. */
-@Composable
-private fun fabShadowElevationProbe(
-    interactionSource: androidx.compose.foundation.interaction.InteractionSource,
-    levels: FabElevationLevels,
-): State<Float> {
-    // Animating the dp value as a float — `Dp.VectorConverter` animates the
-    // same scalar, so the trajectory is identical.
-    val animatable =
-        remember(interactionSource) {
-            Animatable(levels.defaultElevation.value, Float.VectorConverter)
-        }
-    var lastTargetInteraction by remember { mutableStateOf<Interaction?>(null) }
-
-    fun Interaction?.targetElevation(): Float =
-        when (this) {
-            is PressInteraction.Press -> levels.pressedElevation.value
-            is HoverInteraction.Enter -> levels.hoveredElevation.value
-            is FocusInteraction.Focus -> levels.focusedElevation.value
-            else -> levels.defaultElevation.value
-        }
-
-    LaunchedEffect(interactionSource) {
-        val interactions = mutableListOf<Interaction>()
-        interactionSource.interactions.collect { interaction ->
-            when (interaction) {
-                is HoverInteraction.Enter -> interactions.add(interaction)
-                is HoverInteraction.Exit -> interactions.remove(interaction.enter)
-                is FocusInteraction.Focus -> interactions.add(interaction)
-                is FocusInteraction.Unfocus -> interactions.remove(interaction.focus)
-                is PressInteraction.Press -> interactions.add(interaction)
-                is PressInteraction.Release,
-                is PressInteraction.Cancel,
-                -> interactions.remove(
-                    if (interaction is PressInteraction.Release) {
-                        interaction.press
-                    } else {
-                        (interaction as PressInteraction.Cancel).press
-                    },
-                )
-            }
-            val to = interactions.lastOrNull()
-            val from = lastTargetInteraction
-            lastTargetInteraction = to
-            val target = to.targetElevation()
-            if (animatable.targetValue != target) {
-                launch {
-                    val spec =
-                        when {
-                            to != null -> TweenSpec<Float>(120, easing = FastOutSlowInEasing)
-                            from is HoverInteraction.Enter ||
-                                from is PressInteraction.Press ||
-                                from is DragInteraction.Start ||
-                                from is FocusInteraction.Focus ->
-                                TweenSpec(
-                                    if (from is HoverInteraction.Enter) 120 else 150,
-                                    easing = CubicBezierEasing(0.4f, 0f, 0.6f, 1f),
-                                )
-                            else -> null
-                        }
-                    if (spec != null) animatable.animateTo(target, spec)
-                    else animatable.snapTo(target)
-                }
-            }
-        }
-    }
-    return animatable.asState()
 }
 
 /** One corner of a token `RoundedCornerShape`, resolved in dp — the split
@@ -2836,6 +2386,474 @@ private fun StateConnectedGroup(
             verticalArrangement = Arrangement.spacedBy(2.dp),
         ) {
             itemsContent()
+        }
+    }
+}
+
+/** `LayoutDirection.flip()` — private in AlertDialog.kt; mirrored for the
+ * dialog flow row. */
+private fun LayoutDirection.flipped(): LayoutDirection =
+    when (this) {
+        LayoutDirection.Ltr -> LayoutDirection.Rtl
+        LayoutDirection.Rtl -> LayoutDirection.Ltr
+    }
+
+/** One dialog action button: a `TextButton` driven by the item's authored
+ * state through its own `ReplayableInteractionSource`, traced as
+ * `{tag}action{i}` with its label at `text:{textId}`. */
+@Composable
+private fun DialogActionButton(
+    label: String,
+    item: GroupItem,
+    scene: Scene,
+    tracer: Tracer,
+    tag: String,
+    textId: String,
+    density: Float,
+    emitPress: java.util.concurrent.CopyOnWriteArrayList<Pair<Long, Runnable>>,
+) {
+    val interactionSource = remember { ReplayableInteractionSource() }
+    if (!item.disabled) {
+        emitStateInteractions(
+            item.state,
+            scene,
+            tracer,
+            tag,
+            interactionSource,
+            emitPress,
+            Offset(20f * density, 20f * density),
+            density,
+            null,
+        )
+    }
+    val style = MaterialTheme.typography.labelLarge
+    TextButton(
+        onClick = {},
+        enabled = !item.disabled,
+        interactionSource = interactionSource,
+        modifier = Modifier.track(tracer, tag),
+    ) {
+        Text(
+            label,
+            style = style,
+            modifier = Modifier.trackText(tracer, textId, density),
+            onTextLayout = recordTextLayout(
+                tracer,
+                textId,
+                LocalDensity.current,
+                androidx.compose.ui.platform.LocalFontFamilyResolver.current,
+                style.fontFamily,
+            ),
+        )
+    }
+}
+
+/** `AlertDialogContent` (AlertDialog.kt) rendered inline: the scrim
+ * `Modal` paints when the popup opens, then the centered
+ * `sizeIn(280..560)` pane. `Dialog` opens a platform window and
+ * `Surface`'s `shadowElevation` deadlocks layoutlib, so the pane is
+ * unelevated — the Slint side sets `cast_shadow: false`. `title` maps to
+ * the title slot, `text` to the `text` slot, `items` to the actions
+ * ([dismiss, …, confirm] in display order — the flipped `FlowRow` makes
+ * the confirm first child), `icon` to the optional header icon.
+ *
+ * `basic-alert-dialog` shares the scrim and the `sizeIn` box but the
+ * content is the caller's own — `SceneBasicDialogContent`. */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun StateAlertDialog(
+    widget: Widget,
+    scene: Scene,
+    tracer: Tracer,
+    tag: String,
+    density: Float,
+    emitPress: java.util.concurrent.CopyOnWriteArrayList<Pair<Long, Runnable>>,
+    textBase: Int,
+) {
+    val scheme = MaterialTheme.colorScheme
+    val typography = MaterialTheme.typography
+    // `Modal`'s scrim: the `scrim` role at `ScrimTokens.container_opacity`.
+    Box(
+        Modifier.fillMaxSize()
+            .background(scheme.scrim.copy(alpha = 0.32f))
+            .track(tracer, "scrim${tag.filter(Char::isDigit)}"),
+    )
+    if (widget.kind == "basic-alert-dialog") {
+        SceneBasicDialogContent(widget, scene, tracer, tag, density, emitPress, textBase)
+        return
+    }
+    var textIndex = textBase
+    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        // `BasicAlertDialog`'s `sizeIn(280, 560)` +
+        // `propagateMinConstraints` — upstream internal constants
+        // `DialogMinWidth`/`DialogMaxWidth`.
+        Box(
+            Modifier.sizeIn(minWidth = 280.dp, maxWidth = 560.dp),
+            propagateMinConstraints = true,
+        ) {
+            Surface(
+                modifier = Modifier.track(tracer, tag),
+                shape = MaterialTheme.shapes.extraLarge,
+                color = scheme.surfaceContainerHigh,
+                tonalElevation = 0.dp,
+                shadowElevation = 0.dp,
+            ) {
+                Column(Modifier.padding(24.dp)) {
+                    widget.icon?.let { stem ->
+                        CompositionLocalProvider(
+                            LocalContentColor provides scheme.secondary,
+                        ) {
+                            Box(
+                                Modifier.padding(bottom = 16.dp)
+                                    .align(Alignment.CenterHorizontally),
+                            ) {
+                                Icon(
+                                    sceneIcon(stem),
+                                    contentDescription = null,
+                                    modifier = Modifier.size(24.dp),
+                                )
+                            }
+                        }
+                    }
+                    widget.title?.let { title ->
+                        val textId = "text:${textIndex++}"
+                        Text(
+                            title,
+                            style = typography.headlineSmall,
+                            color = scheme.onSurface,
+                            modifier =
+                                Modifier.padding(bottom = 16.dp)
+                                    .align(
+                                        if (widget.icon != null) {
+                                            Alignment.CenterHorizontally
+                                        } else {
+                                            Alignment.Start
+                                        },
+                                    )
+                                    .trackText(tracer, textId, density),
+                            onTextLayout = recordTextLayout(
+                                tracer,
+                                textId,
+                                LocalDensity.current,
+                                androidx.compose.ui.platform.LocalFontFamilyResolver.current,
+                                typography.headlineSmall.fontFamily,
+                            ),
+                        )
+                    }
+                    widget.text?.let { text ->
+                        val textId = "text:${textIndex++}"
+                        Text(
+                            text,
+                            style = typography.bodyMedium,
+                            color = scheme.onSurfaceVariant,
+                            modifier =
+                                Modifier.padding(bottom = 24.dp)
+                                    .align(Alignment.Start)
+                                    .trackText(tracer, textId, density),
+                            onTextLayout = recordTextLayout(
+                                tracer,
+                                textId,
+                                LocalDensity.current,
+                                androidx.compose.ui.platform.LocalFontFamilyResolver.current,
+                                typography.bodyMedium.fontFamily,
+                            ),
+                        )
+                    }
+                    Box(Modifier.align(Alignment.End)) {
+                        // `AlertDialogFlowRow` verbatim: children
+                        // [confirm, dismiss] in the flipped direction —
+                        // confirm rightmost on one line, on top stacked.
+                        val originalLayoutDirection = LocalLayoutDirection.current
+                        CompositionLocalProvider(
+                            LocalLayoutDirection provides
+                                originalLayoutDirection.flipped(),
+                        ) {
+                            FlowRow(
+                                horizontalArrangement =
+                                    Arrangement.spacedBy(8.dp),
+                                verticalArrangement =
+                                    Arrangement.spacedBy(
+                                        (
+                                            8.dp -
+                                                (
+                                                    LocalMinimumInteractiveComponentSize
+                                                        .current -
+                                                        ButtonDefaults.MinHeight
+                                                    )
+                                            ).coerceIn(0.dp, 8.dp),
+                                    ),
+                            ) {
+                                CompositionLocalProvider(
+                                    LocalLayoutDirection provides
+                                        originalLayoutDirection,
+                                ) {
+                                    widget.items.asReversed().forEachIndexed { i, item ->
+                                        val textId = "text:${textIndex++}"
+                                        DialogActionButton(
+                                            label = item.text ?: "",
+                                            item = item,
+                                            scene = scene,
+                                            tracer = tracer,
+                                            tag = "${tag}action$i",
+                                            textId = textId,
+                                            density = density,
+                                            emitPress = emitPress,
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+/** `BasicAlertDialog` content: upstream hands `content` only the
+ * `sizeIn(280..560)` box — the pane here is the caller's own, drawn like
+ * the canonical sample (a surface-coloured extra-large pane with a
+ * headline and an end-aligned action row). */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun SceneBasicDialogContent(
+    widget: Widget,
+    scene: Scene,
+    tracer: Tracer,
+    tag: String,
+    density: Float,
+    emitPress: java.util.concurrent.CopyOnWriteArrayList<Pair<Long, Runnable>>,
+    textBase: Int,
+) {
+    val scheme = MaterialTheme.colorScheme
+    var textIndex = textBase
+    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        Box(
+            Modifier.sizeIn(minWidth = 280.dp, maxWidth = 560.dp),
+            propagateMinConstraints = true,
+        ) {
+            Surface(
+                modifier = Modifier.track(tracer, tag),
+                shape = MaterialTheme.shapes.extraLarge,
+                color = scheme.surfaceContainerHigh,
+                tonalElevation = 0.dp,
+                shadowElevation = 0.dp,
+            ) {
+                Column(
+                    Modifier.padding(24.dp),
+                    verticalArrangement = Arrangement.spacedBy(24.dp),
+                ) {
+                    widget.title?.let { title ->
+                        val textId = "text:${textIndex++}"
+                        Text(
+                            title,
+                            style = MaterialTheme.typography.headlineSmall,
+                            color = scheme.onSurface,
+                            modifier = Modifier.trackText(tracer, textId, density),
+                            onTextLayout = recordTextLayout(
+                                tracer,
+                                textId,
+                                LocalDensity.current,
+                                androidx.compose.ui.platform.LocalFontFamilyResolver.current,
+                                MaterialTheme.typography.headlineSmall.fontFamily,
+                            ),
+                        )
+                    }
+                    Row(
+                        Modifier.align(Alignment.End),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        widget.items.forEachIndexed { i, item ->
+                            val textId = "text:${textIndex++}"
+                            DialogActionButton(
+                                label = item.text ?: "",
+                                item = item,
+                                scene = scene,
+                                tracer = tracer,
+                                tag = "${tag}action$i",
+                                textId = textId,
+                                density = density,
+                                emitPress = emitPress,
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+/** `date-picker`/`date-range-picker` ISO `YYYY-MM-DD` (or `YYYY-MM` → day 1)
+ * → start-of-day UTC millis, the `*Millis` the upstream state classes take. */
+private fun isoMillis(iso: String): Long =
+    java.time.LocalDate.parse(
+        if (iso.count { it == '-' } == 1) "$iso-01" else iso
+    ).atStartOfDay(java.time.ZoneOffset.UTC).toInstant().toEpochMilli()
+
+/** `DatePickerDialog` content rendered inline — `DatePickerDialog_android.kt`:
+ * a `BasicAlertDialog` `Surface` at `requiredWidth(360).heightIn(max = 568)`
+ * (`DatePickerModalTokens.ContainerWidth`/`ContainerHeight`, both `internal`)
+ * holding `Column(SpaceBetween) { weighted content; aligned-end buttons }`.
+ * The buttons row is upstream's verbatim: an `AlertDialogFlowRow` under the
+ * `DialogButtonsPadding` (`PaddingValues(end = 6, bottom = 8)`,
+ * `DialogButtonsMainAxisSpacing` 8 / `DialogButtonsCrossAxisSpacing` 8) with
+ * the confirm first so the flipped row lands it rightmost — each wrapped in
+ * the focus-management `Box`es that have no layout effect. `Dialog` opens a
+ * platform window and `Surface` shadows deadlock layoutlib, so the scene is
+ * the inline equivalent (the scrim drawn behind) — like `StateAlertDialog`.
+ *
+ * No `trackText`/`recordTextLayout` inside: the picker's own labels live in
+ * the private upstream composables the mirror can't reach, so text indices
+ * would misalign — these scenes verify text by pixels alone. */
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun StateDatePickerDialog(
+    widget: Widget,
+    scene: Scene,
+    tracer: Tracer,
+    tag: String,
+    density: Float,
+    emitPress: java.util.concurrent.CopyOnWriteArrayList<Pair<Long, Runnable>>,
+) {
+    val scheme = MaterialTheme.colorScheme
+    Box(
+        Modifier.fillMaxSize()
+            .background(scheme.scrim.copy(alpha = 0.32f))
+            .track(tracer, "scrim${tag.filter(Char::isDigit)}"),
+    )
+    // `SelectableDates` — the slint side's `selectable_from`/`selectable_to`
+    // contiguous window. An inclusive day range: the `to` bound covers that
+    // whole day (millis < next midnight).
+    val selectableDates = remember(widget) {
+        object : androidx.compose.material3.SelectableDates {
+            private val from = widget.selectableFrom?.let(::isoMillis) ?: Long.MIN_VALUE
+            private val to = widget.selectableTo?.let(::isoMillis) ?: Long.MAX_VALUE
+            override fun isSelectableDate(utcTimeMillis: Long): Boolean =
+                utcTimeMillis >= from && utcTimeMillis <= to + 86399999L
+            override fun isSelectableYear(year: Int): Boolean {
+                val lo =
+                    widget.selectableFrom
+                        ?.let { java.time.LocalDate.parse(it).year }
+                        ?: Int.MIN_VALUE
+                val hi =
+                    widget.selectableTo
+                        ?.let { java.time.LocalDate.parse(it).year }
+                        ?: Int.MAX_VALUE
+                return year in lo..hi
+            }
+        }
+    }
+    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        Surface(
+            modifier =
+                Modifier.requiredWidth(360.dp)
+                    .heightIn(max = 568.dp)
+                    .track(tracer, tag),
+            shape = MaterialTheme.shapes.extraLarge,
+            color = scheme.surfaceContainerHigh,
+            tonalElevation = 0.dp,
+            shadowElevation = 0.dp,
+        ) {
+            Column(verticalArrangement = Arrangement.SpaceBetween) {
+                Box(Modifier.weight(1f, fill = false)) {
+                    val initialDisplayMode =
+                        if (widget.displayMode == "input") {
+                            androidx.compose.material3.DisplayMode.Input
+                        } else {
+                            androidx.compose.material3.DisplayMode.Picker
+                        }
+                    if (widget.kind == "date-range-picker") {
+                        val state =
+                            androidx.compose.material3.rememberDateRangePickerState(
+                                initialSelectedStartDateMillis =
+                                    widget.selectedStart?.let(::isoMillis),
+                                initialSelectedEndDateMillis =
+                                    widget.selectedEnd?.let(::isoMillis),
+                                initialDisplayedMonthMillis =
+                                    widget.displayed?.let(::isoMillis),
+                                yearRange = widget.yearMin..widget.yearMax,
+                                initialDisplayMode = initialDisplayMode,
+                                selectableDates = selectableDates,
+                            )
+                        androidx.compose.material3.DateRangePicker(
+                            state = state,
+                            showModeToggle = widget.showModeToggle,
+                            // Upstream autofocuses the input field ~400ms in —
+                            // the blinking cursor makes captures flaky.
+                            focusRequester = null,
+                        )
+                    } else {
+                        val state =
+                            androidx.compose.material3.rememberDatePickerState(
+                                initialSelectedDateMillis =
+                                    widget.selected?.let(::isoMillis),
+                                initialDisplayedMonthMillis =
+                                    widget.displayed?.let(::isoMillis),
+                                yearRange = widget.yearMin..widget.yearMax,
+                                initialDisplayMode = initialDisplayMode,
+                                selectableDates = selectableDates,
+                            )
+                        androidx.compose.material3.DatePicker(
+                            state = state,
+                            title =
+                                widget.title?.let { text -> { Text(text) } }
+                                    ?: {
+                                        androidx.compose.material3.DatePickerDefaults
+                                            .DatePickerTitle(displayMode = state.displayMode)
+                                    },
+                            showModeToggle = widget.showModeToggle,
+                            focusRequester = null,
+                        )
+                    }
+                }
+                Box(Modifier.align(Alignment.End).padding(end = 6.dp, bottom = 8.dp)) {
+                    // `DialogTokens.ActionLabelTextColor`/`ActionLabelTextFont`
+                    // — the stable `TextButton` overload the dialog samples
+                    // and `emitStateInteractions`-driven `DialogActionButton`
+                    // use (labelLarge/onSurface label colors).
+                    val confirmInteraction = remember { ReplayableInteractionSource() }
+                    val originalLayoutDirection = LocalLayoutDirection.current
+                    CompositionLocalProvider(
+                        LocalLayoutDirection provides originalLayoutDirection.flipped(),
+                    ) {
+                        FlowRow(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalArrangement =
+                                Arrangement.spacedBy(
+                                    (
+                                        8.dp -
+                                            (
+                                                LocalMinimumInteractiveComponentSize.current -
+                                                    ButtonDefaults.MinHeight
+                                                )
+                                        ).coerceIn(0.dp, 8.dp),
+                                ),
+                        ) {
+                            CompositionLocalProvider(
+                                LocalLayoutDirection provides originalLayoutDirection,
+                            ) {
+                                // Children laid out [confirm, dismiss] — the
+                                // flipped direction puts the confirm
+                                // rightmost like the upstream dialog.
+                                TextButton(
+                                    onClick = {},
+                                    enabled = widget.confirmEnabled,
+                                    interactionSource = confirmInteraction,
+                                    modifier = Modifier.track(tracer, "${tag}action0"),
+                                ) {
+                                    Text("OK", style = MaterialTheme.typography.labelLarge)
+                                }
+                                TextButton(
+                                    onClick = {},
+                                    modifier = Modifier.track(tracer, "${tag}action1"),
+                                ) {
+                                    Text("Cancel", style = MaterialTheme.typography.labelLarge)
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 }

@@ -1,0 +1,40 @@
+{
+  "name": "negative-date-picker-selected-day",
+  "type": "canvas",
+  "parity": "negative",
+  "size": [
+    500,
+    620
+  ],
+  "densities": [
+    1,
+    2
+  ],
+  "theme": {
+    "seed": "6750A4",
+    "variant": "tonal-spot",
+    "spec": "spec2025",
+    "platform": "phone",
+    "dark": false,
+    "contrast": 0.0
+  },
+  "fonts": {
+    "plain": "Roboto",
+    "brand": "Roboto"
+  },
+  "widgets": [
+    {
+      "kind": "date-picker",
+      "title": "Select date",
+      "selected": "2031-03-14",
+      "displayed": "2031-03",
+      "slint_overrides": {
+        "selected_day_container": "secondary-container"
+      }
+    }
+  ],
+  "trace_elements": [],
+  "trace_items": {},
+  "trace_props": [],
+  "negative_note": "the selected day fills with secondary-container instead of DateSelectedContainerColor's primary"
+}

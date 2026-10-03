@@ -12,6 +12,14 @@ button-styles
 connected-button-groups
 connected-button-morph
 connected-button-press-morph
+date-picker-dark
+date-picker-disabled
+date-picker-empty
+date-picker-input
+date-picker-range-input
+date-picker-range-partial
+date-picker-range
+date-picker
 elevation-shadow
 elevation-surfaces
 extended-fab-morph
@@ -36,6 +44,10 @@ negative-button-role
 negative-connected-button-group
 negative-corner-leak-dark
 negative-corner-leak
+negative-date-picker-container
+negative-date-picker-corner
+negative-date-picker-range-band
+negative-date-picker-selected-day
 negative-extended-fab-expanded
 negative-fab-color
 negative-fab-shadow

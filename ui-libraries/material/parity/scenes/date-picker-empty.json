@@ -1,0 +1,38 @@
+{
+  "name": "date-picker-empty",
+  "type": "canvas",
+  "parity": "static",
+  "size": [
+    500,
+    620
+  ],
+  "densities": [
+    1,
+    2
+  ],
+  "theme": {
+    "seed": "6750A4",
+    "variant": "tonal-spot",
+    "spec": "spec2025",
+    "platform": "phone",
+    "dark": false,
+    "contrast": 0.0
+  },
+  "fonts": {
+    "plain": "Roboto",
+    "brand": "Roboto"
+  },
+  "widgets": [
+    {
+      "kind": "date-picker",
+      "title": "Select date",
+      "displayed": "2031-03"
+    }
+  ],
+  "trace_elements": [
+    "scrim0",
+    "picker0"
+  ],
+  "trace_items": {},
+  "trace_props": []
+}
