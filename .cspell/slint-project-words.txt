@@ -244,6 +244,7 @@ expm1
 Exti
 EXTRAVERSION
 extversion
+fabmenu
 fabstyle
 Farbfeld
 fbits
@@ -402,6 +403,7 @@ langtype
 layoutinfo
 LBUTTONUP
 lerp
+lerped
 lerping
 letterboxed
 libasound
@@ -469,6 +471,7 @@ Macronix
 mainwindow
 MALLOC
 manylinux
+maskdbg
 materialui
 matplot
 maturin
@@ -822,6 +825,7 @@ unfocusable
 unhinted
 unicodes
 uninit
+unioned
 unioning
 Unitless
 unittests
