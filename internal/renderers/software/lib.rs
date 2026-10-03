@@ -3601,7 +3601,7 @@ impl<T: ProcessScene> i_slint_core::item_rendering::ItemRenderer for SceneBuilde
                     // fitted to the geometry shrunk by half the border width —
                     // what `BorderRectLayout::border_rect` gives the other
                     // renderers.
-                    let border_inset = rect.border_width().get() / 2.;
+                    let border_inset = rect.border_width().get() as f32 / 2.;
                     let stroke_geom = logical_geom.inflate(-border_inset, -border_inset);
                     let stroke_contours = if stroke_geom.is_empty() {
                         Vec::new()
