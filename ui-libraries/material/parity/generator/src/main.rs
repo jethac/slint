@@ -51,9 +51,12 @@ struct Scene {
     mask_inner: std::collections::BTreeMap<String, Vec<u64>>,
     /// Timestamps (ms) at which an element's decoration outside its
     /// silhouette (a drop shadow, a blur) is not comparable on the
-    /// reference engine; the corner zones take the normal band.
+    /// reference engine; the corner zones take the normal band. Either a
+    /// bare timestamp list or `{"times": [...], "margin": dp}` — the
+    /// margin widens the decoration band past the default 6dp for
+    /// decorations that spill further (a big elevation shadow).
     #[serde(default)]
-    mask_decor: std::collections::BTreeMap<String, Vec<u64>>,
+    mask_decor: std::collections::BTreeMap<String, MaskDecor>,
     #[serde(default)]
     params: serde_json::Map<String, serde_json::Value>,
     #[serde(default)]
@@ -105,6 +108,31 @@ struct Action {
     /// until a mid-sequence release).
     #[serde(default)]
     at: f64,
+}
+
+/// A `mask_decor` entry: a bare timestamp list, or `times` plus a `margin`
+/// (dp) widening the element's decoration band past the 6dp default.
+#[derive(serde::Deserialize, serde::Serialize)]
+#[serde(untagged)]
+enum MaskDecor {
+    Times(Vec<u64>),
+    WithMargin { times: Vec<u64>, margin: f64 },
+}
+
+impl MaskDecor {
+    fn times(&self) -> &[u64] {
+        match self {
+            Self::Times(ts) => ts,
+            Self::WithMargin { times, .. } => times,
+        }
+    }
+
+    fn margin(&self) -> Option<f64> {
+        match self {
+            Self::Times(_) => None,
+            Self::WithMargin { margin, .. } => Some(*margin),
+        }
+    }
 }
 
 #[derive(serde::Deserialize, serde::Serialize)]
@@ -159,6 +187,35 @@ struct Widget {
     /// `Elevation.level`, the Compose side sets `Modifier.shadow`'s dp.
     #[serde(default)]
     level: Option<i64>,
+    /// `top-app-bar` variant: `small` (default), `center`, `medium`,
+    /// `medium-flexible`, `large`, `large-flexible`, `two-rows`. Compose maps
+    /// it to `TopAppBar`/`CenterAlignedTopAppBar`/`MediumTopAppBar`/
+    /// `MediumFlexibleTopAppBar`/`LargeTopAppBar`/`LargeFlexibleTopAppBar`/
+    /// `TwoRowsTopAppBar`.
+    #[serde(default)]
+    variant: Option<String>,
+    /// Second line of the flexible two-row variants.
+    #[serde(default)]
+    subtitle: Option<String>,
+    /// `TopAppBarState.heightOffset`/`BottomAppBarState.heightOffset` —
+    /// negative values render a partially collapsed bar.
+    #[serde(default)]
+    height_offset: Option<f64>,
+    /// `TopAppBarState.contentOffset` — positive values mark the content
+    /// overlapped, which flips the single-row bar's container color to the
+    /// scrolled color.
+    #[serde(default)]
+    content_offset: Option<f64>,
+    /// `top-app-bar`/`search-bar` leading (`navigationIcon`) icon stem.
+    #[serde(default)]
+    nav_icon: Option<String>,
+    /// `top-app-bar` action / `bottom-app-bar` icon-button icon stems,
+    /// rendered left to right.
+    #[serde(default)]
+    icons: Vec<String>,
+    /// `search-bar`/`app-bar-with-search` placeholder text.
+    #[serde(default)]
+    placeholder: Option<String>,
     /// Caster outline for `surface` widgets: a `MaterialShapes` global
     /// member name in kebab case (`"cookie-9-sided"` → `MaterialShapes.
     /// cookie-9-sided` / Compose `MaterialShapes.Cookie9Sided`), or `"rect"`
@@ -172,6 +229,11 @@ struct Widget {
     /// Determinate loading-indicator progress, 0–1.
     #[serde(default)]
     progress: Option<f64>,
+    /// `elevated-rect` only: the elevation in dp of the Android ambient+spot
+    /// shadow — the Slint side sets a plain `Rectangle`'s `elevation`, the
+    /// Compose side `Modifier.shadow`'s dp.
+    #[serde(default)]
+    elevation: Option<f64>,
     /// What this widget deliberately gets wrong on the Slint side
     /// (`negative` scenes only). Keys shadow the widget's own fields.
     #[serde(default)]
@@ -206,7 +268,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         // Compose side rasterizes literally the same path the Slint
         // `Icons.<name>` image does.
         for w in &scene.widgets {
-            if let Some(icon) = &w.icon {
+            for icon in w
+                .icon
+                .iter()
+                .chain(w.nav_icon.iter())
+                .chain(w.icons.iter())
+            {
                 let src = repo_root
                     .join("ui-libraries/material/src/ui/icons")
                     .join(format!("{icon}.svg"));
@@ -465,11 +532,15 @@ fn slint_case(scene: &Scene) -> String {
         )
         .unwrap();
     }
-    for (id, ts) in &scene.mask_decor {
+    for (id, spec) in &scene.mask_decor {
+        let margin = match spec.margin() {
+            Some(m) => format!("+{m}"),
+            None => String::new(),
+        };
         writeln!(
             s,
-            "//MASK_DECOR={id}@{}",
-            ts.iter().map(u64::to_string).collect::<Vec<_>>().join(",")
+            "//MASK_DECOR={id}{margin}@{}",
+            spec.times().iter().map(u64::to_string).collect::<Vec<_>>().join(",")
         )
         .unwrap();
     }
@@ -501,12 +572,26 @@ fn slint_case(scene: &Scene) -> String {
             "outlined-icon-button" => "OutlineIconButton",
             "loading-indicator" => "LoadingIndicator",
             "contained-loading-indicator" => "ContainedLoadingIndicator",
-            // `surface` imports `Elevation`/`MaterialShapes` below instead.
-            "rect" | "surface" => continue,
+            // `surface` imports `Elevation`/`MaterialShapes` below instead;
+            // `rect`/`elevated-rect` are plain `Rectangle`s — no import.
+            "rect" | "surface" | "elevated-rect" => continue,
+            "top-app-bar" => match w.variant.as_deref().unwrap_or("small") {
+                "small" => "TopAppBar",
+                "center" => "CenterAlignedTopAppBar",
+                "medium" => "MediumTopAppBar",
+                "medium-flexible" => "MediumFlexibleTopAppBar",
+                "large" => "LargeTopAppBar",
+                "large-flexible" => "LargeFlexibleTopAppBar",
+                "two-rows" => "TwoRowsTopAppBar",
+                other => panic!("unknown top-app-bar variant {other:?}"),
+            },
+            "bottom-app-bar" => "BottomAppBar",
+            "search-bar" => "SearchBar",
+            "app-bar-with-search" => "AppBarWithSearch",
             other => panic!("unknown widget kind {other:?}"),
         };
         imports.push(component);
-        if w.icon.is_some() {
+        if w.icon.is_some() || w.nav_icon.is_some() || !w.icons.is_empty() {
             needs_icons = true;
         }
         if w.size.is_some() || w.corner.is_some() || w.width_option.is_some() {
@@ -730,6 +815,7 @@ fn slint_canvas(s: &mut String, scene: &Scene) {
     // intact.
     let mut buttons = 0;
     let mut surfaces = 0;
+    let mut appbars = 0;
     for w in scene.widgets.iter() {
         let component = match w.kind.as_str() {
             "filled-button" => "FilledButton",
@@ -818,6 +904,30 @@ fn slint_canvas(s: &mut String, scene: &Scene) {
                     )
                     .unwrap();
                 }
+                continue;
+            }
+            // Unlike `surface` (the Material `Elevation` component, which sets
+            // the layer colors explicitly), `elevated-rect` exercises a plain
+            // `Rectangle`'s `elevation` — the compiler-default shadow colors.
+            "elevated-rect" => {
+                writeln!(
+                    s,
+                    "    Rectangle {{\n        x: {}px;\n        y: {}px;\n        width: {}px;\n        height: {}px;\n        border-radius: {}px;\n        background: MaterialPalette.{};\n        elevation: {}px;\n    }}\n",
+                    w.x as i64,
+                    w.y as i64,
+                    w.width.unwrap() as i64,
+                    w.height.unwrap() as i64,
+                    w.radius.unwrap_or(0.0) as i64,
+                    w.color.as_deref().unwrap_or("primary").replace('-', "_"),
+                    w.elevation.unwrap_or(0.0) as i64,
+                )
+                .unwrap();
+                continue;
+            }
+            "top-app-bar" | "bottom-app-bar" | "search-bar" | "app-bar-with-search" => {
+                let i = appbars;
+                appbars += 1;
+                appbar_widget(s, w, i);
                 continue;
             }
             "rect" => {
@@ -922,6 +1032,109 @@ fn slint_spring_motion(s: &mut String, scene: &Scene) {
         color = p["color"].as_str().unwrap().replace('-', "_"),
         dur = get("duration_ms") as i64,
         bounce = get("bounce"),
+    )
+    .unwrap();
+}
+
+/// One app-bar family widget (`top-app-bar`, `bottom-app-bar`, `search-bar`,
+/// `app-bar-with-search`): geometry plus the props the Compose mirror sets.
+/// Elements are named `appbar{n}` in scene order.
+fn appbar_widget(s: &mut String, w: &Widget, i: usize) {
+    let component = match w.kind.as_str() {
+        "top-app-bar" => match w.variant.as_deref().unwrap_or("small") {
+            "small" => "TopAppBar",
+            "center" => "CenterAlignedTopAppBar",
+            "medium" => "MediumTopAppBar",
+            "medium-flexible" => "MediumFlexibleTopAppBar",
+            "large" => "LargeTopAppBar",
+            "large-flexible" => "LargeFlexibleTopAppBar",
+            "two-rows" => "TwoRowsTopAppBar",
+            other => panic!("unknown top-app-bar variant {other:?}"),
+        },
+        "bottom-app-bar" => "BottomAppBar",
+        "search-bar" => "SearchBar",
+        "app-bar-with-search" => "AppBarWithSearch",
+        other => panic!("unknown app-bar kind {other:?}"),
+    };
+    let mut p = String::new();
+    if let Some(text) = &w.text {
+        if w.kind == "search-bar" || w.kind == "app-bar-with-search" {
+            writeln!(p, "        text: \"{text}\";").unwrap();
+        } else {
+            writeln!(p, "        title: \"{text}\";").unwrap();
+        }
+    }
+    if let Some(subtitle) = &w.subtitle {
+        writeln!(p, "        subtitle: \"{subtitle}\";").unwrap();
+    }
+    if let Some(placeholder) = &w.placeholder {
+        writeln!(p, "        placeholder-text: \"{placeholder}\";").unwrap();
+    }
+    if let Some(icon) = &w.nav_icon {
+        match w.kind.as_str() {
+            "bottom-app-bar" => writeln!(p, "        fab-icon: Icons.{icon};").unwrap(),
+            "search-bar" => writeln!(p, "        leading-icon: Icons.{icon};").unwrap(),
+            "app-bar-with-search" => {
+                writeln!(p, "        leading-icon: Icons.{icon};").unwrap()
+            }
+            _ => {
+                writeln!(
+                    p,
+                    "        leading-button: {{ icon: Icons.{icon}, enabled: true }};"
+                )
+                .unwrap()
+            }
+        }
+    }
+    if !w.icons.is_empty() {
+        match w.kind.as_str() {
+            "bottom-app-bar" => {
+                let items = w
+                    .icons
+                    .iter()
+                    .map(|ic| format!("{{ icon: Icons.{ic}, enabled: true }}"))
+                    .collect::<Vec<_>>()
+                    .join(", ");
+                writeln!(p, "        icon-buttons: [{items}];").unwrap();
+            }
+            "search-bar" => {
+                if let Some(ic) = w.icons.first() {
+                    writeln!(p, "        trailing-icon: Icons.{ic};").unwrap();
+                }
+            }
+            _ => {
+                let items = w
+                    .icons
+                    .iter()
+                    .map(|ic| format!("{{ icon: Icons.{ic}, enabled: true }}"))
+                    .collect::<Vec<_>>()
+                    .join(", ");
+                writeln!(p, "        trailing-buttons: [{items}];").unwrap();
+            }
+        }
+    }
+    if let Some(offset) = w.height_offset {
+        writeln!(p, "        height-offset: {offset}px;").unwrap();
+    }
+    if let Some(offset) = w.content_offset {
+        writeln!(p, "        content-offset: {offset}px;").unwrap();
+    }
+    if let Some(width) = w.width {
+        writeln!(p, "        width: {width}px;").unwrap();
+    }
+    if w.enabled == Some(false) {
+        p.push_str("        enabled: false;\n");
+    }
+    // Touch-target expansion matches `LocalMinimumInteractiveComponentSize`
+    // being 0 on the Compose side; the search-bar family routes its buttons
+    // through fixed-size icon slots instead.
+    if w.kind != "search-bar" && w.kind != "app-bar-with-search" {
+        p.push_str("        touch-target: false;\n");
+    }
+    writeln!(
+        s,
+        "    appbar{i} := {component} {{\n        x: {}px;\n        y: {}px;\n{}    }}\n",
+        w.x as i64, w.y as i64, p,
     )
     .unwrap();
 }

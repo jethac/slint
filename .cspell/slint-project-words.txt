@@ -59,6 +59,7 @@ beziers
 bezpath
 BGRA
 BGRX
+atan2f
 bindgen
 bindtextdomain
 blit
@@ -137,6 +138,7 @@ cosa
 coterminal
 CPACK
 Cpolygon
+cosf
 cpos
 cppbuild
 cppdocs
@@ -457,6 +459,7 @@ lpfn
 lpsz
 lstar
 Ltdc
+asinf
 ltdcsel
 lumino
 LVGL
@@ -497,6 +500,7 @@ multisample
 multiview
 Musterfrau
 Mustermann
+expf
 mycomponentlib
 myimage
 mylibrary
@@ -575,6 +579,7 @@ prec
 prediv
 Preedit
 PREMUL
+powf
 premultiplication
 premultiply
 PRIMASK
@@ -713,6 +718,8 @@ Spyrosoft
 srcroot
 SRCS
 SRGBA
+acosf
+sinf
 standardbutton
 startswith
 staticlib
@@ -724,6 +731,7 @@ stockticker
 STOOQ
 streamable
 STREQUAL
+cbrtf
 strikethrough
 strprop
 strs
@@ -759,6 +767,7 @@ systemtrayicon
 systest
 tableheadersection
 Tabler
+tanf
 targetstruct
 Tdefmt
 tempor

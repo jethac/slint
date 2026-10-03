@@ -2511,6 +2511,7 @@ dependencies = [
  "image",
  "js-sys",
  "ksni",
+ "libm",
  "lyon_algorithms",
  "lyon_extra",
  "lyon_geom",

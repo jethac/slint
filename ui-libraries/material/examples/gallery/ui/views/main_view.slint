@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: MIT
 
 import { ComponentsView } from "components_view.slint";
+import { SchemeDialog } from "scheme_dialog.slint";
 import { Palette } from "std-widgets.slint";
 import { MainWindowAdapter } from "../main_window_adapter.slint";
 import { FilledIcons, OutlinedIcons } from "../icons.slint";
@@ -15,7 +16,7 @@ import {
     NavigationRail,
     NavigationItem,
     NavigationBar,
-    SmallAppBar,
+    TopAppBar,
     PopupMenu,
     MenuItem,
     MaterialStyleMetrics
@@ -56,20 +57,27 @@ export component MainView {
     ];
 
     VerticalLayout {
-        app_bar := SmallAppBar {
+        app_bar := TopAppBar {
             title: "Material 3";
-            trailing_buttons: [
+            trailing-buttons: [
                 { icon: OutlinedIcons.palette, enabled: true },
+                { icon: OutlinedIcons.settings, enabled: true },
                 { icon: Palette.color_scheme == ColorScheme.light ? OutlinedIcons.dark_mode : OutlinedIcons.light_mode, enabled: true }
             ];
-            show_background: MainWindowAdapter.show_background;
 
-            trailing_button_clicked(index) => {
+            trailing-button-clicked(index) => {
                 if index == 0 {
                     color_menu.show();
                 }
 
                 if index == 1 {
+                    // Changes in the dialog configure the runtime scheme, so
+                    // make the dynamic palette active while it is open.
+                    MaterialPalette.dynamic = true;
+                    scheme_dialog.show();
+                }
+
+                if index == 2 {
 
                     if Palette.color_scheme == ColorScheme.light {
                         Palette.color_scheme = ColorScheme.dark;
@@ -79,6 +87,13 @@ export component MainView {
                     Palette.color_scheme = ColorScheme.light;
                 }
             }
+        }
+
+        scheme_dialog := SchemeDialog {
+            x: -root.absolute_position.x;
+            y: -root.absolute_position.y;
+            width: MainWindowAdapter.width;
+            height: MainWindowAdapter.height;
         }
 
         color_menu := PopupMenu {

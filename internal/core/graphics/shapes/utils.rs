@@ -235,22 +235,22 @@ pub(crate) fn k_sqrt(x: f32) -> f32 {
 
 /// `kotlin.math.sin(Float)`.
 pub(crate) fn k_sin(x: f32) -> f32 {
-    (x as f64).sin() as f32
+    crate::graphics::math::sin(x as f64) as f32
 }
 
 /// `kotlin.math.cos(Float)`.
 pub(crate) fn k_cos(x: f32) -> f32 {
-    (x as f64).cos() as f32
+    crate::graphics::math::cos(x as f64) as f32
 }
 
 /// `kotlin.math.tan(Float)`.
 pub(crate) fn k_tan(x: f32) -> f32 {
-    (x as f64).tan() as f32
+    crate::graphics::math::tan(x as f64) as f32
 }
 
 /// `kotlin.math.atan2(Float, Float)`.
 pub(crate) fn k_atan2(y: f32, x: f32) -> f32 {
-    (y as f64).atan2(x as f64) as f32
+    crate::graphics::math::atan2(y as f64, x as f64) as f32
 }
 
 /// `kotlin.math.min(Float, Float)` — NaN propagates like `Math.min`.

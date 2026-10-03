@@ -392,8 +392,8 @@ fn push_join_arc(
     end: euclid::Vector2D<f32, PhysicalPx>,
     radius: f32,
 ) {
-    let a0 = start.y.atan2(start.x);
-    let mut a1 = end.y.atan2(end.x);
+    let a0 = i_slint_core::graphics::math::atan2f(start.y, start.x);
+    let mut a1 = i_slint_core::graphics::math::atan2f(end.y, end.x);
     while a1 - a0 > core::f32::consts::PI {
         a1 -= 2. * core::f32::consts::PI;
     }
@@ -409,7 +409,13 @@ fn push_join_arc(
     out.push(center + start);
     for i in 1..steps {
         let a = a0 + sweep * (i as f32 / steps as f32);
-        out.push(center + euclid::vec2::<f32, PhysicalPx>(a.cos() * radius, a.sin() * radius));
+        out.push(
+            center
+                + euclid::vec2::<f32, PhysicalPx>(
+                    i_slint_core::graphics::math::cosf(a) * radius,
+                    i_slint_core::graphics::math::sinf(a) * radius,
+                ),
+        );
     }
     out.push(center + end);
 }
@@ -429,13 +435,13 @@ fn cap_points(
         LineCap::Round => {
             let mut pts = Vec::with_capacity(9);
             // Semicircle from +n through `outward` to −n.
-            let a0 = n.y.atan2(n.x);
+            let a0 = i_slint_core::graphics::math::atan2f(n.y, n.x);
             for i in 1..=8 {
                 let a = a0 - core::f32::consts::PI * (i as f32 / 8.);
                 pts.push(
                     tip + euclid::vec2::<f32, PhysicalPx>(
-                        a.cos() * half_width,
-                        a.sin() * half_width,
+                        i_slint_core::graphics::math::cosf(a) * half_width,
+                        i_slint_core::graphics::math::sinf(a) * half_width,
                     ),
                 );
             }
@@ -712,8 +718,9 @@ pub fn gaussian_blur(src: &[u8], dst: &mut [u8], w: usize, h: usize, sigma: f32)
         return;
     }
     let radius = (3. * sigma).ceil() as usize;
-    let mut kernel: Vec<f32> =
-        (0..=radius).map(|i| (-((i * i) as f32) / (2. * sigma * sigma)).exp()).collect();
+    let mut kernel: Vec<f32> = (0..=radius)
+        .map(|i| i_slint_core::graphics::math::expf(-((i * i) as f32) / (2. * sigma * sigma)))
+        .collect();
     let sum: f32 = kernel[0] + 2. * kernel[1..].iter().sum::<f32>();
     for v in kernel.iter_mut() {
         *v /= sum;
@@ -988,8 +995,9 @@ mod tests {
         gaussian_blur(&src, &mut dst, w, h, sigma);
         // Rebuild the normalized 1-D kernel exactly like gaussian_blur does.
         let radius = (3. * sigma).ceil() as usize;
-        let mut kernel: Vec<f32> =
-            (0..=radius).map(|i| (-((i * i) as f32) / (2. * sigma * sigma)).exp()).collect();
+        let mut kernel: Vec<f32> = (0..=radius)
+            .map(|i| i_slint_core::graphics::math::expf(-((i * i) as f32) / (2. * sigma * sigma)))
+            .collect();
         let sum: f32 = kernel[0] + 2. * kernel[1..].iter().sum::<f32>();
         for v in kernel.iter_mut() {
             *v /= sum;
