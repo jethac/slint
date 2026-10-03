@@ -1,49 +1,152 @@
 ---
 title: FloatingActionButton (FAB)
-description: FloatingActionButton API.
+description: FloatingActionButton and ExtendedFloatingActionButton API.
 ---
 
 import CodeSnippetMD from '@slint/common-files/src/components/CodeSnippetMD.astro';
 import SlintProperty from '@slint/common-files/src/components/SlintProperty.astro';
 
-<CodeSnippetMD imagePath="" noScreenShot scale="3" imageWidth="300" imageHeight="200" imageAlt="">
+<CodeSnippetMD imagePath="/src/assets/generated/floatingactionbutton.png" scale="3" imageWidth="200" imageHeight="140" imageAlt="">
 ```slint
-import { FloatingActionButton, FABStyle } from "@material";
+import { FloatingActionButton } from "@material";
 export component Example inherits Window {
-    width: 120px;
+    width: 140px;
     height: 120px;
     background: transparent;
     FloatingActionButton {
         icon: @image-url("../icons/add.svg");
         tooltip: "Add";
-        style: FABStyle.standard;
     }
 }
 ```
 </CodeSnippetMD>
 
 A `FloatingActionButton` (FAB) is a circular button that floats above the UI and is used for a primary action.
+An `ExtendedFloatingActionButton` is its wider variant that carries a text label and can collapse to hide it.
 
-## Properties
+<CodeSnippetMD imagePath="/src/assets/generated/floatingactionbutton-sizes.png" scale="3" imageWidth="480" imageHeight="200" imageAlt="">
+```slint
+import { FloatingActionButton, ExtendedFloatingActionButton, FabSize, ExtendedFabSize } from "@material";
+export component Example inherits Window {
+    width: 460px;
+    height: 180px;
+    background: transparent;
+    HorizontalLayout {
+        padding: 20px;
+        spacing: 16px;
+        alignment: center;
+        FloatingActionButton { icon: @image-url("../icons/add.svg"); size: FabSize.small; }
+        FloatingActionButton { icon: @image-url("../icons/add.svg"); }
+        FloatingActionButton { icon: @image-url("../icons/add.svg"); size: FabSize.medium; }
+        FloatingActionButton { icon: @image-url("../icons/add.svg"); size: FabSize.large; }
+    }
+}
+```
+</CodeSnippetMD>
+
+<CodeSnippetMD imagePath="/src/assets/generated/extendedfloatingactionbutton.png" scale="3" imageWidth="480" imageHeight="160" imageAlt="">
+```slint
+import { ExtendedFloatingActionButton, ExtendedFabSize } from "@material";
+export component Example inherits Window {
+    width: 460px;
+    height: 140px;
+    background: transparent;
+    HorizontalLayout {
+        padding: 20px;
+        spacing: 16px;
+        alignment: center;
+        ExtendedFloatingActionButton { icon: @image-url("../icons/add.svg"); text: "Create"; size: ExtendedFabSize.small; }
+        ExtendedFloatingActionButton { icon: @image-url("../icons/add.svg"); text: "Create"; }
+        ExtendedFloatingActionButton { icon: @image-url("../icons/add.svg"); text: "Compose"; size: ExtendedFabSize.medium; }
+    }
+}
+```
+</CodeSnippetMD>
+
+## FloatingActionButton Properties
+
+### alignment
+<SlintProperty propName="alignment" typeName="enum" enumName="FabAlignment" defaultValue="FabAlignment.bottom_end">
+The anchor a `shown` or `target_scale` transition grows from or shrinks toward.
+</SlintProperty>
+
+### container-color
+<SlintProperty propName="container-color" typeName="color" defaultValue="FabPrimaryContainerTokens.container-color">
+The container fill color.
+</SlintProperty>
+
+### content-color
+<SlintProperty propName="content-color" typeName="color" defaultValue="FabPrimaryContainerTokens.icon-color">
+The icon tint color.
+</SlintProperty>
+
+### elevation-style
+<SlintProperty propName="elevation-style" typeName="enum" enumName="FabElevation" defaultValue="FabElevation.normal">
+The resting elevation: `normal`, `lowered`, or `bottom_app_bar` (flat).
+</SlintProperty>
+
+### enabled
+<SlintProperty propName="enabled" typeName="bool" defaultValue="true">
+Whether the button reacts to pointer and keyboard input.
+</SlintProperty>
+
+### enforce-touch-target
+<SlintProperty propName="enforce-touch-target" typeName="bool" defaultValue="true">
+Whether the button extends its touch target to at least 48px when its visual container is smaller.
+</SlintProperty>
 
 ### icon
 <SlintProperty propName="icon" typeName="image">
 The icon image displayed on the button.
 </SlintProperty>
 
-### style
-<SlintProperty propName="style" typeName="enum" enumName="FABStyle">
-The style of the FAB: `small`, `standard`, or `large`.
+### shown
+<SlintProperty propName="shown" typeName="bool" defaultValue="true">
+Whether the button is visible. Toggling it animates a scale transition anchored at `alignment`.
 </SlintProperty>
 
-### text
-<SlintProperty propName="text" typeName="string">
-An optional text label for the button.
+### size
+<SlintProperty propName="size" typeName="enum" enumName="FabSize" defaultValue="FabSize.baseline">
+The container size: `small` (deprecated 40px), `baseline` (56px), `medium` (80px), or `large` (96px).
+</SlintProperty>
+
+### target-scale
+<SlintProperty propName="target-scale" typeName="float" defaultValue="0.2">
+A manual scale for the container, animated with the same transition as `shown` — used by FAB menus to shrink the button while a menu opens.
 </SlintProperty>
 
 ### tooltip
 <SlintProperty propName="tooltip" typeName="string">
 A tooltip text that appears when hovering over the button.
+</SlintProperty>
+
+## ExtendedFloatingActionButton Properties
+
+All `FloatingActionButton` properties apply, with `size` typed as `ExtendedFabSize` and these additions:
+
+### expanded
+<SlintProperty propName="expanded" typeName="bool" defaultValue="true">
+Whether the label is visible. Collapsing morphs the container toward the icon-only FAB shape.
+</SlintProperty>
+
+### icon
+<SlintProperty propName="icon" typeName="image">
+The leading icon; omit it for a text-only extended FAB.
+</SlintProperty>
+
+### label-width
+<SlintProperty propName="label-width" typeName="length" defaultValue="0">
+A fixed width for the collapsed container's label area; `0` measures the label text.
+</SlintProperty>
+
+### size
+<SlintProperty propName="size" typeName="enum" enumName="ExtendedFabSize" defaultValue="ExtendedFabSize.baseline">
+The container size: `small`, `baseline`, `medium`, or `large`.
+</SlintProperty>
+
+### text
+<SlintProperty propName="text" typeName="string">
+The label text.
 </SlintProperty>
 
 ## Callbacks

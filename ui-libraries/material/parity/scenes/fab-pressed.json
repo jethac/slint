@@ -1,0 +1,52 @@
+{
+  "name": "fab-pressed",
+  "type": "canvas",
+  "parity": "static",
+  "size": [
+    176,
+    112
+  ],
+  "densities": [
+    1
+  ],
+  "theme": {
+    "seed": "6750A4",
+    "variant": "tonal-spot",
+    "spec": "spec2025",
+    "platform": "phone",
+    "dark": false,
+    "contrast": 0.0
+  },
+  "fonts": {
+    "plain": "Roboto",
+    "brand": "Roboto"
+  },
+  "trace_elements": [
+    "button0"
+  ],
+  "trace_props": [
+    "shadow_elevation"
+  ],
+  "mask_inner": {
+    "button0": [
+      2000
+    ]
+  },
+  "mask_decor": {
+    "button0": [
+      0,
+      2000
+    ]
+  },
+  "widgets": [
+    {
+      "kind": "fab",
+      "x": 56,
+      "y": 28,
+      "icon": "add",
+      "state": "pressed"
+    }
+  ],
+  "parity_eps": 32,
+  "parity_eps_reason": "issue #6: the layoutlib-vs-SkShadowUtils elevation shadow penumbra diverges ~11-20 channels around 6-8dp widgets at 2x; the container silhouette itself matches within 1px"
+}

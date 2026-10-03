@@ -84,6 +84,7 @@
   "type": "canvas",
   "widgets": [
     {
+      "alignment": null,
       "checkable": null,
       "checked": null,
       "checked_icon": null,
@@ -92,6 +93,7 @@
       "corner": null,
       "elevation": null,
       "enabled": null,
+      "expanded": null,
       "height": null,
       "height_offset": null,
       "icon": null,
@@ -99,6 +101,7 @@
       "indeterminate": null,
       "items": [],
       "kind": "filled-button",
+      "label_width": null,
       "level": null,
       "multi_select": null,
       "nav_icon": null,
@@ -108,6 +111,7 @@
       "radius": null,
       "selected_index": null,
       "shape": null,
+      "shown": null,
       "side": null,
       "size": null,
       "slint_overrides": {
@@ -117,7 +121,9 @@
       },
       "state": "hovered",
       "subtitle": null,
+      "target_scale": null,
       "text": "Label",
+      "toggle": null,
       "trailing_icon": null,
       "variant": null,
       "vertical": null,

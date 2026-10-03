@@ -1,0 +1,99 @@
+{
+  "name": "extended-fab-morph",
+  "type": "canvas",
+  "parity": "xfail",
+  "negative_note": "issue #27: the Compose frame clock starts the expand/collapse animatables ~2ms after the Slint dispatch, so identical-timestamp frames report a systematic lead \u2014 a silent pass would mean the harness went blind",
+  "size": [
+    360,
+    128
+  ],
+  "densities": [
+    1,
+    2
+  ],
+  "theme": {
+    "seed": "6750A4",
+    "variant": "tonal-spot",
+    "spec": "spec2025",
+    "platform": "phone",
+    "dark": false,
+    "contrast": 0.0
+  },
+  "fonts": {
+    "plain": "Roboto",
+    "brand": "Roboto"
+  },
+  "times": [
+    0,
+    60,
+    120,
+    200,
+    333,
+    500,
+    800,
+    1500
+  ],
+  "widgets": [
+    {
+      "kind": "extended-fab",
+      "x": 16,
+      "y": 44,
+      "icon": "add",
+      "text": "Create",
+      "label_width": 52,
+      "toggle": "expanded"
+    },
+    {
+      "kind": "extended-fab",
+      "x": 172,
+      "y": 24,
+      "icon": "add",
+      "text": "Create",
+      "label_width": 78,
+      "size": "medium",
+      "toggle": "expanded"
+    }
+  ],
+  "actions": [
+    {
+      "kind": "press",
+      "x": 60,
+      "y": 72
+    },
+    {
+      "kind": "release",
+      "x": 60,
+      "y": 72,
+      "at": 200
+    },
+    {
+      "kind": "move",
+      "x": 0,
+      "y": 0,
+      "at": 201
+    }
+  ],
+  "trace_elements": [
+    "button0",
+    "button1"
+  ],
+  "trace_props": [
+    "expand_progress",
+    "label_alpha"
+  ],
+  "mask_inner": {
+    "button0": [
+      200,
+      333,
+      500,
+      800
+    ],
+    "button1": [
+      200,
+      333,
+      500,
+      800
+    ]
+  },
+  "xfail_text": "issue #28: Slint ceils text layout widths where Compose keeps fractional advances"
+}

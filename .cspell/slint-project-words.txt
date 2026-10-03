@@ -23,6 +23,7 @@ analogclock
 androideabi
 androidx
 animatable
+animatables
 anyrender
 apng
 APCA
@@ -255,9 +256,11 @@ EVKB
 excinfo
 expm
 expm1
+extendedfloatingactionbutton
 Exti
 EXTRAVERSION
 extversion
+fabs
 fabstyle
 Farbfeld
 fbits
@@ -284,6 +287,7 @@ flathub
 Flexbox
 flexboxes
 Flickables
+floatingactionbutton
 floatprop
 floatval
 Florian
@@ -419,6 +423,7 @@ langtype
 layoutinfo
 LBUTTONUP
 lerp
+lerped
 lerping
 letterboxed
 libasound
@@ -723,6 +728,7 @@ sharedvector
 shiki
 shikijs
 Shmelt
+showhide
 signalsafe
 signum
 SIGUSR
@@ -855,9 +861,11 @@ udisksctl
 udivdi
 uintptr
 ullamco
+unauthored
 unclipped
 uncoerced
 Uncontained
+unfocus
 unfocusable
 unhinted
 unicodes
@@ -873,6 +881,7 @@ unpic
 Unpremul
 unpremultiplies
 unpremultiply
+unrequested
 unrotated
 unsendable
 untimed

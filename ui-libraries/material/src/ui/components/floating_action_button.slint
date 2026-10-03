@@ -2,61 +2,738 @@
 // SPDX-License-Identifier: MIT
 
 import { Elevation } from "./elevation.slint";
-import { BaseButton } from "./base_button.slint";
-import { MaterialTypography } from "../styling/material_typography.slint";
+import { FocusRing, StateLayerArea } from "./state_layer.slint";
+import { Icon } from "./icon.slint";
+import { MaterialText } from "./material_text.slint";
+import { MaterialButtonMetrics } from "./button_metrics.slint";
+import { MaterialAnimations } from "../styling/material_animations.slint";
 import { MaterialPalette } from "../styling/material_palette.slint";
-import { MaterialStyleMetrics } from "../styling/material_style_metrics.slint";
+import { MaterialTypography, MaterialTypeStyle } from "../styling/material_typography.slint";
+import { MaterialCornerShape, ShapeTokens } from "../styling/generated/material_shape_tokens.slint";
 import {
+    ExtendedFabLargeTokens,
+    ExtendedFabMediumTokens,
+    ExtendedFabPrimaryTokens,
+    ExtendedFabSmallTokens,
     FabBaselineTokens,
     FabLargeTokens,
+    FabMediumTokens,
     FabPrimaryContainerTokens,
     FabSmallTokens,
 } from "../styling/generated/material_component_tokens.slint";
 
-export enum FABStyle {
+/// The M3E FAB size set — the upstream `FloatingActionButton` (baseline),
+/// `SmallFloatingActionButton`, `MediumFloatingActionButton` and
+/// `LargeFloatingActionButton` composables in the pinned
+/// `FloatingActionButton.kt`.
+export enum FabSize {
+    /// 40x40 — the pre-M3E small FAB the catalog dropped (deprecated; the
+    /// upstream composable itself is not `@Deprecated` at the pin).
     small,
-    standard,
-    large
+    /// 56x56 — `FloatingActionButton`.
+    baseline,
+    /// 80x80 — `MediumFloatingActionButton`.
+    medium,
+    /// 96x96 — `LargeFloatingActionButton`.
+    large,
 }
 
+/// The extended-FAB size set — `ExtendedFloatingActionButton` (baseline)
+/// and `Small/Medium/LargeExtendedFloatingActionButton` upstream.
+export enum ExtendedFabSize {
+    /// 56dp tall — `SmallExtendedFloatingActionButton`.
+    small,
+    /// 56dp tall, wider padding — `ExtendedFloatingActionButton`.
+    baseline,
+    /// 80dp tall — `MediumExtendedFloatingActionButton`.
+    medium,
+    /// 96dp tall — `LargeExtendedFloatingActionButton`.
+    large,
+}
+
+/// The upstream `FloatingActionButtonElevation` factories on
+/// `FloatingActionButtonDefaults`: `elevation()`, `loweredElevation()` and
+/// `bottomAppBarFabElevation()`.
+export enum FabElevation {
+    /// `elevation()` — `FabPrimaryContainerTokens`: 6/6/6/8dp
+    /// default/pressed/focused/hovered.
+    normal,
+    /// `loweredElevation()` — `ElevationTokens.Level1` except hovered
+    /// `Level2`: 1/1/1/3dp.
+    lowered,
+    /// `bottomAppBarFabElevation()` — 0dp in every state.
+    bottom_app_bar,
+}
+
+/// The nine anchors `Modifier.animateFloatingActionButton` accepts as
+/// `alignment` — the pivot the `shown` scale transition grows from /
+/// shrinks toward.
+export enum FabAlignment {
+    top_start,
+    top_center,
+    top_end,
+    center_start,
+    center,
+    center_end,
+    bottom_start,
+    bottom_center,
+    bottom_end,
+}
+
+/// Resolves the per-size token tables to plain values so the components
+/// stay thin bindings — every function mirrors a
+/// `FloatingActionButtonDefaults.*` getter or private constant in the
+/// pinned `FloatingActionButton.kt`.
+export global FabMetrics {
+    /// The square container edge — `Fab{,Small,Medium,Large}Tokens`
+    /// `ContainerWidth` (`ContainerHeight` is identical upstream).
+    public pure function container-size(size: FabSize) -> length {
+        size == FabSize.small ? FabSmallTokens.container_width :
+        size == FabSize.medium ? FabMediumTokens.container_width :
+        size == FabSize.large ? FabLargeTokens.container_width :
+        FabBaselineTokens.container_width
+    }
+
+    /// Resting shape per size. `mediumShape` is hard-coded
+    /// `ShapeDefaults.LargeIncreased` upstream ("TODO: update to use
+    /// token" in the pinned source) — `corner_large_increased` here.
+    public pure function container-shape(size: FabSize) -> MaterialCornerShape {
+        size == FabSize.small ? FabSmallTokens.container_shape :
+        size == FabSize.medium ? ShapeTokens.corner_large_increased :
+        size == FabSize.large ? FabLargeTokens.container_shape :
+        FabBaselineTokens.container_shape
+    }
+
+    /// Recommended icon edge — the `IconSize` tokens except `large`, which
+    /// is hard-coded `LargeIconSize = 36.dp` upstream
+    /// ("FabLargeTokens.IconSize is incorrect").
+    public pure function icon-size(size: FabSize) -> length {
+        size == FabSize.medium ? FabMediumTokens.icon_size :
+        size == FabSize.large ? 36px :
+        size == FabSize.small ? FabSmallTokens.icon_size :
+        FabBaselineTokens.icon_size
+    }
+
+    /// `FabElevation` table → `Elevation.level` slots
+    /// (`FabPrimaryContainerTokens.*_container_elevation` against
+    /// `ElevationTokens`: 6dp=level3, 8dp=level4; lowered 1dp=level1,
+    /// 3dp=level2; bottom-app-bar 0dp=level0).
+    public pure function elevation-default(style: FabElevation) -> int {
+        style == FabElevation.lowered ? 1 :
+        style == FabElevation.bottom_app_bar ? 0 : 3
+    }
+    public pure function elevation-pressed(style: FabElevation) -> int {
+        style == FabElevation.lowered ? 1 :
+        style == FabElevation.bottom_app_bar ? 0 : 3
+    }
+    public pure function elevation-focused(style: FabElevation) -> int {
+        style == FabElevation.lowered ? 1 :
+        style == FabElevation.bottom_app_bar ? 0 : 3
+    }
+    public pure function elevation-hovered(style: FabElevation) -> int {
+        style == FabElevation.lowered ? 2 :
+        style == FabElevation.bottom_app_bar ? 0 : 4
+    }
+}
+
+/// Per-size metric tables for `ExtendedFloatingActionButton`. The
+/// baseline variant's paddings (`ExtendedFabStartIconPadding` 16,
+/// `ExtendedFabEndIconPadding` 12, `ExtendedFabTextPadding` 20,
+/// `ExtendedFabMinimumWidth` 80) are private constants in the pinned
+/// source, and the medium/large icon gaps are hard-coded 12/16 there
+/// (the token's `IconLabelSpace` is marked incorrect); the rest are the
+/// `ExtendedFab*Tokens` tables.
+export global ExtendedFabMetrics {
+    /// Container height per size (`ContainerHeight`; S/M/L collapse to
+    /// this width — a square).
+    public pure function container-height(size: ExtendedFabSize) -> length {
+        size == ExtendedFabSize.medium ? ExtendedFabMediumTokens.container_height :
+        size == ExtendedFabSize.large ? ExtendedFabLargeTokens.container_height :
+        size == ExtendedFabSize.small ? ExtendedFabSmallTokens.container_height :
+        ExtendedFabPrimaryTokens.container_height
+    }
+
+    /// Resting shape per size; medium is `ShapeDefaults.LargeIncreased`
+    /// (hard-coded upstream like `FabMetrics.container-shape`).
+    public pure function container-shape(size: ExtendedFabSize) -> MaterialCornerShape {
+        size == ExtendedFabSize.medium ? ShapeTokens.corner_large_increased :
+        size == ExtendedFabSize.large ? ExtendedFabLargeTokens.container_shape :
+        size == ExtendedFabSize.small ? ExtendedFabSmallTokens.container_shape :
+        ExtendedFabPrimaryTokens.container_shape
+    }
+
+    /// The collapsed width floor — `FabBaselineTokens.ContainerWidth` for
+    /// baseline, the square `ContainerHeight` for S/M/L.
+    public pure function collapsed-width(size: ExtendedFabSize) -> length {
+        size == ExtendedFabSize.baseline ? FabBaselineTokens.container_width :
+        container-height(size)
+    }
+
+    /// The expanded width floor — `ExtendedFabMinimumWidth = 80.dp` for
+    /// baseline, the square edge for S/M/L (`sizeIn(minWidth)`).
+    public pure function min-width-expanded(size: ExtendedFabSize) -> length {
+        size == ExtendedFabSize.baseline ? 80px : container-height(size)
+    }
+
+    /// Leading content padding — `*LeadingSpace` tokens; the baseline's
+    /// `ExtendedFabStartIconPadding` is 16dp.
+    public pure function leading-space(size: ExtendedFabSize) -> length {
+        size == ExtendedFabSize.medium ? ExtendedFabMediumTokens.leading_space :
+        size == ExtendedFabSize.large ? ExtendedFabLargeTokens.leading_space :
+        size == ExtendedFabSize.small ? ExtendedFabSmallTokens.leading_space :
+        16px
+    }
+
+    /// Trailing content padding — `*TrailingSpace` tokens; the baseline's
+    /// `ExtendedFabTextPadding` is 20dp.
+    public pure function trailing-space(size: ExtendedFabSize) -> length {
+        size == ExtendedFabSize.medium ? ExtendedFabMediumTokens.trailing_space :
+        size == ExtendedFabSize.large ? ExtendedFabLargeTokens.trailing_space :
+        size == ExtendedFabSize.small ? ExtendedFabSmallTokens.trailing_space :
+        20px
+    }
+
+    /// Icon–label gap — `*IconLabelSpace` for the small variant; medium
+    /// and large are hard-coded 12/16dp upstream (token values marked
+    /// incorrect), baseline is `ExtendedFabEndIconPadding` = 12dp.
+    public pure function icon-label-space(size: ExtendedFabSize) -> length {
+        size == ExtendedFabSize.small ? ExtendedFabSmallTokens.icon_label_space :
+        size == ExtendedFabSize.medium ? 12px :
+        size == ExtendedFabSize.large ? 16px :
+        12px
+    }
+
+    /// `IconSize` tokens.
+    public pure function icon-size(size: ExtendedFabSize) -> length {
+        size == ExtendedFabSize.medium ? ExtendedFabMediumTokens.icon_size :
+        size == ExtendedFabSize.large ? ExtendedFabLargeTokens.icon_size :
+        size == ExtendedFabSize.small ? ExtendedFabSmallTokens.icon_size :
+        ExtendedFabPrimaryTokens.icon_size
+    }
+
+    /// The label's text style — `*ExtendedFabTextStyle` upstream:
+    /// `ExtendedFabPrimaryTokens.label_text_font` (LabelLarge) for the
+    /// baseline; `TypographyKeyTokens` TitleMedium/TitleLarge/
+    /// HeadlineSmall for S/M/L.
+    public pure function label-style(size: ExtendedFabSize) -> MaterialTypeStyle {
+        size == ExtendedFabSize.small ? MaterialTypography.title_medium :
+        size == ExtendedFabSize.medium ? MaterialTypography.title_large :
+        size == ExtendedFabSize.large ? MaterialTypography.headline_small :
+        ExtendedFabPrimaryTokens.label_text_font
+    }
+}
+
+/// The interaction kind driving `Elevation` — mirrors upstream's
+/// `Interaction` subclasses (drag is unused: FABs aren't draggable).
+enum FabInteraction { none, press, hover, focus }
+
+/// Shared FAB surface: the upstream private `FloatingActionButton` —
+/// `Surface` (shape + elevation + clipped content) with
+/// `Box(contentAlignment = Center)` / padded-row content supplied by the
+/// caller via `@children`, plus the `Modifier.animateFloatingActionButton`
+/// show/hide layer.
+component FabBase {
+    /// Resolved metrics — the caller maps its size enum to tokens.
+    in property <length> container_width;
+    in property <length> container_height;
+    in property <length> container_radius;
+    in property <int> elevation_default: 3;
+    in property <int> elevation_pressed: 3;
+    in property <int> elevation_focused: 3;
+    in property <int> elevation_hovered: 4;
+    in property <color> container_color;
+    in property <color> content_color;
+    in property <bool> enabled: true;
+    in property <string> tooltip;
+    /// Reserve the 48dp minimum interactive size — Compose's
+    /// `LocalMinimumInteractiveComponentSize` (the parity harness pins it
+    /// to 0 on the reference side and sets this false).
+    in property <bool> enforce_touch_target: true;
+    /// `Modifier.animateFloatingActionButton`: `visible`/`alignment`/
+    /// `targetScale` — scale+alpha toward the anchor on the motion
+    /// scheme's fast spatial/effects specs.
+    in property <bool> shown: true;
+    in property <FabAlignment> alignment: FabAlignment.bottom_end;
+    in property <float> target_scale: 0.2;
+    /// See `StateLayerArea.simulate_*` — parity-harness state hooks.
+    in property <bool> simulate_hover;
+    in property <bool> simulate_press;
+
+    callback clicked;
+    out property <bool> has_focus <=> area.has_focus;
+    out property <bool> pressed <=> area.effective_pressed;
+    out property <bool> has_hover <=> area.effective_hover;
+    /// The drawn container rect in this component's coordinates — the
+    /// caller positions `@children` inside `clipper` relative to it.
+    out property <length> box_x <=> container.x;
+    out property <length> box_y <=> container.y;
+    out property <length> box_w <=> container.width;
+    out property <length> box_h <=> container.height;
+    /// `animateElevation`'s live `State<Dp>` — the shadow's dp.
+    out property <length> shadow_elevation <=> container.shadow_height;
+    /// The show/hide progress values — upstream `scaleAnimatable` /
+    /// `alphaAnimatable` (0 → target_scale/0 at rest hidden).
+    out property <float> show_scale <=> root.show_scale_t;
+    out property <float> show_alpha <=> root.show_alpha_t;
+
+    // `interactions.lastOrNull()`: each live interaction is stamped with a
+    // recency tick; the newest stamp wins the elevation, and the previous
+    // winner is kept as `last_target` — upstream `lastTargetInteraction`,
+    // which picks the outgoing spec when everything releases.
+    property <int> clock;
+    property <int> press_stamp: -1;
+    property <int> hover_stamp: -1;
+    property <int> focus_stamp: -1;
+    property <FabInteraction> last_target: FabInteraction.none;
+    property <bool> state_pressed: area.effective_pressed;
+    property <bool> state_hover: area.effective_hover;
+    property <bool> state_focus: area.has_focus;
+    changed state_pressed => {
+        root.last_target = root.winner;
+        if root.state_pressed {
+            root.clock += 1;
+            root.press_stamp = root.clock;
+        } else {
+            root.press_stamp = -1;
+        }
+    }
+    changed state_hover => {
+        root.last_target = root.winner;
+        if root.state_hover {
+            root.clock += 1;
+            root.hover_stamp = root.clock;
+        } else {
+            root.hover_stamp = -1;
+        }
+    }
+    changed state_focus => {
+        root.last_target = root.winner;
+        if root.state_focus {
+            root.clock += 1;
+            root.focus_stamp = root.clock;
+        } else {
+            root.focus_stamp = -1;
+        }
+    }
+    /// The winning interaction — `to != null` upstream picks the incoming
+    /// spec; a null target (rest) picks the outgoing spec by `last_target`.
+    property <FabInteraction> winner:
+        root.press_stamp > root.hover_stamp && root.press_stamp > root.focus_stamp ? FabInteraction.press :
+        root.hover_stamp > root.focus_stamp ? FabInteraction.hover :
+        root.focus_stamp > -1 ? FabInteraction.focus : FabInteraction.none;
+    property <int> current_level:
+        root.winner == FabInteraction.press ? root.elevation_pressed :
+        root.winner == FabInteraction.hover ? root.elevation_hovered :
+        root.winner == FabInteraction.focus ? root.elevation_focused :
+        root.elevation_default;
+
+    // `animateFloatingActionButton`: independent scale (FastSpatial) and
+    // alpha (FastEffects) animatables 0↔1; the applied scale lerps
+    // `targetScale`→1.
+    property <float> show_scale_t: root.shown ? 1 : 0;
+    property <float> show_alpha_t: root.shown ? 1 : 0;
+    animate show_scale_t {
+        easing: MaterialAnimations.fast-spatial-spring;
+        enabled: !MaterialPalette.reduced-motion;
+    }
+    animate show_alpha_t {
+        easing: MaterialAnimations.fast-effects-spring;
+        enabled: !MaterialPalette.reduced-motion;
+    }
+
+    // The scale pivot — `alignment.align(IntSize(1, 1), nodeSize)`: a 1x1
+    // child anchored in the container, i.e. 0 / floor((edge-1)/2) /
+    // edge-1 per axis. (The 16dp layer inset upstream only enlarges the
+    // graphics layer so the shadow survives clipping — Slint shadows draw
+    // outside bounds already.)
+    property <length> pivot_x:
+        root.alignment == FabAlignment.top_start || root.alignment == FabAlignment.center_start || root.alignment == FabAlignment.bottom_start ? root.box_x :
+        root.alignment == FabAlignment.top_end || root.alignment == FabAlignment.center_end || root.alignment == FabAlignment.bottom_end ? root.box_x + root.box_w - 1px :
+        root.box_x + Math.floor((root.box_w - 1px) / 1px / 2) * 1px;
+    property <length> pivot_y:
+        root.alignment == FabAlignment.top_start || root.alignment == FabAlignment.top_center || root.alignment == FabAlignment.top_end ? root.box_y :
+        root.alignment == FabAlignment.bottom_start || root.alignment == FabAlignment.bottom_center || root.alignment == FabAlignment.bottom_end ? root.box_y + root.box_h - 1px :
+        root.box_y + Math.floor((root.box_h - 1px) / 1px / 2) * 1px;
+
+    property <length> touch: root.enforce_touch_target ? 48px : 0px;
+    // `alphaAnimatable.value == 0f` measures 0x0 upstream; until then the
+    // node keeps its full size while the layer shrinks visually.
+    min_width: root.show_alpha_t != 0 ? max(root.touch, root.container_width) : 0px;
+    min_height: root.show_alpha_t != 0 ? max(root.touch, root.container_height) : 0px;
+    preferred_width: root.min_width;
+    preferred_height: root.min_height;
+
+    // The graphics layer: scale toward `alignment`'s pivot and fade. The
+    // software renderer has no element transforms (upstream #6068) — it
+    // still gets the alpha half and the 0x0 collapse.
+    layer := Rectangle {
+        width: 100%;
+        height: 100%;
+        transform-scale-x: root.target_scale + (1 - root.target_scale) * root.show_scale_t;
+        transform-scale-y: self.transform-scale-x;
+        transform-origin: { x: root.pivot_x, y: root.pivot_y };
+        opacity: Math.clamp(root.show_alpha_t, 0, 1);
+        visible: root.show_alpha_t != 0;
+
+        container := Elevation {
+            x: (parent.width - root.container_width) / 2;
+            y: (parent.height - root.container_height) / 2;
+            width: root.container_width;
+            height: root.container_height;
+            border_radius: root.container_radius;
+            background: root.container_color;
+            level: root.current_level;
+            interaction_active: root.winner != FabInteraction.none;
+            // ElevationDefaults: incoming 120ms / FastOutSlowInEasing for
+            // every interaction kind; outgoing `DefaultOutgoingSpec`
+            // 150ms — except hover's `HoveredOutgoingSpec` at 120ms —
+            // / OutgoingSpecEasing (0.4, 0, 0.6, 1).
+            in_duration: 120ms;
+            in_easing: cubic-bezier(0.4, 0, 0.2, 1);
+            out_duration: root.last_target == FabInteraction.hover ? 120ms : 150ms;
+            out_easing: cubic-bezier(0.4, 0, 0.6, 1);
+        }
+
+        // Upstream `Surface` draws container, state layer and content
+        // without clipping the children (the state layer clips its own
+        // ripple; the extended label slot clips itself while it
+        // animates).
+        area := StateLayerArea {
+            x: container.x;
+            y: container.y;
+            width: container.width;
+            height: container.height;
+            enabled: root.enabled;
+            color: root.content_color;
+            border_radius: root.container_radius;
+            hit_radius: root.container_radius;
+            tooltip: root.tooltip;
+            display_background: false;
+            focus_ring: true;
+            simulate_hover: root.simulate_hover;
+            simulate_press: root.simulate_press;
+
+            clicked() => {
+                if !area.pointer_inside && !area.enter_pressed {
+                    return;
+                }
+                root.clicked();
+            }
+        }
+
+        @children
+
+        // The inset ring follows the outline, drawn over the content.
+        if area.has_focus && root.enabled : FocusRing {
+            x: container.x;
+            y: container.y;
+            width: container.width;
+            height: container.height;
+            border_radius: root.container_radius;
+        }
+    }
+}
+
+/// [Material Design floating action button](https://m3.material.io/components/floating-action-button/overview) —
+/// the upstream `FloatingActionButton` / `SmallFloatingActionButton` /
+/// `MediumFloatingActionButton` / `LargeFloatingActionButton` composables
+/// as one `size` enum.
+///
+/// `size: FabSize.small` (40dp) is the pre-M3E size the catalog dropped:
+/// deprecated, kept for compatibility (`SmallFloatingActionButton` is not
+/// `@Deprecated` upstream at the pin).
 export component FloatingActionButton {
-    in property <image> icon <=> base.icon;
-    in property <string> text <=> base.text;
-    in property <string> tooltip <=> base.tooltip;
-    in property <FABStyle> style;
+    /// The icon image — upstream's `content` slot, typically `Icon`.
+    in property <image> icon;
+    in property <string> tooltip;
+    /// See `FabSize`; defaults to `baseline` (upstream `FloatingActionButton`).
+    in property <FabSize> size: FabSize.baseline;
+    /// The `FloatingActionButtonElevation` table — see `FabElevation`.
+    in property <FabElevation> elevation_style: FabElevation.normal;
+    /// `containerColor` — `FabPrimaryContainerTokens.ContainerColor`.
+    /// `secondaryContainer`/`onSecondaryContainer` need
+    /// `FabSecondaryContainerTokens`: set both explicitly like upstream's
+    /// color params.
+    in property <color> container_color: FabPrimaryContainerTokens.container_color;
+    /// `contentColor` — `FabPrimaryContainerTokens.IconColor`
+    /// (`contentColorFor` resolves the on-color for non-token containers).
+    in property <color> content_color: FabPrimaryContainerTokens.icon_color;
+    in property <bool> enabled: true;
+    /// See `FabBase.enforce_touch_target`.
+    in property <bool> enforce_touch_target: true;
+    /// `Modifier.animateFloatingActionButton` — see `FabBase`.
+    in property <bool> shown: true;
+    in property <FabAlignment> alignment: FabAlignment.bottom_end;
+    in property <float> target_scale: 0.2;
+    /// Parity-harness state hooks — `StateLayerArea.simulate_*`.
+    in property <bool> simulate_hover;
+    in property <bool> simulate_press;
 
     callback clicked <=> base.clicked;
 
-    accessible-role: button;
-    accessible-enabled: true;
-    accessible-label: root.text == "" ? root.tooltip : root.text;
+    out property <bool> has_focus <=> base.has_focus;
+    out property <bool> pressed <=> base.pressed;
+    out property <bool> has_hover <=> base.has_hover;
+    /// Live animated values for the parity trace.
+    out property <length> container_radius <=> base.container_radius;
+    out property <length> shadow_elevation <=> base.shadow_elevation;
+    out property <float> show_scale <=> base.show_scale;
+    out property <float> show_alpha <=> base.show_alpha;
+
+    accessible-role: AccessibleRole.button;
+    accessible-enabled: root.enabled;
+    accessible-label: root.tooltip;
     accessible-action-default => { base.clicked(); }
 
-    elevation := Elevation {
-        border_radius: root.style == FABStyle.small ? FabSmallTokens.container_shape.top_left :
-            root.style == FABStyle.standard ? FabBaselineTokens.container_shape.top_left : FabLargeTokens.container_shape.top_left;
-        background: FabPrimaryContainerTokens.container_color;
-        level: 3;
+    min_width: base.min_width;
+    min_height: base.min_height;
+    preferred_width: base.preferred_width;
+    preferred_height: base.preferred_height;
+
+    base := FabBase {
         width: 100%;
         height: 100%;
-    }
+        container_width: FabMetrics.container-size(root.size);
+        container_height: self.container_width;
+        container_radius: MaterialButtonMetrics.corner-radius(FabMetrics.container-shape(root.size), self.container_height);
+        elevation_default: FabMetrics.elevation-default(root.elevation_style);
+        elevation_pressed: FabMetrics.elevation-pressed(root.elevation_style);
+        elevation_focused: FabMetrics.elevation-focused(root.elevation_style);
+        elevation_hovered: FabMetrics.elevation-hovered(root.elevation_style);
+        container_color: root.container_color;
+        content_color: root.content_color;
+        enabled: root.enabled;
+        tooltip: root.tooltip;
+        enforce_touch_target: root.enforce_touch_target;
+        shown: root.shown;
+        alignment: root.alignment;
+        target_scale: root.target_scale;
+        simulate_hover: root.simulate_hover;
+        simulate_press: root.simulate_press;
 
-    base := BaseButton {
-        border_radius: elevation.border_radius;
-        color:  FabPrimaryContainerTokens.icon_color;
-        button_vertical_padding: root.style == FABStyle.small ? MaterialStyleMetrics.padding_10 :
-            root.style == FABStyle.standard ? MaterialStyleMetrics.padding_14 : MaterialStyleMetrics.padding_30;
-        button_horizontal_padding: self.button_vertical_padding;
-        min_layout_width: self.min_layout_height;
-        min_layout_height: root.style == FABStyle.small ? FabSmallTokens.container_height :
-            root.style == FABStyle.standard ? FabBaselineTokens.container_height : FabLargeTokens.container_height;
-        icon_size: root.style == FABStyle.small ? FabSmallTokens.icon_size :
-            root.style == FABStyle.standard ? FabBaselineTokens.icon_size : FabLargeTokens.icon_size;
-    }
-
-    states [
-        hover when base.has_hover : {
-            elevation.level: 4;
+        if root.icon.width > 0 && root.icon.height > 0 : Icon {
+            source: root.icon;
+            width: FabMetrics.icon-size(root.size);
+            height: self.width;
+            x: (parent.width - self.width) / 2;
+            y: (parent.height - self.height) / 2;
+            colorize: root.content_color;
         }
-    ]
+    }
+}
+
+/// [Material Design extended floating action button](https://m3.material.io/components/extended-fab/overview) —
+/// the upstream `ExtendedFloatingActionButton` (baseline) and
+/// `Small/Medium/LargeExtendedFloatingActionButton` composables as one
+/// `size` enum.
+///
+/// The baseline `expanded` morph is `AnimatedVisibility` on the label
+/// slot (padding/arrangement snap); S/M/L lerp the container width
+/// square↔content on the fast spatial spec and fade the label on fast
+/// effects.
+export component ExtendedFloatingActionButton {
+    /// The label text — upstream's `text` slot.
+    in property <string> text;
+    /// The leading icon — upstream's `icon` slot.
+    in property <image> icon;
+    in property <string> tooltip;
+    /// Collapsed shows only the icon; upstream `expanded` param.
+    in property <bool> expanded: true;
+    /// See `ExtendedFabSize`; defaults to `baseline`
+    /// (`ExtendedFloatingActionButton`).
+    in property <ExtendedFabSize> size: ExtendedFabSize.baseline;
+    /// The `FloatingActionButtonElevation` table — see `FabElevation`.
+    in property <FabElevation> elevation_style: FabElevation.normal;
+    /// `containerColor` — `ExtendedFabPrimaryTokens.ContainerColor`.
+    in property <color> container_color: ExtendedFabPrimaryTokens.container_color;
+    /// `contentColor` — `ExtendedFabPrimaryTokens.IconColor`.
+    in property <color> content_color: ExtendedFabPrimaryTokens.icon_color;
+    in property <bool> enabled: true;
+    /// See `FabBase.enforce_touch_target`.
+    in property <bool> enforce_touch_target: true;
+    /// `Modifier.animateFloatingActionButton` — see `FabBase`.
+    in property <bool> shown: true;
+    in property <FabAlignment> alignment: FabAlignment.bottom_end;
+    in property <float> target_scale: 0.2;
+    /// Pins the text slot's width like `Modifier.width` on the upstream
+    /// `text` composable — 0 (default) sizes it to the text.
+    in property <length> label_width: 0px;
+    /// Parity-harness state hooks — `StateLayerArea.simulate_*`.
+    in property <bool> simulate_hover;
+    in property <bool> simulate_press;
+
+    callback clicked <=> base.clicked;
+
+    out property <bool> has_focus <=> base.has_focus;
+    out property <bool> pressed <=> base.pressed;
+    out property <bool> has_hover <=> base.has_hover;
+    /// Live animated values for the parity trace.
+    out property <length> container_radius <=> base.container_radius;
+    out property <length> shadow_elevation <=> base.shadow_elevation;
+    out property <float> show_scale <=> base.show_scale;
+    out property <float> show_alpha <=> base.show_alpha;
+    /// The expand/collapse morph's live values — the width lerp progress
+    /// (fast spatial) and label alpha (fast effects) for S/M/L, the
+    /// baseline's `AnimatedVisibility` width/alpha.
+    out property <length> box_width <=> base.box_w;
+    out property <float> label_alpha: root.label_t;
+    out property <length> slot_width <=> root.label_w;
+    /// The morph progress 0..1 — `expandedWidthProgress` for S/M/L, the
+    /// `AnimatedVisibility` slot fraction (width over its full size) for
+    /// the baseline.
+    out property <float> expand_progress: root.size_family ? root.expand_t :
+        root.label_w / max(1px, (root.icon_w > 0 ? root.gap : 0px) + root.label_content_w);
+
+    accessible-role: AccessibleRole.button;
+    accessible-enabled: root.enabled;
+    accessible-label: root.tooltip;
+    accessible-action-default => { base.clicked(); }
+
+    min_width: base.min_width;
+    min_height: base.min_height;
+    preferred_width: base.preferred_width;
+    preferred_height: base.preferred_height;
+
+    // Token metrics — the `ExtendedFab*Tokens` table via `ExtendedFabMetrics`.
+    property <MaterialTypeStyle> label_style: ExtendedFabMetrics.label-style(root.size);
+    property <length> icon_edge: ExtendedFabMetrics.icon-size(root.size);
+    property <length> leading: ExtendedFabMetrics.leading-space(root.size);
+    property <length> trailing: ExtendedFabMetrics.trailing-space(root.size);
+    property <length> gap: ExtendedFabMetrics.icon-label-space(root.size);
+    property <length> square: ExtendedFabMetrics.collapsed-width(root.size);
+    // The label content's width — `Modifier.width` pin when set, else
+    // the text's intrinsic measure.
+    property <length> label_content_w: root.label_width > 0 ? root.label_width : label.min_width;
+    // The label's intrinsic width — `maxIntrinsicWidth` upstream counts the
+    // icon-label `Spacer` whenever the slot is live; the text-only
+    // overloads emit no `Spacer` (no `gap`).
+    property <length> natural: root.leading + root.icon_w
+        + (root.icon_w > 0 ? root.gap : 0px) + root.label_content_w + root.trailing;
+    property <length> height_px: ExtendedFabMetrics.container-height(root.size);
+
+    // S/M/L: `updateTransition(expanded ? 1 : 0)` lerps width
+    // minWidth↔maxIntrinsicWidth on FastSpatial and label alpha on
+    // FastEffects. Baseline: `AnimatedVisibility` expands the label slot
+    // (FastSpatial) and fades it — enter DefaultEffects / exit
+    // FastEffects — while paddings and arrangement snap.
+    property <bool> size_family: root.size != ExtendedFabSize.baseline;
+    property <float> expand_t: root.size_family && root.expanded ? 1 : 0;
+    property <float> alpha_t: root.size_family && root.expanded ? 1 : 0;
+    animate expand_t {
+        easing: MaterialAnimations.fast-spatial-spring;
+        enabled: !MaterialPalette.reduced-motion;
+    }
+    animate alpha_t {
+        easing: MaterialAnimations.fast-effects-spring;
+        enabled: !MaterialPalette.reduced-motion;
+    }
+    // Baseline `AnimatedVisibility` slot: width 0↔natural label slot,
+    // alpha 0↔1. For S/M/L it reports the slot's full width for tracing.
+    // The text-only overloads emit no icon `Spacer` — no `gap` either.
+    property <length> label_w:
+        root.size_family ? (root.icon_w > 0 ? root.gap : 0px) + root.label_content_w :
+        (root.expanded ? (root.icon_w > 0 ? root.gap : 0px) + root.label_content_w : 0px);
+    property <float> label_t:
+        root.size_family ? root.alpha_t : (root.expanded ? 1 : 0);
+    animate label_w {
+        // enter = expandHorizontally(FastSpatial, Start); exit =
+        // shrinkHorizontally(DefaultSpatial, Start).
+        easing: root.expanded ? MaterialAnimations.fast-spatial-spring : MaterialAnimations.default-spatial-spring;
+        enabled: !MaterialPalette.reduced-motion;
+    }
+    animate label_t {
+        // enter = fadeIn(DefaultEffects); exit = fadeOut(FastEffects).
+        easing: root.expanded ? MaterialAnimations.default-effects-spring : MaterialAnimations.fast-effects-spring;
+        enabled: !MaterialPalette.reduced-motion;
+    }
+    // Baseline paddings snap (`if (expanded) X.dp else 0.dp`) — and the
+    // width floor is the `sizeIn(minWidth)` value, 80 expanded / 56
+    // collapsed. The text-only baseline overload pads
+    // `horizontal = ExtendedFabTextPadding` (20/20) instead of
+    // start 16 / end 20.
+    property <length> live_leading: root.size_family ? root.leading :
+        (root.expanded ? (root.icon_w > 0 ? root.leading : 20px) : 0px);
+    property <length> live_trailing: root.size_family ? root.trailing :
+        (root.expanded ? root.trailing : 0px);
+    property <length> icon_w: root.icon.width > 0 && root.icon.height > 0 ? root.icon_edge : 0px;
+    property <length> container_width:
+        root.size_family ? root.square + (root.natural - root.square) * root.expand_t :
+        max(root.expanded ? ExtendedFabMetrics.min-width-expanded(root.size) : root.square,
+            root.live_leading + root.icon_w + root.label_w + root.live_trailing);
+    // Baseline's `horizontalArrangement` snaps to Center on collapse —
+    // the CONTENT (icon + animated label slot) centers, so the icon
+    // slides while the label shrinks; S/M/L keep `Arrangement.Start`,
+    // pinning it at `leading`.
+    property <length> icon_x:
+        root.size_family ? root.leading :
+        (root.expanded ? root.leading : max(0px, (root.container_width - root.icon_w - root.label_w) / 2));
+    // The text-only overloads arrange `Arrangement.Center` — the bare
+    // label slot centers in the container.
+    property <length> label_slot_x: root.icon_w > 0 ? root.icon_x + root.icon_w
+        : max(0px, (root.container_width - root.label_w) / 2);
+
+    base := FabBase {
+        width: 100%;
+        height: 100%;
+        container_width: root.container_width;
+        container_height: root.height_px;
+        container_radius: MaterialButtonMetrics.corner-radius(ExtendedFabMetrics.container-shape(root.size), self.container_height);
+        elevation_default: FabMetrics.elevation-default(root.elevation_style);
+        elevation_pressed: FabMetrics.elevation-pressed(root.elevation_style);
+        elevation_focused: FabMetrics.elevation-focused(root.elevation_style);
+        elevation_hovered: FabMetrics.elevation-hovered(root.elevation_style);
+        container_color: root.container_color;
+        content_color: root.content_color;
+        enabled: root.enabled;
+        tooltip: root.tooltip;
+        enforce_touch_target: root.enforce_touch_target;
+        shown: root.shown;
+        alignment: root.alignment;
+        target_scale: root.target_scale;
+        simulate_hover: root.simulate_hover;
+        simulate_press: root.simulate_press;
+
+        if root.icon.width > 0 && root.icon.height > 0 : Icon {
+            source: root.icon;
+            width: root.icon_edge;
+            height: self.width;
+            x: root.icon_x;
+            y: (root.height_px - self.height) / 2;
+            colorize: root.content_color;
+        }
+
+        // The label slot: S/M/L draw it whenever the transition is live
+        // (`fullyCollapsed` removes it — `visible` drops paint, hit and
+        // a11y at rest-collapsed), alpha on fast effects, clipped by the
+        // lerped container; baseline animates the slot's width toward
+        // Start like `AnimatedVisibility`.
+        label_clip := Rectangle {
+            x: root.label_slot_x;
+            y: 0;
+            width: root.size_family ? (root.icon_w > 0 ? root.gap : 0px) + root.label_content_w : root.label_w;
+            height: root.height_px;
+            // `AnimatedVisibility` clips its content to the animating
+            // slot; S/M/L don't clip — the fading label overhangs the
+            // shrinking container exactly like upstream's unclipped Row.
+            clip: !root.size_family;
+            opacity: root.label_t;
+            visible: root.size_family ? root.expand_t != 0 : root.label_w != 0 || root.label_t != 0;
+
+            // The label is the `Text` node upstream tracks: the
+            // `Modifier.width` pin sizes the SLOT (`label_clip`), not the
+            // text element — its width is the font's own measure, and its
+            // height is the style's line height centered in the container
+            // (`CenterVertically` centers the line box).
+            label := MaterialText {
+                x: root.icon_w > 0 ? root.gap : 0px;
+                height: root.label_style.line_height;
+                y: (root.height_px - self.height) / 2;
+                text: root.text;
+                style: root.label_style;
+                color: root.content_color;
+                overflow: clip;
+                vertical_alignment: center;
+            }
+        }
+    }
 }
