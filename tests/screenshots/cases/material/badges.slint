@@ -1,0 +1,120 @@
+// Copyright © SixtyFPS GmbH <info@slint.dev>
+// SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0
+
+// Scene: badges — generated from `ui-libraries/material/parity/scenes/badges.json`
+// (edit the scene, regenerate with `cargo run -p material-parity-generator`).
+//PARITY=static
+//SIZE=240x176
+//TRACE_ELEMENTS=badge0,badge1,badge2,badge3,badge4,badged-box0,badged-box1,badged-box2,badged-box3
+//XFAIL_TEXT=badge content width follows the label's advance: the issue-#28 ceil drift moves the label and the text-derived stadium cap ~1px (the standalone badges compare geometry as traced elements; badged-boxes carry fixed-width badges only, so the drift never reaches a strict edge there)
+//DENSITIES=1,2
+import "../../fonts/Roboto-VariableFont.ttf";
+import { Badge, BadgedBox, Icon, Icons, MaterialPalette, MaterialTheme, MaterialWindow } from "@material";
+
+export component TestCase inherits MaterialWindow {
+    init => {
+        // The scene pins seed #6750A4, tonal-spot, spec2025, light, contrast 0
+        // (all the library defaults; restated here so a default change can't
+        // silently move the parity baseline).
+        MaterialTheme.seed-color = #6750A4;
+        MaterialTheme.dark = false;
+        MaterialTheme.contrast-level = 0;
+        MaterialTheme.use-platform-color = false;
+        MaterialTheme.plain-family = "Roboto";
+        MaterialTheme.brand-family = "Roboto";
+        // Compose builds its scene scheme from the same seed — use the
+        // runtime-generated scheme, not the static expressive table.
+        MaterialPalette.dynamic = true;
+    }
+
+    badge0 := Badge {
+        x: 16px;
+        y: 16px;
+    }
+
+    badge1 := Badge {
+        x: 56px;
+        y: 16px;
+        text: "1";
+    }
+
+    badge2 := Badge {
+        x: 96px;
+        y: 16px;
+        text: "7";
+    }
+
+    badge3 := Badge {
+        x: 136px;
+        y: 16px;
+        text: "99+";
+    }
+
+    badge4 := Badge {
+        x: 184px;
+        y: 16px;
+        text: "5";
+        container_color: MaterialPalette.primary;
+    }
+
+    badged_box0 := BadgedBox {
+        x: 16px;
+        y: 72px;
+
+        // The upstream demos anchor to a 24dp icon (the badge hangs off
+        // the anchor's measured bounds); the Compose side draws
+        // `Icon(sceneIcon)` at its intrinsic 24dp.
+        Icon {
+            width: 24px;
+            height: 24px;
+            source: Icons.check;
+        }
+    }
+
+    badged_box1 := BadgedBox {
+        x: 80px;
+        y: 72px;
+        badge_text: "3";
+
+        // The upstream demos anchor to a 24dp icon (the badge hangs off
+        // the anchor's measured bounds); the Compose side draws
+        // `Icon(sceneIcon)` at its intrinsic 24dp.
+        Icon {
+            width: 24px;
+            height: 24px;
+            source: Icons.menu;
+        }
+    }
+
+    badged_box2 := BadgedBox {
+        x: 144px;
+        y: 72px;
+        badge_text: "9";
+
+        // The upstream demos anchor to a 24dp icon (the badge hangs off
+        // the anchor's measured bounds); the Compose side draws
+        // `Icon(sceneIcon)` at its intrinsic 24dp.
+        Icon {
+            width: 24px;
+            height: 24px;
+            source: Icons.schedule;
+        }
+    }
+
+    badged_box3 := BadgedBox {
+        x: 200px;
+        y: 72px;
+        badge_text: "5";
+        badge_container_color: MaterialPalette.secondary;
+
+        // The upstream demos anchor to a 24dp icon (the badge hangs off
+        // the anchor's measured bounds); the Compose side draws
+        // `Icon(sceneIcon)` at its intrinsic 24dp.
+        Icon {
+            width: 24px;
+            height: 24px;
+            source: Icons.add;
+        }
+    }
+
+}

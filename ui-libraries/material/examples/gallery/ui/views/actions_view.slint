@@ -51,6 +51,8 @@ import {
     HorizontalDivider,
     VerticalDivider,
     Badge,
+    BadgedBox,
+    Icon,
     Dialog,
     FullscreenDialog,
     MaterialAnimations,
@@ -730,6 +732,24 @@ export component ActionsView {
 
                     Badge {
                         text: "999+";
+                    }
+
+                    BadgedBox {
+                        badge_text: "12";
+
+                        Icon {
+                            width: 24px;
+                            height: 24px;
+                            source: FilledIcons.mail;
+                        }
+                    }
+
+                    BadgedBox {
+                        Icon {
+                            width: 24px;
+                            height: 24px;
+                            source: FilledIcons.chat_bubble;
+                        }
                     }
                 }
 
