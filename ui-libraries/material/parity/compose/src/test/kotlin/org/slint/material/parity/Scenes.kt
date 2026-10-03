@@ -43,6 +43,8 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.IconButtonDefaults.IconButtonWidthOption
 import androidx.compose.material3.IconToggleButton
+import androidx.compose.material3.LoadingIndicator
+import androidx.compose.material3.ContainedLoadingIndicator
 import androidx.compose.material3.LocalMinimumInteractiveComponentSize
 import androidx.compose.material3.LocalRippleThemeConfiguration
 import androidx.compose.material3.RippleDefaults
@@ -421,6 +423,7 @@ private fun FrameRecorder(scene: Scene, tracer: Tracer) {
     }
 }
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun CanvasScene(
     scene: Scene,
@@ -547,6 +550,27 @@ private fun CanvasScene(
                             .background(schemeColor(widget.color ?: "surface"))
                             .track(tracer, tag),
                     )
+                }
+                widget.kind == "loading-indicator" ||
+                    widget.kind == "contained-loading-indicator" -> {
+                    // The 48dp indicator draws at the scene's declared
+                    // coordinates on both sides.
+                    Box(Modifier.offset(widget.x.dp, widget.y.dp)) {
+                        if (widget.indeterminate) {
+                            if (widget.kind == "loading-indicator") {
+                                LoadingIndicator()
+                            } else {
+                                ContainedLoadingIndicator()
+                            }
+                        } else {
+                            val progress = widget.progress
+                            if (widget.kind == "loading-indicator") {
+                                LoadingIndicator(progress = { progress })
+                            } else {
+                                ContainedLoadingIndicator(progress = { progress })
+                            }
+                        }
+                    }
                 }
                 else -> error("unknown widget kind ${widget.kind}")
             }

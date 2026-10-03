@@ -6,8 +6,7 @@
 //! Port of `FloatMapping.kt` and `FeatureMapping.kt` from androidx.graphics.shapes.
 
 use super::feature::Feature;
-use super::utils::{DISTANCE_EPSILON, Point, distance_squared, k_min, positive_modulo};
-use alloc::collections::BTreeSet;
+use super::utils::{Point, distance_squared, k_min, positive_modulo};
 use alloc::vec::Vec;
 
 /// Checks if the given progress is in the given progress range. Since progress is in
@@ -51,6 +50,7 @@ pub(crate) fn linear_map(x_values: &[f32], y_values: &[f32], x: f32) -> Option<f
 
 /// Distance between two progress values. Since progress wraps around, a difference of
 /// 0.99 counts as a distance of 0.01.
+#[allow(dead_code)]
 pub(crate) fn progress_distance(p1: f32, p2: f32) -> f32 {
     let d = (p1 - p2).abs();
     k_min(d, 1. - d)
@@ -124,137 +124,88 @@ pub(crate) fn feature_mapper(
     features2: &[ProgressableFeature],
 ) -> Option<DoubleMapper> {
     // We only use corners for this mapping.
-    let filtered_features1: Vec<usize> = (0..features1.len())
-        .filter(|&i| matches!(features1[i].feature(), Feature::Corner { .. }))
+    let filtered_features1: Vec<ProgressableFeature> = features1
+        .iter()
+        .filter(|f| matches!(f.feature(), Feature::Corner { .. }))
+        .cloned()
         .collect();
-    let filtered_features2: Vec<usize> = (0..features2.len())
-        .filter(|&i| matches!(features2[i].feature(), Feature::Corner { .. }))
+    let filtered_features2: Vec<ProgressableFeature> = features2
+        .iter()
+        .filter(|f| matches!(f.feature(), Feature::Corner { .. }))
+        .cloned()
         .collect();
 
-    let feature_progress_mapping = do_mapping(
-        &filtered_features1.iter().map(|&i| features1[i].clone()).collect::<Vec<_>>(),
-        &filtered_features2.iter().map(|&i| features2[i].clone()).collect::<Vec<_>>(),
-    )?;
+    // doMapping maps the smaller feature list into the larger one.
+    let (m1, m2) = if filtered_features1.len() > filtered_features2.len() {
+        (do_mapping(&filtered_features2, &filtered_features1)?, filtered_features2)
+    } else {
+        let m2 = do_mapping(&filtered_features1, &filtered_features2)?;
+        (filtered_features1, m2)
+    };
 
-    DoubleMapper::new(&feature_progress_mapping)
+    let mm: Vec<(f32, f32)> =
+        m1.iter().zip(m2.iter()).map(|(a, b)| (a.progress(), b.progress())).collect();
+
+    DoubleMapper::new(&mm)
 }
 
-struct DistanceVertex {
-    distance: f32,
-    f1: usize,
-    f2: usize,
-}
-
-/// Returns a mapping of the features between `features1` and `features2`, sorted by
-/// the progress of the first feature. Port of `doMapping`.
+/// Returns a mapping of the features in `features2` that best map to the features
+/// in `features1`: a list of `features2` entries the size of `features1`. This is
+/// done to figure out what the best features are in `features2` that map to the
+/// existing features in `features1`. For example, if `features1` has 3 features
+/// and `features2` has 4, we want to know what the 3 features are in `features2`
+/// that map to the features in `features1` (then the morph will create a
+/// placeholder feature in the smaller shape). Port of `doMapping`.
 pub(crate) fn do_mapping(
     features1: &[ProgressableFeature],
     features2: &[ProgressableFeature],
-) -> Option<Vec<(f32, f32)>> {
-    let mut distance_vertex_list: Vec<DistanceVertex> = Vec::new();
-    for (i1, f1) in features1.iter().enumerate() {
-        for (i2, f2) in features2.iter().enumerate() {
-            let d = feature_dist_squared(f1.feature(), f2.feature());
-            if d != f32::MAX {
-                distance_vertex_list.push(DistanceVertex { distance: d, f1: i1, f2: i2 });
-            }
+) -> Option<Vec<ProgressableFeature>> {
+    let m = features1.len();
+    let n = features2.len();
+    if m == 0 || n == 0 {
+        return None;
+    }
+
+    // Pick the first mapping in a greedy way.
+    // Kotlin's `minBy` returns the first minimal element (or throws on empty);
+    // mirror that by tracking the best index by hand.
+    let mut ix = 0usize;
+    let mut ix_d = feature_dist_squared(features1[0].feature(), features2[0].feature());
+    for (i2, f2) in features2.iter().enumerate().skip(1) {
+        let d = feature_dist_squared(features1[0].feature(), f2.feature());
+        if d < ix_d {
+            ix_d = d;
+            ix = i2;
         }
     }
-    distance_vertex_list.sort_by(|a, b| a.distance.total_cmp(&b.distance));
 
-    // Special cases.
-    if distance_vertex_list.is_empty() {
-        return Some(alloc::vec![(0., 0.), (0.5, 0.5)]);
-    }
-    if distance_vertex_list.len() == 1 {
-        let it = &distance_vertex_list[0];
-        let f1 = features1[it.f1].progress();
-        let f2 = features2[it.f2].progress();
-        return Some(alloc::vec![(f1, f2), ((f1 + 0.5) % 1., (f2 + 0.5) % 1.),]);
-    }
-
-    let mut helper = MappingHelper::default();
-    for dv in &distance_vertex_list {
-        helper.add_mapping(&features1[dv.f1], dv.f1, &features2[dv.f2], dv.f2)?;
-    }
-    // The greedy filters can leave fewer than two usable pairs (e.g. morphing a
-    // mid-morph outline whose re-detected features collide with the target's):
-    // fall back to the same anchor constructions as the degenerate candidate
-    // lists above so the morph stays continuous instead of failing.
-    match helper.mapping.len() {
-        0 => Some(alloc::vec![(0., 0.), (0.5, 0.5)]),
-        1 => {
-            let (f1, f2) = helper.mapping[0];
-            Some(alloc::vec![(f1, f2), ((f1 + 0.5) % 1., (f2 + 0.5) % 1.),])
-        }
-        _ => Some(helper.mapping),
-    }
-}
-
-#[derive(Default)]
-struct MappingHelper {
-    // List of mappings from progress in the start shape to progress in the end
-    // shape. We keep this list sorted by the first element.
-    mapping: Vec<(f32, f32)>,
-
-    // Which features in the start shape have we used and which in the end shape.
-    // Kotlin uses Set<ProgressableFeature> with reference equality on the Feature;
-    // the index into the filtered lists plays that role here.
-    used_f1: BTreeSet<usize>,
-    used_f2: BTreeSet<usize>,
-}
-
-impl MappingHelper {
-    /// Returns `None` when a feature repeats a progress value, which Kotlin's
-    /// `require` rejects (surfaced as a degenerate morph).
-    fn add_mapping(
-        &mut self,
-        f1: &ProgressableFeature,
-        f1_index: usize,
-        f2: &ProgressableFeature,
-        f2_index: usize,
-    ) -> Option<()> {
-        // We don't want to map the same feature twice.
-        if self.used_f1.contains(&f1_index) || self.used_f2.contains(&f2_index) {
-            return Some(());
-        }
-
-        // Ret is sorted, find where we need to insert this new mapping.
-        let index = self.mapping.binary_search_by(|p| p.0.total_cmp(&f1.progress()));
-        let insertion_index = match index {
-            Ok(_) => return None,
-            Err(i) => i,
+    let mut ret = alloc::vec![features2[ix].clone()];
+    let mut last_picked = ix as i64;
+    for (i, f1) in features1.iter().enumerate().skip(1) {
+        // Check the indices we can pick, which one is better.
+        // Leave enough items in features2 to pick matches for the items left in features1.
+        let last = {
+            let raw = ix as i64 - (m as i64 - i as i64);
+            if raw > last_picked { raw } else { raw + n as i64 }
         };
-        let n = self.mapping.len();
-
-        // We can always add the first 1 element
-        if n >= 1 {
-            let (before1, before2) = self.mapping[(insertion_index + n - 1) % n];
-            let (after1, after2) = self.mapping[insertion_index % n];
-
-            // We don't want features that are way too close to each other, that will
-            // make the DoubleMapper unstable
-            if progress_distance(f1.progress(), before1) < DISTANCE_EPSILON
-                || progress_distance(f1.progress(), after1) < DISTANCE_EPSILON
-                || progress_distance(f2.progress(), before2) < DISTANCE_EPSILON
-                || progress_distance(f2.progress(), after2) < DISTANCE_EPSILON
-            {
-                return Some(());
-            }
-
-            // When we have 2 or more elements, we need to ensure we are not adding
-            // extra crossings.
-            if n > 1 && !progress_in_range(f2.progress(), before2, after2) {
-                return Some(());
+        // Kotlin's `minBy` still returns the first index when every candidate's
+        // distance is `f32::MAX` (convex-vs-concave corners); track `INFINITY`
+        // rather than `MAX` so those candidates are still picked.
+        let mut best: Option<i64> = None;
+        let mut best_d = f32::INFINITY;
+        for cand in (last_picked + 1)..=last {
+            let d =
+                feature_dist_squared(f1.feature(), features2[(cand % n as i64) as usize].feature());
+            if d < best_d {
+                best_d = d;
+                best = Some(cand);
             }
         }
-
-        // All good, we can add the mapping.
-        self.mapping.insert(insertion_index, (f1.progress(), f2.progress()));
-        self.used_f1.insert(f1_index);
-        self.used_f2.insert(f2_index);
-        Some(())
+        let best = best?;
+        ret.push(features2[(best % n as i64) as usize].clone());
+        last_picked = best;
     }
+    Some(ret)
 }
 
 /// Distance along the overall shape between two Features on the two different shapes.
@@ -286,31 +237,15 @@ fn feature_representative_point(feature: &Feature) -> Option<Point> {
     })
 }
 
-/// Verify that a list of progress values are all in the range [0.0, 1.0) and is
+/// Verify that a list of progress values are all in the range [0.0, 1.0] and is
 /// monotonically increasing, with the exception of maybe one time in which the
-/// progress wraps around. This check includes all pairs of consecutive elements in
-/// the list plus the last-to-first element pair.
+/// progress wraps around.
 pub(crate) fn validate_progress(p: &[f32]) -> bool {
-    let Some(&last) = p.last() else { return false };
-    let mut prev = last;
-    let mut wraps = 0;
-    for &curr in p {
-        // FloatMapping - Progress outside of range
-        if !(0. ..1.).contains(&curr) {
-            return false;
-        }
-        // FloatMapping - Progress repeats a value
-        if progress_distance(curr, prev) <= DISTANCE_EPSILON {
-            return false;
-        }
-        if curr < prev {
-            wraps += 1;
-            // FloatMapping - Progress wraps more than once
-            if wraps > 1 {
-                return false;
-            }
-        }
-        prev = curr;
+    // FloatMapping - Progress outside of range
+    if !p.iter().all(|&curr| (0. ..=1.).contains(&curr)) {
+        return false;
     }
-    true
+    // FloatMapping - Progress wraps more than once
+    let wraps = (1..p.len()).filter(|&i| p[i] < p[i - 1]).count();
+    wraps <= 1
 }

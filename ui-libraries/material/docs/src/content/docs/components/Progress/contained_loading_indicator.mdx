@@ -1,0 +1,61 @@
+---
+title: ContainedLoadingIndicator
+description: ContainedLoadingIndicator API.
+---
+
+import CodeSnippetMD from '@slint/common-files/src/components/CodeSnippetMD.astro';
+import SlintProperty from '@slint/common-files/src/components/SlintProperty.astro';
+
+<CodeSnippetMD imagePath="/src/assets/generated/containedloadingindicator.png" scale="3" imageWidth="300" imageHeight="200" imageAlt="">
+```slint
+import { ContainedLoadingIndicator } from "@material";
+export component Example inherits Window {
+    width: 200px;
+    height: 100px;
+    background: transparent;
+    ContainedLoadingIndicator {
+        indeterminate: false;
+        progress: 0.6;
+    }
+}
+```
+</CodeSnippetMD>
+
+A `ContainedLoadingIndicator` displays loading status by morphing continuously through a sequence of shapes inside a filled, clipped container — the `ContainedLoadingIndicator` of `LoadingIndicator.kt`.
+
+## Properties
+
+### indeterminate
+<SlintProperty propName="indeterminate" typeName="bool" defaultValue="true">
+Whether the indicator is indeterminate (a continuous looping animation) or determinate (morphed by `progress`).
+</SlintProperty>
+
+### progress
+<SlintProperty propName="progress" typeName="float">
+The determinate mode's progress, between 0 and 1. Values outside the range are coerced.
+</SlintProperty>
+
+### indicator-color
+<SlintProperty propName="indicator-color" typeName="color">
+The active indicator color. Defaults to `LoadingIndicatorTokens.contained_active_color` (the on-primary-container role).
+</SlintProperty>
+
+### container-color
+<SlintProperty propName="container-color" typeName="color">
+The container color. Defaults to `LoadingIndicatorTokens.contained_container_color` (the primary-container role).
+</SlintProperty>
+
+### container-shape
+<SlintProperty propName="container-shape" typeName="MaterialCornerShape">
+The container's corner shape as a `MaterialCornerShape` token record. Defaults to `LoadingIndicatorTokens.container_shape` (the corner-full token).
+</SlintProperty>
+
+### polygons
+<SlintProperty propName="polygons" typeName="[shape]">
+The shape sequence the indicator morphs between — a list of `shape` values such as the `MaterialShapes` members. Defaults per mode to the seven-shape indeterminate sequence or the two-shape determinate sequence of `LoadingIndicatorDefaults`. Expected to hold at least two items.
+</SlintProperty>
+
+### active-scale
+<SlintProperty propName="active-scale" typeName="float">
+`calculateScaleFactor(polygons) * ActiveIndicatorScale` from the upstream source — the factor that keeps the rotating shapes unclipped at the correct ratio. The defaults are the exact computed values for the built-in sequences; supply a matching value when passing custom `polygons`.
+</SlintProperty>

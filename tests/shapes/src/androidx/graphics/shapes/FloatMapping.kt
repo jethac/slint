@@ -91,32 +91,19 @@ internal class DoubleMapper(vararg mappings: Pair<Float, Float>) {
     }
 }
 
-// Verify that a list of progress values are all in the range [0.0, 1.0) and is monotonically
-// increasing, with the exception of maybe one time in which the progress wraps around, this check
-// needs to include all pairs of consecutive elements in the list plus the last to first element
-// pair.
+// Verify that a list of progress values are all in the range [0.0, 1.0] and is monotonically
+// increasing, with the exception of maybe one time in which the progress wraps around.
 // For example: (0.0, 0.3, 0.6) is a valid list, so are (0.3, 0.6, 0.0) and (0.6, 0.3, 0.0).
 // On the other hand, something like (0.5, 0.0, 0.7) is not (since it goes down twice, from 0.5 to
 // 0.0 and then from to 0.7 to 0.5).
+// graphics-shapes 1.0.1: progress values may reach 1.0 (a feature at the
+// outline's end sits exactly on the wrap), and repeats are not rejected.
 internal fun validateProgress(p: FloatList) {
-    var prev = p.last()
-    var wraps = 0
-    for (i in 0 until p.size) {
-        val curr = p[i]
-        require(curr >= 0f && curr < 1f) {
-            "FloatMapping - Progress outside of range: " + p.joinToString()
-        }
-        require(progressDistance(curr, prev) > DistanceEpsilon) {
-            "FloatMapping - Progress repeats a value: " + p.joinToString()
-        }
-        if (curr < prev) {
-            wraps++
-            require(wraps <= 1) {
-                "FloatMapping - Progress wraps more than once: " + p.joinToString()
-            }
-        }
-        prev = curr
+    require(p.fold(true) { res, curr -> res && curr in 0f..1f }) {
+        "FloatMapping - Progress outside of range: " + p.joinToString()
     }
+    val wraps = (1 until p.size).count { p[it] < p[it - 1] }
+    require(wraps <= 1) { "FloatMapping - Progress wraps more than once: " + p.joinToString() }
 }
 
 // Distance between two progress values.

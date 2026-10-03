@@ -7,7 +7,7 @@
 
 use super::cubic::Cubic;
 use super::mapping::feature_mapper;
-use super::measure::{LengthMeasurer, MeasuredPolygon};
+use super::measure::{AngleMeasurer, LengthMeasurer, MeasuredPolygon};
 use super::rounded_polygon::RoundedPolygon;
 use super::utils::{ANGLE_EPSILON, interpolate, k_max, k_min, positive_modulo};
 use alloc::rc::Rc;
@@ -204,11 +204,13 @@ fn match_shapes(p1: &RoundedPolygon, p2: &RoundedPolygon) -> Option<(Vec<(Cubic,
     // Measure polygons, returns lists of measured cubics for each polygon, which
     // we then use to match start/end curves
     let measured_polygon1 = MeasuredPolygon::measure_polygon(
-        Rc::new(LengthMeasurer::default()) as Rc<dyn super::measure::Measurer>,
+        Rc::new(AngleMeasurer::new(p1.center_x(), p1.center_y()))
+            as Rc<dyn super::measure::Measurer>,
         p1,
     )?;
     let measured_polygon2 = MeasuredPolygon::measure_polygon(
-        Rc::new(LengthMeasurer::default()) as Rc<dyn super::measure::Measurer>,
+        Rc::new(AngleMeasurer::new(p2.center_x(), p2.center_y()))
+            as Rc<dyn super::measure::Measurer>,
         p2,
     )?;
 
@@ -235,11 +237,14 @@ fn match_shapes(p1: &RoundedPolygon, p2: &RoundedPolygon) -> Option<(Vec<(Cubic,
     // The resulting bs1/2 are MeasuredPolygons, whose MeasuredCubics start from
     // outlineProgress=0 and increasing until outlineProgress=1
     // The measured perimeter of p1, used by Morph::scalar_delta for retarget
-    // velocity normalization.
-    let start_perimeter: f32 = (0..measured_polygon1.size())
-        .filter_map(|i| measured_polygon1.get(i))
-        .map(|c| c.measured_size)
-        .sum();
+    // velocity normalization: a physical length, so it is measured by
+    // arc length rather than by the angle measurer above.
+    let start_perimeter: f32 = MeasuredPolygon::measure_polygon(
+        Rc::new(LengthMeasurer::default()) as Rc<dyn super::measure::Measurer>,
+        p1,
+    )
+    .map(|mp| (0..mp.size()).filter_map(|i| mp.get(i)).map(|c| c.measured_size).sum())
+    .unwrap_or(0.);
 
     let bs1 = &measured_polygon1;
     let bs2 = measured_polygon2.cut_and_shift(polygon2_cut_point)?;

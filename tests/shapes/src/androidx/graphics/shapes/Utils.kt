@@ -21,6 +21,7 @@ package androidx.graphics.shapes
 import kotlin.jvm.JvmName
 import kotlin.math.PI
 import kotlin.math.abs
+import kotlin.math.atan2
 import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.math.sqrt
@@ -29,6 +30,10 @@ import kotlin.math.sqrt
 internal fun distance(x: Float, y: Float) = sqrt(x * x + y * y)
 
 internal fun distanceSquared(x: Float, y: Float) = x * x + y * y
+
+// Ported from graphics-shapes 1.0.1 for AngleMeasurer: the counterclockwise
+// angle of the vector (x, y), normalized to [0, 2π).
+internal fun angle(x: Float, y: Float) = ((atan2(y, x) + TwoPi) % TwoPi)
 
 /** Returns unit vector representing the direction to this point from (0, 0) */
 internal fun directionVector(x: Float, y: Float): Point {

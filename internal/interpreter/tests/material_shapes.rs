@@ -16,7 +16,7 @@
 //! in `TOLERANT_SHAPES` below and held to a 1e-4 absolute bound, mirroring the
 //! tolerance table in `tests/shapes/golden/README.md`.
 
-use i_slint_core::graphics::shapes::{Cubic, Feature, LengthMeasurer, MeasuredPolygon, Measurer};
+use i_slint_core::graphics::shapes::{AngleMeasurer, Cubic, Feature, MeasuredPolygon, Measurer};
 use slint_interpreter::{Compiler, Value};
 use std::rc::Rc;
 
@@ -180,10 +180,12 @@ fn material_shapes_match_golden() {
 
         // The measured corner progress along the outline — the morph
         // mapper's input. `start_offset` is the feature's progress in
-        // [0, 1); for trig-derived shapes the arc-length progression may
-        // differ in the last ulp, so TOLERANT_SHAPES gets the 1e-4 bound.
+        // [0, 1); measured by angle about the center like graphics-shapes
+        // 1.0.1's `Morph` and the golden generator. For trig-derived shapes
+        // the progression may differ in the last ulp, so TOLERANT_SHAPES
+        // gets the 1e-4 bound.
         let measured = MeasuredPolygon::measure_polygon(
-            Rc::new(LengthMeasurer::default()) as Rc<dyn Measurer>,
+            Rc::new(AngleMeasurer::new(polygon.center_x(), polygon.center_y())) as Rc<dyn Measurer>,
             &polygon,
         )
         .expect("{label}: measure_polygon");

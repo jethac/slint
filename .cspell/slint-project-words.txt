@@ -85,6 +85,7 @@ builtinfunctions
 bunfig
 bytemuck
 calloop
+cand
 caplog
 casesensitive
 Casteljau
@@ -132,6 +133,7 @@ connectedbuttongroup
 consectetur
 consequat
 Constexpr
+containedloadingindicator
 contextid
 CONTEXTMENU
 contextmenuarea
@@ -465,6 +467,7 @@ Llff
 llms
 Lmaterial
 LOADADDR
+loadingindicator
 LOWORD
 lpfn
 lpsz
@@ -838,6 +841,7 @@ udivdi
 uintptr
 ullamco
 unclipped
+uncoerced
 Uncontained
 unfocusable
 unhinted
@@ -914,6 +918,7 @@ xcassets
 xcent
 xchg
 xcrun
+xfail
 xfer
 xfixes
 Xiaolin
