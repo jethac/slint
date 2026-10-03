@@ -442,7 +442,6 @@ private fun CanvasScene(
         var buttons = 0
         var surfaces = 0
         var items = 0
-        var texts = 0
         var appbars = 0
         var groups = 0
         // `text:{n}` spans every text node in scene order — group items
