@@ -14,7 +14,9 @@ import {
     OutlineButton,
     TextButton,
     FloatingActionButton,
-    FABStyle,
+    ExtendedFloatingActionButton,
+    FabSize,
+    ExtendedFabSize,
     IconButton,
     Vertical,
     Horizontal,
@@ -313,7 +315,8 @@ export component ActionsView {
 
                         FloatingActionButton {
                             icon: FilledIcons.add;
-                            tooltip: "Small";
+                            size: FabSize.small;
+                            tooltip: "Small (deprecated)";
                         }
                     }
 
@@ -322,7 +325,43 @@ export component ActionsView {
 
                         FloatingActionButton {
                             icon: FilledIcons.add;
-                            style: FABStyle.standard;
+                            tooltip: "FAB";
+                        }
+                    }
+
+                    VerticalLayout {
+                        alignment: center;
+
+                        FloatingActionButton {
+                            icon: FilledIcons.add;
+                            size: FabSize.medium;
+                            tooltip: "Medium";
+                        }
+                    }
+
+                    VerticalLayout {
+                        alignment: center;
+
+                        FloatingActionButton {
+                            icon: FilledIcons.add;
+                            size: FabSize.large;
+                            tooltip: "Large";
+                        }
+                    }
+                }
+            }
+
+            ComponentCard {
+                title: "Extended Floating Action Buttons";
+
+                Horizontal {
+                    alignment: center;
+
+                    VerticalLayout {
+                        alignment: center;
+
+                        ExtendedFloatingActionButton {
+                            icon: FilledIcons.add;
                             text: "Create";
                             tooltip: "Extended";
                         }
@@ -331,20 +370,33 @@ export component ActionsView {
                     VerticalLayout {
                         alignment: center;
 
-                        FloatingActionButton {
+                        ExtendedFloatingActionButton {
                             icon: FilledIcons.add;
-                            style: FABStyle.standard;
-                            tooltip: "Standard";
+                            text: "Create";
+                            size: ExtendedFabSize.small;
+                            tooltip: "Extended small";
                         }
                     }
 
                     VerticalLayout {
                         alignment: center;
 
-                        FloatingActionButton {
+                        ExtendedFloatingActionButton {
                             icon: FilledIcons.add;
-                            style: FABStyle.large;
-                            tooltip: "Large";
+                            text: "Create";
+                            size: ExtendedFabSize.medium;
+                            tooltip: "Extended medium";
+                        }
+                    }
+
+                    VerticalLayout {
+                        alignment: center;
+
+                        ExtendedFloatingActionButton {
+                            icon: FilledIcons.add;
+                            text: "Create";
+                            size: ExtendedFabSize.large;
+                            tooltip: "Extended large";
                         }
                     }
                 }
