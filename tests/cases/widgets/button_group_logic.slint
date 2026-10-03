@@ -45,7 +45,7 @@ export component TestCase inherits MaterialWindow {
 
 /*
 ```rust
-use slint::Model;
+use slint::{Model, ModelRc, VecModel};
 
 let instance = TestCase::new().unwrap();
 slint_testing::mock_elapsed_time(0);
@@ -104,19 +104,19 @@ instance.set_grp_width(640.);
 slint_testing::mock_elapsed_time(0);
 assert!(items.row_data(2).unwrap().shown);
 
-// single selection: last claim wins, others yield
+// single selection: a checked row claims on init, then current-index
+// steers the claim — the previous holder yields its check. (Full-property
+// writes only: a fetched model can surface as a read-only adapter.)
 instance.set_grp_selection(ButtonGroupSelection::Single);
-let mut row = items.row_data(0).unwrap();
-row.checked = true;
-items.set_row_data(0, row.clone());
+let mut rows = [r0.clone(), r1.clone(), r2.clone()];
+rows[0].checked = true;
+instance.set_items(ModelRc::new(VecModel::from(rows.to_vec())));
 slint_testing::mock_elapsed_time(0);
 assert_eq!(instance.get_current_index(), 0);
-let mut row = items.row_data(1).unwrap();
-row.checked = true;
-items.set_row_data(1, row.clone());
+instance.set_current_index(1);
 slint_testing::mock_elapsed_time(0);
 assert_eq!(instance.get_current_index(), 1);
-assert!(!items.row_data(0).unwrap().checked);
-assert!(items.row_data(1).unwrap().checked);
+assert!(!instance.get_items().row_data(0).unwrap().checked);
+assert!(instance.get_items().row_data(1).unwrap().checked);
 ```
 */
