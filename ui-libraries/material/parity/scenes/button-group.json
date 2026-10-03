@@ -69,5 +69,5 @@
         "button5",
         "button6"
     ],
-    "xfail_text": "issue #28: Slint ceils text layout widths where Compose keeps fractional advances"
+    "xfail_text": "*1.5: issue #28: Slint ceils text layout widths where Compose keeps fractional advances"
 }

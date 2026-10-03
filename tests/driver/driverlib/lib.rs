@@ -291,10 +291,17 @@ pub struct ParityMarkers {
     /// window an expected divergence rather than a failure. Optionally
     /// scoped — `//XFAIL_TEXT=<driver>[,<driver>…]: <reason>` — where the
     /// expected frames' rasterizer already matches a driver's (skia vs
-    /// layoutlib), the marker is meaningless there and would read stale.
+    /// layoutlib), the marker is meaningless there and would read stale. An
+    /// optional `*N` at the end of the scope — `//XFAIL_TEXT=*1.5: <reason>`
+    /// or `//XFAIL_TEXT=skia,femtovg*1.5: <reason>` — multiplies the relaxed
+    /// per-cell bound for cases whose ink displacement runs larger than the
+    /// calibrated default (a row item's position inherits every earlier
+    /// label's width drift).
     pub xfail_text: Option<String>,
     /// Non-empty when `//XFAIL_TEXT=` was scoped to specific drivers.
     pub xfail_text_renderers: Vec<String>,
+    /// `> 1.0` when `//XFAIL_TEXT=` carried a `*N` bound multiplier.
+    pub xfail_text_scale: f64,
     /// `//XFAIL_SILHOUETTE=<reason>` marks the software driver's
     /// `//MASK_INNER=` silhouette findings an expected divergence rather
     /// than a failure; zero findings re-arms the check.
@@ -459,6 +466,7 @@ pub fn extract_parity(source: &str) -> ParityMarkers {
     }
 
     let mut xfail_text_renderers = Vec::new();
+    let mut xfail_text_scale = 1.0;
     ParityMarkers {
         parity,
         times: csv("//TIMES=").into_iter().filter_map(|s| s.parse().ok()).collect(),
@@ -478,31 +486,51 @@ pub fn extract_parity(source: &str) -> ParityMarkers {
             });
             match marker {
                 Some(v) => {
-                    // `<driver>[,<driver>…]: <reason>` — same scoping as
-                    // `PARITY=xfail`; a pre-colon run of known driver names
-                    // limits where the marker applies.
+                    // `<driver>[,<driver>…][*<scale>]: <reason>` — same
+                    // scoping as `PARITY=xfail`; a pre-colon run of known
+                    // driver names limits where the marker applies, and an
+                    // optional `*N` tail multiplies the relaxed bound.
                     const DRIVERS: &[&str] = &["software", "skia", "femtovg", "interpreter"];
-                    let (renderers, reason) = match v.split_once(':') {
-                        Some((scope, reason))
-                            if !scope.is_empty()
-                                && scope
-                                    .split(',')
-                                    .all(|d| DRIVERS.contains(&d.trim())) =>
-                        {
-                            (
-                                scope.split(',').map(|d| d.trim().to_string()).collect(),
-                                reason.trim().to_string(),
-                            )
+                    let (renderers, scale, reason) = match v.split_once(':') {
+                        Some((scope, reason)) => {
+                            let (drivers_part, scale) = match scope.rsplit_once('*') {
+                                Some((d, s)) => {
+                                    (d.trim_end_matches(','), s.trim().parse::<f64>())
+                                }
+                                None => (scope, Ok(1.0)),
+                            };
+                            match scale {
+                                Ok(scale)
+                                    if scale >= 1.0
+                                        && (drivers_part.is_empty()
+                                            || drivers_part
+                                                .split(',')
+                                                .all(|d| DRIVERS.contains(&d.trim()))) =>
+                                {
+                                    (
+                                        drivers_part
+                                            .split(',')
+                                            .filter(|d| !d.is_empty())
+                                            .map(|d| d.trim().to_string())
+                                            .collect(),
+                                        scale,
+                                        reason.trim().to_string(),
+                                    )
+                                }
+                                _ => (Vec::new(), 1.0, v),
+                            }
                         }
-                        _ => (Vec::new(), v),
+                        _ => (Vec::new(), 1.0, v),
                     };
                     xfail_text_renderers = renderers;
+                    xfail_text_scale = scale;
                     Some(reason)
                 }
                 None => None,
             }
         },
         xfail_text_renderers,
+        xfail_text_scale,
         xfail_silhouette: source.find("//XFAIL_SILHOUETTE=").map(|p| {
             let rest = &source[p + "//XFAIL_SILHOUETTE=".len()..];
             let end = rest.find('\n').unwrap_or(rest.len());

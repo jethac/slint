@@ -87,10 +87,14 @@
       "checkable": null,
       "checked": null,
       "color": null,
+      "content_offset": null,
       "corner": null,
+      "elevation": null,
       "enabled": null,
       "height": null,
+      "height_offset": null,
       "icon": null,
+      "icons": [],
       "items": [
         {
           "text": "Day"
@@ -104,6 +108,8 @@
       ],
       "kind": "button-group",
       "level": null,
+      "nav_icon": null,
+      "placeholder": null,
       "radius": null,
       "shape": null,
       "size": null,
@@ -111,7 +117,9 @@
         "spacing": 0
       },
       "state": null,
+      "subtitle": null,
       "text": null,
+      "variant": null,
       "width": null,
       "width_option": null,
       "x": 16.0,

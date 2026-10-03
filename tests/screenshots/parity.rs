@@ -2115,7 +2115,7 @@ pub fn run_parity_case<C: i_slint_core::api::ComponentHandle>(
             // magnitude scales with the scene density: at 2x a barely-1dp
             // shift lands ~2 device px inside the cell.
             let text_cell_eps = if xfail_text.is_some() {
-                TEXT_CELL_EPS * 1.25 * *density as f64
+                TEXT_CELL_EPS * 1.25 * *density as f64 * spec.xfail_text_scale
             } else {
                 TEXT_CELL_EPS
             };
