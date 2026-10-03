@@ -3503,6 +3503,7 @@ dependencies = [
  "image",
  "js-sys",
  "ksni",
+ "libm",
  "log",
  "lyon_algorithms",
  "lyon_extra",

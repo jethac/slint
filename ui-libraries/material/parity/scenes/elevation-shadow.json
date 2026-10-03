@@ -1,0 +1,68 @@
+{
+  "name": "elevation-shadow",
+  "type": "canvas",
+  "parity": "xfail",
+  "negative_note": "same shadow footprint but the layoutlib-rendered reference runs ~1.3-1.6x darker through the penumbra than the pinned SkShadowUtils model; all light/alpha constants verified against dimens.xml + ThreadedRenderer at the pin (issue #6 elevation parity)",
+  "size": [
+    480,
+    96
+  ],
+  "densities": [
+    1,
+    2
+  ],
+  "theme": {
+    "seed": "6750A4",
+    "variant": "tonal-spot",
+    "spec": "spec2025",
+    "platform": "phone",
+    "dark": false,
+    "contrast": 0.0
+  },
+  "fonts": {
+    "plain": "Roboto",
+    "brand": "Roboto"
+  },
+  "widgets": [
+    {
+      "kind": "elevated-rect",
+      "x": 16,
+      "y": 16,
+      "width": 96,
+      "height": 64,
+      "radius": 12,
+      "elevation": 0,
+      "color": "surface"
+    },
+    {
+      "kind": "elevated-rect",
+      "x": 132,
+      "y": 16,
+      "width": 96,
+      "height": 64,
+      "radius": 12,
+      "elevation": 6,
+      "color": "surface"
+    },
+    {
+      "kind": "elevated-rect",
+      "x": 248,
+      "y": 16,
+      "width": 96,
+      "height": 64,
+      "radius": 12,
+      "elevation": 24,
+      "color": "surface"
+    },
+    {
+      "kind": "elevated-rect",
+      "x": 364,
+      "y": 16,
+      "width": 96,
+      "height": 64,
+      "radius": 40,
+      "elevation": 12,
+      "color": "surface"
+    }
+  ]
+}

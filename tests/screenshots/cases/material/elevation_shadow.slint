@@ -1,0 +1,68 @@
+// Copyright © SixtyFPS GmbH <info@slint.dev>
+// SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0
+
+// Scene: elevation-shadow — generated from `ui-libraries/material/parity/scenes/elevation-shadow.json`
+// (edit the scene, regenerate with `cargo run -p material-parity-generator`).
+//PARITY=xfail: same shadow footprint but the layoutlib-rendered reference runs ~1.3-1.6x darker through the penumbra than the pinned SkShadowUtils model; all light/alpha constants verified against dimens.xml + ThreadedRenderer at the pin (issue #6 elevation parity)
+//SIZE=480x96
+//DENSITIES=1,2
+import "../../fonts/Roboto-VariableFont.ttf";
+import { MaterialPalette, MaterialTheme, MaterialWindow } from "@material";
+
+export component TestCase inherits MaterialWindow {
+    init => {
+        // The scene pins seed #6750A4, tonal-spot, spec2025, light, contrast 0
+        // (all the library defaults; restated here so a default change can't
+        // silently move the parity baseline).
+        MaterialTheme.seed-color = #6750A4;
+        MaterialTheme.dark = false;
+        MaterialTheme.contrast-level = 0;
+        MaterialTheme.use-platform-color = false;
+        MaterialTheme.plain-family = "Roboto";
+        MaterialTheme.brand-family = "Roboto";
+        // Compose builds its scene scheme from the same seed — use the
+        // runtime-generated scheme, not the static expressive table.
+        MaterialPalette.dynamic = true;
+    }
+
+    Rectangle {
+        x: 16px;
+        y: 16px;
+        width: 96px;
+        height: 64px;
+        border-radius: 12px;
+        background: MaterialPalette.surface;
+        elevation: 0px;
+    }
+
+    Rectangle {
+        x: 132px;
+        y: 16px;
+        width: 96px;
+        height: 64px;
+        border-radius: 12px;
+        background: MaterialPalette.surface;
+        elevation: 6px;
+    }
+
+    Rectangle {
+        x: 248px;
+        y: 16px;
+        width: 96px;
+        height: 64px;
+        border-radius: 12px;
+        background: MaterialPalette.surface;
+        elevation: 24px;
+    }
+
+    Rectangle {
+        x: 364px;
+        y: 16px;
+        width: 96px;
+        height: 64px;
+        border-radius: 40px;
+        background: MaterialPalette.surface;
+        elevation: 12px;
+    }
+
+}

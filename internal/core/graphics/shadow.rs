@@ -1,6 +1,8 @@
 // Copyright © SixtyFPS GmbH <info@slint.dev>
 // SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0
 
+// cSpell: ignore MSAA subsamples
+
 //! Elevation shadows: the Android ambient + spot shadow model.
 //!
 //! This module is a Rust port of the two tessellated shadow meshes Skia builds
@@ -637,15 +639,15 @@ fn compute_radial_steps(v1: Vec2, v2: Vec2, offset: f32) -> Option<(f32, f32, us
     if !r_sin.is_finite() {
         return None;
     }
-    let theta = r_sin.atan2(r_cos);
+    let theta = crate::graphics::math::atan2f(r_sin, r_cos);
     let float_steps = (offset * theta * RECIP_PIXELS_PER_ARC_SEGMENT).abs();
     if float_steps >= u16::MAX as f32 {
         return None;
     }
     let steps = (float_steps + 0.5).floor() as usize;
     let d_theta = if steps > 0 { theta / steps as f32 } else { 0. };
-    let rot_sin = d_theta.sin();
-    let rot_cos = d_theta.cos();
+    let rot_sin = crate::graphics::math::sinf(d_theta);
+    let rot_cos = crate::graphics::math::cosf(d_theta);
     if steps > 0 && (rot_sin == 0. || rot_cos == 1.) {
         return None;
     }
@@ -1992,10 +1994,10 @@ impl BaseTessellator {
             const TOLERANCE: f32 = 1.0e-2;
             if min_dist_sq < (inset + TOLERANCE) * (inset + TOLERANCE) {
                 // the umbra would collapse: back off the inset and fade the
-                // umbra ring to preserve total darkness
+                // umbra ring toward the penumbra a-value as it shrinks
                 let new_inset = min_dist_sq.sqrt() - TOLERANCE;
                 let ratio = (128. * (new_inset / inset + 1.)).clamp(0., 256.);
-                umbra_alpha = 1. - ratio / 256.;
+                umbra_alpha = ratio / 256.;
                 inset = new_inset;
             }
             match inset_convex_polygon(&self.path_polygon, inset) {
@@ -2532,7 +2534,7 @@ fn gaussian_blur_mask(mask: &mut [u8], size: euclid::Size2D<u32, LogicalPx>, sig
     let mut kernel = Vec::with_capacity((2 * radius + 1) as usize);
     let mut sum = 0f32;
     for i in -radius..=radius {
-        let w = (-0.5 * (i as f32 / sigma).powi(2)).exp();
+        let w = crate::graphics::math::expf(-0.5 * (i as f32 / sigma).powi(2));
         kernel.push(w);
         sum += w;
     }
@@ -2874,11 +2876,13 @@ pub fn shadow_local_bounds(
 /// Rasterize a shadow mesh into an A8 coverage mask for `bounds` (in the
 /// mesh's coordinate space, i.e. before `offset` is applied by the caller).
 ///
-/// Each pixel accumulates triangle coverage `C` and coverage-weighted
-/// interpolated vertex alpha `A`; the stored alpha is `C · gauss(A/C)`, which
-/// is Skia's pipeline (vertex-alpha interpolation → Gaussian color filter →
-/// coverage) in one accumulation pass. Coverage is computed by 4×4
-/// supersampling, matching the ~0.25px outline tolerance.
+/// Coverage is computed by 4×4 supersampling, matching the ~0.25px outline
+/// tolerance, resolved the way `drawVertices` resolves MSAA: each of the 16
+/// subsamples takes the interpolated vertex alpha of the last triangle
+/// covering it — sliver overlaps between adjacent wedges neither sum coverage
+/// nor split a pixel's ownership — and contributes `gauss(alpha)` — Skia's
+/// vertex-alpha interpolation followed by the Gaussian color filter — to the
+/// pixel's mean alpha.
 pub fn rasterize_shadow_mesh(mesh: &ShadowMesh, bounds: euclid::Rect<f32, LogicalPx>) -> Vec<u8> {
     rasterize_shadow_mesh_at(mesh, bounds, vec2(0., 0.))
 }
@@ -2897,8 +2901,12 @@ pub fn rasterize_shadow_mesh_at(
     if w == 0 || h == 0 || mesh.is_empty() {
         return Vec::new();
     }
-    let mut cov = alloc::vec![0f32; w * h];
-    let mut acc = alloc::vec![0f32; w * h];
+    // Per-subsample winning alpha: each of the 16 subsamples keeps the alpha
+    // of the last triangle covering it (overdraw in index order, the same
+    // resolve `drawVertices` gets from the depth-less triangle soup). Sliver
+    // overlaps between adjacent wedges can't sum coverage or split a pixel's
+    // ownership row by row.
+    let mut sub_alphas = alloc::vec![0f32; w * h * 16];
     let ox = bounds.origin.x;
     let oy = bounds.origin.y;
 
@@ -2935,7 +2943,7 @@ pub fn rasterize_shadow_mesh_at(
         let tl2 = top_left(p0, p1);
         for py in min_y..max_y {
             for px in min_x..max_x {
-                let (c, al) = tri_pixel_sample(
+                let (bits, alphas) = tri_pixel_sample(
                     p0,
                     p1,
                     p2,
@@ -2949,30 +2957,34 @@ pub fn rasterize_shadow_mesh_at(
                     ox + px as f32,
                     oy + py as f32,
                 );
-                if c > 0. {
-                    let idx = py * w + px;
-                    cov[idx] += c;
-                    acc[idx] += al;
+                if bits == 0 {
+                    continue;
+                }
+                let base = (py * w + px) * 16;
+                for (s, alpha) in alphas.iter().enumerate() {
+                    if bits & (1 << s) != 0 {
+                        sub_alphas[base + s] = *alpha;
+                    }
                 }
             }
         }
     }
 
-    // resolve: alpha = C · gauss(A / C)
     let mut out = alloc::vec![0u8; w * h];
-    for i in 0..w * h {
-        let c = cov[i];
-        if c > 1e-6 {
-            let a = acc[i] / c;
-            out[i] = (c * gauss_falloff_lut(a).clamp(0., 1.) * 255.).round().min(255.) as u8;
+    for (i, pixel) in out.iter_mut().enumerate() {
+        let mut g = 0.;
+        for &alpha in &sub_alphas[i * 16..(i + 1) * 16] {
+            g += gauss_falloff_lut(alpha);
         }
+        *pixel = resolve_shadow_pixel(g);
     }
     out
 }
 
-/// The coverage and interpolated alpha a triangle accumulates over the pixel
-/// whose top-left corner is `(px, py)`, by 4×4 supersampling under the
-/// top-left edge-ownership rule. Returns `(coverage, alpha · coverage)`.
+/// The subsample coverage and interpolated alpha a triangle contributes to
+/// the pixel whose top-left corner is `(px, py)`, by 4×4 supersampling under
+/// the top-left edge-ownership rule. Returns the coverage bitmask of the 16
+/// subsamples plus each subsample's interpolated vertex alpha.
 #[allow(clippy::too_many_arguments)]
 fn tri_pixel_sample(
     p0: Pt,
@@ -2987,10 +2999,10 @@ fn tri_pixel_sample(
     tl2: bool,
     px: f32,
     py: f32,
-) -> (f32, f32) {
+) -> (u16, [f32; 16]) {
     const SS: usize = 4; // 4×4 supersampling
-    let mut c = 0f32;
-    let mut al = 0f32;
+    let mut bits = 0u16;
+    let mut alphas = [0f32; 16];
     for sy in 0..SS {
         for sx in 0..SS {
             let q = pt(px + (sx as f32 + 0.5) / SS as f32, py + (sy as f32 + 0.5) / SS as f32);
@@ -3001,12 +3013,23 @@ fn tri_pixel_sample(
                 && (w1 > 1e-6 || (w1 >= -1e-6 && tl1))
                 && (w2 > 1e-6 || (w2 >= -1e-6 && tl2))
             {
-                c += 1.;
-                al += w0 * a0 + w1 * a1 + w2 * a2;
+                let s = sy * SS + sx;
+                bits |= 1 << s;
+                alphas[s] = w0 * a0 + w1 * a1 + w2 * a2;
             }
         }
     }
-    (c / (SS * SS) as f32, al / (SS * SS) as f32)
+    (bits, alphas)
+}
+
+/// Resolve one pixel's claimed `bits`/`acc` contributions into an A8 value:
+/// Skia resolves the mesh the way `drawVertices` does — each covered
+/// subsample's interpolated vertex alpha passes through the Gaussian color
+/// filter, and the pixel's alpha is their mean — so overlapping triangles
+/// never sum coverage past 1.
+#[inline]
+fn resolve_shadow_pixel(acc: f32) -> u8 {
+    (acc * (255. / 16.)).round().min(255.) as u8
 }
 
 /// Rasterize the scanline of `mesh` drawn at `offset` covering `row`'s pixel
@@ -3035,10 +3058,8 @@ pub fn rasterize_shadow_mesh_row(
         row.fill(0);
         return;
     }
-    scratch.cov.clear();
-    scratch.acc.clear();
-    scratch.cov.resize(row.len(), 0.);
-    scratch.acc.resize(row.len(), 0.);
+    scratch.sub_alphas.clear();
+    scratch.sub_alphas.resize(row.len() * 16, 0.);
     let top_left = |a: Pt, b: Pt| b.y < a.y || (b.y == a.y && b.x < a.x);
     for tri in mesh.indices.as_chunks::<3>().0 {
         let p0 = mesh.positions[tri[0] as usize] + offset;
@@ -3065,7 +3086,7 @@ pub fn rasterize_shadow_mesh_row(
         let begin = (min_px.max(x_start) - x_start).max(0) as usize;
         let end = ((max_px - x_start).min(row.len() as i32)).max(0) as usize;
         for i in begin..end {
-            let (c, al) = tri_pixel_sample(
+            let (bits, alphas) = tri_pixel_sample(
                 p0,
                 p1,
                 p2,
@@ -3079,26 +3100,30 @@ pub fn rasterize_shadow_mesh_row(
                 x_start as f32 + i as f32,
                 y as f32,
             );
-            scratch.cov[i] += c;
-            scratch.acc[i] += al;
+            if bits == 0 {
+                continue;
+            }
+            for (s, alpha) in alphas.iter().enumerate() {
+                if bits & (1 << s) != 0 {
+                    scratch.sub_alphas[i * 16 + s] = *alpha;
+                }
+            }
         }
     }
-    for (i, (&c, &a)) in scratch.cov.iter().zip(scratch.acc.iter()).enumerate() {
-        row[i] = if c > 1e-6 {
-            let mean = a / c;
-            (c * gauss_falloff_lut(mean).clamp(0., 1.) * 255.).round().min(255.) as u8
-        } else {
-            0
-        };
+    for (i, out) in row.iter_mut().enumerate() {
+        let mut g = 0.;
+        for &alpha in &scratch.sub_alphas[i * 16..(i + 1) * 16] {
+            g += gauss_falloff_lut(alpha);
+        }
+        *out = resolve_shadow_pixel(g);
     }
 }
 
-/// Reusable scratch for [`rasterize_shadow_mesh_row`]: two row-length
-/// coverage/alpha accumulators, allocated once per rasterizer.
+/// Reusable scratch for [`rasterize_shadow_mesh_row`]: one row of
+/// per-subsample winning alphas, allocated once per rasterizer.
 #[derive(Default)]
 pub struct ShadowRowScratch {
-    cov: Vec<f32>,
-    acc: Vec<f32>,
+    sub_alphas: Vec<f32>,
 }
 
 /// Where a mesh's [`rasterize_shadow_mesh`] bounds come from: the mesh's own

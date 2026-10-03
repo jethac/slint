@@ -404,8 +404,8 @@ fn arc_to_cubics(
     /* Convert rotation angle from degrees to radians */
     let theta_d: f64 = theta as f64 / 180. * core::f64::consts::PI;
     /* Pre-compute rotation matrix entries */
-    let cos_theta = theta_d.cos();
-    let sin_theta = theta_d.sin();
+    let cos_theta = crate::graphics::math::cos(theta_d);
+    let sin_theta = crate::graphics::math::sin(theta_d);
     /* Transform (x0, y0) and (x1, y1) into unit space */
     /* using (inverse) rotation, followed by (inverse) scale */
     let x0p = (x0 as f64 * cos_theta + y0 as f64 * sin_theta) / a as f64;
@@ -451,9 +451,9 @@ fn arc_to_cubics(
         cy = ym - sdx;
     }
 
-    let eta0 = (y0p - cy).atan2(x0p - cx);
+    let eta0 = crate::graphics::math::atan2(y0p - cy, x0p - cx);
 
-    let eta1 = (y1p - cy).atan2(x1p - cx);
+    let eta1 = crate::graphics::math::atan2(y1p - cy, x1p - cx);
 
     let mut sweep = eta1 - eta0;
     if is_positive_arc != (sweep >= 0.) {

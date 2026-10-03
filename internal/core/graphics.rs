@@ -34,6 +34,9 @@ pub type Transform = euclid::default::Transform2D<Coord>;
 pub(crate) mod color;
 pub use color::*;
 
+#[doc(hidden)]
+pub mod math;
+
 #[cfg(feature = "shared-fontique")]
 use i_slint_common::sharedfontique::{self, fontique};
 #[cfg(feature = "path")]
