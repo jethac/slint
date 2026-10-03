@@ -48,11 +48,15 @@ import {
     HorizontalDivider,
     VerticalDivider,
     Badge,
+    BadgedBox,
+    Icon,
     Dialog,
     FullscreenDialog,
     MaterialAnimations,
     MaterialMotionScheme,
     MaterialTheme,
+    Icon,
+    Icons,
     Slider,
     Switch
 } from "../../../../src/material.slint";
@@ -754,6 +758,24 @@ export component ActionsView {
                     Badge {
                         text: "999+";
                     }
+
+                    BadgedBox {
+                        badge_text: "12";
+
+                        Icon {
+                            width: 24px;
+                            height: 24px;
+                            source: FilledIcons.mail;
+                        }
+                    }
+
+                    BadgedBox {
+                        Icon {
+                            width: 24px;
+                            height: 24px;
+                            source: FilledIcons.chat_bubble;
+                        }
+                    }
                 }
 
                 NavigationBar {
@@ -976,6 +998,20 @@ export component ActionsView {
                         VerticalDivider {}
                         VerticalDivider {}
                     }
+                }
+            }
+
+            ComponentCard {
+                title: "Icons";
+
+                Horizontal {
+                    alignment: center;
+                    spacing: MaterialStyleMetrics.spacing_16;
+
+                    // The default content-color tint and the natural 24px size.
+                    Icon { source: Icons.check; }
+                    Icon { source: Icons.schedule; colorize: MaterialPalette.primary; }
+                    Icon { source: Icons.keyboard; width: 40px; height: 40px; }
                 }
             }
         }
