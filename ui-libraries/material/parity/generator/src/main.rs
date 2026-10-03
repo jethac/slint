@@ -1205,7 +1205,7 @@ fn slint_canvas(s: &mut String, scene: &Scene) {
                         panic!("no forwarding known for trace prop {prop:?} on a button-group");
                     }
                 }
-                
+
                 continue;
             }
             "filled-button" => "FilledButton",
