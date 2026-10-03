@@ -167,6 +167,9 @@ struct Widget {
     radius: Option<f64>,
     #[serde(default)]
     text: Option<String>,
+    /// `alert-dialog`/`basic-alert-dialog`: the dialog title.
+    #[serde(default)]
+    title: Option<String>,
     /// Named icon for `icon-button` kinds or a leading icon on a text
     /// button: the stem of an svg under `src/ui/icons/` (e.g. `check` for
     /// `Icons.check`). The generator copies the svg into the Compose
@@ -626,17 +629,26 @@ fn slint_case(scene: &Scene) -> String {
     // `<container>item<i>` ids name a container's repeated children — one
     // shared qualified id per instance on the Slint side, so they go to
     // `//TRACE_ITEMS=` (enumerated in tree order) instead of
-    // `//TRACE_ELEMENTS=` (a literal-id lookup). The Compose side reads the
-    // same scene JSON and records them verbatim.
+    // `//TRACE_ELEMENTS=` (a literal-id lookup). Dialog action buttons use
+    // the same scheme with an `action` stem (`dialog0action0`). The Compose
+    // side reads the same scene JSON and records them verbatim.
     let (item_containers, elements): (BTreeSet<String>, Vec<&String>) = {
         let mut containers = BTreeSet::new();
         let mut plain = Vec::new();
         for id in &scene.trace_elements {
             let stem = id.trim_end_matches(|c: char| c.is_ascii_digit());
-            if stem.len() > "item".len() && stem.ends_with("item") && stem.len() < id.len() {
-                containers.insert(stem[..stem.len() - "item".len()].to_string());
-            } else {
-                plain.push(id);
+            let container = ["item", "action"]
+                .iter()
+                .find(|suffix| {
+                    stem.len() > suffix.len() && stem.ends_with(*suffix)
+                        && stem.len() < id.len()
+                })
+                .map(|suffix| &stem[..stem.len() - suffix.len()]);
+            match container {
+                Some(container) => {
+                    containers.insert(container.to_string());
+                }
+                None => plain.push(id),
             }
         }
         (containers, plain)
@@ -750,9 +762,16 @@ fn slint_case(scene: &Scene) -> String {
             "connected-button" => "ConnectedButton",
             "connected-button-group" => "ConnectedButtonGroup",
             "vertical-connected-button-group" => "VerticalConnectedButtonGroup",
+            // The dialog emitters draw the scrim inline; only their
+            // content uses components.
+            "alert-dialog" => "AlertDialogContent",
+            "basic-alert-dialog" => "MaterialText",
             other => panic!("unknown widget kind {other:?}"),
         };
         imports.push(component);
+        if w.kind == "basic-alert-dialog" {
+            imports.extend(["MaterialStyleMetrics", "MaterialTypography", "TextButton"]);
+        }
         if w.kind == "badged-box" {
             imports.push("Icon");
         }
@@ -872,12 +891,20 @@ fn widget_actions(scene: &Scene) -> Vec<Action> {
             tabs_emitted = target + 1;
         }
         // A `*-button-group`'s layout isn't focusable — only its items
-        // land in the Tab chain (handled below). Anything else is
-        // `focusables` focusables (2 for a split button's halves, else 1).
-        if !w.kind.ends_with("button-group") {
+        // land in the Tab chain (handled below); a dialog's action
+        // buttons likewise. Anything else is `focusables` focusables
+        // (2 for a split button's halves, else 1).
+        if !w.kind.ends_with("button-group") && !w.kind.ends_with("alert-dialog") {
             ordinal += focusables;
         }
-        for item in &w.items {
+        // The dialog's `AlertDialogFlowRow` lands its actions in tree
+        // order confirm-first, so the Tab chain walks `items` reversed.
+        let items: Box<dyn Iterator<Item = &GroupItem>> = if w.kind == "alert-dialog" {
+            Box::new(w.items.iter().rev())
+        } else {
+            Box::new(w.items.iter())
+        };
+        for item in items {
             // Disabled items aren't in the Tab chain.
             if item.disabled == Some(true) {
                 continue;
@@ -1278,6 +1305,7 @@ fn slint_canvas(s: &mut String, scene: &Scene) {
     let mut surfaces = 0;
     let mut appbars = 0;
     let mut groups = 0;
+    let mut dialogs = 0;
     let mut icons = 0;
     let mut dividers = 0;
     let mut badges = 0;
@@ -1413,6 +1441,12 @@ fn slint_canvas(s: &mut String, scene: &Scene) {
                 let i = groups;
                 groups += 1;
                 connected_group_widget(s, w, i, scene);
+                continue;
+            }
+            "alert-dialog" | "basic-alert-dialog" => {
+                let i = dialogs;
+                dialogs += 1;
+                dialog_widget(s, w, i, scene);
                 continue;
             }
             "icon" => {
@@ -1992,6 +2026,160 @@ fn appbar_widget(s: &mut String, w: &Widget, i: usize) {
         s,
         "    appbar{i} := {component} {{\n        x: {}px;\n        y: {}px;\n{}    }}\n",
         w.x as i64, w.y as i64, p,
+    )
+    .unwrap();
+}
+
+
+/// Escapes a string for embedding in a generated `.slint` string literal.
+fn slint_str(text: &str) -> String {
+    text.replace('\\', "\\\\").replace('"', "\\\"").replace('\n', "\\n")
+}
+
+/// An `alert-dialog`/`basic-alert-dialog` — the scrim `Modal` paints when the
+/// popup opens (`background_modal`), plus the centered content inline. The
+/// recorded Compose side draws the same inline: `Dialog` opens a platform
+/// window and `Surface` shadows deadlock layoutlib, so the scene content is
+/// `cast_shadow: false`. Widget `x`/`y` are ignored — the pane centers like
+/// the dialog window.
+fn dialog_widget(s: &mut String, w: &Widget, i: usize, scene: &Scene) {
+    let over = &w.slint_overrides;
+    // `Modal`'s scrim — `ScrimTokens.container_opacity` (0.32) via
+    // `background_modal`.
+    writeln!(
+        s,
+        "    scrim{i} := Rectangle {{\n        x: 0px;\n        y: 0px;\n        width: 100%;\n        height: 100%;\n        background: MaterialPalette.background_modal;\n    }}\n",
+    )
+    .unwrap();
+
+    if w.kind == "basic-alert-dialog" {
+        // `BasicAlertDialog` hands `content` only the `sizeIn` clamp — the
+        // pane chrome here is the caller's own, like the canonical sample's.
+        let mut content = String::new();
+        if let Some(title) = &w.title {
+            // The pane title is content-sized (`root.width` is the scene
+            // width — outside any layout chain, so no binding loop).
+            writeln!(
+                content,
+                "            MaterialText {{\n                text: \"{}\";\n                style: MaterialTypography.headline_small;\n                color: MaterialPalette.on_surface;\n                wrap: word_wrap;\n                width: min(self.preferred-width, root.width - 48px);\n            }}\n",
+                slint_str(title),
+            )
+            .unwrap();
+        }
+        if !w.items.is_empty() {
+            let labels = w
+                .items
+                .iter()
+                .map(|item| {
+                    format!("\"{}\"", slint_str(item.text.as_deref().unwrap_or_default()))
+                })
+                .collect::<Vec<_>>()
+                .join(", ");
+            // The repeated `action` id is what `//TRACE_ITEMS=` enumerates.
+            let hover = w
+                .items
+                .iter()
+                .position(|it| it.state.as_deref() == Some("hovered"));
+            let press = w
+                .items
+                .iter()
+                .position(|it| it.state.as_deref() == Some("pressed"));
+            content.push_str("            // align(End) on the actions box\n            HorizontalLayout {\n                alignment: end;\n                spacing: 8px;\n");
+            writeln!(
+                content,
+                "                for action_text[index] in [{labels}] : action := TextButton {{\n                    text: action_text;\n                    enforce_touch_target: false;\n                    // The mirror renders the stable `TextButton` overload.\n                    expressive: false;\n{hover}{press}                }}\n",
+                hover = hover
+                    .map(|i| format!("                    simulate_hover: index == {i};\n"))
+                    .unwrap_or_default(),
+                press = press
+                    .map(|i| format!("                    simulate_press: index == {i};\n"))
+                    .unwrap_or_default(),
+            )
+            .unwrap();
+            content.push_str("            }\n");
+        }
+        let title_lit = w
+            .title
+            .as_ref()
+            .map(|t| format!("\"{}\"", slint_str(t)))
+            .unwrap_or_else(|| "\"\"".to_string());
+        writeln!(
+            s,
+            "    basic{i} := Rectangle {{\n        x: (parent.width - self.width) / 2;\n        y: (parent.height - self.height) / 2;\n        // The Compose `sizeIn` clamp grows the pane to the widest child's\n        // preferred width; the wrapping title under-measures as min-width,\n        // so `measure{i}` (invisible twin) supplies the preferred term.\n        measure{i} := MaterialText {{\n            visible: false;\n            text: {title_lit};\n            style: MaterialTypography.headline_small;\n        }}\n        width: min(max(280px, inner.min_width, measure{i}.preferred-width + 48px), min(560px, parent.width));\n        height: inner.min_height;\n        border-radius: MaterialStyleMetrics.border_radius_28;\n        background: MaterialPalette.surface_container_high;\n        clip: true;\n        inner := VerticalLayout {{\n            padding: 24px;\n            spacing: 24px;\n{content}        }}\n    }}\n",
+        )
+        .unwrap();
+        return;
+    }
+
+    let mut p = String::new();
+    p.push_str("        cast_shadow: false;\n");
+    // `LocalMinimumInteractiveComponentSize` is 0 on the Compose side —
+    // the action buttons drop their 48dp touch padding (upstream's
+    // crossAxis math then supplies the 8dp gap itself).
+    p.push_str("        action_enforce_touch_target: false;\n");
+    if let Some(title) = &w.title {
+        writeln!(p, "        title: \"{}\";", slint_str(title)).unwrap();
+    }
+    if let Some(icon) = &w.icon {
+        writeln!(p, "        icon: Icons.{icon};").unwrap();
+    }
+    if let Some(text) = &w.text {
+        writeln!(p, "        text: \"{}\";", slint_str(text)).unwrap();
+    }
+    // `actions` is display order — dismiss first, confirm last (the
+    // component's flipped FlowRow lands the confirm rightmost/on top).
+    // `slint_overrides.actions_reversed` emits the array backwards: the
+    // negative scene's forgot-the-flip defect.
+    let reversed = over.get("actions_reversed").and_then(|v| v.as_bool()).unwrap_or(false);
+    let mut items: Vec<&GroupItem> = w.items.iter().collect();
+    if reversed {
+        items.reverse();
+    }
+    let actions = items
+        .iter()
+        .map(|item| format!("\"{}\"", slint_str(item.text.as_deref().unwrap_or_default())))
+        .collect::<Vec<_>>()
+        .join(", ");
+    writeln!(p, "        actions: [{actions}];").unwrap();
+    // A `state` on `items[i]` drives `MaterialButtonBase.simulate_*` on the
+    // `actions[i]` button (static scenes); `focused` gets `key:Tab` steps
+    // from `widget_actions` instead.
+    if scene.times.is_empty() {
+        for (index, item) in w.items.iter().enumerate() {
+            // The override's swapped array moves the state index with it.
+            let action_index = if reversed { w.items.len() - 1 - index } else { index };
+            match item.state.as_deref() {
+                Some("hovered") => {
+                    writeln!(p, "        action_simulate_hover: {action_index};").unwrap()
+                }
+                Some("pressed") => {
+                    writeln!(p, "        action_simulate_press: {action_index};").unwrap()
+                }
+                _ => {}
+            }
+        }
+    }
+    // `slint_overrides` defects for `negative` scenes — token overrides the
+    // component exposes (`corner` widens the whole shape to a fixed radius).
+    if let Some(corner) = over.get("corner").and_then(|v| v.as_f64()) {
+        writeln!(
+            p,
+            "        container_shape: {{ top_left: {corner}px, top_right: {corner}px, bottom_right: {corner}px, bottom_left: {corner}px, full: false }};",
+        )
+        .unwrap();
+    }
+    if let Some(fill) = over.get("container").and_then(|v| v.as_str()) {
+        writeln!(p, "        container_color: MaterialPalette.{};", fill.replace('-', "_"))
+            .unwrap();
+    }
+    for (k, prop) in [("padding", "content_padding"), ("actions_spacing", "actions_spacing")] {
+        if let Some(v) = over.get(k).and_then(|v| v.as_f64()) {
+            writeln!(p, "        {prop}: {v}px;").unwrap();
+        }
+    }
+    writeln!(
+        s,
+        "    dialog{i} := AlertDialogContent {{\n        x: (parent.width - self.width) / 2;\n        y: (parent.height - self.height) / 2;\n        available_width: parent.width;\n{p}    }}\n",
     )
     .unwrap();
 }

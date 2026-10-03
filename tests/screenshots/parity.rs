@@ -59,7 +59,8 @@ fn parse_item_ref(id: &str) -> Option<(String, usize)> {
         return None;
     }
     let (stem, num) = id.split_at(id.len() - digits);
-    let container = stem.strip_suffix("item")?;
+    let container =
+        stem.strip_suffix("item").or_else(|| stem.strip_suffix("action"))?;
     if container.is_empty() {
         return None;
     }
@@ -1441,6 +1442,23 @@ fn compare_text_metrics<C: i_slint_core::api::ComponentHandle>(
             // hinted `w`/`frac_w` stay a few px wider by design and are not
             // re-checked here.
             match m["unhint_w"].as_f64() {
+                // A wrapped text's Compose `w` is the measured width under a
+                // width constraint, not the unhinted advance — Slint's
+                // element width compares against `w`/`frac_w` directly.
+                // (`lines > 1` marks the constrained measure; a one-line
+                // `w` below `unhint_w` is only hinting drift.)
+                Some(unhint_w)
+                    if unhint_w.is_finite()
+                        && cw < unhint_w - 1.0
+                        && m["lines"].as_f64().unwrap_or(1.0) > 1.0 =>
+                {
+                    if (sw - cw).abs() > GEOM_EPS {
+                        errors.push(format!(
+                            "t={}ms text:{n}.w: slint {sw} vs compose {cw} (eps {GEOM_EPS})",
+                            frame.t_ms
+                        ));
+                    }
+                }
                 Some(unhint_w) if unhint_w.is_finite() => {
                     let slack = sw - unhint_w;
                     let bound = if xfail_text.is_some() { 1.15 } else { 0.5 };

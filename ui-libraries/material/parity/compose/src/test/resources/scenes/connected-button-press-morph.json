@@ -142,6 +142,7 @@
       "target_scale": null,
       "text": "Start",
       "thickness": null,
+      "title": null,
       "toggle": null,
       "trailing_icon": null,
       "variant": null,

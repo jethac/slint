@@ -31,6 +31,10 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -46,6 +50,7 @@ import androidx.compose.material3.FilledIconToggleButton
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.FilledTonalIconToggleButton
+import androidx.compose.material3.Surface
 import androidx.compose.material3.TonalToggleButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -54,8 +59,10 @@ import androidx.compose.material3.IconButtonDefaults.IconButtonWidthOption
 import androidx.compose.material3.IconToggleButton
 import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.ContainedLoadingIndicator
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.LocalMinimumInteractiveComponentSize
 import androidx.compose.material3.LocalRippleThemeConfiguration
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RippleDefaults
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.FloatingActionButton
@@ -118,6 +125,7 @@ import androidx.compose.runtime.State
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.withFrameNanos
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.draw.clip
@@ -131,6 +139,7 @@ import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.boundsInRoot
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.role
@@ -139,6 +148,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.Dp
 import androidx.compose.foundation.interaction.Interaction
 import kotlinx.coroutines.launch
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import kotlin.math.PI
 
@@ -472,6 +482,7 @@ private fun CanvasScene(
         var surfaces = 0
         var appbars = 0
         var groups = 0
+        var dialogs = 0
         var icons = 0
         var dividers = 0
         var badges = 0
@@ -486,6 +497,15 @@ private fun CanvasScene(
                     w.kind == "connected-button-group" ||
                         w.kind == "vertical-connected-button-group" -> w.items.size
                     w.kind == "connected-button" || w.isButton -> 1
+                    // The Slint side's Text elements in tree order:
+                    // title, then the text slot, then each action label
+                    // (emitted confirm-first by the flipped flow row).
+                    w.kind == "alert-dialog" ->
+                        (if (w.title != null) 1 else 0) +
+                            (if (w.text != null) 1 else 0) +
+                            w.items.size
+                    w.kind == "basic-alert-dialog" ->
+                        (if (w.title != null) 1 else 0) + w.items.size
                     else -> 0
                 }
             }
@@ -556,6 +576,20 @@ private fun CanvasScene(
                     density,
                     emitPress,
                 )
+                widget.kind == "alert-dialog" || widget.kind == "basic-alert-dialog" ->
+                    StateAlertDialog(
+                        widget,
+                        scene,
+                        tracer,
+                        if (widget.kind == "basic-alert-dialog") {
+                            "basic${dialogs++}"
+                        } else {
+                            "dialog${dialogs++}"
+                        },
+                        density,
+                        emitPress,
+                        textBase,
+                    )
                 widget.kind == "top-app-bar" ||
                     widget.kind == "bottom-app-bar" ||
                     widget.kind == "search-bar" ||
@@ -3099,6 +3133,300 @@ private fun StateConnectedGroup(
             verticalArrangement = Arrangement.spacedBy(2.dp),
         ) {
             itemsContent()
+        }
+    }
+}
+
+
+/** `LayoutDirection.flip()` — private in AlertDialog.kt; mirrored for the
+ * dialog flow row. */
+private fun LayoutDirection.flipped(): LayoutDirection =
+    when (this) {
+        LayoutDirection.Ltr -> LayoutDirection.Rtl
+        LayoutDirection.Rtl -> LayoutDirection.Ltr
+    }
+
+/** One dialog action button: a `TextButton` driven by the item's authored
+ * state through its own `ReplayableInteractionSource`, traced as
+ * `{tag}action{i}` with its label at `text:{textId}`. */
+@Composable
+private fun DialogActionButton(
+    label: String,
+    item: GroupItem,
+    scene: Scene,
+    tracer: Tracer,
+    tag: String,
+    textId: String,
+    density: Float,
+    emitPress: java.util.concurrent.CopyOnWriteArrayList<Pair<Long, Runnable>>,
+) {
+    val interactionSource = remember { ReplayableInteractionSource() }
+    if (!item.disabled) {
+        emitStateInteractions(
+            item.state,
+            scene,
+            tracer,
+            tag,
+            interactionSource,
+            emitPress,
+            Offset(20f * density, 20f * density),
+            density,
+            null,
+        )
+    }
+    val style = MaterialTheme.typography.labelLarge
+    TextButton(
+        onClick = {},
+        enabled = !item.disabled,
+        interactionSource = interactionSource,
+        modifier = Modifier.track(tracer, tag),
+    ) {
+        Text(
+            label,
+            style = style,
+            modifier = Modifier.trackText(tracer, textId, density),
+            onTextLayout = recordTextLayout(
+                tracer,
+                textId,
+                LocalDensity.current,
+                androidx.compose.ui.platform.LocalFontFamilyResolver.current,
+                style.fontFamily,
+            ),
+        )
+    }
+}
+
+/** `AlertDialogContent` (AlertDialog.kt) rendered inline: the scrim
+ * `Modal` paints when the popup opens, then the centered
+ * `sizeIn(280..560)` pane. `Dialog` opens a platform window and
+ * `Surface`'s `shadowElevation` deadlocks layoutlib, so the pane is
+ * unelevated — the Slint side sets `cast_shadow: false`. `title` maps to
+ * the title slot, `text` to the `text` slot, `items` to the actions
+ * ([dismiss, …, confirm] in display order — the flipped `FlowRow` makes
+ * the confirm first child), `icon` to the optional header icon.
+ *
+ * `basic-alert-dialog` shares the scrim and the `sizeIn` box but the
+ * content is the caller's own — `SceneBasicDialogContent`. */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun StateAlertDialog(
+    widget: Widget,
+    scene: Scene,
+    tracer: Tracer,
+    tag: String,
+    density: Float,
+    emitPress: java.util.concurrent.CopyOnWriteArrayList<Pair<Long, Runnable>>,
+    textBase: Int,
+) {
+    val scheme = MaterialTheme.colorScheme
+    val typography = MaterialTheme.typography
+    // `Modal`'s scrim: the `scrim` role at `ScrimTokens.container_opacity`.
+    Box(
+        Modifier.fillMaxSize()
+            .background(scheme.scrim.copy(alpha = 0.32f))
+            .track(tracer, "scrim${tag.filter(Char::isDigit)}"),
+    )
+    if (widget.kind == "basic-alert-dialog") {
+        SceneBasicDialogContent(widget, scene, tracer, tag, density, emitPress, textBase)
+        return
+    }
+    var textIndex = textBase
+    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        // `BasicAlertDialog`'s `sizeIn(280, 560)` +
+        // `propagateMinConstraints` — upstream internal constants
+        // `DialogMinWidth`/`DialogMaxWidth`.
+        Box(
+            Modifier.sizeIn(minWidth = 280.dp, maxWidth = 560.dp),
+            propagateMinConstraints = true,
+        ) {
+            Surface(
+                modifier = Modifier.track(tracer, tag),
+                shape = MaterialTheme.shapes.extraLarge,
+                color = scheme.surfaceContainerHigh,
+                tonalElevation = 0.dp,
+                shadowElevation = 0.dp,
+            ) {
+                Column(Modifier.padding(24.dp)) {
+                    widget.icon?.let { stem ->
+                        CompositionLocalProvider(
+                            LocalContentColor provides scheme.secondary,
+                        ) {
+                            Box(
+                                Modifier.padding(bottom = 16.dp)
+                                    .align(Alignment.CenterHorizontally),
+                            ) {
+                                Icon(
+                                    sceneIcon(stem),
+                                    contentDescription = null,
+                                    modifier = Modifier.size(24.dp),
+                                )
+                            }
+                        }
+                    }
+                    widget.title?.let { title ->
+                        val textId = "text:${textIndex++}"
+                        Text(
+                            title,
+                            style = typography.headlineSmall,
+                            color = scheme.onSurface,
+                            modifier =
+                                Modifier.padding(bottom = 16.dp)
+                                    .align(
+                                        if (widget.icon != null) {
+                                            Alignment.CenterHorizontally
+                                        } else {
+                                            Alignment.Start
+                                        },
+                                    )
+                                    .trackText(tracer, textId, density),
+                            onTextLayout = recordTextLayout(
+                                tracer,
+                                textId,
+                                LocalDensity.current,
+                                androidx.compose.ui.platform.LocalFontFamilyResolver.current,
+                                typography.headlineSmall.fontFamily,
+                            ),
+                        )
+                    }
+                    widget.text?.let { text ->
+                        val textId = "text:${textIndex++}"
+                        Text(
+                            text,
+                            style = typography.bodyMedium,
+                            color = scheme.onSurfaceVariant,
+                            modifier =
+                                Modifier.padding(bottom = 24.dp)
+                                    .align(Alignment.Start)
+                                    .trackText(tracer, textId, density),
+                            onTextLayout = recordTextLayout(
+                                tracer,
+                                textId,
+                                LocalDensity.current,
+                                androidx.compose.ui.platform.LocalFontFamilyResolver.current,
+                                typography.bodyMedium.fontFamily,
+                            ),
+                        )
+                    }
+                    Box(Modifier.align(Alignment.End)) {
+                        // `AlertDialogFlowRow` verbatim: children
+                        // [confirm, dismiss] in the flipped direction —
+                        // confirm rightmost on one line, on top stacked.
+                        val originalLayoutDirection = LocalLayoutDirection.current
+                        CompositionLocalProvider(
+                            LocalLayoutDirection provides
+                                originalLayoutDirection.flipped(),
+                        ) {
+                            FlowRow(
+                                horizontalArrangement =
+                                    Arrangement.spacedBy(8.dp),
+                                verticalArrangement =
+                                    Arrangement.spacedBy(
+                                        (
+                                            8.dp -
+                                                (
+                                                    LocalMinimumInteractiveComponentSize
+                                                        .current -
+                                                        ButtonDefaults.MinHeight
+                                                    )
+                                            ).coerceIn(0.dp, 8.dp),
+                                    ),
+                            ) {
+                                CompositionLocalProvider(
+                                    LocalLayoutDirection provides
+                                        originalLayoutDirection,
+                                ) {
+                                    widget.items.asReversed().forEachIndexed { i, item ->
+                                        val textId = "text:${textIndex++}"
+                                        DialogActionButton(
+                                            label = item.text ?: "",
+                                            item = item,
+                                            scene = scene,
+                                            tracer = tracer,
+                                            tag = "${tag}action$i",
+                                            textId = textId,
+                                            density = density,
+                                            emitPress = emitPress,
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+/** `BasicAlertDialog` content: upstream hands `content` only the
+ * `sizeIn(280..560)` box — the pane here is the caller's own, drawn like
+ * the canonical sample (a surface-coloured extra-large pane with a
+ * headline and an end-aligned action row). */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun SceneBasicDialogContent(
+    widget: Widget,
+    scene: Scene,
+    tracer: Tracer,
+    tag: String,
+    density: Float,
+    emitPress: java.util.concurrent.CopyOnWriteArrayList<Pair<Long, Runnable>>,
+    textBase: Int,
+) {
+    val scheme = MaterialTheme.colorScheme
+    var textIndex = textBase
+    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        Box(
+            Modifier.sizeIn(minWidth = 280.dp, maxWidth = 560.dp),
+            propagateMinConstraints = true,
+        ) {
+            Surface(
+                modifier = Modifier.track(tracer, tag),
+                shape = MaterialTheme.shapes.extraLarge,
+                color = scheme.surfaceContainerHigh,
+                tonalElevation = 0.dp,
+                shadowElevation = 0.dp,
+            ) {
+                Column(
+                    Modifier.padding(24.dp),
+                    verticalArrangement = Arrangement.spacedBy(24.dp),
+                ) {
+                    widget.title?.let { title ->
+                        val textId = "text:${textIndex++}"
+                        Text(
+                            title,
+                            style = MaterialTheme.typography.headlineSmall,
+                            color = scheme.onSurface,
+                            modifier = Modifier.trackText(tracer, textId, density),
+                            onTextLayout = recordTextLayout(
+                                tracer,
+                                textId,
+                                LocalDensity.current,
+                                androidx.compose.ui.platform.LocalFontFamilyResolver.current,
+                                MaterialTheme.typography.headlineSmall.fontFamily,
+                            ),
+                        )
+                    }
+                    Row(
+                        Modifier.align(Alignment.End),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        widget.items.forEachIndexed { i, item ->
+                            val textId = "text:${textIndex++}"
+                            DialogActionButton(
+                                label = item.text ?: "",
+                                item = item,
+                                scene = scene,
+                                tracer = tracer,
+                                tag = "${tag}action$i",
+                                textId = textId,
+                                density = density,
+                                emitPress = emitPress,
+                            )
+                        }
+                    }
+                }
+            }
         }
     }
 }

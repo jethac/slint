@@ -163,8 +163,8 @@ States: focused, hovered, pressed
 
 | Component | Source | Status | Issues | Needs | Notes |
 |---|---|---|---|---|---|
-| AlertDialog | AlertDialog.kt | partial | #11 | none | slint component: Dialog |
-| BasicAlertDialog | AlertDialog.kt | missing | #11 | none | - |
+| AlertDialog | AlertDialog.kt | done | #11 | none | slint components: Dialog, AlertDialogContent; parity cases: alert-dialog, alert-dialog-no-icon, alert-dialog-stacked, alert-dialog-dark, alert-dialog-action-hover, alert-dialog-action-press, alert-dialog-action-focus, negative-alert-dialog-{corner,container,padding,actions} |
+| BasicAlertDialog | AlertDialog.kt | done | #11 | none | slint component: BasicAlertDialog; parity case: basic-alert-dialog |
 | DatePickerDialog | DatePickerDialog.kt | partial | #11 | none | slint component: DatePickerPopup |
 
 ### Divider

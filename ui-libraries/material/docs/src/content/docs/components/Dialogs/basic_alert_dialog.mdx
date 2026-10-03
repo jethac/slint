@@ -1,0 +1,70 @@
+---
+title: BasicAlertDialog
+description: BasicAlertDialog API.
+---
+
+import CodeSnippetMD from '@slint/common-files/src/components/CodeSnippetMD.astro';
+import SlintProperty from '@slint/common-files/src/components/SlintProperty.astro';
+
+```slint playground
+import { BasicAlertDialog, FilledButton, MaterialPalette, MaterialTypography, MaterialText, TextButton } from "@material";
+export component Example inherits Window {
+    width: 400px;
+    height: 300px;
+
+    button := FilledButton {
+        text: "Show basic dialog";
+
+        clicked => {
+            basic_dialog.show();
+        }
+    }
+
+    basic_dialog := BasicAlertDialog {
+        dismissed => {
+            basic_dialog.close();
+        }
+
+        Rectangle {
+            border-radius: 28px;
+            background: MaterialPalette.surface_container_high;
+            clip: true;
+
+            VerticalLayout {
+                padding: 24px;
+                spacing: 24px;
+
+                MaterialText {
+                    text: "Custom content";
+                    style: MaterialTypography.headline_small;
+                    color: MaterialPalette.on_surface;
+                }
+
+                HorizontalLayout {
+                    alignment: end;
+                    spacing: 8px;
+
+                    TextButton {
+                        text: "Dismiss";
+
+                        clicked => {
+                            basic_dialog.close();
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+```
+
+A `BasicAlertDialog` is the upstream basic `AlertDialog` overload: a modal overlay that centers arbitrary content in a
+box sized between 280 and 560&nbsp;dp — `sizeIn(DialogMinWidth, DialogMaxWidth)` intersected with the space the
+dialog is offered. Unlike `Dialog` it draws no surface of its own and adds no padding, so callers supply their own
+container, spacing, and actions. It is the base for content that does not fit the icon/title/text pattern.
+
+## Callbacks
+
+### dismissed()
+Invoked when the scrim is clicked or Escape is pressed — the upstream `onDismissRequest`. Call `close()` from
+the callback (or leave the dialog open) as appropriate.

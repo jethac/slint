@@ -71,6 +71,8 @@ class Widget(json: JSONObject) {
     val height: Float = json.optDouble("height", 0.0).toFloat()
     val radius: Float = json.optDouble("radius", 0.0).toFloat()
     val text: String? = (json.opt("text") as? String)?.takeIf { it.isNotEmpty() }
+    /** `alert-dialog`/`basic-alert-dialog`: the dialog title. */
+    val title: String? = (json.opt("title") as? String)?.takeIf { it.isNotEmpty() }
     /** Stem of an svg under `src/ui/icons/` (`check` → `icons/check.svg`),
      * loaded as an [ImageVector] — the same path the Slint `Icons` image
      * rasterizes. */
