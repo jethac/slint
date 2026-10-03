@@ -24,7 +24,8 @@ import {
     FilledIconButton,
     TonalIconButton,
     OutlineIconButton,
-    SegmentedButton,
+    ConnectedButtonGroup,
+    VerticalConnectedButtonGroup,
     FilledSplitButton,
     TonalSplitButton,
     ElevatedSplitButton,
@@ -580,26 +581,25 @@ export component ActionsView {
             }
 
             ComponentCard {
-                title: "Segmented buttons";
+                title: "Connected button groups";
 
-                Vertical {
-                    HorizontalLayout {
-                        alignment: center;
+                Horizontal {
+                    spacing: MaterialStyleMetrics.spacing_16;
+                    alignment: center;
 
-                        SegmentedButton {
+                    Vertical {
+                        ConnectedButtonGroup {
+                            selected_index: 0;
+
                             items: [
                                 {  icon: OutlinedIcons.today, text: "Day" },
                                 {  icon: OutlinedIcons.view_week, text: "Week" },
                                 {  icon: OutlinedIcons.calendar_month, text: "Month" },
                             ];
                         }
-                    }
 
-                    HorizontalLayout {
-                        alignment: center;
-
-                        SegmentedButton {
-                            current_index: 4;
+                        ConnectedButtonGroup {
+                            selected_index: 4;
 
                             items: [
                                 { text: "XS" },
@@ -609,6 +609,26 @@ export component ActionsView {
                                 { text: "XL" },
                             ];
                         }
+
+                        ConnectedButtonGroup {
+                            multi_select: true;
+
+                            items: [
+                                { text: "10%" },
+                                { text: "30%", checked: true },
+                                { text: "50%" },
+                            ];
+                        }
+                    }
+
+                    VerticalConnectedButtonGroup {
+                        selected_index: 1;
+
+                        items: [
+                            { text: "Songs" },
+                            { text: "Album" },
+                            { text: "Podcast" },
+                        ];
                     }
                 }
             }
@@ -932,14 +952,14 @@ export component ActionsView {
                 Horizontal {
                     alignment: center;
 
-                    SegmentedButton {
+                    ConnectedButtonGroup {
                         items: [
                             { text: "Expressive" },
                             { text: "Standard" },
                         ];
-                        current_index: MaterialAnimations.motion-scheme == MaterialMotionScheme.expressive ? 0 : 1;
+                        selected_index: MaterialAnimations.motion-scheme == MaterialMotionScheme.expressive ? 0 : 1;
 
-                        index_changed(index) => {
+                        selected_index_changed(index) => {
                             MaterialAnimations.motion-scheme = index == 0 ? MaterialMotionScheme.expressive : MaterialMotionScheme.standard;
                         }
                     }
