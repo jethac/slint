@@ -1,6 +1,6 @@
 {
   "actions": [],
-  "case_rel": "material/extended_fab_pressed",
+  "case_rel": "material/negative_icon_offset",
   "densities": [
     1
   ],
@@ -8,20 +8,12 @@
     "brand": "Roboto",
     "plain": "Roboto"
   },
-  "mask_decor": {
-    "button0": [
-      0,
-      2000
-    ]
-  },
-  "mask_inner": {
-    "button0": [
-      2000
-    ]
-  },
-  "name": "extended-fab-pressed",
+  "mask_decor": {},
+  "mask_inner": {},
+  "name": "negative-icon-offset",
+  "negative_note": "The Slint side draws the icon at the wrong offset (shifted 20dp right) — the comparator must flag the glyph's displaced ink.",
   "params": {},
-  "parity": "static",
+  "parity": "negative",
   "scheme": {
     "background": "FFFDF7FE",
     "error": "FFA8364B",
@@ -72,8 +64,8 @@
     "tertiaryFixedDim": "FFE5B2D5"
   },
   "size": [
-    272,
-    120
+    96,
+    64
   ],
   "theme": {
     "contrast": 0.0,
@@ -84,12 +76,8 @@
     "variant": "tonal-spot"
   },
   "times": [],
-  "trace_elements": [
-    "button0"
-  ],
-  "trace_props": [
-    "shadow_elevation"
-  ],
+  "trace_elements": [],
+  "trace_props": [],
   "type": "canvas",
   "widgets": [
     {
@@ -105,12 +93,12 @@
       "expanded": null,
       "height": null,
       "height_offset": null,
-      "icon": "add",
+      "icon": "check",
       "icons": [],
       "indeterminate": null,
       "items": [],
-      "kind": "extended-fab",
-      "label_width": 52.0,
+      "kind": "icon",
+      "label_width": null,
       "level": null,
       "multi_select": null,
       "nav_icon": null,
@@ -123,19 +111,21 @@
       "shown": null,
       "side": null,
       "size": null,
-      "slint_overrides": {},
-      "state": "pressed",
+      "slint_overrides": {
+        "x": 56
+      },
+      "state": null,
       "subtitle": null,
       "target_scale": null,
-      "text": "Create",
+      "text": null,
       "toggle": null,
       "trailing_icon": null,
       "variant": null,
       "vertical": null,
       "width": null,
       "width_option": null,
-      "x": 56.0,
-      "y": 32.0
+      "x": 36.0,
+      "y": 20.0
     }
   ]
 }
