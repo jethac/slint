@@ -1,0 +1,63 @@
+// Copyright © SixtyFPS GmbH <info@slint.dev>
+// SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0
+
+// Scene: pull-refresh-refreshing — generated from `ui-libraries/material/parity/scenes/pull-refresh-refreshing.json`
+// (edit the scene, regenerate with `cargo run -p material-parity-generator`).
+//PARITY=xfail:femtovg: the refreshing indicators run infinite animations; Compose launches their LaunchedEffect coroutines ~40ms of frame time after t=0 inside Paparazzi, so identical-timestamp frames sit at different phases of the morph+rotation cycle — the loading indicator's blob interior is masked as mid-flight ink while its static circular container stays strict; femtovg additionally tessellates the spinner's stroked arc with a different AA coverage ramp than layoutlib — isolated edge pixels diverge ~90/255 at d2 while geometry is verified identical on software and skia; a silent pass would mean the harness went blind
+// thin stroked outlines (16dp arc, morphing polygon edges): the engines' AA coverage ramps legitimately diverge past the default 8/255
+//PARITY_EPS=16
+//SIZE=560x220
+//TIMES=500,1250,2500
+//TRACE_ELEMENTS=ind
+//MASK_INNER=ind@500,1250,2500
+//DENSITIES=1,2
+import "../../fonts/Roboto-VariableFont.ttf";
+import { MaterialPalette, MaterialTheme, MaterialWindow, PullToRefreshBox, PullToRefreshIndicatorKind } from "@material";
+
+export component TestCase inherits MaterialWindow {
+    init => {
+        // The scene pins seed #6750A4, tonal-spot, spec2025, light, contrast 0
+        // (all the library defaults; restated here so a default change can't
+        // silently move the parity baseline).
+        MaterialTheme.seed-color = #6750A4;
+        MaterialTheme.dark = false;
+        MaterialTheme.contrast-level = 0;
+        MaterialTheme.use-platform-color = false;
+        MaterialTheme.plain-family = "Roboto";
+        MaterialTheme.brand-family = "Roboto";
+        // Compose builds its scene scheme from the same seed — use the
+        // runtime-generated scheme, not the static expressive table.
+        MaterialPalette.dynamic = true;
+    }
+
+    box0 := PullToRefreshBox {
+        x: 40px;
+        y: 60px;
+        width: 220px;
+        height: 130px;
+        indicator-kind: PullToRefreshIndicatorKind.classic;
+        is-refreshing: true;
+        Rectangle {
+            background: MaterialPalette.surface_container;
+        }
+        init => {
+            box0.snap-to(1);
+        }
+    }
+
+    box1 := PullToRefreshBox {
+        x: 300px;
+        y: 60px;
+        width: 220px;
+        height: 130px;
+        indicator-kind: PullToRefreshIndicatorKind.loading-indicator;
+        is-refreshing: true;
+        Rectangle {
+            background: MaterialPalette.surface_container;
+        }
+        init => {
+            box1.snap-to(1);
+        }
+    }
+
+}

@@ -77,6 +77,7 @@ negative-list-segmented
 negative-list-select
 negative-navigation-bar
 negative-press-overlay
+negative-pull-refresh-fraction
 negative-radius
 negative-recolor
 negative-shape-fit
@@ -90,9 +91,14 @@ negative-split-button-spacing
 negative-surface-color
 negative-surface-radius
 negative-surface-tonal
+negative-swipe-dismiss-initial
 negative-thumb-offset
 negative-toggle-select
 negative-wrong-shadow
+pull-refresh-refreshing
+pull-refresh-settle
+pull-refresh-threshold-settle
+pull-to-refresh-states
 radio-check-morph
 radio-hover
 radio-states
@@ -117,6 +123,9 @@ split-button-states
 split-button-styles
 spring-motion
 surfaces
+swipe-to-dismiss-dismiss
+swipe-to-dismiss-settle
+swipe-to-dismiss-states
 switch-hover
 switch-off-morph
 switch-on-morph
