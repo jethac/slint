@@ -846,9 +846,9 @@
     "issues": [
       11
     ],
-    "needs": "shapes (#6)",
-    "notes": "",
-    "status": "missing"
+    "needs": "none",
+    "notes": "slint component: RangeSlider; same Slider.kt pin",
+    "status": "done"
   },
   "RowScope": {
     "issues": [
@@ -951,9 +951,9 @@
     "issues": [
       11
     ],
-    "needs": "shapes (#6)",
-    "notes": "slint component: Slider",
-    "status": "partial"
+    "needs": "none",
+    "notes": "slint component: Slider; tokens: SliderTokens (generated); layout/track/thumb: Slider.kt at the #3 pin",
+    "status": "done"
   },
   "SmallExtendedFloatingActionButton": {
     "issues": [
@@ -1184,9 +1184,9 @@
     "issues": [
       11
     ],
-    "needs": "shapes (#6)",
-    "notes": "",
-    "status": "missing"
+    "needs": "none",
+    "notes": "slint component: VerticalSlider; same Slider.kt pin",
+    "status": "done"
   },
   "VibrantTimePickerDialog": {
     "issues": [
