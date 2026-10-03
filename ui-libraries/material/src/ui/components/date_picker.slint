@@ -1343,7 +1343,7 @@ export component DatePickerDialogContent inherits Rectangle {
     callback dismiss_clicked();
 
     width: DatePickerModalTokens.container_width;
-    // `heightIn(max)` wraps the integer-measured column; ceilling here keeps
+    // `heightIn(max)` wraps the integer-measured column; ceiling here keeps
     // the centered surface on the physical-pixel grid like Compose's
     // integer-placed bounds.
     height: min(Math.ceil(surface_column.min_height / 1px) * 1px, DatePickerModalTokens.container_height);
