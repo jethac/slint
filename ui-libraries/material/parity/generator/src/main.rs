@@ -479,6 +479,27 @@ struct Widget {
     /// "selected_icon": "inbox", "badge": "3", "enabled": false }]`.
     /// The two kinds never coexist on one widget, so the field shapes
     /// are disjoint keys of the merged `GroupItem`.
+    /// `material-snackbar` action label — unset/empty draws no action
+    /// (upstream `action == null`).
+    #[serde(default)]
+    action_text: Option<String>,
+    /// `material-snackbar` `dismissAction != null` upstream.
+    #[serde(default)]
+    has_close_button: Option<bool>,
+    /// `material-snackbar` `actionOnNewLine` — the
+    /// `LegacyNewLineButtonSnackbar` layout at the pin.
+    #[serde(default)]
+    action_on_new_line: Option<bool>,
+    /// `material-snackbar` `actionContentColor` role name.
+    #[serde(default)]
+    action_color: Option<String>,
+    /// `material-snackbar` `dismissActionContentColor` role name.
+    #[serde(default)]
+    dismiss_color: Option<String>,
+    /// `material-snackbar` `contentColor` role name (the message text).
+    #[serde(default)]
+    content_color: Option<String>,
+    /// `connected-button-group`/`vertical-connected-button-group` items.
     #[serde(default)]
     items: Vec<GroupItem>,
     /// Groups: every item carries its own checked state instead of one
@@ -555,6 +576,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         // Compose side rasterizes literally the same path the Slint
         // `Icons.<name>` image does.
         for w in &scene.widgets {
+            // A `material-snackbar` with `has_close_button` always draws the
+            // `Icons.close` dismiss glyph.
+            let close_icon = if w.has_close_button.unwrap_or(false) {
+                vec!["close".to_string()]
+            } else {
+                vec![]
+            };
             for icon in w
                 .icon
                 .iter()
@@ -568,6 +596,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                         .into_iter()
                         .flatten()
                 }))
+                .chain(close_icon.iter())
             {
                 let src = repo_root
                     .join("ui-libraries/material/src/ui/icons")
@@ -945,6 +974,7 @@ fn slint_case(scene: &Scene) -> String {
             "vertical-divider" => "VerticalDivider",
             "badge" => "Badge",
             "badged-box" => "BadgedBox",
+            "material-snackbar" => "SnackBar",
             "top-app-bar" => match w.variant.as_deref().unwrap_or("small") {
                 "small" => "TopAppBar",
                 "center" => "CenterAlignedTopAppBar",
@@ -1725,6 +1755,7 @@ fn slint_canvas(s: &mut String, scene: &Scene) {
     let mut badges = 0;
     let mut badged_boxes = 0;
     let mut nav_bars = 0;
+    let mut snackbars = 0;
     for w in scene.widgets.iter() {
         let component = match w.kind.as_str() {
             "filled-button" => "FilledButton",
@@ -2163,6 +2194,78 @@ fn slint_canvas(s: &mut String, scene: &Scene) {
                 let i = nav_bars;
                 nav_bars += 1;
                 navbar_widget(s, w, i);
+                continue;
+            }
+            "material-snackbar" => {
+                let i = snackbars;
+                snackbars += 1;
+                // `slint_overrides` shadow the authored values for the
+                // negative scenes: `color` (container), `action_color`,
+                // `radius`.
+                let color = w
+                    .slint_overrides
+                    .get("color")
+                    .and_then(|v| v.as_str())
+                    .map(str::to_string)
+                    .or_else(|| w.color.clone())
+                    .map(|c| format!("\n        container_color: MaterialPalette.{};", c.replace('-', "_")))
+                    .unwrap_or_default();
+                let action_color = w
+                    .slint_overrides
+                    .get("action_color")
+                    .and_then(|v| v.as_str())
+                    .map(str::to_string)
+                    .or_else(|| w.action_color.clone())
+                    .map(|c| format!("\n        action_color: MaterialPalette.{};", c.replace('-', "_")))
+                    .unwrap_or_default();
+                let content_color = w
+                    .slint_overrides
+                    .get("content_color")
+                    .and_then(|v| v.as_str())
+                    .map(str::to_string)
+                    .or_else(|| w.content_color.clone())
+                    .map(|c| format!("\n        content_color: MaterialPalette.{};", c.replace('-', "_")))
+                    .unwrap_or_default();
+                let dismiss_color = w
+                    .slint_overrides
+                    .get("dismiss_color")
+                    .and_then(|v| v.as_str())
+                    .map(str::to_string)
+                    .or_else(|| w.dismiss_color.clone())
+                    .map(|c| format!("\n        dismiss_action_color: MaterialPalette.{};", c.replace('-', "_")))
+                    .unwrap_or_default();
+                let radius = w
+                    .slint_overrides
+                    .get("radius")
+                    .map(widget_num)
+                    .or(w.radius)
+                    .map(|r| format!("\n        border_radius: {r}px;"))
+                    .unwrap_or_default();
+                let touch = if w
+                    .slint_overrides
+                    .get("enforce_touch_target")
+                    .and_then(|v| v.as_bool())
+                    .unwrap_or(false)
+                {
+                    String::new()
+                } else {
+                    // The Paparazzi record runs without touch-target
+                    // enforcement, so the snackbar's inner buttons measure
+                    // at their 40dp intrinsic height.
+                    "\n        enforce_touch_target: false;".to_string()
+                };
+                writeln!(
+                    s,
+                    "    snackbar{i} := SnackBar {{\n        x: {}px;\n        y: {}px;\n        constraint-width: {}px;\n        text: {:?};\n        action_text: {:?};\n        has_close_button: {};\n        action_on_new_line: {};{color}{action_color}{content_color}{dismiss_color}{radius}{touch}\n    }}\n",
+                    w.x as i64,
+                    w.y as i64,
+                    w.width.unwrap() as i64,
+                    w.text.as_deref().unwrap_or_default(),
+                    w.action_text.as_deref().unwrap_or_default(),
+                    w.has_close_button.unwrap_or(false),
+                    w.action_on_new_line.unwrap_or(false),
+                )
+                .unwrap();
                 continue;
             }
             "rect" => {

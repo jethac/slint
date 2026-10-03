@@ -38,6 +38,9 @@ import {
     ContainedLoadingIndicator,
     SnackBar,
     Surface,
+    SnackBarDuration,
+    SnackBarHost,
+    SnackBarVisuals,
     ModalBottomSheet,
     BottomSheet,
     BottomSheetScaffold,
@@ -844,7 +847,12 @@ export component ActionsView {
                         text: "Show snackbar";
 
                         clicked => {
-                            snackbar.show();
+                            snackbar_queue.push({
+                                message: "This is a snackbar",
+                                action-label: "Action",
+                                with-dismiss-action: false,
+                                duration: SnackBarDuration.short,
+                            });
                         }
                     }
                 }
@@ -1239,13 +1247,14 @@ export component ActionsView {
         }
     }
 
-    snackbar := SnackBar {
+    in-out property <[SnackBarVisuals]> snackbar_queue;
+
+    snackbar_host := SnackBarHost {
         x: -root.absolute_position.x;
         y: -root.absolute_position.y;
         width: MainWindowAdapter.width;
         height: MainWindowAdapter.height;
-        text: "This is a snackbar";
-        action_text: "Close";
+        queue: snackbar_queue;
     }
 
      dialog := Dialog {

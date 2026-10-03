@@ -218,6 +218,19 @@ class Widget(json: JSONObject) {
     /** `*-divider` line thickness in dp — `DividerDefaults.Thickness` when
      * unset; `0` is the upstream `Dp.Hairline` (one physical pixel). */
     val thickness: Float = json.optDouble("thickness", 1.0).toFloat()
+    /** `material-snackbar` action label — absent/empty is upstream
+     * `action == null`. */
+    val actionText: String? = (json.opt("action_text") as? String)?.takeIf { it.isNotEmpty() }
+    /** `material-snackbar` `dismissAction != null` upstream. */
+    val hasCloseButton: Boolean = json.optBoolean("has_close_button", false)
+    /** `material-snackbar` `actionOnNewLine`. */
+    val actionOnNewLine: Boolean = json.optBoolean("action_on_new_line", false)
+    /** `material-snackbar` `actionContentColor` role name. */
+    val actionColor: String? = (json.opt("action_color") as? String)?.takeIf { it.isNotEmpty() }
+    /** `material-snackbar` `dismissActionContentColor` role name. */
+    val dismissColor: String? = (json.opt("dismiss_color") as? String)?.takeIf { it.isNotEmpty() }
+    /** `material-snackbar` `contentColor` role name. */
+    val contentColor: String? = (json.opt("content_color") as? String)?.takeIf { it.isNotEmpty() }
 
 
     val isFab: Boolean get() = kind == "fab" || kind == "extended-fab"
