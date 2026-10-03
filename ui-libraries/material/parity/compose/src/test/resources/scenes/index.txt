@@ -72,6 +72,10 @@ split-button-sizes
 split-button-states
 split-button-styles
 spring-motion
+switch-hover
+switch-off-morph
+switch-on-morph
+switch-states
 toggle-buttons
 toggle-select-morph
 top-app-bars

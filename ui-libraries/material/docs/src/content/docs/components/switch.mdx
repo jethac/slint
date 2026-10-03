@@ -21,7 +21,32 @@ export component Example inherits Window {
 ```
 </CodeSnippetMD>
 
-A `Switch` is a control that allows users to toggle between two states (on/off). It provides a more prominent visual indication than a checkbox for binary settings.
+A `Switch` is a control that allows users to toggle between two states (on/off). It provides a more prominent visual indication than a checkbox for binary settings. The control is a 52x32px stadium track with a thumb whose size and offset spring to their targets — pressing snaps the thumb to 28px and pins it one outline width off the far edge, hover or press draws the 40px state-layer circle over the thumb, and focus shows the track outline ring.
+
+<CodeSnippetMD imagePath="/src/assets/generated/switch-states.png" scale="3" imageWidth="300" imageHeight="100" imageAlt="" needsBackground="true">
+```slint
+import { Switch } from "@material";
+export component Example inherits Window {
+    width: 300px;
+    height: 100px;
+    background: transparent;
+    HorizontalLayout {
+        spacing: 8px;
+        Switch {}
+        Switch {
+            checked: true;
+        }
+        Switch {
+            enabled: false;
+        }
+        Switch {
+            enabled: false;
+            checked: true;
+        }
+    }
+}
+```
+</CodeSnippetMD>
 
 ## Properties
 
@@ -54,6 +79,11 @@ An icon displayed when the switch is in the checked state.
 ### tooltip
 <SlintProperty propName="tooltip" typeName="string">
 A tooltip text that appears when hovering over the switch.
+</SlintProperty>
+
+### enforce-touch-target
+<SlintProperty propName="enforce-touch-target" typeName="bool" defaultValue="true">
+Whether the switch extends its touch target to at least 48px when its visual container is smaller.
 </SlintProperty>
 
 ## Functions
