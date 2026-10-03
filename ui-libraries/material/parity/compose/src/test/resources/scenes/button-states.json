@@ -33,6 +33,7 @@
       2000
     ]
   },
+  "mask_shadow": {},
   "name": "button-states",
   "params": {},
   "parity": "static",

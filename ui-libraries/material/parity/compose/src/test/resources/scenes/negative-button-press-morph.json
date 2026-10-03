@@ -11,6 +11,7 @@
   },
   "mask_decor": {},
   "mask_inner": {},
+  "mask_shadow": {},
   "name": "negative-button-press-morph",
   "negative_note": "the covering rectangle repaints the pressed button at its resting 28px radius — a corner that fails to morph on press must fail",
   "params": {},

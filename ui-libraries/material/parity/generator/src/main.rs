@@ -55,6 +55,8 @@ struct Scene {
     #[serde(default)]
     mask_decor: std::collections::BTreeMap<String, Vec<u64>>,
     #[serde(default)]
+    mask_shadow: std::collections::BTreeMap<String, Vec<u64>>,
+    #[serde(default)]
     params: serde_json::Map<String, serde_json::Value>,
     #[serde(default)]
     widgets: Vec<Widget>,
@@ -73,6 +75,12 @@ struct Scene {
     /// the case fails when they stop occurring.
     #[serde(default)]
     xfail_silhouette: Option<String>,
+    /// `//PHASE_TOL_MS=<ms>` — bounds the anim-launch phase window (upstream
+    /// launches per-item springs from a coroutine inside a layout pass,
+    /// one frame of pipeline latency on top of #27's clock offset); element
+    /// and text positions best-match within `±ms`.
+    #[serde(default)]
+    phase_tol_ms: u64,
 }
 
 #[derive(serde::Deserialize, serde::Serialize)]
@@ -155,6 +163,27 @@ struct Widget {
     /// Icon-button container width: `narrow`, `uniform` (default), `wide`.
     #[serde(default)]
     width_option: Option<String>,
+    /// FAB menu host size for `toggle-fab`/`fab-menu` kinds: `baseline`
+    /// (default), `medium`, or `large` — upstream's
+    /// `containerSize{,Medium,Large}` overloads (no small exists).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    fab_size: Option<String>,
+    /// The icon drawn once the toggle's `checkedProgress` passes 0.5 —
+    /// `checked-icon` on the Slint side, the upstream sample's close icon.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    checked_icon: Option<String>,
+    /// `expanded` on `FloatingActionButtonMenu` (drives the toggle's
+    /// `checked` on both sides).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    expanded: Option<bool>,
+    /// `horizontalAlignment` for `fab-menu`: `start`, `center`, or `end`
+    /// (upstream default `Alignment.End`).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    alignment: Option<String>,
+    /// The `fab-menu` widget's entries: `{icon, text, enabled}` structs —
+    /// `FloatingActionButtonMenuItem`s on both sides.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    items: Vec<FabMenuItemSpec>,
     /// M3 elevation level (0–5) for `surface` widgets: the Slint side sets
     /// `Elevation.level`, the Compose side sets `Modifier.shadow`'s dp.
     #[serde(default)]
@@ -169,6 +198,18 @@ struct Widget {
     /// (`negative` scenes only). Keys shadow the widget's own fields.
     #[serde(default)]
     slint_overrides: serde_json::Map<String, serde_json::Value>,
+}
+
+/// One entry of a `fab-menu` widget's `items` — `FabMenuItem` on the Slint
+/// side, one `FloatingActionButtonMenuItem` call upstream.
+#[derive(serde::Deserialize, serde::Serialize)]
+struct FabMenuItemSpec {
+    #[serde(default)]
+    icon: Option<String>,
+    #[serde(default)]
+    text: Option<String>,
+    #[serde(default)]
+    enabled: Option<bool>,
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -199,7 +240,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         // Compose side rasterizes literally the same path the Slint
         // `Icons.<name>` image does.
         for w in &scene.widgets {
-            if let Some(icon) = &w.icon {
+            let icons = w
+                .icon
+                .iter()
+                .chain(w.checked_icon.iter())
+                .chain(w.items.iter().filter_map(|i| i.icon.as_ref()));
+            for icon in icons {
                 let src = repo_root
                     .join("ui-libraries/material/src/ui/icons")
                     .join(format!("{icon}.svg"));
@@ -279,6 +325,7 @@ fn resolved_scene(scene: &Scene, case_rel: &str) -> serde_json::Value {
         "actions": scene.actions.iter().chain(widget_actions(scene).iter()).collect::<Vec<_>>(),
         "mask_inner": scene.mask_inner,
         "mask_decor": scene.mask_decor,
+        "mask_shadow": scene.mask_shadow,
         "params": scene.params,
         "widgets": scene.widgets,
         "scheme": scheme_argbs(&scene.theme),
@@ -466,11 +513,22 @@ fn slint_case(scene: &Scene) -> String {
         )
         .unwrap();
     }
+    for (id, ts) in &scene.mask_shadow {
+        writeln!(
+            s,
+            "//MASK_SHADOW={id}@{}",
+            ts.iter().map(u64::to_string).collect::<Vec<_>>().join(",")
+        )
+        .unwrap();
+    }
     if let Some(reason) = &scene.xfail_text {
         writeln!(s, "//XFAIL_TEXT={reason}").unwrap();
     }
     if let Some(reason) = &scene.xfail_silhouette {
         writeln!(s, "//XFAIL_SILHOUETTE={reason}").unwrap();
+    }
+    if scene.phase_tol_ms > 0 {
+        writeln!(s, "//PHASE_TOL_MS={}", scene.phase_tol_ms).unwrap();
     }
     writeln!(
         s,
@@ -492,12 +550,20 @@ fn slint_case(scene: &Scene) -> String {
             "filled-icon-button" => "FilledIconButton",
             "tonal-icon-button" => "TonalIconButton",
             "outlined-icon-button" => "OutlineIconButton",
+            "toggle-fab" => "ToggleFloatingActionButton",
+            "fab-menu" => "FloatingActionButtonMenu",
             // `surface` imports `Elevation`/`MaterialShapes` below instead.
             "rect" | "surface" => continue,
             other => panic!("unknown widget kind {other:?}"),
         };
         imports.push(component);
-        if w.icon.is_some() {
+        if w.kind == "toggle-fab" || w.kind == "fab-menu" {
+            imports.push("FabMenuSize");
+        }
+        if w.icon.is_some()
+            || w.checked_icon.is_some()
+            || w.items.iter().any(|i| i.icon.is_some())
+        {
             needs_icons = true;
         }
         if w.size.is_some() || w.corner.is_some() || w.width_option.is_some() {
@@ -715,12 +781,40 @@ fn button_props(w: &Widget, timed: bool) -> String {
     p
 }
 
+/// `baseline`/`medium`/`large` → the `FabMenuSize` enum variant.
+fn fab_size_variant(size: Option<&str>) -> &'static str {
+    match size.unwrap_or("baseline") {
+        "baseline" => "baseline",
+        "medium" => "medium",
+        "large" => "large",
+        other => panic!("unknown fab size {other:?}"),
+    }
+}
+
+/// `//TRACE_PROPS` forwarding for the fab-menu kinds: emits
+/// `out property` aliases on the test-case root reading the live values
+/// off `target` (`button{n}`/`menu{n}`).
+fn forward_fab_trace(s: &mut String, target: &str, scene: &Scene) {
+    for prop in &scene.trace_props {
+        let ty = match prop.as_str() {
+            "container_radius" | "container_size" => "length",
+            "checked_progress" => "float",
+            other => panic!("no forwarding type known for trace prop {other:?}"),
+        };
+        writeln!(s, "    out property <{ty}> {prop}: {target}.{prop};\n").unwrap();
+    }
+}
+
 fn slint_canvas(s: &mut String, scene: &Scene) {
     // Buttons are named `button{n}` by count of button-family widgets, not
     // widget index — a backdrop `rect` ahead of a button leaves `button0`
     // intact.
     let mut buttons = 0;
     let mut surfaces = 0;
+    let mut menus = 0;
+    // The first traced fab widget owns the scene's `TRACE_PROPS` forwarding —
+    // the same `button0` convention the button-family scenes use.
+    let mut fab_traced = false;
     for w in scene.widgets.iter() {
         let component = match w.kind.as_str() {
             "filled-button" => "FilledButton",
@@ -786,6 +880,98 @@ fn slint_canvas(s: &mut String, scene: &Scene) {
                         cover["opacity"].as_f64().unwrap_or(1.0),
                     )
                     .unwrap();
+                }
+                continue;
+            }
+            "toggle-fab" => {
+                let i = buttons;
+                buttons += 1;
+                let mut p = String::new();
+                writeln!(p, "        size: FabMenuSize.{};", fab_size_variant(w.fab_size.as_deref())).unwrap();
+                if let Some(icon) = &w.icon {
+                    writeln!(p, "        icon: Icons.{icon};").unwrap();
+                }
+                if let Some(icon) = &w.checked_icon {
+                    writeln!(p, "        checked-icon: Icons.{icon};").unwrap();
+                }
+                if w.checked == Some(true) {
+                    p.push_str("        checked: true;\n");
+                }
+                if w.enabled == Some(false) {
+                    p.push_str("        enabled: false;\n");
+                }
+                // Static-state scenes drive hover/press through the
+                // `simulate_*` hooks like the button family; timed scenes
+                // get the gesture from `widget_actions` instead.
+                if scene.times.is_empty() {
+                    match w.state.as_deref() {
+                        Some("hovered") => p.push_str("        simulate-hover: true;\n"),
+                        Some("pressed") => p.push_str("        simulate-press: true;\n"),
+                        _ => {}
+                    }
+                }
+                writeln!(
+                    s,
+                    "    button{i} := ToggleFloatingActionButton {{\n        x: {}px;\n        y: {}px;\n{p}    }}\n",
+                    w.x as i64,
+                    w.y as i64,
+                )
+                .unwrap();
+                if !fab_traced {
+                    forward_fab_trace(s, &format!("button{i}"), scene);
+                    fab_traced = true;
+                }
+                continue;
+            }
+            "fab-menu" => {
+                let i = menus;
+                menus += 1;
+                let mut p = String::new();
+                if w.expanded == Some(true) {
+                    p.push_str("        expanded: true;\n");
+                }
+                let size = fab_size_variant(w.fab_size.as_deref());
+                if size != "baseline" {
+                    writeln!(p, "        button-size: FabMenuSize.{size};").unwrap();
+                }
+                if let Some(icon) = &w.icon {
+                    writeln!(p, "        button-icon: Icons.{icon};").unwrap();
+                }
+                if let Some(icon) = &w.checked_icon {
+                    writeln!(p, "        button-checked-icon: Icons.{icon};").unwrap();
+                }
+                if let Some(alignment) = &w.alignment {
+                    if alignment != "end" {
+                        writeln!(p, "        horizontal-alignment: LayoutAlignment.{alignment};").unwrap();
+                    }
+                }
+                let items = w
+                    .items
+                    .iter()
+                    .map(|item| {
+                        let icon = item
+                            .icon
+                            .as_deref()
+                            .unwrap_or_else(|| panic!("fab-menu item needs an icon"));
+                        format!(
+                            "{{ icon: Icons.{icon}, text: {:?}, enabled: {} }}",
+                            item.text.as_deref().unwrap_or_default(),
+                            item.enabled.unwrap_or(true),
+                        )
+                    })
+                    .collect::<Vec<_>>()
+                    .join(", ");
+                writeln!(p, "        items: [{items}];").unwrap();
+                writeln!(
+                    s,
+                    "    menu{i} := FloatingActionButtonMenu {{\n        x: {}px;\n        y: {}px;\n{p}    }}\n",
+                    w.x as i64,
+                    w.y as i64,
+                )
+                .unwrap();
+                if !fab_traced {
+                    forward_fab_trace(s, &format!("menu{i}"), scene);
+                    fab_traced = true;
                 }
                 continue;
             }

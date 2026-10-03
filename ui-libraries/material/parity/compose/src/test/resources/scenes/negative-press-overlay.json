@@ -11,6 +11,7 @@
   },
   "mask_decor": {},
   "mask_inner": {},
+  "mask_shadow": {},
   "name": "negative-press-overlay",
   "negative_note": "the covering rectangle adds a second on-primary 10% overlay on the pressed button — a doubled state layer must fail",
   "params": {},

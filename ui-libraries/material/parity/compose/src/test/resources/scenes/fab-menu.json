@@ -1,6 +1,6 @@
 {
   "actions": [],
-  "case_rel": "material/button_icons",
+  "case_rel": "material/fab_menu",
   "densities": [
     1,
     2
@@ -11,8 +11,69 @@
   },
   "mask_decor": {},
   "mask_inner": {},
-  "mask_shadow": {},
-  "name": "button-icons",
+  "mask_shadow": {
+    "menu0": [
+      0,
+      2000
+    ],
+    "menu0>container0": [
+      0,
+      2000
+    ],
+    "menu0>container1": [
+      0,
+      2000
+    ],
+    "menu0>container2": [
+      0,
+      2000
+    ],
+    "menu0>toggle0": [
+      0,
+      2000
+    ],
+    "menu1": [
+      0,
+      2000
+    ],
+    "menu1>container0": [
+      0,
+      2000
+    ],
+    "menu1>container1": [
+      0,
+      2000
+    ],
+    "menu1>container2": [
+      0,
+      2000
+    ],
+    "menu1>toggle0": [
+      0,
+      2000
+    ],
+    "menu2": [
+      0,
+      2000
+    ],
+    "menu2>container0": [
+      0,
+      2000
+    ],
+    "menu2>container1": [
+      0,
+      2000
+    ],
+    "menu2>container2": [
+      0,
+      2000
+    ],
+    "menu2>toggle0": [
+      0,
+      2000
+    ]
+  },
+  "name": "fab-menu",
   "params": {},
   "parity": "static",
   "scheme": {
@@ -65,8 +126,8 @@
     "tertiaryFixedDim": "FFE5B2D5"
   },
   "size": [
-    716,
-    176
+    640,
+    300
   ],
   "theme": {
     "contrast": 0.0,
@@ -78,119 +139,146 @@
   },
   "times": [],
   "trace_elements": [
-    "button0",
-    "button1",
-    "button2",
-    "button3",
-    "button4"
+    "menu0",
+    "menu0>toggle",
+    "menu0>container",
+    "menu1",
+    "menu1>toggle",
+    "menu1>container",
+    "menu2",
+    "menu2>toggle",
+    "menu2>container"
   ],
-  "trace_props": [],
+  "trace_props": [
+    "checked_progress"
+  ],
   "type": "canvas",
   "widgets": [
     {
+      "alignment": "end",
       "checkable": null,
       "checked": null,
+      "checked_icon": "close",
       "color": null,
       "corner": null,
       "enabled": null,
+      "expanded": true,
+      "fab_size": "baseline",
       "height": null,
-      "icon": "check",
-      "kind": "filled-button",
+      "icon": "edit",
+      "items": [
+        {
+          "enabled": null,
+          "icon": "check",
+          "text": "Compose"
+        },
+        {
+          "enabled": null,
+          "icon": "schedule",
+          "text": "Send"
+        },
+        {
+          "enabled": null,
+          "icon": "arrow_right",
+          "text": "Archive"
+        }
+      ],
+      "kind": "fab-menu",
       "level": null,
       "radius": null,
       "shape": null,
-      "size": "xs",
+      "size": null,
       "slint_overrides": {},
       "state": null,
-      "text": "Add",
-      "width": 75.0,
+      "text": null,
+      "width": null,
       "width_option": null,
-      "x": 16.0,
-      "y": 128.0
+      "x": 440.0,
+      "y": 44.0
     },
     {
+      "alignment": "center",
       "checkable": null,
       "checked": null,
+      "checked_icon": "close",
       "color": null,
       "corner": null,
       "enabled": null,
+      "expanded": true,
+      "fab_size": "medium",
       "height": null,
-      "icon": "check",
-      "kind": "filled-button",
+      "icon": "edit",
+      "items": [
+        {
+          "enabled": null,
+          "icon": "check",
+          "text": "Compose"
+        },
+        {
+          "enabled": null,
+          "icon": "schedule",
+          "text": "Send"
+        },
+        {
+          "enabled": null,
+          "icon": "arrow_right",
+          "text": "Archive"
+        }
+      ],
+      "kind": "fab-menu",
       "level": null,
       "radius": null,
       "shape": null,
-      "size": "s",
+      "size": null,
       "slint_overrides": {},
       "state": null,
-      "text": "Add",
-      "width": 87.0,
+      "text": null,
+      "width": null,
       "width_option": null,
-      "x": 156.0,
-      "y": 120.0
+      "x": 220.0,
+      "y": 44.0
     },
     {
+      "alignment": "start",
       "checkable": null,
       "checked": null,
+      "checked_icon": "close",
       "color": null,
       "corner": null,
       "enabled": null,
+      "expanded": true,
+      "fab_size": "large",
       "height": null,
-      "icon": "check",
-      "kind": "filled-button",
+      "icon": "edit",
+      "items": [
+        {
+          "enabled": null,
+          "icon": "check",
+          "text": "Compose"
+        },
+        {
+          "enabled": null,
+          "icon": "schedule",
+          "text": "Send"
+        },
+        {
+          "enabled": null,
+          "icon": "arrow_right",
+          "text": "Archive"
+        }
+      ],
+      "kind": "fab-menu",
       "level": null,
       "radius": null,
       "shape": null,
-      "size": "m",
+      "size": null,
       "slint_overrides": {},
       "state": null,
-      "text": "Add",
-      "width": 107.0,
+      "text": null,
+      "width": null,
       "width_option": null,
-      "x": 296.0,
-      "y": 104.0
-    },
-    {
-      "checkable": null,
-      "checked": null,
-      "color": null,
-      "corner": null,
-      "enabled": null,
-      "height": null,
-      "icon": "check",
-      "kind": "filled-button",
-      "level": null,
-      "radius": null,
-      "shape": null,
-      "size": "l",
-      "slint_overrides": {},
-      "state": null,
-      "text": "Add",
-      "width": 167.0,
-      "width_option": null,
-      "x": 436.0,
-      "y": 64.0
-    },
-    {
-      "checkable": null,
-      "checked": null,
-      "color": null,
-      "corner": null,
-      "enabled": null,
-      "height": null,
-      "icon": "check",
-      "kind": "filled-button",
-      "level": null,
-      "radius": null,
-      "shape": null,
-      "size": "xl",
-      "slint_overrides": {},
-      "state": null,
-      "text": "Add",
-      "width": 211.0,
-      "width_option": null,
-      "x": 576.0,
-      "y": 24.0
+      "x": 20.0,
+      "y": 44.0
     }
   ]
 }

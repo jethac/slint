@@ -11,6 +11,7 @@
   },
   "mask_decor": {},
   "mask_inner": {},
+  "mask_shadow": {},
   "name": "negative-corner-leak-dark",
   "negative_note": "the covering rectangle paints square corners over the pressed button's rounded shape — ink outside the corner arc is visibly dark-on-light and must fail the strict layer at both densities",
   "params": {},

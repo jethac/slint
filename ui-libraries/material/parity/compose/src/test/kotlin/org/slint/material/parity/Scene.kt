@@ -100,9 +100,33 @@ class Widget(json: JSONObject) {
     val checked: Boolean = json.optBoolean("checked", false)
     /** Icon-button container width `narrow`/`uniform`/`wide`. */
     val widthOption: String = (json.opt("width_option") as? String) ?: "uniform"
+    /** FAB menu host size for `toggle-fab`/`fab-menu`: `baseline`
+     * (default), `medium`, or `large` — the upstream
+     * `containerSize{,Medium,Large}` overloads (no small exists). */
+    val fabSize: String = (json.opt("fab_size") as? String) ?: "baseline"
+    /** The icon drawn once the toggle's `checkedProgress` passes 0.5 —
+     * the upstream sample's close icon. */
+    val checkedIcon: String? = (json.opt("checked_icon") as? String)?.takeIf { it.isNotEmpty() }
+    /** `expanded` on `FloatingActionButtonMenu` (drives the toggle's
+     * `checked` on both sides). */
+    val expanded: Boolean = json.optBoolean("expanded", false)
+    /** `horizontalAlignment` for `fab-menu`: `start`, `center`, or `end`
+     * (upstream default `Alignment.End`). */
+    val alignment: String = (json.opt("alignment") as? String) ?: "end"
+    /** The `fab-menu` widget's `{icon, text, enabled}` entries. */
+    val items: List<FabMenuItemSpec> =
+        json.optJSONArray("items")?.let { a -> (0 until a.length()).map { FabMenuItemSpec(a.getJSONObject(it)) } }
+            ?: emptyList()
 
     val isIconButton: Boolean get() = kind.endsWith("icon-button")
     val isButton: Boolean get() = isIconButton || kind.endsWith("-button")
+}
+
+/** One `fab-menu` item — a `FloatingActionButtonMenuItem` upstream. */
+class FabMenuItemSpec(json: JSONObject) {
+    val icon: String? = (json.opt("icon") as? String)?.takeIf { it.isNotEmpty() }
+    val text: String? = (json.opt("text") as? String)?.takeIf { it.isNotEmpty() }
+    val enabled: Boolean = json.optBoolean("enabled", true)
 }
 
 /** "primary-container" → "primaryContainer" for `scheme` map lookups. */

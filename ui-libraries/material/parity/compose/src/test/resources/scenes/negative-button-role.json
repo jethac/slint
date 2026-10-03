@@ -11,6 +11,7 @@
   },
   "mask_decor": {},
   "mask_inner": {},
+  "mask_shadow": {},
   "name": "negative-button-role",
   "negative_note": "the covering rectangle fills the button with secondary-container instead of primary — a wrong container role must fail",
   "params": {},

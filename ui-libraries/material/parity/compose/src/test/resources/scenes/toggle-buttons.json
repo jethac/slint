@@ -52,6 +52,7 @@
     ]
   },
   "mask_inner": {},
+  "mask_shadow": {},
   "name": "toggle-buttons",
   "params": {},
   "parity": "static",

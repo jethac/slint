@@ -30,6 +30,7 @@
       1500
     ]
   },
+  "mask_shadow": {},
   "name": "icon-button-press-morph",
   "params": {},
   "parity": "motion",

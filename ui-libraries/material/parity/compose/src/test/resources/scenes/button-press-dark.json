@@ -29,6 +29,7 @@
       2500
     ]
   },
+  "mask_shadow": {},
   "name": "button-press-dark",
   "params": {},
   "parity": "motion",

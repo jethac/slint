@@ -18,6 +18,7 @@
   },
   "mask_decor": {},
   "mask_inner": {},
+  "mask_shadow": {},
   "name": "negative-button-focus-ring",
   "negative_note": "the covering rectangle repaints the focused button flat primary over the whole widget — the missing focus ring must fail",
   "params": {},

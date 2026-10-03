@@ -228,6 +228,14 @@ impl PxRect {
 /// boundary; a fill bleeding past it (the corner leak) lands on strict pixels.
 const CORNER_BAND: f64 = 2.0;
 
+/// Ring width a `//MASK_SHADOW=` element's halo spill masks, in logical px.
+/// Sized to contain the Android ambient + spot recipe for the component
+/// library's deepest elevation (level 3, 6dp): ambient outset `z/2` plus
+/// the spot blur/outset both sides of the shadow bounds. The recipe's own
+/// correctness is covered by the renderers' `draw_shadow` tests — what
+/// differs across engines here is only where that halo lands.
+const SHADOW_MARGIN_DP: f64 = 16.0;
+
 /// Growth a `//MASK_INNER=` element's ink coverage must still have left one
 /// frame after the gesture: a bounded ripple expands over hundreds of ms,
 /// so coverage at the first post-action frame sits well below the settled
@@ -289,6 +297,20 @@ impl PixelMask {
         }
     }
 
+    /// Fill the band `outer \ inner` with `class` — the spill region an
+    /// elevation shadow paints, minus the caster's own bounds.
+    fn fill_ring(&mut self, outer: PxRect, inner: PxRect, class: PixelClass) {
+        for y in outer.y0.floor().max(0.0) as usize..(outer.y1.ceil() as usize).min(self.h) {
+            for x in outer.x0.floor().max(0.0) as usize..(outer.x1.ceil() as usize).min(self.w)
+            {
+                let (px, py) = (x as f64 + 0.5, y as f64 + 0.5);
+                if !inner.contains(px, py) {
+                    self.set(x, y, class);
+                }
+            }
+        }
+    }
+
     /// Record the traced element pair `slint`/`compose` (device px). Two
     /// kinds of pixels skip strict comparison, and nothing else:
     ///
@@ -316,6 +338,13 @@ impl PixelMask {
     /// carve-out (`//MASK_DECOR=`): when the element carries a decoration
     /// the reference engine cannot render, corner zones take the normal
     /// margin band.
+    ///
+    /// `wedge_skip` (`//MASK_SHADOW=` elements) additionally skips the
+    /// wedge inside the bounds but outside the maximal silhouette: nothing
+    /// of the shape paints there, so it shows the *outside* shadow recipe
+    /// through the silhouette's AA edge — the same engine divergence the
+    /// shadow ring masks. The silhouette itself is still verified by
+    /// `corner_silhouette_findings` scanning the boundary edges numerically.
     fn mark_element(
         &mut self,
         slint: PxRect,
@@ -324,6 +353,7 @@ impl PixelMask {
         inset: f64,
         corners_strict: bool,
         inked: bool,
+        wedge_skip: bool,
     ) {
         let (a, b) = (slint.dilated(1.0), compose.dilated(1.0));
         let (x0, y0) =
@@ -416,7 +446,7 @@ impl PixelMask {
                         // element the wedge itself is decor (shadow spill,
                         // a ring), so it is masked instead.
                         Some(CornerCell::Outside) => {
-                            if !corners_strict {
+                            if !corners_strict || (wedge_skip && r.contains(px, py)) {
                                 self.set(x, y, PixelClass::Skip)
                             } else if !inked
                                 && r.contains(px, py)
@@ -798,6 +828,12 @@ pub struct TraceFrame {
     pub props: BTreeMap<String, TraceValue>,
     /// x, y, w, h, opacity per element id — logical units.
     pub elements: BTreeMap<String, [f64; 5]>,
+    /// x, y, w, h, layout-w of every `Text` element in document order —
+    /// the `text:<n>` geometry `compare_text_metrics` checks per frame.
+    /// x/y/w/h are the *visible* bounds (clipped by ancestor clips, like
+    /// upstream's bounds tracker); layout-w is the unclipped layout width
+    /// — the intrinsic metric `unhint_w` compares against.
+    pub texts: Vec<[f64; 5]>,
 }
 
 /// Traced property getter: name → value, or `None` when unknown.
@@ -823,10 +859,9 @@ pub fn capture_trace<C: i_slint_core::api::ComponentHandle>(
             ),
         }
     }
-    for id in &spec.trace_elements {
-        // Element ids are emitted component-qualified (`TestCase::thumb`).
-        let id_owned = id.clone();
-        let handle = i_slint_backend_testing::ElementQuery::from_root(component)
+    let find_element = |component: &C, id: &str| {
+        let id_owned = id.to_string();
+        i_slint_backend_testing::ElementQuery::from_root(component)
             .match_predicate(move |e| {
                 e.id()
                     .map(|candidate| {
@@ -835,8 +870,53 @@ pub fn capture_trace<C: i_slint_core::api::ComponentHandle>(
                     })
                     .unwrap_or(false)
             })
-            .find_first();
-        let Some(handle) = handle else {
+            .find_first()
+    };
+    for id in &spec.trace_elements {
+        // `parent>child`: every descendant of `parent` whose id ends with
+        // `::child`, indexed in tree order — for repeated children inside a
+        // component (menu items), which carry no unique id.
+        if let Some((parent, sub)) = id.split_once('>') {
+            let Some(parent_handle) = find_element(component, parent) else {
+                panic!("TRACE_ELEMENTS names '{parent}' (of '{id}') but no element has that id")
+            };
+            let sub_owned = sub.to_string();
+            let matches = parent_handle
+                .query_descendants()
+                .match_predicate(move |e| {
+                    e.id()
+                        .map(|candidate| {
+                            let candidate = candidate.as_str();
+                            candidate == sub_owned
+                                || candidate.ends_with(&format!("::{sub_owned}"))
+                        })
+                        .unwrap_or(false)
+                })
+                .find_all();
+            for (i, handle) in matches.iter().enumerate() {
+                // The item repeats carry `accessible-item-index` on their
+                // component root: walking ancestors gives each `container`
+                // the slot it belongs to (`container2` even while siblings
+                // are hidden). Elements outside the repeat fall back to
+                // tree order.
+                let index = handle.nearest_accessible_item_index().unwrap_or(i);
+                let pos = handle.absolute_position();
+                let size = handle.size();
+                frame.elements.insert(
+                    format!("{id}{index}"),
+                    [
+                        pos.x as f64,
+                        pos.y as f64,
+                        size.width as f64,
+                        size.height as f64,
+                        handle.computed_opacity() as f64,
+                    ],
+                );
+            }
+            continue;
+        }
+        // Element ids are emitted component-qualified (`TestCase::thumb`).
+        let Some(handle) = find_element(component, id) else {
             panic!("TRACE_ELEMENTS names '{id}' but no element has that id")
         };
         let pos = handle.absolute_position();
@@ -851,6 +931,25 @@ pub fn capture_trace<C: i_slint_core::api::ComponentHandle>(
                 handle.computed_opacity() as f64,
             ],
         );
+    }
+    for handle in i_slint_backend_testing::ElementQuery::from_root(component)
+        .match_inherits("Text")
+        .include_invisible()
+        .find_all()
+    {
+        // Upstream's bounds tracker reports the rect clipped by the item's
+        // clip chain — a text trailing out of its animating pill reads x at
+        // the clip edge and w as the visible slice. `visible_bounds` gives
+        // the same semantics. The last column keeps the unclipped layout
+        // width — upstream's `unhint_w` is intrinsic regardless of clip.
+        let (pos, size) = handle.visible_bounds();
+        frame.texts.push([
+            pos.x as f64,
+            pos.y as f64,
+            size.width as f64,
+            size.height as f64,
+            handle.size().width as f64,
+        ]);
     }
     frame
 }
@@ -917,10 +1016,20 @@ fn dispatch_action(window: &i_slint_core::api::Window, action: &ParityAction) {
 }
 
 fn advance_mock_time_to(start_ms: u64, target_rel_ms: u64) {
-    let now = i_slint_backend_testing::get_mocked_time();
-    let delta = (start_ms + target_rel_ms).saturating_sub(now);
-    if delta > 0 {
-        i_slint_backend_testing::mock_elapsed_time(delta);
+    let target = start_ms + target_rel_ms;
+    loop {
+        let now = i_slint_backend_testing::get_mocked_time();
+        let delta = target.saturating_sub(now);
+        if delta == 0 {
+            break;
+        }
+        // Tick at 1ms granularity: `mock_elapsed_time` is the engine's frame
+        // — it updates animated bindings and runs change handlers — so a
+        // single big jump would pin every downstream binding (an integer
+        // stagger gating item springs) to the sampled times rather than the
+        // instant it actually crossed, skewing the scene's motion a whole
+        // interval late. Compose's trace samples the same continuous line.
+        i_slint_backend_testing::mock_elapsed_time(delta.min(1));
     }
 }
 
@@ -1023,9 +1132,17 @@ fn estimate_phase(slint: &[TraceFrame], by_time: &BTreeMap<u64, &serde_json::Val
 
 /// `(findings, measured compose clock offset)` — the offset is reported for
 /// the record but never applied to the comparison (#27).
+///
+/// `phase_tol_ms` bounds the anim-launch phase window (`//PHASE_TOL_MS=`):
+/// element geometry matches the best Compose frame within `±phase_tol_ms`
+/// because upstream launches per-item springs from a coroutine inside a
+/// layout pass while Slint's binding eval is instantaneous. Properties stay
+/// identical-timestamp — they drive their own springs, so a launch-lag
+/// there would be a real divergence.
 pub fn compare_traces(
     slint: &[TraceFrame],
     compose: &serde_json::Value,
+    phase_tol_ms: u64,
 ) -> (Vec<String>, Option<i64>) {
     let mut errors = Vec::new();
     let frames = compose["frames"].as_array().cloned().unwrap_or_default();
@@ -1038,6 +1155,12 @@ pub fn compare_traces(
     // for the xfail note; it is never applied to the comparison.
     let compose_at = |t: u64| -> Vec<&serde_json::Value> {
         by_time.get(&t).copied().into_iter().collect()
+    };
+    let compose_in = |t: u64, tol: u64| -> Vec<&serde_json::Value> {
+        if tol == 0 {
+            return compose_at(t);
+        }
+        (t.saturating_sub(tol)..=t + tol).filter_map(|tt| by_time.get(&tt).copied()).collect()
     };
 
     // The hinted drift `|w - unhinted advance|` of `text:<N>` is a constant
@@ -1066,6 +1189,7 @@ pub fn compare_traces(
             errors.push(format!("t={}ms has no Compose trace frame", frame.t_ms));
             continue;
         }
+        let element_candidates = compose_in(frame.t_ms, phase_tol_ms);
         for (name, value) in &frame.props {
             let Some(actual) = value.components() else { continue };
             let mut best: Option<(Vec<f64>, f64)> = None;
@@ -1126,14 +1250,18 @@ pub fn compare_traces(
                     + 1.0
             };
             let mut best: Option<(&serde_json::Value, f64, u64)> = None;
-            for cf in &candidates {
+            for cf in &element_candidates {
                 let Some(ce) = cf["elements"].get(id) else { continue };
-                let w_eps = if drift.is_empty() { GEOM_EPS } else { drift_eps() };
+                // `x` of a text-sized element inherits `w`'s drift: the
+                // element's width is the text's hinted-width difference and
+                // an end- or center-anchored placement shifts by as much.
+                let pos_eps = if drift.is_empty() { GEOM_EPS } else { drift_eps() };
                 let err: f64 = ["x", "y", "w", "h", "opacity"]
                     .iter()
                     .enumerate()
                     .filter_map(|(i, key)| {
-                        let eps = if *key == "w" { w_eps } else { GEOM_EPS };
+                        let eps =
+                            if *key == "w" || *key == "x" { pos_eps } else { GEOM_EPS };
                         ce[key].as_f64().map(|e| (geo[i] - e).abs() / eps.max(GEOM_EPS))
                     })
                     .fold(0.0, f64::max);
@@ -1146,10 +1274,10 @@ pub fn compare_traces(
                     .push(format!("t={}ms element '{id}' missing from Compose trace", frame.t_ms)),
                 Some((cf, err, ct)) if err > 1.0 => {
                     let ce = &cf["elements"][id];
-                    let w_eps = if drift.is_empty() { GEOM_EPS } else { drift_eps() };
+                    let pos_eps = if drift.is_empty() { GEOM_EPS } else { drift_eps() };
                     for (i, key) in ["x", "y", "w", "h", "opacity"].iter().enumerate() {
                         let Some(e) = ce[key].as_f64() else { continue };
-                        let eps = if *key == "w" { w_eps } else { GEOM_EPS };
+                        let eps = if *key == "w" || *key == "x" { pos_eps } else { GEOM_EPS };
                         if (geo[i] - e).abs() > eps {
                             errors.push(format!(
                                 "t={}ms element '{id}'.{key}: slint {} vs compose@{ct}ms {e} (eps {eps:.2})",
@@ -1200,20 +1328,17 @@ pub fn compare_traces(
 /// difference (text nodes are centered in their containers). `h` still
 /// compares at 1px (line-height rounding), `baseline`/`lines` have no Slint
 /// introspection — the masked pixel layer covers their visual effect.
-fn compare_text_metrics<C: i_slint_core::api::ComponentHandle>(
-    component: &C,
+fn compare_text_metrics(
     slint: &[TraceFrame],
     compose: &serde_json::Value,
     xfail_text: Option<&str>,
+    phase_tol_ms: u64,
 ) -> Vec<String> {
     let mut errors = Vec::new();
     let mut saw_drift = false;
     let frames = compose["frames"].as_array().cloned().unwrap_or_default();
     let by_time: BTreeMap<u64, &serde_json::Value> =
         frames.iter().filter_map(|f| f["t_ms"].as_u64().map(|t| (t, f))).collect();
-    let handles = i_slint_backend_testing::ElementQuery::from_root(component)
-        .match_inherits("Text")
-        .find_all();
 
     for frame in slint {
         // Same ±PHASE_MS matching as compare_traces: the Compose harness
@@ -1221,6 +1346,17 @@ fn compare_text_metrics<C: i_slint_core::api::ComponentHandle>(
         let lo = frame.t_ms.saturating_sub(4);
         let Some(cf) = (lo..=frame.t_ms + 4).filter_map(|t| by_time.get(&t)).next_back() else {
             continue;
+        };
+        // Positional comparisons may best-match inside the `//PHASE_TOL_MS=`
+        // window: the launch pipeline shifts a text's x/y by the same
+        // quantum as its element's. Intrinsic metrics (`w`/`h`) stay on the
+        // exact frame.
+        let pos_window: Vec<&serde_json::Value> = if phase_tol_ms > 0 {
+            (frame.t_ms.saturating_sub(phase_tol_ms)..=frame.t_ms + phase_tol_ms)
+                .filter_map(|t| by_time.get(&t).copied())
+                .collect()
+        } else {
+            vec![cf]
         };
         let Some(texts) = cf["text"].as_object() else { continue };
         if texts.is_empty() {
@@ -1236,20 +1372,28 @@ fn compare_text_metrics<C: i_slint_core::api::ComponentHandle>(
             .collect();
         entries.sort_by_key(|(n, _)| *n);
         for (i, (n, m)) in entries.iter().enumerate() {
-            let Some(handle) = handles.get(i) else {
+            let Some(&[sx, sy, sw_clip, sh, sw]) = frame.texts.get(i) else {
                 errors.push(format!(
                     "t={}ms text:{n}: no Slint Text element ({} found)",
                     frame.t_ms,
-                    handles.len()
+                    frame.texts.len()
                 ));
                 continue;
             };
-            let pos = handle.absolute_position();
-            let size = handle.size();
-            let (sx, sy, sw, sh) =
-                (pos.x as f64, pos.y as f64, size.width as f64, size.height as f64);
             let Some(cw) = m["w"].as_f64() else { continue };
             let Some(cx) = m["x"].as_f64() else { continue };
+
+            // A text whose container was never placed reports all-zero
+            // bounds upstream (e.g. a FAB-menu item still hidden by the
+            // stagger — `isVisible` skips `placeWithLayer`). The Slint side
+            // hides it with `visible: false`, which leaves no pixel evidence
+            // either way — the strict layer already fails if anything is
+            // painted — so there is no geometry to compare. `unhint_w` is a
+            // string metric emitted even for unplaced texts, so the width
+            // check below still runs; only positional comparisons skip.
+            let cf_placed = !(cx == 0.0
+                && m["y"].as_f64().unwrap_or(0.0) == 0.0
+                && m["h"].as_f64().unwrap_or(0.0) == 0.0);
 
             // Slint's Text element width is `ceil(unhinted advance)` (the
             // layout ceils min/preferred — see issue #28) while Compose
@@ -1285,30 +1429,101 @@ fn compare_text_metrics<C: i_slint_core::api::ComponentHandle>(
                     }
                 }
                 // Fallback for references recorded before unhint_w existed:
-                // bound the cross-engine drift to ~0.5px per glyph.
-                _ => {
+                // bound the cross-engine drift to ~0.5px per glyph. Both
+                // sides' `w` are the clipped slice, so the check only
+                // applies while the text is fully placed — a clipped slice
+                // carries the clip geometry, not the string width.
+                _ if cf_placed => {
                     let chars = m["chars"].as_f64().unwrap_or(1.0).max(1.0);
                     let bound = GEOM_EPS + 0.6 * chars;
-                    if (sw - cw).abs() > bound {
+                    if (sw_clip - cw).abs() > bound {
                         errors.push(format!(
                             "t={}ms text:{n}.w: slint {sw} vs compose {cw} (bound {bound:.1})",
                             frame.t_ms
                         ));
                     }
                 }
+                _ => {}
+            }
+
+            // Positional comparisons best-match across `pos_window` — the
+            // `//PHASE_TOL_MS=` launch window. Entries still unplaced at a
+            // frame (all-zero bounds) don't take part: upstream emits zeros,
+            // not interpolated positions.
+            let text_key = format!("text:{n}");
+            let placed: Vec<(&serde_json::Value, &serde_json::Value)> = pos_window
+                .iter()
+                .filter_map(|cf2| cf2["text"].get(&text_key).map(|m2| (*cf2, m2)))
+                .filter(|(_, m2)| {
+                    !(m2["x"].as_f64().unwrap_or(0.0) == 0.0
+                        && m2["y"].as_f64().unwrap_or(0.0) == 0.0
+                        && m2["h"].as_f64().unwrap_or(0.0) == 0.0)
+                })
+                .collect();
+            if placed.is_empty() {
+                continue;
             }
 
             // Label placement inside its container: compare the text's x
-            // offset within the element `button<N>` (or `*<N>`) that holds
-            // it on both sides — the container widths legitimately differ
-            // by the summed hinting drift, so absolute centers would carry
-            // half of it. Falls back to absolute center without a container.
-            let container = format!("button{n}");
-            let slint_off = frame.elements.get(&container).map(|g| sx - g[0]);
-            let compose_off =
-                cf["elements"].get(&container).and_then(|ce| ce["x"].as_f64()).map(|bx| cx - bx);
+            // offset within the element (`button<N>`/`container<N>`) that
+            // holds it on both sides — the container widths legitimately
+            // differ by the summed hinting drift, so absolute centers would
+            // carry half of it. Falls back to absolute center without a
+            // container.
+            fn leaf(id: &str) -> &str {
+                id.rsplit('>').next().unwrap_or(id)
+            }
+            let slint_off = ["button", "container"]
+                .iter()
+                .map(|p| format!("{p}{n}"))
+                .find_map(|want| {
+                    frame
+                        .elements
+                        .iter()
+                        .find(|(k, _)| leaf(k) == want)
+                        .map(|(_, g)| sx - g[0])
+                });
+            if sx == 0.0 && sy == 0.0 && sw_clip == 0.0 && sh == 0.0 {
+                // Slint's own entry is fully clipped/invisible this frame —
+                // there is no position to match. The strict pixel layer
+                // already verifies that no ink is present.
+                continue;
+            }
+            let c_offs: Vec<(f64, f64)> = placed
+                .iter()
+                .filter_map(|(cf2, m2)| {
+                    ["button", "container"].iter().map(|p| format!("{p}{n}")).find_map(|want| {
+                        let (_, ce) =
+                            cf2["elements"].as_object()?.iter().find(|(k, _)| leaf(k) == want)?;
+                        // An unplaced container emits all-zero bounds — its
+                        // `x` is not a real edge, so the frame contributes
+                        // no offset candidate.
+                        if ce["x"].as_f64().unwrap_or(0.0) == 0.0
+                            && ce["y"].as_f64().unwrap_or(0.0) == 0.0
+                            && ce["w"].as_f64().unwrap_or(0.0) == 0.0
+                            && ce["h"].as_f64().unwrap_or(0.0) == 0.0
+                        {
+                            return None;
+                        }
+                        ce["x"].as_f64().and_then(|bx| {
+                            m2["x"].as_f64().and_then(|tx| {
+                                m2["w"].as_f64().map(|tw| (tx - bx, tw))
+                            })
+                        })
+                    })
+                })
+                .collect();
+            let compose_off = slint_off.and_then(|s| {
+                c_offs.iter().copied().reduce(|best, off| {
+                    if (s - off.0).abs() < (s - best.0).abs() {
+                        off
+                    } else {
+                        best
+                    }
+                })
+            });
             match (slint_off, compose_off) {
-                (Some(s_off), Some(c_off)) => {
+                (Some(s_off), Some((c_off, cw2))) => {
                     // A centered label's offset within its container carries
                     // half the width slack: `(W − w)/2` shifts by `−Δw/2`.
                     // `//XFAIL_TEXT=` admits the same ceil-quantization
@@ -1316,7 +1531,7 @@ fn compare_text_metrics<C: i_slint_core::api::ComponentHandle>(
                     // equal the box it centers in, so placement inherits
                     // the tracked #28 divergence too.
                     let off_eps = (GEOM_EPS + if xfail_text.is_some() { 1.15 } else { 0.0 })
-                        + (cw - sw).abs() / 2.0;
+                        + (cw2 - sw_clip).abs() / 2.0;
                     if (s_off - c_off).abs() > off_eps {
                         errors.push(format!(
                             "t={}ms text:{n}.x-offset: slint {s_off:.2} vs compose {c_off:.2} (eps {off_eps:.2})",
@@ -1327,25 +1542,72 @@ fn compare_text_metrics<C: i_slint_core::api::ComponentHandle>(
                     }
                 }
                 _ => {
-                    let c_center = cx + cw / 2.0;
-                    let drift = m["frac_w"]
-                        .as_f64()
-                        .filter(|f| f.is_finite())
-                        .map(|f| (cw - f).abs())
-                        .unwrap_or(1.0);
+                    let matched = placed
+                        .iter()
+                        .filter_map(|(_, m2)| {
+                            let c = m2["x"].as_f64()? + m2["w"].as_f64().unwrap_or(0.0) / 2.0;
+                            let drift = m2["frac_w"]
+                                .as_f64()
+                                .filter(|f| f.is_finite())
+                                .zip(m2["w"].as_f64())
+                                .map(|(f, w)| (w - f).abs())
+                                .unwrap_or(1.0);
+                            Some((c, drift))
+                        })
+                        .reduce(|best, c| {
+                            let s_center = sx + sw_clip / 2.0;
+                            if (s_center - c.0).abs() < (s_center - best.0).abs() {
+                                c
+                            } else {
+                                best
+                            }
+                        });
+                    let Some((c_center, drift)) = matched else { continue };
                     let c_eps = drift / 2.0 + GEOM_EPS;
-                    if (sx + sw / 2.0 - c_center).abs() > c_eps {
+                    if (sx + sw_clip / 2.0 - c_center).abs() > c_eps {
                         errors.push(format!(
                             "t={}ms text:{n}.cx: slint {:.2} vs compose {c_center:.2} (eps {c_eps:.2})",
                             frame.t_ms,
-                            sx + sw / 2.0,
+                            sx + sw_clip / 2.0,
                         ));
                     }
                 }
             }
             for (key, actual, eps) in [("y", sy, GEOM_EPS), ("h", sh, 1.0)] {
-                let Some(e) = m[key].as_f64() else { continue };
-                if (actual - e).abs() > eps {
+                // `y` is positional — best-match over the phase window;
+                // `h` is intrinsic and stays on the exact frame — unless
+                // that frame's entry is unplaced (all zeros), in which case
+                // the nearest placed entry in the window carries the metric.
+                if key == "h" {
+                    let entry = if cf_placed {
+                        Some(*m)
+                    } else {
+                        placed
+                            .iter()
+                            .min_by_key(|(cf2, _)| {
+                                cf2["t_ms"].as_u64().unwrap_or(0).abs_diff(frame.t_ms)
+                            })
+                            .map(|(_, m2)| *m2)
+                    };
+                    let Some(e) = entry.and_then(|e| e[key].as_f64()) else { continue };
+                    if (actual - e).abs() > eps {
+                        errors.push(format!(
+                            "t={}ms text:{n}.{key}: slint {actual} vs compose {e} (eps {eps})",
+                            frame.t_ms
+                        ));
+                    }
+                    continue;
+                }
+                let mut best: Option<(f64, f64)> = None;
+                for (_, m2) in &placed {
+                    let Some(e) = m2[key].as_f64() else { continue };
+                    let d = (actual - e).abs();
+                    if best.map_or(true, |(_, bd)| d < bd) {
+                        best = Some((e, d));
+                    }
+                }
+                let Some((e, d)) = best else { continue };
+                if d > eps {
                     errors.push(format!(
                         "t={}ms text:{n}.{key}: slint {actual} vs compose {e} (eps {eps})",
                         frame.t_ms
@@ -1386,6 +1648,21 @@ pub fn trace_to_json(frames: &[TraceFrame]) -> String {
             ));
         }
         s.push_str(if frame.elements.is_empty() { "}" } else { " }" });
+        if !frame.texts.is_empty() {
+            s.push_str(", \"text\": {");
+            for (j, geo) in frame.texts.iter().enumerate() {
+                s.push_str(&format!(
+                    "{}\"text:{j}\": {{\"x\": {}, \"y\": {}, \"w\": {}, \"h\": {}, \"unhint_w\": {}}}",
+                    if j == 0 { " " } else { ", " },
+                    geo[0],
+                    geo[1],
+                    geo[2],
+                    geo[3],
+                    geo[4],
+                ));
+            }
+            s.push_str(" }");
+        }
         s.push_str(if i + 1 == frames.len() { " }\n" } else { " },\n" });
     }
     if let Some(settle) = settle_time_ms(frames) {
@@ -1481,6 +1758,122 @@ fn compose_frame_at(compose: &serde_json::Value, t: u64) -> Option<&serde_json::
         .map(|(_, f)| f)
 }
 
+/// A pseudo Compose frame for `//PHASE_TOL_MS=` cases: every element/text
+/// id's rect is the union of its placed bounds across `±tol` of `t`, so the
+/// frame masks cover the ink anywhere in the launch window. Unplaced
+/// (all-zero) entries don't take part — upstream reports zeros, not an
+/// interpolated position.
+///
+/// Text entries also carry `"moving": true` when the union has to absorb
+/// real motion — the ink then legitimately sits at different positions
+/// inside the unioned cell, so the pixel layer can't compare it (the
+/// trajectory is still verified by `compare_text_metrics`). Settled text
+/// unions to its own rect and stays a normal text cell.
+fn compose_phase_frame(compose: &serde_json::Value, t: u64, tol: u64) -> serde_json::Value {
+    use serde_json::{Map, Value, json};
+    let mut elements: Map<String, Value> = Map::new();
+    let mut texts: Map<String, Value> = Map::new();
+    // Per-text accumulation: the union plus the smallest single-frame size
+    // and the placed-frame count — a union bigger than every contributing
+    // rect, or one assembled from fewer frames than the window holds,
+    // means the text moved (or appeared) inside the window.
+    struct TextAcc {
+        x0: f64,
+        y0: f64,
+        x1: f64,
+        y1: f64,
+        min_w: f64,
+        min_h: f64,
+        placed: u64,
+    }
+    let mut text_acc: std::collections::BTreeMap<String, TextAcc> =
+        std::collections::BTreeMap::new();
+    let mut window_frames = 0u64;
+    let Some(frames) = compose["frames"].as_array() else {
+        return json!({});
+    };
+    let union =
+        |acc: &mut Map<String, Value>, key: &String, x: f64, y: f64, w: f64, h: f64| {
+            if w == 0.0 && h == 0.0 && x == 0.0 && y == 0.0 {
+                return;
+            }
+            let entry = acc.entry(key.clone()).or_insert_with(|| json!([x, y, x + w, y + h]));
+            let Some(u) = entry.as_array_mut() else { return };
+            u[0] = json!(u[0].as_f64().unwrap_or(x).min(x));
+            u[1] = json!(u[1].as_f64().unwrap_or(y).min(y));
+            u[2] = json!(u[2].as_f64().unwrap_or(x + w).max(x + w));
+            u[3] = json!(u[3].as_f64().unwrap_or(y + h).max(y + h));
+        };
+    for f in frames {
+        let Some(ft) = f["t_ms"].as_u64() else { continue };
+        if ft.abs_diff(t) > tol {
+            continue;
+        }
+        window_frames += 1;
+        if let Some(els) = f["elements"].as_object() {
+            for (id, e) in els {
+                let (Some(x), Some(y), Some(w), Some(h)) =
+                    (e["x"].as_f64(), e["y"].as_f64(), e["w"].as_f64(), e["h"].as_f64())
+                else {
+                    continue;
+                };
+                union(&mut elements, id, x, y, w, h);
+            }
+        }
+        if let Some(tt) = f["text"].as_object() {
+            for (k, m) in tt {
+                let (Some(x), Some(y), Some(w), Some(h)) =
+                    (m["x"].as_f64(), m["y"].as_f64(), m["w"].as_f64(), m["h"].as_f64())
+                else {
+                    continue;
+                };
+                if w == 0.0 && h == 0.0 && x == 0.0 && y == 0.0 {
+                    continue;
+                }
+                let a = text_acc.entry(k.clone()).or_insert(TextAcc {
+                    x0: x,
+                    y0: y,
+                    x1: x + w,
+                    y1: y + h,
+                    min_w: w,
+                    min_h: h,
+                    placed: 0,
+                });
+                a.x0 = a.x0.min(x);
+                a.y0 = a.y0.min(y);
+                a.x1 = a.x1.max(x + w);
+                a.y1 = a.y1.max(y + h);
+                a.min_w = a.min_w.min(w);
+                a.min_h = a.min_h.min(h);
+                a.placed += 1;
+            }
+        }
+    }
+    for (k, a) in text_acc {
+        let moving = a.placed < window_frames
+            || (a.x1 - a.x0) - a.min_w > 1.0
+            || (a.y1 - a.y0) - a.min_h > 1.0;
+        texts.insert(
+            k,
+            json!({
+                "x": a.x0, "y": a.y0, "w": a.x1 - a.x0, "h": a.y1 - a.y0,
+                "moving": moving,
+            }),
+        );
+    }
+    let to_rects = |acc: Map<String, Value>| -> Map<String, Value> {
+        acc.into_iter()
+            .filter_map(|(k, u)| {
+                let u = u.as_array()?;
+                let (x0, y0, x1, y1) =
+                    (u[0].as_f64()?, u[1].as_f64()?, u[2].as_f64()?, u[3].as_f64()?);
+                Some((k, json!({"x": x0, "y": y0, "w": x1 - x0, "h": y1 - y0})))
+            })
+            .collect()
+    };
+    json!({ "elements": to_rects(elements), "text": Map::from_iter(texts) })
+}
+
 /// Build the layered mask for one rendered frame: the Compose text mask,
 /// merged with the Slint text rects and the Compose text rects (each
 /// dilated 1px — the engines place a label's ink a pixel apart), plus a
@@ -1491,6 +1884,7 @@ fn build_frame_mask<C: i_slint_core::api::ComponentHandle>(
     compose_frame: Option<&serde_json::Value>,
     inner_masked: &[String],
     decor_masked: &[String],
+    shadow_masked: &[String],
     png_mask: Option<&SharedPixelBuffer<Rgba8Pixel>>,
     density: f64,
     width: u32,
@@ -1550,13 +1944,54 @@ fn build_frame_mask<C: i_slint_core::api::ComponentHandle>(
             else {
                 continue;
             };
+            // A `moving` entry (a `//PHASE_TOL_MS=` union that had to absorb
+            // real motion) means the ink legitimately sits at different
+            // positions inside the rect — nothing pixel-comparable; the
+            // trace layer still verifies the trajectory.
+            let class = if m["moving"].as_bool() == Some(true) {
+                PixelClass::Skip
+            } else {
+                PixelClass::Text
+            };
             mask.fill_rect(
                 PxRect { x0: x * d, y0: y * d, x1: (x + w) * d, y1: (y + h) * d }.dilated(2.0),
-                PixelClass::Text,
+                class,
             );
         }
     }
     if let Some(compose_elements) = cf["elements"].as_object() {
+        // `//MASK_SHADOW=` first: the ring outside a traced element's bounds
+        // is shadow spill — the harness can't compare where layoutlib and the
+        // Skia renderer land their different light models. Painted before the
+        // element bands so each pair's own strict band and corner zones
+        // overwrite it where they overlap the ring.
+        if !shadow_masked.is_empty() {
+            for (id, geo) in &slint_frame.elements {
+                if !shadow_masked.contains(id) {
+                    continue;
+                }
+                let Some(ce) = compose_elements.get(id) else { continue };
+                let (Some(x), Some(y), Some(w), Some(h)) = (
+                    ce["x"].as_f64(),
+                    ce["y"].as_f64(),
+                    ce["w"].as_f64(),
+                    ce["h"].as_f64(),
+                ) else {
+                    continue;
+                };
+                let union = PxRect {
+                    x0: (geo[0] * d).min(x * d),
+                    y0: (geo[1] * d).min(y * d),
+                    x1: ((geo[0] + geo[2]) * d).max((x + w) * d),
+                    y1: ((geo[1] + geo[3]) * d).max((y + h) * d),
+                };
+                mask.fill_ring(
+                    union.dilated(SHADOW_MARGIN_DP * d),
+                    union,
+                    PixelClass::Skip,
+                );
+            }
+        }
         for (id, geo) in &slint_frame.elements {
             let Some(ce) = compose_elements.get(id) else { continue };
             let (Some(x), Some(y), Some(w), Some(h)) =
@@ -1564,6 +1999,13 @@ fn build_frame_mask<C: i_slint_core::api::ComponentHandle>(
             else {
                 continue;
             };
+            if std::env::var_os("PARITY_DUMP_MASK").is_some() {
+                eprintln!(
+                    "maskdbg {id}: slint={geo:?} compose=({x},{y},{w},{h}) wedge_skip={} inked={}",
+                    shadow_masked.contains(id),
+                    inner_masked.contains(id)
+                );
+            }
             let slint_rect = PxRect {
                 x0: geo[0] * d,
                 y0: geo[1] * d,
@@ -1597,6 +2039,7 @@ fn build_frame_mask<C: i_slint_core::api::ComponentHandle>(
                 OUTLINE_INSET_DP * d,
                 !decor_masked.contains(id),
                 inner_masked.contains(id),
+                shadow_masked.contains(id),
             );
         }
     }
@@ -2010,17 +2453,48 @@ pub fn run_parity_case<C: i_slint_core::api::ComponentHandle>(
                 .filter(|(_, ts)| *ts == t)
                 .map(|(id, _)| id.clone())
                 .collect();
+            let shadow_masked: Vec<String> = spec
+                .mask_shadow
+                .iter()
+                .filter(|(_, ts)| *ts == t)
+                .map(|(id, _)| id.clone())
+                .collect();
+            // `//PHASE_TOL_MS=` unions the Compose-side rects over the launch
+            // window, so the masks cover transient ink wherever the phase
+            // lag legitimately puts it.
+            let phase_frame = if spec.phase_tol_ms > 0 {
+                compose.as_ref().map(|c| compose_phase_frame(c, t, spec.phase_tol_ms))
+            } else {
+                None
+            };
             let mask = build_frame_mask(
                 &component,
                 frames.last().unwrap(),
-                compose.as_ref().and_then(|c| compose_frame_at(c, t)),
+                phase_frame
+                    .as_ref()
+                    .or_else(|| compose.as_ref().and_then(|c| compose_frame_at(c, t))),
                 &inner_masked,
                 &decor_masked,
+                &shadow_masked,
                 png_mask.as_ref(),
                 *density as f64,
                 actual.width(),
                 actual.height(),
             );
+            if std::env::var_os("PARITY_DUMP_MASK").is_some() {
+                let dir = artifacts_dir(driver, case_rel);
+                std::fs::create_dir_all(&dir)?;
+                let mut img = SharedPixelBuffer::<Rgba8Pixel>::new(mask.w as u32, mask.h as u32);
+                let px = img.make_mut_slice();
+                for (i, &c) in mask.layer.iter().enumerate() {
+                    px[i] = match c {
+                        PixelClass::Strict => Rgba8Pixel { r: 255, g: 255, b: 255, a: 255 },
+                        PixelClass::Skip => Rgba8Pixel { r: 128, g: 64, b: 128, a: 255 },
+                        PixelClass::Text => Rgba8Pixel { r: 64, g: 64, b: 160, a: 255 },
+                    };
+                }
+                write_png(&dir.join(format!("mask_d{density}_{tag}.png")), &img)?;
+            }
             let result = layered_compare(&actual, &expected, Some(&mask), pixel_eps, region);
             strict_caught += result.strict_failures;
             if negative
@@ -2184,16 +2658,16 @@ pub fn run_parity_case<C: i_slint_core::api::ComponentHandle>(
 
         if let Some(compose) = &compose {
             let (mut errors, phase) = if !spec.times.is_empty() {
-                compare_traces(&frames, compose)
+                compare_traces(&frames, compose, spec.phase_tol_ms)
             } else {
                 (Vec::new(), None)
             };
             measured_phase = measured_phase.or(phase);
             errors.extend(compare_text_metrics(
-                &component,
                 &frames,
                 compose,
                 spec.xfail_text.as_deref(),
+                spec.phase_tol_ms,
             ));
             compare_findings += errors.len();
             // A motion-class defect is caught by the trace layer; record the

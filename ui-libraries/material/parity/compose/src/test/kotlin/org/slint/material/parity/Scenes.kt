@@ -26,6 +26,10 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.FilledIconToggleButton
+import androidx.compose.material3.FloatingActionButtonMenu
+import androidx.compose.material3.FloatingActionButtonMenuItem
+import androidx.compose.material3.ToggleFloatingActionButton
+import androidx.compose.material3.ToggleFloatingActionButtonDefaults
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.FilledTonalIconToggleButton
@@ -61,6 +65,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.withFrameNanos
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.draw.clip
@@ -406,6 +411,8 @@ private fun CanvasScene(
         // ahead of a button leaves `button0` intact.
         var buttons = 0
         var surfaces = 0
+        var menus = 0
+        var menuTexts = 0
         scene.widgets.forEach { widget ->
             when {
                 widget.isIconButton -> StateIconButton(
@@ -425,6 +432,28 @@ private fun CanvasScene(
                     density,
                     emitPress,
                 )
+                widget.kind == "toggle-fab" -> ToggleFab(
+                    widget,
+                    scene,
+                    tracer,
+                    "button${buttons++}",
+                    density,
+                    emitPress,
+                )
+                widget.kind == "fab-menu" -> {
+                    FabMenu(
+                        widget,
+                        scene,
+                        tracer,
+                        "menu${menus++}",
+                        density,
+                        emitPress,
+                        menuTexts,
+                    )
+                    // `text:<n>` enumerates text-bearing widgets in
+                    // document order across the whole scene.
+                    menuTexts += widget.items.size
+                }
                 widget.kind == "rect" ->
                     Box(
                         Modifier.offset(widget.x.dp, widget.y.dp)
@@ -637,19 +666,39 @@ private fun sceneIcon(name: String): androidx.compose.ui.graphics.vector.ImageVe
         .bufferedReader().readText()
     val vb = Regex("""viewBox="([\d.\- ]+)"""").find(svg)!!.groupValues[1]
         .trim().split(" ").map { it.toFloat() }
+    // `Icon` sizes itself by `defaultWidth`/`defaultHeight` — pinning 24dp
+    // keeps a 960-unit viewBox (Material's edit/schedule icons) from
+    // inflating the layout; the viewport scaling is unaffected. viewBox is
+    // `minX minY width height` — the viewport is the *size*, not the span.
     val builder = androidx.compose.ui.graphics.vector.ImageVector.Builder(
         name = name,
-        defaultWidth = (vb[2] - vb[0]).dp,
-        defaultHeight = (vb[3] - vb[1]).dp,
-        viewportWidth = vb[2] - vb[0],
-        viewportHeight = vb[3] - vb[1],
+        defaultWidth = 24.dp,
+        defaultHeight = 24.dp,
+        viewportWidth = vb[2],
+        viewportHeight = vb[3],
     )
-    Regex("""<path[^>]*d="([^"]+)"""").findAll(svg).forEach { m ->
+    // The viewBox's min corner shifts the coordinate space — Material's
+    // icons use `0 -960 960 960`, whose path data is all negative-y.
+    // `ImageVector` has no viewBox offset, so a non-zero origin is applied
+    // as a group translation.
+    builder.addGroup(
+        name = "viewBox",
+        translationX = -vb[0],
+        translationY = -vb[1],
+        clipPathData = emptyList(),
+    )
+    // A `fill="none"` path is a hit-test/bounds rectangle in the SVG —
+    // Material's `schedule` icon has one — not a drawable shape.
+    Regex("""<path[^>]*>""").findAll(svg).forEach { m ->
+        val tag = m.groupValues[0]
+        if (tag.contains("fill=\"none\"")) return@forEach
+        val d = Regex("""d="([^"]+)"""").find(tag)?.groupValues?.get(1) ?: return@forEach
         builder.addPath(
-            androidx.compose.ui.graphics.vector.addPathNodes(m.groupValues[1]),
+            androidx.compose.ui.graphics.vector.addPathNodes(d),
             fill = androidx.compose.ui.graphics.SolidColor(Color.Black),
         )
     }
+    builder.clearGroup()
     return builder.build()
 }
 
@@ -1300,6 +1349,9 @@ private fun StateIconButton(
  * by reference: 0.1 of the content color at the held-press settle. */
 private const val PRESSED_STATE_LAYER_ALPHA = 0.1f
 
+/** `StateTokens.HoverStateLayerOpacity` — 0.08 of the content color. */
+private const val HOVER_STATE_LAYER_ALPHA = 0.08f
+
 /** The content color a widget's ripple tints its container with — the same
  * color object family the dispatch below picks for the composable. */
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
@@ -1385,12 +1437,228 @@ private fun PressInkOverlay(
     density: Float,
     shape: Shape,
     color: Color,
+    alpha: Float = PRESSED_STATE_LAYER_ALPHA,
 ) {
     val b = tracer.elementBounds[elementId] ?: return
     Box(
         Modifier.offset((b.left / density).dp, (b.top / density).dp)
             .size((b.width / density).dp, (b.height / density).dp)
             .clip(shape)
-            .background(color.copy(alpha = PRESSED_STATE_LAYER_ALPHA)),
+            .background(color.copy(alpha = alpha)),
     )
+}
+
+/** Upstream `containerSize{,Medium,Large}` / `containerCornerRadius{,Medium,Large}`
+ * for the widget's `fab_size` — the (Float) -> Dp lambdas the public
+ * `ToggleFloatingActionButton` overload takes. */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+private fun fabMenuDefaults(
+    widget: Widget,
+): Triple<(Float) -> Dp, (Float) -> Dp, (Float) -> Dp> {
+    val d = ToggleFloatingActionButtonDefaults
+    return when (widget.fabSize) {
+        "medium" -> Triple(d.containerSizeMedium(), d.containerCornerRadiusMedium(), d.iconSizeMedium())
+        "large" -> Triple(d.containerSizeLarge(), d.containerCornerRadiusLarge(), d.iconSizeLarge())
+        else -> Triple(d.containerSize(), d.containerCornerRadius(), d.iconSize())
+    }
+}
+
+/** The resting container size/radius `containerSize(0f)` evaluates to —
+ * upstream's `Fab{,Medium,Large}Initial{Size,CornerRadius}` (56/80/96 dp
+ * and 16/20/28 dp). Used only by the trace probe; the composable itself
+ * gets the `(Float) -> Dp` defaults above. */
+private fun fabInitial(widget: Widget): Pair<Dp, Dp> = when (widget.fabSize) {
+    "medium" -> 80.dp to 20.dp
+    "large" -> 96.dp to 28.dp
+    else -> 56.dp to 16.dp
+}
+
+/** The morph probe: the component's own `checkedProgress` is internal, so
+ * the trace re-derives it with the spec `ToggleFloatingActionButton`
+ * hands `animateFloatAsState` — `MotionSchemeKeyTokens.FastSpatial` —
+ * and the `(Float) -> Dp` defaults map it to size/radius, the same math
+ * the real lambdas apply. */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun fabMorphProbe(widget: Widget, checked: Boolean, tracer: Tracer) {
+    val motionScheme = androidx.compose.material3.MaterialTheme.motionScheme
+    val p by animateFloatAsState(
+        targetValue = if (checked) 1f else 0f,
+        animationSpec = motionScheme.fastSpatialSpec<Float>(),
+        label = "checked_progress",
+    )
+    val (_, _) = fabInitial(widget)
+    val (sizeFn, radiusFn, _) = fabMenuDefaults(widget)
+    tracer.propGetters["checked_progress"] = { p.toDouble() }
+    tracer.propGetters["container_size"] = { sizeFn(p).value.toDouble() }
+    tracer.propGetters["container_radius"] = { radiusFn(p).value.toDouble() }
+}
+
+/** `ToggleFloatingActionButton` — the morphing FAB that can host a menu.
+ * A `press`+`release` action pair is the upstream click: `checked` flips
+ * at the release's `at` time, matching the Slint driver's real pointer
+ * click (the composable's `toggleable` fires `onCheckedChange` on
+ * release-inside). */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun ToggleFab(
+    widget: Widget,
+    scene: Scene,
+    tracer: Tracer,
+    elementId: String,
+    density: Float,
+    emitPress: java.util.concurrent.CopyOnWriteArrayList<Pair<Long, Runnable>>,
+) {
+    var checked by remember { mutableStateOf(widget.checked) }
+    DisposableEffect(Unit) {
+        val flip = Runnable { checked = !checked }
+        val at = scene.actions.firstOrNull { it.kind == "release" }?.at ?: 0L
+        val entry = at to flip
+        if (sceneActionsClick(scene)) {
+            emitPress.add(entry)
+        }
+        onDispose { emitPress.remove(entry) }
+    }
+    fabMorphProbe(widget, checked, tracer)
+    val (sizeFn, radiusFn, iconSizeFn) = fabMenuDefaults(widget)
+    val iconColor = ToggleFloatingActionButtonDefaults.iconColor()
+    val pressInk = pressInkMarker(widget, emitPress)
+    // The Slint element's bounds are the fixed `initialSize` box; upstream
+    // puts `Modifier` (and so `track`) on the morphing inner box, whose
+    // animated bounds can't pair with it — a fixed wrapper tracks instead.
+    Box(
+        Modifier.offset(widget.x.dp, widget.y.dp)
+            .size(fabInitial(widget).first)
+            .track(tracer, elementId),
+    ) {
+        ToggleFloatingActionButton(
+            checked = checked,
+            onCheckedChange = { checked = it },
+            modifier = Modifier.track(tracer, "$elementId>button-bg0"),
+            containerSize = sizeFn,
+            containerCornerRadius = radiusFn,
+        ) {
+            val iconName = if (checkedProgress > 0.5f) {
+                widget.checkedIcon ?: widget.icon
+            } else {
+                widget.icon
+            }
+            if (iconName != null) {
+                // `Modifier.animateIcon` tints through a recorded graphics
+                // layer, which the screenshot pipeline doesn't rasterize —
+                // the same size/color lambdas applied to a plain `Icon`
+                // paint identically.
+                Icon(
+                    sceneIcon(iconName),
+                    contentDescription = null,
+                    modifier = Modifier.size(iconSizeFn(checkedProgress)),
+                    tint = iconColor(checkedProgress),
+                )
+            }
+        }
+        // `toggleable(interactionSource = null)` — the state layer can't be
+        // fed through an interaction source, so the static state paints it
+        // directly over the pill (TopEnd inside the fixed outer box).
+        if (pressInk.value || widget.state == "hovered") {
+            val p = if (checked) 1f else 0f
+            Box(
+                Modifier.align(Alignment.TopEnd)
+                    .size(sizeFn(p))
+                    .clip(RoundedCornerShape(radiusFn(p)))
+                    .background(
+                        iconColor(p).copy(
+                            alpha =
+                                if (pressInk.value) PRESSED_STATE_LAYER_ALPHA
+                                else HOVER_STATE_LAYER_ALPHA
+                        )
+                    ),
+            )
+        }
+    }
+}
+
+/** `FloatingActionButtonMenu` — the items column above a toggle FAB.
+ * `expanded` is the upstream `expanded` parameter; a `press`+`release`
+ * action pair on the button is its click, so `expanded` flips at the
+ * release's `at` time. */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun FabMenu(
+    widget: Widget,
+    scene: Scene,
+    tracer: Tracer,
+    elementId: String,
+    density: Float,
+    emitPress: java.util.concurrent.CopyOnWriteArrayList<Pair<Long, Runnable>>,
+    textBase: Int,
+) {
+    var expanded by remember { mutableStateOf(widget.expanded) }
+    DisposableEffect(Unit) {
+        val flip = Runnable { expanded = !expanded }
+        val at = scene.actions.firstOrNull { it.kind == "release" }?.at ?: 0L
+        val entry = at to flip
+        if (sceneActionsClick(scene)) {
+            emitPress.add(entry)
+        }
+        onDispose { emitPress.remove(entry) }
+    }
+    fabMorphProbe(widget, expanded, tracer)
+    val (sizeFn, radiusFn, iconSizeFn) = fabMenuDefaults(widget)
+    val iconColor = ToggleFloatingActionButtonDefaults.iconColor()
+    FloatingActionButtonMenu(
+        expanded = expanded,
+        modifier = Modifier.offset(widget.x.dp, widget.y.dp).track(tracer, elementId),
+        horizontalAlignment = when (widget.alignment) {
+            "start" -> Alignment.Start
+            "center" -> Alignment.CenterHorizontally
+            else -> Alignment.End
+        },
+        button = {
+            ToggleFloatingActionButton(
+                checked = expanded,
+                onCheckedChange = { expanded = it },
+                modifier = Modifier.track(tracer, "$elementId>toggle0"),
+                containerSize = sizeFn,
+                containerCornerRadius = radiusFn,
+            ) {
+                val iconName = if (checkedProgress > 0.5f) {
+                    widget.checkedIcon ?: widget.icon
+                } else {
+                    widget.icon
+                }
+                if (iconName != null) {
+                    Icon(
+                        sceneIcon(iconName),
+                        contentDescription = null,
+                        modifier = Modifier.size(iconSizeFn(checkedProgress)),
+                        tint = iconColor(checkedProgress),
+                    )
+                }
+            }
+        },
+    ) {
+        widget.items.forEachIndexed { i, item ->
+            FloatingActionButtonMenuItem(
+                onClick = {},
+                modifier = Modifier.track(tracer, "$elementId>container$i"),
+                text = {
+                    val textId = "text:${textBase + i}"
+                    Text(
+                        item.text ?: "",
+                        modifier = Modifier.trackText(tracer, textId, density),
+                        onTextLayout = recordTextLayout(
+                            tracer,
+                            textId,
+                            LocalDensity.current,
+                            androidx.compose.ui.platform.LocalFontFamilyResolver.current,
+                            androidx.compose.material3.MaterialTheme.typography.titleMedium.fontFamily,
+                        ),
+                    )
+                },
+                icon = {
+                    item.icon?.let { Icon(sceneIcon(it), contentDescription = null) }
+                },
+            )
+        }
+    }
 }

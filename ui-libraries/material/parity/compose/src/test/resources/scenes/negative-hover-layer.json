@@ -11,6 +11,7 @@
   },
   "mask_decor": {},
   "mask_inner": {},
+  "mask_shadow": {},
   "name": "negative-hover-layer",
   "negative_note": "the covering rectangle paints the hovered button in flat primary — the missing hover state layer must fail",
   "params": {},

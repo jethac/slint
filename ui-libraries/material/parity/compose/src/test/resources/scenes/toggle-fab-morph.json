@@ -1,6 +1,25 @@
 {
-  "actions": [],
-  "case_rel": "material/button_hover",
+  "actions": [
+    {
+      "at": 0.0,
+      "kind": "press",
+      "x": 70.0,
+      "y": 70.0
+    },
+    {
+      "at": 0.0,
+      "kind": "release",
+      "x": 70.0,
+      "y": 70.0
+    },
+    {
+      "at": 1.0,
+      "kind": "move",
+      "x": 0.0,
+      "y": 0.0
+    }
+  ],
+  "case_rel": "material/toggle_fab_morph",
   "densities": [
     1,
     2
@@ -9,16 +28,35 @@
     "brand": "Roboto",
     "plain": "Roboto"
   },
-  "mask_decor": {
-    "button1": [
-      2000
+  "mask_decor": {},
+  "mask_inner": {},
+  "mask_shadow": {
+    "button0": [
+      0,
+      33,
+      66,
+      100,
+      150,
+      200,
+      300,
+      400,
+      600
+    ],
+    "button0>button-bg0": [
+      0,
+      33,
+      66,
+      100,
+      150,
+      200,
+      300,
+      400,
+      600
     ]
   },
-  "mask_inner": {},
-  "mask_shadow": {},
-  "name": "button-hover",
+  "name": "toggle-fab-morph",
   "params": {},
-  "parity": "static",
+  "parity": "motion",
   "scheme": {
     "background": "FFFDF7FE",
     "error": "FFA8364B",
@@ -69,8 +107,8 @@
     "tertiaryFixedDim": "FFE5B2D5"
   },
   "size": [
-    240,
-    96
+    140,
+    140
   ],
   "theme": {
     "contrast": 0.0,
@@ -80,55 +118,50 @@
     "spec": "spec2025",
     "variant": "tonal-spot"
   },
-  "times": [],
+  "times": [
+    0,
+    33,
+    66,
+    100,
+    150,
+    200,
+    300,
+    400,
+    600
+  ],
   "trace_elements": [
     "button0",
-    "button1"
+    "button0>button-bg"
   ],
-  "trace_props": [],
+  "trace_props": [
+    "container_radius",
+    "container_size",
+    "checked_progress"
+  ],
   "type": "canvas",
   "widgets": [
     {
       "checkable": null,
       "checked": null,
+      "checked_icon": "close",
       "color": null,
       "corner": null,
       "enabled": null,
+      "fab_size": "medium",
       "height": null,
-      "icon": null,
-      "kind": "filled-button",
+      "icon": "edit",
+      "kind": "toggle-fab",
       "level": null,
       "radius": null,
       "shape": null,
       "size": null,
       "slint_overrides": {},
-      "state": "enabled",
-      "text": "Enabled",
+      "state": null,
+      "text": null,
       "width": null,
       "width_option": null,
-      "x": 16.0,
-      "y": 28.0
-    },
-    {
-      "checkable": null,
-      "checked": null,
-      "color": null,
-      "corner": null,
-      "enabled": null,
-      "height": null,
-      "icon": null,
-      "kind": "filled-button",
-      "level": null,
-      "radius": null,
-      "shape": null,
-      "size": null,
-      "slint_overrides": {},
-      "state": "hovered",
-      "text": "Hovered",
-      "width": null,
-      "width_option": null,
-      "x": 132.0,
-      "y": 28.0
+      "x": 30.0,
+      "y": 30.0
     }
   ]
 }

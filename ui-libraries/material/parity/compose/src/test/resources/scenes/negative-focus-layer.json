@@ -18,6 +18,7 @@
   },
   "mask_decor": {},
   "mask_inner": {},
+  "mask_shadow": {},
   "name": "negative-focus-layer",
   "negative_note": "the covering rectangle paints the focused button in flat primary — the missing focus state layer must fail",
   "params": {},

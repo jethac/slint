@@ -28,6 +28,7 @@
       2500
     ]
   },
+  "mask_shadow": {},
   "name": "button-press",
   "params": {},
   "parity": "motion",

@@ -11,6 +11,7 @@
   },
   "mask_decor": {},
   "mask_inner": {},
+  "mask_shadow": {},
   "name": "elevation-surfaces",
   "params": {},
   "parity": "static",

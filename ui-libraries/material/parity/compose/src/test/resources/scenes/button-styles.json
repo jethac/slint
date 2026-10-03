@@ -32,6 +32,7 @@
     ]
   },
   "mask_inner": {},
+  "mask_shadow": {},
   "name": "button-styles",
   "params": {},
   "parity": "static",

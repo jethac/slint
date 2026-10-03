@@ -9,6 +9,8 @@ button-sizes
 button-states
 button-styles
 elevation-surfaces
+fab-menu-expand
+fab-menu
 icon-button-focus
 icon-button-press-morph
 icon-button-states
@@ -32,4 +34,6 @@ negative-toggle-select
 negative-wrong-shadow
 spring-motion
 toggle-buttons
+toggle-fab-morph
+toggle-fab-states
 toggle-select-morph

@@ -11,6 +11,7 @@
   },
   "mask_decor": {},
   "mask_inner": {},
+  "mask_shadow": {},
   "name": "negative-wrong-shadow",
   "negative_note": "the Compose surface is unelevated, but the Slint side casts a level-3 shadow — an unexpected shadow must fail the strict layer",
   "params": {},

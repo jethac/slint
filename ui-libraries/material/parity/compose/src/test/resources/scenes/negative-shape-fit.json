@@ -11,6 +11,7 @@
   },
   "mask_decor": {},
   "mask_inner": {},
+  "mask_shadow": {},
   "name": "negative-shape-fit",
   "negative_note": "the Slint side maps the cookie outline with `fill` (outline bounds stretched to the rect) while Compose's `toShape` maps the normalized (0,0)-(1,1) space — the cookie's silhouette is ~1.5px taller and its petal edges must fail the strict layer",
   "params": {},

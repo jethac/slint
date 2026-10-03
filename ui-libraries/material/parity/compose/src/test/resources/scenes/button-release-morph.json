@@ -42,6 +42,7 @@
       1500
     ]
   },
+  "mask_shadow": {},
   "name": "button-release-morph",
   "params": {},
   "parity": "motion",

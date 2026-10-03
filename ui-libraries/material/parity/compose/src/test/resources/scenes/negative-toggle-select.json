@@ -11,6 +11,7 @@
   },
   "mask_decor": {},
   "mask_inner": {},
+  "mask_shadow": {},
   "name": "negative-toggle-select",
   "negative_note": "slint_overrides drops `checkable`, so the Slint widget renders the resting round shape while checked — a toggle that does not morph on selection must fail",
   "params": {},

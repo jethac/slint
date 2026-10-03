@@ -11,6 +11,7 @@
   },
   "mask_decor": {},
   "mask_inner": {},
+  "mask_shadow": {},
   "name": "negative-button-ripple-clip",
   "negative_note": "slint_overrides turns the icon button `inline` — its ripple paints unbounded past the container, the clipped Compose ripple must not match",
   "params": {},

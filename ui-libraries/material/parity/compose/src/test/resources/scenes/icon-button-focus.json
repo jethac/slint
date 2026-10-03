@@ -23,6 +23,7 @@
     ]
   },
   "mask_inner": {},
+  "mask_shadow": {},
   "name": "icon-button-focus",
   "params": {},
   "parity": "static",

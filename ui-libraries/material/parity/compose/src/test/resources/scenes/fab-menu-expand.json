@@ -1,6 +1,19 @@
 {
-  "actions": [],
-  "case_rel": "material/button_hover",
+  "actions": [
+    {
+      "at": 0.0,
+      "kind": "press",
+      "x": 44.0,
+      "y": 276.0
+    },
+    {
+      "at": 0.0,
+      "kind": "release",
+      "x": 44.0,
+      "y": 276.0
+    }
+  ],
+  "case_rel": "material/fab_menu_expand",
   "densities": [
     1,
     2
@@ -9,16 +22,73 @@
     "brand": "Roboto",
     "plain": "Roboto"
   },
-  "mask_decor": {
-    "button1": [
-      2000
+  "mask_decor": {},
+  "mask_inner": {},
+  "mask_shadow": {
+    "menu0": [
+      0,
+      50,
+      100,
+      150,
+      200,
+      300,
+      400,
+      500,
+      650,
+      800
+    ],
+    "menu0>container0": [
+      0,
+      50,
+      100,
+      150,
+      200,
+      300,
+      400,
+      500,
+      650,
+      800
+    ],
+    "menu0>container1": [
+      0,
+      50,
+      100,
+      150,
+      200,
+      300,
+      400,
+      500,
+      650,
+      800
+    ],
+    "menu0>container2": [
+      0,
+      50,
+      100,
+      150,
+      200,
+      300,
+      400,
+      500,
+      650,
+      800
+    ],
+    "menu0>toggle0": [
+      0,
+      50,
+      100,
+      150,
+      200,
+      300,
+      400,
+      500,
+      650,
+      800
     ]
   },
-  "mask_inner": {},
-  "mask_shadow": {},
-  "name": "button-hover",
+  "name": "fab-menu-expand",
   "params": {},
-  "parity": "static",
+  "parity": "motion",
   "scheme": {
     "background": "FFFDF7FE",
     "error": "FFA8364B",
@@ -69,8 +139,8 @@
     "tertiaryFixedDim": "FFE5B2D5"
   },
   "size": [
-    240,
-    96
+    200,
+    320
   ],
   "theme": {
     "contrast": 0.0,
@@ -80,55 +150,66 @@
     "spec": "spec2025",
     "variant": "tonal-spot"
   },
-  "times": [],
-  "trace_elements": [
-    "button0",
-    "button1"
+  "times": [
+    0,
+    50,
+    100,
+    150,
+    200,
+    300,
+    400,
+    500,
+    650,
+    800
   ],
-  "trace_props": [],
+  "trace_elements": [
+    "menu0",
+    "menu0>toggle",
+    "menu0>container"
+  ],
+  "trace_props": [
+    "checked_progress"
+  ],
   "type": "canvas",
   "widgets": [
     {
       "checkable": null,
       "checked": null,
+      "checked_icon": "close",
       "color": null,
       "corner": null,
       "enabled": null,
       "height": null,
-      "icon": null,
-      "kind": "filled-button",
+      "icon": "edit",
+      "items": [
+        {
+          "enabled": null,
+          "icon": "check",
+          "text": "Compose"
+        },
+        {
+          "enabled": null,
+          "icon": "schedule",
+          "text": "Send"
+        },
+        {
+          "enabled": null,
+          "icon": "arrow_right",
+          "text": "Archive"
+        }
+      ],
+      "kind": "fab-menu",
       "level": null,
       "radius": null,
       "shape": null,
       "size": null,
       "slint_overrides": {},
-      "state": "enabled",
-      "text": "Enabled",
+      "state": null,
+      "text": null,
       "width": null,
       "width_option": null,
-      "x": 16.0,
-      "y": 28.0
-    },
-    {
-      "checkable": null,
-      "checked": null,
-      "color": null,
-      "corner": null,
-      "enabled": null,
-      "height": null,
-      "icon": null,
-      "kind": "filled-button",
-      "level": null,
-      "radius": null,
-      "shape": null,
-      "size": null,
-      "slint_overrides": {},
-      "state": "hovered",
-      "text": "Hovered",
-      "width": null,
-      "width_option": null,
-      "x": 132.0,
-      "y": 28.0
+      "x": 0.0,
+      "y": 248.0
     }
   ]
 }

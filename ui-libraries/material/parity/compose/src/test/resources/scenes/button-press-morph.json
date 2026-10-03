@@ -18,6 +18,7 @@
   },
   "mask_decor": {},
   "mask_inner": {},
+  "mask_shadow": {},
   "name": "button-press-morph",
   "negative_note": "issue #27: the Compose frame clock starts the press morph ~2ms after the Slint dispatch, so identical-timestamp frames report a systematic lead in the pill→pressed-shape morph — a silent pass would mean the harness went blind",
   "params": {},

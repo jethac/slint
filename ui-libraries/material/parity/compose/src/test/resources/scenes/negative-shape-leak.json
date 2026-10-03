@@ -11,6 +11,7 @@
   },
   "mask_decor": {},
   "mask_inner": {},
+  "mask_shadow": {},
   "name": "negative-shape-leak",
   "negative_note": "the covering rectangle paints square corners over the cookie-shaped surface — ink outside the petal arcs must fail the strict layer",
   "params": {},
