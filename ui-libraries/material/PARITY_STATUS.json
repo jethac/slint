@@ -53,15 +53,15 @@
     ],
     "needs": "none",
     "notes": "slint component: Badge",
-    "status": "partial"
+    "status": "done"
   },
   "BadgedBox": {
     "issues": [
       11
     ],
     "needs": "none",
-    "notes": "slint component: Badge",
-    "status": "partial"
+    "notes": "slint component: BadgedBox",
+    "status": "done"
   },
   "BasicAlertDialog": {
     "issues": [
@@ -508,7 +508,7 @@
     ],
     "needs": "none",
     "notes": "slint component: Icon",
-    "status": "partial"
+    "status": "done"
   },
   "IconButton": {
     "issues": [
@@ -596,8 +596,8 @@
       11
     ],
     "needs": "shapes (#6)",
-    "notes": "slint component: ListTile",
-    "status": "partial"
+    "notes": "slint component: ListTile — interactive/selectable/checkable, interactive shape morph",
+    "status": "done"
   },
   "LoadingIndicator": {
     "issues": [
@@ -904,8 +904,8 @@
       11
     ],
     "needs": "shapes (#6)",
-    "notes": "",
-    "status": "missing"
+    "notes": "slint component: SegmentedListItem — index/count segmentedShapes positions",
+    "status": "done"
   },
   "SelectableDropdownMenuItem": {
     "issues": [
@@ -1024,8 +1024,8 @@
       11
     ],
     "needs": "springs (#5), shapes (#6)",
-    "notes": "slint component: Switch",
-    "status": "partial"
+    "notes": "slint component: Switch; tokens: generated component tokens; SwitchImpl + ThumbNode — 52x32dp track, thumb pressed 28/snap + resting 24/16 on FastSpatial, offsets incl. pressed TrackOutlineWidth inset, thumbContent slot (androidx/androidx@23327507f7fc, material3 1.5.0-alpha18); parity scenes: switch-states/switch-hover/switch-on-morph/switch-off-morph (xfail on femtovg, #53-class edge-AA band vs coverage-integral drivers)",
+    "status": "done"
   },
   "Tab": {
     "issues": [

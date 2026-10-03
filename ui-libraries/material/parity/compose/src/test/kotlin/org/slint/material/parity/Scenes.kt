@@ -56,6 +56,9 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.IconButtonDefaults.IconButtonWidthOption
 import androidx.compose.material3.IconToggleButton
+import androidx.compose.material3.ListItem
+import androidx.compose.material3.ListItemDefaults
+import androidx.compose.material3.SegmentedListItem
 import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.ContainedLoadingIndicator
 import androidx.compose.material3.LocalMinimumInteractiveComponentSize
@@ -76,6 +79,8 @@ import androidx.compose.material3.SplitButtonDefaults
 import androidx.compose.material3.SplitButtonLayout
 import androidx.compose.material3.MaterialExpressiveTheme
 import androidx.compose.material3.MotionScheme
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedIconButton
 import androidx.compose.material3.OutlinedIconToggleButton
@@ -86,6 +91,9 @@ import androidx.compose.material3.ToggleButton
 import androidx.compose.material3.ToggleButtonDefaults
 import androidx.compose.material3.Typography
 import androidx.compose.material3.VerticalDivider
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
+import androidx.compose.material3.BadgeDefaults
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.material3.toShape
 import androidx.compose.material3.TopAppBar
@@ -469,10 +477,14 @@ private fun CanvasScene(
         // ahead of a button leaves `button0` intact.
         var buttons = 0
         var surfaces = 0
+        var items = 0
         var appbars = 0
         var progresses = 0
         var groups = 0
+        var icons = 0
         var dividers = 0
+        var badges = 0
+        var badgedBoxes = 0
         // `text:{n}` spans every text node in scene order — group items
         // interleave with the standalone widgets' labels. Bases are
         // precomputed per widget so recompositions can't renumber them.
@@ -536,6 +548,14 @@ private fun CanvasScene(
                     density,
                     emitPress,
                 )
+                widget.kind == "switch" -> StateSwitch(
+                    widget,
+                    scene,
+                    tracer,
+                    "button${buttons++}",
+                    density,
+                    emitPress,
+                )
                 widget.isButton -> StateButton(
                     widget,
                     scene,
@@ -545,6 +565,29 @@ private fun CanvasScene(
                     density,
                     emitPress,
                 )
+                widget.isListItem -> {
+                    // `text:<n>` ids pair with the Slint side's Text
+                    // elements in document order — each item emits its
+                    // avatar label, overline, headline, supporting, and
+                    // trailing text in that order.
+                    val nTexts = 1 +
+                        listOfNotNull(
+                            widget.avatar,
+                            widget.overline,
+                            widget.supporting,
+                            widget.trailingText,
+                        ).size
+                    StateListItem(
+                        widget,
+                        scene,
+                        tracer,
+                        texts,
+                        "item${items++}",
+                        density,
+                        emitPress,
+                    )
+                    texts += nTexts
+                }
                 widget.kind == "top-app-bar" ||
                     widget.kind == "bottom-app-bar" ||
                     widget.kind == "search-bar" ||
@@ -592,6 +635,44 @@ private fun CanvasScene(
                             .track(tracer, tag),
                     )
                 }
+                widget.kind == "icon" -> {
+                    // The bare `Icon` takes its painter's intrinsic size
+                    // (or `DefaultIconSizeModifier`'s 24dp when the
+                    // painter has none); `width`/`height` apply upstream's
+                    // `modifier` size and `color` applies `tint`. The
+                    // default tint is `LocalContentColor` — provided here
+                    // as `onSurface`, the content color a `Surface` gives
+                    // (the same value as the Slint default `on_background`
+                    // at the pin).
+                    val tag = "icon${icons++}"
+                    CompositionLocalProvider(
+                        androidx.compose.material3.LocalContentColor provides
+                            scheme.onSurface,
+                    ) {
+                        Icon(
+                            sceneIcon(widget.icon ?: "check"),
+                            contentDescription = null,
+                            modifier = Modifier.offset(widget.x.dp, widget.y.dp)
+                                .then(
+                                    if (widget.width > 0) {
+                                        Modifier.width(widget.width.dp)
+                                    } else {
+                                        Modifier
+                                    },
+                                )
+                                .then(
+                                    if (widget.height > 0) {
+                                        Modifier.height(widget.height.dp)
+                                    } else {
+                                        Modifier
+                                    },
+                                )
+                                .track(tracer, tag),
+                            tint = widget.color?.let { schemeColor(it) }
+                                ?: androidx.compose.material3.LocalContentColor.current,
+                        )
+                    }
+                }
                 widget.kind == "divider" || widget.kind == "horizontal-divider" ||
                     widget.kind == "vertical-divider" -> {
                     // `Divider`/`HorizontalDivider` is `fillMaxWidth().
@@ -633,7 +714,63 @@ private fun CanvasScene(
                         }
                     }
                 }
-                widget.kind == "loading-indicator" ||
+                widget.kind == "badge" -> {
+                    // Upstream `Badge`: an empty `text` is the null-content
+                    // branch (the `BadgeTokens.Size` dot), any text the
+                    // large badge — a null-and-empty content lambda is not
+                    // the same thing upstream, so the two calls differ in
+                    // kind, not just arguments.
+                    val tag = "badge${badges++}"
+                    val container = widget.color?.let { schemeColor(it) }
+                        ?: BadgeDefaults.containerColor
+                    val mods = Modifier.offset(widget.x.dp, widget.y.dp)
+                        .track(tracer, tag)
+                    if (widget.text != null) {
+                        Badge(modifier = mods, containerColor = container) {
+                            Text(widget.text)
+                        }
+                    } else {
+                        Badge(modifier = mods, containerColor = container)
+                    }
+                }
+                widget.kind == "badged-box" -> {
+                    // The upstream `BadgedBox`: the badge hangs at the
+                    // anchor's top end corner — a dot `BadgeOffset`, a
+                    // content badge `BadgeWithContentHorizontalOffset` /
+                    // `BadgeWithContentVerticalOffset`.
+                    val tag = "badged-box${badgedBoxes++}"
+                    val container = widget.color?.let { schemeColor(it) }
+                        ?: BadgeDefaults.containerColor
+                    BadgedBox(
+                        badge = {
+                            // Same null-content rule as the `badge` widgets:
+                            // a non-null lambda that draws nothing still
+                            // counts as content upstream (`LargeSize`).
+                            if (widget.text != null) {
+                                Badge(containerColor = container) {
+                                    Text(widget.text)
+                                }
+                            } else {
+                                Badge(containerColor = container)
+                            }
+                        },
+                        modifier = Modifier.offset(widget.x.dp, widget.y.dp)
+                            .track(tracer, tag),
+                    ) {
+                        // The same `LocalContentColor` provision the `icon`
+                        // widgets get — `onSurface` (the `on_background`
+                        // stand-in on the Slint side, equal at the pin).
+                        CompositionLocalProvider(
+                            androidx.compose.material3.LocalContentColor provides
+                                scheme.onSurface,
+                        ) {
+                            Icon(
+                                sceneIcon(widget.icon ?: "check"),
+                                contentDescription = null,
+                            )
+                        }
+                    }
+                }                widget.kind == "loading-indicator" ||
                     widget.kind == "contained-loading-indicator" -> {
                     // The 48dp indicator draws at the scene's declared
                     // coordinates on both sides.
@@ -831,11 +968,12 @@ private fun emitStateInteractions(
         // the driver's synthetic pointer press carries no hover either, and
         // the interior pixels stay within tolerance of Slint's state layer.
         // The flow replays its latest emission, so the button's collectors
-        // receive the press whenever they subscribe during the pump. The
-        // registration goes to the frame sink, which runs it right after
-        // the first presented frame: the Slint driver dispatches //ACTION=
-        // just after its own pre-press baseline frame, and an earlier emit
-        // would put pressed ink (and the morph's start) into frame 0 — the
+        // receive the press whenever they subscribe during the pump.
+        //
+        // Timed scenes still go through the
+        // frame sink — the Slint driver dispatches //ACTION= just after its
+        // own pre-press baseline frame, and an earlier emit would put
+        // pressed ink (and the morph's start) into frame 0 — the
         // composition runs ahead of the pump during setup. Landing after
         // frame 0 also keeps the press off uptime 0, where a ripple's frame
         // callback would abort layoutlib.
@@ -958,9 +1096,16 @@ private fun sceneIcon(name: String): androidx.compose.ui.graphics.vector.ImageVe
     if (vb[0] != 0f || vb[1] != 0f) {
         builder.addGroup(translationX = -vb[0], translationY = -vb[1])
     }
-    Regex("""<path[^>]*d="([^"]+)"""").findAll(svg).forEach { m ->
+    // Google Material Icon exports carry a viewport-sized `fill="none"`
+    // bounds path that resvg skips — honoring the attribute keeps the
+    // ImageVector identical to what the Slint side rasterizes.
+    Regex("""<path[^>]*>""").findAll(svg).forEach { m ->
+        val tag = m.value
+        if (tag.contains("""fill="none"""")) return@forEach
+        val d = Regex("""d="([^"]+)"""").find(tag)?.groupValues?.get(1)
+            ?: return@forEach
         builder.addPath(
-            androidx.compose.ui.graphics.vector.addPathNodes(m.groupValues[1]),
+            androidx.compose.ui.graphics.vector.addPathNodes(d),
             fill = androidx.compose.ui.graphics.SolidColor(Color.Black),
         )
     }
@@ -1276,16 +1421,40 @@ private fun schemeColor(role: String): Color =
     androidx.compose.material3.MaterialTheme.colorScheme.let { scheme ->
         when (role.kebabToCamel()) {
             "primary" -> scheme.primary
+            "onPrimary" -> scheme.onPrimary
             "primaryContainer" -> scheme.primaryContainer
+            "onPrimaryContainer" -> scheme.onPrimaryContainer
             "secondary" -> scheme.secondary
+            "onSecondary" -> scheme.onSecondary
             "secondaryContainer" -> scheme.secondaryContainer
+            "onSecondaryContainer" -> scheme.onSecondaryContainer
             "tertiary" -> scheme.tertiary
+            "onTertiary" -> scheme.onTertiary
             "tertiaryContainer" -> scheme.tertiaryContainer
+            "onTertiaryContainer" -> scheme.onTertiaryContainer
             "surface" -> scheme.surface
+            "onSurface" -> scheme.onSurface
+            "surfaceVariant" -> scheme.surfaceVariant
+            "onSurfaceVariant" -> scheme.onSurfaceVariant
             "inverseSurface" -> scheme.inverseSurface
+            "inverseOnSurface" -> scheme.inverseOnSurface
+            "inversePrimary" -> scheme.inversePrimary
             "background" -> scheme.background
+            "onBackground" -> scheme.onBackground
             "error" -> scheme.error
+            "onError" -> scheme.onError
             "errorContainer" -> scheme.errorContainer
+            "onErrorContainer" -> scheme.onErrorContainer
+            "outline" -> scheme.outline
+            "outlineVariant" -> scheme.outlineVariant
+            "surfaceContainerLowest" -> scheme.surfaceContainerLowest
+            "surfaceContainerLow" -> scheme.surfaceContainerLow
+            "surfaceContainer" -> scheme.surfaceContainer
+            "surfaceContainerHigh" -> scheme.surfaceContainerHigh
+            "surfaceContainerHighest" -> scheme.surfaceContainerHighest
+            "surfaceDim" -> scheme.surfaceDim
+            "surfaceBright" -> scheme.surfaceBright
+            "scrim" -> scheme.scrim
             else -> error("scene catalog has no ColorScheme role for $role")
         }
     }
@@ -1611,6 +1780,83 @@ private fun StateIconButton(
             iconInkColor(widget, checked),
         )
     }
+}
+
+/** `switch` — a hoisted `checked` like every upstream selection control
+ * (`Switch(checked, onCheckedChange, …)`), with a scene-side mirror of
+ * the pin's private `ThumbNode` so `//TRACE_PROPS=thumb_size,thumb_offset`
+ * reads the same value the Slint out properties animate. The targets
+ * (`Switch.kt` L283-306: pressed → `PressedHandleWidth`, `hasContent ||
+ * checked` → `ThumbDiameter`, else `UncheckedThumbDiameter`; pressed pulls
+ * the thumb one `TrackOutlineWidth` off the far edge, `checked` sits at
+ * `(SwitchWidth - ThumbDiameter) - ThumbPadding`) animate on
+ * `SnapSpec` while pressed and `MotionSchemeKeyTokens.FastSpatial`
+ * otherwise. `hasContent` measures the current state's slot — a
+ * `thumbContent` that draws nothing while unchecked reports 0. */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun StateSwitch(
+    widget: Widget,
+    scene: Scene,
+    tracer: Tracer,
+    elementId: String,
+    density: Float,
+    emitPress: java.util.concurrent.CopyOnWriteArrayList<Pair<Long, Runnable>>,
+) {
+    val interactionSource = remember { ReplayableInteractionSource() }
+    var selected by remember { mutableStateOf(widget.checked) }
+    val pressed by interactionSource.collectIsPressedAsState()
+    val hasContent = widget.icon != null
+
+    fun targetSize(): Float =
+        if (pressed) 28f else if (hasContent || selected) 24f else 16f
+    fun targetOffset(size: Float): Float =
+        if (pressed && selected) 22f
+        else if (pressed) 2f
+        else if (selected) 24f
+        else (32f - size) / 2f
+
+    val thumbSize = remember { Animatable(
+        if (hasContent || selected) 24f else 16f) }
+    val thumbOffset = remember { Animatable(
+        if (selected) 24f else (32f - (if (hasContent) 24f else 16f)) / 2f) }
+    val spatialSpec = androidx.compose.material3.MaterialTheme.motionScheme.fastSpatialSpec<Float>()
+    LaunchedEffect(selected, pressed) {
+        val size = targetSize()
+        val offset = targetOffset(size)
+        val spec = if (pressed) androidx.compose.animation.core.snap<Float>() else spatialSpec
+        launch { thumbSize.animateTo(size, spec) }
+        launch { thumbOffset.animateTo(offset, spec) }
+    }
+    tracer.propGetters["thumb_size"] = { thumbSize.value.toDouble() }
+    tracer.propGetters["thumb_offset"] = { thumbOffset.value.toDouble() }
+
+    emitStateInteractions(
+        widget.state,
+        scene,
+        tracer,
+        elementId,
+        interactionSource,
+        emitPress,
+        Offset(16f * density, 16f * density),
+        density,
+        Runnable { selected = !selected },
+    )
+
+    val iconVector = widget.icon?.let { sceneIcon(it) }
+    Switch(
+        checked = selected,
+        onCheckedChange = { selected = it },
+        modifier = Modifier.offset(widget.x.dp, widget.y.dp)
+            .track(tracer, elementId),
+        enabled = widget.enabled,
+        interactionSource = interactionSource,
+        thumbContent = if (iconVector != null) {
+            { Icon(iconVector, contentDescription = null, modifier = Modifier.size(SwitchDefaults.IconSize)) }
+        } else {
+            null
+        },
+    )
 }
 
 /** `bottom_end` → `Alignment.BottomEnd` — `animateFloatingActionButton`'s
@@ -2422,6 +2668,290 @@ private fun PressInkOverlay(
             .clip(shape)
             .background(color.copy(alpha = PRESSED_STATE_LAYER_ALPHA)),
     )
+}
+
+/** A `ListItem`/`SegmentedListItem` parity widget. The overload dispatch
+ * mirrors the scene fields: `checkable` → `onCheckedChange`, `selectable`
+ * → `selected`+`onClick`, `interactive` → plain `onClick`, else the
+ * non-interactive base overload. On `selectable`/`checkable` the host owns
+ * the state — a press+release action pair is the click, flipping
+ * `selected`/`checked` at the release's `at` time like the Slint case's
+ * `clicked` handler. `container_radius` probes the shape morph at
+ * `MotionScheme.fastSpatialSpec` — `ListItemShapes`' `shapeAnimationSpec`
+ * — following pressed → selected → resting; focus, hover, and `dragged`
+ * never reach a scene (no scene action emits focus, and platform shadows
+ * deadlock layoutlib, so no scene asserts a dragged item's Level4
+ * elevation). */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun StateListItem(
+    widget: Widget,
+    scene: Scene,
+    tracer: Tracer,
+    textBase: Int,
+    elementId: String,
+    density: Float,
+    emitPress: java.util.concurrent.CopyOnWriteArrayList<Pair<Long, Runnable>>,
+) {
+    val interactionSource = remember { ReplayableInteractionSource() }
+    val interactive = widget.interactive || widget.selectable || widget.checkable
+    if (interactive) {
+        emitStateInteractions(
+            widget, scene, tracer, elementId, interactionSource, emitPress,
+            Offset(40f * density, 20f * density), density,
+        )
+    }
+
+    var checked by remember { mutableStateOf(widget.checked) }
+    var selected by remember { mutableStateOf(widget.selected) }
+    val clickToggles = (widget.checkable || widget.selectable) && sceneActionsClick(scene)
+    DisposableEffect(Unit) {
+        val flip = Runnable { if (widget.checkable) checked = !checked else selected = !selected }
+        val entry =
+            (scene.actions.firstOrNull { it.kind == "release" }?.at ?: 0L) to flip
+        if (clickToggles) emitPress.add(entry)
+        onDispose { emitPress.remove(entry) }
+    }
+    val selectedEffective =
+        if (widget.selectable) selected else if (widget.checkable) checked else false
+
+    val segmented = widget.kind == "segmented-list-item"
+    val shapes = if (segmented) {
+        ListItemDefaults.segmentedShapes(widget.index, widget.count)
+    } else {
+        ListItemDefaults.shapes()
+    }
+    val colors =
+        if (segmented) ListItemDefaults.segmentedColors() else ListItemDefaults.colors()
+
+    // `container_radius` — every list container corner is an absolute-dp
+    // token, so `radiusOf`'s height argument is inert (it only resolves
+    // percent corners, which list shapes never use).
+    val pressed by interactionSource.collectIsPressedAsState()
+    val radius by animateFloatAsState(
+        targetValue = radiusOf(
+            when {
+                pressed -> shapes.pressedShape
+                selectedEffective -> shapes.selectedShape
+                else -> shapes.shape
+            },
+            56.dp,
+            density,
+        ),
+        animationSpec =
+            androidx.compose.material3.MaterialTheme.motionScheme.fastSpatialSpec<Float>(),
+        label = "container_radius",
+    )
+    tracer.propGetters["container_radius"] = { radius.toDouble() }
+
+    var modifier = Modifier.offset(widget.x.dp, widget.y.dp)
+    if (widget.width > 0) {
+        modifier = modifier.width(widget.width.dp)
+    }
+    modifier = modifier.track(tracer, elementId)
+
+    val resolver = androidx.compose.ui.platform.LocalFontFamilyResolver.current
+    val localDensity = LocalDensity.current
+    // `text:<n>` ids follow the Slint side's Text element order: the avatar
+    // label sits in the leading slot before the column's overline/headline/
+    // supporting and the row's trailing text.
+    var tid = textBase
+    fun nextTextId() = "text:${tid++}"
+    fun slotText(id: String, t: String, color: Color): @Composable () -> Unit = {
+        Text(
+            text = t,
+            color = color,
+            modifier = Modifier.trackText(tracer, id, density),
+            onTextLayout =
+                recordTextLayout(tracer, id, localDensity, resolver, null),
+        )
+    }
+    // The leading slot mirrors the Slint `ListTile` slots: the 40px avatar
+    // circle (`ItemLeadingAvatarColor`/`ItemLeadingAvatarLabelColor`), a
+    // 56px `leading_image` clipped to `ItemLeadingImageExpressiveShape`
+    // (`corner_small` = 8dp), or the 24px `leading_icon`.
+    val leading: (@Composable () -> Unit)? = when {
+        widget.avatar != null -> {
+            val avatarSlot = slotText(
+                nextTextId(),
+                widget.avatar!!,
+                schemeColor("on-primary-container"),
+            )
+            val slot: @Composable () -> Unit = {
+                Box(
+                    Modifier.size(40.dp)
+                        .clip(androidx.compose.foundation.shape.CircleShape)
+                        .background(schemeColor("primary-container")),
+                    contentAlignment = androidx.compose.ui.Alignment.Center,
+                ) {
+                    avatarSlot()
+                }
+            }
+            slot
+        }
+        widget.leadingImage != null -> {
+            {
+                androidx.compose.foundation.Image(
+                    imageVector = sceneIcon(widget.leadingImage!!),
+                    contentDescription = null,
+                    modifier = Modifier.size(56.dp)
+                        .clip(androidx.compose.foundation.shape.RoundedCornerShape(8.dp)),
+                    contentScale = androidx.compose.ui.layout.ContentScale.FillBounds,
+                )
+            }
+        }
+        widget.icon != null -> {
+            {
+                Icon(
+                    sceneIcon(widget.icon!!),
+                    contentDescription = null,
+                    modifier = Modifier.size(24.dp),
+                )
+            }
+        }
+        else -> null
+    }
+    val overline: (@Composable () -> Unit)? = widget.overline?.let { t ->
+        slotText(nextTextId(), t, Color.Unspecified)
+    }
+    val content: @Composable () -> Unit =
+        slotText(nextTextId(), widget.text ?: "", Color.Unspecified)
+    val supporting: (@Composable () -> Unit)? = widget.supporting?.let { t ->
+        slotText(nextTextId(), t, Color.Unspecified)
+    }
+    val trailing: (@Composable () -> Unit)? = when {
+        widget.trailingIcon != null -> {
+            {
+                Icon(
+                    sceneIcon(widget.trailingIcon!!),
+                    contentDescription = null,
+                    modifier = Modifier.size(24.dp),
+                )
+            }
+        }
+        widget.trailingText != null ->
+            slotText(nextTextId(), widget.trailingText!!, Color.Unspecified)
+        else -> null
+    }
+
+    if (segmented) {
+        when {
+            widget.checkable -> SegmentedListItem(
+                checked = checked,
+                onCheckedChange = { checked = it },
+                shapes = shapes,
+                modifier = modifier,
+                enabled = widget.enabled,
+                leadingContent = leading,
+                trailingContent = trailing,
+                overlineContent = overline,
+                supportingContent = supporting,
+                colors = colors,
+                interactionSource = interactionSource,
+                content = content,
+            )
+            widget.selectable -> SegmentedListItem(
+                selected = selected,
+                onClick = { selected = !selected },
+                shapes = shapes,
+                modifier = modifier,
+                enabled = widget.enabled,
+                leadingContent = leading,
+                trailingContent = trailing,
+                overlineContent = overline,
+                supportingContent = supporting,
+                colors = colors,
+                interactionSource = interactionSource,
+                content = content,
+            )
+            interactive -> SegmentedListItem(
+                onClick = {},
+                shapes = shapes,
+                modifier = modifier,
+                enabled = widget.enabled,
+                leadingContent = leading,
+                trailingContent = trailing,
+                overlineContent = overline,
+                supportingContent = supporting,
+                colors = colors,
+                interactionSource = interactionSource,
+                content = content,
+            )
+            else -> SegmentedListItem(
+                // material3 1.5.0-alpha18 ships no non-interactive
+                // SegmentedListItem overload; a no-op onClick draws the
+                // identical resting visual (ripple only appears on touch,
+                // and no scene action touches a non-interactive item).
+                onClick = {},
+                shapes = shapes,
+                modifier = modifier,
+                enabled = widget.enabled,
+                leadingContent = leading,
+                trailingContent = trailing,
+                overlineContent = overline,
+                supportingContent = supporting,
+                colors = colors,
+                interactionSource = interactionSource,
+                content = content,
+            )
+        }
+    } else {
+        when {
+            widget.checkable -> ListItem(
+                checked = checked,
+                onCheckedChange = { checked = it },
+                modifier = modifier,
+                enabled = widget.enabled,
+                leadingContent = leading,
+                trailingContent = trailing,
+                overlineContent = overline,
+                supportingContent = supporting,
+                shapes = shapes,
+                colors = colors,
+                interactionSource = interactionSource,
+                content = content,
+            )
+            widget.selectable -> ListItem(
+                selected = selected,
+                onClick = { selected = !selected },
+                modifier = modifier,
+                enabled = widget.enabled,
+                leadingContent = leading,
+                trailingContent = trailing,
+                overlineContent = overline,
+                supportingContent = supporting,
+                shapes = shapes,
+                colors = colors,
+                interactionSource = interactionSource,
+                content = content,
+            )
+            interactive -> ListItem(
+                onClick = {},
+                modifier = modifier,
+                enabled = widget.enabled,
+                leadingContent = leading,
+                trailingContent = trailing,
+                overlineContent = overline,
+                supportingContent = supporting,
+                shapes = shapes,
+                colors = colors,
+                interactionSource = interactionSource,
+                content = content,
+            )
+            else -> ListItem(
+                // The legacy `headlineContent` overload is upstream's only
+                // non-interactive ListItem: flat `ListItemDefaults.shape`
+                // corners, no `enabled` — it cannot render a disabled item.
+                headlineContent = content,
+                modifier = modifier,
+                leadingContent = leading,
+                trailingContent = trailing,
+                overlineContent = overline,
+                supportingContent = supporting,
+                colors = colors,
+            )
+        }
+    }
 }
 
 
