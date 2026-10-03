@@ -36,6 +36,9 @@ import {
     LinearProgressIndicator,
     LoadingIndicator,
     ContainedLoadingIndicator,
+    PullToRefreshBox,
+    PullToRefreshIndicatorKind,
+    SwipeToDismissBox,
     SnackBar,
     Surface,
     ModalBottomSheet,
@@ -830,6 +833,107 @@ export component ActionsView {
                             indeterminate: pi.indeterminate;
                             progress: 0.5;
                         }
+                    }
+                }
+            }
+
+            ComponentCard {
+                title: "Pull to refresh";
+
+                Horizontal {
+                    alignment: center;
+
+                    PullToRefreshBox {
+                        width: 260px;
+                        height: 140px;
+                        is-refreshing: refresh_timer.running;
+                        indicator-kind: PullToRefreshIndicatorKind.loading-indicator;
+
+                        on-refresh => {
+                            refresh_timer.running = true;
+                        }
+
+                        Rectangle {
+                            background: MaterialPalette.surface_container_high;
+                            border-radius: 8px;
+
+                            VerticalLayout {
+                                padding: 12px;
+                                spacing: 8px;
+
+                                MaterialText {
+                                    text: "Pull down to refresh";
+                                    style: MaterialTypography.body_medium;
+                                }
+
+                                for i in 3 : Rectangle {
+                                    height: 16px;
+                                    background: MaterialPalette.surface_container_highest;
+                                    border-radius: 4px;
+                                }
+                            }
+                        }
+                    }
+                }
+
+                refresh_timer := Timer {
+                    interval: 1500ms;
+                    triggered => {
+                        self.running = false;
+                    }
+                }
+            }
+
+            ComponentCard {
+                title: "Swipe to dismiss";
+
+                Horizontal {
+                    alignment: center;
+
+                    sd_demo := Rectangle {
+                        property <bool> dismissed;
+
+                        width: 300px;
+                        height: 56px;
+                        background: self.dismissed ? MaterialPalette.surface_container_high :
+                            MaterialPalette.error_container;
+                        border-radius: 8px;
+
+                        MaterialText {
+                            x: 16px;
+                            vertical-alignment: center;
+                            text: sd_demo.dismissed ? "Dismissed" : "Delete";
+                            color: sd_demo.dismissed ? MaterialPalette.on_surface :
+                                MaterialPalette.on_error_container;
+                        }
+
+                        if !sd_demo.dismissed : SwipeToDismissBox {
+                            width: parent.width;
+                            height: parent.height;
+
+                            on-dismiss(direction) => {
+                                sd_demo.dismissed = true;
+                            }
+
+                            Rectangle {
+                                background: MaterialPalette.surface_container_highest;
+                                border-radius: 8px;
+
+                                MaterialText {
+                                    text: "Swipe to dismiss";
+                                    horizontal-alignment: center;
+                                    vertical-alignment: center;
+                                }
+                            }
+                        }
+                    }
+                }
+
+                TextButton {
+                    text: "Reset";
+                    enabled: sd_demo.dismissed;
+                    clicked => {
+                        sd_demo.dismissed = false;
                     }
                 }
             }
