@@ -39,6 +39,9 @@ list-states
 loading-indicator-motion
 loading-indicator-states
 modal-scrim-dismiss
+navigation-bar-select-morph
+navigation-bars
+navigation-bars-start-icons
 negative-badge-offset
 negative-badge-text
 negative-button-focus-ring

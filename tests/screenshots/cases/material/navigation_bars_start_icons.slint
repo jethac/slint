@@ -1,14 +1,14 @@
 // Copyright © SixtyFPS GmbH <info@slint.dev>
 // SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0
 
-// Scene: navigation-bars — generated from `ui-libraries/material/parity/scenes/navigation-bars.json`
+// Scene: navigation-bars-start-icons — generated from `ui-libraries/material/parity/scenes/navigation-bars-start-icons.json`
 // (edit the scene, regenerate with `cargo run -p material-parity-generator`).
-//PARITY=static
-//SIZE=360x420
-//TRACE_ELEMENTS=navbar0,navbar1,navbar2,navbar3,navbar4
-//DENSITIES=1,2
+//PARITY=xfail: issue #28: Slint ceils text layout widths where Compose keeps fractional advances; start-icon item geometry is label-width-driven, so icon/pill/badge positions shift ~1px (strict-pixel-only divergence)
+//SIZE=360x152
+//TRACE_ELEMENTS=navbar0,navbar1
+//DENSITIES=1
 import "../../fonts/Roboto-VariableFont.ttf";
-import { Icons, MaterialPalette, MaterialTheme, MaterialWindow, NavigationBar, ShortNavigationBar, ShortNavigationBarArrangement } from "@material";
+import { Icons, MaterialPalette, MaterialTheme, MaterialWindow, NavigationItemIconPosition, ShortNavigationBar, ShortNavigationBarArrangement } from "@material";
 
 export component TestCase inherits MaterialWindow {
     init => {
@@ -26,37 +26,11 @@ export component TestCase inherits MaterialWindow {
         MaterialPalette.dynamic = true;
     }
 
-    navbar0 := NavigationBar {
+    navbar0 := ShortNavigationBar {
         x: 0px;
         y: 0px;
         width: 360px;
-        current-index: 0;
-        items: [
-            { icon: Icons.check, selected-icon: Icons.arrow_right, text: "Inbox", badge: "3", show-badge: true, enabled: true },
-            { icon: Icons.schedule, text: "Share", enabled: true },
-            { icon: Icons.keyboard, text: "Saved", enabled: false },
-            { icon: Icons.more_vert, text: "More", enabled: true },
-        ];
-    }
-
-    navbar1 := NavigationBar {
-        x: 0px;
-        y: 96px;
-        width: 360px;
-        always-show-label: false;
-        current-index: 1;
-        items: [
-            { icon: Icons.check, text: "Inbox", enabled: true },
-            { icon: Icons.schedule, text: "Share", enabled: true },
-            { icon: Icons.keyboard, text: "Saved", enabled: true },
-            { icon: Icons.more_vert, text: "More", enabled: true },
-        ];
-    }
-
-    navbar2 := ShortNavigationBar {
-        x: 0px;
-        y: 192px;
-        width: 360px;
+        icon-position: NavigationItemIconPosition.start;
         item-min-size: 0px;
         current-index: 0;
         items: [
@@ -66,31 +40,18 @@ export component TestCase inherits MaterialWindow {
         ];
     }
 
-    navbar3 := ShortNavigationBar {
+    navbar1 := ShortNavigationBar {
         x: 0px;
-        y: 272px;
+        y: 80px;
         width: 360px;
         arrangement: ShortNavigationBarArrangement.centered;
+        icon-position: NavigationItemIconPosition.start;
         item-min-size: 0px;
         current-index: 1;
         items: [
             { icon: Icons.check, selected-icon: Icons.arrow_right, text: "Inbox", enabled: true },
             { icon: Icons.schedule, text: "Share", enabled: true },
             { icon: Icons.keyboard, text: "Saved", enabled: false },
-        ];
-    }
-
-    navbar4 := ShortNavigationBar {
-        x: 0px;
-        y: 352px;
-        width: 360px;
-        item-min-size: 0px;
-        current-index: 2;
-        items: [
-            { icon: Icons.check, text: "", enabled: true },
-            { icon: Icons.schedule, text: "", enabled: true },
-            { icon: Icons.keyboard, text: "", enabled: true },
-            { icon: Icons.close, text: "", enabled: true },
         ];
     }
 
