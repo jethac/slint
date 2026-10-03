@@ -1,0 +1,102 @@
+{
+  "name": "switch-states",
+  "type": "canvas",
+  "parity": "static",
+  "size": [
+    532,
+    96
+  ],
+  "densities": [
+    1,
+    2
+  ],
+  "theme": {
+    "seed": "6750A4",
+    "variant": "tonal-spot",
+    "spec": "spec2025",
+    "platform": "phone",
+    "dark": false,
+    "contrast": 0.0
+  },
+  "fonts": {
+    "plain": "Roboto",
+    "brand": "Roboto"
+  },
+  "widgets": [
+    {
+      "kind": "switch",
+      "x": 16,
+      "y": 32,
+      "checked": false
+    },
+    {
+      "kind": "switch",
+      "x": 80,
+      "y": 32,
+      "checked": true
+    },
+    {
+      "kind": "switch",
+      "x": 144,
+      "y": 32,
+      "checked": true,
+      "state": "focused"
+    },
+    {
+      "kind": "switch",
+      "x": 208,
+      "y": 32,
+      "checked": false,
+      "state": "hovered"
+    },
+    {
+      "kind": "switch",
+      "x": 272,
+      "y": 32,
+      "checked": true,
+      "icon": "check"
+    },
+    {
+      "kind": "switch",
+      "x": 336,
+      "y": 32,
+      "checked": false,
+      "icon": "check"
+    },
+    {
+      "kind": "switch",
+      "x": 400,
+      "y": 32,
+      "checked": true,
+      "enabled": false
+    },
+    {
+      "kind": "switch",
+      "x": 464,
+      "y": 32,
+      "checked": false,
+      "enabled": false
+    }
+  ],
+  "trace_elements": [
+    "button0",
+    "button1",
+    "button2",
+    "button3",
+    "button4",
+    "button5",
+    "button6",
+    "button7"
+  ],
+  "trace_props": [],
+  "mask_decor": {
+    "button2": [
+      0,
+      2000
+    ],
+    "button3": [
+      0,
+      2000
+    ]
+  }
+}
