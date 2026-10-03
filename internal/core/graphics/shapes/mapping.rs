@@ -171,8 +171,8 @@ pub(crate) fn do_mapping(
     // mirror that by tracking the best index by hand.
     let mut ix = 0usize;
     let mut ix_d = feature_dist_squared(features1[0].feature(), features2[0].feature());
-    for i2 in 1..n {
-        let d = feature_dist_squared(features1[0].feature(), features2[i2].feature());
+    for (i2, f2) in features2.iter().enumerate().skip(1) {
+        let d = feature_dist_squared(features1[0].feature(), f2.feature());
         if d < ix_d {
             ix_d = d;
             ix = i2;
@@ -181,7 +181,7 @@ pub(crate) fn do_mapping(
 
     let mut ret = alloc::vec![features2[ix].clone()];
     let mut last_picked = ix as i64;
-    for i in 1..m {
+    for (i, f1) in features1.iter().enumerate().skip(1) {
         // Check the indices we can pick, which one is better.
         // Leave enough items in features2 to pick matches for the items left in features1.
         let last = {
@@ -194,10 +194,8 @@ pub(crate) fn do_mapping(
         let mut best: Option<i64> = None;
         let mut best_d = f32::INFINITY;
         for cand in (last_picked + 1)..=last {
-            let d = feature_dist_squared(
-                features1[i].feature(),
-                features2[(cand % n as i64) as usize].feature(),
-            );
+            let d =
+                feature_dist_squared(f1.feature(), features2[(cand % n as i64) as usize].feature());
             if d < best_d {
                 best_d = d;
                 best = Some(cand);

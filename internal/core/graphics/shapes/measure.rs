@@ -95,9 +95,11 @@ impl AngleMeasurer {
         Self { center_x, center_y }
     }
 
-    /// `angle(x, y) = (atan2(y, x) + 2π) mod 2π` from `Utils.kt`.
+    /// `angle(x, y) = (atan2(y, x) + 2π) % 2π` from `Utils.kt`. Kotlin's `%`
+    /// is a single IEEE remainder; `atan2 + 2π` is always positive, so this
+    /// matches `positiveModulo` mathematically while rounding identically.
     fn angle(&self, x: f32, y: f32) -> f32 {
-        positive_modulo(k_atan2(y - self.center_y, x - self.center_x) + TWO_PI, TWO_PI)
+        (k_atan2(y - self.center_y, x - self.center_x) + TWO_PI) % TWO_PI
     }
 }
 
