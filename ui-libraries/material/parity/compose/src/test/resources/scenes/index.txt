@@ -11,6 +11,10 @@ button-release-morph
 button-sizes
 button-states
 button-styles
+checkbox-check-morph
+checkbox-hover
+checkbox-states
+checkbox-uncheck-morph
 connected-button-groups
 connected-button-morph
 connected-button-press-morph
@@ -124,3 +128,6 @@ switch-states
 toggle-buttons
 toggle-select-morph
 top-app-bars
+tri-checkbox-indeterminate-morph
+tri-checkbox-off-morph
+tri-checkbox-states

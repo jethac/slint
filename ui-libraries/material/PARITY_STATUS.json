@@ -142,8 +142,8 @@
       11
     ],
     "needs": "shapes (#6)",
-    "notes": "slint component: CheckBox",
-    "status": "partial"
+    "notes": "slint component: CheckBox; tokens: generated component tokens; flag-off CheckboxImpl geometry and check-path morph (androidx/androidx@23327507f7fc, material3 1.5.0-alpha18); springs via active motion scheme",
+    "status": "done"
   },
   "CircularProgressIndicator": {
     "issues": [
@@ -1147,8 +1147,8 @@
       11
     ],
     "needs": "shapes (#6)",
-    "notes": "",
-    "status": "missing"
+    "notes": "slint component: TriStateCheckbox; tokens: generated component tokens; flag-off CheckboxImpl geometry and check-path morph (androidx/androidx@23327507f7fc, material3 1.5.0-alpha18); springs via active motion scheme",
+    "status": "done"
   },
   "TwoRowsTopAppBar": {
     "issues": [
