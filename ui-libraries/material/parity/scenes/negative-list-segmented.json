@@ -1,0 +1,45 @@
+{
+    "name": "negative-list-segmented",
+    "type": "canvas",
+    "parity": "negative",
+    "negative_note": "slint_overrides shifts `index` to 1, so the Slint item renders the last-in-group bottom corners while Compose draws the first-in-group top corners \u2014 wrong segmented corners must fail",
+    "size": [
+        240,
+        96
+    ],
+    "densities": [
+        1,
+        2
+    ],
+    "theme": {
+        "seed": "6750A4",
+        "variant": "tonal-spot",
+        "spec": "spec2025",
+        "platform": "phone",
+        "dark": false,
+        "contrast": 0.0
+    },
+    "fonts": {
+        "plain": "Roboto",
+        "brand": "Roboto"
+    },
+    "widgets": [
+        {
+            "kind": "segmented-list-item",
+            "x": 16,
+            "y": 20,
+            "width": 208,
+            "index": 0,
+            "count": 2,
+            "text": "Label",
+            "interactive": true,
+            "slint_overrides": {
+                "index": 1
+            }
+        }
+    ],
+    "trace_elements": [
+        "item0"
+    ],
+    "trace_props": []
+}
