@@ -8,6 +8,7 @@ import { TextButton } from "./text_button.slint";
 import { FilledButton } from "./filled_button.slint";
 import { MaterialText } from "./material_text.slint";
 import { MaterialAnimations } from "../styling/material_animations.slint";
+import { DialogTokens } from "../styling/generated/material_component_tokens.slint";
 import { Modal } from "./modal.slint";
 import { Icon } from "./icon.slint";
 import { IconButton } from "./icon_button.slint";
@@ -144,6 +145,8 @@ export component BaseDialog {
 
                     if root.has_icon : Icon {
                         x: (parent.width - self.width) / 2;
+                        width: DialogTokens.icon_size;
+                        height: self.width;
                         colorize: MaterialPalette.on_surface;
                         source: root.icon;
                     }

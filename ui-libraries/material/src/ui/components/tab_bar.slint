@@ -8,6 +8,7 @@ import { StateLayerArea } from "./state_layer.slint";
 import { MaterialText } from "./material_text.slint";
 import { MaterialTypography } from "../styling/material_typography.slint";
 import { MaterialAnimations } from "../styling/material_animations.slint";
+import { PrimaryNavigationTabTokens, SecondaryNavigationTabTokens } from "../styling/generated/material_component_tokens.slint";
 import { Icon } from "./icon.slint";
 
 component BaseTabItemTemplate inherits BaseNavigationItemTemplate {
@@ -50,6 +51,8 @@ component TabItemTemplate inherits BaseTabItemTemplate {
                 alignment: center;
 
                 Icon {
+                    width: PrimaryNavigationTabTokens.icon_size;
+                    height: self.width;
                     source: root.icon;
                     colorize: label.color;
 
@@ -98,6 +101,8 @@ component SecondaryTabItemTemplate inherits BaseTabItemTemplate {
                 alignment: center;
 
                 Icon {
+                    width: SecondaryNavigationTabTokens.icon_size;
+                    height: self.width;
                     source: root.icon;
                     colorize: label.color;
 
