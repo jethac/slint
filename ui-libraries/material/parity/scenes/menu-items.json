@@ -27,7 +27,7 @@
       "kind": "menu",
       "x": 16,
       "y": 8,
-      "items": [
+      "menu_items": [
         {
           "text": "Menu item"
         },
@@ -70,7 +70,7 @@
       "x": 272,
       "y": 8,
       "item_kind": "selectable",
-      "items": [
+      "menu_items": [
         {
           "text": "Option A",
           "selected": true,
@@ -102,7 +102,7 @@
       "y": 330,
       "item_kind": "checkable",
       "variant": "vibrant",
-      "items": [
+      "menu_items": [
         {
           "text": "Checked",
           "checked": true,
@@ -137,7 +137,7 @@
       "x": 272,
       "y": 330,
       "variant": "vibrant",
-      "items": [
+      "menu_items": [
         {
           "text": "Vibrant item"
         },

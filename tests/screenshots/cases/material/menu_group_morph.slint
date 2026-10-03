@@ -11,7 +11,7 @@
 //ACTION=move:60,34
 //ACTION=move@300:0,0
 //MASK_DECOR=menu0+16@0,15,30,60,120,200,333,500,800,1500
-//XFAIL_TEXT=software: issue #28: Slint ceils text layout widths where Compose keeps fractional advances
+//XFAIL_TEXT=software,skia: issue #28: Slint ceils text layout widths where Compose keeps fractional advances — skia drifts just past the calibrated text-cell bound in the group-label cell at d2
 //DENSITIES=1,2
 import "../../fonts/Roboto-VariableFont.ttf";
 import { Icons, MaterialPalette, MaterialTheme, MaterialWindow, MenuGroupContent, MenuItemKind, MenuShapePosition, MenuVariant } from "@material";

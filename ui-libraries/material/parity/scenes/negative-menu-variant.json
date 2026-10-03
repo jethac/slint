@@ -20,7 +20,7 @@
       "y": 8,
       "variant": "vibrant",
       "slint_overrides": { "variant": "standard" },
-      "items": [
+      "menu_items": [
         { "text": "First", "icon": "edit" },
         { "text": "Second", "trailing_icon": "check" }
       ]
@@ -32,7 +32,7 @@
       "variant": "vibrant",
       "slint_overrides": { "variant": "standard" },
       "item_kind": "selectable",
-      "items": [
+      "menu_items": [
         { "text": "Picked", "selected": true, "selected_icon": "check" },
         { "text": "Other" }
       ]

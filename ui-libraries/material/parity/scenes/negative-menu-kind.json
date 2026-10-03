@@ -20,7 +20,7 @@
       "y": 8,
       "item_kind": "selectable",
       "slint_overrides": { "item_kind": "standard" },
-      "items": [
+      "menu_items": [
         { "text": "Picked", "selected": true, "selected_icon": "check" },
         { "text": "Other" }
       ]
@@ -32,7 +32,7 @@
       "item_kind": "checkable",
       "slint_overrides": { "item_kind": "standard" },
       "variant": "vibrant",
-      "items": [
+      "menu_items": [
         { "text": "On", "checked": true, "selected_icon": "check" },
         { "text": "Off" }
       ]

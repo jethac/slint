@@ -3,7 +3,7 @@
 
 import { IconButton } from "./icon_button.slint";
 import { IconButtonWidth, MaterialButtonMetrics, MaterialButtonSize } from "./button_metrics.slint";
-import { FloatingActionButton, FABStyle } from "./floating_action_button.slint";
+import { FloatingActionButton, FabElevation } from "./floating_action_button.slint";
 import { MaterialPalette } from "../styling/material_palette.slint";
 import { MaterialStyleMetrics } from "../styling/material_style_metrics.slint";
 import { MaterialAnimations } from "../styling/material_animations.slint";
@@ -346,7 +346,9 @@ export component BottomAppBar inherits Rectangle {
                 x: 0;
                 y: 8px;
                 icon: root.fab-icon;
-                style: FABStyle.standard;
+                // `FloatingActionButtonBottomAppBarElevation`
+                // (Level0 everywhere).
+                elevation_style: FabElevation.bottom_app_bar;
 
                 clicked => { root.fab-clicked(); }
             }

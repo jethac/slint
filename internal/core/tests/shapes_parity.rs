@@ -600,9 +600,10 @@ fn assert_polygon_eq(name: &str, golden: &serde_json::Value, actual: &RoundedPol
     }
 
     // Measured features additionally pin each feature's start offset in
-    // outline-progress space (what FeatureMapping aligns on).
+    // outline-progress space (what FeatureMapping aligns on). graphics-shapes
+    // 1.0.1 measures by angle about the polygon center, like Morph does.
     let measurer: std::rc::Rc<dyn shapes::Measurer> =
-        std::rc::Rc::new(shapes::LengthMeasurer::default());
+        std::rc::Rc::new(shapes::AngleMeasurer::new(actual.center_x(), actual.center_y()));
     let measured = shapes::MeasuredPolygon::measure_polygon(measurer, actual)
         .expect("golden shapes must be measurable");
     let measured_features = golden["measured_features"].as_array().unwrap();

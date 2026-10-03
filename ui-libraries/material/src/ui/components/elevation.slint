@@ -3,11 +3,31 @@
 
 import { MaterialPalette } from "../styling/material_palette.slint";
 import { ElevationTokens } from "../styling/generated/material_elevation_tokens.slint";
+import { MaterialCornerRadii } from "./state_layer.slint";
 
 export component Elevation {
     in property <brush> background;
     in property <length> border_radius;
+    /// Per-corner radii; used instead of `border_radius` when
+    /// `shaped_corners`. The caster rectangle carries them, so the shadow
+    /// outline follows the morph too.
+    in property <MaterialCornerRadii> corners;
+    in property <bool> shaped_corners;
     in property <int> level;
+    /// Opt-in `animateElevation` tween specs (the private `ElevationDefaults`
+    /// in upstream `internal/Elevation.kt`): the `in_*` spec animates toward
+    /// an interaction target, the `out_*` spec back to rest — the caller
+    /// picks the released interaction's outgoing duration (120ms hover,
+    /// 150ms press/focus/drag). Defaults keep the historical single spec so
+    /// callers that don't set them are unchanged.
+    in property <duration> in_duration: 150ms;
+    in property <easing> in_easing: cubic-bezier(0.4, 0, 0.2, 1);
+    in property <duration> out_duration: 150ms;
+    in property <easing> out_easing: cubic-bezier(0.4, 0, 0.2, 1);
+    /// Whether the current `level` target belongs to a live interaction —
+    /// bound to the same state as `level` so the spec picks the direction
+    /// the way `to != null` does upstream.
+    in property <bool> interaction_active;
     // `shape` is an element-level property: `Elevation { shape: X }` binds it
     // on this component's root element and `root.shape` forwards it to the
     // caster. When unset it stays empty and the caster uses `border_radius`.
@@ -16,8 +36,9 @@ export component Elevation {
     // maps onto the element — `fill` would stretch the outline's own bounds.
     shape-fit: ShapeFit.normalized;
 
-    // The M3 `level` slot mapped to its dp token (ElevationTokens.levelN).
-    property <length> shadow_height:
+    // The M3 `level` slot mapped to its dp token (ElevationTokens.levelN) —
+    // `out` so the parity trace reads the live tween value.
+    out property <length> shadow_height:
         root.level <= 0 ? ElevationTokens.level0 :
         root.level == 1 ? ElevationTokens.level1 :
         root.level == 2 ? ElevationTokens.level2 :
@@ -25,12 +46,13 @@ export component Elevation {
         root.level == 4 ? ElevationTokens.level4 :
         ElevationTokens.level5;
 
-    // `animateElevation` tweens between *Elevation values (120ms/150ms
-    // incoming/outgoing upstream — one spec covers both here).
+    // `animateElevation` tweens between *Elevation values; the spec fields
+    // re-evaluate per transition, so `interaction_active` picks the
+    // incoming/outgoing spec per direction.
     animate shadow_height {
         enabled: !MaterialPalette.reduced-motion;
-        duration: 150ms;
-        easing: cubic-bezier(0.4, 0, 0.2, 1);
+        duration: root.interaction_active ? root.in_duration : root.out_duration;
+        easing: root.interaction_active ? root.in_easing : root.out_easing;
     }
 
     // The `elevation`/`ambient-shadow-color`/`spot-shadow-color` bindings are
@@ -39,6 +61,10 @@ export component Elevation {
     // radius when unset).
     caster := Rectangle {
         border_radius: root.border_radius;
+        border-top-left-radius: root.shaped_corners ? root.corners.top_left : root.border_radius;
+        border-top-right-radius: root.shaped_corners ? root.corners.top_right : root.border_radius;
+        border-bottom-right-radius: root.shaped_corners ? root.corners.bottom_right : root.border_radius;
+        border-bottom-left-radius: root.shaped_corners ? root.corners.bottom_left : root.border_radius;
         shape: root.shape;
         shape-fit: root.shape-fit;
         background: root.background;

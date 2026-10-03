@@ -3,17 +3,20 @@
 
 // Golden-vector generator for the Slint shapes parity tests. Compiles the
 // pinned androidx.graphics.shapes sources (vendored under
-// src/androidx/graphics/shapes/) plus MaterialShapes.kt at
-// 23327507f7fc7d5b19d65fec4b090f60c970079b and emits JSON where every f32 is
-// encoded as its IEEE-754 bit pattern (u32) so comparisons are bit-exact.
+// src/androidx/graphics/shapes/ at 23327507f7fc7d5b19d65fec4b090f60c970079b,
+// with the morph engine — AngleMeasurer, greedy doMapping, inclusive
+// validateProgress, unwrapped feature progress — taken from the packaged
+// androidx.graphics:graphics-shapes:1.0.1 that Compose M3 Expressive depends
+// on) plus MaterialShapes.kt and emits JSON where every f32 is encoded as its
+// IEEE-754 bit pattern (u32) so comparisons are bit-exact.
 
 @file:OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
 
 import androidx.compose.material3.MaterialShapes
+import androidx.graphics.shapes.AngleMeasurer
 import androidx.graphics.shapes.CornerRounding
 import androidx.graphics.shapes.Cubic
 import androidx.graphics.shapes.Feature
-import androidx.graphics.shapes.LengthMeasurer
 import androidx.graphics.shapes.MeasuredPolygon
 import androidx.graphics.shapes.Morph
 import androidx.graphics.shapes.RoundedPolygon
@@ -61,9 +64,10 @@ private fun featuresJson(polygon: RoundedPolygon): String {
 
 private fun measuredFeaturesJson(polygon: RoundedPolygon): String {
     // MeasuredPolygon carries each feature's start offset in outline-progress
-    // space, which is what FeatureMapping aligns on.
+    // space, which is what FeatureMapping aligns on. graphics-shapes 1.0.1
+    // measures by angle about the polygon center, like Morph does.
     val measured =
-        MeasuredPolygon.measurePolygon(LengthMeasurer(), polygon)
+        MeasuredPolygon.measurePolygon(AngleMeasurer(polygon.centerX, polygon.centerY), polygon)
     val sb = StringBuilder("[")
     measured.features.forEachIndexed { i, pf ->
         if (i > 0) sb.append(',')
@@ -179,7 +183,7 @@ fun main(args: Array<String>) {
     }
     File(outDir, "material_shapes.json")
         .writeText(
-            "{\"pin\":\"23327507f7fc7d5b19d65fec4b090f60c970079b\",\n" +
+            "{\"pin\":\"23327507f7fc7d5b19d65fec4b090f60c970079b + graphics-shapes-1.0.1 morph engine\",\n" +
                 "\"shapes\":{\n$shapesSb\n}}\n"
         )
 
@@ -224,7 +228,7 @@ fun main(args: Array<String>) {
     }
     File(outDir, "morphs.json")
         .writeText(
-            "{\"pin\":\"23327507f7fc7d5b19d65fec4b090f60c970079b\",\n" +
+            "{\"pin\":\"23327507f7fc7d5b19d65fec4b090f60c970079b + graphics-shapes-1.0.1 morph engine\",\n" +
                 "\"morphs\":{\n$morphsSb\n}}\n"
         )
 
@@ -298,7 +302,7 @@ fun main(args: Array<String>) {
     }
     File(outDir, "svg_paths.json")
         .writeText(
-            "{\"pin\":\"23327507f7fc7d5b19d65fec4b090f60c970079b\",\n" +
+            "{\"pin\":\"23327507f7fc7d5b19d65fec4b090f60c970079b + graphics-shapes-1.0.1 morph engine\",\n" +
                 "\"paths\":{\n$svgSb\n}}\n"
         )
 

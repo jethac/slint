@@ -4,6 +4,8 @@
 // Scene: menu-items — generated from `ui-libraries/material/parity/scenes/menu-items.json`
 // (edit the scene, regenerate with `cargo run -p material-parity-generator`).
 //PARITY=static
+// (undocumented)
+//PARITY_EPS=10
 //SIZE=520x640
 //TRACE_ELEMENTS=menu0,menu1,menu2,menu3
 //MASK_DECOR=menu0+16@0,2000
@@ -11,8 +13,6 @@
 //MASK_DECOR=menu2+16@0,2000
 //MASK_DECOR=menu3+16@0,2000
 //XFAIL_TEXT=issue #28: Slint ceils text layout widths where Compose keeps fractional advances
-//PARITY_EPS=10
-// (the hovered item container edge lands a fraction of a pixel differently between Skia and Paparazzi, above the per-channel eps on two AA pixels)
 //DENSITIES=1,2
 import "../../fonts/Roboto-VariableFont.ttf";
 import { Icons, MaterialPalette, MaterialTheme, MaterialWindow, MenuInner, MenuItemKind, MenuVariant } from "@material";

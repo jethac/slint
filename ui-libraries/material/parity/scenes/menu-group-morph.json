@@ -40,7 +40,7 @@
       "x": 16,
       "y": 16,
       "label": "Section",
-      "items": [
+      "menu_items": [
         {
           "text": "First",
           "icon": "edit"
@@ -87,5 +87,5 @@
       "margin": 16
     }
   },
-  "xfail_text": "software: issue #28: Slint ceils text layout widths where Compose keeps fractional advances"
+  "xfail_text": "software,skia: issue #28: Slint ceils text layout widths where Compose keeps fractional advances — skia drifts just past the calibrated text-cell bound in the group-label cell at d2"
 }

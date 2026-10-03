@@ -17,6 +17,7 @@
 //! `cargo run -p material-parity-generator -- --check` (fails if the checked-in
 //! generated files have drifted from the scenes — used in CI).
 
+use std::collections::BTreeSet;
 use std::fmt::Write as _;
 use std::path::{Path, PathBuf};
 
@@ -41,6 +42,14 @@ struct Scene {
     trace_props: Vec<String>,
     #[serde(default)]
     trace_elements: Vec<String>,
+    /// `//TRACE_ITEMS=` — the local element ids a traced container's repeated
+    /// children carry, when one container can emit items under several ids
+    /// (mutually exclusive `for` loops). Omitting a container derives
+    /// `{container}:item` from its `<container>item<i>` `trace_elements`
+    /// entries. The Compose side ignores this field: `track` tags record
+    /// `<container>item<i>` verbatim.
+    #[serde(default)]
+    trace_items: std::collections::BTreeMap<String, Vec<String>>,
     #[serde(default)]
     actions: Vec<Action>,
     /// Timestamps (ms) at which an element's interior ink is excluded from
@@ -76,12 +85,14 @@ struct Scene {
     /// the case fails when they stop occurring.
     #[serde(default)]
     xfail_silhouette: Option<String>,
-    /// `//PARITY_EPS=<n>` — per-channel strict-pixel tolerance override,
-    /// emitted with `parity_eps_note` as the explanation the marker requires.
+    /// `//PARITY_EPS=<n>` — per-channel strict-pixel tolerance override for
+    /// cases whose engine noise exceeds the default 8; carries the reason
+    /// the override exists, emitted as a comment above the directive.
     #[serde(default)]
     parity_eps: Option<u8>,
+    /// Why `parity_eps` is set — required when it is.
     #[serde(default)]
-    parity_eps_note: Option<String>,
+    parity_eps_reason: Option<String>,
 }
 
 #[derive(serde::Deserialize, serde::Serialize)]
@@ -162,6 +173,10 @@ struct Widget {
     /// resources so both sides rasterize the identical path.
     #[serde(default)]
     icon: Option<String>,
+    /// `connected-button` only: icon stem shown while checked — the
+    /// upstream samples' filled/outlined swap.
+    #[serde(default)]
+    checked_icon: Option<String>,
     #[serde(default)]
     enabled: Option<bool>,
     /// Interaction state the widget starts in: `enabled` (default),
@@ -189,6 +204,15 @@ struct Widget {
     /// Icon-button container width: `narrow`, `uniform` (default), `wide`.
     #[serde(default)]
     width_option: Option<String>,
+    /// `*-split-button` kinds only: which half carries the authored `state`
+    /// and receives scripted pointer input — `leading` or `trailing`
+    /// (default `trailing`).
+    #[serde(default)]
+    side: Option<String>,
+    /// `*-split-button` trailing icon stem — defaults to
+    /// `keyboard_arrow_down`, the chevron the upstream samples rotate.
+    #[serde(default)]
+    trailing_icon: Option<String>,
     /// M3 elevation level (0–5) for `surface` widgets: the Slint side sets
     /// `Elevation.level`, the Compose side sets `Modifier.shadow`'s dp.
     #[serde(default)]
@@ -222,12 +246,42 @@ struct Widget {
     /// `search-bar`/`app-bar-with-search` placeholder text.
     #[serde(default)]
     placeholder: Option<String>,
+    /// `extended-fab` expansion state (`expanded` upstream).
+    #[serde(default)]
+    expanded: Option<bool>,
+    /// `fab`/`extended-fab` visibility — `visible` on
+    /// `Modifier.animateFloatingActionButton` upstream.
+    #[serde(default)]
+    shown: Option<bool>,
+    /// `fab` show/hide scale pivot — `alignment` on
+    /// `Modifier.animateFloatingActionButton` (`bottom_end` default).
+    #[serde(default)]
+    alignment: Option<String>,
+    /// `fab` show/hide minimum scale — `targetScale` on
+    /// `Modifier.animateFloatingActionButton` (0.2 upstream).
+    #[serde(default)]
+    target_scale: Option<f64>,
+    /// The prop a press+release click toggles — `expanded` or `shown`
+    /// (fab kinds): the click flips it at the release action's `at` time.
+    #[serde(default)]
+    toggle: Option<String>,
+    /// `extended-fab` label slot width pin — `Modifier.width` on the
+    /// upstream `text` composable; 0/unset sizes the slot to the text.
+    #[serde(default)]
+    label_width: Option<f64>,
     /// Caster outline for `surface` widgets: a `MaterialShapes` global
     /// member name in kebab case (`"cookie-9-sided"` → `MaterialShapes.
     /// cookie-9-sided` / Compose `MaterialShapes.Cookie9Sided`), or `"rect"`
     /// (default) for the `radius` field's rounded rectangle.
     #[serde(default)]
     shape: Option<String>,
+    /// Loading-indicator mode: indeterminate (default — the continuous
+    /// morph loop) or driven by `progress`.
+    #[serde(default)]
+    indeterminate: Option<bool>,
+    /// Determinate loading-indicator progress, 0–1.
+    #[serde(default)]
+    progress: Option<f64>,
     /// `elevated-rect` only: the elevation in dp of the Android ambient+spot
     /// shadow — the Slint side sets a plain `Rectangle`'s `elevation`, the
     /// Compose side `Modifier.shadow`'s dp.
@@ -244,15 +298,15 @@ struct Widget {
     /// item's `simulate_*`/`focused` properties on the Slint side and its
     /// `InteractionSource` on the Compose side).
     #[serde(default)]
-    items: Option<Vec<serde_json::Value>>,
+    menu_items: Option<Vec<serde_json::Value>>,
     /// Group models for `menu-popup`: `[{label, items:[…]}]` — each entry's
-    /// `items` uses the same fields as `items`.
+    /// `items` uses the same fields as `menu_items`.
     #[serde(default)]
     groups: Option<Vec<serde_json::Value>>,
     /// `menu-item`/`menu-group` shape position (`MenuDefaults.itemShape` /
     /// `groupShape`): `standalone` (default), `leading`, `middle`, `trailing`.
     #[serde(default)]
-    position: Option<String>,
+    shape_position: Option<String>,
     /// `menu-item`/`menu` item `selected`/`checked` flags and the standalone
     /// `menu-item` widget's own flags.
     #[serde(default)]
@@ -260,8 +314,6 @@ struct Widget {
     /// Icon stems for the standalone `menu-item` widget.
     #[serde(default)]
     selected_icon: Option<String>,
-    #[serde(default)]
-    trailing_icon: Option<String>,
     /// `menu-item`/`menu` item `trailingText` (the `trailingContent` text
     /// slot) and `supportingText`.
     #[serde(default)]
@@ -279,6 +331,53 @@ struct Widget {
     /// (`negative` scenes only). Keys shadow the widget's own fields.
     #[serde(default)]
     slint_overrides: serde_json::Map<String, serde_json::Value>,
+    /// `connected-button` only: `start`/`middle`/`end` — the position's
+    /// `connected*ButtonShapes` (`start` is the leading item of a
+    /// horizontal group, the top item of a vertical one).
+    #[serde(default)]
+    position: Option<String>,
+    /// `connected-button` only: the `VerticalButtonGroupSample` shapes —
+    /// `CornerSize(100)` caps on `start`/`end`, uniform 6dp pressed.
+    #[serde(default)]
+    vertical: Option<bool>,
+    /// `horizontal-divider`/`vertical-divider`/`divider` line thickness in
+    /// dp — `DividerDefaults.Thickness` (1dp) when unset; `0` authors the
+    /// upstream `Dp.Hairline` (one physical pixel).
+    #[serde(default)]
+    thickness: Option<f64>,
+    /// `connected-button-group`/`vertical-connected-button-group` items.
+    #[serde(default)]
+    items: Vec<GroupItem>,
+    /// Groups: every item carries its own checked state instead of one
+    /// `selected_index`.
+    #[serde(default)]
+    multi_select: Option<bool>,
+    /// Single-select groups: the checked item (`-1` selects none).
+    #[serde(default)]
+    selected_index: Option<i64>,
+}
+
+/// One item of a `connected-button-group`: the label, an optional leading
+/// icon, a `checked_icon` swap, `disabled`, `checked` (multi-select), and
+/// an interaction `state` the Compose side emits on that item's source.
+#[derive(serde::Deserialize, serde::Serialize)]
+struct GroupItem {
+    #[serde(default)]
+    text: Option<String>,
+    /// Icon stem like the widget's `icon`; `checked_icon` replaces it
+    /// while the item is checked.
+    #[serde(default)]
+    icon: Option<String>,
+    #[serde(default)]
+    checked_icon: Option<String>,
+    #[serde(default)]
+    disabled: Option<bool>,
+    #[serde(default)]
+    checked: Option<bool>,
+    /// `pressed`/`hovered`/`focused` — static scenes bind it through
+    /// `simulate_*_index` on the Slint side.
+    #[serde(default)]
+    state: Option<String>,
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -291,7 +390,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let mut entries: Vec<_> = std::fs::read_dir(parity_dir.join("scenes"))?
         .map(|e| e.unwrap().path())
-        .filter(|p| p.extension().map_or(false, |e| e == "json"))
+        .filter(|p| p.extension().is_some_and(|e| e == "json"))
         .collect();
     entries.sort();
     for path in entries {
@@ -312,12 +411,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             for icon in w
                 .icon
                 .iter()
+                .chain(w.checked_icon.iter())
+                .chain(w.nav_icon.iter())
+                .chain(w.icons.iter())
+                .chain(w.selected_icon.iter())
+                .chain(w.trailing_icon.iter())
+                .chain(w.items.iter().flat_map(|item| item.icon.iter().chain(item.checked_icon.iter())))
                 .map(String::as_str)
-                .chain(w.nav_icon.iter().map(String::as_str))
-                .chain(w.icons.iter().map(String::as_str))
-                .chain(w.selected_icon.iter().map(String::as_str))
-                .chain(w.trailing_icon.iter().map(String::as_str))
-                .chain(item_icons(&w.items))
+                .chain(item_icons(&w.menu_items))
                 .chain(group_item_icons(&w.groups))
             {
                 let src = repo_root
@@ -545,6 +646,15 @@ fn slint_case(scene: &Scene) -> String {
         }
         kind => writeln!(s, "//PARITY={kind}").unwrap(),
     }
+    if let Some(eps) = scene.parity_eps {
+        writeln!(
+            s,
+            "// {}",
+            scene.parity_eps_reason.as_deref().unwrap_or("(undocumented)")
+        )
+        .unwrap();
+        writeln!(s, "//PARITY_EPS={eps}").unwrap();
+    }
     writeln!(s, "//SIZE={}x{}", scene.size[0], scene.size[1]).unwrap();
     if !scene.times.is_empty() {
         writeln!(
@@ -557,8 +667,42 @@ fn slint_case(scene: &Scene) -> String {
     if !scene.trace_props.is_empty() {
         writeln!(s, "//TRACE_PROPS={}", scene.trace_props.join(",")).unwrap();
     }
-    if !scene.trace_elements.is_empty() {
-        writeln!(s, "//TRACE_ELEMENTS={}", scene.trace_elements.join(",")).unwrap();
+    // `<container>item<i>` ids name a container's repeated children — one
+    // shared qualified id per instance on the Slint side, so they go to
+    // `//TRACE_ITEMS=` (enumerated in tree order) instead of
+    // `//TRACE_ELEMENTS=` (a literal-id lookup). The Compose side reads the
+    // same scene JSON and records them verbatim.
+    let (item_containers, elements): (BTreeSet<String>, Vec<&String>) = {
+        let mut containers = BTreeSet::new();
+        let mut plain = Vec::new();
+        for id in &scene.trace_elements {
+            let stem = id.trim_end_matches(|c: char| c.is_ascii_digit());
+            if stem.len() > "item".len() && stem.ends_with("item") && stem.len() < id.len() {
+                containers.insert(stem[..stem.len() - "item".len()].to_string());
+            } else {
+                plain.push(id);
+            }
+        }
+        (containers, plain)
+    };
+    if !elements.is_empty() {
+        let elements = elements.iter().map(|s| s.as_str()).collect::<Vec<_>>().join(",");
+        writeln!(s, "//TRACE_ELEMENTS={elements}").unwrap();
+    }
+    let trace_items = item_containers
+        .iter()
+        .map(|c| {
+            let locals = scene
+                .trace_items
+                .get(c)
+                .cloned()
+                .unwrap_or_else(|| vec!["item".to_string()]);
+            format!("{c}:{}", locals.join("+"))
+        })
+        .collect::<Vec<_>>()
+        .join(",");
+    if !trace_items.is_empty() {
+        writeln!(s, "//TRACE_ITEMS={trace_items}").unwrap();
     }
     for a in scene.actions.iter().chain(widget_actions(scene).iter()) {
         if let Some(key) = a.kind.strip_prefix("key:") {
@@ -596,14 +740,6 @@ fn slint_case(scene: &Scene) -> String {
     if let Some(reason) = &scene.xfail_silhouette {
         writeln!(s, "//XFAIL_SILHOUETTE={reason}").unwrap();
     }
-    if let Some(eps) = scene.parity_eps {
-        writeln!(
-            s,
-            "//PARITY_EPS={eps}\n// ({})",
-            scene.parity_eps_note.as_deref().unwrap_or("(undocumented)")
-        )
-        .unwrap();
-    }
     writeln!(
         s,
         "//DENSITIES={}",
@@ -624,9 +760,21 @@ fn slint_case(scene: &Scene) -> String {
             "filled-icon-button" => "FilledIconButton",
             "tonal-icon-button" => "TonalIconButton",
             "outlined-icon-button" => "OutlineIconButton",
+            "loading-indicator" => "LoadingIndicator",
+            "contained-loading-indicator" => "ContainedLoadingIndicator",
+            "filled-split-button" => "FilledSplitButton",
+            "tonal-split-button" => "TonalSplitButton",
+            "elevated-split-button" => "ElevatedSplitButton",
+            "outlined-split-button" => "OutlineSplitButton",
+            "fab" => "FloatingActionButton",
+            "extended-fab" => "ExtendedFloatingActionButton",
             // `surface` imports `Elevation`/`MaterialShapes` below instead;
             // `rect`/`elevated-rect` are plain `Rectangle`s — no import.
             "rect" | "surface" | "elevated-rect" => continue,
+            "icon" => "Icon",
+            // `divider` is the deprecated `HorizontalDivider` alias upstream.
+            "divider" | "horizontal-divider" => "HorizontalDivider",
+            "vertical-divider" => "VerticalDivider",
             "top-app-bar" => match w.variant.as_deref().unwrap_or("small") {
                 "small" => "TopAppBar",
                 "center" => "CenterAlignedTopAppBar",
@@ -664,16 +812,25 @@ fn slint_case(scene: &Scene) -> String {
             }
             "menu-divider" => "MenuDivider",
             "menu-group-label" => "MenuGroupLabel",
+            "connected-button" => "ConnectedButton",
+            "connected-button-group" => "ConnectedButtonGroup",
+            "vertical-connected-button-group" => "VerticalConnectedButtonGroup",
             other => panic!("unknown widget kind {other:?}"),
         };
         imports.push(component);
+        if w.kind.starts_with("connected-button") || w.kind == "vertical-connected-button-group" {
+            imports.push("ConnectedButtonPosition");
+        }
         if w.icon.is_some()
+            || w.checked_icon.is_some()
             || w.nav_icon.is_some()
             || !w.icons.is_empty()
             || w.selected_icon.is_some()
             || w.trailing_icon.is_some()
-            || item_icons(&w.items).next().is_some()
+            || w.kind.ends_with("split-button")
+            || item_icons(&w.menu_items).next().is_some()
             || group_item_icons(&w.groups).next().is_some()
+            || w.items.iter().any(|item| item.icon.is_some() || item.checked_icon.is_some())
         {
             needs_icons = true;
         }
@@ -681,6 +838,12 @@ fn slint_case(scene: &Scene) -> String {
             imports.push("MaterialButtonSize");
             imports.push("MaterialButtonShape");
             imports.push("IconButtonWidth");
+        }
+        if w.kind == "fab" || w.kind == "extended-fab" {
+            imports.push("FabSize");
+            imports.push("ExtendedFabSize");
+            imports.push("FabElevation");
+            imports.push("FabAlignment");
         }
     }
     if needs_icons {
@@ -746,11 +909,18 @@ fn widget_actions(scene: &Scene) -> Vec<Action> {
     let mut actions = Vec::new();
     // Tab steps walk the focusable widgets in declaration order, starting
     // from no focus: reaching the widget at focusable ordinal `o` takes
-    // `o + 1` Tabs. Later `focused` widgets continue from there.
+    // `o + 1` Tabs. Later `focused` widgets continue from there. A
+    // connected-button-group contributes one focusable per enabled item —
+    // a `focused` item walks to its own ordinal.
     let mut tabs_emitted = 0usize;
     let mut ordinal = 0usize;
     for w in &scene.widgets {
+        // A split button has two focusable halves — the trailing one is the
+        // second Tab stop.
+        let focusables = if w.kind.ends_with("split-button") { 2 } else { 1 };
         if w.enabled == Some(false) {
+            // A disabled widget takes no Tab stop on either side, so it
+            // does not consume focus ordinals.
             continue;
         }
         if w.state.as_deref() == Some("focused") {
@@ -761,12 +931,39 @@ fn widget_actions(scene: &Scene) -> Vec<Action> {
                 ordinal += 1;
                 continue;
             }
-            for _ in tabs_emitted..=ordinal {
+            // Focused split halves: `leading` is the first of the pair.
+            let target = if w.kind.ends_with("split-button")
+                && w.side.as_deref() == Some("trailing")
+            {
+                ordinal + 1
+            } else {
+                ordinal
+            };
+            for _ in tabs_emitted..=target {
                 actions.push(Action { kind: "key:Tab".into(), x: 0.0, y: 0.0, at: 0.0 });
             }
-            tabs_emitted = ordinal + 1;
+            tabs_emitted = target + 1;
         }
-        ordinal += 1;
+        // A `*-button-group`'s layout isn't focusable — only its items
+        // land in the Tab chain (handled below). Anything else is
+        // `focusables` focusables (2 for a split button's halves, else 1).
+        if !w.kind.ends_with("button-group") {
+            ordinal += focusables;
+        }
+        for item in &w.items {
+            // Disabled items aren't in the Tab chain.
+            if item.disabled == Some(true) {
+                continue;
+            }
+            if item.state.as_deref() == Some("focused") {
+                // `ordinal` counts the items before this one already.
+                for _ in tabs_emitted..=ordinal {
+                    actions.push(Action { kind: "key:Tab".into(), x: 0.0, y: 0.0, at: 0.0 });
+                }
+                tabs_emitted = ordinal + 1;
+            }
+            ordinal += 1;
+        }
     }
     // A motion scene animates the state change through its timed frames, so
     // `hovered`/`pressed` must be a real pointer gesture — a `simulate_*`
@@ -780,12 +977,19 @@ fn widget_actions(scene: &Scene) -> Vec<Action> {
                 Some("hovered") => "move",
                 _ => continue,
             };
-            actions.push(Action {
-                kind: kind.into(),
-                x: w.x + 20.0,
-                y: w.y + 16.0,
-                at: 0.0,
-            });
+            // Split buttons aim the gesture at the authored half: the
+            // trailing half hugs the right edge (`w.width` pins the total —
+            // the trailing keeps its intrinsic width, so a point near the
+            // right edge lands inside it).
+            let x = if w.kind.ends_with("split-button")
+                && w.side.as_deref() == Some("trailing")
+                && w.width.is_some()
+            {
+                w.x + w.width.unwrap() - 16.0
+            } else {
+                w.x + 20.0
+            };
+            actions.push(Action { kind: kind.into(), x, y: w.y + 16.0, at: 0.0 });
         }
     }
     for w in &scene.widgets {
@@ -977,7 +1181,7 @@ fn menu_item_states(s: &mut String, w: &Widget, grouped: bool) {
             );
         }
     } else {
-        collect(&w.items, None);
+        collect(&w.menu_items, None);
     }
 }
 
@@ -1074,6 +1278,204 @@ fn button_props(w: &Widget, timed: bool) -> String {
     }
     p
 }
+/// `*-split-button` props — same spirit as `button_props` but the
+/// component's split-specific surface: `trailing_checkable`, the trailing
+/// chevron icon, per-side `simulate_*` hooks and the token override props
+/// the negative scenes inject defects through.
+fn split_button_props(w: &Widget, timed: bool) -> String {
+    let mut p = String::new();
+    let over = &w.slint_overrides;
+    let bool_over = |k: &str, authored: Option<bool>| -> bool {
+        over.get(k).and_then(|v| v.as_bool()).unwrap_or(authored.unwrap_or(false))
+    };
+    let len_over = |k: &str| -> Option<f64> { over.get(k).and_then(|v| v.as_f64()) };
+    if let Some(text) = &w.text {
+        writeln!(p, "        text: \"{text}\";").unwrap();
+    }
+    let size = over
+        .get("size")
+        .and_then(|v| v.as_str())
+        .map(str::to_string)
+        .or_else(|| w.size.clone());
+    if let Some(size) = size {
+        writeln!(p, "        size: MaterialButtonSize.{};", size_variant(&size)).unwrap();
+    }
+    if bool_over("checkable", w.checkable) {
+        p.push_str("        trailing_checkable: true;\n");
+    }
+    if bool_over("checked", w.checked) {
+        p.push_str("        checked: true;\n");
+    }
+    let icon = over
+        .get("icon")
+        .and_then(|v| v.as_str())
+        .map(str::to_string)
+        .or_else(|| w.icon.clone());
+    if let Some(icon) = icon {
+        writeln!(p, "        icon: Icons.{icon};").unwrap();
+    }
+    // The trailing chevron — the upstream samples' `KeyboardArrowDown`;
+    // `trailing_icon` swaps the glyph (a wrong-icon negative defect).
+    let trailing_icon = over
+        .get("trailing_icon")
+        .and_then(|v| v.as_str())
+        .map(str::to_string)
+        .or_else(|| w.trailing_icon.clone())
+        .unwrap_or_else(|| "keyboard_arrow_down".into());
+    writeln!(p, "        trailing_icon: Icons.{trailing_icon};").unwrap();
+    if !bool_over("enabled", w.enabled.or(Some(true))) {
+        p.push_str("        enabled: false;\n");
+    }
+    if let Some(width) = w.width {
+        writeln!(p, "        width: {width}px;").unwrap();
+    }
+    if !timed {
+        let side = w.side.as_deref().unwrap_or("trailing");
+        match w.state.as_deref() {
+            Some("hovered") => writeln!(p, "        {side}_simulate_hover: true;").unwrap(),
+            Some("pressed") => writeln!(p, "        {side}_simulate_press: true;").unwrap(),
+            _ => {}
+        }
+    }
+    // Token overrides for `negative` scenes (defaults are the generated
+    // token values; only a set key reaches the component).
+    for k in ["spacing", "inner_corner", "inner_pressed_corner", "outer_corner"] {
+        if let Some(v) = len_over(k) {
+            writeln!(p, "        {k}: {v}px;").unwrap();
+        }
+    }
+    if over.get("checked_overlay").and_then(|v| v.as_bool()) == Some(false) {
+        p.push_str("        checked_overlay: false;\n");
+    }
+    if !bool_over("enforce_touch_target", None) {
+        p.push_str("        enforce_touch_target: false;\n");
+    }
+    p
+}
+
+/// The container-role name whose `on-*` counterpart fills its content —
+/// `contentColorFor` upstream resolves to this table.
+fn on_color_role(role: &str) -> &str {
+    match role {
+        "primary" => "on_primary",
+        "primary-container" => "on_primary_container",
+        "secondary" => "on_secondary",
+        "secondary-container" => "on_secondary_container",
+        "tertiary" => "on_tertiary",
+        "tertiary-container" => "on_tertiary_container",
+        "error" => "on_error",
+        "error-container" => "on_error_container",
+        "inverse-surface" => "inverse_on_surface",
+        "surface" | "surface-bright" | "surface-dim" | "surface-container"
+        | "surface-container-high" | "surface-container-highest" | "surface-container-low"
+        | "surface-container-lowest" => "on_surface",
+        "surface-variant" => "on_surface_variant",
+        other => panic!("no content-color role known for {other:?}"),
+    }
+}
+
+/// `fab`/`extended-fab` props — same spirit as `button_props` but the FAB
+/// surface: the `FabSize`/`ExtendedFabSize`/`FabElevation`/`FabAlignment`
+/// enums, `expanded`/`shown`/`target_scale`, the `label_width` text-slot
+/// pin and the `toggle` click wiring for morph scenes.
+fn fab_props(w: &Widget, timed: bool) -> String {
+    let mut p = String::new();
+    let over = &w.slint_overrides;
+    let bool_over = |k: &str, authored: Option<bool>| -> bool {
+        over.get(k).and_then(|v| v.as_bool()).unwrap_or(authored.unwrap_or(false))
+    };
+    let extended = w.kind == "extended-fab";
+    if extended {
+        if let Some(text) = &w.text {
+            writeln!(p, "        text: \"{text}\";").unwrap();
+        }
+        if let Some(v) = w.label_width {
+            writeln!(p, "        label-width: {v}px;").unwrap();
+        }
+        let expanded = bool_over("expanded", w.expanded.or(Some(true)));
+        writeln!(p, "        expanded: {expanded};").unwrap();
+    }
+    if let Some(text) = &w.text {
+        if !extended {
+            // A plain FAB's `text` authors the tooltip/accessibility label.
+            writeln!(p, "        tooltip: \"{text}\";").unwrap();
+        }
+    }
+    let size = over
+        .get("size")
+        .and_then(|v| v.as_str())
+        .map(str::to_string)
+        .or_else(|| w.size.clone());
+    if let Some(size) = size {
+        let en = if extended { "ExtendedFabSize" } else { "FabSize" };
+        writeln!(p, "        size: {en}.{size};").unwrap();
+    }
+    let icon = over
+        .get("icon")
+        .and_then(|v| v.as_str())
+        .map(str::to_string)
+        .or_else(|| w.icon.clone());
+    if let Some(icon) = icon {
+        writeln!(p, "        icon: Icons.{icon};").unwrap();
+    }
+    if let Some(color) = &w.color {
+        let role = color.replace('-', "_");
+        writeln!(p, "        container_color: MaterialPalette.{role};").unwrap();
+        writeln!(
+            p,
+            "        content_color: MaterialPalette.{};",
+            on_color_role(color)
+        )
+        .unwrap();
+    }
+    let variant = over
+        .get("variant")
+        .and_then(|v| v.as_str())
+        .map(str::to_string)
+        .or_else(|| w.variant.clone());
+    match variant.as_deref() {
+        Some("lowered") => p.push_str("        elevation_style: FabElevation.lowered;\n"),
+        Some("bottom-app-bar") => {
+            p.push_str("        elevation_style: FabElevation.bottom_app_bar;\n")
+        }
+        _ => {}
+    }
+    let shown = bool_over("shown", w.shown.or(Some(true)));
+    if !shown {
+        p.push_str("        shown: false;\n");
+    }
+    if let Some(alignment) = &w.alignment {
+        writeln!(p, "        alignment: FabAlignment.{alignment};").unwrap();
+    }
+    if let Some(scale) = w.target_scale {
+        writeln!(p, "        target_scale: {scale};").unwrap();
+    }
+    if !bool_over("enabled", w.enabled.or(Some(true))) {
+        p.push_str("        enabled: false;\n");
+    }
+    if !timed {
+        match w.state.as_deref() {
+            Some("hovered") => p.push_str("        simulate_hover: true;\n"),
+            Some("pressed") => p.push_str("        simulate_press: true;\n"),
+            _ => {}
+        }
+    }
+    // A click flips the authored toggle prop on release — the Compose side
+    // toggles its hoisted state at the same `at` time.
+    if let Some(toggle) = &w.toggle {
+        match toggle.as_str() {
+            "expanded" if extended => {
+                p.push_str("        clicked => { self.expanded = !self.expanded; }\n")
+            }
+            "shown" => p.push_str("        clicked => { self.shown = !self.shown; }\n"),
+            other => panic!("unknown fab toggle {other:?}"),
+        }
+    }
+    if !bool_over("enforce_touch_target", None) {
+        p.push_str("        enforce_touch_target: false;\n");
+    }
+    p
+}
 
 fn slint_canvas(s: &mut String, scene: &Scene) {
     // Buttons are named `button{n}` by count of button-family widgets, not
@@ -1082,6 +1484,9 @@ fn slint_canvas(s: &mut String, scene: &Scene) {
     let mut buttons = 0;
     let mut surfaces = 0;
     let mut appbars = 0;
+    let mut groups = 0;
+    let mut icons = 0;
+    let mut dividers = 0;
     let mut menus = 0;
     for w in scene.widgets.iter() {
         let component = match w.kind.as_str() {
@@ -1094,6 +1499,34 @@ fn slint_canvas(s: &mut String, scene: &Scene) {
             "filled-icon-button" => "FilledIconButton",
             "tonal-icon-button" => "TonalIconButton",
             "outlined-icon-button" => "OutlineIconButton",
+            "loading-indicator" | "contained-loading-indicator" => {
+                let component = match w.kind.as_str() {
+                    "loading-indicator" => "LoadingIndicator",
+                    _ => "ContainedLoadingIndicator",
+                };
+                let indeterminate = w.indeterminate.unwrap_or(true);
+                // `progress` only binds in determinate mode — the upstream
+                // indeterminate composable takes no progress parameter.
+                let progress = if indeterminate {
+                    String::new()
+                } else {
+                    format!("\n        progress: {};", w.progress.unwrap_or(0.))
+                };
+                writeln!(
+                    s,
+                    "    {component} {{\n        x: {}px;\n        y: {}px;\n        indeterminate: {indeterminate};{progress}\n    }}\n",
+                    w.x as i64,
+                    w.y as i64,
+                )
+                .unwrap();
+                continue;
+            }
+            "filled-split-button" => "FilledSplitButton",
+            "tonal-split-button" => "TonalSplitButton",
+            "elevated-split-button" => "ElevatedSplitButton",
+            "outlined-split-button" => "OutlineSplitButton",
+            "fab" => "FloatingActionButton",
+            "extended-fab" => "ExtendedFloatingActionButton",
             "surface" => {
                 let i = surfaces;
                 surfaces += 1;
@@ -1182,6 +1615,106 @@ fn slint_canvas(s: &mut String, scene: &Scene) {
                 menu_widget(s, w, i, scene);
                 continue;
             }
+            "connected-button" => {
+                let i = buttons;
+                buttons += 1;
+                connected_button_widget(s, w, i, scene);
+                continue;
+            }
+            "connected-button-group" | "vertical-connected-button-group" => {
+                let i = groups;
+                groups += 1;
+                connected_group_widget(s, w, i, scene);
+                continue;
+            }
+            "icon" => {
+                let i = icons;
+                icons += 1;
+                // `color` maps to upstream's `tint` (the `colorize` prop);
+                // `slint_overrides` shadow it for the negative scenes.
+                let color = w
+                    .slint_overrides
+                    .get("color")
+                    .and_then(|v| v.as_str())
+                    .map(str::to_string)
+                    .or_else(|| w.color.clone());
+                let colorize_prop = color
+                    .map(|c| format!("\n        colorize: MaterialPalette.{};", c.replace('-', "_")))
+                    .unwrap_or_default();
+                // No `width`/`height` authored → the icon takes the
+                // source's natural size (`defaultSizeFor` upstream).
+                let size_prop = |v: Option<f64>, name: &str| {
+                    v.map(|v| format!("\n        {name}: {v}px;"))
+                        .unwrap_or_default()
+                };
+                let width = w
+                    .slint_overrides
+                    .get("width")
+                    .map(widget_num)
+                    .or(w.width);
+                let height = w
+                    .slint_overrides
+                    .get("height")
+                    .map(widget_num)
+                    .or(w.height);
+                let x = w.slint_overrides.get("x").map(widget_num).unwrap_or(w.x);
+                let y = w.slint_overrides.get("y").map(widget_num).unwrap_or(w.y);
+                writeln!(
+                    s,
+                    "    icon{i} := Icon {{\n        x: {}px;\n        y: {}px;\n        source: Icons.{};{}{}{}\n    }}\n",
+                    x as i64,
+                    y as i64,
+                    w.icon.as_deref().unwrap_or("check"),
+                    size_prop(width, "width"),
+                    size_prop(height, "height"),
+                    colorize_prop,
+                )
+                .unwrap();
+                continue;
+            }
+            "divider" | "horizontal-divider" | "vertical-divider" => {
+                let i = dividers;
+                dividers += 1;
+                let component = if w.kind == "vertical-divider" {
+                    "VerticalDivider"
+                } else {
+                    "HorizontalDivider"
+                };
+                // The band pins its long axis from the scene; the short axis
+                // is the divider's own `thickness` (`DividerDefaults.
+                // Thickness` upstream when unset). `slint_overrides` shadow
+                // the authored values for the negative scenes.
+                let thickness = w
+                    .slint_overrides
+                    .get("thickness")
+                    .map(widget_num)
+                    .or(w.thickness);
+                let thickness_prop = thickness
+                    .map(|t| format!("\n        thickness: {t}px;"))
+                    .unwrap_or_default();
+                let color = w
+                    .slint_overrides
+                    .get("color")
+                    .and_then(|v| v.as_str())
+                    .map(str::to_string)
+                    .or_else(|| w.color.clone());
+                let color_prop = color
+                    .map(|c| format!("\n        color: MaterialPalette.{};", c.replace('-', "_")))
+                    .unwrap_or_default();
+                let (width, height) = if w.kind == "vertical-divider" {
+                    (thickness.unwrap_or(1.0), w.height.unwrap())
+                } else {
+                    (w.width.unwrap(), thickness.unwrap_or(1.0))
+                };
+                writeln!(
+                    s,
+                    "    divider{i} := {component} {{\n        x: {}px;\n        y: {}px;\n        width: {width}px;\n        height: {height}px;{thickness_prop}{color_prop}\n    }}\n",
+                    w.x as i64,
+                    w.y as i64,
+                )
+                .unwrap();
+                continue;
+            }
             "rect" => {
                 let radius = w
                     .slint_overrides
@@ -1211,7 +1744,13 @@ fn slint_canvas(s: &mut String, scene: &Scene) {
             "    button{i} := {component} {{\n        x: {}px;\n        y: {}px;\n{}    }}\n",
             w.x as i64,
             w.y as i64,
-            button_props(w, !scene.times.is_empty()),
+            if w.kind.ends_with("split-button") {
+                split_button_props(w, !scene.times.is_empty())
+            } else if w.kind == "fab" || w.kind == "extended-fab" {
+                fab_props(w, !scene.times.is_empty())
+            } else {
+                button_props(w, !scene.times.is_empty())
+            },
         )
         .unwrap();
         // `TRACE_PROPS` reads properties on the test-case root — forward the
@@ -1219,46 +1758,256 @@ fn slint_canvas(s: &mut String, scene: &Scene) {
         // morph's animated value, which every button component exposes.
         if i == 0 {
             for prop in &scene.trace_props {
-                let ty = match prop.as_str() {
-                    "container_radius" => "length",
-                    other => panic!("no forwarding type known for trace prop {other:?}"),
-                };
+                let ty = trace_prop_type(prop);
                 writeln!(s, "    out property <{ty}> {prop}: button{i}.{prop};\n").unwrap();
             }
         }
-        if let Some(cover) = w.slint_overrides.get("cover") {
-            // `slint_overrides.cover` paints a rectangle over the whole
-            // widget: an opaque one masks the real fill and every state
-            // layer (and the focus ring, drawn last), a translucent one
-            // adds a second overlay. `label` redraws the button text on
-            // top so the defect stays in the button's body.
-            let fill = cover["fill"].as_str().unwrap_or("primary");
-            let fill_expr = if fill.starts_with('#') {
-                fill.to_lowercase()
-            } else {
-                format!("MaterialPalette.{}", fill.replace('-', "_"))
-            };
-            let label = if cover["label"].as_bool().unwrap_or(true) {
-                let label_fill =
-                    cover["label_fill"].as_str().unwrap_or("on-primary").replace('-', "_");
-                format!(
-                    "        Text {{\n            text: \"{}\";\n            color: MaterialPalette.{label_fill};\n            font-family: \"Roboto\";\n            font-weight: 500;\n            font-size: 14px;\n            horizontal-alignment: center;\n            vertical-alignment: center;\n        }}\n",
-                    w.text.as_deref().unwrap_or_default()
-                )
-            } else {
-                String::new()
-            };
-            let cover_radius = cover["radius"]
-                .as_f64()
-                .map(|r| format!("{r}px"))
-                .unwrap_or_else(|| format!("button{i}.height / 2"));
-            writeln!(
-                s,
-                "    // Deliberate defect (scene `slint_overrides.cover`).\n    Rectangle {{\n        x: button{i}.x;\n        y: button{i}.y;\n        width: button{i}.width;\n        height: button{i}.height;\n        border-radius: {cover_radius};\n        background: {fill_expr};\n        opacity: {};\n{label}    }}\n",
-                cover["opacity"].as_f64().unwrap_or(1.0),
+        emit_button_cover(s, w, i);
+    }
+}
+
+/// The Slint property type of a `//TRACE_PROPS=` name: `container_radius`,
+/// the connected-button `corner_*` morph values and the FAB container/label
+/// geometry are all `length`; the FAB scale/fade props are `float`.
+fn trace_prop_type(prop: &str) -> &'static str {
+    match prop {
+        "container_radius"
+        | "leading_inner_radius"
+        | "trailing_inner_radius"
+        | "corner_top_left"
+        | "corner_top_right"
+        | "corner_bottom_right"
+        | "corner_bottom_left"
+        | "box_width"
+        | "slot_width"
+        | "shadow_elevation" => "length",
+        "trailing_icon_rotation" => "angle",
+        "label_alpha" | "show_scale" | "show_alpha" | "expand_progress" => "float",
+        other => panic!("no forwarding type known for trace prop {other:?}"),
+    }
+}
+
+/// `slint_overrides.cover` paints a rectangle over the widget: an opaque
+/// one masks the real fill and every state layer (and the focus ring,
+/// drawn last), a translucent one adds a second overlay. `label` redraws
+/// the button text on top so the defect stays in the button's body.
+fn emit_button_cover(s: &mut String, w: &Widget, i: usize) {
+    if let Some(cover) = w.slint_overrides.get("cover") {
+        let fill = cover["fill"].as_str().unwrap_or("primary");
+        let fill_expr = if fill.starts_with('#') {
+            fill.to_lowercase()
+        } else {
+            format!("MaterialPalette.{}", fill.replace('-', "_"))
+        };
+        let label = if cover["label"].as_bool().unwrap_or(true) {
+            let label_fill =
+                cover["label_fill"].as_str().unwrap_or("on-primary").replace('-', "_");
+            format!(
+                "        Text {{\n            text: \"{}\";\n            color: MaterialPalette.{label_fill};\n            font-family: \"Roboto\";\n            font-weight: 500;\n            font-size: 14px;\n            horizontal-alignment: center;\n            vertical-alignment: center;\n        }}\n",
+                w.text.as_deref().unwrap_or_default()
             )
-            .unwrap();
+        } else {
+            String::new()
+        };
+        let cover_radius = cover["radius"]
+            .as_f64()
+            .map(|r| format!("{r}px"))
+            .unwrap_or_else(|| format!("button{i}.height / 2"));
+        writeln!(
+            s,
+            "    // Deliberate defect (scene `slint_overrides.cover`).\n    Rectangle {{\n        x: button{i}.x;\n        y: button{i}.y;\n        width: button{i}.width;\n        height: button{i}.height;\n        border-radius: {cover_radius};\n        background: {fill_expr};\n        opacity: {};\n{label}    }}\n",
+            cover["opacity"].as_f64().unwrap_or(1.0),
+        )
+        .unwrap();
+    }
+}
+
+/// One `ConnectedButton` item of a group, or a standalone one — named
+/// `button{n}` like the rest of the button family so `TRACE_ELEMENTS` and
+/// per-corner `TRACE_PROPS` (`corner_top_left` …) resolve on the root.
+fn connected_button_widget(s: &mut String, w: &Widget, i: usize, scene: &Scene) {
+    let over = &w.slint_overrides;
+    let mut p = String::new();
+    let position = over
+        .get("position")
+        .and_then(|v| v.as_str())
+        .map(str::to_string)
+        .or_else(|| w.position.clone())
+        .unwrap_or_else(|| "middle".to_string());
+    writeln!(p, "        position: ConnectedButtonPosition.{position};").unwrap();
+    let vertical = over
+        .get("vertical")
+        .and_then(|v| v.as_bool())
+        .or(w.vertical)
+        .unwrap_or(false);
+    if vertical {
+        p.push_str("        vertical: true;\n");
+    }
+    if let Some(text) = &w.text {
+        writeln!(p, "        text: \"{text}\";").unwrap();
+    }
+    let icon = over
+        .get("icon")
+        .and_then(|v| v.as_str())
+        .map(str::to_string)
+        .or_else(|| w.icon.clone());
+    if let Some(icon) = icon {
+        writeln!(p, "        icon: Icons.{icon};").unwrap();
+    }
+    let checked_icon = over
+        .get("checked_icon")
+        .and_then(|v| v.as_str())
+        .map(str::to_string)
+        .or_else(|| w.checked_icon.clone());
+    if let Some(icon) = checked_icon {
+        writeln!(p, "        checked_icon: Icons.{icon};").unwrap();
+    }
+    let checked = over
+        .get("checked")
+        .and_then(|v| v.as_bool())
+        .or(w.checked)
+        .unwrap_or(false);
+    if checked {
+        p.push_str("        checked: true;\n");
+    }
+    let enabled = over
+        .get("enabled")
+        .and_then(|v| v.as_bool())
+        .or(w.enabled)
+        .unwrap_or(true);
+    if !enabled {
+        p.push_str("        enabled: false;\n");
+    }
+    if let Some(width) = w.width {
+        writeln!(p, "        width: {width}px;").unwrap();
+    }
+    // Static scenes bind the authored state through the simulate hooks —
+    // timed scenes get the real gesture from `widget_actions`.
+    if scene.times.is_empty() {
+        match w.state.as_deref() {
+            Some("hovered") => p.push_str("        simulate_hover: true;\n"),
+            Some("pressed") => p.push_str("        simulate_press: true;\n"),
+            _ => {}
         }
+    }
+    if !over.get("enforce_touch_target").and_then(|v| v.as_bool()).unwrap_or(false) {
+        p.push_str("        enforce_touch_target: false;\n");
+    }
+    writeln!(
+        s,
+        "    button{i} := ConnectedButton {{\n        x: {}px;\n        y: {}px;\n{}    }}\n",
+        w.x as i64,
+        w.y as i64,
+        p,
+    )
+    .unwrap();
+    if i == 0 {
+        for prop in &scene.trace_props {
+            let ty = trace_prop_type(prop);
+            writeln!(s, "    out property <{ty}> {prop}: button{i}.{prop};\n").unwrap();
+        }
+    }
+    emit_button_cover(s, w, i);
+}
+
+/// A `ConnectedButtonGroup`/`VerticalConnectedButtonGroup` — named
+/// `group{n}`. The items array is the `ConnectedButtonGroupItem` struct
+/// literal; per-item `state` drives `simulate_*_index` (static scenes).
+fn connected_group_widget(s: &mut String, w: &Widget, i: usize, scene: &Scene) {
+    let component = match w.kind.as_str() {
+        "connected-button-group" => "ConnectedButtonGroup",
+        "vertical-connected-button-group" => "VerticalConnectedButtonGroup",
+        other => panic!("unknown connected group kind {other:?}"),
+    };
+    let over = &w.slint_overrides;
+    let mut p = String::new();
+    if w.items.is_empty() {
+        panic!("{} needs at least one item", w.kind);
+    }
+    // `ConnectedButtonGroupItem` — every struct field is required in the
+    // literal, so the absent icon/checked_icon get an empty image-url.
+    let empty_img = "@image-url(\"\")";
+    let items = w
+        .items
+        .iter()
+        .map(|item| {
+            format!(
+                "{{ icon: {}, checked_icon: {}, text: {:?}, tooltip: \"\", disabled: {}, checked: {} }}",
+                item.icon.as_deref().map(|i| format!("Icons.{i}")).unwrap_or_else(|| empty_img.into()),
+                item.checked_icon
+                    .as_deref()
+                    .map(|i| format!("Icons.{i}"))
+                    .unwrap_or_else(|| empty_img.into()),
+                item.text.as_deref().unwrap_or_default(),
+                item.disabled.unwrap_or(false),
+                item.checked.unwrap_or(false),
+            )
+        })
+        .collect::<Vec<_>>()
+        .join(", ");
+    writeln!(p, "        items: [{items}];").unwrap();
+    if w.multi_select.unwrap_or(false) {
+        p.push_str("        multi_select: true;\n");
+    }
+    let selected = over
+        .get("selected_index")
+        .map(|v| widget_num(v) as i64)
+        .or(w.selected_index)
+        .unwrap_or(-1);
+    writeln!(p, "        selected_index: {selected};").unwrap();
+    if let Some(spacing) = over.get("between_space").map(widget_num) {
+        writeln!(p, "        between_space: {spacing}px;").unwrap();
+    }
+    if let Some(spacing) = over.get("item_spacing").map(widget_num) {
+        writeln!(p, "        item_spacing: {spacing}px;").unwrap();
+    }
+    if let Some(width) = w.width {
+        writeln!(p, "        width: {width}px;").unwrap();
+    }
+    if scene.times.is_empty() {
+        let press = w
+            .items
+            .iter()
+            .position(|item| item.state.as_deref() == Some("pressed"))
+            .map(|i| i as i64)
+            .unwrap_or(-1);
+        let hover = w
+            .items
+            .iter()
+            .position(|item| item.state.as_deref() == Some("hovered"))
+            .map(|i| i as i64)
+            .unwrap_or(-1);
+        if press >= 0 {
+            writeln!(p, "        simulate_press_index: {press};").unwrap();
+        }
+        if hover >= 0 {
+            writeln!(p, "        simulate_hover_index: {hover};").unwrap();
+        }
+    }
+    if !over.get("enforce_touch_target").and_then(|v| v.as_bool()).unwrap_or(false) {
+        p.push_str("        enforce_touch_target: false;\n");
+    }
+    writeln!(
+        s,
+        "    group{i} := {component} {{\n        x: {}px;\n        y: {}px;\n{}    }}\n",
+        w.x as i64,
+        w.y as i64,
+        p,
+    )
+    .unwrap();
+    if let Some(cover) = w.slint_overrides.get("cover") {
+        let fill = cover["fill"].as_str().unwrap_or("primary");
+        let fill_expr = if fill.starts_with('#') {
+            fill.to_lowercase()
+        } else {
+            format!("MaterialPalette.{}", fill.replace('-', "_"))
+        };
+        writeln!(
+            s,
+            "    // Deliberate defect (scene `slint_overrides.cover`).\n    Rectangle {{\n        x: group{i}.x;\n        y: group{i}.y;\n        width: group{i}.width;\n        height: group{i}.height;\n        background: {fill_expr};\n        opacity: {};\n    }}\n",
+            cover["opacity"].as_f64().unwrap_or(1.0),
+        )
+        .unwrap();
     }
 }
 
@@ -1403,7 +2152,7 @@ fn menu_widget(s: &mut String, w: &Widget, i: usize, scene: &Scene) {
     };
     let variant = menu_variant(str_over("variant", w.variant.as_deref()).as_deref());
     let item_kind = menu_item_kind(str_over("item_kind", w.item_kind.as_deref()).as_deref());
-    let position = menu_position(str_over("position", w.position.as_deref()).as_deref());
+    let position = menu_position(str_over("shape_position", w.shape_position.as_deref()).as_deref());
     let mut p = String::new();
     let x = w.x as i64;
     let y = w.y as i64;
@@ -1412,7 +2161,7 @@ fn menu_widget(s: &mut String, w: &Widget, i: usize, scene: &Scene) {
             writeln!(
                 p,
                 "        items: {};\n        item-kind: {item_kind};\n        variant: {variant};\n        // The references cannot render platform shadows (layoutlib\n        // deadlocks on `Surface.shadowElevation`).\n        cast-shadow: false;",
-                slint_menu_items(&w.items),
+                slint_menu_items(&w.menu_items),
             )
             .unwrap();
             if let Some(fi) = over.get("first_index").map(widget_num).map(|v| v as i64).or(w.first_index) {
@@ -1455,7 +2204,7 @@ fn menu_widget(s: &mut String, w: &Widget, i: usize, scene: &Scene) {
             writeln!(
                 p,
                 "        items: {};\n        item-kind: {item_kind};\n        variant: {variant};\n        shape-position: {position};\n        // The references cannot render platform shadows (layoutlib\n        // deadlocks on `Surface.shadowElevation`).\n        cast-shadow: false;",
-                slint_menu_items(&w.items),
+                slint_menu_items(&w.menu_items),
             )
             .unwrap();
             if w.state.as_deref() == Some("hovered") {
