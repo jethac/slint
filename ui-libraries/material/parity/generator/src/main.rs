@@ -724,6 +724,7 @@ fn slint_case(scene: &Scene) -> String {
             "outlined-split-button" => "OutlineSplitButton",
             "fab" => "FloatingActionButton",
             "extended-fab" => "ExtendedFloatingActionButton",
+            "radio-button" => "RadioButton",
             // `surface` imports `Elevation`/`MaterialShapes` below instead;
             // `rect`/`elevated-rect` are plain `Rectangle`s — no import.
             "rect" | "surface" | "elevated-rect" => continue,
@@ -910,7 +911,14 @@ fn widget_actions(scene: &Scene) -> Vec<Action> {
             } else {
                 w.x + 20.0
             };
-            actions.push(Action { kind: kind.into(), x, y: w.y + 16.0, at: 0.0 });
+            // A `radio-button`'s drawn control is a 24dp slot — aim at its
+            // center, not the button-bucket point.
+            let (x, y) = if w.kind == "radio-button" {
+                (w.x + 12.0, w.y + 12.0)
+            } else {
+                (x, w.y + 16.0)
+            };
+            actions.push(Action { kind: kind.into(), x, y, at: 0.0 });
         }
     }
     for w in &scene.widgets {
@@ -1023,6 +1031,41 @@ fn button_props(w: &Widget, timed: bool) -> String {
     }
     p
 }
+/// `radio-button` props — the 24dp visual slot: `checked` (the upstream
+/// `selected`), `enabled`, the `simulate_*` state hooks and the MICS pin
+/// off so the scene's coordinates place the drawn control.
+fn radio_props(w: &Widget, timed: bool) -> String {
+    let mut p = String::new();
+    let over = &w.slint_overrides;
+    let bool_over = |k: &str, authored: Option<bool>| -> bool {
+        over.get(k).and_then(|v| v.as_bool()).unwrap_or(authored.unwrap_or(false))
+    };
+    if bool_over("checked", w.checked) {
+        p.push_str("        checked: true;\n");
+    }
+    if !bool_over("enabled", w.enabled.or(Some(true))) {
+        p.push_str("        enabled: false;\n");
+    }
+    if !timed {
+        match w.state.as_deref() {
+            Some("hovered") => p.push_str("        simulate_hover: true;\n"),
+            Some("pressed") => p.push_str("        simulate_press: true;\n"),
+            _ => {}
+        }
+    }
+    if !bool_over("enforce_touch_target", None) {
+        p.push_str("        enforce_touch_target: false;\n");
+    }
+    // A timed scene clicks through a real press+release: flip `checked`
+    // so the morph animates — the same flip the Compose side runs in its
+    // onRelease hook. A plain `in` property takes the write from the
+    // declaring scope here.
+    if timed {
+        p.push_str("        clicked => { self.checked = !self.checked; }\n");
+    }
+    p
+}
+
 /// `*-split-button` props — same spirit as `button_props` but the
 /// component's split-specific surface: `trailing_checkable`, the trailing
 /// chevron icon, per-side `simulate_*` hooks and the token override props
@@ -1271,6 +1314,7 @@ fn slint_canvas(s: &mut String, scene: &Scene) {
             "outlined-split-button" => "OutlineSplitButton",
             "fab" => "FloatingActionButton",
             "extended-fab" => "ExtendedFloatingActionButton",
+            "radio-button" => "RadioButton",
             "surface" => {
                 let i = surfaces;
                 surfaces += 1;
@@ -1485,6 +1529,8 @@ fn slint_canvas(s: &mut String, scene: &Scene) {
                 split_button_props(w, !scene.times.is_empty())
             } else if w.kind == "fab" || w.kind == "extended-fab" {
                 fab_props(w, !scene.times.is_empty())
+            } else if w.kind == "radio-button" {
+                radio_props(w, !scene.times.is_empty())
             } else {
                 button_props(w, !scene.times.is_empty())
             },
@@ -1517,7 +1563,8 @@ fn trace_prop_type(prop: &str) -> &'static str {
         | "corner_bottom_left"
         | "box_width"
         | "slot_width"
-        | "shadow_elevation" => "length",
+        | "shadow_elevation"
+        | "dot_radius" => "length",
         "trailing_icon_rotation" => "angle",
         "label_alpha" | "show_scale" | "show_alpha" | "expand_progress" => "float",
         other => panic!("no forwarding type known for trace prop {other:?}"),

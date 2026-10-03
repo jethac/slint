@@ -1,57 +1,153 @@
 // Copyright © SixtyFPS GmbH <info@slint.dev>
 // SPDX-License-Identifier: MIT
 
-import { MaterialStyleMetrics } from "../styling/material_style_metrics.slint";
 import { MaterialPalette } from "../styling/material_palette.slint";
 import { MaterialAnimations } from "../styling/material_animations.slint";
-import { StateLayerArea } from "./state_layer.slint";
+import { RadioButtonTokens } from "../styling/generated/material_component_tokens.slint";
 import { ListTile } from "./list.slint";
-import { ListView } from "./list_view.slint";
+import { FocusTouchArea, StateLayer, Ripple, FocusRing } from "./state_layer.slint";
 
+/// The pinned `RadioButtonImpl` + `RadioButtonColors` —
+/// `androidx.compose.material3.RadioButton` at androidx/androidx@23327507f7fc:
+/// a 20dp `IconSize` canvas inside `RadioButtonPadding` (2dp), the 2dp
+/// `RadioStrokeWidth` ring, and the dot whose radius springs to
+/// `RadioButtonDotSize / 2` (6dp) minus half the stroke on selection.
 export component RadioButton {
     in property <bool> checked;
-    in property <bool> enabled;
+    in property <bool> enabled <=> touch.enabled;
+    /// `Modifier.minimumInteractiveComponentSize` — the 48dp slot the drawn
+    /// control is centered in. The parity harness disables it like
+    /// Compose's `LocalMinimumInteractiveComponentSize provides 0.dp`.
+    in property <bool> enforce_touch_target: true;
+    /// Test hooks: drive the state layers without pointer input — see
+    /// `StateLayerArea.simulate_*`.
+    in property <bool> simulate_hover;
+    in property <bool> simulate_press;
+    in property <string> tooltip <=> touch.tooltip;
 
     callback clicked();
+    out property <bool> has_focus <=> touch.has_focus;
+    out property <bool> has_hover <=> touch.has_hover;
+    out property <bool> pressed <=> touch.pressed;
+    /// `pressed`/`has_hover` including keyboard activation and the scene
+    /// hooks.
+    out property <bool> effective_pressed: touch.pressed || touch.enter_pressed || root.simulate_press;
+    out property <bool> effective_hover: touch.has_hover || root.simulate_hover;
 
-    min_width: MaterialStyleMetrics.size_40;
+    /// `animateDpAsState(if (selected) RadioButtonDotSize / 2 else 0.dp)` —
+    /// the dot target radius, on `MotionSchemeKeyTokens.FastSpatial`.
+    /// `RadioButtonDotSize` is a private 12dp constant at the pin.
+    out property <length> dot_radius: root.checked ? 6px : 0px;
+
+    // `RadioButtonColors.radioColor(enabled, selected)` — the single color
+    // both the ring and the dot draw with.
+    property <color> radio_color:
+        !root.enabled ? (root.checked
+            ? RadioButtonTokens.disabled_selected_icon_color.with_alpha(RadioButtonTokens.disabled_selected_icon_opacity)
+            : RadioButtonTokens.disabled_unselected_icon_color.with_alpha(RadioButtonTokens.disabled_unselected_icon_opacity))
+        : root.checked ? RadioButtonTokens.selected_icon_color
+        : RadioButtonTokens.unselected_icon_color;
+
+    animate radio_color {
+        // `MotionSchemeKeyTokens.DefaultEffects`, except disabled which
+        // snaps through `rememberUpdatedState`.
+        easing: MaterialAnimations.default-effects-spring;
+        enabled: root.enabled && !MaterialPalette.reduced-motion;
+    }
+    animate dot_radius {
+        easing: MaterialAnimations.fast-spatial-spring;
+        enabled: !MaterialPalette.reduced-motion;
+    }
+
+    min_width: Math.max(root.canvas_size + 2 * root.inner_padding, root.enforce_touch_target ? 48px : 0px);
     min_height: self.min_width;
+    preferred_width: root.min_width;
+    preferred_height: root.min_width;
+
     accessible-enabled: root.enabled;
     accessible-checkable: true;
     accessible-checked <=> root.checked;
     accessible-role: radio-button;
-    accessible-action-default => { state_area.clicked(); }
-    forward_focus: state_area;
+    accessible-action-default => { if root.enabled { touch.clicked(); } }
+    forward_focus: touch;
 
-    state_area := StateLayerArea {
+    property <length> canvas_size: RadioButtonTokens.icon_size;
+    property <length> inner_padding: 2px;
+    /// `RadioStrokeWidth`.
+    property <length> stroke_width: 2px;
+
+    touch := FocusTouchArea {
+        x: 0;
+        y: 0;
         width: 100%;
         height: 100%;
-        border_radius: max(self.width, self.height) / 2;
-        color: MaterialPalette.on_surface;
 
-        border := Rectangle {
-            width: MaterialStyleMetrics.size_20;
+        canvas := Rectangle {
+            // `wrapContentSize(Alignment.Center)` — the canvas is centered
+            // inside the padding/MICS bounds.
+            x: (parent.width - self.width) / 2;
+            y: (parent.height - self.height) / 2;
+            width: root.canvas_size;
             height: self.width;
-            border_radius: max(self.width, self.height) / 2;
-            border_color: MaterialPalette.on_surface_variant;
-            border_width: MaterialStyleMetrics.size_2;
+            // The ring: `drawCircle(radius = IconSize / 2 - strokeWidth / 2,
+            // style = Stroke(strokeWidth))` — a 20dp circle stroked 2dp.
+            border_radius: self.width / 2;
+            border_width: root.stroke_width;
+            border_color: root.radio_color;
+            background: transparent;
+        }
 
-            indicator := Rectangle {
-                width: parent.width / 2;
-                height: self.width;
-                border_radius: max(self.width, self.height) / 2;
-                background: MaterialPalette.primary;
-                opacity: !root.checked ? 0 : 1;
+        // The dot: `drawCircle(radius = animatedDotRadius - strokeWidth / 2,
+        // style = Fill)` gated on `animatedDotRadius > 0.dp`; the spring may
+        // overshoot the 6dp target, and a non-positive radius draws nothing.
+        // Kept outside the bordered `canvas`: its children are inset by the
+        // border width.
+        if root.dot_radius > 0px : dot := Rectangle {
+            x: canvas.x + (canvas.width - self.width) / 2;
+            y: canvas.y + (canvas.height - self.height) / 2;
+            width: Math.max(0px, (root.dot_radius - root.stroke_width / 2) * 2);
+            height: self.width;
+            border_radius: self.width / 2;
+            background: root.radio_color;
+        }
 
-                animate opacity { enabled: !MaterialPalette.reduced-motion;
-                    duration: MaterialAnimations.opacity_duration;
-                    easing: MaterialAnimations.opacity_easing;
-                }
+        // `ripple(bounded = false, radius = StateLayerSize / 2)` — the
+        // hover/press state layer is a 40dp circle centered on the canvas.
+        // `color = Unspecified` resolves to `LocalContentColor`, which the
+        // parity scene leaves at the `Color.Black` default.
+        if root.enabled && (root.effective_hover || root.effective_pressed) : state_circle := Rectangle {
+            x: canvas.x + (canvas.width - self.width) / 2;
+            y: canvas.y + (canvas.height - self.height) / 2;
+            width: RadioButtonTokens.state_layer_size;
+            height: self.width;
+            border_radius: self.width / 2;
+
+            StateLayer {
+                width: 100%;
+                height: 100%;
+                border_radius: parent.border_radius;
+                background: black;
+                display_background: false;
+                enabled: root.enabled;
+                pressed: root.effective_pressed;
+                has_focus: false;
+                has_hover: root.effective_hover;
+                // The focus indication is the inset ring, not a fill.
+                focus_ring: true;
             }
 
-            animate border_color { enabled: !MaterialPalette.reduced-motion;
-                duration: MaterialAnimations.opacity_duration;
-                easing: MaterialAnimations.opacity_easing;
+            if root.effective_pressed : Ripple {
+                width: 100%;
+                height: 100%;
+                border_radius: parent.border_radius;
+                // Presses without a pointer position (keyboard, scene
+                // hooks) center inside the indication bounds upstream.
+                pressed_x: touch.pressed ? touch.pressed_x - state_circle.x : self.width / 2;
+                pressed_y: touch.pressed ? touch.pressed_y - state_circle.y : self.height / 2;
+                color: black;
+                // Clip to the state-layer circle: the unbounded upstream
+                // ripple settles at exactly this circle.
+                clip_ripple: true;
             }
         }
 
@@ -60,20 +156,13 @@ export component RadioButton {
         }
     }
 
-    states [
-        disabled when !root.enabled : {
-            border.border_color: MaterialPalette.on_surface;
-            border.opacity: MaterialPalette.disable_opacity;
-            indicator.background: MaterialPalette.on_surface;
-            indicator.opacity: root.checked ? MaterialPalette.disable_opacity : 0;
-        }
-        highlighted when !root.checked && (state_area.pressed || state_area.has_focus || state_area.has_hover) : {
-            border.border_color: MaterialPalette.on_surface;
-        }
-        checked when root.checked : {
-            border.border_color: MaterialPalette.primary;
-        }
-    ]
+    // The `InsetRing` focus indication follows `focusRingShape` —
+    // `CircleShape` on the element bounds.
+    if touch.has_focus && root.enabled : FocusRing {
+        width: 100%;
+        height: 100%;
+        border_radius: Math.min(self.width, self.height) / 2;
+    }
 }
 
 export component RadioButtonTile inherits ListTile {
