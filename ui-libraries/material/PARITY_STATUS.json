@@ -169,7 +169,7 @@
       10
     ],
     "needs": "springs (#5), shapes (#6)",
-    "notes": "slint component: ContainedLoadingIndicator; parity scenes: loading-indicator-states, loading-indicator-motion (xfail, #27-class launch jitter)",
+    "notes": "slint component: ContainedLoadingIndicator; parity scenes: loading-indicator-states (xfail on femtovg, #53 concave-fill AA fringe), loading-indicator-motion (xfail, #27-class launch jitter)",
     "status": "partial"
   },
   "DatePicker": {
@@ -606,7 +606,7 @@
       10
     ],
     "needs": "springs (#5), shapes (#6)",
-    "notes": "slint component: LoadingIndicator; parity scenes: loading-indicator-states, loading-indicator-motion (xfail, #27-class launch jitter)",
+    "notes": "slint component: LoadingIndicator; parity scenes: loading-indicator-states (xfail on femtovg, #53 concave-fill AA fringe), loading-indicator-motion (xfail, #27-class launch jitter)",
     "status": "partial"
   },
   "MediumExtendedFloatingActionButton": {
