@@ -1,5 +1,11 @@
 bottom-app-bars
 button-focus
+button-group-overflow
+button-group-press-morph
+button-group-press
+button-group-toggle
+button-group-weights
+button-group
 button-hover
 button-icons
 button-press-dark
@@ -16,6 +22,8 @@ icon-button-press-morph
 icon-button-states
 icon-buttons
 negative-button-focus-ring
+negative-button-group-spacing
+negative-button-group-weight
 negative-button-press-morph
 negative-button-ripple-clip
 negative-button-role

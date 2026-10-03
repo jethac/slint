@@ -1,0 +1,73 @@
+{
+    "name": "button-group",
+    "type": "canvas",
+    "parity": "motion",
+    "size": [
+        400,
+        140
+    ],
+    "densities": [
+        1,
+        2
+    ],
+    "theme": {
+        "seed": "6750A4",
+        "variant": "tonal-spot",
+        "spec": "spec2025",
+        "platform": "phone",
+        "dark": false,
+        "contrast": 0.0
+    },
+    "fonts": {
+        "plain": "Roboto",
+        "brand": "Roboto"
+    },
+    "widgets": [
+        {
+            "kind": "button-group",
+            "x": 16,
+            "y": 24,
+            "items": [
+                {
+                    "text": "Day"
+                },
+                {
+                    "text": "Week"
+                },
+                {
+                    "text": "Month"
+                }
+            ]
+        },
+        {
+            "kind": "button-group",
+            "x": 16,
+            "y": 80,
+            "items": [
+                {
+                    "text": "Day",
+                    "icon": "calendar_today"
+                },
+                {
+                    "text": "Week",
+                    "icon": "schedule"
+                },
+                {
+                    "text": "Month",
+                    "icon": "edit"
+                }
+            ]
+        }
+    ],
+    "trace_elements": [
+        "group0",
+        "group1",
+        "button0",
+        "button1",
+        "button2",
+        "button4",
+        "button5",
+        "button6"
+    ],
+    "xfail_text": "issue #28: Slint ceils text layout widths where Compose keeps fractional advances"
+}

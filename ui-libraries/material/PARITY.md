@@ -78,7 +78,7 @@ States: pressed, selected
 
 | Component | Source | Status | Issues | Needs | Notes |
 |---|---|---|---|---|---|
-| ButtonGroup | ButtonGroup.kt | missing | #5, #9, #10 | springs (#5), shapes (#6) | - |
+| ButtonGroup | ButtonGroup.kt | partial | #10 | none | slint component: ButtonGroup (standard group) |
 
 ### Buttons
 

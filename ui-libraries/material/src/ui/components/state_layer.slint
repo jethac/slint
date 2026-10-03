@@ -53,18 +53,23 @@ export component Ripple {
             border_radius: self.width / 2;
             opacity: MaterialPalette.state_layer_opacity_press;
             background: root.color;
-            width: 0px;
+            width: self.grow * self.cover * 1px;
 
             // The settled circle covers the element: diameter = twice the
-            // distance from the press point to the farthest corner.
+            // distance from the press point to the farthest corner. `cover`
+            // stays bound to the element's size — a pressed item can still
+            // resize (button-group expansion) while `grow` animates in —
+            // so the settled ink never leaves the arc edge visible.
             property <float> dx: Math.max(root.pressed_x / 1px, (root.width - root.pressed_x) / 1px);
             property <float> dy: Math.max(root.pressed_y / 1px, (root.height - root.pressed_y) / 1px);
+            property <float> cover: Math.sqrt(dx * dx + dy * dy) * 2;
+            property <float> grow;
 
             init => {
-                self.width = Math.sqrt(dx * dx + dy * dy) * 2px;
+                self.grow = 1;
             }
 
-            animate width { enabled: !MaterialPalette.reduced-motion; duration: MaterialAnimations.ripple_duration; easing: MaterialAnimations.ripple_easing; }
+            animate grow { enabled: !MaterialPalette.reduced-motion; duration: MaterialAnimations.ripple_duration; easing: MaterialAnimations.ripple_easing; }
         }
     }
 }
@@ -294,7 +299,7 @@ export component StateLayerArea inherits FocusTouchArea {
         focus_ring: root.focus_ring;
     }
 
-    // ripple
+    // ripple — the expanding ink *is* the pressed overlay.
     if root.enabled && root.effective_pressed : Ripple {
         pressed_x: root.pressed_x;
         pressed_y: root.pressed_y;

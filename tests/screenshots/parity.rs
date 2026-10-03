@@ -391,8 +391,15 @@ impl PixelMask {
         };
         for r in [a, b] {
             let outer = r.dilated(margin);
-            let inner =
-                PxRect { x0: r.x0 + inset, y0: r.y0 + inset, x1: r.x1 - inset, y1: r.y1 - inset };
+            // Straight edges take the same drift slack the corner cells get:
+            // a boundary displaced by the traced bounds' drift is still the
+            // same boundary, so the strict band starts `drift` deeper in.
+            let inner = PxRect {
+                x0: r.x0 + inset + drift,
+                y0: r.y0 + inset + drift,
+                x1: r.x1 - inset - drift,
+                y1: r.y1 - inset - drift,
+            };
             for y in outer.y0.floor().max(0.0) as usize..(outer.y1.ceil() as usize).min(self.h) {
                 for x in outer.x0.floor().max(0.0) as usize..(outer.x1.ceil() as usize).min(self.w)
                 {
@@ -870,6 +877,21 @@ pub fn capture_trace<C: i_slint_core::api::ComponentHandle>(
             ],
         );
     }
+    for (id, names) in &spec.trace_element_props {
+        // Bounds synthesized from properties — for geometry no element id
+        // can address (a `for` repeater's items share one local name).
+        let mut geo = [0.0; 5];
+        geo[4] = 1.0;
+        for (i, name) in names.iter().enumerate() {
+            match prop_value(component, name) {
+                Some(TraceValue::Number(n)) => geo[i] = n,
+                _ => panic!(
+                    "TRACE_ELEMENT_PROPS names '{name}' for '{id}' but it is not a readable number"
+                ),
+            }
+        }
+        frame.elements.insert(id.clone(), geo);
+    }
     frame
 }
 
@@ -1143,6 +1165,24 @@ pub fn compare_traces(
                     + GEOM_EPS
                     + 1.0
             };
+            // Its x accumulates the width divergence of every earlier
+            // `text:<j>` — a row item's position inherits the summed
+            // hinted-vs-ceil slack of the labels laid out before it.
+            let x_eps = if drift.is_empty() {
+                GEOM_EPS
+            } else {
+                GEOM_EPS
+                    + drift
+                        .parse::<u64>()
+                        .map(|n| {
+                            (0..n)
+                                .map(|j| {
+                                    text_drift.get(&format!("text:{j}")).copied().unwrap_or(0.0)
+                                })
+                                .sum::<f64>()
+                        })
+                        .unwrap_or(0.0)
+            };
             let mut best: Option<(&serde_json::Value, f64, u64)> = None;
             for cf in &candidates {
                 let Some(ce) = cf["elements"].get(id) else { continue };
@@ -1151,7 +1191,11 @@ pub fn compare_traces(
                     .iter()
                     .enumerate()
                     .filter_map(|(i, key)| {
-                        let eps = if *key == "w" { w_eps } else { GEOM_EPS };
+                        let eps = match *key {
+                            "w" => w_eps,
+                            "x" => x_eps,
+                            _ => GEOM_EPS,
+                        };
                         ce[key].as_f64().map(|e| (geo[i] - e).abs() / eps.max(GEOM_EPS))
                     })
                     .fold(0.0, f64::max);
@@ -1167,7 +1211,11 @@ pub fn compare_traces(
                     let w_eps = if drift.is_empty() { GEOM_EPS } else { drift_eps() };
                     for (i, key) in ["x", "y", "w", "h", "opacity"].iter().enumerate() {
                         let Some(e) = ce[key].as_f64() else { continue };
-                        let eps = if *key == "w" { w_eps } else { GEOM_EPS };
+                        let eps = match *key {
+                            "w" => w_eps,
+                            "x" => x_eps,
+                            _ => GEOM_EPS,
+                        };
                         if (geo[i] - e).abs() > eps {
                             errors.push(format!(
                                 "t={}ms element '{id}'.{key}: slint {} vs compose@{ct}ms {e} (eps {eps:.2})",
@@ -1516,9 +1564,12 @@ fn build_frame_mask<C: i_slint_core::api::ComponentHandle>(
         .unwrap_or_else(|| PixelMask::new(width, height));
     let d = density;
     // Text regions from both sides — a label's ink lives inside its bounds.
-    // The 2px dilation covers a centered label's position drift: inside a
+    // The dilation covers a centered label's position drift: inside a
     // pinned-width container the label block itself lands ~1px off between
     // engines (half the width slack), and its cells still check the ink.
+    // Glyph ink overhangs the layout box by ~1px at the edges — `frac_w`/
+    // `unhint_w` understate the rasterized span — so text bounds dilate
+    // wider than other element margins.
     for handle in i_slint_backend_testing::ElementQuery::from_root(component)
         .match_inherits("Text")
         .find_all()
@@ -1532,7 +1583,7 @@ fn build_frame_mask<C: i_slint_core::api::ComponentHandle>(
                 x1: (p.x + s.width) as f64 * d,
                 y1: (p.y + s.height) as f64 * d,
             }
-            .dilated(2.0),
+            .dilated(4.0),
             PixelClass::Text,
         );
     }
@@ -1565,7 +1616,7 @@ fn build_frame_mask<C: i_slint_core::api::ComponentHandle>(
                 continue;
             };
             mask.fill_rect(
-                PxRect { x0: x * d, y0: y * d, x1: (x + w) * d, y1: (y + h) * d }.dilated(2.0),
+                PxRect { x0: x * d, y0: y * d, x1: (x + w) * d, y1: (y + h) * d }.dilated(4.0),
                 PixelClass::Text,
             );
         }
@@ -1891,6 +1942,16 @@ pub fn run_parity_case<C: i_slint_core::api::ComponentHandle>(
     // is case-level, so the staleness verdict aggregates all densities.
     let mut xfail_text_pixels_used = false;
     let mut xfail_text_saw_drift = false;
+    // `//XFAIL_TEXT=` may scope itself to the drivers whose rasterizer
+    // differs from the expected frames' (layoutlib is skia) — elsewhere it
+    // stays inert so the marker never reads stale there.
+    let xfail_text = spec
+        .xfail_text
+        .as_deref()
+        .filter(|_| {
+            spec.xfail_text_renderers.is_empty()
+                || spec.xfail_text_renderers.iter().any(|d| d.as_str() == driver)
+        });
     for (di, density) in spec.densities.iter().enumerate() {
         let component = make_instance(*density);
 
@@ -2053,7 +2114,7 @@ pub fn run_parity_case<C: i_slint_core::api::ComponentHandle>(
             // constant logical-px error per advance, so its device-px
             // magnitude scales with the scene density: at 2x a barely-1dp
             // shift lands ~2 device px inside the cell.
-            let text_cell_eps = if spec.xfail_text.is_some() {
+            let text_cell_eps = if xfail_text.is_some() {
                 TEXT_CELL_EPS * 1.25 * *density as f64
             } else {
                 TEXT_CELL_EPS
@@ -2232,7 +2293,7 @@ pub fn run_parity_case<C: i_slint_core::api::ComponentHandle>(
                 &component,
                 &frames,
                 compose,
-                spec.xfail_text.as_deref(),
+                xfail_text,
             );
             errors.extend(metric_errors);
             xfail_text_saw_drift |= saw_drift;
@@ -2265,7 +2326,7 @@ pub fn run_parity_case<C: i_slint_core::api::ComponentHandle>(
         }
     }
 
-    if let Some(reason) = &spec.xfail_text {
+    if let Some(reason) = xfail_text {
         // The marker covers both the trace layer (width/center drift) and
         // the pixel layer (the relaxed per-cell mean it feeds) — only flag
         // it stale when neither consumer needed it at any density.

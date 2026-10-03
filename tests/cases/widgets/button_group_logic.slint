@@ -1,0 +1,122 @@
+// Copyright © SixtyFPS GmbH <info@slint.dev>
+// SPDX-License-Identifier: MIT
+
+//library_path(material): ../../../ui-libraries/material/src/material.slint
+
+import "../../screenshots/fonts/Roboto-VariableFont.ttf";
+import {
+    ButtonGroup,
+    ButtonGroupItem,
+    ButtonGroupItemAlignment,
+    ButtonGroupSelection,
+    MaterialTheme,
+    MaterialWindow,
+} from "@material";
+
+export component TestCase inherits MaterialWindow {
+    init => {
+        MaterialTheme.seed-color = #6750A4;
+    }
+
+    in-out property <[ButtonGroupItem]> items: [
+        { text: "Alpha" },
+        { text: "Bravo" },
+        { text: "Charlie" },
+    ];
+    in-out property <length> grp-width: 640px;
+    in-out property <bool> press: false;
+    in-out property <ButtonGroupSelection> grp-selection: ButtonGroupSelection.multiple;
+    in-out property <int> current-index <=> grp.current-index;
+
+    grp := ButtonGroup {
+        x: 0px;
+        y: 0px;
+        width: root.grp-width;
+        items <=> root.items;
+        selection <=> root.grp-selection;
+        simulate-index: 1;
+        simulate-press: root.press;
+    }
+
+    out property <int> shown-count <=> grp.shown-count;
+    out property <bool> overflow-needed <=> grp.overflow-needed;
+    out property <bool> test: true;
+}
+
+/*
+```rust
+use slint::Model;
+
+let instance = TestCase::new().unwrap();
+slint_testing::mock_elapsed_time(0);
+let items = instance.get_items();
+let (r0, r1, r2) = (
+    items.row_data(0).unwrap(),
+    items.row_data(1).unwrap(),
+    items.row_data(2).unwrap(),
+);
+// init seeding: desired = intrinsic, cum chain, resting widths, x positions
+assert!(r0.desired > 0. && r1.desired > 0. && r2.desired > 0.);
+assert!((r2.cum_desired - (r0.desired + r1.desired + r2.desired)).abs() < 0.01);
+assert!((r0.final_w - r0.desired).abs() < 0.01);
+assert!((r1.final_w - r1.desired).abs() < 0.01);
+assert!((r0.x_pos).abs() < 0.01);
+assert!((r1.x_pos - (r0.final_w + 12.)).abs() < 0.01);
+assert!((r2.x_pos - (r1.x_pos + r1.final_w + 12.)).abs() < 0.01);
+assert!(r0.shown && r1.shown && r2.shown);
+assert_eq!(instance.get_shown_count(), 3);
+assert!(!instance.get_overflow_needed());
+
+// expand on press: middle item grows, neighbors shrink, total conserved
+instance.set_press(true);
+slint_testing::mock_elapsed_time(2000);
+let (p0, p1, p2) = (
+    items.row_data(0).unwrap(),
+    items.row_data(1).unwrap(),
+    items.row_data(2).unwrap(),
+);
+assert!((p1.press - 1.).abs() < 0.01, "press={}", p1.press);
+assert!(p1.final_w > r1.desired, "final_w={} desired={}", p1.final_w, r1.desired);
+assert!(p0.final_w < r0.desired);
+assert!(p2.final_w < r2.desired);
+let sum_p = p0.final_w + p1.final_w + p2.final_w;
+let sum_d = r0.desired + r1.desired + r2.desired;
+assert!((sum_p - sum_d).abs() < 0.02, "sum_p={} sum_d={}", sum_p, sum_d);
+// released: restores resting widths
+instance.set_press(false);
+slint_testing::mock_elapsed_time(2000);
+let q1 = items.row_data(1).unwrap();
+assert!((q1.final_w - r1.desired).abs() < 0.02, "final_w={}", q1.final_w);
+
+// overflow: shrink width below desired total + spacing -> tail hidden
+let total = r2.cum_desired + 24.;
+instance.set_grp_width(total - 40.);
+slint_testing::mock_elapsed_time(0);
+let (o0, o1, o2) = (
+    items.row_data(0).unwrap(),
+    items.row_data(1).unwrap(),
+    items.row_data(2).unwrap(),
+);
+assert!(instance.get_overflow_needed());
+assert!(o0.shown && o1.shown && !o2.shown, "{} {} {}", o0.shown, o1.shown, o2.shown);
+assert_eq!(instance.get_shown_count(), 2);
+instance.set_grp_width(640.);
+slint_testing::mock_elapsed_time(0);
+assert!(items.row_data(2).unwrap().shown);
+
+// single selection: last claim wins, others yield
+instance.set_grp_selection(ButtonGroupSelection::Single);
+let mut row = items.row_data(0).unwrap();
+row.checked = true;
+items.set_row_data(0, row.clone());
+slint_testing::mock_elapsed_time(0);
+assert_eq!(instance.get_current_index(), 0);
+let mut row = items.row_data(1).unwrap();
+row.checked = true;
+items.set_row_data(1, row.clone());
+slint_testing::mock_elapsed_time(0);
+assert_eq!(instance.get_current_index(), 1);
+assert!(!items.row_data(0).unwrap().checked);
+assert!(items.row_data(1).unwrap().checked);
+```
+*/

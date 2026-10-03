@@ -115,12 +115,38 @@ class Widget(json: JSONObject) {
     val icons: List<String> =
         json.optJSONArray("icons")?.let { a -> (0 until a.length()).map(a::getString) } ?: emptyList()
     val placeholder: String? = (json.opt("placeholder") as? String)?.takeIf { it.isNotEmpty() }
+    /** `button-group` rows — one per `clickableItem`/`toggleableItem` in
+     * the upstream `content` lambda. */
+    val items: List<GroupItem> =
+        json.optJSONArray("items")?.let { a ->
+            (0 until a.length()).map { GroupItem(a.getJSONObject(it)) }
+        } ?: emptyList()
+    /** `button-group` selection: `none` (clickable items, default),
+     * `single`/`multiple` (toggle items). */
+    val selection: String = (json.opt("selection") as? String) ?: "none"
+    /** `button-group` `expanded-ratio` — `ButtonGroupDefaults.ExpandedRatio`. */
+    val expandedRatio: Float = json.optDouble("expanded_ratio", 0.15).toFloat()
+    /** `button-group` item a `pressed`/`hovered` `state` applies to. */
+    val pressIndex: Int = json.optInt("press_index", 0)
 
     val isIconButton: Boolean get() = kind.endsWith("icon-button")
     val isButton: Boolean get() = isIconButton || kind.endsWith("-button")
     /** `elevated-rect` only: the elevation in dp of the Android ambient+spot
      * shadow `Modifier.shadow` draws behind the caster. */
     val elevation: Float = json.optDouble("elevation", 0.0).toFloat()
+}
+
+/** One `button-group` item — the arguments a `clickableItem`/
+ * `toggleableItem` call takes upstream. */
+class GroupItem(json: JSONObject) {
+    val text: String = (json.opt("text") as? String) ?: ""
+    /** Icon stem under `src/ui/icons/` — loaded like a widget's `icon`. */
+    val icon: String? = (json.opt("icon") as? String)?.takeIf { it.isNotEmpty() }
+    /** Weighted width share; `null` → upstream's `Float.NaN` (unweighted). */
+    val weight: Float? =
+        if (!json.isNull("weight")) json.getDouble("weight").toFloat() else null
+    val checked: Boolean = json.optBoolean("checked", false)
+    val enabled: Boolean = json.optBoolean("enabled", true)
 }
 
 /** "primary-container" → "primaryContainer" for `scheme` map lookups. */

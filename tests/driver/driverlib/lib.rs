@@ -232,6 +232,13 @@ fn test_extract_library_paths() {
 ///   record in the trace (numbers, colors, bools, strings).
 /// - `//TRACE_ELEMENTS=id1,id2` — element ids whose x/y/width/height/opacity are
 ///   recorded in the trace (found with `ElementQuery::match_id`).
+/// - `//TRACE_ELEMENT_PROPS=id:px:py:pw:ph[:po],...` — element ids whose
+///   x/y/width/height[/opacity] are synthesized from named `out property`
+///   values instead of an `ElementQuery` lookup, for geometry no element id
+///   can name (e.g. items a `for` repeater instantiates without a per-item
+///   local name). Each entry is the element id followed by the four or five
+///   property names, all separated by `:`; the properties must read as
+///   numbers in logical units.
 /// - `//ACTION=move:x,y` / `//ACTION=press:x,y` / `//ACTION=release:x,y` —
 ///   pointer input dispatched to the window before the case is rendered, in
 ///   declaration order (logical coordinates).
@@ -281,8 +288,13 @@ pub struct ParityMarkers {
     /// `xfail:software:<reason>` expects the divergence only on `software`.
     pub xfail_renderers: Vec<String>,
     /// `//XFAIL_TEXT=<reason>` marks the text-width layer's ceil-quantization
-    /// window an expected divergence rather than a failure.
+    /// window an expected divergence rather than a failure. Optionally
+    /// scoped — `//XFAIL_TEXT=<driver>[,<driver>…]: <reason>` — where the
+    /// expected frames' rasterizer already matches a driver's (skia vs
+    /// layoutlib), the marker is meaningless there and would read stale.
     pub xfail_text: Option<String>,
+    /// Non-empty when `//XFAIL_TEXT=` was scoped to specific drivers.
+    pub xfail_text_renderers: Vec<String>,
     /// `//XFAIL_SILHOUETTE=<reason>` marks the software driver's
     /// `//MASK_INNER=` silhouette findings an expected divergence rather
     /// than a failure; zero findings re-arms the check.
@@ -292,6 +304,9 @@ pub struct ParityMarkers {
     /// `(element-id, t_ms, margin)` triples from `//MASK_DECOR=` markers;
     /// `margin` is `Some(dp)` when the marker carried a `+dp` override.
     pub mask_decor: Vec<(String, u64, Option<f64>)>,
+    /// `//TRACE_ELEMENT_PROPS=` entries: element id → the property names
+    /// its x/y/width/height[/opacity] are read from.
+    pub trace_element_props: Vec<(String, Vec<String>)>,
 }
 
 /// One `//ACTION=` input step. `at_ms` is the dispatch time within the
@@ -443,6 +458,7 @@ pub fn extract_parity(source: &str) -> ParityMarkers {
         }
     }
 
+    let mut xfail_text_renderers = Vec::new();
     ParityMarkers {
         parity,
         times: csv("//TIMES=").into_iter().filter_map(|s| s.parse().ok()).collect(),
@@ -454,11 +470,39 @@ pub fn extract_parity(source: &str) -> ParityMarkers {
         negative_note,
         xfail_note,
         xfail_renderers,
-        xfail_text: source.find("//XFAIL_TEXT=").map(|p| {
-            let rest = &source[p + "//XFAIL_TEXT=".len()..];
-            let end = rest.find('\n').unwrap_or(rest.len());
-            rest[..end].trim().to_string()
-        }),
+        xfail_text: {
+            let marker = source.find("//XFAIL_TEXT=").map(|p| {
+                let rest = &source[p + "//XFAIL_TEXT=".len()..];
+                let end = rest.find('\n').unwrap_or(rest.len());
+                rest[..end].trim().to_string()
+            });
+            match marker {
+                Some(v) => {
+                    // `<driver>[,<driver>…]: <reason>` — same scoping as
+                    // `PARITY=xfail`; a pre-colon run of known driver names
+                    // limits where the marker applies.
+                    const DRIVERS: &[&str] = &["software", "skia", "femtovg", "interpreter"];
+                    let (renderers, reason) = match v.split_once(':') {
+                        Some((scope, reason))
+                            if !scope.is_empty()
+                                && scope
+                                    .split(',')
+                                    .all(|d| DRIVERS.contains(&d.trim())) =>
+                        {
+                            (
+                                scope.split(',').map(|d| d.trim().to_string()).collect(),
+                                reason.trim().to_string(),
+                            )
+                        }
+                        _ => (Vec::new(), v),
+                    };
+                    xfail_text_renderers = renderers;
+                    Some(reason)
+                }
+                None => None,
+            }
+        },
+        xfail_text_renderers,
         xfail_silhouette: source.find("//XFAIL_SILHOUETTE=").map(|p| {
             let rest = &source[p + "//XFAIL_SILHOUETTE=".len()..];
             let end = rest.find('\n').unwrap_or(rest.len());
@@ -466,6 +510,19 @@ pub fn extract_parity(source: &str) -> ParityMarkers {
         }),
         mask_inner,
         mask_decor,
+        trace_element_props: csv("//TRACE_ELEMENT_PROPS=")
+            .iter()
+            .map(|entry| {
+                let mut parts = entry.split(':').map(str::trim);
+                let id = parts.next().expect("empty //TRACE_ELEMENT_PROPS= entry");
+                let props: Vec<String> = parts.map(ToString::to_string).collect();
+                assert!(
+                    props.len() == 4 || props.len() == 5,
+                    "//TRACE_ELEMENT_PROPS= entry '{entry}' needs 4 or 5 property names"
+                );
+                (id.to_string(), props)
+            })
+            .collect(),
     }
 }
 

@@ -67,6 +67,11 @@ export component MaterialButtonBase {
     /// icon, so this defaults to `icon` in the callers).
     in property <image> checked_icon;
     in property <length> padding_horizontal;
+    /// Asymmetric horizontal padding overrides — a negative value falls
+    /// back to `padding_horizontal` (upstream `PaddingValues(start, end)`
+    /// where the two ends differ, e.g. `ButtonWithIconContentPadding`).
+    in property <length> padding_leading: -1px;
+    in property <length> padding_trailing: -1px;
     in property <length> padding_vertical;
     in property <length> icon_size;
     in property <length> icon_spacing;
@@ -174,8 +179,8 @@ export component MaterialButtonBase {
         }
 
         layout := HorizontalLayout {
-            padding_left: root.icon_button ? 0px : root.padding_horizontal;
-            padding_right: root.icon_button ? 0px : root.padding_horizontal;
+            padding_left: root.icon_button ? 0px : (root.padding_leading >= 0px ? root.padding_leading : root.padding_horizontal);
+            padding_right: root.icon_button ? 0px : (root.padding_trailing >= 0px ? root.padding_trailing : root.padding_horizontal);
             padding_top: root.icon_button ? 0px : root.padding_vertical;
             padding_bottom: root.icon_button ? 0px : root.padding_vertical;
             spacing: root.icon_spacing;

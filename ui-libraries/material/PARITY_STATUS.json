@@ -105,13 +105,11 @@
   },
   "ButtonGroup": {
     "issues": [
-      5,
-      9,
       10
     ],
-    "needs": "springs (#5), shapes (#6)",
-    "notes": "",
-    "status": "missing"
+    "needs": "none",
+    "notes": "slint component: ButtonGroup (standard group)",
+    "status": "partial"
   },
   "Card": {
     "issues": [
