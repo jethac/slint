@@ -115,13 +115,21 @@ class Widget(json: JSONObject) {
     val icons: List<String> =
         json.optJSONArray("icons")?.let { a -> (0 until a.length()).map(a::getString) } ?: emptyList()
     val placeholder: String? = (json.opt("placeholder") as? String)?.takeIf { it.isNotEmpty() }
+    /** `*-split-button` kinds only: which half carries `state` and receives
+     * the scripted pointer gesture — `leading` or `trailing`. */
+    val side: String = (json.opt("side") as? String) ?: "trailing"
+    /** `*-split-button` trailing icon stem — `keyboard_arrow_down`, the
+     * chevron the upstream samples rotate, when unset. */
+    val trailingIcon: String? = (json.opt("trailing_icon") as? String)?.takeIf { it.isNotEmpty() }
 
     // --- navigation-rail kinds (`navigation-rail`, `wide-navigation-rail`,
     // `modal-navigation-rail`) ---
     /** Rail items: `[{ "text": "Inbox", "icon": "inbox",
-     * "selected_icon": "inbox", "badge": "3", "enabled": false }]`. */
-    val items: List<RailItem> =
-        json.optJSONArray("items")?.let { a -> (0 until a.length()).map { RailItem(a.getJSONObject(it)) } }
+     * "selected_icon": "inbox", "badge": "3", "enabled": false }]`.
+     * `rail_items` in the scene JSON — `items` is `button-group`'s
+     * `GroupItem` rows. */
+    val railItems: List<RailItem> =
+        json.optJSONArray("rail_items")?.let { a -> (0 until a.length()).map { RailItem(a.getJSONObject(it)) } }
             ?: emptyList()
     /** `WideNavigationRailValue` — expanded when true, collapsed when false. */
     val expanded: Boolean = json.optBoolean("expanded", false)
@@ -138,8 +146,9 @@ class Widget(json: JSONObject) {
     /** The selected item index (`current-index` on the Slint side). */
     val selectedIndex: Int = json.optInt("selected_index", 0)
 
+    val isSplitButton: Boolean get() = kind.endsWith("split-button")
     val isIconButton: Boolean get() = kind.endsWith("icon-button")
-    val isButton: Boolean get() = isIconButton || kind.endsWith("-button")
+    val isButton: Boolean get() = isIconButton || isSplitButton || kind.endsWith("-button")
     /** `elevated-rect` only: the elevation in dp of the Android ambient+spot
      * shadow `Modifier.shadow` draws behind the caster. */
     val elevation: Float = json.optDouble("elevation", 0.0).toFloat()

@@ -30,7 +30,7 @@
       "height": 320,
       "always_show_label": true,
       "selected_index": 0,
-      "items": [
+      "rail_items": [
         {
           "text": "Inbox",
           "icon": "check"

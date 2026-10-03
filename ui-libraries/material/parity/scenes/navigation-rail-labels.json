@@ -22,7 +22,7 @@
             "x": 0, "y": 0, "height": 420,
             "always_show_label": false,
             "selected_index": 1,
-            "items": [
+            "rail_items": [
                 { "text": "Inbox", "icon": "check" },
                 { "text": "Sent", "icon": "schedule" },
                 { "text": "Files", "icon": "keyboard" },
@@ -34,7 +34,7 @@
             "x": 120, "y": 0, "height": 420,
             "always_show_label": true,
             "selected_index": 0,
-            "items": [
+            "rail_items": [
                 { "text": "", "icon": "check" },
                 { "text": "", "icon": "schedule" },
                 { "text": "", "icon": "keyboard", "enabled": false },

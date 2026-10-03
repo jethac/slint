@@ -63,7 +63,7 @@
       "expanded": false,
       "fab_icon": "edit",
       "height": 420,
-      "items": [
+      "rail_items": [
         {
           "icon": "check",
           "selected_icon": "arrow_right",

@@ -99,7 +99,12 @@
       "hide_on_collapse": null,
       "icon": null,
       "icons": [],
-      "items": [
+      "kind": "navigation-rail",
+      "level": null,
+      "nav_icon": null,
+      "placeholder": null,
+      "radius": null,
+      "rail_items": [
         {
           "badge": null,
           "enabled": null,
@@ -122,13 +127,9 @@
           "text": "Files"
         }
       ],
-      "kind": "navigation-rail",
-      "level": null,
-      "nav_icon": null,
-      "placeholder": null,
-      "radius": null,
       "selected_index": 0,
       "shape": null,
+      "side": null,
       "size": null,
       "slint_overrides": {
         "cover": {
@@ -139,6 +140,7 @@
       "state": null,
       "subtitle": null,
       "text": null,
+      "trailing_icon": null,
       "variant": null,
       "width": null,
       "width_option": null,

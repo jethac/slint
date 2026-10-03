@@ -992,12 +992,11 @@
   },
   "SplitButtonLayout": {
     "issues": [
-      9,
       10
     ],
-    "needs": "springs (#5), shapes (#6)",
-    "notes": "",
-    "status": "missing"
+    "needs": "none",
+    "notes": "slint components: FilledSplitButton, TonalSplitButton, ElevatedSplitButton, OutlineSplitButton",
+    "status": "partial"
   },
   "SuggestionChip": {
     "issues": [

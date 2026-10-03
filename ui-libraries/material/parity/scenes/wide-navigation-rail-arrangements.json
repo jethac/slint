@@ -23,7 +23,7 @@
             "expanded": false,
             "arrangement": "center",
             "selected_index": 1,
-            "items": [
+            "rail_items": [
                 { "text": "Inbox", "icon": "check" },
                 { "text": "Sent", "icon": "schedule" },
                 { "text": "Files", "icon": "keyboard" },
@@ -36,7 +36,7 @@
             "expanded": false,
             "arrangement": "bottom",
             "selected_index": 0,
-            "items": [
+            "rail_items": [
                 { "text": "Inbox", "icon": "check" },
                 { "text": "Sent", "icon": "schedule" },
                 { "text": "Files", "icon": "keyboard" },
@@ -49,7 +49,7 @@
             "expanded": false,
             "arrangement": "space-between",
             "selected_index": 2,
-            "items": [
+            "rail_items": [
                 { "text": "Inbox", "icon": "check" },
                 { "text": "Sent", "icon": "schedule" },
                 { "text": "Files", "icon": "keyboard" },
