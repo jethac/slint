@@ -67,7 +67,7 @@ impl WindowAdapter for SkiaScreenshotWindow {
 pub fn init_skia() {
     crate::testing::force_reference_os();
 
-    i_slint_core::platform::set_platform(Box::new(SkiaScreenshotBackend::default()))
+    i_slint_core::platform::set_platform(Box::new(SkiaScreenshotBackend))
         .expect("platform already initialized");
 }
 

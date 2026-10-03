@@ -9,6 +9,9 @@ button-release-morph
 button-sizes
 button-states
 button-styles
+connected-button-groups
+connected-button-morph
+connected-button-press-morph
 elevation-shadow
 elevation-surfaces
 icon-button-focus
@@ -19,6 +22,7 @@ negative-button-focus-ring
 negative-button-press-morph
 negative-button-ripple-clip
 negative-button-role
+negative-connected-button-group
 negative-corner-leak-dark
 negative-corner-leak
 negative-focus-layer

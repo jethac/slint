@@ -1,0 +1,58 @@
+{
+    "name": "negative-connected-button-group",
+    "type": "canvas",
+    "parity": "negative",
+    "negative_note": "slint_overrides force `selected_index: 0` where the reference selects item 1 (wrong item morphs to CornerFull) and force `position: middle` on the standalone leading item (inner corners rendered on both sides) — each must fail",
+    "size": [
+        360,
+        160
+    ],
+    "densities": [
+        1,
+        2
+    ],
+    "theme": {
+        "seed": "6750A4",
+        "variant": "tonal-spot",
+        "spec": "spec2025",
+        "platform": "phone",
+        "dark": false,
+        "contrast": 0.0
+    },
+    "fonts": {
+        "plain": "Roboto",
+        "brand": "Roboto"
+    },
+    "widgets": [
+        {
+            "kind": "connected-button-group",
+            "x": 16,
+            "y": 20,
+            "items": [
+                { "text": "Day" },
+                { "text": "Week" },
+                { "text": "Month" }
+            ],
+            "selected_index": 1,
+            "slint_overrides": {
+                "selected_index": 0
+            }
+        },
+        {
+            "kind": "connected-button",
+            "x": 16,
+            "y": 100,
+            "text": "Start",
+            "position": "start",
+            "width": 88,
+            "slint_overrides": {
+                "position": "middle"
+            }
+        }
+    ],
+    "trace_elements": [
+        "group0",
+        "button0"
+    ],
+    "trace_props": []
+}

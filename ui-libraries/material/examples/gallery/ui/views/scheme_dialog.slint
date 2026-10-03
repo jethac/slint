@@ -12,7 +12,7 @@ import {
     MaterialTheme,
     MaterialTypography,
     ScrollView,
-    SegmentedButton,
+    ConnectedButtonGroup,
     Slider,
     Switch,
     TextButton,
@@ -204,15 +204,15 @@ export component SchemeDialog inherits Dialog {
                 color: MaterialPalette.on_surface;
             }
 
-            spec_buttons := SegmentedButton {
-                current_index: root.spec_index(MaterialTheme.spec-version);
+            spec_buttons := ConnectedButtonGroup {
+                selected_index: root.spec_index(MaterialTheme.spec-version);
                 items: [
                     { text: "2021" },
                     { text: "2025" },
                     { text: "2026" },
                 ];
 
-                index_changed(index) => {
+                selected_index_changed(index) => {
                     MaterialPalette.dynamic = true;
                     MaterialTheme.spec-version = root.spec_version(index);
                 }
@@ -224,14 +224,14 @@ export component SchemeDialog inherits Dialog {
                 color: MaterialPalette.on_surface;
             }
 
-            platform_buttons := SegmentedButton {
-                current_index: MaterialTheme.platform == MaterialSchemePlatform.phone ? 0 : 1;
+            platform_buttons := ConnectedButtonGroup {
+                selected_index: MaterialTheme.platform == MaterialSchemePlatform.phone ? 0 : 1;
                 items: [
                     { text: "Phone" },
                     { text: "Watch" },
                 ];
 
-                index_changed(index) => {
+                selected_index_changed(index) => {
                     MaterialPalette.dynamic = true;
                     MaterialTheme.platform = index == 0 ? MaterialSchemePlatform.phone : MaterialSchemePlatform.watch;
                 }

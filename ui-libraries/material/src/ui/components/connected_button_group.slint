@@ -1,0 +1,377 @@
+// Copyright © SixtyFPS GmbH <info@slint.dev>
+// SPDX-License-Identifier: MIT
+
+import { MaterialButtonBase } from "./button_base.slint";
+import { MaterialButtonMetrics, MaterialButtonSize } from "./button_metrics.slint";
+import { MaterialCornerRadii } from "./state_layer.slint";
+import {
+    ConnectedButtonGroupSmallTokens,
+    FilledButtonTokens,
+} from "../styling/generated/material_component_tokens.slint";
+
+/// One item of a `ConnectedButtonGroup` / `VerticalConnectedButtonGroup`:
+/// the label with an optional leading icon. `checked_icon` replaces `icon`
+/// while the item is checked (the upstream samples swap filled for
+/// outlined icons); when left empty `icon` is kept. `checked` is the
+/// item's initial checked state for `multi-select` groups — single-select
+/// groups check `selected-index` instead. `disabled` marks the item
+/// disabled — struct fields can't carry a default, so the enabled state
+/// is implicit.
+export struct ConnectedButtonGroupItem {
+    icon: image,
+    checked_icon: image,
+    text: string,
+    tooltip: string,
+    disabled: bool,
+    checked: bool,
+}
+
+/// Which `connected*ButtonShapes` position a `ConnectedButton` takes in
+/// its group: `start` is the leading item of a horizontal group (the top
+/// item of a vertical one), `end` the trailing (bottom) one — `start`
+/// resolving to the left in left-to-right layout direction, matching the
+/// upstream samples.
+export enum ConnectedButtonPosition { start, middle, end }
+
+/// One `ToggleButton` of a connected button group — Material 3
+/// Expressive's replacement for a segmented button item. Its inner
+/// corners differ from its outer corners (`connectedLeading/Middle/
+/// TrailingButtonShapes`, or the vertical variant's `CornerSize(100)`
+/// caps) and it morphs to the `CornerFull` stadium while checked on the
+/// `fast_spatial` spring. Colors, metrics and elevation are the small
+/// `ToggleButton`'s `FilledButtonTokens` table.
+export component ConnectedButton {
+    /// The item's position in its group — see `ConnectedButtonPosition`.
+    in property <ConnectedButtonPosition> position: ConnectedButtonPosition.middle;
+    /// The `VerticalButtonGroupSample` shapes — `CornerSize(100)` top caps
+    /// on `start`, bottom caps on `end` — instead of the horizontal
+    /// leading/middle/trailing shapes.
+    in property <bool> vertical;
+    /// The item's index in its group, reported to accessibility.
+    in property <int> index;
+    in property <image> icon;
+    /// `icon` while checked; kept as `icon` when left empty.
+    in property <image> checked_icon;
+    in property <string> text;
+    in property <string> tooltip;
+    in property <bool> enabled: true;
+    in-out property <bool> checked;
+    /// Reserve a 48x48 touch target around the 40px container (default
+    /// on; the parity harness turns it off like every other component).
+    in property <bool> enforce_touch_target: true;
+    /// See `MaterialButtonBase.simulate_hover` / `simulate_press`.
+    in property <bool> simulate_hover;
+    in property <bool> simulate_press;
+    /// See `MaterialButtonBase.toggle_on_click` — a single-select group
+    /// drives `selected-index` instead of flipping the item's `checked`.
+    in property <bool> toggle_on_click: true;
+
+    callback clicked <=> base.clicked;
+
+    out property <bool> has_focus <=> base.has_focus;
+    out property <bool> pressed <=> base.pressed;
+    out property <bool> has_hover <=> base.has_hover;
+    /// The live per-corner radii of the morphing shape — the parity
+    /// harness's motion trace. `CornerSize(percent)` resolves against the
+    /// item's shorter side, so cap each reported radius at `min(w,h)` —
+    /// the Compose side records `toPx`'s `minDimension * percent`.
+    out property <length> corner_top_left: Math.min(base.corner_tl, Math.min(root.width, root.height));
+    out property <length> corner_top_right: Math.min(base.corner_tr, Math.min(root.width, root.height));
+    out property <length> corner_bottom_right: Math.min(base.corner_br, Math.min(root.width, root.height));
+    out property <length> corner_bottom_left: Math.min(base.corner_bl, Math.min(root.width, root.height));
+
+    // `ToggleButton` carries `Role.Checkbox` upstream; the single-select
+    // group wraps this in `Role.RadioButton` items like the samples.
+    accessible-role: checkbox;
+    accessible-label: root.text;
+    accessible-enabled: root.enabled;
+    accessible-checkable: true;
+    accessible-checked <=> root.checked;
+    accessible-item-index: root.index;
+    accessible-item-selectable: true;
+    accessible-item-selected: root.checked;
+    accessible-action-default => { base.clicked(); }
+
+    property <length> inner: ConnectedButtonGroupSmallTokens.inner_corner_corner_size;
+    property <length> pressed_inner: ConnectedButtonGroupSmallTokens.pressed_inner_corner_corner_size;
+    /// `ShapeDefaults.CornerFull` = `CornerSize(percent = 100)` — its
+    /// `toPx` resolves to the shape's shorter side. The container is
+    /// `container_height` tall, so the shorter side is `container_height`
+    /// for any item wider than tall (a `Math.min(width, …)` here would
+    /// feed layout output back into `MaterialButtonBase`'s corners,
+    /// which feed `optical_offset`'s layout padding — a binding loop).
+    /// The renderers clamp each corner to `min(w,h)/2` at draw, matching
+    /// `RoundedCornerShape`'s outline clamp.
+    property <length> outer: ConnectedButtonGroupSmallTokens.container_height;
+    /// `CornerSize(100)` of the vertical variant's first/last items.
+    property <length> cap: root.outer;
+
+    // `connectedLeadingButtonShapes` / `connectedMiddleButtonShapes` /
+    // `connectedTrailingButtonShapes` — or the `VerticalButtonGroupSample`
+    // `CornerSize(100)` caps — as per-corner radii.
+    property <MaterialCornerRadii> resting_corners:
+        root.vertical ?
+            (root.position == ConnectedButtonPosition.start ?
+                { top_left: root.cap, top_right: root.cap, bottom_right: root.inner, bottom_left: root.inner } :
+             root.position == ConnectedButtonPosition.end ?
+                { top_left: root.inner, top_right: root.inner, bottom_right: root.cap, bottom_left: root.cap } :
+                { top_left: root.inner, top_right: root.inner, bottom_right: root.inner, bottom_left: root.inner }) :
+            (root.position == ConnectedButtonPosition.start ?
+                { top_left: root.outer, top_right: root.inner, bottom_right: root.inner, bottom_left: root.outer } :
+             root.position == ConnectedButtonPosition.end ?
+                { top_left: root.inner, top_right: root.outer, bottom_right: root.outer, bottom_left: root.inner } :
+                { top_left: root.inner, top_right: root.inner, bottom_right: root.inner, bottom_left: root.inner });
+
+    // `connectedLeadingButtonPressShape` / `connectedMiddleButtonPressShape`
+    // / `connectedTrailingButtonPressShape`; the vertical variant presses
+    // to `ToggleButtonDefaults.pressedShape` = `RoundedCornerShape(6.dp)`.
+    property <MaterialCornerRadii> pressed_corners:
+        root.vertical ?
+            { top_left: 6px, top_right: 6px, bottom_right: 6px, bottom_left: 6px } :
+            (root.position == ConnectedButtonPosition.start ?
+                { top_left: root.outer, top_right: root.pressed_inner, bottom_right: root.pressed_inner, bottom_left: root.outer } :
+             root.position == ConnectedButtonPosition.end ?
+                { top_left: root.pressed_inner, top_right: root.outer, bottom_right: root.outer, bottom_left: root.pressed_inner } :
+                { top_left: root.pressed_inner, top_right: root.pressed_inner, bottom_right: root.pressed_inner, bottom_left: root.pressed_inner });
+
+    min_width: base.min_width;
+    min_height: base.min_height;
+    preferred_width: base.preferred_width;
+    preferred_height: base.preferred_height;
+
+    base := MaterialButtonBase {
+        width: 100%;
+        height: 100%;
+        checkable: true;
+        checked <=> root.checked;
+        toggle_on_click: root.toggle_on_click;
+        enabled: root.enabled;
+        tooltip: root.tooltip;
+        enforce_touch_target: root.enforce_touch_target;
+        simulate_hover: root.simulate_hover;
+        simulate_press: root.simulate_press;
+
+        container_height: ConnectedButtonGroupSmallTokens.container_height;
+        min_button_width: 0px;
+        // The uniform fallbacks only feed `container_radius` reporting —
+        // every `*_corners` field is set above.
+        resting_radius: root.inner;
+        pressed_radius: root.vertical ? 6px : root.pressed_inner;
+        checked_radius: root.outer / 2;
+        shaped_corners: true;
+        resting_corners: root.resting_corners;
+        pressed_corners: root.pressed_corners;
+        // `ButtonGroupDefaults.connectedButtonCheckedShape` =
+        // `CornerSize(percent = SelectedInnerCornerCornerSizePercent)`
+        // (50): `toPx` is `min(w,h)/2`, `container_height/2` on the
+        // 40px container, for every position and both orientations.
+        checked_corners: { top_left: root.outer / 2, top_right: root.outer / 2, bottom_right: root.outer / 2, bottom_left: root.outer / 2 };
+        fast_spatial: true;
+
+        // `FilledToggleButtonColors` — the same `FilledButtonTokens` table
+        // `FilledButton` resolves when `checkable`.
+        container_color: root.checked ? FilledButtonTokens.selected_container_color : FilledButtonTokens.unselected_container_color;
+        content_color: root.checked ? FilledButtonTokens.selected_pressed_label_text_color : FilledButtonTokens.unselected_pressed_label_text_color;
+        disabled_container_color: FilledButtonTokens.disabled_container_color.with_alpha(FilledButtonTokens.disabled_container_opacity);
+        disabled_content_color: FilledButtonTokens.disabled_label_text_color.with_alpha(FilledButtonTokens.disabled_label_text_opacity);
+        elevation_hovered: 1;
+
+        text: root.text;
+        icon: root.icon;
+        checked_icon: root.checked_icon.width > 0 && root.checked_icon.height > 0 ? root.checked_icon : root.icon;
+        padding_horizontal: MaterialButtonMetrics.horizontal-padding(MaterialButtonSize.small);
+        padding_vertical: MaterialButtonMetrics.vertical-padding(MaterialButtonSize.small);
+        icon_size: MaterialButtonMetrics.icon-size(MaterialButtonSize.small);
+        icon_spacing: MaterialButtonMetrics.icon-spacing(MaterialButtonSize.small);
+        label_style: MaterialButtonMetrics.label-style(MaterialButtonSize.small, true);
+    }
+}
+
+/// The single-select item — the upstream samples' `Role.RadioButton`
+/// semantics override (`Modifier.semantics { role = Role.RadioButton }`).
+component ConnectedRadioItem inherits ConnectedButton {
+    accessible-role: radio-button;
+}
+
+/// The connected button group — Material 3 Expressive's replacement for
+/// `SegmentedButton`: `ToggleButton`s in a wrapping row spaced
+/// `ConnectedButtonGroupSmallTokens.between_space` apart (the upstream
+/// samples' `FlowRow`), each item's inner corners differing from its
+/// outer corners and the checked item morphing to the `CornerFull`
+/// stadium on the `fast_spatial` spring.
+///
+/// `multi-select` gives every item its own checked state (checkbox
+/// semantics, `item-checked-changed`); otherwise the group is
+/// single-select with `selected-index` and radio semantics. `start`
+/// corners resolve to the left — the upstream samples' LTR shapes.
+export component ConnectedButtonGroup {
+    in property <[ConnectedButtonGroupItem]> items;
+    /// Give each item its own checked state instead of a single
+    /// `selected-index`.
+    in property <bool> multi_select;
+    /// The checked item for single-select groups; `-1` selects none.
+    in-out property <int> selected_index: -1;
+    /// The horizontal gap between items — the upstream samples'
+    /// `spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween)` parameter.
+    in property <length> between_space: ConnectedButtonGroupSmallTokens.between_space;
+    /// Reserve a 48x48 touch target around each item (default on; the
+    /// parity harness turns it off like every other component).
+    in property <bool> enforce_touch_target: true;
+    /// Test hooks driving `MaterialButtonBase.simulate_*` on the given
+    /// item index; `-1` leaves every item to the pointer.
+    in property <int> simulate_press_index: -1;
+    in property <int> simulate_hover_index: -1;
+
+    callback selected_index_changed(index: int);
+    callback item_checked_changed(index: int, checked: bool);
+
+    // `accessible-role` takes a constant only — `groupbox` covers both
+    // selection modes (upstream's `FlowRow` carries no container role).
+    accessible-role: groupbox;
+    accessible-item-count: root.items.length;
+
+    min_width: flow.min-width;
+    min_height: flow.min-height;
+    preferred_width: flow.preferred-width;
+    preferred_height: flow.preferred-height;
+
+    flow := FlexboxLayout {
+        // `FlowRow(horizontalArrangement = spacedBy(ConnectedSpaceBetween),
+        // verticalArrangement = spacedBy(2.dp))` in the upstream samples.
+        // `wrap` stays off: a connected group is inherently single-row —
+        // inner and outer corners only exist along the row axis — and a
+        // `wrap` container reports a roughly-square preferred width, which
+        // would wrap unconstrained uses. An explicit narrow `width`
+        // overflows like CSS `nowrap` instead of wrapping a second row.
+        flex-wrap: no-wrap;
+        spacing-horizontal: root.between_space;
+        spacing-vertical: 2px;
+
+        for data[index] in root.multi_select ? root.items : [] : item := ConnectedButton {
+            index: index;
+            position: index == 0 ? ConnectedButtonPosition.start :
+                (index == root.items.length - 1 ? ConnectedButtonPosition.end : ConnectedButtonPosition.middle);
+            icon: data.icon;
+            checked_icon: data.checked_icon;
+            text: data.text;
+            tooltip: data.tooltip;
+            enabled: !data.disabled;
+            checked: data.checked;
+            enforce_touch_target: root.enforce_touch_target;
+            simulate_press: index == root.simulate_press_index;
+            simulate_hover: index == root.simulate_hover_index;
+
+            clicked => {
+                root.item_checked_changed(index, self.checked);
+            }
+        }
+
+        for data[index] in root.multi_select ? [] : root.items : radio-item := ConnectedRadioItem {
+            index: index;
+            position: index == 0 ? ConnectedButtonPosition.start :
+                (index == root.items.length - 1 ? ConnectedButtonPosition.end : ConnectedButtonPosition.middle);
+            icon: data.icon;
+            checked_icon: data.checked_icon;
+            text: data.text;
+            tooltip: data.tooltip;
+            enabled: !data.disabled;
+            checked: index == root.selected_index;
+            enforce_touch_target: root.enforce_touch_target;
+            simulate_press: index == root.simulate_press_index;
+            simulate_hover: index == root.simulate_hover_index;
+            // `checked` stays bound to `selected-index`; the group moves
+            // the selection — a local toggle would drop the binding.
+            toggle_on_click: false;
+
+            clicked => {
+                root.selected_index = index;
+                root.selected_index_changed(index);
+            }
+        }
+    }
+}
+
+/// The vertical connected button group — the upstream
+/// `VerticalButtonGroupSample`: a column of `ToggleButton`s overlapping
+/// by 6px, the first item capped with `CornerSize(100)` top corners and
+/// the last with bottom ones, pressing to a uniform
+/// `RoundedCornerShape(6.dp)`. Selection and callbacks work exactly like
+/// `ConnectedButtonGroup`.
+export component VerticalConnectedButtonGroup {
+    in property <[ConnectedButtonGroupItem]> items;
+    in property <bool> multi_select;
+    in-out property <int> selected_index: -1;
+    /// The vertical spacing between items — negative so each item pulls
+    /// up over the previous one, the upstream sample's
+    /// `spacedBy((-6).dp)` parameter.
+    in property <length> item_spacing: -6px;
+    in property <bool> enforce_touch_target: true;
+    in property <int> simulate_press_index: -1;
+    in property <int> simulate_hover_index: -1;
+
+    callback selected_index_changed(index: int);
+    callback item_checked_changed(index: int, checked: bool);
+
+    accessible-role: groupbox;
+    accessible-item-count: root.items.length;
+
+    min_width: vbox.min-width;
+    min_height: vbox.min-height;
+    preferred_width: vbox.preferred-width;
+    preferred_height: vbox.preferred-height;
+
+    vbox := VerticalLayout {
+        // `Column(verticalArrangement = Arrangement.spacedBy((-6).dp))`:
+        // each item pulls 6px up over the previous one, so later items
+        // paint over the earlier ones — the repeater's order matches.
+        spacing: root.item_spacing;
+
+        for data[index] in root.multi_select ? root.items : [] : item := ConnectedButton {
+            index: index;
+            vertical: true;
+            position: index == 0 ? ConnectedButtonPosition.start :
+                (index == root.items.length - 1 ? ConnectedButtonPosition.end : ConnectedButtonPosition.middle);
+            icon: data.icon;
+            checked_icon: data.checked_icon;
+            text: data.text;
+            tooltip: data.tooltip;
+            enabled: !data.disabled;
+            checked: data.checked;
+            enforce_touch_target: root.enforce_touch_target;
+            simulate_press: index == root.simulate_press_index;
+            simulate_hover: index == root.simulate_hover_index;
+            // Keep the item's own extents: upstream `Column` neither
+            // stretches children nor grows them into the overlap space.
+            horizontal-stretch: 0;
+            vertical-stretch: 0;
+
+            clicked => {
+                root.item_checked_changed(index, self.checked);
+            }
+        }
+
+        for data[index] in root.multi_select ? [] : root.items : radio-item := ConnectedRadioItem {
+            index: index;
+            vertical: true;
+            position: index == 0 ? ConnectedButtonPosition.start :
+                (index == root.items.length - 1 ? ConnectedButtonPosition.end : ConnectedButtonPosition.middle);
+            icon: data.icon;
+            checked_icon: data.checked_icon;
+            text: data.text;
+            tooltip: data.tooltip;
+            enabled: !data.disabled;
+            checked: index == root.selected_index;
+            enforce_touch_target: root.enforce_touch_target;
+            simulate_press: index == root.simulate_press_index;
+            simulate_hover: index == root.simulate_hover_index;
+            toggle_on_click: false;
+            horizontal-stretch: 0;
+            vertical-stretch: 0;
+
+            clicked => {
+                root.selected_index = index;
+                root.selected_index_changed(index);
+            }
+        }
+    }
+}

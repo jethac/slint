@@ -7,6 +7,7 @@ import { MaterialText } from "./material_text.slint";
 import { FocusRing, MaterialCornerRadii, StateLayerArea } from "./state_layer.slint";
 import { MaterialAnimations } from "../styling/material_animations.slint";
 import { MaterialPalette } from "../styling/material_palette.slint";
+import { MaterialCornerShape } from "../styling/generated/material_shape_tokens.slint";
 import { MaterialTypeStyle, MaterialTypography } from "../styling/material_typography.slint";
 import { StateTokens } from "../styling/generated/material_state_tokens.slint";
 
@@ -105,6 +106,10 @@ export component MaterialButtonBase {
     in property <bool> enabled: true;
     in property <bool> checkable;
     in-out property <bool> checked;
+    /// Flip `checked` on click — false when the parent owns the selection
+    /// state (the connected button group's single-select mode drives
+    /// `selected-index`; writing `checked` would also drop its binding).
+    in property <bool> toggle_on_click: true;
     in property <string> tooltip;
     /// See `StateLayerArea.simulate_hover` / `simulate_press`.
     in property <bool> simulate_hover;
@@ -252,7 +257,7 @@ export component MaterialButtonBase {
             if !area.pointer_inside && !area.enter_pressed {
                 return;
             }
-            if root.checkable {
+            if root.checkable && root.toggle_on_click {
                 root.checked = !root.checked;
             }
             root.clicked();
