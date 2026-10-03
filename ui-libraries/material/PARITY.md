@@ -420,7 +420,7 @@ States: hovered, pressed, selected
 
 | Component | Source | Status | Issues | Needs | Notes |
 |---|---|---|---|---|---|
-| SplitButtonLayout | SplitButton.kt | missing | #9, #10 | springs (#5), shapes (#6) | - |
+| SplitButtonLayout | SplitButton.kt | partial | #10 | none | slint components: FilledSplitButton, TonalSplitButton, ElevatedSplitButton, OutlineSplitButton |
 
 ### Surface
 

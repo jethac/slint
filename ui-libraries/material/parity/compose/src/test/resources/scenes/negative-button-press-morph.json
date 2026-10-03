@@ -101,6 +101,7 @@
       "placeholder": null,
       "radius": null,
       "shape": null,
+      "side": null,
       "size": "m",
       "slint_overrides": {
         "cover": {
@@ -111,6 +112,7 @@
       "state": "pressed",
       "subtitle": null,
       "text": "Label",
+      "trailing_icon": null,
       "variant": null,
       "width": 86.0,
       "width_option": null,

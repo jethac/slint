@@ -23,6 +23,10 @@ import {
     TonalIconButton,
     OutlineIconButton,
     SegmentedButton,
+    FilledSplitButton,
+    TonalSplitButton,
+    ElevatedSplitButton,
+    OutlineSplitButton,
     ScrollView,
     NavigationBar,
     CircularProgressIndicator,
@@ -573,6 +577,54 @@ export component ActionsView {
                                 { text: "M" },
                                 { text: "L" },
                                 { text: "XL" },
+                            ];
+                        }
+                    }
+                }
+            }
+
+            ComponentCard {
+                title: "Split buttons";
+
+                Vertical {
+                    // Rows: styles x the five sizes; the trailing menu button
+                    // toggles a popup menu.
+                    HorizontalLayout {
+                        alignment: center;
+                        spacing: MaterialStyleMetrics.spacing_8;
+
+                        FilledSplitButton {
+                            text: "Filled";
+                            size: MaterialButtonSize.medium;
+                        }
+
+                        TonalSplitButton {
+                            text: "Tonal";
+                            size: MaterialButtonSize.medium;
+                        }
+
+                        ElevatedSplitButton {
+                            text: "Elevated";
+                            size: MaterialButtonSize.medium;
+                        }
+
+                        OutlineSplitButton {
+                            text: "Outlined";
+                            size: MaterialButtonSize.medium;
+                        }
+                    }
+
+                    HorizontalLayout {
+                        alignment: center;
+                        spacing: MaterialStyleMetrics.spacing_8;
+
+                        for size[size_i] in root.button_sizes: FilledSplitButton {
+                            text: "Label";
+                            icon: FilledIcons.edit;
+                            size: size;
+                            menu_items: [
+                                { text: "Undo" },
+                                { text: "Redo" },
                             ];
                         }
                     }

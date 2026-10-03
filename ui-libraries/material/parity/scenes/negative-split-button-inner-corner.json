@@ -1,0 +1,44 @@
+{
+  "name": "negative-split-button-inner-corner",
+  "type": "canvas",
+  "parity": "negative",
+  "negative_note": "slint_overrides sets `inner_corner` to 12px where the small-bucket InnerCornerCornerSize token is 4px \u2014 a split button whose inner seam rounds wrong must fail",
+  "size": [
+    240,
+    96
+  ],
+  "densities": [
+    1,
+    2
+  ],
+  "theme": {
+    "seed": "6750A4",
+    "variant": "tonal-spot",
+    "spec": "spec2025",
+    "platform": "phone",
+    "dark": false,
+    "contrast": 0.0
+  },
+  "fonts": {
+    "plain": "Roboto",
+    "brand": "Roboto"
+  },
+  "widgets": [
+    {
+      "kind": "filled-split-button",
+      "x": 16,
+      "y": 28,
+      "size": "s",
+      "checkable": true,
+      "width": 148,
+      "slint_overrides": {
+        "inner_corner": 12
+      },
+      "icon": "edit"
+    }
+  ],
+  "trace_elements": [
+    "button0"
+  ],
+  "trace_props": []
+}

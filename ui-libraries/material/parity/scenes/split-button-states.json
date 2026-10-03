@@ -1,0 +1,123 @@
+{
+  "name": "split-button-states",
+  "type": "canvas",
+  "parity": "xfail:software",
+  "size": [
+    750,
+    148
+  ],
+  "densities": [
+    1,
+    2
+  ],
+  "theme": {
+    "seed": "6750A4",
+    "variant": "tonal-spot",
+    "spec": "spec2025",
+    "platform": "phone",
+    "dark": false,
+    "contrast": 0.0
+  },
+  "fonts": {
+    "plain": "Roboto",
+    "brand": "Roboto"
+  },
+  "widgets": [
+    {
+      "kind": "filled-split-button",
+      "x": 16,
+      "y": 12,
+      "size": "m",
+      "checkable": true,
+      "state": "enabled",
+      "width": 138,
+      "icon": "edit"
+    },
+    {
+      "kind": "filled-split-button",
+      "x": 202,
+      "y": 12,
+      "size": "m",
+      "checkable": true,
+      "state": "hovered",
+      "side": "leading",
+      "width": 138,
+      "icon": "edit"
+    },
+    {
+      "kind": "filled-split-button",
+      "x": 388,
+      "y": 12,
+      "size": "m",
+      "checkable": true,
+      "state": "hovered",
+      "side": "trailing",
+      "width": 138,
+      "icon": "edit"
+    },
+    {
+      "kind": "filled-split-button",
+      "x": 574,
+      "y": 12,
+      "size": "m",
+      "checkable": true,
+      "state": "focused",
+      "side": "leading",
+      "width": 138,
+      "icon": "edit"
+    },
+    {
+      "kind": "filled-split-button",
+      "x": 202,
+      "y": 80,
+      "size": "m",
+      "checkable": true,
+      "enabled": false,
+      "width": 138,
+      "icon": "edit"
+    },
+    {
+      "kind": "filled-split-button",
+      "x": 16,
+      "y": 80,
+      "size": "m",
+      "checkable": true,
+      "checked": true,
+      "width": 138,
+      "icon": "edit"
+    }
+  ],
+  "trace_elements": [
+    "button0",
+    "button1",
+    "button2",
+    "button3",
+    "button4",
+    "button5"
+  ],
+  "trace_props": [],
+  "mask_decor": {
+    "button1": {
+      "margin": 12,
+      "times": [
+        0,
+        2000
+      ]
+    },
+    "button2": {
+      "margin": 12,
+      "times": [
+        0,
+        2000
+      ]
+    },
+    "button3": {
+      "margin": 12,
+      "times": [
+        0,
+        2000
+      ]
+    }
+  },
+  "negative_note": "issue #6: the software renderer has no transform-rotation \u2014 the checked/checked-toggled trailing chevron stays unrotated on that driver (a real engine gap the scope isolates, not a fake)"
+}

@@ -1,0 +1,44 @@
+{
+  "name": "negative-split-button-spacing",
+  "type": "canvas",
+  "parity": "negative",
+  "negative_note": "slint_overrides widens `spacing` to 8px where the BetweenSpace token is 2px \u2014 a split button that spaces its halves wrong must fail",
+  "size": [
+    240,
+    96
+  ],
+  "densities": [
+    1,
+    2
+  ],
+  "theme": {
+    "seed": "6750A4",
+    "variant": "tonal-spot",
+    "spec": "spec2025",
+    "platform": "phone",
+    "dark": false,
+    "contrast": 0.0
+  },
+  "fonts": {
+    "plain": "Roboto",
+    "brand": "Roboto"
+  },
+  "widgets": [
+    {
+      "kind": "filled-split-button",
+      "x": 16,
+      "y": 28,
+      "size": "s",
+      "checkable": true,
+      "width": 148,
+      "slint_overrides": {
+        "spacing": 8
+      },
+      "icon": "edit"
+    }
+  ],
+  "trace_elements": [
+    "button0"
+  ],
+  "trace_props": []
+}

@@ -1,0 +1,86 @@
+{
+  "name": "split-button-check-morph",
+  "type": "canvas",
+  "parity": "motion",
+  "size": [
+    200,
+    96
+  ],
+  "densities": [
+    1,
+    2
+  ],
+  "theme": {
+    "seed": "6750A4",
+    "variant": "tonal-spot",
+    "spec": "spec2025",
+    "platform": "phone",
+    "dark": false,
+    "contrast": 0.0
+  },
+  "fonts": {
+    "plain": "Roboto",
+    "brand": "Roboto"
+  },
+  "times": [
+    0,
+    15,
+    30,
+    60,
+    120,
+    200,
+    333,
+    500,
+    800,
+    1500
+  ],
+  "widgets": [
+    {
+      "kind": "filled-split-button",
+      "x": 24,
+      "y": 28,
+      "size": "s",
+      "checkable": true,
+      "width": 170,
+      "icon": "edit"
+    }
+  ],
+  "actions": [
+    {
+      "kind": "press",
+      "x": 126,
+      "y": 48
+    },
+    {
+      "kind": "release",
+      "x": 126,
+      "y": 48
+    },
+    {
+      "kind": "move",
+      "x": 0,
+      "y": 0,
+      "at": 1
+    }
+  ],
+  "trace_elements": [
+    "button0"
+  ],
+  "trace_props": [
+    "leading_inner_radius",
+    "trailing_inner_radius"
+  ],
+  "mask_inner": {
+    "button0": [
+      15,
+      30,
+      60,
+      120,
+      200,
+      333,
+      500,
+      800,
+      1500
+    ]
+  }
+}

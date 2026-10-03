@@ -1,0 +1,42 @@
+// Copyright © SixtyFPS GmbH <info@slint.dev>
+// SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0
+
+// Scene: negative-split-button-checked-overlay — generated from `ui-libraries/material/parity/scenes/negative-split-button-checked-overlay.json`
+// (edit the scene, regenerate with `cargo run -p material-parity-generator`).
+//PARITY=negative: slint_overrides drops `checked_overlay`, so the checked trailing loses the PressedStateLayerOpacity content-color wash it gets upstream — a checked trailing without its overlay must fail
+//SIZE=240x96
+//TRACE_ELEMENTS=button0
+//DENSITIES=1,2
+import "../../fonts/Roboto-VariableFont.ttf";
+import { FilledSplitButton, IconButtonWidth, Icons, MaterialButtonShape, MaterialButtonSize, MaterialPalette, MaterialTheme, MaterialWindow } from "@material";
+
+export component TestCase inherits MaterialWindow {
+    init => {
+        // The scene pins seed #6750A4, tonal-spot, spec2025, light, contrast 0
+        // (all the library defaults; restated here so a default change can't
+        // silently move the parity baseline).
+        MaterialTheme.seed-color = #6750A4;
+        MaterialTheme.dark = false;
+        MaterialTheme.contrast-level = 0;
+        MaterialTheme.use-platform-color = false;
+        MaterialTheme.plain-family = "Roboto";
+        MaterialTheme.brand-family = "Roboto";
+        // Compose builds its scene scheme from the same seed — use the
+        // runtime-generated scheme, not the static expressive table.
+        MaterialPalette.dynamic = true;
+    }
+
+    button0 := FilledSplitButton {
+        x: 16px;
+        y: 28px;
+        size: MaterialButtonSize.small;
+        trailing_checkable: true;
+        checked: true;
+        icon: Icons.edit;
+        trailing_icon: Icons.keyboard_arrow_down;
+        width: 148px;
+        checked_overlay: false;
+        enforce_touch_target: false;
+    }
+
+}
