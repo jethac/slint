@@ -56,7 +56,11 @@ export component TextButton {
 
         container_height: MaterialButtonMetrics.container-height(root.size);
         resting_radius: MaterialButtonMetrics.resting-radius(root.size, root.button_shape, self.container_height);
-        pressed_radius: MaterialButtonMetrics.pressed-radius(root.size, false);
+        // The stable `TextButton` API routes through the non-morphing
+        // `Button(shape = textShape)` overload (Button.kt) — the container
+        // keeps `ContainerShapeRound` pressed or not; only the state layer
+        // reacts. (`ButtonShapes` morphs need the expressive overload.)
+        pressed_radius: MaterialButtonMetrics.resting-radius(root.size, root.button_shape, self.container_height);
         checked_radius: MaterialButtonMetrics.checked-radius(root.size);
         min_button_width: 58px; // `ButtonDefaults.MinWidth`
 
@@ -74,8 +78,12 @@ export component TextButton {
 
         text: root.text;
         icon: root.icon;
-        padding_horizontal: MaterialButtonMetrics.horizontal-padding(root.size);
-        padding_vertical: MaterialButtonMetrics.vertical-padding(root.size);
+        // `ButtonDefaults.TextButtonContentPadding` is fixed
+        // `PaddingValues(horizontal = TextButtonHorizontalPadding = 12.dp,
+        // vertical = ContentPadding = ButtonVerticalPadding = 8.dp)` in
+        // Button.kt — not the size bucket's `leading_space`/bucket padding.
+        padding_horizontal: 12px;
+        padding_vertical: 8px;
         icon_size: MaterialButtonMetrics.icon-size(root.size);
         icon_spacing: MaterialButtonMetrics.icon-spacing(root.size);
         label_style: MaterialButtonMetrics.label-style(root.size, false);

@@ -1,0 +1,3239 @@
+{
+  "times_ms": [
+    2000
+  ],
+  "frames": [
+    {
+      "t_ms": 1,
+      "props": {},
+      "elements": {
+        "scrim0": {
+          "x": 0,
+          "y": 0,
+          "w": 500,
+          "h": 360
+        },
+        "dialog0": {
+          "x": 0,
+          "y": 80,
+          "w": 500,
+          "h": 200
+        },
+        "dialog0action0": {
+          "x": 408,
+          "y": 216,
+          "w": 68,
+          "h": 40
+        },
+        "dialog0action1": {
+          "x": 324,
+          "y": 216,
+          "w": 76,
+          "h": 40
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 51,
+      "props": {},
+      "elements": {
+        "scrim0": {
+          "x": 0,
+          "y": 0,
+          "w": 500,
+          "h": 360,
+          "opacity": 1
+        },
+        "dialog0": {
+          "x": 0,
+          "y": 80,
+          "w": 500,
+          "h": 200,
+          "opacity": 1
+        },
+        "dialog0action0": {
+          "x": 408,
+          "y": 216,
+          "w": 68,
+          "h": 40,
+          "opacity": 1
+        },
+        "dialog0action1": {
+          "x": 324,
+          "y": 216,
+          "w": 76,
+          "h": 40,
+          "opacity": 1
+        }
+      },
+      "text": {
+        "text:0": {
+          "x": 24,
+          "y": 104,
+          "w": 163,
+          "h": 32,
+          "baseline": 24,
+          "lines": 1,
+          "frac_w": 163,
+          "unhint_w": 162.125,
+          "chars": 17
+        },
+        "text:1": {
+          "x": 24,
+          "y": 152,
+          "w": 452,
+          "h": 40,
+          "baseline": 15,
+          "lines": 2,
+          "frac_w": 400.2633056640625,
+          "unhint_w": 784.75,
+          "chars": 126
+        },
+        "text:2": {
+          "x": 420,
+          "y": 226,
+          "w": 44,
+          "h": 20,
+          "baseline": 15,
+          "lines": 1,
+          "frac_w": 42.500003814697266,
+          "unhint_w": 40.375,
+          "chars": 6
+        },
+        "text:3": {
+          "x": 336,
+          "y": 226,
+          "w": 52,
+          "h": 20,
+          "baseline": 15,
+          "lines": 1,
+          "frac_w": 50.59999465942383,
+          "unhint_w": 50.75,
+          "chars": 7
+        }
+      }
+    },
+    {
+      "t_ms": 101,
+      "props": {},
+      "elements": {
+        "scrim0": {
+          "x": 0,
+          "y": 0,
+          "w": 500,
+          "h": 360,
+          "opacity": 1
+        },
+        "dialog0": {
+          "x": 0,
+          "y": 80,
+          "w": 500,
+          "h": 200,
+          "opacity": 1
+        },
+        "dialog0action0": {
+          "x": 408,
+          "y": 216,
+          "w": 68,
+          "h": 40,
+          "opacity": 1
+        },
+        "dialog0action1": {
+          "x": 324,
+          "y": 216,
+          "w": 76,
+          "h": 40,
+          "opacity": 1
+        }
+      },
+      "text": {
+        "text:0": {
+          "x": 24,
+          "y": 104,
+          "w": 163,
+          "h": 32,
+          "baseline": 24,
+          "lines": 1,
+          "frac_w": 163,
+          "unhint_w": 162.125,
+          "chars": 17
+        },
+        "text:1": {
+          "x": 24,
+          "y": 152,
+          "w": 452,
+          "h": 40,
+          "baseline": 15,
+          "lines": 2,
+          "frac_w": 400.2633056640625,
+          "unhint_w": 784.75,
+          "chars": 126
+        },
+        "text:2": {
+          "x": 420,
+          "y": 226,
+          "w": 44,
+          "h": 20,
+          "baseline": 15,
+          "lines": 1,
+          "frac_w": 42.500003814697266,
+          "unhint_w": 40.375,
+          "chars": 6
+        },
+        "text:3": {
+          "x": 336,
+          "y": 226,
+          "w": 52,
+          "h": 20,
+          "baseline": 15,
+          "lines": 1,
+          "frac_w": 50.59999465942383,
+          "unhint_w": 50.75,
+          "chars": 7
+        }
+      }
+    },
+    {
+      "t_ms": 151,
+      "props": {},
+      "elements": {
+        "scrim0": {
+          "x": 0,
+          "y": 0,
+          "w": 500,
+          "h": 360,
+          "opacity": 1
+        },
+        "dialog0": {
+          "x": 0,
+          "y": 80,
+          "w": 500,
+          "h": 200,
+          "opacity": 1
+        },
+        "dialog0action0": {
+          "x": 408,
+          "y": 216,
+          "w": 68,
+          "h": 40,
+          "opacity": 1
+        },
+        "dialog0action1": {
+          "x": 324,
+          "y": 216,
+          "w": 76,
+          "h": 40,
+          "opacity": 1
+        }
+      },
+      "text": {
+        "text:0": {
+          "x": 24,
+          "y": 104,
+          "w": 163,
+          "h": 32,
+          "baseline": 24,
+          "lines": 1,
+          "frac_w": 163,
+          "unhint_w": 162.125,
+          "chars": 17
+        },
+        "text:1": {
+          "x": 24,
+          "y": 152,
+          "w": 452,
+          "h": 40,
+          "baseline": 15,
+          "lines": 2,
+          "frac_w": 400.2633056640625,
+          "unhint_w": 784.75,
+          "chars": 126
+        },
+        "text:2": {
+          "x": 420,
+          "y": 226,
+          "w": 44,
+          "h": 20,
+          "baseline": 15,
+          "lines": 1,
+          "frac_w": 42.500003814697266,
+          "unhint_w": 40.375,
+          "chars": 6
+        },
+        "text:3": {
+          "x": 336,
+          "y": 226,
+          "w": 52,
+          "h": 20,
+          "baseline": 15,
+          "lines": 1,
+          "frac_w": 50.59999465942383,
+          "unhint_w": 50.75,
+          "chars": 7
+        }
+      }
+    },
+    {
+      "t_ms": 201,
+      "props": {},
+      "elements": {
+        "scrim0": {
+          "x": 0,
+          "y": 0,
+          "w": 500,
+          "h": 360,
+          "opacity": 1
+        },
+        "dialog0": {
+          "x": 0,
+          "y": 80,
+          "w": 500,
+          "h": 200,
+          "opacity": 1
+        },
+        "dialog0action0": {
+          "x": 408,
+          "y": 216,
+          "w": 68,
+          "h": 40,
+          "opacity": 1
+        },
+        "dialog0action1": {
+          "x": 324,
+          "y": 216,
+          "w": 76,
+          "h": 40,
+          "opacity": 1
+        }
+      },
+      "text": {
+        "text:0": {
+          "x": 24,
+          "y": 104,
+          "w": 163,
+          "h": 32,
+          "baseline": 24,
+          "lines": 1,
+          "frac_w": 163,
+          "unhint_w": 162.125,
+          "chars": 17
+        },
+        "text:1": {
+          "x": 24,
+          "y": 152,
+          "w": 452,
+          "h": 40,
+          "baseline": 15,
+          "lines": 2,
+          "frac_w": 400.2633056640625,
+          "unhint_w": 784.75,
+          "chars": 126
+        },
+        "text:2": {
+          "x": 420,
+          "y": 226,
+          "w": 44,
+          "h": 20,
+          "baseline": 15,
+          "lines": 1,
+          "frac_w": 42.500003814697266,
+          "unhint_w": 40.375,
+          "chars": 6
+        },
+        "text:3": {
+          "x": 336,
+          "y": 226,
+          "w": 52,
+          "h": 20,
+          "baseline": 15,
+          "lines": 1,
+          "frac_w": 50.59999465942383,
+          "unhint_w": 50.75,
+          "chars": 7
+        }
+      }
+    },
+    {
+      "t_ms": 251,
+      "props": {},
+      "elements": {
+        "scrim0": {
+          "x": 0,
+          "y": 0,
+          "w": 500,
+          "h": 360,
+          "opacity": 1
+        },
+        "dialog0": {
+          "x": 0,
+          "y": 80,
+          "w": 500,
+          "h": 200,
+          "opacity": 1
+        },
+        "dialog0action0": {
+          "x": 408,
+          "y": 216,
+          "w": 68,
+          "h": 40,
+          "opacity": 1
+        },
+        "dialog0action1": {
+          "x": 324,
+          "y": 216,
+          "w": 76,
+          "h": 40,
+          "opacity": 1
+        }
+      },
+      "text": {
+        "text:0": {
+          "x": 24,
+          "y": 104,
+          "w": 163,
+          "h": 32,
+          "baseline": 24,
+          "lines": 1,
+          "frac_w": 163,
+          "unhint_w": 162.125,
+          "chars": 17
+        },
+        "text:1": {
+          "x": 24,
+          "y": 152,
+          "w": 452,
+          "h": 40,
+          "baseline": 15,
+          "lines": 2,
+          "frac_w": 400.2633056640625,
+          "unhint_w": 784.75,
+          "chars": 126
+        },
+        "text:2": {
+          "x": 420,
+          "y": 226,
+          "w": 44,
+          "h": 20,
+          "baseline": 15,
+          "lines": 1,
+          "frac_w": 42.500003814697266,
+          "unhint_w": 40.375,
+          "chars": 6
+        },
+        "text:3": {
+          "x": 336,
+          "y": 226,
+          "w": 52,
+          "h": 20,
+          "baseline": 15,
+          "lines": 1,
+          "frac_w": 50.59999465942383,
+          "unhint_w": 50.75,
+          "chars": 7
+        }
+      }
+    },
+    {
+      "t_ms": 301,
+      "props": {},
+      "elements": {
+        "scrim0": {
+          "x": 0,
+          "y": 0,
+          "w": 500,
+          "h": 360,
+          "opacity": 1
+        },
+        "dialog0": {
+          "x": 0,
+          "y": 80,
+          "w": 500,
+          "h": 200,
+          "opacity": 1
+        },
+        "dialog0action0": {
+          "x": 408,
+          "y": 216,
+          "w": 68,
+          "h": 40,
+          "opacity": 1
+        },
+        "dialog0action1": {
+          "x": 324,
+          "y": 216,
+          "w": 76,
+          "h": 40,
+          "opacity": 1
+        }
+      },
+      "text": {
+        "text:0": {
+          "x": 24,
+          "y": 104,
+          "w": 163,
+          "h": 32,
+          "baseline": 24,
+          "lines": 1,
+          "frac_w": 163,
+          "unhint_w": 162.125,
+          "chars": 17
+        },
+        "text:1": {
+          "x": 24,
+          "y": 152,
+          "w": 452,
+          "h": 40,
+          "baseline": 15,
+          "lines": 2,
+          "frac_w": 400.2633056640625,
+          "unhint_w": 784.75,
+          "chars": 126
+        },
+        "text:2": {
+          "x": 420,
+          "y": 226,
+          "w": 44,
+          "h": 20,
+          "baseline": 15,
+          "lines": 1,
+          "frac_w": 42.500003814697266,
+          "unhint_w": 40.375,
+          "chars": 6
+        },
+        "text:3": {
+          "x": 336,
+          "y": 226,
+          "w": 52,
+          "h": 20,
+          "baseline": 15,
+          "lines": 1,
+          "frac_w": 50.59999465942383,
+          "unhint_w": 50.75,
+          "chars": 7
+        }
+      }
+    },
+    {
+      "t_ms": 351,
+      "props": {},
+      "elements": {
+        "scrim0": {
+          "x": 0,
+          "y": 0,
+          "w": 500,
+          "h": 360,
+          "opacity": 1
+        },
+        "dialog0": {
+          "x": 0,
+          "y": 80,
+          "w": 500,
+          "h": 200,
+          "opacity": 1
+        },
+        "dialog0action0": {
+          "x": 408,
+          "y": 216,
+          "w": 68,
+          "h": 40,
+          "opacity": 1
+        },
+        "dialog0action1": {
+          "x": 324,
+          "y": 216,
+          "w": 76,
+          "h": 40,
+          "opacity": 1
+        }
+      },
+      "text": {
+        "text:0": {
+          "x": 24,
+          "y": 104,
+          "w": 163,
+          "h": 32,
+          "baseline": 24,
+          "lines": 1,
+          "frac_w": 163,
+          "unhint_w": 162.125,
+          "chars": 17
+        },
+        "text:1": {
+          "x": 24,
+          "y": 152,
+          "w": 452,
+          "h": 40,
+          "baseline": 15,
+          "lines": 2,
+          "frac_w": 400.2633056640625,
+          "unhint_w": 784.75,
+          "chars": 126
+        },
+        "text:2": {
+          "x": 420,
+          "y": 226,
+          "w": 44,
+          "h": 20,
+          "baseline": 15,
+          "lines": 1,
+          "frac_w": 42.500003814697266,
+          "unhint_w": 40.375,
+          "chars": 6
+        },
+        "text:3": {
+          "x": 336,
+          "y": 226,
+          "w": 52,
+          "h": 20,
+          "baseline": 15,
+          "lines": 1,
+          "frac_w": 50.59999465942383,
+          "unhint_w": 50.75,
+          "chars": 7
+        }
+      }
+    },
+    {
+      "t_ms": 401,
+      "props": {},
+      "elements": {
+        "scrim0": {
+          "x": 0,
+          "y": 0,
+          "w": 500,
+          "h": 360,
+          "opacity": 1
+        },
+        "dialog0": {
+          "x": 0,
+          "y": 80,
+          "w": 500,
+          "h": 200,
+          "opacity": 1
+        },
+        "dialog0action0": {
+          "x": 408,
+          "y": 216,
+          "w": 68,
+          "h": 40,
+          "opacity": 1
+        },
+        "dialog0action1": {
+          "x": 324,
+          "y": 216,
+          "w": 76,
+          "h": 40,
+          "opacity": 1
+        }
+      },
+      "text": {
+        "text:0": {
+          "x": 24,
+          "y": 104,
+          "w": 163,
+          "h": 32,
+          "baseline": 24,
+          "lines": 1,
+          "frac_w": 163,
+          "unhint_w": 162.125,
+          "chars": 17
+        },
+        "text:1": {
+          "x": 24,
+          "y": 152,
+          "w": 452,
+          "h": 40,
+          "baseline": 15,
+          "lines": 2,
+          "frac_w": 400.2633056640625,
+          "unhint_w": 784.75,
+          "chars": 126
+        },
+        "text:2": {
+          "x": 420,
+          "y": 226,
+          "w": 44,
+          "h": 20,
+          "baseline": 15,
+          "lines": 1,
+          "frac_w": 42.500003814697266,
+          "unhint_w": 40.375,
+          "chars": 6
+        },
+        "text:3": {
+          "x": 336,
+          "y": 226,
+          "w": 52,
+          "h": 20,
+          "baseline": 15,
+          "lines": 1,
+          "frac_w": 50.59999465942383,
+          "unhint_w": 50.75,
+          "chars": 7
+        }
+      }
+    },
+    {
+      "t_ms": 451,
+      "props": {},
+      "elements": {
+        "scrim0": {
+          "x": 0,
+          "y": 0,
+          "w": 500,
+          "h": 360,
+          "opacity": 1
+        },
+        "dialog0": {
+          "x": 0,
+          "y": 80,
+          "w": 500,
+          "h": 200,
+          "opacity": 1
+        },
+        "dialog0action0": {
+          "x": 408,
+          "y": 216,
+          "w": 68,
+          "h": 40,
+          "opacity": 1
+        },
+        "dialog0action1": {
+          "x": 324,
+          "y": 216,
+          "w": 76,
+          "h": 40,
+          "opacity": 1
+        }
+      },
+      "text": {
+        "text:0": {
+          "x": 24,
+          "y": 104,
+          "w": 163,
+          "h": 32,
+          "baseline": 24,
+          "lines": 1,
+          "frac_w": 163,
+          "unhint_w": 162.125,
+          "chars": 17
+        },
+        "text:1": {
+          "x": 24,
+          "y": 152,
+          "w": 452,
+          "h": 40,
+          "baseline": 15,
+          "lines": 2,
+          "frac_w": 400.2633056640625,
+          "unhint_w": 784.75,
+          "chars": 126
+        },
+        "text:2": {
+          "x": 420,
+          "y": 226,
+          "w": 44,
+          "h": 20,
+          "baseline": 15,
+          "lines": 1,
+          "frac_w": 42.500003814697266,
+          "unhint_w": 40.375,
+          "chars": 6
+        },
+        "text:3": {
+          "x": 336,
+          "y": 226,
+          "w": 52,
+          "h": 20,
+          "baseline": 15,
+          "lines": 1,
+          "frac_w": 50.59999465942383,
+          "unhint_w": 50.75,
+          "chars": 7
+        }
+      }
+    },
+    {
+      "t_ms": 501,
+      "props": {},
+      "elements": {
+        "scrim0": {
+          "x": 0,
+          "y": 0,
+          "w": 500,
+          "h": 360,
+          "opacity": 1
+        },
+        "dialog0": {
+          "x": 0,
+          "y": 80,
+          "w": 500,
+          "h": 200,
+          "opacity": 1
+        },
+        "dialog0action0": {
+          "x": 408,
+          "y": 216,
+          "w": 68,
+          "h": 40,
+          "opacity": 1
+        },
+        "dialog0action1": {
+          "x": 324,
+          "y": 216,
+          "w": 76,
+          "h": 40,
+          "opacity": 1
+        }
+      },
+      "text": {
+        "text:0": {
+          "x": 24,
+          "y": 104,
+          "w": 163,
+          "h": 32,
+          "baseline": 24,
+          "lines": 1,
+          "frac_w": 163,
+          "unhint_w": 162.125,
+          "chars": 17
+        },
+        "text:1": {
+          "x": 24,
+          "y": 152,
+          "w": 452,
+          "h": 40,
+          "baseline": 15,
+          "lines": 2,
+          "frac_w": 400.2633056640625,
+          "unhint_w": 784.75,
+          "chars": 126
+        },
+        "text:2": {
+          "x": 420,
+          "y": 226,
+          "w": 44,
+          "h": 20,
+          "baseline": 15,
+          "lines": 1,
+          "frac_w": 42.500003814697266,
+          "unhint_w": 40.375,
+          "chars": 6
+        },
+        "text:3": {
+          "x": 336,
+          "y": 226,
+          "w": 52,
+          "h": 20,
+          "baseline": 15,
+          "lines": 1,
+          "frac_w": 50.59999465942383,
+          "unhint_w": 50.75,
+          "chars": 7
+        }
+      }
+    },
+    {
+      "t_ms": 551,
+      "props": {},
+      "elements": {
+        "scrim0": {
+          "x": 0,
+          "y": 0,
+          "w": 500,
+          "h": 360,
+          "opacity": 1
+        },
+        "dialog0": {
+          "x": 0,
+          "y": 80,
+          "w": 500,
+          "h": 200,
+          "opacity": 1
+        },
+        "dialog0action0": {
+          "x": 408,
+          "y": 216,
+          "w": 68,
+          "h": 40,
+          "opacity": 1
+        },
+        "dialog0action1": {
+          "x": 324,
+          "y": 216,
+          "w": 76,
+          "h": 40,
+          "opacity": 1
+        }
+      },
+      "text": {
+        "text:0": {
+          "x": 24,
+          "y": 104,
+          "w": 163,
+          "h": 32,
+          "baseline": 24,
+          "lines": 1,
+          "frac_w": 163,
+          "unhint_w": 162.125,
+          "chars": 17
+        },
+        "text:1": {
+          "x": 24,
+          "y": 152,
+          "w": 452,
+          "h": 40,
+          "baseline": 15,
+          "lines": 2,
+          "frac_w": 400.2633056640625,
+          "unhint_w": 784.75,
+          "chars": 126
+        },
+        "text:2": {
+          "x": 420,
+          "y": 226,
+          "w": 44,
+          "h": 20,
+          "baseline": 15,
+          "lines": 1,
+          "frac_w": 42.500003814697266,
+          "unhint_w": 40.375,
+          "chars": 6
+        },
+        "text:3": {
+          "x": 336,
+          "y": 226,
+          "w": 52,
+          "h": 20,
+          "baseline": 15,
+          "lines": 1,
+          "frac_w": 50.59999465942383,
+          "unhint_w": 50.75,
+          "chars": 7
+        }
+      }
+    },
+    {
+      "t_ms": 601,
+      "props": {},
+      "elements": {
+        "scrim0": {
+          "x": 0,
+          "y": 0,
+          "w": 500,
+          "h": 360,
+          "opacity": 1
+        },
+        "dialog0": {
+          "x": 0,
+          "y": 80,
+          "w": 500,
+          "h": 200,
+          "opacity": 1
+        },
+        "dialog0action0": {
+          "x": 408,
+          "y": 216,
+          "w": 68,
+          "h": 40,
+          "opacity": 1
+        },
+        "dialog0action1": {
+          "x": 324,
+          "y": 216,
+          "w": 76,
+          "h": 40,
+          "opacity": 1
+        }
+      },
+      "text": {
+        "text:0": {
+          "x": 24,
+          "y": 104,
+          "w": 163,
+          "h": 32,
+          "baseline": 24,
+          "lines": 1,
+          "frac_w": 163,
+          "unhint_w": 162.125,
+          "chars": 17
+        },
+        "text:1": {
+          "x": 24,
+          "y": 152,
+          "w": 452,
+          "h": 40,
+          "baseline": 15,
+          "lines": 2,
+          "frac_w": 400.2633056640625,
+          "unhint_w": 784.75,
+          "chars": 126
+        },
+        "text:2": {
+          "x": 420,
+          "y": 226,
+          "w": 44,
+          "h": 20,
+          "baseline": 15,
+          "lines": 1,
+          "frac_w": 42.500003814697266,
+          "unhint_w": 40.375,
+          "chars": 6
+        },
+        "text:3": {
+          "x": 336,
+          "y": 226,
+          "w": 52,
+          "h": 20,
+          "baseline": 15,
+          "lines": 1,
+          "frac_w": 50.59999465942383,
+          "unhint_w": 50.75,
+          "chars": 7
+        }
+      }
+    },
+    {
+      "t_ms": 651,
+      "props": {},
+      "elements": {
+        "scrim0": {
+          "x": 0,
+          "y": 0,
+          "w": 500,
+          "h": 360,
+          "opacity": 1
+        },
+        "dialog0": {
+          "x": 0,
+          "y": 80,
+          "w": 500,
+          "h": 200,
+          "opacity": 1
+        },
+        "dialog0action0": {
+          "x": 408,
+          "y": 216,
+          "w": 68,
+          "h": 40,
+          "opacity": 1
+        },
+        "dialog0action1": {
+          "x": 324,
+          "y": 216,
+          "w": 76,
+          "h": 40,
+          "opacity": 1
+        }
+      },
+      "text": {
+        "text:0": {
+          "x": 24,
+          "y": 104,
+          "w": 163,
+          "h": 32,
+          "baseline": 24,
+          "lines": 1,
+          "frac_w": 163,
+          "unhint_w": 162.125,
+          "chars": 17
+        },
+        "text:1": {
+          "x": 24,
+          "y": 152,
+          "w": 452,
+          "h": 40,
+          "baseline": 15,
+          "lines": 2,
+          "frac_w": 400.2633056640625,
+          "unhint_w": 784.75,
+          "chars": 126
+        },
+        "text:2": {
+          "x": 420,
+          "y": 226,
+          "w": 44,
+          "h": 20,
+          "baseline": 15,
+          "lines": 1,
+          "frac_w": 42.500003814697266,
+          "unhint_w": 40.375,
+          "chars": 6
+        },
+        "text:3": {
+          "x": 336,
+          "y": 226,
+          "w": 52,
+          "h": 20,
+          "baseline": 15,
+          "lines": 1,
+          "frac_w": 50.59999465942383,
+          "unhint_w": 50.75,
+          "chars": 7
+        }
+      }
+    },
+    {
+      "t_ms": 701,
+      "props": {},
+      "elements": {
+        "scrim0": {
+          "x": 0,
+          "y": 0,
+          "w": 500,
+          "h": 360,
+          "opacity": 1
+        },
+        "dialog0": {
+          "x": 0,
+          "y": 80,
+          "w": 500,
+          "h": 200,
+          "opacity": 1
+        },
+        "dialog0action0": {
+          "x": 408,
+          "y": 216,
+          "w": 68,
+          "h": 40,
+          "opacity": 1
+        },
+        "dialog0action1": {
+          "x": 324,
+          "y": 216,
+          "w": 76,
+          "h": 40,
+          "opacity": 1
+        }
+      },
+      "text": {
+        "text:0": {
+          "x": 24,
+          "y": 104,
+          "w": 163,
+          "h": 32,
+          "baseline": 24,
+          "lines": 1,
+          "frac_w": 163,
+          "unhint_w": 162.125,
+          "chars": 17
+        },
+        "text:1": {
+          "x": 24,
+          "y": 152,
+          "w": 452,
+          "h": 40,
+          "baseline": 15,
+          "lines": 2,
+          "frac_w": 400.2633056640625,
+          "unhint_w": 784.75,
+          "chars": 126
+        },
+        "text:2": {
+          "x": 420,
+          "y": 226,
+          "w": 44,
+          "h": 20,
+          "baseline": 15,
+          "lines": 1,
+          "frac_w": 42.500003814697266,
+          "unhint_w": 40.375,
+          "chars": 6
+        },
+        "text:3": {
+          "x": 336,
+          "y": 226,
+          "w": 52,
+          "h": 20,
+          "baseline": 15,
+          "lines": 1,
+          "frac_w": 50.59999465942383,
+          "unhint_w": 50.75,
+          "chars": 7
+        }
+      }
+    },
+    {
+      "t_ms": 751,
+      "props": {},
+      "elements": {
+        "scrim0": {
+          "x": 0,
+          "y": 0,
+          "w": 500,
+          "h": 360,
+          "opacity": 1
+        },
+        "dialog0": {
+          "x": 0,
+          "y": 80,
+          "w": 500,
+          "h": 200,
+          "opacity": 1
+        },
+        "dialog0action0": {
+          "x": 408,
+          "y": 216,
+          "w": 68,
+          "h": 40,
+          "opacity": 1
+        },
+        "dialog0action1": {
+          "x": 324,
+          "y": 216,
+          "w": 76,
+          "h": 40,
+          "opacity": 1
+        }
+      },
+      "text": {
+        "text:0": {
+          "x": 24,
+          "y": 104,
+          "w": 163,
+          "h": 32,
+          "baseline": 24,
+          "lines": 1,
+          "frac_w": 163,
+          "unhint_w": 162.125,
+          "chars": 17
+        },
+        "text:1": {
+          "x": 24,
+          "y": 152,
+          "w": 452,
+          "h": 40,
+          "baseline": 15,
+          "lines": 2,
+          "frac_w": 400.2633056640625,
+          "unhint_w": 784.75,
+          "chars": 126
+        },
+        "text:2": {
+          "x": 420,
+          "y": 226,
+          "w": 44,
+          "h": 20,
+          "baseline": 15,
+          "lines": 1,
+          "frac_w": 42.500003814697266,
+          "unhint_w": 40.375,
+          "chars": 6
+        },
+        "text:3": {
+          "x": 336,
+          "y": 226,
+          "w": 52,
+          "h": 20,
+          "baseline": 15,
+          "lines": 1,
+          "frac_w": 50.59999465942383,
+          "unhint_w": 50.75,
+          "chars": 7
+        }
+      }
+    },
+    {
+      "t_ms": 801,
+      "props": {},
+      "elements": {
+        "scrim0": {
+          "x": 0,
+          "y": 0,
+          "w": 500,
+          "h": 360,
+          "opacity": 1
+        },
+        "dialog0": {
+          "x": 0,
+          "y": 80,
+          "w": 500,
+          "h": 200,
+          "opacity": 1
+        },
+        "dialog0action0": {
+          "x": 408,
+          "y": 216,
+          "w": 68,
+          "h": 40,
+          "opacity": 1
+        },
+        "dialog0action1": {
+          "x": 324,
+          "y": 216,
+          "w": 76,
+          "h": 40,
+          "opacity": 1
+        }
+      },
+      "text": {
+        "text:0": {
+          "x": 24,
+          "y": 104,
+          "w": 163,
+          "h": 32,
+          "baseline": 24,
+          "lines": 1,
+          "frac_w": 163,
+          "unhint_w": 162.125,
+          "chars": 17
+        },
+        "text:1": {
+          "x": 24,
+          "y": 152,
+          "w": 452,
+          "h": 40,
+          "baseline": 15,
+          "lines": 2,
+          "frac_w": 400.2633056640625,
+          "unhint_w": 784.75,
+          "chars": 126
+        },
+        "text:2": {
+          "x": 420,
+          "y": 226,
+          "w": 44,
+          "h": 20,
+          "baseline": 15,
+          "lines": 1,
+          "frac_w": 42.500003814697266,
+          "unhint_w": 40.375,
+          "chars": 6
+        },
+        "text:3": {
+          "x": 336,
+          "y": 226,
+          "w": 52,
+          "h": 20,
+          "baseline": 15,
+          "lines": 1,
+          "frac_w": 50.59999465942383,
+          "unhint_w": 50.75,
+          "chars": 7
+        }
+      }
+    },
+    {
+      "t_ms": 851,
+      "props": {},
+      "elements": {
+        "scrim0": {
+          "x": 0,
+          "y": 0,
+          "w": 500,
+          "h": 360,
+          "opacity": 1
+        },
+        "dialog0": {
+          "x": 0,
+          "y": 80,
+          "w": 500,
+          "h": 200,
+          "opacity": 1
+        },
+        "dialog0action0": {
+          "x": 408,
+          "y": 216,
+          "w": 68,
+          "h": 40,
+          "opacity": 1
+        },
+        "dialog0action1": {
+          "x": 324,
+          "y": 216,
+          "w": 76,
+          "h": 40,
+          "opacity": 1
+        }
+      },
+      "text": {
+        "text:0": {
+          "x": 24,
+          "y": 104,
+          "w": 163,
+          "h": 32,
+          "baseline": 24,
+          "lines": 1,
+          "frac_w": 163,
+          "unhint_w": 162.125,
+          "chars": 17
+        },
+        "text:1": {
+          "x": 24,
+          "y": 152,
+          "w": 452,
+          "h": 40,
+          "baseline": 15,
+          "lines": 2,
+          "frac_w": 400.2633056640625,
+          "unhint_w": 784.75,
+          "chars": 126
+        },
+        "text:2": {
+          "x": 420,
+          "y": 226,
+          "w": 44,
+          "h": 20,
+          "baseline": 15,
+          "lines": 1,
+          "frac_w": 42.500003814697266,
+          "unhint_w": 40.375,
+          "chars": 6
+        },
+        "text:3": {
+          "x": 336,
+          "y": 226,
+          "w": 52,
+          "h": 20,
+          "baseline": 15,
+          "lines": 1,
+          "frac_w": 50.59999465942383,
+          "unhint_w": 50.75,
+          "chars": 7
+        }
+      }
+    },
+    {
+      "t_ms": 901,
+      "props": {},
+      "elements": {
+        "scrim0": {
+          "x": 0,
+          "y": 0,
+          "w": 500,
+          "h": 360,
+          "opacity": 1
+        },
+        "dialog0": {
+          "x": 0,
+          "y": 80,
+          "w": 500,
+          "h": 200,
+          "opacity": 1
+        },
+        "dialog0action0": {
+          "x": 408,
+          "y": 216,
+          "w": 68,
+          "h": 40,
+          "opacity": 1
+        },
+        "dialog0action1": {
+          "x": 324,
+          "y": 216,
+          "w": 76,
+          "h": 40,
+          "opacity": 1
+        }
+      },
+      "text": {
+        "text:0": {
+          "x": 24,
+          "y": 104,
+          "w": 163,
+          "h": 32,
+          "baseline": 24,
+          "lines": 1,
+          "frac_w": 163,
+          "unhint_w": 162.125,
+          "chars": 17
+        },
+        "text:1": {
+          "x": 24,
+          "y": 152,
+          "w": 452,
+          "h": 40,
+          "baseline": 15,
+          "lines": 2,
+          "frac_w": 400.2633056640625,
+          "unhint_w": 784.75,
+          "chars": 126
+        },
+        "text:2": {
+          "x": 420,
+          "y": 226,
+          "w": 44,
+          "h": 20,
+          "baseline": 15,
+          "lines": 1,
+          "frac_w": 42.500003814697266,
+          "unhint_w": 40.375,
+          "chars": 6
+        },
+        "text:3": {
+          "x": 336,
+          "y": 226,
+          "w": 52,
+          "h": 20,
+          "baseline": 15,
+          "lines": 1,
+          "frac_w": 50.59999465942383,
+          "unhint_w": 50.75,
+          "chars": 7
+        }
+      }
+    },
+    {
+      "t_ms": 951,
+      "props": {},
+      "elements": {
+        "scrim0": {
+          "x": 0,
+          "y": 0,
+          "w": 500,
+          "h": 360,
+          "opacity": 1
+        },
+        "dialog0": {
+          "x": 0,
+          "y": 80,
+          "w": 500,
+          "h": 200,
+          "opacity": 1
+        },
+        "dialog0action0": {
+          "x": 408,
+          "y": 216,
+          "w": 68,
+          "h": 40,
+          "opacity": 1
+        },
+        "dialog0action1": {
+          "x": 324,
+          "y": 216,
+          "w": 76,
+          "h": 40,
+          "opacity": 1
+        }
+      },
+      "text": {
+        "text:0": {
+          "x": 24,
+          "y": 104,
+          "w": 163,
+          "h": 32,
+          "baseline": 24,
+          "lines": 1,
+          "frac_w": 163,
+          "unhint_w": 162.125,
+          "chars": 17
+        },
+        "text:1": {
+          "x": 24,
+          "y": 152,
+          "w": 452,
+          "h": 40,
+          "baseline": 15,
+          "lines": 2,
+          "frac_w": 400.2633056640625,
+          "unhint_w": 784.75,
+          "chars": 126
+        },
+        "text:2": {
+          "x": 420,
+          "y": 226,
+          "w": 44,
+          "h": 20,
+          "baseline": 15,
+          "lines": 1,
+          "frac_w": 42.500003814697266,
+          "unhint_w": 40.375,
+          "chars": 6
+        },
+        "text:3": {
+          "x": 336,
+          "y": 226,
+          "w": 52,
+          "h": 20,
+          "baseline": 15,
+          "lines": 1,
+          "frac_w": 50.59999465942383,
+          "unhint_w": 50.75,
+          "chars": 7
+        }
+      }
+    },
+    {
+      "t_ms": 1001,
+      "props": {},
+      "elements": {
+        "scrim0": {
+          "x": 0,
+          "y": 0,
+          "w": 500,
+          "h": 360,
+          "opacity": 1
+        },
+        "dialog0": {
+          "x": 0,
+          "y": 80,
+          "w": 500,
+          "h": 200,
+          "opacity": 1
+        },
+        "dialog0action0": {
+          "x": 408,
+          "y": 216,
+          "w": 68,
+          "h": 40,
+          "opacity": 1
+        },
+        "dialog0action1": {
+          "x": 324,
+          "y": 216,
+          "w": 76,
+          "h": 40,
+          "opacity": 1
+        }
+      },
+      "text": {
+        "text:0": {
+          "x": 24,
+          "y": 104,
+          "w": 163,
+          "h": 32,
+          "baseline": 24,
+          "lines": 1,
+          "frac_w": 163,
+          "unhint_w": 162.125,
+          "chars": 17
+        },
+        "text:1": {
+          "x": 24,
+          "y": 152,
+          "w": 452,
+          "h": 40,
+          "baseline": 15,
+          "lines": 2,
+          "frac_w": 400.2633056640625,
+          "unhint_w": 784.75,
+          "chars": 126
+        },
+        "text:2": {
+          "x": 420,
+          "y": 226,
+          "w": 44,
+          "h": 20,
+          "baseline": 15,
+          "lines": 1,
+          "frac_w": 42.500003814697266,
+          "unhint_w": 40.375,
+          "chars": 6
+        },
+        "text:3": {
+          "x": 336,
+          "y": 226,
+          "w": 52,
+          "h": 20,
+          "baseline": 15,
+          "lines": 1,
+          "frac_w": 50.59999465942383,
+          "unhint_w": 50.75,
+          "chars": 7
+        }
+      }
+    },
+    {
+      "t_ms": 1051,
+      "props": {},
+      "elements": {
+        "scrim0": {
+          "x": 0,
+          "y": 0,
+          "w": 500,
+          "h": 360,
+          "opacity": 1
+        },
+        "dialog0": {
+          "x": 0,
+          "y": 80,
+          "w": 500,
+          "h": 200,
+          "opacity": 1
+        },
+        "dialog0action0": {
+          "x": 408,
+          "y": 216,
+          "w": 68,
+          "h": 40,
+          "opacity": 1
+        },
+        "dialog0action1": {
+          "x": 324,
+          "y": 216,
+          "w": 76,
+          "h": 40,
+          "opacity": 1
+        }
+      },
+      "text": {
+        "text:0": {
+          "x": 24,
+          "y": 104,
+          "w": 163,
+          "h": 32,
+          "baseline": 24,
+          "lines": 1,
+          "frac_w": 163,
+          "unhint_w": 162.125,
+          "chars": 17
+        },
+        "text:1": {
+          "x": 24,
+          "y": 152,
+          "w": 452,
+          "h": 40,
+          "baseline": 15,
+          "lines": 2,
+          "frac_w": 400.2633056640625,
+          "unhint_w": 784.75,
+          "chars": 126
+        },
+        "text:2": {
+          "x": 420,
+          "y": 226,
+          "w": 44,
+          "h": 20,
+          "baseline": 15,
+          "lines": 1,
+          "frac_w": 42.500003814697266,
+          "unhint_w": 40.375,
+          "chars": 6
+        },
+        "text:3": {
+          "x": 336,
+          "y": 226,
+          "w": 52,
+          "h": 20,
+          "baseline": 15,
+          "lines": 1,
+          "frac_w": 50.59999465942383,
+          "unhint_w": 50.75,
+          "chars": 7
+        }
+      }
+    },
+    {
+      "t_ms": 1101,
+      "props": {},
+      "elements": {
+        "scrim0": {
+          "x": 0,
+          "y": 0,
+          "w": 500,
+          "h": 360,
+          "opacity": 1
+        },
+        "dialog0": {
+          "x": 0,
+          "y": 80,
+          "w": 500,
+          "h": 200,
+          "opacity": 1
+        },
+        "dialog0action0": {
+          "x": 408,
+          "y": 216,
+          "w": 68,
+          "h": 40,
+          "opacity": 1
+        },
+        "dialog0action1": {
+          "x": 324,
+          "y": 216,
+          "w": 76,
+          "h": 40,
+          "opacity": 1
+        }
+      },
+      "text": {
+        "text:0": {
+          "x": 24,
+          "y": 104,
+          "w": 163,
+          "h": 32,
+          "baseline": 24,
+          "lines": 1,
+          "frac_w": 163,
+          "unhint_w": 162.125,
+          "chars": 17
+        },
+        "text:1": {
+          "x": 24,
+          "y": 152,
+          "w": 452,
+          "h": 40,
+          "baseline": 15,
+          "lines": 2,
+          "frac_w": 400.2633056640625,
+          "unhint_w": 784.75,
+          "chars": 126
+        },
+        "text:2": {
+          "x": 420,
+          "y": 226,
+          "w": 44,
+          "h": 20,
+          "baseline": 15,
+          "lines": 1,
+          "frac_w": 42.500003814697266,
+          "unhint_w": 40.375,
+          "chars": 6
+        },
+        "text:3": {
+          "x": 336,
+          "y": 226,
+          "w": 52,
+          "h": 20,
+          "baseline": 15,
+          "lines": 1,
+          "frac_w": 50.59999465942383,
+          "unhint_w": 50.75,
+          "chars": 7
+        }
+      }
+    },
+    {
+      "t_ms": 1151,
+      "props": {},
+      "elements": {
+        "scrim0": {
+          "x": 0,
+          "y": 0,
+          "w": 500,
+          "h": 360,
+          "opacity": 1
+        },
+        "dialog0": {
+          "x": 0,
+          "y": 80,
+          "w": 500,
+          "h": 200,
+          "opacity": 1
+        },
+        "dialog0action0": {
+          "x": 408,
+          "y": 216,
+          "w": 68,
+          "h": 40,
+          "opacity": 1
+        },
+        "dialog0action1": {
+          "x": 324,
+          "y": 216,
+          "w": 76,
+          "h": 40,
+          "opacity": 1
+        }
+      },
+      "text": {
+        "text:0": {
+          "x": 24,
+          "y": 104,
+          "w": 163,
+          "h": 32,
+          "baseline": 24,
+          "lines": 1,
+          "frac_w": 163,
+          "unhint_w": 162.125,
+          "chars": 17
+        },
+        "text:1": {
+          "x": 24,
+          "y": 152,
+          "w": 452,
+          "h": 40,
+          "baseline": 15,
+          "lines": 2,
+          "frac_w": 400.2633056640625,
+          "unhint_w": 784.75,
+          "chars": 126
+        },
+        "text:2": {
+          "x": 420,
+          "y": 226,
+          "w": 44,
+          "h": 20,
+          "baseline": 15,
+          "lines": 1,
+          "frac_w": 42.500003814697266,
+          "unhint_w": 40.375,
+          "chars": 6
+        },
+        "text:3": {
+          "x": 336,
+          "y": 226,
+          "w": 52,
+          "h": 20,
+          "baseline": 15,
+          "lines": 1,
+          "frac_w": 50.59999465942383,
+          "unhint_w": 50.75,
+          "chars": 7
+        }
+      }
+    },
+    {
+      "t_ms": 1201,
+      "props": {},
+      "elements": {
+        "scrim0": {
+          "x": 0,
+          "y": 0,
+          "w": 500,
+          "h": 360,
+          "opacity": 1
+        },
+        "dialog0": {
+          "x": 0,
+          "y": 80,
+          "w": 500,
+          "h": 200,
+          "opacity": 1
+        },
+        "dialog0action0": {
+          "x": 408,
+          "y": 216,
+          "w": 68,
+          "h": 40,
+          "opacity": 1
+        },
+        "dialog0action1": {
+          "x": 324,
+          "y": 216,
+          "w": 76,
+          "h": 40,
+          "opacity": 1
+        }
+      },
+      "text": {
+        "text:0": {
+          "x": 24,
+          "y": 104,
+          "w": 163,
+          "h": 32,
+          "baseline": 24,
+          "lines": 1,
+          "frac_w": 163,
+          "unhint_w": 162.125,
+          "chars": 17
+        },
+        "text:1": {
+          "x": 24,
+          "y": 152,
+          "w": 452,
+          "h": 40,
+          "baseline": 15,
+          "lines": 2,
+          "frac_w": 400.2633056640625,
+          "unhint_w": 784.75,
+          "chars": 126
+        },
+        "text:2": {
+          "x": 420,
+          "y": 226,
+          "w": 44,
+          "h": 20,
+          "baseline": 15,
+          "lines": 1,
+          "frac_w": 42.500003814697266,
+          "unhint_w": 40.375,
+          "chars": 6
+        },
+        "text:3": {
+          "x": 336,
+          "y": 226,
+          "w": 52,
+          "h": 20,
+          "baseline": 15,
+          "lines": 1,
+          "frac_w": 50.59999465942383,
+          "unhint_w": 50.75,
+          "chars": 7
+        }
+      }
+    },
+    {
+      "t_ms": 1251,
+      "props": {},
+      "elements": {
+        "scrim0": {
+          "x": 0,
+          "y": 0,
+          "w": 500,
+          "h": 360,
+          "opacity": 1
+        },
+        "dialog0": {
+          "x": 0,
+          "y": 80,
+          "w": 500,
+          "h": 200,
+          "opacity": 1
+        },
+        "dialog0action0": {
+          "x": 408,
+          "y": 216,
+          "w": 68,
+          "h": 40,
+          "opacity": 1
+        },
+        "dialog0action1": {
+          "x": 324,
+          "y": 216,
+          "w": 76,
+          "h": 40,
+          "opacity": 1
+        }
+      },
+      "text": {
+        "text:0": {
+          "x": 24,
+          "y": 104,
+          "w": 163,
+          "h": 32,
+          "baseline": 24,
+          "lines": 1,
+          "frac_w": 163,
+          "unhint_w": 162.125,
+          "chars": 17
+        },
+        "text:1": {
+          "x": 24,
+          "y": 152,
+          "w": 452,
+          "h": 40,
+          "baseline": 15,
+          "lines": 2,
+          "frac_w": 400.2633056640625,
+          "unhint_w": 784.75,
+          "chars": 126
+        },
+        "text:2": {
+          "x": 420,
+          "y": 226,
+          "w": 44,
+          "h": 20,
+          "baseline": 15,
+          "lines": 1,
+          "frac_w": 42.500003814697266,
+          "unhint_w": 40.375,
+          "chars": 6
+        },
+        "text:3": {
+          "x": 336,
+          "y": 226,
+          "w": 52,
+          "h": 20,
+          "baseline": 15,
+          "lines": 1,
+          "frac_w": 50.59999465942383,
+          "unhint_w": 50.75,
+          "chars": 7
+        }
+      }
+    },
+    {
+      "t_ms": 1301,
+      "props": {},
+      "elements": {
+        "scrim0": {
+          "x": 0,
+          "y": 0,
+          "w": 500,
+          "h": 360,
+          "opacity": 1
+        },
+        "dialog0": {
+          "x": 0,
+          "y": 80,
+          "w": 500,
+          "h": 200,
+          "opacity": 1
+        },
+        "dialog0action0": {
+          "x": 408,
+          "y": 216,
+          "w": 68,
+          "h": 40,
+          "opacity": 1
+        },
+        "dialog0action1": {
+          "x": 324,
+          "y": 216,
+          "w": 76,
+          "h": 40,
+          "opacity": 1
+        }
+      },
+      "text": {
+        "text:0": {
+          "x": 24,
+          "y": 104,
+          "w": 163,
+          "h": 32,
+          "baseline": 24,
+          "lines": 1,
+          "frac_w": 163,
+          "unhint_w": 162.125,
+          "chars": 17
+        },
+        "text:1": {
+          "x": 24,
+          "y": 152,
+          "w": 452,
+          "h": 40,
+          "baseline": 15,
+          "lines": 2,
+          "frac_w": 400.2633056640625,
+          "unhint_w": 784.75,
+          "chars": 126
+        },
+        "text:2": {
+          "x": 420,
+          "y": 226,
+          "w": 44,
+          "h": 20,
+          "baseline": 15,
+          "lines": 1,
+          "frac_w": 42.500003814697266,
+          "unhint_w": 40.375,
+          "chars": 6
+        },
+        "text:3": {
+          "x": 336,
+          "y": 226,
+          "w": 52,
+          "h": 20,
+          "baseline": 15,
+          "lines": 1,
+          "frac_w": 50.59999465942383,
+          "unhint_w": 50.75,
+          "chars": 7
+        }
+      }
+    },
+    {
+      "t_ms": 1351,
+      "props": {},
+      "elements": {
+        "scrim0": {
+          "x": 0,
+          "y": 0,
+          "w": 500,
+          "h": 360,
+          "opacity": 1
+        },
+        "dialog0": {
+          "x": 0,
+          "y": 80,
+          "w": 500,
+          "h": 200,
+          "opacity": 1
+        },
+        "dialog0action0": {
+          "x": 408,
+          "y": 216,
+          "w": 68,
+          "h": 40,
+          "opacity": 1
+        },
+        "dialog0action1": {
+          "x": 324,
+          "y": 216,
+          "w": 76,
+          "h": 40,
+          "opacity": 1
+        }
+      },
+      "text": {
+        "text:0": {
+          "x": 24,
+          "y": 104,
+          "w": 163,
+          "h": 32,
+          "baseline": 24,
+          "lines": 1,
+          "frac_w": 163,
+          "unhint_w": 162.125,
+          "chars": 17
+        },
+        "text:1": {
+          "x": 24,
+          "y": 152,
+          "w": 452,
+          "h": 40,
+          "baseline": 15,
+          "lines": 2,
+          "frac_w": 400.2633056640625,
+          "unhint_w": 784.75,
+          "chars": 126
+        },
+        "text:2": {
+          "x": 420,
+          "y": 226,
+          "w": 44,
+          "h": 20,
+          "baseline": 15,
+          "lines": 1,
+          "frac_w": 42.500003814697266,
+          "unhint_w": 40.375,
+          "chars": 6
+        },
+        "text:3": {
+          "x": 336,
+          "y": 226,
+          "w": 52,
+          "h": 20,
+          "baseline": 15,
+          "lines": 1,
+          "frac_w": 50.59999465942383,
+          "unhint_w": 50.75,
+          "chars": 7
+        }
+      }
+    },
+    {
+      "t_ms": 1401,
+      "props": {},
+      "elements": {
+        "scrim0": {
+          "x": 0,
+          "y": 0,
+          "w": 500,
+          "h": 360,
+          "opacity": 1
+        },
+        "dialog0": {
+          "x": 0,
+          "y": 80,
+          "w": 500,
+          "h": 200,
+          "opacity": 1
+        },
+        "dialog0action0": {
+          "x": 408,
+          "y": 216,
+          "w": 68,
+          "h": 40,
+          "opacity": 1
+        },
+        "dialog0action1": {
+          "x": 324,
+          "y": 216,
+          "w": 76,
+          "h": 40,
+          "opacity": 1
+        }
+      },
+      "text": {
+        "text:0": {
+          "x": 24,
+          "y": 104,
+          "w": 163,
+          "h": 32,
+          "baseline": 24,
+          "lines": 1,
+          "frac_w": 163,
+          "unhint_w": 162.125,
+          "chars": 17
+        },
+        "text:1": {
+          "x": 24,
+          "y": 152,
+          "w": 452,
+          "h": 40,
+          "baseline": 15,
+          "lines": 2,
+          "frac_w": 400.2633056640625,
+          "unhint_w": 784.75,
+          "chars": 126
+        },
+        "text:2": {
+          "x": 420,
+          "y": 226,
+          "w": 44,
+          "h": 20,
+          "baseline": 15,
+          "lines": 1,
+          "frac_w": 42.500003814697266,
+          "unhint_w": 40.375,
+          "chars": 6
+        },
+        "text:3": {
+          "x": 336,
+          "y": 226,
+          "w": 52,
+          "h": 20,
+          "baseline": 15,
+          "lines": 1,
+          "frac_w": 50.59999465942383,
+          "unhint_w": 50.75,
+          "chars": 7
+        }
+      }
+    },
+    {
+      "t_ms": 1451,
+      "props": {},
+      "elements": {
+        "scrim0": {
+          "x": 0,
+          "y": 0,
+          "w": 500,
+          "h": 360,
+          "opacity": 1
+        },
+        "dialog0": {
+          "x": 0,
+          "y": 80,
+          "w": 500,
+          "h": 200,
+          "opacity": 1
+        },
+        "dialog0action0": {
+          "x": 408,
+          "y": 216,
+          "w": 68,
+          "h": 40,
+          "opacity": 1
+        },
+        "dialog0action1": {
+          "x": 324,
+          "y": 216,
+          "w": 76,
+          "h": 40,
+          "opacity": 1
+        }
+      },
+      "text": {
+        "text:0": {
+          "x": 24,
+          "y": 104,
+          "w": 163,
+          "h": 32,
+          "baseline": 24,
+          "lines": 1,
+          "frac_w": 163,
+          "unhint_w": 162.125,
+          "chars": 17
+        },
+        "text:1": {
+          "x": 24,
+          "y": 152,
+          "w": 452,
+          "h": 40,
+          "baseline": 15,
+          "lines": 2,
+          "frac_w": 400.2633056640625,
+          "unhint_w": 784.75,
+          "chars": 126
+        },
+        "text:2": {
+          "x": 420,
+          "y": 226,
+          "w": 44,
+          "h": 20,
+          "baseline": 15,
+          "lines": 1,
+          "frac_w": 42.500003814697266,
+          "unhint_w": 40.375,
+          "chars": 6
+        },
+        "text:3": {
+          "x": 336,
+          "y": 226,
+          "w": 52,
+          "h": 20,
+          "baseline": 15,
+          "lines": 1,
+          "frac_w": 50.59999465942383,
+          "unhint_w": 50.75,
+          "chars": 7
+        }
+      }
+    },
+    {
+      "t_ms": 1501,
+      "props": {},
+      "elements": {
+        "scrim0": {
+          "x": 0,
+          "y": 0,
+          "w": 500,
+          "h": 360,
+          "opacity": 1
+        },
+        "dialog0": {
+          "x": 0,
+          "y": 80,
+          "w": 500,
+          "h": 200,
+          "opacity": 1
+        },
+        "dialog0action0": {
+          "x": 408,
+          "y": 216,
+          "w": 68,
+          "h": 40,
+          "opacity": 1
+        },
+        "dialog0action1": {
+          "x": 324,
+          "y": 216,
+          "w": 76,
+          "h": 40,
+          "opacity": 1
+        }
+      },
+      "text": {
+        "text:0": {
+          "x": 24,
+          "y": 104,
+          "w": 163,
+          "h": 32,
+          "baseline": 24,
+          "lines": 1,
+          "frac_w": 163,
+          "unhint_w": 162.125,
+          "chars": 17
+        },
+        "text:1": {
+          "x": 24,
+          "y": 152,
+          "w": 452,
+          "h": 40,
+          "baseline": 15,
+          "lines": 2,
+          "frac_w": 400.2633056640625,
+          "unhint_w": 784.75,
+          "chars": 126
+        },
+        "text:2": {
+          "x": 420,
+          "y": 226,
+          "w": 44,
+          "h": 20,
+          "baseline": 15,
+          "lines": 1,
+          "frac_w": 42.500003814697266,
+          "unhint_w": 40.375,
+          "chars": 6
+        },
+        "text:3": {
+          "x": 336,
+          "y": 226,
+          "w": 52,
+          "h": 20,
+          "baseline": 15,
+          "lines": 1,
+          "frac_w": 50.59999465942383,
+          "unhint_w": 50.75,
+          "chars": 7
+        }
+      }
+    },
+    {
+      "t_ms": 1551,
+      "props": {},
+      "elements": {
+        "scrim0": {
+          "x": 0,
+          "y": 0,
+          "w": 500,
+          "h": 360,
+          "opacity": 1
+        },
+        "dialog0": {
+          "x": 0,
+          "y": 80,
+          "w": 500,
+          "h": 200,
+          "opacity": 1
+        },
+        "dialog0action0": {
+          "x": 408,
+          "y": 216,
+          "w": 68,
+          "h": 40,
+          "opacity": 1
+        },
+        "dialog0action1": {
+          "x": 324,
+          "y": 216,
+          "w": 76,
+          "h": 40,
+          "opacity": 1
+        }
+      },
+      "text": {
+        "text:0": {
+          "x": 24,
+          "y": 104,
+          "w": 163,
+          "h": 32,
+          "baseline": 24,
+          "lines": 1,
+          "frac_w": 163,
+          "unhint_w": 162.125,
+          "chars": 17
+        },
+        "text:1": {
+          "x": 24,
+          "y": 152,
+          "w": 452,
+          "h": 40,
+          "baseline": 15,
+          "lines": 2,
+          "frac_w": 400.2633056640625,
+          "unhint_w": 784.75,
+          "chars": 126
+        },
+        "text:2": {
+          "x": 420,
+          "y": 226,
+          "w": 44,
+          "h": 20,
+          "baseline": 15,
+          "lines": 1,
+          "frac_w": 42.500003814697266,
+          "unhint_w": 40.375,
+          "chars": 6
+        },
+        "text:3": {
+          "x": 336,
+          "y": 226,
+          "w": 52,
+          "h": 20,
+          "baseline": 15,
+          "lines": 1,
+          "frac_w": 50.59999465942383,
+          "unhint_w": 50.75,
+          "chars": 7
+        }
+      }
+    },
+    {
+      "t_ms": 1601,
+      "props": {},
+      "elements": {
+        "scrim0": {
+          "x": 0,
+          "y": 0,
+          "w": 500,
+          "h": 360,
+          "opacity": 1
+        },
+        "dialog0": {
+          "x": 0,
+          "y": 80,
+          "w": 500,
+          "h": 200,
+          "opacity": 1
+        },
+        "dialog0action0": {
+          "x": 408,
+          "y": 216,
+          "w": 68,
+          "h": 40,
+          "opacity": 1
+        },
+        "dialog0action1": {
+          "x": 324,
+          "y": 216,
+          "w": 76,
+          "h": 40,
+          "opacity": 1
+        }
+      },
+      "text": {
+        "text:0": {
+          "x": 24,
+          "y": 104,
+          "w": 163,
+          "h": 32,
+          "baseline": 24,
+          "lines": 1,
+          "frac_w": 163,
+          "unhint_w": 162.125,
+          "chars": 17
+        },
+        "text:1": {
+          "x": 24,
+          "y": 152,
+          "w": 452,
+          "h": 40,
+          "baseline": 15,
+          "lines": 2,
+          "frac_w": 400.2633056640625,
+          "unhint_w": 784.75,
+          "chars": 126
+        },
+        "text:2": {
+          "x": 420,
+          "y": 226,
+          "w": 44,
+          "h": 20,
+          "baseline": 15,
+          "lines": 1,
+          "frac_w": 42.500003814697266,
+          "unhint_w": 40.375,
+          "chars": 6
+        },
+        "text:3": {
+          "x": 336,
+          "y": 226,
+          "w": 52,
+          "h": 20,
+          "baseline": 15,
+          "lines": 1,
+          "frac_w": 50.59999465942383,
+          "unhint_w": 50.75,
+          "chars": 7
+        }
+      }
+    },
+    {
+      "t_ms": 1651,
+      "props": {},
+      "elements": {
+        "scrim0": {
+          "x": 0,
+          "y": 0,
+          "w": 500,
+          "h": 360,
+          "opacity": 1
+        },
+        "dialog0": {
+          "x": 0,
+          "y": 80,
+          "w": 500,
+          "h": 200,
+          "opacity": 1
+        },
+        "dialog0action0": {
+          "x": 408,
+          "y": 216,
+          "w": 68,
+          "h": 40,
+          "opacity": 1
+        },
+        "dialog0action1": {
+          "x": 324,
+          "y": 216,
+          "w": 76,
+          "h": 40,
+          "opacity": 1
+        }
+      },
+      "text": {
+        "text:0": {
+          "x": 24,
+          "y": 104,
+          "w": 163,
+          "h": 32,
+          "baseline": 24,
+          "lines": 1,
+          "frac_w": 163,
+          "unhint_w": 162.125,
+          "chars": 17
+        },
+        "text:1": {
+          "x": 24,
+          "y": 152,
+          "w": 452,
+          "h": 40,
+          "baseline": 15,
+          "lines": 2,
+          "frac_w": 400.2633056640625,
+          "unhint_w": 784.75,
+          "chars": 126
+        },
+        "text:2": {
+          "x": 420,
+          "y": 226,
+          "w": 44,
+          "h": 20,
+          "baseline": 15,
+          "lines": 1,
+          "frac_w": 42.500003814697266,
+          "unhint_w": 40.375,
+          "chars": 6
+        },
+        "text:3": {
+          "x": 336,
+          "y": 226,
+          "w": 52,
+          "h": 20,
+          "baseline": 15,
+          "lines": 1,
+          "frac_w": 50.59999465942383,
+          "unhint_w": 50.75,
+          "chars": 7
+        }
+      }
+    },
+    {
+      "t_ms": 1701,
+      "props": {},
+      "elements": {
+        "scrim0": {
+          "x": 0,
+          "y": 0,
+          "w": 500,
+          "h": 360,
+          "opacity": 1
+        },
+        "dialog0": {
+          "x": 0,
+          "y": 80,
+          "w": 500,
+          "h": 200,
+          "opacity": 1
+        },
+        "dialog0action0": {
+          "x": 408,
+          "y": 216,
+          "w": 68,
+          "h": 40,
+          "opacity": 1
+        },
+        "dialog0action1": {
+          "x": 324,
+          "y": 216,
+          "w": 76,
+          "h": 40,
+          "opacity": 1
+        }
+      },
+      "text": {
+        "text:0": {
+          "x": 24,
+          "y": 104,
+          "w": 163,
+          "h": 32,
+          "baseline": 24,
+          "lines": 1,
+          "frac_w": 163,
+          "unhint_w": 162.125,
+          "chars": 17
+        },
+        "text:1": {
+          "x": 24,
+          "y": 152,
+          "w": 452,
+          "h": 40,
+          "baseline": 15,
+          "lines": 2,
+          "frac_w": 400.2633056640625,
+          "unhint_w": 784.75,
+          "chars": 126
+        },
+        "text:2": {
+          "x": 420,
+          "y": 226,
+          "w": 44,
+          "h": 20,
+          "baseline": 15,
+          "lines": 1,
+          "frac_w": 42.500003814697266,
+          "unhint_w": 40.375,
+          "chars": 6
+        },
+        "text:3": {
+          "x": 336,
+          "y": 226,
+          "w": 52,
+          "h": 20,
+          "baseline": 15,
+          "lines": 1,
+          "frac_w": 50.59999465942383,
+          "unhint_w": 50.75,
+          "chars": 7
+        }
+      }
+    },
+    {
+      "t_ms": 1751,
+      "props": {},
+      "elements": {
+        "scrim0": {
+          "x": 0,
+          "y": 0,
+          "w": 500,
+          "h": 360,
+          "opacity": 1
+        },
+        "dialog0": {
+          "x": 0,
+          "y": 80,
+          "w": 500,
+          "h": 200,
+          "opacity": 1
+        },
+        "dialog0action0": {
+          "x": 408,
+          "y": 216,
+          "w": 68,
+          "h": 40,
+          "opacity": 1
+        },
+        "dialog0action1": {
+          "x": 324,
+          "y": 216,
+          "w": 76,
+          "h": 40,
+          "opacity": 1
+        }
+      },
+      "text": {
+        "text:0": {
+          "x": 24,
+          "y": 104,
+          "w": 163,
+          "h": 32,
+          "baseline": 24,
+          "lines": 1,
+          "frac_w": 163,
+          "unhint_w": 162.125,
+          "chars": 17
+        },
+        "text:1": {
+          "x": 24,
+          "y": 152,
+          "w": 452,
+          "h": 40,
+          "baseline": 15,
+          "lines": 2,
+          "frac_w": 400.2633056640625,
+          "unhint_w": 784.75,
+          "chars": 126
+        },
+        "text:2": {
+          "x": 420,
+          "y": 226,
+          "w": 44,
+          "h": 20,
+          "baseline": 15,
+          "lines": 1,
+          "frac_w": 42.500003814697266,
+          "unhint_w": 40.375,
+          "chars": 6
+        },
+        "text:3": {
+          "x": 336,
+          "y": 226,
+          "w": 52,
+          "h": 20,
+          "baseline": 15,
+          "lines": 1,
+          "frac_w": 50.59999465942383,
+          "unhint_w": 50.75,
+          "chars": 7
+        }
+      }
+    },
+    {
+      "t_ms": 1801,
+      "props": {},
+      "elements": {
+        "scrim0": {
+          "x": 0,
+          "y": 0,
+          "w": 500,
+          "h": 360,
+          "opacity": 1
+        },
+        "dialog0": {
+          "x": 0,
+          "y": 80,
+          "w": 500,
+          "h": 200,
+          "opacity": 1
+        },
+        "dialog0action0": {
+          "x": 408,
+          "y": 216,
+          "w": 68,
+          "h": 40,
+          "opacity": 1
+        },
+        "dialog0action1": {
+          "x": 324,
+          "y": 216,
+          "w": 76,
+          "h": 40,
+          "opacity": 1
+        }
+      },
+      "text": {
+        "text:0": {
+          "x": 24,
+          "y": 104,
+          "w": 163,
+          "h": 32,
+          "baseline": 24,
+          "lines": 1,
+          "frac_w": 163,
+          "unhint_w": 162.125,
+          "chars": 17
+        },
+        "text:1": {
+          "x": 24,
+          "y": 152,
+          "w": 452,
+          "h": 40,
+          "baseline": 15,
+          "lines": 2,
+          "frac_w": 400.2633056640625,
+          "unhint_w": 784.75,
+          "chars": 126
+        },
+        "text:2": {
+          "x": 420,
+          "y": 226,
+          "w": 44,
+          "h": 20,
+          "baseline": 15,
+          "lines": 1,
+          "frac_w": 42.500003814697266,
+          "unhint_w": 40.375,
+          "chars": 6
+        },
+        "text:3": {
+          "x": 336,
+          "y": 226,
+          "w": 52,
+          "h": 20,
+          "baseline": 15,
+          "lines": 1,
+          "frac_w": 50.59999465942383,
+          "unhint_w": 50.75,
+          "chars": 7
+        }
+      }
+    },
+    {
+      "t_ms": 1851,
+      "props": {},
+      "elements": {
+        "scrim0": {
+          "x": 0,
+          "y": 0,
+          "w": 500,
+          "h": 360,
+          "opacity": 1
+        },
+        "dialog0": {
+          "x": 0,
+          "y": 80,
+          "w": 500,
+          "h": 200,
+          "opacity": 1
+        },
+        "dialog0action0": {
+          "x": 408,
+          "y": 216,
+          "w": 68,
+          "h": 40,
+          "opacity": 1
+        },
+        "dialog0action1": {
+          "x": 324,
+          "y": 216,
+          "w": 76,
+          "h": 40,
+          "opacity": 1
+        }
+      },
+      "text": {
+        "text:0": {
+          "x": 24,
+          "y": 104,
+          "w": 163,
+          "h": 32,
+          "baseline": 24,
+          "lines": 1,
+          "frac_w": 163,
+          "unhint_w": 162.125,
+          "chars": 17
+        },
+        "text:1": {
+          "x": 24,
+          "y": 152,
+          "w": 452,
+          "h": 40,
+          "baseline": 15,
+          "lines": 2,
+          "frac_w": 400.2633056640625,
+          "unhint_w": 784.75,
+          "chars": 126
+        },
+        "text:2": {
+          "x": 420,
+          "y": 226,
+          "w": 44,
+          "h": 20,
+          "baseline": 15,
+          "lines": 1,
+          "frac_w": 42.500003814697266,
+          "unhint_w": 40.375,
+          "chars": 6
+        },
+        "text:3": {
+          "x": 336,
+          "y": 226,
+          "w": 52,
+          "h": 20,
+          "baseline": 15,
+          "lines": 1,
+          "frac_w": 50.59999465942383,
+          "unhint_w": 50.75,
+          "chars": 7
+        }
+      }
+    },
+    {
+      "t_ms": 1901,
+      "props": {},
+      "elements": {
+        "scrim0": {
+          "x": 0,
+          "y": 0,
+          "w": 500,
+          "h": 360,
+          "opacity": 1
+        },
+        "dialog0": {
+          "x": 0,
+          "y": 80,
+          "w": 500,
+          "h": 200,
+          "opacity": 1
+        },
+        "dialog0action0": {
+          "x": 408,
+          "y": 216,
+          "w": 68,
+          "h": 40,
+          "opacity": 1
+        },
+        "dialog0action1": {
+          "x": 324,
+          "y": 216,
+          "w": 76,
+          "h": 40,
+          "opacity": 1
+        }
+      },
+      "text": {
+        "text:0": {
+          "x": 24,
+          "y": 104,
+          "w": 163,
+          "h": 32,
+          "baseline": 24,
+          "lines": 1,
+          "frac_w": 163,
+          "unhint_w": 162.125,
+          "chars": 17
+        },
+        "text:1": {
+          "x": 24,
+          "y": 152,
+          "w": 452,
+          "h": 40,
+          "baseline": 15,
+          "lines": 2,
+          "frac_w": 400.2633056640625,
+          "unhint_w": 784.75,
+          "chars": 126
+        },
+        "text:2": {
+          "x": 420,
+          "y": 226,
+          "w": 44,
+          "h": 20,
+          "baseline": 15,
+          "lines": 1,
+          "frac_w": 42.500003814697266,
+          "unhint_w": 40.375,
+          "chars": 6
+        },
+        "text:3": {
+          "x": 336,
+          "y": 226,
+          "w": 52,
+          "h": 20,
+          "baseline": 15,
+          "lines": 1,
+          "frac_w": 50.59999465942383,
+          "unhint_w": 50.75,
+          "chars": 7
+        }
+      }
+    },
+    {
+      "t_ms": 1951,
+      "props": {},
+      "elements": {
+        "scrim0": {
+          "x": 0,
+          "y": 0,
+          "w": 500,
+          "h": 360,
+          "opacity": 1
+        },
+        "dialog0": {
+          "x": 0,
+          "y": 80,
+          "w": 500,
+          "h": 200,
+          "opacity": 1
+        },
+        "dialog0action0": {
+          "x": 408,
+          "y": 216,
+          "w": 68,
+          "h": 40,
+          "opacity": 1
+        },
+        "dialog0action1": {
+          "x": 324,
+          "y": 216,
+          "w": 76,
+          "h": 40,
+          "opacity": 1
+        }
+      },
+      "text": {
+        "text:0": {
+          "x": 24,
+          "y": 104,
+          "w": 163,
+          "h": 32,
+          "baseline": 24,
+          "lines": 1,
+          "frac_w": 163,
+          "unhint_w": 162.125,
+          "chars": 17
+        },
+        "text:1": {
+          "x": 24,
+          "y": 152,
+          "w": 452,
+          "h": 40,
+          "baseline": 15,
+          "lines": 2,
+          "frac_w": 400.2633056640625,
+          "unhint_w": 784.75,
+          "chars": 126
+        },
+        "text:2": {
+          "x": 420,
+          "y": 226,
+          "w": 44,
+          "h": 20,
+          "baseline": 15,
+          "lines": 1,
+          "frac_w": 42.500003814697266,
+          "unhint_w": 40.375,
+          "chars": 6
+        },
+        "text:3": {
+          "x": 336,
+          "y": 226,
+          "w": 52,
+          "h": 20,
+          "baseline": 15,
+          "lines": 1,
+          "frac_w": 50.59999465942383,
+          "unhint_w": 50.75,
+          "chars": 7
+        }
+      }
+    },
+    {
+      "t_ms": 2001,
+      "props": {},
+      "elements": {
+        "scrim0": {
+          "x": 0,
+          "y": 0,
+          "w": 500,
+          "h": 360,
+          "opacity": 1
+        },
+        "dialog0": {
+          "x": 0,
+          "y": 80,
+          "w": 500,
+          "h": 200,
+          "opacity": 1
+        },
+        "dialog0action0": {
+          "x": 408,
+          "y": 216,
+          "w": 68,
+          "h": 40,
+          "opacity": 1
+        },
+        "dialog0action1": {
+          "x": 324,
+          "y": 216,
+          "w": 76,
+          "h": 40,
+          "opacity": 1
+        }
+      },
+      "text": {
+        "text:0": {
+          "x": 24,
+          "y": 104,
+          "w": 163,
+          "h": 32,
+          "baseline": 24,
+          "lines": 1,
+          "frac_w": 163,
+          "unhint_w": 162.125,
+          "chars": 17
+        },
+        "text:1": {
+          "x": 24,
+          "y": 152,
+          "w": 452,
+          "h": 40,
+          "baseline": 15,
+          "lines": 2,
+          "frac_w": 400.2633056640625,
+          "unhint_w": 784.75,
+          "chars": 126
+        },
+        "text:2": {
+          "x": 420,
+          "y": 226,
+          "w": 44,
+          "h": 20,
+          "baseline": 15,
+          "lines": 1,
+          "frac_w": 42.500003814697266,
+          "unhint_w": 40.375,
+          "chars": 6
+        },
+        "text:3": {
+          "x": 336,
+          "y": 226,
+          "w": 52,
+          "h": 20,
+          "baseline": 15,
+          "lines": 1,
+          "frac_w": 50.59999465942383,
+          "unhint_w": 50.75,
+          "chars": 7
+        }
+      }
+    }
+  ],
+  "settle_ms": 1
+}

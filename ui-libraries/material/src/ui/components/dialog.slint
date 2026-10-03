@@ -4,14 +4,18 @@
 import { MaterialPalette } from "../styling/material_palette.slint";
 import { MaterialStyleMetrics } from "../styling/material_style_metrics.slint";
 import { MaterialTypography } from "../styling/material_typography.slint";
+import { MaterialAnimations } from "../styling/material_animations.slint";
+import { DialogTokens } from "../styling/generated/material_component_tokens.slint";
+import { MaterialCornerShape } from "../styling/generated/material_shape_tokens.slint";
+import { MaterialCornerRadii } from "./state_layer.slint";
 import { TextButton } from "./text_button.slint";
 import { FilledButton } from "./filled_button.slint";
 import { MaterialText } from "./material_text.slint";
-import { MaterialAnimations } from "../styling/material_animations.slint";
 import { Modal } from "./modal.slint";
 import { Icon } from "./icon.slint";
 import { IconButton } from "./icon_button.slint";
 import { Icons } from "../icons/icons.slint";
+import { Elevation } from "./elevation.slint";
 
 export component FullscreenDialog inherits PopupWindow {
     in property <string> title;
@@ -89,14 +93,278 @@ export component FullscreenDialog inherits PopupWindow {
     }
 }
 
-export component BaseDialog {
+/// The dialog surface: `AlertDialogContent` of AlertDialog.kt — an
+/// `Elevation` container (`DialogTokens.container_shape` at
+/// `container_elevation` = level 3) holding the icon, title, text and
+/// actions column padded by `AlertDialogDefaults.dialogPadding` (24 on the
+/// pinned phone target; `shouldUsePrecisionPointerComponentSizing`'s 20 is
+/// the pointer-device branch the pin doesn't take). `Dialog` wraps this in
+/// a `PopupWindow`; parity scenes and picker dialogs embed it directly.
+export component AlertDialogContent inherits Rectangle {
     in property <string> title;
     in property <image> icon;
+    // The upstream `text` slot's canonical content: rendered in
+    // `DialogTokens.supporting_text_font`/`supporting_text_color` with the
+    // slot's 24dp bottom padding.
+    in property <string> text;
+    // Leading icon buttons in the actions row — the picker dialogs' display
+    // mode toggle upstream (`Row { toggle; Spacer; dismiss; confirm }`).
     in property <[image]> action_button_icons;
     in property <string> default_action_text;
     in property <[string]> actions;
+    in property <MaterialCornerShape> container_shape: DialogTokens.container_shape;
+    in property <color> container_color: DialogTokens.container_color;
+    // `AlertDialogDefaults.dialogPadding` — 24dp on the pinned phone target.
+    in property <length> content_padding: 24px;
+    // `ButtonsMainAxisSpacing` (AlertDialog.kt).
+    in property <length> actions_spacing: 8px;
+    // Parity scenes turn this off: the recorded Compose surfaces paint no
+    // platform window shadow under layoutlib.
+    in property <bool> cast_shadow: true;
+    // The incoming max-width constraint the dialog's `sizeIn` is
+    // intersected with — callers pass the space they offer (`parent.width`
+    // at the call site). Defaults to `DialogMaxWidth`.
+    in property <length> available_width: 560px;
+    // Forwarded to the action buttons' `enforce_touch_target` — upstream's
+    // `LocalMinimumInteractiveComponentSize` (48 on Android, 0 in parity
+    // scenes).
+    in property <bool> action_enforce_touch_target: true;
+    // Test hooks driving `MaterialButtonBase.simulate_*` on the actions
+    // indexed into the `actions` array (-1 = none).
+    in property <int> action_simulate_hover: -1;
+    in property <int> action_simulate_press: -1;
+
+    callback action_clicked(index: int);
+    callback action_button_clicked(index: int);
+    callback default_action_clicked();
+
+    // upstream `semantics { paneTitle = ... }` marks the pane.
+    accessible-role: groupbox;
+    accessible-label: root.title;
 
     property <bool> has_icon: root.icon.width > 0 && root.icon.height > 0;
+    property <length> full_radius: min(root.width, layout.min_height) / 2;
+    property <MaterialCornerRadii> corner_radii: {
+        top_left: root.container_shape.full ? root.full_radius : root.container_shape.top_left,
+        top_right: root.container_shape.full ? root.full_radius : root.container_shape.top_right,
+        bottom_right: root.container_shape.full ? root.full_radius : root.container_shape.bottom_right,
+        bottom_left: root.container_shape.full ? root.full_radius : root.container_shape.bottom_left,
+    };
+
+    // `sizeIn(minWidth = DialogMinWidth, maxWidth = DialogMaxWidth)` =
+    // 280..560dp intersected with the incoming width constraint
+    // (AlertDialog.kt): the cap is `min(560, available width)`.
+    width: min(max(280px, layout.min_width, max(title_preferred_width, max(text_preferred_width, actions_preferred_width)) + 2 * root.content_padding), min(560px, root.available_width));
+    height: layout.min_height;
+
+    // The Compose `Column` sizes the dialog to the widest child's
+    // preferred width; a wrapping text reports only its longest word as
+    // min-width, so the clamp measures the preferred widths directly.
+    property <length> title_preferred_width: root.title != "" ? measure_title.preferred-width : 0px;
+    property <length> text_preferred_width: root.text != "" ? measure_text.preferred-width : 0px;
+    // The upstream `FlowRow` reports its unwrapped width: the dialog
+    // grows to fit the buttons on one line before wrapping.
+    property <length> actions_preferred_width: root.action_button_icons.length == 0 ? measure_actions.preferred-width : 0px;
+    // The content width the `sizeIn` clamp produces from the measured
+    // preferreds — the slots' `width: min(preferred, cap)` reads this;
+    // `layout.min_width` can't take part (it would loop through
+    // `layoutinfo-h`).
+    property <length> content_cap: min(
+            max(280px, max(title_preferred_width, max(text_preferred_width, actions_preferred_width)) + 2 * root.content_padding),
+            min(560px, root.available_width)) - 2 * root.content_padding;
+
+    container := Elevation {
+        width: root.width;
+        height: layout.min_height;
+        level: root.cast_shadow ? 3 : 0;
+        background: root.container_color;
+        corners: root.corner_radii;
+        shaped_corners: true;
+        border_radius: root.corner_radii.top_left;
+        clip_content: true;
+
+        TouchArea {
+            // Width measurement for the `sizeIn` clamp — invisible twins
+            // of the slots below (wrapping texts report only their longest
+            // word as min-width, so `layout.min_width` under-measures).
+            measure_title := MaterialText {
+                visible: false;
+                text: root.title;
+                style: DialogTokens.headline_font;
+            }
+
+            measure_text := MaterialText {
+                visible: false;
+                text: root.text;
+                style: DialogTokens.supporting_text_font;
+            }
+
+            // Height measurement for `actions_min_height`: a width-pinned
+            // twin of the actions flow row (a wrapping flex reports its
+            // wrapped min-height only once its own width is bound; the
+            // real one reads it here).
+            measure_actions := FlexboxLayout {
+                visible: false;
+                width: root.width - 2 * root.content_padding;
+                flex-direction: row-reverse;
+                flex-wrap: wrap;
+                alignment: start;
+                spacing-horizontal: root.actions_spacing;
+                spacing-vertical: root.action_enforce_touch_target ? 0px : 8px;
+
+                // Same children as the real row below; only read when the
+                // no-icons branch is active.
+                if root.default_action_text != "" : measure_default := FilledButton {
+                    text: root.default_action_text;
+                }
+
+                for index in root.actions.length : measure_action := TextButton {
+                    text: root.actions[root.actions.length - 1 - index];
+                    enforce_touch_target: root.action_enforce_touch_target;
+                }
+            }
+
+            // Swallow clicks on the dialog body so they don't fall through
+            // to the scrim's dismiss area.
+            layout := VerticalLayout {
+                padding: root.content_padding;
+
+                // `Box(Modifier.padding(IconPadding).align(CenterHorizontally))`
+                if root.has_icon : HorizontalLayout {
+                    alignment: center;
+                    padding-bottom: 16px;
+
+                    Icon {
+                        source: root.icon;
+                        width: DialogTokens.icon_size;
+                        height: DialogTokens.icon_size;
+                        colorize: DialogTokens.icon_color;
+                    }
+                }
+
+                // `Box(Modifier.padding(TitlePadding).align(CenterHorizontally
+                // iff icon, else Start))` — the title is content-sized and
+                // wraps only past the content width.
+                if root.title != "" : HorizontalLayout {
+                    alignment: root.has_icon ? center : start;
+                    padding-bottom: 16px;
+
+                    title_text := MaterialText {
+                        text: root.title;
+                        style: DialogTokens.headline_font;
+                        color: DialogTokens.headline_color;
+                        wrap: word_wrap;
+                        width: min(self.preferred-width, root.content_cap);
+                    }
+                }
+
+                // The `text` slot: `ProvideContentColorTextStyle` +
+                // `Box(weight(1f, fill = false).padding(textPadding).align(Start))`.
+                if root.text != "" : HorizontalLayout {
+                    alignment: start;
+                    padding-bottom: 24px;
+
+                    body_text := MaterialText {
+                        text: root.text;
+                        style: DialogTokens.supporting_text_font;
+                        color: DialogTokens.supporting_text_color;
+                        wrap: word_wrap;
+                        width: min(self.preferred-width, root.content_cap);
+                    }
+                }
+
+                // Custom content in the text slot (the picker dialogs'
+                // chrome) — upstream lets `text` be an arbitrary
+                // composable; callers supplying children own their padding.
+                @children
+
+                // The picker dialogs' actions row — `Row(fillMaxWidth,
+                // spacedBy(8)) { toggle; Spacer; dismiss; confirm }` in
+                // upstream TimePickerDialog/DatePickerDialog. Doesn't wrap.
+                if root.action_button_icons.length > 0 : HorizontalLayout {
+                    spacing: root.actions_spacing;
+
+                    for icon_button[index] in root.action_button_icons : action_button := IconButton {
+                        icon: icon_button;
+
+                        clicked => {
+                            root.action_button_clicked(index);
+                        }
+                    }
+
+                    // Spacer(weight(1f))
+                    Rectangle {}
+
+                    for action_label[index] in root.actions : icon_action := TextButton {
+                        text: action_label;
+                        enforce_touch_target: root.action_enforce_touch_target;
+                        simulate_hover: index == root.action_simulate_hover;
+                        simulate_press: index == root.action_simulate_press;
+
+                        clicked => {
+                            root.action_clicked(index);
+                        }
+                    }
+
+                    if root.default_action_text != "" : default_action_button := FilledButton {
+                        text: root.default_action_text;
+
+                        clicked => {
+                            root.default_action_clicked();
+                        }
+                    }
+                }
+
+                // `AlertDialogFlowRow` — a FlowRow measured in the flipped
+                // layout direction holding [confirm, dismiss]: the confirm
+                // lands rightmost on one line, and on top when the buttons
+                // stack. `crossAxisSpacing` is
+                // `8 - (LocalMinimumInteractiveComponentSize - 40)` clamped
+                // to 0..8: 0 under the 48dp touch minimum (the buttons'
+                // padded slots supply the visual gap) and 8 without it.
+                if root.action_button_icons.length == 0 : FlexboxLayout {
+                    flex-direction: row-reverse;
+                    flex-wrap: wrap;
+                    alignment: start;
+                    spacing-horizontal: root.actions_spacing;
+                    spacing-vertical: root.action_enforce_touch_target ? 0px : 8px;
+                    // The wrapped min-height needs the solved width —
+                    // `measure_actions` (outside the layout) supplies it.
+                    min-height: measure_actions.min-height;
+
+                    if root.default_action_text != "" : default_action := FilledButton {
+                        text: root.default_action_text;
+
+                        clicked => {
+                            root.default_action_clicked();
+                        }
+                    }
+
+                    for index in root.actions.length : action := TextButton {
+                        text: root.actions[root.actions.length - 1 - index];
+                        enforce_touch_target: root.action_enforce_touch_target;
+                        simulate_hover: root.actions.length - 1 - index == root.action_simulate_hover;
+                        simulate_press: root.actions.length - 1 - index == root.action_simulate_press;
+
+                        clicked => {
+                            root.action_clicked(root.actions.length - 1 - index);
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+// The shared modal shell of `Dialog` and the picker popups: scrim +
+// Escape/Return handling + a centered `AlertDialogContent`.
+export component BaseDialog {
+    in property <string> title;
+    in property <image> icon;
+    in property <string> text;
+    in property <[image]> action_button_icons;
+    in property <string> default_action_text;
+    in property <[string]> actions;
 
     callback default_action_clicked();
     callback action_button_clicked(index: int);
@@ -128,66 +396,30 @@ export component BaseDialog {
         width: 100%;
         height: 100%;
 
-        background_layer := Rectangle {
+        content := AlertDialogContent {
             x: (parent.width - self.width) / 2;
             y: (parent.height - self.height) / 2;
-            width: layout.min_width;
-            height: layout.min_height;
+            available_width: parent.width;
+            title: root.title;
+            icon: root.icon;
+            text: root.text;
+            action_button_icons: root.action_button_icons;
+            default_action_text: root.default_action_text;
+            actions: root.actions;
             opacity: 0;
-            border_radius: MaterialStyleMetrics.border_radius_28;
-            background: MaterialPalette.surface_container_high;
 
-            TouchArea {
-                layout := VerticalLayout {
-                    padding: MaterialStyleMetrics.padding_24;
-                    spacing: MaterialStyleMetrics.spacing_16;
+            @children
 
-                    if root.has_icon : Icon {
-                        x: (parent.width - self.width) / 2;
-                        colorize: MaterialPalette.on_surface;
-                        source: root.icon;
-                    }
+            action_clicked(index) => {
+                root.action_clicked(index);
+            }
 
-                    if root.title != "" : MaterialText {
-                        horizontal_alignment: root.has_icon ? center : left;
-                        text: root.title;
-                        style: MaterialTypography.headline_small;
-                        color: MaterialPalette.on_surface;
-                    }
+            action_button_clicked(index) => {
+                root.action_button_clicked(index);
+            }
 
-                    @children
-
-                    HorizontalLayout {
-                        spacing: MaterialStyleMetrics.spacing_8;
-
-                        for action_button[index] in root.action_button_icons : IconButton {
-                            icon: action_button;
-
-                            clicked => {
-                                root.action_button_clicked(index);
-                            }
-                        }
-
-                        // Spacer
-                        Rectangle {}
-
-                        for action[index] in root.actions : TextButton {
-                            text: action;
-
-                            clicked => {
-                                root.action_clicked(index);
-                            }
-                        }
-
-                        if root.default_action_text != "" : FilledButton {
-                            text: root.default_action_text;
-
-                            clicked => {
-                                root.default_action_clicked();
-                            }
-                        }
-                    }
-                }
+            default_action_clicked => {
+                root.default_action_clicked();
             }
 
             animate opacity { enabled: !MaterialPalette.reduced-motion; duration: MaterialAnimations.opacity_duration; easing: MaterialAnimations.opacity_easing; }
@@ -202,19 +434,24 @@ export component BaseDialog {
         interval: 50ms;
 
         triggered => {
-            background_layer.opacity = 1;
+            content.opacity = 1;
             self.running = false;
         }
     }
 }
 
+/// `AlertDialog` of AlertDialog.kt: a modal `AlertDialogContent` in a
+/// popup window — scrim, Escape and outside clicks dismiss it.
 export component Dialog inherits PopupWindow {
     in property <string> title <=> base.title;
     in property <image> icon <=> base.icon;
+    in property <string> text <=> base.text;
+    in property <[image]> action_button_icons <=> base.action_button_icons;
     in property <string> default_action_text <=> base.default_action_text;
     in property <[string]> actions <=> base.actions;
 
     callback default_action_clicked <=> base.default_action_clicked;
+    callback action_button_clicked <=> base.action_button_clicked;
     callback action_clicked <=> base.action_clicked;
 
     close_policy: no_auto_close;
@@ -228,6 +465,70 @@ export component Dialog inherits PopupWindow {
 
         close => {
             root.close();
+        }
+    }
+}
+
+/// `BasicAlertDialog` of AlertDialog.kt — the non-deprecated basic
+/// overload: a modal scrim with arbitrary content centered in the
+/// `sizeIn(DialogMinWidth, DialogMaxWidth)` box (280..560dp).
+export component BasicAlertDialog inherits PopupWindow {
+    // `onDismissRequest`: scrim click or Escape.
+    callback dismissed();
+
+    close_policy: no_auto_close;
+    forward_focus: focus_scope;
+
+    focus_scope := FocusScope {
+        x: 0;
+        width: 0;
+
+        key_pressed(event) => {
+            if event.text == Key.Escape {
+                root.dismissed();
+                return accept;
+            }
+
+            reject
+        }
+    }
+
+    Modal {
+        width: 100%;
+        height: 100%;
+
+        box := Rectangle {
+            x: (parent.width - self.width) / 2;
+            y: (parent.height - self.height) / 2;
+            // `sizeIn(minWidth = DialogMinWidth, maxWidth = DialogMaxWidth)`
+            // intersected with the incoming width constraint
+            // (`min(560, available)`); `propagateMinConstraints` passes
+            // the 280dp minimum on to the content. The Box is transparent
+            // upstream — callers supply their own surface and padding.
+            width: min(max(280px, inner.min_width), min(560px, parent.width));
+            height: inner.min_height;
+            opacity: 0;
+
+            TouchArea {
+                inner := VerticalLayout {
+                    @children
+                }
+            }
+
+            animate opacity { enabled: !MaterialPalette.reduced-motion; duration: MaterialAnimations.opacity_duration; easing: MaterialAnimations.opacity_easing; }
+        }
+
+        clicked => {
+            root.dismissed();
+        }
+    }
+
+    Timer {
+        interval: 50ms;
+
+        triggered => {
+            box.opacity = 1;
+            self.running = false;
         }
     }
 }
