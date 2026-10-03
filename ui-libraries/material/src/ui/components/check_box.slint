@@ -1,14 +1,11 @@
 // Copyright © SixtyFPS GmbH <info@slint.dev>
 // SPDX-License-Identifier: MIT
 
-import { MaterialStyleMetrics } from "../styling/material_style_metrics.slint";
 import { MaterialPalette } from "../styling/material_palette.slint";
 import { MaterialAnimations } from "../styling/material_animations.slint";
 import { CheckboxTokens } from "../styling/generated/material_component_tokens.slint";
-import { Icons } from "../icons/icons.slint";
 import { ListTile } from "./list.slint";
-import { StateLayerArea } from "./state_layer.slint";
-import { Icon } from "./icon.slint";
+import { FocusTouchArea, StateLayer, Ripple, FocusRing } from "./state_layer.slint";
 
 export enum CheckState {
     unchecked,
@@ -16,75 +13,212 @@ export enum CheckState {
     checked,
 }
 
-export component CheckBox {
-
+/// The pinned `CheckboxImpl` + `CheckboxColors` —
+/// `androidx.compose.material3.Checkbox` at androidx/androidx@23327507f7fc.
+/// `ComposeMaterial3Flags.isCheckboxStylingFixEnabled` defaults to `false`
+/// there, so the flag-off geometry applies: a 20dp `CheckboxSize` canvas
+/// inside `CheckboxDefaultPadding` (2dp) — not the 18dp
+/// `CheckboxTokens.ContainerSize` — and the legacy check-path fractions.
+component CheckBoxBase {
     in_out property <CheckState> check_state;
     in_out property <bool> tristate;
     in property <bool> has_error;
-    in property <bool> enabled <=> state_area.enabled;
+    in property <bool> enabled <=> touch.enabled;
+    /// `Modifier.minimumInteractiveComponentSize` — the 48dp slot the drawn
+    /// control is centered in. The parity harness disables it like
+    /// Compose's `LocalMinimumInteractiveComponentSize provides 0.dp`.
+    in property <bool> enforce_touch_target: true;
+    /// Test hooks: drive the state layers without pointer input — see
+    /// `StateLayerArea.simulate_*`.
+    in property <bool> simulate_hover;
+    in property <bool> simulate_press;
+    in property <string> tooltip <=> touch.tooltip;
 
-    property <bool> checked: root.check_state == CheckState.checked || root.check_state == CheckState.partially_checked;
-
+    callback clicked();
     callback checked_state_changed(check_state: CheckState);
+    out property <bool> has_focus <=> touch.has_focus;
+    out property <bool> has_hover <=> touch.has_hover;
+    out property <bool> pressed <=> touch.pressed;
+    /// `pressed`/`has_hover` including keyboard activation and the scene
+    /// hooks.
+    out property <bool> effective_pressed: touch.pressed || touch.enter_pressed || root.simulate_press;
+    out property <bool> effective_hover: touch.has_hover || root.simulate_hover;
+    /// True for `checked` and `partially_checked` — `ToggleableState != Off`.
+    out property <bool> checked: root.check_state != CheckState.unchecked;
 
-    min_width: MaterialStyleMetrics.size_48;
+    property <bool> is_off: root.check_state == CheckState.unchecked;
+    /// `checkDrawFraction`: how much of the morphed check path is stroked.
+    out property <float> check_fraction;
+    /// `checkCenterGravitationShiftFraction`: checkmark ↔ dash morph.
+    out property <float> gravitation;
+
+    // `CheckboxColors` at the pin. Box/border resolve against `enabled` and
+    // snap on disabled; the flag-off `checkmarkColor(state)` ignores
+    // `enabled` (the disabled check still draws `checkedCheckmarkColor`).
+    property <color> selected_color: root.has_error ? CheckboxTokens.selected_error_container_color : CheckboxTokens.selected_container_color;
+    property <color> box_color: root.is_off ? transparent
+        : !root.enabled ? CheckboxTokens.selected_disabled_container_color.with_alpha(CheckboxTokens.selected_disabled_container_opacity)
+        : root.selected_color;
+    property <color> border_color: !root.is_off ? (root.enabled ? root.selected_color
+            : CheckboxTokens.selected_disabled_container_color.with_alpha(CheckboxTokens.selected_disabled_container_opacity))
+        : root.enabled ? (root.has_error ? CheckboxTokens.unselected_error_outline_color : CheckboxTokens.unselected_outline_color)
+        : CheckboxTokens.unselected_disabled_outline_color.with_alpha(CheckboxTokens.unselected_disabled_container_opacity);
+    // Flag-off `checkmarkColor(state)` resolves `Off` → transparent and
+    // everything else → `checkedCheckmarkColor`, ignoring `enabled`.
+    property <color> check_color: root.is_off ? transparent
+        : root.has_error ? CheckboxTokens.selected_error_icon_color
+        : CheckboxTokens.selected_icon_color;
+
+    animate box_color, border_color {
+        // `colorAnimationSpecForState`: `FastEffects` while transitioning
+        // out ("box out" — the target is `Off`), `DefaultEffects` otherwise.
+        easing: root.is_off ? MaterialAnimations.fast-effects-spring : MaterialAnimations.default-effects-spring;
+        // Disabled resolves through `rememberUpdatedState` — a snap.
+        enabled: root.enabled && !MaterialPalette.reduced-motion;
+    }
+    animate check_color {
+        easing: root.is_off ? MaterialAnimations.fast-effects-spring : MaterialAnimations.default-effects-spring;
+        enabled: !MaterialPalette.reduced-motion;
+    }
+
+    // Morphed check path (flag-off fractions): from (0.2, 0.5) through the
+    // cross lerp (0.4, 0.7)→(0.5, 0.5) to (0.8, 0.3→0.5) of the canvas.
+    property <float> g: root.gravitation;
+    property <float> left_x: 0.2;
+    property <float> left_y: 0.5;
+    property <float> cross_x: 0.4 + 0.1 * root.g;
+    property <float> cross_y: 0.7 - 0.2 * root.g;
+    property <float> right_x: 0.8;
+    property <float> right_y: 0.3 + 0.2 * root.g;
+    property <float> seg1: Math.sqrt((root.cross_x - root.left_x) * (root.cross_x - root.left_x)
+        + (root.cross_y - root.left_y) * (root.cross_y - root.left_y));
+    property <float> seg2: Math.sqrt((root.right_x - root.cross_x) * (root.right_x - root.cross_x)
+        + (root.right_y - root.cross_y) * (root.right_y - root.cross_y));
+    /// `pathMeasure.getSegment(0, length * checkFraction)` — the path tail.
+    property <float> draw_len: root.check_fraction * (root.seg1 + root.seg2);
+    property <float> u1: root.seg1 > 0 ? Math.min(root.draw_len / root.seg1, 1) : 0;
+    property <float> u2: root.seg2 > 0 ? Math.min(Math.max((root.draw_len - root.seg1) / root.seg2, 0), 1) : 0;
+    property <float> end_x: root.u1 < 1 ? root.left_x + (root.cross_x - root.left_x) * root.u1
+        : root.cross_x + (root.right_x - root.cross_x) * root.u2;
+    property <float> end_y: root.u1 < 1 ? root.left_y + (root.cross_y - root.left_y) * root.u1
+        : root.cross_y + (root.right_y - root.cross_y) * root.u2;
+    property <float> mid_x: root.u1 < 1 ? root.end_x : root.cross_x;
+    property <float> mid_y: root.u1 < 1 ? root.end_y : root.cross_y;
+
+    min_width: Math.max(root.canvas_size + 2 * root.inner_padding, root.enforce_touch_target ? 48px : 0px);
     min_height: self.min_width;
+    preferred_width: root.min_width;
+    preferred_height: root.min_width;
+
     accessible-enabled: root.enabled;
     accessible-checkable: true;
     accessible-checked <=> root.checked;
     accessible-role: checkbox;
-    accessible-action-default => { state_area.clicked(); }
-    forward_focus: state_area;
+    accessible-action-default => { if root.enabled { touch.clicked(); } }
+    forward_focus: touch;
 
-    init() => {
-        // Initialize tristate as well
-        if self.check_state == CheckState.partially-checked {
-            root.tristate = true;
-        }
-    }
+    property <length> canvas_size: 20px;
+    property <length> inner_padding: 2px;
 
-    state_area := StateLayerArea {
+    touch := FocusTouchArea {
+        x: 0;
+        y: 0;
         width: 100%;
         height: 100%;
-        border_radius: max(self.width, self.height) / 2;
-        color: MaterialPalette.on_surface;
 
-        background_layer := Rectangle {
-            width: MaterialStyleMetrics.size_18;
+        canvas := Rectangle {
+            // `wrapContentSize(Alignment.Center)` — the canvas is centered
+            // inside the padding/MICS bounds.
+            x: (parent.width - self.width) / 2;
+            y: (parent.height - self.height) / 2;
+            width: root.canvas_size;
             height: self.width;
-            border_radius: MaterialStyleMetrics.border_radius_2;
-            border_width: root.checked ? 0 : 2px;
-            border_color: root.has_error ? MaterialPalette.error : MaterialPalette.on_surface_variant;
+            // `RadiusSize`; the 2dp ring/inner-fill split of `drawBox` maps
+            // to a constant `StrokeWidth` border. When `boxColor ==
+            // borderColor` upstream takes its single-draw path — one
+            // 20x20 fill, no ring — so the border collapses here too (two
+            // overlapping translucent draws would darken the ring).
+            border_radius: CheckboxTokens.container_shape.top_left;
+            border_width: root.border_color == root.box_color ? 0px
+                : CheckboxTokens.unselected_outline_width;
+            border_color: root.border_color;
+            background: root.box_color;
+        }
 
-            if root.checked : Icon {
-                width: CheckboxTokens.icon_size;
-                height: self.width;
-                colorize: MaterialPalette.on_primary;
-                source: Icons.check;
+        // `drawCheck` — the morphed path stroked with a 2dp square cap;
+        // `checkFraction == 0` draws nothing upstream. `Path` insets its
+        // viewbox by `stroke_width / 2`, so it is sized up by the stroke to
+        // keep the upstream 0..20 canvas coordinates exact.
+        if root.check_fraction > 0 : check := Path {
+            property <length> stroke_w: CheckboxTokens.unselected_outline_width;
+            x: canvas.x - self.stroke_w / 2;
+            y: canvas.y - self.stroke_w / 2;
+            width: canvas.width + self.stroke_w;
+            height: self.width;
+            viewbox_width: 20;
+            viewbox_height: 20;
+            fill: transparent;
+            stroke: root.check_color;
+            stroke_width: CheckboxTokens.unselected_outline_width;
+            stroke_line_cap: square;
 
-                states [
-                    partial_checked when root.check_state == CheckState.partially-checked : {
-                        source: Icons.remove;
-                    }
-                ]
+            MoveTo { x: 4; y: 10; }
+            LineTo { x: root.mid_x * 20; y: root.mid_y * 20; }
+            LineTo { x: root.end_x * 20; y: root.end_y * 20; }
+        }
+
+        // `ripple(bounded = false, radius = StateLayerSize / 2)` — the
+        // hover/press state layer is a 40dp circle centered on the canvas.
+        // `color = Unspecified` resolves to `LocalContentColor`, which the
+        // parity scene leaves at the `Color.Black` default.
+        if root.enabled && (root.effective_hover || root.effective_pressed) : state_circle := Rectangle {
+            x: canvas.x + (canvas.width - self.width) / 2;
+            y: canvas.y + (canvas.height - self.height) / 2;
+            width: CheckboxTokens.state_layer_size;
+            height: self.width;
+            border_radius: self.width / 2;
+
+            StateLayer {
+                width: 100%;
+                height: 100%;
+                border_radius: parent.border_radius;
+                background: black;
+                display_background: false;
+                enabled: root.enabled;
+                pressed: root.effective_pressed;
+                has_focus: false;
+                has_hover: root.effective_hover;
+                // The focus indication is the inset ring, not a fill.
+                focus_ring: true;
             }
 
-             animate background, border_width { enabled: !MaterialPalette.reduced-motion;
-                duration: MaterialAnimations.opacity_duration;
-                easing: MaterialAnimations.opacity_easing;
-             }
+            if root.effective_pressed : Ripple {
+                width: 100%;
+                height: 100%;
+                border_radius: parent.border_radius;
+                // Presses without a pointer position (keyboard, scene
+                // hooks) center inside the indication bounds upstream.
+                pressed_x: touch.pressed ? touch.pressed_x - state_circle.x : self.width / 2;
+                pressed_y: touch.pressed ? touch.pressed_y - state_circle.y : self.height / 2;
+                color: black;
+                // Clip to the state-layer circle: the unbounded upstream
+                // ripple settles at exactly this circle.
+                clip_ripple: true;
+            }
         }
 
         clicked => {
             root.toggle();
+            root.clicked();
         }
     }
 
-    changed check_state => {
-        if self.check_state == CheckState.partially-checked {
-            root.tristate = true;
-        }
-        root.checked_state_changed(root.check_state);
+    // The `InsetRing` focus indication follows `focusRingShape` —
+    // `RoundedCornerShape(25)` is a 25% corner on the element bounds.
+    if touch.has_focus && root.enabled : FocusRing {
+        width: 100%;
+        height: 100%;
+        border_radius: Math.min(self.width, self.height) * 25%;
     }
 
     public function toggle() {
@@ -97,23 +231,92 @@ export component CheckBox {
             root.check_state == CheckState.partially_checked ? CheckState.unchecked : CheckState.checked;
     }
 
-    // Keep for backward compatibility
+    // Kept for backward compatibility.
     public function set_check_state(check_state: CheckState) {
         root.check_state = check_state;
     }
 
-    states [
-        disabled when !root.enabled : {
-           state_area.display_background: false;
-           background_layer.border_color: root.checked ? transparent : MaterialPalette.on_surface.with_alpha(38%);
-           background_layer.background: root.checked ? MaterialPalette.on_surface.with_alpha(38%) : transparent;
+    changed check_state => {
+        if self.check_state == CheckState.partially-checked {
+            root.tristate = true;
         }
-        checked when root.checked : {
-            background_layer.border_width: 0;
-            background_layer.background: root.has_error ? MaterialPalette.error :  MaterialPalette.primary;
-            state_area.color: background_layer.background;
+        root.checked_state_changed(root.check_state);
+    }
+
+    init() => {
+        // Initialize tristate as well.
+        if self.check_state == CheckState.partially-checked {
+            root.tristate = true;
+        }
+    }
+
+    // Declaration order matters: the engine resolves transition animations
+    // last-declared-wins, so `unchecked`'s `in`/`out` override the other
+    // states' on transitions to and from `Off` — matching the pin's
+    // `transitionSpec`: `snap(delayMillis = 100)` towards `Off`, `snap()`
+    // leaving it for the gravitation, `DefaultSpatial` everywhere else.
+    states [
+        on_state when root.check_state == CheckState.checked : {
+            check_fraction: 1;
+            gravitation: 0;
+            in {
+                animate check_fraction, gravitation {
+                    easing: MaterialAnimations.default-spatial-spring;
+                    enabled: !MaterialPalette.reduced-motion;
+                }
+            }
+            out {
+                animate check_fraction, gravitation {
+                    easing: MaterialAnimations.default-spatial-spring;
+                    enabled: !MaterialPalette.reduced-motion;
+                }
+            }
+        }
+        indeterminate_state when root.check_state == CheckState.partially-checked : {
+            check_fraction: 1;
+            gravitation: 1;
+            in {
+                animate check_fraction, gravitation {
+                    easing: MaterialAnimations.default-spatial-spring;
+                    enabled: !MaterialPalette.reduced-motion;
+                }
+            }
+            out {
+                animate check_fraction, gravitation {
+                    easing: MaterialAnimations.default-spatial-spring;
+                    enabled: !MaterialPalette.reduced-motion;
+                }
+            }
+        }
+        off_state when root.check_state == CheckState.unchecked : {
+            check_fraction: 0;
+            gravitation: 0;
+            in {
+                animate check_fraction, gravitation {
+                    duration: 0ms;
+                    delay: 100ms;
+                    enabled: !MaterialPalette.reduced-motion;
+                }
+            }
+            out {
+                animate check_fraction {
+                    easing: MaterialAnimations.default-spatial-spring;
+                    enabled: !MaterialPalette.reduced-motion;
+                }
+                animate gravitation {
+                    duration: 0ms;
+                    enabled: !MaterialPalette.reduced-motion;
+                }
+            }
         }
     ]
+}
+
+export component CheckBox inherits CheckBoxBase {
+}
+
+export component TriStateCheckbox inherits CheckBoxBase {
+    tristate: true;
 }
 
 export component CheckBoxTile inherits ListTile {
