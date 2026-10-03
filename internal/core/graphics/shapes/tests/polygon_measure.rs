@@ -58,8 +58,11 @@ fn irregular_polygon_measure(polygon: &RoundedPolygon, extra_checks: &dyn Fn(&Me
     }
 
     for (index, progressable_feature) in measured_polygon.features.iter().enumerate() {
+        // The packaged graphics-shapes (1.0.1) `measurePolygon` keeps the raw
+        // cubic-endpoint midpoint as the feature progress — a feature covering
+        // the outline's end may sit at exactly 1.0.
         assert!(
-            progressable_feature.progress() >= 0. && progressable_feature.progress() < 1.,
+            progressable_feature.progress() >= 0. && progressable_feature.progress() <= 1.,
             "Feature #{index} has invalid progress: {}",
             progressable_feature.progress(),
         );

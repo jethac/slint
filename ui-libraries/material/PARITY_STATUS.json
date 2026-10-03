@@ -166,8 +166,8 @@
       10
     ],
     "needs": "springs (#5), shapes (#6)",
-    "notes": "",
-    "status": "missing"
+    "notes": "slint component: ContainedLoadingIndicator; parity scenes: loading-indicator-states (xfail on femtovg, #53 concave-fill AA fringe), loading-indicator-motion (xfail, #27-class launch jitter)",
+    "status": "partial"
   },
   "DatePicker": {
     "issues": [
@@ -215,8 +215,8 @@
       11
     ],
     "needs": "none",
-    "notes": "",
-    "status": "missing"
+    "notes": "slint component: Divider (deprecated alias for HorizontalDivider)",
+    "status": "done"
   },
   "DockedSearchBar": {
     "issues": [
@@ -364,11 +364,11 @@
   },
   "ExtendedFloatingActionButton": {
     "issues": [
-      9
+      11
     ],
     "needs": "springs (#5), shapes (#6)",
-    "notes": "slint component: FloatingActionButton",
-    "status": "partial"
+    "notes": "slint component: ExtendedFloatingActionButton; tokens: generated component tokens; springs via active motion scheme",
+    "status": "done"
   },
   "FilledIconButton": {
     "issues": [
@@ -436,11 +436,11 @@
   },
   "FloatingActionButton": {
     "issues": [
-      9
+      11
     ],
     "needs": "springs (#5), shapes (#6)",
-    "notes": "slint component: FloatingActionButton",
-    "status": "partial"
+    "notes": "slint component: FloatingActionButton; tokens: generated component tokens; springs via active motion scheme",
+    "status": "done"
   },
   "FloatingActionButtonMenu": {
     "issues": [
@@ -472,8 +472,8 @@
       11
     ],
     "needs": "none",
-    "notes": "slint component: HorizontalDivider",
-    "status": "partial"
+    "notes": "slint component: HorizontalDivider; tokens: generated component tokens",
+    "status": "done"
   },
   "HorizontalFloatingToolbar": {
     "issues": [
@@ -533,11 +533,11 @@
   },
   "LargeExtendedFloatingActionButton": {
     "issues": [
-      9
+      11
     ],
     "needs": "springs (#5), shapes (#6)",
-    "notes": "",
-    "status": "missing"
+    "notes": "slint component: ExtendedFloatingActionButton; tokens: generated component tokens; springs via active motion scheme",
+    "status": "done"
   },
   "LargeFlexibleTopAppBar": {
     "issues": [
@@ -549,11 +549,11 @@
   },
   "LargeFloatingActionButton": {
     "issues": [
-      9
+      11
     ],
     "needs": "springs (#5), shapes (#6)",
-    "notes": "",
-    "status": "missing"
+    "notes": "slint component: FloatingActionButton; tokens: generated component tokens; springs via active motion scheme",
+    "status": "done"
   },
   "LargeTopAppBar": {
     "issues": [
@@ -603,16 +603,16 @@
       10
     ],
     "needs": "springs (#5), shapes (#6)",
-    "notes": "",
-    "status": "missing"
+    "notes": "slint component: LoadingIndicator; parity scenes: loading-indicator-states (xfail on femtovg, #53 concave-fill AA fringe), loading-indicator-motion (xfail, #27-class launch jitter)",
+    "status": "partial"
   },
   "MediumExtendedFloatingActionButton": {
     "issues": [
-      9
+      11
     ],
     "needs": "springs (#5), shapes (#6)",
-    "notes": "",
-    "status": "missing"
+    "notes": "slint component: ExtendedFloatingActionButton; tokens: generated component tokens; springs via active motion scheme",
+    "status": "done"
   },
   "MediumFlexibleTopAppBar": {
     "issues": [
@@ -624,11 +624,11 @@
   },
   "MediumFloatingActionButton": {
     "issues": [
-      9
+      11
     ],
     "needs": "springs (#5), shapes (#6)",
-    "notes": "",
-    "status": "missing"
+    "notes": "slint component: FloatingActionButton; tokens: generated component tokens; springs via active motion scheme",
+    "status": "done"
   },
   "MediumTopAppBar": {
     "issues": [
@@ -954,19 +954,19 @@
   },
   "SmallExtendedFloatingActionButton": {
     "issues": [
-      9
+      11
     ],
     "needs": "springs (#5), shapes (#6)",
-    "notes": "",
-    "status": "missing"
+    "notes": "slint component: ExtendedFloatingActionButton; tokens: generated component tokens; springs via active motion scheme",
+    "status": "done"
   },
   "SmallFloatingActionButton": {
     "issues": [
-      9
+      11
     ],
     "needs": "springs (#5), shapes (#6)",
-    "notes": "",
-    "status": "missing"
+    "notes": "slint component: FloatingActionButton; tokens: generated component tokens; springs via active motion scheme",
+    "status": "done"
   },
   "Snackbar": {
     "issues": [
@@ -1157,8 +1157,8 @@
       11
     ],
     "needs": "none",
-    "notes": "slint component: VerticalDivider",
-    "status": "partial"
+    "notes": "slint component: VerticalDivider; tokens: generated component tokens",
+    "status": "done"
   },
   "VerticalDragHandle": {
     "issues": [

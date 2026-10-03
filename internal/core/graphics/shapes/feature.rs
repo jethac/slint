@@ -201,6 +201,53 @@ pub(crate) fn detect_features(cubics: &[Cubic]) -> Vec<Feature> {
     result
 }
 
+/// Like [`detect_features`], but each feature keeps the original cubics of its
+/// streak rather than the merged representative cubic. The snowball merges are
+/// identical — `current` still decides where streaks break and how each feature
+/// classifies — but rebuilding an outline from the result is lossless, because
+/// no cubic is approximated by `extend`. Used where the cubics must round-trip
+/// exactly, like morph output (`Morph::as_cubics` interpolates real geometry;
+/// `Cubic::empty` placeholders are still dropped on rebuild as zero-length).
+pub(crate) fn detect_features_preserving(cubics: &[Cubic]) -> Vec<Feature> {
+    if cubics.is_empty() {
+        return Vec::new();
+    }
+
+    let mut result = Vec::new();
+    let mut current = cubics[0];
+    // The streak's first cubic; the streak always ends at i (inclusive).
+    let mut streak_start = 0usize;
+
+    for i in 0..cubics.len() {
+        let next = cubics[(i + 1) % cubics.len()];
+
+        if i < cubics.len() - 1 && current.aligns_ish_with(&next) {
+            current = extend(current, next);
+            continue;
+        }
+
+        result.push(as_feature_of(&current, &next, &cubics[streak_start..=i]));
+
+        if !current.smoothes_into_ish(&next) {
+            result.push(Cubic::empty(current.anchor1_x(), current.anchor1_y()).as_feature(&next));
+        }
+
+        current = next;
+        streak_start = i + 1;
+    }
+    result
+}
+
+/// `Cubic::as_feature` classified by `representative` (the streak's merged
+/// cubic) while storing the streak's original cubics.
+fn as_feature_of(representative: &Cubic, next: &Cubic, streak: &[Cubic]) -> Feature {
+    if representative.straight_ish() {
+        Feature::Edge(streak.to_vec())
+    } else {
+        Feature::Corner { cubics: streak.to_vec(), convex: representative.convex_to(next) }
+    }
+}
+
 impl Cubic {
     /// Convert to [Feature::Edge] if this cubic describes a straight line, otherwise
     /// to a [Feature::Corner]. Corner convexity is determined by `convex`.
