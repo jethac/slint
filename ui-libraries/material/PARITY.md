@@ -442,7 +442,7 @@ States: selected, disabled, unselected, focused, pressed, hovered
 
 | Component | Source | Status | Issues | Needs | Notes |
 |---|---|---|---|---|---|
-| Switch | Switch.kt | partial | #11 | springs (#5), shapes (#6) | slint component: Switch |
+| Switch | Switch.kt | done | #11 | springs (#5), shapes (#6) | slint component: Switch; tokens: generated component tokens; SwitchImpl + ThumbNode — 52x32dp track, thumb pressed 28/snap + resting 24/16 on FastSpatial, offsets incl. pressed TrackOutlineWidth inset, thumbContent slot (androidx/androidx@23327507f7fc, material3 1.5.0-alpha18) |
 
 ### Tabs
 

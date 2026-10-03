@@ -1024,8 +1024,8 @@
       11
     ],
     "needs": "springs (#5), shapes (#6)",
-    "notes": "slint component: Switch",
-    "status": "partial"
+    "notes": "slint component: Switch; tokens: generated component tokens; SwitchImpl + ThumbNode — 52x32dp track, thumb pressed 28/snap + resting 24/16 on FastSpatial, offsets incl. pressed TrackOutlineWidth inset, thumbContent slot (androidx/androidx@23327507f7fc, material3 1.5.0-alpha18)",
+    "status": "done"
   },
   "Tab": {
     "issues": [
