@@ -240,6 +240,7 @@
   "widgets": [
     {
       "alignment": null,
+      "check_state": null,
       "checkable": null,
       "checked": null,
       "checked_icon": null,
@@ -311,6 +312,7 @@
     },
     {
       "alignment": null,
+      "check_state": null,
       "checkable": null,
       "checked": null,
       "checked_icon": null,
@@ -390,6 +392,7 @@
     },
     {
       "alignment": null,
+      "check_state": null,
       "checkable": null,
       "checked": null,
       "checked_icon": null,
@@ -461,6 +464,7 @@
     },
     {
       "alignment": null,
+      "check_state": null,
       "checkable": null,
       "checked": null,
       "checked_icon": null,
@@ -532,6 +536,7 @@
     },
     {
       "alignment": null,
+      "check_state": null,
       "checkable": null,
       "checked": null,
       "checked_icon": null,
@@ -603,6 +608,7 @@
     },
     {
       "alignment": null,
+      "check_state": null,
       "checkable": null,
       "checked": null,
       "checked_icon": null,
@@ -674,6 +680,7 @@
     },
     {
       "alignment": null,
+      "check_state": null,
       "checkable": null,
       "checked": null,
       "checked_icon": null,
@@ -720,6 +727,7 @@
     },
     {
       "alignment": null,
+      "check_state": null,
       "checkable": null,
       "checked": true,
       "checked_icon": "check",
@@ -766,6 +774,7 @@
     },
     {
       "alignment": null,
+      "check_state": null,
       "checkable": null,
       "checked": null,
       "checked_icon": null,

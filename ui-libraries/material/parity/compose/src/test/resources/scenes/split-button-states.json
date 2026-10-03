@@ -155,6 +155,7 @@
   "widgets": [
     {
       "alignment": null,
+      "check_state": null,
       "checkable": true,
       "checked": null,
       "checked_icon": null,
@@ -201,6 +202,7 @@
     },
     {
       "alignment": null,
+      "check_state": null,
       "checkable": true,
       "checked": null,
       "checked_icon": null,
@@ -247,6 +249,7 @@
     },
     {
       "alignment": null,
+      "check_state": null,
       "checkable": true,
       "checked": null,
       "checked_icon": null,
@@ -293,6 +296,7 @@
     },
     {
       "alignment": null,
+      "check_state": null,
       "checkable": true,
       "checked": null,
       "checked_icon": null,
@@ -339,6 +343,7 @@
     },
     {
       "alignment": null,
+      "check_state": null,
       "checkable": true,
       "checked": null,
       "checked_icon": null,
@@ -385,6 +390,7 @@
     },
     {
       "alignment": null,
+      "check_state": null,
       "checkable": true,
       "checked": true,
       "checked_icon": null,
