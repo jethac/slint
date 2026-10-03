@@ -102,6 +102,7 @@
   "widgets": [
     {
       "alignment": null,
+      "check_state": null,
       "checkable": true,
       "checked": null,
       "checked_icon": null,

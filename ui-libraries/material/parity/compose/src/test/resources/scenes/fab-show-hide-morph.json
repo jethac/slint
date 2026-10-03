@@ -134,6 +134,7 @@
   "widgets": [
     {
       "alignment": null,
+      "check_state": null,
       "checkable": null,
       "checked": null,
       "checked_icon": null,
@@ -180,6 +181,7 @@
     },
     {
       "alignment": "top_start",
+      "check_state": null,
       "checkable": null,
       "checked": null,
       "checked_icon": null,
