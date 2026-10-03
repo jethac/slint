@@ -1,0 +1,153 @@
+{
+  "actions": [],
+  "case_rel": "material/extended_fab_pressed",
+  "densities": [
+    1
+  ],
+  "fonts": {
+    "brand": "Roboto",
+    "plain": "Roboto"
+  },
+  "mask_decor": {
+    "button0": [
+      0,
+      2000
+    ]
+  },
+  "mask_inner": {
+    "button0": [
+      2000
+    ]
+  },
+  "name": "extended-fab-pressed",
+  "params": {},
+  "parity": "static",
+  "scheme": {
+    "background": "FFFDF7FE",
+    "error": "FFA8364B",
+    "errorContainer": "FFF97386",
+    "inverseOnSurface": "FFA09BA1",
+    "inversePrimary": "FFD4C3FD",
+    "inverseSurface": "FF0F0D12",
+    "onBackground": "FF34313A",
+    "onError": "FFFFF7F7",
+    "onErrorContainer": "FF6E0523",
+    "onPrimary": "FFFDF7FF",
+    "onPrimaryContainer": "FF493C6C",
+    "onPrimaryFixed": "FF352857",
+    "onPrimaryFixedVariant": "FF524576",
+    "onSecondary": "FFFDF7FF",
+    "onSecondaryContainer": "FF554F63",
+    "onSecondaryFixed": "FF423C50",
+    "onSecondaryFixedVariant": "FF5F586E",
+    "onSurface": "FF34313A",
+    "onTertiary": "FFFFF7F9",
+    "onTertiaryContainer": "FF5F3956",
+    "onTertiaryFixed": "FF4A2642",
+    "onTertiaryFixedVariant": "FF694260",
+    "outline": "FF7D7983",
+    "outlineVariant": "FFB5B0BB",
+    "primary": "FF655789",
+    "primaryContainer": "FFD4C3FD",
+    "primaryFixed": "FFD4C3FD",
+    "primaryFixedDim": "FFC6B6EE",
+    "scrim": "FF000000",
+    "secondary": "FF625C71",
+    "secondaryContainer": "FFE8DEF8",
+    "secondaryFixed": "FFE8DEF8",
+    "secondaryFixedDim": "FFDAD0EA",
+    "surface": "FFFDF7FE",
+    "surfaceBright": "FFFDF7FE",
+    "surfaceContainer": "FFF2ECF5",
+    "surfaceContainerHigh": "FFECE6F0",
+    "surfaceContainerHighest": "FFE7E0EC",
+    "surfaceContainerLow": "FFF8F1FA",
+    "surfaceContainerLowest": "FFFFFFFF",
+    "surfaceDim": "FFDED8E4",
+    "surfaceTint": "FF655789",
+    "surfaceVariant": "FFE7E0EC",
+    "tertiary": "FF7B5270",
+    "tertiaryContainer": "FFF4BFE3",
+    "tertiaryFixed": "FFF4BFE3",
+    "tertiaryFixedDim": "FFE5B2D5"
+  },
+  "size": [
+    272,
+    120
+  ],
+  "theme": {
+    "contrast": 0.0,
+    "dark": false,
+    "platform": "phone",
+    "seed": "6750A4",
+    "spec": "spec2025",
+    "variant": "tonal-spot"
+  },
+  "times": [],
+  "trace_elements": [
+    "button0"
+  ],
+  "trace_props": [
+    "shadow_elevation"
+  ],
+  "type": "canvas",
+  "widgets": [
+    {
+      "alignment": null,
+      "avatar": null,
+      "checkable": null,
+      "checked": null,
+      "checked_icon": null,
+      "color": null,
+      "content_offset": null,
+      "corner": null,
+      "count": null,
+      "dragged": null,
+      "elevation": null,
+      "enabled": null,
+      "expanded": null,
+      "height": null,
+      "height_offset": null,
+      "icon": "add",
+      "icons": [],
+      "indeterminate": null,
+      "index": null,
+      "interactive": null,
+      "items": [],
+      "kind": "extended-fab",
+      "label_width": 52.0,
+      "leading_image": null,
+      "level": null,
+      "multi_select": null,
+      "nav_icon": null,
+      "overline": null,
+      "placeholder": null,
+      "position": null,
+      "progress": null,
+      "radius": null,
+      "selectable": null,
+      "selected": null,
+      "selected_index": null,
+      "shape": null,
+      "shown": null,
+      "side": null,
+      "size": null,
+      "slint_overrides": {},
+      "state": "pressed",
+      "subtitle": null,
+      "supporting": null,
+      "supporting_multiline": null,
+      "target_scale": null,
+      "text": "Create",
+      "toggle": null,
+      "trailing_icon": null,
+      "trailing_text": null,
+      "variant": null,
+      "vertical": null,
+      "width": null,
+      "width_option": null,
+      "x": 56.0,
+      "y": 32.0
+    }
+  ]
+}

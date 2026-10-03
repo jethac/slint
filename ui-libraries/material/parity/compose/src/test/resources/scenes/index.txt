@@ -14,6 +14,15 @@ connected-button-morph
 connected-button-press-morph
 elevation-shadow
 elevation-surfaces
+extended-fab-morph
+extended-fab-pressed
+extended-fab-sizes
+extended-fab-states
+fab-hover-morph
+fab-pressed
+fab-show-hide-morph
+fab-sizes
+fab-states
 icon-button-focus
 icon-button-press-morph
 icon-button-states
@@ -22,6 +31,8 @@ list-basic
 list-press-morph
 list-select-morph
 list-states
+loading-indicator-motion
+loading-indicator-states
 negative-button-focus-ring
 negative-button-press-morph
 negative-button-ripple-clip
@@ -29,6 +40,10 @@ negative-button-role
 negative-connected-button-group
 negative-corner-leak-dark
 negative-corner-leak
+negative-extended-fab-expanded
+negative-fab-color
+negative-fab-shadow
+negative-fab-size
 negative-focus-layer
 negative-hover-layer
 negative-icon-button-morph

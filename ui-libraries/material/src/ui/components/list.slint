@@ -251,9 +251,12 @@ component MaterialListItemBase {
         height: 100%;
         // `elevationAnimationSpec` = `MotionSchemeKeyTokens.FastSpatial`,
         // `ItemContainerElevation`/`ItemDraggedContainerElevation` as M3
-        // levels.
+        // levels — the drag drives both the level and the interaction flag,
+        // and upstream's spatial spec has no in/out direction split.
         level: root.dragged ? 4 : 0;
-        shadow_easing: MaterialAnimations.fast-spatial-spring;
+        interaction_active: root.dragged;
+        in_easing: MaterialAnimations.fast-spatial-spring;
+        out_easing: MaterialAnimations.fast-spatial-spring;
         background: root.current_container_color;
         shape: root.live_shape;
         shape-fit: ShapeFit.fill;

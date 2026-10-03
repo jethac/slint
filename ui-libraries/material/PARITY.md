@@ -187,14 +187,14 @@ States: focused, hovered, pressed
 
 | Component | Source | Status | Issues | Needs | Notes |
 |---|---|---|---|---|---|
-| ExtendedFloatingActionButton | FloatingActionButton.kt | partial | #9 | springs (#5), shapes (#6) | slint component: FloatingActionButton |
-| FloatingActionButton | FloatingActionButton.kt | partial | #9 | springs (#5), shapes (#6) | slint component: FloatingActionButton |
-| LargeExtendedFloatingActionButton | FloatingActionButton.kt | missing | #9 | springs (#5), shapes (#6) | - |
-| LargeFloatingActionButton | FloatingActionButton.kt | missing | #9 | springs (#5), shapes (#6) | - |
-| MediumExtendedFloatingActionButton | FloatingActionButton.kt | missing | #9 | springs (#5), shapes (#6) | - |
-| MediumFloatingActionButton | FloatingActionButton.kt | missing | #9 | springs (#5), shapes (#6) | - |
-| SmallExtendedFloatingActionButton | FloatingActionButton.kt | missing | #9 | springs (#5), shapes (#6) | - |
-| SmallFloatingActionButton | FloatingActionButton.kt | missing | #9 | springs (#5), shapes (#6) | - |
+| ExtendedFloatingActionButton | FloatingActionButton.kt | done | #11 | springs (#5), shapes (#6) | slint component: ExtendedFloatingActionButton; tokens: generated component tokens; springs via active motion scheme |
+| FloatingActionButton | FloatingActionButton.kt | done | #11 | springs (#5), shapes (#6) | slint component: FloatingActionButton; tokens: generated component tokens; springs via active motion scheme |
+| LargeExtendedFloatingActionButton | FloatingActionButton.kt | done | #11 | springs (#5), shapes (#6) | slint component: ExtendedFloatingActionButton; tokens: generated component tokens; springs via active motion scheme |
+| LargeFloatingActionButton | FloatingActionButton.kt | done | #11 | springs (#5), shapes (#6) | slint component: FloatingActionButton; tokens: generated component tokens; springs via active motion scheme |
+| MediumExtendedFloatingActionButton | FloatingActionButton.kt | done | #11 | springs (#5), shapes (#6) | slint component: ExtendedFloatingActionButton; tokens: generated component tokens; springs via active motion scheme |
+| MediumFloatingActionButton | FloatingActionButton.kt | done | #11 | springs (#5), shapes (#6) | slint component: FloatingActionButton; tokens: generated component tokens; springs via active motion scheme |
+| SmallExtendedFloatingActionButton | FloatingActionButton.kt | done | #11 | springs (#5), shapes (#6) | slint component: ExtendedFloatingActionButton; tokens: generated component tokens; springs via active motion scheme |
+| SmallFloatingActionButton | FloatingActionButton.kt | done | #11 | springs (#5), shapes (#6) | slint component: FloatingActionButton; tokens: generated component tokens; springs via active motion scheme |
 
 ### FAB menu
 
@@ -252,8 +252,8 @@ States: active
 
 | Component | Source | Status | Issues | Needs | Notes |
 |---|---|---|---|---|---|
-| ContainedLoadingIndicator | LoadingIndicator.kt | missing | #5, #6, #10 | springs (#5), shapes (#6) | - |
-| LoadingIndicator | LoadingIndicator.kt | missing | #5, #6, #10 | springs (#5), shapes (#6) | - |
+| ContainedLoadingIndicator | LoadingIndicator.kt | partial | #5, #6, #10 | springs (#5), shapes (#6) | slint component: ContainedLoadingIndicator; parity scenes: loading-indicator-states (xfail on femtovg, #53 concave-fill AA fringe), loading-indicator-motion (xfail, #27-class launch jitter) |
+| LoadingIndicator | LoadingIndicator.kt | partial | #5, #6, #10 | springs (#5), shapes (#6) | slint component: LoadingIndicator; parity scenes: loading-indicator-states (xfail on femtovg, #53 concave-fill AA fringe), loading-indicator-motion (xfail, #27-class launch jitter) |
 
 ### Menus
 

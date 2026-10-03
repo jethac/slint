@@ -1,0 +1,80 @@
+{
+  "name": "fab-sizes",
+  "type": "canvas",
+  "parity": "static",
+  "size": [
+    376,
+    128
+  ],
+  "densities": [
+    1,
+    2
+  ],
+  "theme": {
+    "seed": "6750A4",
+    "variant": "tonal-spot",
+    "spec": "spec2025",
+    "platform": "phone",
+    "dark": false,
+    "contrast": 0.0
+  },
+  "fonts": {
+    "plain": "Roboto",
+    "brand": "Roboto"
+  },
+  "widgets": [
+    {
+      "kind": "fab",
+      "x": 16,
+      "y": 44,
+      "icon": "add",
+      "size": "small"
+    },
+    {
+      "kind": "fab",
+      "x": 80,
+      "y": 36,
+      "icon": "add",
+      "size": "baseline"
+    },
+    {
+      "kind": "fab",
+      "x": 160,
+      "y": 24,
+      "icon": "add",
+      "size": "medium"
+    },
+    {
+      "kind": "fab",
+      "x": 264,
+      "y": 16,
+      "icon": "add",
+      "size": "large"
+    }
+  ],
+  "trace_elements": [
+    "button0",
+    "button1",
+    "button2",
+    "button3"
+  ],
+  "trace_props": [],
+  "mask_decor": {
+    "button0": [
+      0,
+      2000
+    ],
+    "button1": [
+      0,
+      2000
+    ],
+    "button2": [
+      0,
+      2000
+    ],
+    "button3": [
+      0,
+      2000
+    ]
+  }
+}
