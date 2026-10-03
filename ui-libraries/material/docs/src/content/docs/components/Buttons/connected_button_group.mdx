@@ -1,0 +1,162 @@
+---
+title: ConnectedButtonGroup
+description: ConnectedButtonGroup API.
+---
+
+import CodeSnippetMD from '@slint/common-files/src/components/CodeSnippetMD.astro';
+import SlintProperty from '@slint/common-files/src/components/SlintProperty.astro';
+
+<CodeSnippetMD imagePath="/src/assets/generated/connectedbuttongroup.png" scale="3" imageWidth="340" imageHeight="140" imageAlt="">
+```slint
+import { ConnectedButtonGroup } from "@material";
+export component Example inherits Window {
+    width: 320px;
+    height: 100px;
+    background: transparent;
+    ConnectedButtonGroup {
+        items: [
+            { text: "Day" },
+            { text: "Week" },
+            { text: "Month" }
+        ];
+        selected-index: 1;
+    }
+}
+```
+</CodeSnippetMD>
+
+A `ConnectedButtonGroup` displays a group of related options as a single
+control — the Material 3 Expressive replacement for `SegmentedButton`. The
+items' inner corners differ from their outer corners, and the selected item
+morphs to the fully rounded stadium. Set `multi-select` to give every item
+its own checked state instead of a single selection. `checked-icon` swaps an
+item's icon while it is checked.
+
+<CodeSnippetMD imagePath="/src/assets/generated/connectedbuttongroup-multi.png" scale="3" imageWidth="340" imageHeight="220" imageAlt="">
+```slint
+import { ConnectedButtonGroup, Icons } from "@material";
+export component Example inherits Window {
+    width: 320px;
+    height: 180px;
+    background: transparent;
+    ConnectedButtonGroup {
+        multi-select: true;
+        items: [
+            { icon: Icons.check, checked-icon: Icons.check, text: "Mon", checked: true },
+            { icon: Icons.check, checked-icon: Icons.check, text: "Tue" },
+            { icon: Icons.check, checked-icon: Icons.check, text: "Wed", checked: true },
+            { icon: Icons.check, checked-icon: Icons.check, text: "Thu" }
+        ];
+    }
+}
+```
+</CodeSnippetMD>
+
+`VerticalConnectedButtonGroup` stacks the items in a column overlapping by
+6px, the first item's top corners and the last item's bottom corners fully
+rounded.
+
+<CodeSnippetMD imagePath="/src/assets/generated/connectedbuttongroup-vertical.png" scale="3" imageWidth="160" imageHeight="240" imageAlt="">
+```slint
+import { VerticalConnectedButtonGroup } from "@material";
+export component Example inherits Window {
+    width: 120px;
+    height: 200px;
+    background: transparent;
+    VerticalConnectedButtonGroup {
+        items: [
+            { text: "Top" },
+            { text: "Mid" },
+            { text: "Bot" }
+        ];
+        selected-index: 0;
+    }
+}
+```
+</CodeSnippetMD>
+
+A standalone `ConnectedButton` is one item of the group — position it with
+`position` (`start`, `middle`, `end`) and set `vertical` for the vertical
+variant's shapes.
+
+## ConnectedButtonGroup Properties
+
+### items
+<SlintProperty propName="items" typeName="[struct]" structName="ConnectedButtonGroupItem">
+An array of connected items, each containing an optional icon, checked icon, text, tooltip, disabled flag and checked flag.
+</SlintProperty>
+
+### multi-select
+<SlintProperty propName="multi-select" typeName="bool">
+Give each item its own checked state (checkbox semantics) instead of a single `selected-index` (radio semantics).
+</SlintProperty>
+
+### selected-index
+<SlintProperty propName="selected-index" typeName="int" propertyVisibility="in-out">
+The checked item for single-select groups; `-1` selects none.
+</SlintProperty>
+
+### between-space
+<SlintProperty propName="between-space" typeName="length" defaultValue="2px">
+The horizontal gap between items — the upstream samples' `spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween)` parameter.
+</SlintProperty>
+
+## ConnectedButtonGroup Callbacks
+
+### selected-index-changed(index: int)
+Invoked when the selection moves in a single-select group.
+
+### item-checked-changed(index: int, checked: bool)
+Invoked when an item of a multi-select group is toggled.
+
+## VerticalConnectedButtonGroup Properties
+
+`items`, `multi-select`, `selected-index` and the callbacks work exactly
+like `ConnectedButtonGroup`'s.
+
+### item-spacing
+<SlintProperty propName="item-spacing" typeName="length" defaultValue="-6px">
+The vertical spacing between items — negative so each item pulls up over the previous one.
+</SlintProperty>
+
+## ConnectedButton Properties
+
+### position
+<SlintProperty propName="position" typeName="enum" enumName="ConnectedButtonPosition" defaultValue="ConnectedButtonPosition.middle">
+The item's position in its group: `start` is the leading (top) item, `end` the trailing (bottom) one.
+</SlintProperty>
+
+### vertical
+<SlintProperty propName="vertical" typeName="bool">
+Take the vertical variant's shapes — full corners on the group's outer edge — instead of the horizontal leading/middle/trailing shapes.
+</SlintProperty>
+
+### icon
+<SlintProperty propName="icon" typeName="image">
+The leading icon.
+</SlintProperty>
+
+### checked-icon
+<SlintProperty propName="checked-icon" typeName="image">
+The icon while checked; `icon` is kept when left empty.
+</SlintProperty>
+
+### text
+<SlintProperty propName="text" typeName="string">
+The item's label.
+</SlintProperty>
+
+### tooltip
+<SlintProperty propName="tooltip" typeName="string">
+The tooltip shown on hover.
+</SlintProperty>
+
+### enabled
+<SlintProperty propName="enabled" typeName="bool" defaultValue="true">
+Whether the item can be clicked.
+</SlintProperty>
+
+### checked
+<SlintProperty propName="checked" typeName="bool" propertyVisibility="in-out">
+Whether the item is checked — toggles on click unless `toggle-on-click` is off.
+</SlintProperty>

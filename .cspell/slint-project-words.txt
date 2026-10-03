@@ -1,5 +1,6 @@
 AAPI
 ABGR
+Interpolatable
 accentify
 accum
 actionchip
@@ -125,6 +126,7 @@ colprop
 commodo
 compdef
 compilerlib
+connectedbuttongroup
 consectetur
 consequat
 Constexpr
@@ -213,6 +215,7 @@ ELCDIF
 elementwise
 elems
 elevatedbutton
+elevatedsplitbutton
 elit
 embeddedfonts
 emcmake
@@ -261,6 +264,7 @@ figsize
 fileaccess
 filledbutton
 fillediconbutton
+filledsplitbutton
 filterchip
 Fira
 FLASHMODE
@@ -274,6 +278,7 @@ floatprop
 floatval
 Florian
 fnname
+focusables
 focusreason
 focusscope
 fontconfig
@@ -559,6 +564,7 @@ Ostromentsky
 othercomp
 outlinebutton
 outlineiconbutton
+outlinesplitbutton
 ovmf
 PAKE
 Pantone
@@ -635,6 +641,7 @@ rasterizing
 RBUTTONUP
 Recip
 recompiles
+recompositions
 rects
 redoable
 REFR
@@ -798,6 +805,7 @@ toggleable
 tomllib
 tonalbutton
 tonaliconbutton
+tonalsplitbutton
 toolkits
 toolong
 TOPLEVEL
@@ -835,6 +843,7 @@ unparseable
 unpic
 Unpremul
 unpremultiply
+unrotated
 unsendable
 untimed
 usbc

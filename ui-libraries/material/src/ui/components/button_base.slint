@@ -4,10 +4,12 @@
 import { Elevation } from "./elevation.slint";
 import { Icon } from "./icon.slint";
 import { MaterialText } from "./material_text.slint";
-import { FocusRing, StateLayerArea } from "./state_layer.slint";
+import { FocusRing, MaterialCornerRadii, StateLayerArea } from "./state_layer.slint";
 import { MaterialAnimations } from "../styling/material_animations.slint";
 import { MaterialPalette } from "../styling/material_palette.slint";
+import { MaterialCornerShape } from "../styling/generated/material_shape_tokens.slint";
 import { MaterialTypeStyle, MaterialTypography } from "../styling/material_typography.slint";
+import { StateTokens } from "../styling/generated/material_state_tokens.slint";
 
 /// The shared interaction+decoration shell behind every button style:
 /// the 48dp touch-target slot with the visual container centered in it
@@ -29,6 +31,15 @@ export component MaterialButtonBase {
     in property <length> resting_radius;
     in property <length> pressed_radius;
     in property <length> checked_radius;
+    /// Per-corner shapes (the split button's asymmetric
+    /// `leadingButtonShape`/`trailingButtonShape`): the three `*_corners`
+    /// sets replace the matching `*_radius` values and each corner animates
+    /// independently with the same spec — `rememberAnimatedShape` lerps the
+    /// four `CornerSize`s the same way.
+    in property <bool> shaped_corners;
+    in property <MaterialCornerRadii> resting_corners;
+    in property <MaterialCornerRadii> pressed_corners;
+    in property <MaterialCornerRadii> checked_corners;
     /// `ButtonDefaults.MinWidth` — 58px for plain buttons, 0 for toggles.
     in property <length> min_button_width;
     /// Reserve at least 48x48 of layout space around the container —
@@ -68,6 +79,21 @@ export component MaterialButtonBase {
     in property <image> checked_icon;
     in property <length> padding_horizontal;
     in property <length> padding_vertical;
+    /// Extra leading/trailing content padding — the split button's
+    /// asymmetric `leadingButtonContentPaddingFor`/`trailingButtonContentPaddingFor`.
+    in property <length> padding_start: 0px;
+    in property <length> padding_end: 0px;
+    /// `Modifier.horizontalCenterOptically`: shift the content by
+    /// `0.11 * (avgStart - avgEnd)` of the live corner radii, coerced into
+    /// `[-startPad, +endPad]` — applied by the trailing split button only.
+    in property <bool> optical_center;
+    /// The checked `TrailingButton`'s `drawWithContent` overlay: the content
+    /// color at `StateTokens.PressedStateLayerOpacity` across the live shape.
+    in property <bool> checked_overlay;
+    /// Rotate the icon around its center — the trailing chevron's 0↔180°
+    /// flip from the upstream samples (`animateFloatAsState` default spec:
+    /// `spring(dampingRatio = 1, stiffness = 1500)`).
+    in property <angle> icon_rotation: 0deg;
     in property <length> icon_size;
     in property <length> icon_spacing;
     in property <MaterialTypeStyle> label_style: MaterialTypography.label_large;
@@ -80,6 +106,10 @@ export component MaterialButtonBase {
     in property <bool> enabled: true;
     in property <bool> checkable;
     in-out property <bool> checked;
+    /// Flip `checked` on click — false when the parent owns the selection
+    /// state (the connected button group's single-select mode drives
+    /// `selected-index`; writing `checked` would also drop its binding).
+    in property <bool> toggle_on_click: true;
     in property <string> tooltip;
     /// See `StateLayerArea.simulate_hover` / `simulate_press`.
     in property <bool> simulate_hover;
@@ -91,6 +121,16 @@ export component MaterialButtonBase {
     out property <bool> has_hover <=> area.effective_hover;
     /// The live, animating corner radius — traced by the parity harness.
     out property <length> container_radius <=> container.border_radius;
+    /// The live per-corner radii mid-morph — parity motion traces read them
+    /// directly in `shaped_corners` mode.
+    /// The icon's live rotation — the animated value the parity harness
+    /// traces (0↔180° chevron flip on a split button's trailing).
+    out property <angle> live_icon_rotation <=> root.animated_icon_rotation;
+
+    out property <length> corner_tl: root.target_tl;
+    out property <length> corner_tr: root.target_tr;
+    out property <length> corner_br: root.target_br;
+    out property <length> corner_bl: root.target_bl;
 
     property <length> touch: root.enforce_touch_target ? 48px : 0px;
     property <length> box_width: root.container_width > 0px ? root.container_width : root.width;
@@ -109,6 +149,51 @@ export component MaterialButtonBase {
         (root.checkable && root.checked ? root.checked_radius : root.resting_radius);
     animate target_radius {
         easing: root.fast_spatial ? MaterialAnimations.fast-spatial-spring : MaterialAnimations.default-effects-spring;
+        enabled: !MaterialPalette.reduced-motion;
+    }
+
+    // The per-corner half of `shapeByInteraction` — one animatable per
+    // corner, mirroring `AnimatedShapeState`'s corner lerp. In uniform mode
+    // they follow `target_radius`.
+    property <MaterialCornerRadii> target_corners:
+        area.effective_pressed ? root.pressed_corners :
+        (root.checkable && root.checked ? root.checked_corners : root.resting_corners);
+    property <length> target_tl: root.shaped_corners ? root.target_corners.top_left : root.target_radius;
+    property <length> target_tr: root.shaped_corners ? root.target_corners.top_right : root.target_radius;
+    property <length> target_br: root.shaped_corners ? root.target_corners.bottom_right : root.target_radius;
+    property <length> target_bl: root.shaped_corners ? root.target_corners.bottom_left : root.target_radius;
+    animate target_tl {
+        easing: root.fast_spatial ? MaterialAnimations.fast-spatial-spring : MaterialAnimations.default-effects-spring;
+        enabled: !MaterialPalette.reduced-motion;
+    }
+    animate target_tr {
+        easing: root.fast_spatial ? MaterialAnimations.fast-spatial-spring : MaterialAnimations.default-effects-spring;
+        enabled: !MaterialPalette.reduced-motion;
+    }
+    animate target_br {
+        easing: root.fast_spatial ? MaterialAnimations.fast-spatial-spring : MaterialAnimations.default-effects-spring;
+        enabled: !MaterialPalette.reduced-motion;
+    }
+    animate target_bl {
+        easing: root.fast_spatial ? MaterialAnimations.fast-spatial-spring : MaterialAnimations.default-effects-spring;
+        enabled: !MaterialPalette.reduced-motion;
+    }
+
+    /// The `horizontalCenterOptically` correction: `0.11 * (avgStart -
+    /// avgEnd)` coerced into `[-startPad, +endPad]` and rounded, where start
+    /// is the leading side. Computed from the live radii so the content
+    /// rides the morph mid-spring.
+    property <length> optical_offset:
+        !root.optical_center ? 0px : Math.round(
+            Math.max(-(root.padding_horizontal + root.padding_start) / 1px,
+            Math.min((root.padding_horizontal + root.padding_end) / 1px,
+                0.11 * ((root.target_tl + root.target_bl) / 2 - (root.target_tr + root.target_br) / 2) / 1px))) * 1px;
+
+    /// The icon flip's animated rotation — `animateFloatAsState` in the
+    /// samples (default spec `spring(dampingRatio = 1, stiffness = 1500)`).
+    property <angle> animated_icon_rotation: root.icon_rotation;
+    animate animated_icon_rotation {
+        easing: spring(1, 1500);
         enabled: !MaterialPalette.reduced-motion;
     }
 
@@ -141,6 +226,8 @@ export component MaterialButtonBase {
         width: root.box_width;
         height: root.box_height;
         border_radius: root.target_radius;
+        corners: { top_left: root.target_tl, top_right: root.target_tr, bottom_right: root.target_br, bottom_left: root.target_bl };
+        shaped_corners: root.shaped_corners;
         background: root.current_container_color;
         level: root.current_level;
     }
@@ -153,7 +240,10 @@ export component MaterialButtonBase {
         enabled: root.enabled;
         color: root.current_content_color;
         border_radius: root.target_radius;
+        corners: { top_left: root.target_tl, top_right: root.target_tr, bottom_right: root.target_br, bottom_left: root.target_bl };
+        shaped_corners: root.shaped_corners;
         hit_radius: root.resting_radius;
+        hit_corners: root.resting_corners;
         tooltip: root.tooltip;
         display_background: false;
         focus_ring: true;
@@ -167,15 +257,19 @@ export component MaterialButtonBase {
             if !area.pointer_inside && !area.enter_pressed {
                 return;
             }
-            if root.checkable {
+            if root.checkable && root.toggle_on_click {
                 root.checked = !root.checked;
             }
             root.clicked();
         }
 
         layout := HorizontalLayout {
-            padding_left: root.icon_button ? 0px : root.padding_horizontal;
-            padding_right: root.icon_button ? 0px : root.padding_horizontal;
+            padding_left: root.icon_button ? 0px : root.padding_horizontal + root.padding_start + root.optical_offset;
+            // Compose's content is `Icon + Spacer(iconSpacing) + Text` — the
+            // spacer is emitted whenever an icon is present, so it still
+            // counts when the label is empty.
+            padding_right: root.icon_button ? 0px : root.padding_horizontal + root.padding_end - root.optical_offset
+                + (root.icon.width > 0 && root.text == "" ? root.icon_spacing : 0px);
             padding_top: root.icon_button ? 0px : root.padding_vertical;
             padding_bottom: root.icon_button ? 0px : root.padding_vertical;
             spacing: root.icon_spacing;
@@ -188,6 +282,7 @@ export component MaterialButtonBase {
                 source: root.checked ? root.checked_icon : root.icon;
                 colorize: root.current_content_color;
                 width: root.icon_size;
+                transform-rotation: root.animated_icon_rotation;
             }
 
             if !root.icon_button && root.text != "" : MaterialText {
@@ -218,6 +313,25 @@ export component MaterialButtonBase {
         border_width: root.current_border_width;
         border_color: root.current_border_color;
         border_radius: root.target_radius;
+        border-top-left-radius: root.target_tl;
+        border-top-right-radius: root.target_tr;
+        border-bottom-right-radius: root.target_br;
+        border-bottom-left-radius: root.target_bl;
+    }
+
+    // The checked `TrailingButton`'s `drawWithContent` overlay: drawn after
+    // everything the `Surface` paints — content and border — at
+    // `StateTokens.PressedStateLayerOpacity` in the content color.
+    if root.checked_overlay && root.checkable && root.checked : Rectangle {
+        x: container.x;
+        y: container.y;
+        width: container.width;
+        height: container.height;
+        background: root.current_content_color.with_alpha(StateTokens.pressed_state_layer_opacity);
+        border-top-left-radius: root.target_tl;
+        border-top-right-radius: root.target_tr;
+        border-bottom-right-radius: root.target_br;
+        border-bottom-left-radius: root.target_bl;
     }
 
     // The inset ring follows the live shape — including mid-morph.
@@ -227,5 +341,7 @@ export component MaterialButtonBase {
         width: container.width;
         height: container.height;
         border_radius: root.target_radius;
+        corners: { top_left: root.target_tl, top_right: root.target_tr, bottom_right: root.target_br, bottom_left: root.target_bl };
+        shaped_corners: root.shaped_corners;
     }
 }
