@@ -85,6 +85,14 @@ struct Scene {
     /// the case fails when they stop occurring.
     #[serde(default)]
     xfail_silhouette: Option<String>,
+    /// `//PARITY_EPS=<n>` — per-channel strict-pixel tolerance override for
+    /// cases whose engine noise exceeds the default 8; carries the reason
+    /// the override exists, emitted as a comment above the directive.
+    #[serde(default)]
+    parity_eps: Option<u8>,
+    /// Why `parity_eps` is set — required when it is.
+    #[serde(default)]
+    parity_eps_reason: Option<String>,
 }
 
 #[derive(serde::Deserialize, serde::Serialize)]
@@ -238,6 +246,29 @@ struct Widget {
     /// `search-bar`/`app-bar-with-search` placeholder text.
     #[serde(default)]
     placeholder: Option<String>,
+    /// `extended-fab` expansion state (`expanded` upstream).
+    #[serde(default)]
+    expanded: Option<bool>,
+    /// `fab`/`extended-fab` visibility — `visible` on
+    /// `Modifier.animateFloatingActionButton` upstream.
+    #[serde(default)]
+    shown: Option<bool>,
+    /// `fab` show/hide scale pivot — `alignment` on
+    /// `Modifier.animateFloatingActionButton` (`bottom_end` default).
+    #[serde(default)]
+    alignment: Option<String>,
+    /// `fab` show/hide minimum scale — `targetScale` on
+    /// `Modifier.animateFloatingActionButton` (0.2 upstream).
+    #[serde(default)]
+    target_scale: Option<f64>,
+    /// The prop a press+release click toggles — `expanded` or `shown`
+    /// (fab kinds): the click flips it at the release action's `at` time.
+    #[serde(default)]
+    toggle: Option<String>,
+    /// `extended-fab` label slot width pin — `Modifier.width` on the
+    /// upstream `text` composable; 0/unset sizes the slot to the text.
+    #[serde(default)]
+    label_width: Option<f64>,
     /// Caster outline for `surface` widgets: a `MaterialShapes` global
     /// member name in kebab case (`"cookie-9-sided"` → `MaterialShapes.
     /// cookie-9-sided` / Compose `MaterialShapes.Cookie9Sided`), or `"rect"`
@@ -559,6 +590,15 @@ fn slint_case(scene: &Scene) -> String {
         }
         kind => writeln!(s, "//PARITY={kind}").unwrap(),
     }
+    if let Some(eps) = scene.parity_eps {
+        writeln!(
+            s,
+            "// {}",
+            scene.parity_eps_reason.as_deref().unwrap_or("(undocumented)")
+        )
+        .unwrap();
+        writeln!(s, "//PARITY_EPS={eps}").unwrap();
+    }
     writeln!(s, "//SIZE={}x{}", scene.size[0], scene.size[1]).unwrap();
     if !scene.times.is_empty() {
         writeln!(
@@ -668,6 +708,8 @@ fn slint_case(scene: &Scene) -> String {
             "tonal-split-button" => "TonalSplitButton",
             "elevated-split-button" => "ElevatedSplitButton",
             "outlined-split-button" => "OutlineSplitButton",
+            "fab" => "FloatingActionButton",
+            "extended-fab" => "ExtendedFloatingActionButton",
             // `surface` imports `Elevation`/`MaterialShapes` below instead;
             // `rect`/`elevated-rect` are plain `Rectangle`s — no import.
             "rect" | "surface" | "elevated-rect" => continue,
@@ -706,6 +748,12 @@ fn slint_case(scene: &Scene) -> String {
             imports.push("MaterialButtonSize");
             imports.push("MaterialButtonShape");
             imports.push("IconButtonWidth");
+        }
+        if w.kind == "fab" || w.kind == "extended-fab" {
+            imports.push("FabSize");
+            imports.push("ExtendedFabSize");
+            imports.push("FabElevation");
+            imports.push("FabAlignment");
         }
     }
     if needs_icons {
@@ -1032,6 +1080,130 @@ fn split_button_props(w: &Widget, timed: bool) -> String {
     p
 }
 
+/// The container-role name whose `on-*` counterpart fills its content —
+/// `contentColorFor` upstream resolves to this table.
+fn on_color_role(role: &str) -> &str {
+    match role {
+        "primary" => "on_primary",
+        "primary-container" => "on_primary_container",
+        "secondary" => "on_secondary",
+        "secondary-container" => "on_secondary_container",
+        "tertiary" => "on_tertiary",
+        "tertiary-container" => "on_tertiary_container",
+        "error" => "on_error",
+        "error-container" => "on_error_container",
+        "inverse-surface" => "inverse_on_surface",
+        "surface" | "surface-bright" | "surface-dim" | "surface-container"
+        | "surface-container-high" | "surface-container-highest" | "surface-container-low"
+        | "surface-container-lowest" => "on_surface",
+        "surface-variant" => "on_surface_variant",
+        other => panic!("no content-color role known for {other:?}"),
+    }
+}
+
+/// `fab`/`extended-fab` props — same spirit as `button_props` but the FAB
+/// surface: the `FabSize`/`ExtendedFabSize`/`FabElevation`/`FabAlignment`
+/// enums, `expanded`/`shown`/`target_scale`, the `label_width` text-slot
+/// pin and the `toggle` click wiring for morph scenes.
+fn fab_props(w: &Widget, timed: bool) -> String {
+    let mut p = String::new();
+    let over = &w.slint_overrides;
+    let bool_over = |k: &str, authored: Option<bool>| -> bool {
+        over.get(k).and_then(|v| v.as_bool()).unwrap_or(authored.unwrap_or(false))
+    };
+    let extended = w.kind == "extended-fab";
+    if extended {
+        if let Some(text) = &w.text {
+            writeln!(p, "        text: \"{text}\";").unwrap();
+        }
+        if let Some(v) = w.label_width {
+            writeln!(p, "        label-width: {v}px;").unwrap();
+        }
+        let expanded = bool_over("expanded", w.expanded.or(Some(true)));
+        writeln!(p, "        expanded: {expanded};").unwrap();
+    }
+    if let Some(text) = &w.text {
+        if !extended {
+            // A plain FAB's `text` authors the tooltip/accessibility label.
+            writeln!(p, "        tooltip: \"{text}\";").unwrap();
+        }
+    }
+    let size = over
+        .get("size")
+        .and_then(|v| v.as_str())
+        .map(str::to_string)
+        .or_else(|| w.size.clone());
+    if let Some(size) = size {
+        let en = if extended { "ExtendedFabSize" } else { "FabSize" };
+        writeln!(p, "        size: {en}.{size};").unwrap();
+    }
+    let icon = over
+        .get("icon")
+        .and_then(|v| v.as_str())
+        .map(str::to_string)
+        .or_else(|| w.icon.clone());
+    if let Some(icon) = icon {
+        writeln!(p, "        icon: Icons.{icon};").unwrap();
+    }
+    if let Some(color) = &w.color {
+        let role = color.replace('-', "_");
+        writeln!(p, "        container_color: MaterialPalette.{role};").unwrap();
+        writeln!(
+            p,
+            "        content_color: MaterialPalette.{};",
+            on_color_role(color)
+        )
+        .unwrap();
+    }
+    let variant = over
+        .get("variant")
+        .and_then(|v| v.as_str())
+        .map(str::to_string)
+        .or_else(|| w.variant.clone());
+    match variant.as_deref() {
+        Some("lowered") => p.push_str("        elevation_style: FabElevation.lowered;\n"),
+        Some("bottom-app-bar") => {
+            p.push_str("        elevation_style: FabElevation.bottom_app_bar;\n")
+        }
+        _ => {}
+    }
+    let shown = bool_over("shown", w.shown.or(Some(true)));
+    if !shown {
+        p.push_str("        shown: false;\n");
+    }
+    if let Some(alignment) = &w.alignment {
+        writeln!(p, "        alignment: FabAlignment.{alignment};").unwrap();
+    }
+    if let Some(scale) = w.target_scale {
+        writeln!(p, "        target_scale: {scale};").unwrap();
+    }
+    if !bool_over("enabled", w.enabled.or(Some(true))) {
+        p.push_str("        enabled: false;\n");
+    }
+    if !timed {
+        match w.state.as_deref() {
+            Some("hovered") => p.push_str("        simulate_hover: true;\n"),
+            Some("pressed") => p.push_str("        simulate_press: true;\n"),
+            _ => {}
+        }
+    }
+    // A click flips the authored toggle prop on release — the Compose side
+    // toggles its hoisted state at the same `at` time.
+    if let Some(toggle) = &w.toggle {
+        match toggle.as_str() {
+            "expanded" if extended => {
+                p.push_str("        clicked => { self.expanded = !self.expanded; }\n")
+            }
+            "shown" => p.push_str("        clicked => { self.shown = !self.shown; }\n"),
+            other => panic!("unknown fab toggle {other:?}"),
+        }
+    }
+    if !bool_over("enforce_touch_target", None) {
+        p.push_str("        enforce_touch_target: false;\n");
+    }
+    p
+}
+
 fn slint_canvas(s: &mut String, scene: &Scene) {
     // Buttons are named `button{n}` by count of button-family widgets, not
     // widget index — a backdrop `rect` ahead of a button leaves `button0`
@@ -1055,6 +1227,8 @@ fn slint_canvas(s: &mut String, scene: &Scene) {
             "tonal-split-button" => "TonalSplitButton",
             "elevated-split-button" => "ElevatedSplitButton",
             "outlined-split-button" => "OutlineSplitButton",
+            "fab" => "FloatingActionButton",
+            "extended-fab" => "ExtendedFloatingActionButton",
             "surface" => {
                 let i = surfaces;
                 surfaces += 1;
@@ -1179,6 +1353,8 @@ fn slint_canvas(s: &mut String, scene: &Scene) {
             w.y as i64,
             if w.kind.ends_with("split-button") {
                 split_button_props(w, !scene.times.is_empty())
+            } else if w.kind == "fab" || w.kind == "extended-fab" {
+                fab_props(w, !scene.times.is_empty())
             } else {
                 button_props(w, !scene.times.is_empty())
             },
@@ -1197,8 +1373,9 @@ fn slint_canvas(s: &mut String, scene: &Scene) {
     }
 }
 
-/// The Slint property type of a `//TRACE_PROPS=` name: `container_radius`
-/// and the connected-button `corner_*` morph values are all `length`.
+/// The Slint property type of a `//TRACE_PROPS=` name: `container_radius`,
+/// the connected-button `corner_*` morph values and the FAB container/label
+/// geometry are all `length`; the FAB scale/fade props are `float`.
 fn trace_prop_type(prop: &str) -> &'static str {
     match prop {
         "container_radius"
@@ -1207,8 +1384,12 @@ fn trace_prop_type(prop: &str) -> &'static str {
         | "corner_top_left"
         | "corner_top_right"
         | "corner_bottom_right"
-        | "corner_bottom_left" => "length",
+        | "corner_bottom_left"
+        | "box_width"
+        | "slot_width"
+        | "shadow_elevation" => "length",
         "trailing_icon_rotation" => "angle",
+        "label_alpha" | "show_scale" | "show_alpha" | "expand_progress" => "float",
         other => panic!("no forwarding type known for trace prop {other:?}"),
     }
 }
