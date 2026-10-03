@@ -1,6 +1,6 @@
 ---
 title: CheckBox
-description: CheckBox API.
+description: CheckBox and TriStateCheckbox API.
 ---
 
 import CodeSnippetMD from '@slint/common-files/src/components/CodeSnippetMD.astro';
@@ -20,7 +20,36 @@ export component Example inherits Window {
 ```
 </CodeSnippetMD>
 
-A `CheckBox` is a control that allows users to select one or more options from a set. It can be in three states: unchecked, checked, or partially checked (when `tristate` is enabled).
+A `CheckBox` is a control that allows users to select one or more options from a set. The box is a
+20px rounded square with a check path that draws in when the state turns on; a focused box shows
+the 25%-radius inset ring, and hover or press shows the state-layer disc. `CheckBox` toggles
+between unchecked and checked; `TriStateCheckbox` cycles unchecked → partially checked → checked
+and draws the partially-checked check mark instead.
+
+<CodeSnippetMD imagePath="/src/assets/generated/checkbox-states.png" scale="3" imageWidth="300" imageHeight="100" imageAlt="">
+```slint
+import { CheckBox, TriStateCheckbox, CheckState } from "@material";
+export component Example inherits Window {
+    width: 300px;
+    height: 100px;
+    background: transparent;
+    HorizontalLayout {
+        spacing: 8px;
+        CheckBox {}
+        CheckBox {
+            check-state: CheckState.checked;
+        }
+        TriStateCheckbox {
+            check-state: CheckState.partially-checked;
+        }
+        CheckBox {
+            enabled: false;
+            check-state: CheckState.checked;
+        }
+    }
+}
+```
+</CodeSnippetMD>
 
 ## Properties
 
@@ -41,6 +70,11 @@ CheckBox {
 Whether the checkbox is enabled and can be interacted with.
 </SlintProperty>
 
+### enforce-touch-target
+<SlintProperty propName="enforce-touch-target" typeName="bool" defaultValue="true">
+Whether the checkbox extends its touch target to at least 48px when its visual container is smaller.
+</SlintProperty>
+
 ### has-error
 <SlintProperty propName="has-error" typeName="bool">
 Whether the checkbox should display an error state.
@@ -59,4 +93,19 @@ Invoked when the checkbox state changes.
 ## Functions
 
 ### toggle()
-Toggles the checkbox state. In tristate mode, cycles through unchecked → partially checked → checked → unchecked.
+Toggles the checkbox state. In tristate mode, cycles unchecked → checked → partially checked → unchecked.
+
+### set-check-state(check-state: CheckState)
+Sets the checkbox state without cycling. Kept for backward compatibility.
+
+## TriStateCheckbox
+
+A `TriStateCheckbox` shares the `CheckBox` API but always operates in tristate mode: clicking
+cycles unchecked → checked → partially checked → unchecked, and the `partially-checked` state
+draws the indeterminate check mark.
+
+```slint no-test "check-state: CheckState.partially-checked;"
+TriStateCheckbox {
+    check-state: CheckState.partially-checked;
+}
+```
