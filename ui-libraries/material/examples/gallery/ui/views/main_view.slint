@@ -15,7 +15,7 @@ import {
     NavigationRail,
     NavigationItem,
     NavigationBar,
-    SmallAppBar,
+    TopAppBar,
     PopupMenu,
     MenuItem,
     MaterialStyleMetrics
@@ -56,15 +56,14 @@ export component MainView {
     ];
 
     VerticalLayout {
-        app_bar := SmallAppBar {
+        app_bar := TopAppBar {
             title: "Material 3";
-            trailing_buttons: [
+            trailing-buttons: [
                 { icon: OutlinedIcons.palette, enabled: true },
                 { icon: Palette.color_scheme == ColorScheme.light ? OutlinedIcons.dark_mode : OutlinedIcons.light_mode, enabled: true }
             ];
-            show_background: MainWindowAdapter.show_background;
 
-            trailing_button_clicked(index) => {
+            trailing-button-clicked(index) => {
                 if index == 0 {
                     color_menu.show();
                 }
