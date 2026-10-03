@@ -1448,8 +1448,7 @@ pub fn to_skia_rrect(rect: &PhysicalRect, radius: &PhysicalBorderRadius) -> skia
     // renderer and `ElementOutline` do. `SkRRect` otherwise follows the
     // CSS overlapping-curves rule and shrinks all radii together when two
     // corners overflow a side.
-    let clamped = radius
-        .clone()
+    let clamped = (*radius)
         .min(PhysicalBorderRadius::from_length(PhysicalLength::new(rect.width() / 2.)))
         .min(PhysicalBorderRadius::from_length(PhysicalLength::new(rect.height() / 2.)));
     let radius = &clamped;
