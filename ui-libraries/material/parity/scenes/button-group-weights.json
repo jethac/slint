@@ -69,7 +69,7 @@
         "g0i2_w",
         "g0i1_x"
     ],
-    "xfail_text": "femtovg,software: issue #28: Slint ceils text layout widths where Compose keeps fractional advances",
+    "xfail_text": "skia,femtovg,software: issue #28: Slint ceils text layout widths where Compose keeps fractional advances",
     "trace_elements": [
         "group0",
         "group1",
