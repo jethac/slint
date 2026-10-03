@@ -11,6 +11,7 @@ import { MaterialCornerRadii } from "./state_layer.slint";
 import { TextButton } from "./text_button.slint";
 import { FilledButton } from "./filled_button.slint";
 import { MaterialText } from "./material_text.slint";
+
 import { Modal } from "./modal.slint";
 import { Icon } from "./icon.slint";
 import { IconButton } from "./icon_button.slint";
@@ -238,8 +239,8 @@ export component AlertDialogContent inherits Rectangle {
 
                     Icon {
                         source: root.icon;
-                        width: DialogTokens.icon_size;
-                        height: DialogTokens.icon_size;
+                        // `Icon` takes the source's natural size — the bundled
+                        // glyphs are the 24dp `icon_size`.
                         colorize: DialogTokens.icon_color;
                     }
                 }

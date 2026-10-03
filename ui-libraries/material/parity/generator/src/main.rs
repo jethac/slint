@@ -739,6 +739,7 @@ fn slint_case(scene: &Scene) -> String {
             // `surface` imports `Elevation`/`MaterialShapes` below instead;
             // `rect`/`elevated-rect` are plain `Rectangle`s — no import.
             "rect" | "surface" | "elevated-rect" => continue,
+            "icon" => "Icon",
             // `divider` is the deprecated `HorizontalDivider` alias upstream.
             "divider" | "horizontal-divider" => "HorizontalDivider",
             "vertical-divider" => "VerticalDivider",
@@ -1257,6 +1258,7 @@ fn slint_canvas(s: &mut String, scene: &Scene) {
     let mut appbars = 0;
     let mut groups = 0;
     let mut dialogs = 0;
+    let mut icons = 0;
     let mut dividers = 0;
     for w in scene.widgets.iter() {
         let component = match w.kind.as_str() {
@@ -1394,6 +1396,51 @@ fn slint_canvas(s: &mut String, scene: &Scene) {
                 let i = dialogs;
                 dialogs += 1;
                 dialog_widget(s, w, i, scene);
+                continue;
+            }
+            "icon" => {
+                let i = icons;
+                icons += 1;
+                // `color` maps to upstream's `tint` (the `colorize` prop);
+                // `slint_overrides` shadow it for the negative scenes.
+                let color = w
+                    .slint_overrides
+                    .get("color")
+                    .and_then(|v| v.as_str())
+                    .map(str::to_string)
+                    .or_else(|| w.color.clone());
+                let colorize_prop = color
+                    .map(|c| format!("\n        colorize: MaterialPalette.{};", c.replace('-', "_")))
+                    .unwrap_or_default();
+                // No `width`/`height` authored → the icon takes the
+                // source's natural size (`defaultSizeFor` upstream).
+                let size_prop = |v: Option<f64>, name: &str| {
+                    v.map(|v| format!("\n        {name}: {v}px;"))
+                        .unwrap_or_default()
+                };
+                let width = w
+                    .slint_overrides
+                    .get("width")
+                    .map(widget_num)
+                    .or(w.width);
+                let height = w
+                    .slint_overrides
+                    .get("height")
+                    .map(widget_num)
+                    .or(w.height);
+                let x = w.slint_overrides.get("x").map(widget_num).unwrap_or(w.x);
+                let y = w.slint_overrides.get("y").map(widget_num).unwrap_or(w.y);
+                writeln!(
+                    s,
+                    "    icon{i} := Icon {{\n        x: {}px;\n        y: {}px;\n        source: Icons.{};{}{}{}\n    }}\n",
+                    x as i64,
+                    y as i64,
+                    w.icon.as_deref().unwrap_or("check"),
+                    size_prop(width, "width"),
+                    size_prop(height, "height"),
+                    colorize_prop,
+                )
+                .unwrap();
                 continue;
             }
             "divider" | "horizontal-divider" | "vertical-divider" => {

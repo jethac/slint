@@ -5,6 +5,7 @@ import { MaterialStyleMetrics } from "../styling/material_style_metrics.slint";
 import { MaterialAnimations } from "../styling/material_animations.slint";
 import { MaterialPalette } from "../styling/material_palette.slint";
 import { FocusTouchArea, StateLayer, Ripple } from "./state_layer.slint";
+import { SwitchTokens } from "../styling/generated/material_component_tokens.slint";
 import { Icon } from "./icon.slint";
 
 export component Switch {
@@ -72,6 +73,8 @@ export component Switch {
                 background: root.checked ? MaterialPalette.primary_container : MaterialPalette.outline;
 
                 if root.has_icon : Icon {
+                    width: root.checked ? SwitchTokens.selected_icon_size : SwitchTokens.unselected_icon_size;
+                    height: self.width;
                     source: root.checked ? root.on_icon : root.off_icon;
                     colorize: root.foreground;
 
