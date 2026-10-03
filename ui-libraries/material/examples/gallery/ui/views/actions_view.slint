@@ -37,6 +37,7 @@ import {
     LoadingIndicator,
     ContainedLoadingIndicator,
     SnackBar,
+    Surface,
     ModalBottomSheet,
     MaterialText,
     MaterialStyleMetrics,
@@ -911,6 +912,62 @@ export component ActionsView {
                     OutlinedCard {
                         width: 92px;
                         height: self.width;
+
+                        Vertical {
+                            alignment: space_between;
+
+                            HorizontalLayout {
+                                alignment: end;
+
+                                IconButton {
+                                    icon: OutlinedIcons.more_vert;
+                                }
+                            }
+
+                            MaterialText {
+                                text: "Outlined";
+                            }
+                        }
+                    }
+                }
+            }
+
+            ComponentCard {
+                title: "Surfaces";
+
+                Horizontal {
+                    alignment: center;
+                    spacing: MaterialStyleMetrics.size_16;
+
+                    Surface {
+                        width: 92px;
+                        height: self.width;
+                        tonal_elevation: 2px;
+
+                        Vertical {
+                            alignment: space_between;
+
+                            HorizontalLayout {
+                                alignment: end;
+
+                                IconButton {
+                                    icon: OutlinedIcons.more_vert;
+                                }
+                            }
+
+                            MaterialText {
+                                text: "Tonal";
+                            }
+                        }
+                    }
+
+                    Surface {
+                        width: 92px;
+                        height: self.width;
+                        border_radius: MaterialStyleMetrics.size_16;
+                        border_width: 1px;
+                        border_color: MaterialPalette.outline;
+                        clickable: true;
 
                         Vertical {
                             alignment: space_between;
