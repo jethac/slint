@@ -1,0 +1,113 @@
+// Copyright © SixtyFPS GmbH <info@slint.dev>
+// SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0
+
+// Scene: dividers — generated from `ui-libraries/material/parity/scenes/dividers.json`
+// (edit the scene, regenerate with `cargo run -p material-parity-generator`).
+//PARITY=static
+//SIZE=320x240
+//TRACE_ELEMENTS=divider0,divider1,divider2,divider3,divider4,divider5,divider6,divider7,divider8,divider9,divider10
+//DENSITIES=1,2
+import "../../fonts/Roboto-VariableFont.ttf";
+import { HorizontalDivider, MaterialPalette, MaterialTheme, MaterialWindow, VerticalDivider } from "@material";
+
+export component TestCase inherits MaterialWindow {
+    init => {
+        // The scene pins seed #6750A4, tonal-spot, spec2025, light, contrast 0
+        // (all the library defaults; restated here so a default change can't
+        // silently move the parity baseline).
+        MaterialTheme.seed-color = #6750A4;
+        MaterialTheme.dark = false;
+        MaterialTheme.contrast-level = 0;
+        MaterialTheme.use-platform-color = false;
+        MaterialTheme.plain-family = "Roboto";
+        MaterialTheme.brand-family = "Roboto";
+        // Compose builds its scene scheme from the same seed — use the
+        // runtime-generated scheme, not the static expressive table.
+        MaterialPalette.dynamic = true;
+    }
+
+    divider0 := HorizontalDivider {
+        x: 16px;
+        y: 20px;
+        width: 288px;
+        height: 1px;
+    }
+
+    divider1 := HorizontalDivider {
+        x: 16px;
+        y: 40px;
+        width: 288px;
+        height: 2px;
+        thickness: 2px;
+    }
+
+    divider2 := HorizontalDivider {
+        x: 16px;
+        y: 60px;
+        width: 288px;
+        height: 4px;
+        thickness: 4px;
+    }
+
+    divider3 := HorizontalDivider {
+        x: 16px;
+        y: 80px;
+        width: 288px;
+        height: 1px;
+        color: MaterialPalette.primary;
+    }
+
+    divider4 := HorizontalDivider {
+        x: 16px;
+        y: 100px;
+        width: 288px;
+        height: 0px;
+        thickness: 0px;
+    }
+
+    divider5 := HorizontalDivider {
+        x: 16px;
+        y: 120px;
+        width: 144px;
+        height: 1px;
+    }
+
+    divider6 := HorizontalDivider {
+        x: 16px;
+        y: 140px;
+        width: 288px;
+        height: 1px;
+    }
+
+    divider7 := VerticalDivider {
+        x: 24px;
+        y: 160px;
+        width: 1px;
+        height: 64px;
+    }
+
+    divider8 := VerticalDivider {
+        x: 40px;
+        y: 160px;
+        width: 2px;
+        height: 64px;
+        thickness: 2px;
+    }
+
+    divider9 := VerticalDivider {
+        x: 56px;
+        y: 160px;
+        width: 4px;
+        height: 64px;
+        thickness: 4px;
+        color: MaterialPalette.secondary;
+    }
+
+    divider10 := VerticalDivider {
+        x: 72px;
+        y: 160px;
+        width: 1px;
+        height: 32px;
+    }
+
+}
