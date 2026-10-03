@@ -116,11 +116,45 @@ class Widget(json: JSONObject) {
         json.optJSONArray("icons")?.let { a -> (0 until a.length()).map(a::getString) } ?: emptyList()
     val placeholder: String? = (json.opt("placeholder") as? String)?.takeIf { it.isNotEmpty() }
 
+    // --- navigation-rail kinds (`navigation-rail`, `wide-navigation-rail`,
+    // `modal-navigation-rail`) ---
+    /** Rail items: `[{ "text": "Inbox", "icon": "inbox",
+     * "selected_icon": "inbox", "badge": "3", "enabled": false }]`. */
+    val items: List<RailItem> =
+        json.optJSONArray("items")?.let { a -> (0 until a.length()).map { RailItem(a.getJSONObject(it)) } }
+            ?: emptyList()
+    /** `WideNavigationRailValue` — expanded when true, collapsed when false. */
+    val expanded: Boolean = json.optBoolean("expanded", false)
+    /** `ModalWideNavigationRail`'s `hideOnCollapse` — the standalone modal
+     * sheet that slides in instead of keeping a persistent rail. */
+    val hideOnCollapse: Boolean = json.optBoolean("hide_on_collapse", false)
+    /** `Arrangement.Vertical` of the rail's item stack: `top` (default),
+     * `center`, `bottom`, `space-evenly`, `space-between`, `space-around`. */
+    val arrangement: String = (json.opt("arrangement") as? String) ?: "top"
+    /** FAB icon stem in the rail header. */
+    val fabIcon: String? = (json.opt("fab_icon") as? String)?.takeIf { it.isNotEmpty() }
+    /** `NavigationRailItem.alwaysShowLabel` — narrow rail only. */
+    val alwaysShowLabel: Boolean = json.optBoolean("always_show_label", true)
+    /** The selected item index (`current-index` on the Slint side). */
+    val selectedIndex: Int = json.optInt("selected_index", 0)
+
     val isIconButton: Boolean get() = kind.endsWith("icon-button")
     val isButton: Boolean get() = isIconButton || kind.endsWith("-button")
     /** `elevated-rect` only: the elevation in dp of the Android ambient+spot
      * shadow `Modifier.shadow` draws behind the caster. */
     val elevation: Float = json.optDouble("elevation", 0.0).toFloat()
+}
+
+/** One rail item (`NavigationItem` on the Slint side): `{ "text": "Inbox",
+ * "icon": "inbox", "selected_icon": "inbox", "badge": "3",
+ * "enabled": false }`. */
+class RailItem(json: JSONObject) {
+    val text: String = json.optString("text", "")
+    val icon: String? = (json.opt("icon") as? String)?.takeIf { it.isNotEmpty() }
+    val selectedIcon: String? =
+        (json.opt("selected_icon") as? String)?.takeIf { it.isNotEmpty() }
+    val badge: String? = (json.opt("badge") as? String)?.takeIf { it.isNotEmpty() }
+    val enabled: Boolean = json.optBoolean("enabled", true)
 }
 
 /** "primary-container" → "primaryContainer" for `scheme` map lookups. */

@@ -1,0 +1,62 @@
+{
+    "name": "wide-navigation-rail-arrangements",
+    "type": "canvas",
+    "parity": "static",
+    "size": [340, 430],
+    "densities": [1],
+    "theme": {
+        "seed": "6750A4",
+        "variant": "tonal-spot",
+        "spec": "spec2025",
+        "platform": "phone",
+        "dark": false,
+        "contrast": 0.0
+    },
+    "fonts": {
+        "plain": "Roboto",
+        "brand": "Roboto"
+    },
+    "widgets": [
+        {
+            "kind": "wide-navigation-rail",
+            "x": 8, "y": 0, "height": 430,
+            "expanded": false,
+            "arrangement": "center",
+            "selected_index": 1,
+            "items": [
+                { "text": "Inbox", "icon": "check" },
+                { "text": "Sent", "icon": "schedule" },
+                { "text": "Files", "icon": "keyboard" },
+                { "text": "Trash", "icon": "close" }
+            ]
+        },
+        {
+            "kind": "wide-navigation-rail",
+            "x": 116, "y": 0, "height": 430,
+            "expanded": false,
+            "arrangement": "bottom",
+            "selected_index": 0,
+            "items": [
+                { "text": "Inbox", "icon": "check" },
+                { "text": "Sent", "icon": "schedule" },
+                { "text": "Files", "icon": "keyboard" },
+                { "text": "Trash", "icon": "close" }
+            ]
+        },
+        {
+            "kind": "wide-navigation-rail",
+            "x": 224, "y": 0, "height": 430,
+            "expanded": false,
+            "arrangement": "space-between",
+            "selected_index": 2,
+            "items": [
+                { "text": "Inbox", "icon": "check" },
+                { "text": "Sent", "icon": "schedule" },
+                { "text": "Files", "icon": "keyboard" },
+                { "text": "Trash", "icon": "close" }
+            ]
+        }
+    ],
+    "trace_elements": ["rail0", "rail1", "rail2"],
+    "trace_props": []
+}

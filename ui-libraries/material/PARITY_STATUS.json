@@ -667,11 +667,12 @@
   },
   "ModalWideNavigationRail": {
     "issues": [
+      11,
       12
     ],
-    "needs": "springs (#5), adaptive (#12)",
-    "notes": "",
-    "status": "missing"
+    "needs": "adaptive (#12)",
+    "notes": "slint component: ModalWideNavigationRail; tokens: generated component tokens; springs via active motion scheme",
+    "status": "partial"
   },
   "Modifier": {
     "issues": [
@@ -715,17 +716,19 @@
   },
   "NavigationRail": {
     "issues": [
+      11,
       12
     ],
-    "needs": "springs (#5), adaptive (#12)",
-    "notes": "slint component: NavigationRail",
+    "needs": "adaptive (#12)",
+    "notes": "slint component: NavigationRail; tokens: generated component tokens",
     "status": "partial"
   },
   "NavigationRailItem": {
     "issues": [
+      11,
       12
     ],
-    "needs": "springs (#5), adaptive (#12)",
+    "needs": "adaptive (#12)",
     "notes": "slint component: NavigationItemTemplate",
     "status": "partial"
   },
@@ -1198,18 +1201,20 @@
   },
   "WideNavigationRail": {
     "issues": [
+      11,
       12
     ],
-    "needs": "springs (#5), adaptive (#12)",
-    "notes": "",
-    "status": "missing"
+    "needs": "adaptive (#12)",
+    "notes": "slint component: WideNavigationRail; tokens: generated component tokens; springs via active motion scheme",
+    "status": "partial"
   },
   "WideNavigationRailItem": {
     "issues": [
+      11,
       12
     ],
-    "needs": "springs (#5), adaptive (#12)",
-    "notes": "",
-    "status": "missing"
+    "needs": "adaptive (#12)",
+    "notes": "slint component: WideRailItemTemplate (internal)",
+    "status": "partial"
   }
 }

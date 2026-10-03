@@ -1,0 +1,59 @@
+{
+  "name": "negative-rail-indicator",
+  "type": "canvas",
+  "parity": "negative",
+  "negative_note": "the covering rectangle repaints the rail in a doubled secondary-container wash \u2014 an over-painted active indicator must fail",
+  "size": [
+    160,
+    320
+  ],
+  "densities": [
+    1
+  ],
+  "theme": {
+    "seed": "6750A4",
+    "variant": "tonal-spot",
+    "spec": "spec2025",
+    "platform": "phone",
+    "dark": false,
+    "contrast": 0.0
+  },
+  "fonts": {
+    "plain": "Roboto",
+    "brand": "Roboto"
+  },
+  "widgets": [
+    {
+      "kind": "navigation-rail",
+      "x": 0,
+      "y": 0,
+      "height": 320,
+      "always_show_label": true,
+      "selected_index": 0,
+      "items": [
+        {
+          "text": "Inbox",
+          "icon": "check"
+        },
+        {
+          "text": "Sent",
+          "icon": "schedule"
+        },
+        {
+          "text": "Files",
+          "icon": "keyboard"
+        }
+      ],
+      "slint_overrides": {
+        "cover": {
+          "fill": "secondary-container",
+          "opacity": 0.5
+        }
+      }
+    }
+  ],
+  "trace_elements": [
+    "rail0"
+  ],
+  "trace_props": []
+}

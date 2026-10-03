@@ -1,0 +1,169 @@
+{
+  "densities": [
+    1,
+    2
+  ],
+  "fonts": {
+    "brand": "Roboto",
+    "plain": "Roboto"
+  },
+  "name": "navigation-rails",
+  "parity": "xfail:femtovg",
+  "size": [
+    560,
+    420
+  ],
+  "theme": {
+    "contrast": 0.0,
+    "dark": false,
+    "platform": "phone",
+    "seed": "6750A4",
+    "spec": "spec2025",
+    "variant": "tonal-spot"
+  },
+  "trace_elements": [
+    "rail0",
+    "rail1",
+    "rail2",
+    "rail3",
+    "headerfab",
+    "fab"
+  ],
+  "trace_props": [],
+  "type": "canvas",
+  "widgets": [
+    {
+      "always_show_label": true,
+      "fab_icon": "edit",
+      "height": 420,
+      "items": [
+        {
+          "icon": "check",
+          "selected_icon": "arrow_right",
+          "text": "Inbox"
+        },
+        {
+          "icon": "schedule",
+          "text": "Sent"
+        },
+        {
+          "enabled": false,
+          "icon": "keyboard",
+          "text": "Files"
+        },
+        {
+          "icon": "close",
+          "text": "Trash"
+        }
+      ],
+      "kind": "navigation-rail",
+      "nav_icon": "menu",
+      "selected_index": 0,
+      "x": 0,
+      "y": 0
+    },
+    {
+      "arrangement": "top",
+      "expanded": false,
+      "height": 420,
+      "items": [
+        {
+          "badge": "3",
+          "icon": "check",
+          "selected_icon": "arrow_right",
+          "text": "Inbox"
+        },
+        {
+          "icon": "schedule",
+          "text": "Sent"
+        },
+        {
+          "enabled": false,
+          "icon": "keyboard",
+          "text": "Files"
+        },
+        {
+          "icon": "close",
+          "text": "Trash"
+        }
+      ],
+      "kind": "wide-navigation-rail",
+      "nav_icon": "menu",
+      "selected_index": 0,
+      "x": 92,
+      "y": 0
+    },
+    {
+      "arrangement": "top",
+      "expanded": true,
+      "fab_icon": "edit",
+      "height": 420,
+      "items": [
+        {
+          "icon": "check",
+          "selected_icon": "arrow_right",
+          "text": "WAV"
+        },
+        {
+          "icon": "schedule",
+          "text": "Sent"
+        },
+        {
+          "enabled": false,
+          "icon": "keyboard",
+          "text": "Files"
+        },
+        {
+          "icon": "close",
+          "text": "Trash"
+        }
+      ],
+      "kind": "wide-navigation-rail",
+      "nav_icon": "menu",
+      "selected_index": 0,
+      "x": 200,
+      "y": 0
+    },
+    {
+      "expanded": false,
+      "height": 420,
+      "items": [
+        {
+          "icon": "check",
+          "text": "Inbox"
+        },
+        {
+          "icon": "schedule",
+          "text": "Sent"
+        },
+        {
+          "icon": "keyboard",
+          "text": "Files"
+        },
+        {
+          "icon": "close",
+          "text": "Trash"
+        }
+      ],
+      "kind": "modal-navigation-rail",
+      "selected_index": 1,
+      "x": 452,
+      "y": 0
+    }
+  ],
+  "mask_decor": {
+    "headerfab": {
+      "margin": 12,
+      "times": [
+        2000
+      ]
+    },
+    "fab": {
+      "margin": 12,
+      "times": [
+        2000
+      ]
+    }
+  },
+  "negative_note": "one strict pixel on the expanded rail's selected-item indicator edge (d1): the expanded item width comes out of the float measure policy, so the indicator edge lands between pixel centers \u2014 Skia and the software rasterizer resolve the coverage the same way the Compose reference does, FemtoVG one texel darker."
+}

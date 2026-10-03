@@ -1,0 +1,93 @@
+{
+  "densities": [
+    1
+  ],
+  "fonts": {
+    "brand": "Roboto",
+    "plain": "Roboto"
+  },
+  "name": "wide-navigation-rail-expand",
+  "params": {
+    "rail_events": [
+      [
+        "expand",
+        30
+      ],
+      [
+        "collapse",
+        1300
+      ]
+    ]
+  },
+  "parity": "xfail",
+  "size": [
+    400,
+    420
+  ],
+  "theme": {
+    "contrast": 0.0,
+    "dark": false,
+    "platform": "phone",
+    "seed": "6750A4",
+    "spec": "spec2025",
+    "variant": "tonal-spot"
+  },
+  "times": [
+    0,
+    60,
+    120,
+    200,
+    300,
+    450,
+    650,
+    900,
+    1150,
+    1250,
+    1360,
+    1450,
+    1550,
+    1750,
+    2000,
+    2400
+  ],
+  "trace_elements": [
+    "rail0"
+  ],
+  "trace_props": [
+    "rail_width"
+  ],
+  "type": "canvas",
+  "widgets": [
+    {
+      "arrangement": "center",
+      "expanded": false,
+      "fab_icon": "edit",
+      "height": 420,
+      "items": [
+        {
+          "icon": "check",
+          "selected_icon": "arrow_right",
+          "text": "WAV"
+        },
+        {
+          "icon": "schedule",
+          "text": "Sent"
+        },
+        {
+          "icon": "keyboard",
+          "text": "Files"
+        },
+        {
+          "icon": "close",
+          "text": "Trash"
+        }
+      ],
+      "kind": "wide-navigation-rail",
+      "nav_icon": "menu",
+      "selected_index": 0,
+      "x": 0,
+      "y": 0
+    }
+  ],
+  "negative_note": "issue #27: the rail events are synchronous Slint key dispatches while the Compose side launches `scope.launch { railState.expand() }`, so the spring starts ~3ms later on the Compose clock \u2014 identical-timestamp comparison reports a systematic lead and mid-animation frame pixels disagree. The t=0 `rail_width` prop is also a Compose capture artifact: its getter reads element bounds before the first layout and reports 0 where the Slint out property already reports 96dp."
+}

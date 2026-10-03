@@ -1,82 +1,341 @@
 // Copyright © SixtyFPS GmbH <info@slint.dev>
 // SPDX-License-Identifier: MIT
 
+// Narrow navigation rail, ported from
+// compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/NavigationRail.kt
+// at androidx/androidx@23327507f7fc7d5b19d65fec4b090f60c970079b (the #3 pin):
+// the `NarrowContainerWidth` rail whose items stack a top icon over a label.
+
 import { NavigationItem } from "../items/navigation_item.slint";
 import { FloatingActionButton, FABStyle } from "./floating_action_button.slint";
 import { MaterialStyleMetrics } from "../styling/material_style_metrics.slint";
 import { MaterialPalette } from "../styling/material_palette.slint";
+import { MaterialAnimations } from "../styling/material_animations.slint";
+import { MaterialTypography } from "../styling/material_typography.slint";
 import { IconButton } from "icon_button.slint";
+import { Icon } from "./icon.slint";
 import { Icons } from "../icons/icons.slint";
-import { NavigationItemTemplate } from "navigation_bar.slint";
-import { BaseNavigation } from "./base_navigation.slint";
+import { Badge } from "./badge.slint";
+import { MaterialText } from "./material_text.slint";
+import { StateLayer, Ripple, FocusRing, FocusTouchArea } from "./state_layer.slint";
+import {
+    NavigationRailBaselineItemTokens,
+    NavigationRailCollapsedTokens,
+    NavigationRailColorTokens,
+    NavigationRailVerticalItemTokens,
+} from "../styling/generated/material_component_tokens.slint";
+import { BaseNavigationItemTemplate, BaseNavigation } from "./base_navigation.slint";
 
+/// Private constants of NavigationRail.kt.
+global NavigationRailMetrics {
+    /// `NavigationRailVerticalPadding` — padding at the rail's top/bottom and
+    /// between items.
+    pure public function vertical-padding() -> length {
+        4px
+    }
+    /// `NavigationRailHeaderPadding` — spacer below the header.
+    pure public function header-padding() -> length {
+        8px
+    }
+    /// `NavigationRailItemWidth` — `NarrowContainerWidth`.
+    pure public function item-width() -> length {
+        NavigationRailCollapsedTokens.narrow-container-width
+    }
+    /// `NavigationRailItemHeight` — `ActiveIndicatorWidth`.
+    pure public function item-height() -> length {
+        NavigationRailVerticalItemTokens.active-indicator-width
+    }
+    /// `NavigationRailItemVerticalPadding` — between the indicator bottom and
+    /// the label.
+    pure public function item-vertical-padding() -> length {
+        4px
+    }
+    /// `IndicatorHorizontalPadding` — `(ActiveIndicatorWidth - IconSize)/2`.
+    pure public function indicator-horizontal-padding() -> length {
+        (NavigationRailVerticalItemTokens.active-indicator-width -
+            NavigationRailBaselineItemTokens.icon-size) / 2
+    }
+    /// `IndicatorVerticalPaddingWithLabel` — `(ActiveIndicatorHeight - IconSize)/2`.
+    pure public function indicator-vertical-padding-with-label() -> length {
+        (NavigationRailVerticalItemTokens.active-indicator-height -
+            NavigationRailBaselineItemTokens.icon-size) / 2
+    }
+    /// `IndicatorVerticalPaddingNoLabel` — `(ActiveIndicatorWidth - IconSize)/2`.
+    pure public function indicator-vertical-padding-no-label() -> length {
+        (NavigationRailVerticalItemTokens.active-indicator-width -
+            NavigationRailBaselineItemTokens.icon-size) / 2
+    }
+}
+
+/// `NavigationRailItem` — the narrow rail's top-icon item. The indicator pill
+/// fades in through `DefaultEffects` and grows through `FastSpatial`, which
+/// also drives the icon/label slide when `always-show-label` is off.
+component NavigationRailItemTemplate inherits BaseNavigationItemTemplate {
+    in property <bool> enabled: true;
+    in property <bool> always-show-label: true;
+
+    property <bool> has-label: root.text != "";
+    property <bool> has-icon: root.icon.width > 0 && root.icon.height > 0;
+
+    /// `sizeAnimationProgress` — `FastSpatial`, clamped non-negative.
+    property <float> selection-spatial: root.selected ? 1 : 0;
+    animate selection-spatial {
+        easing: MaterialAnimations.fast-spatial-spring;
+        enabled: !MaterialPalette.reduced-motion;
+    }
+    /// `alphaAnimationProgress` — `DefaultEffects`.
+    property <float> selection-effects: root.selected ? 1 : 0;
+    animate selection-effects {
+        easing: MaterialAnimations.default-effects-spring;
+        enabled: !MaterialPalette.reduced-motion;
+    }
+
+    property <length> label-w: root.has-label ? label.min-width : 0px;
+    property <length> label-h: root.has-label ? label.min-height : 0px;
+    property <length> indicator-w-total: NavigationRailBaselineItemTokens.icon-size +
+        2 * NavigationRailMetrics.indicator-horizontal-padding();
+    property <length> indicator-h: NavigationRailBaselineItemTokens.icon-size +
+        2 * (root.has-label ? NavigationRailMetrics.indicator-vertical-padding-with-label() :
+            NavigationRailMetrics.indicator-vertical-padding-no-label());
+    property <length> animated-indicator-width: root.indicator-w-total * root.selection-spatial;
+
+    // placeLabelAndIcon / placeIcon.
+    property <length> content-height: root.has-label ?
+        NavigationRailBaselineItemTokens.icon-size +
+            NavigationRailMetrics.indicator-vertical-padding-with-label() +
+            NavigationRailMetrics.item-vertical-padding() + root.label-h :
+        NavigationRailMetrics.item-height();
+    property <length> content-vertical-padding: root.has-label ?
+        max((NavigationRailMetrics.item-height() - root.content-height) / 2,
+            NavigationRailMetrics.indicator-vertical-padding-with-label()) : 0px;
+    property <length> policy-height: root.has-label ?
+        max(root.content-height + 2 * root.content-vertical-padding,
+            NavigationRailMetrics.item-height()) :
+        NavigationRailMetrics.item-height();
+    property <length> selected-icon-y: root.content-vertical-padding;
+    property <length> unselected-icon-y: root.always-show-label ? root.selected-icon-y :
+        (root.policy-height - NavigationRailBaselineItemTokens.icon-size) / 2;
+    property <length> icon-offset: (root.unselected-icon-y - root.selected-icon-y) *
+        (1 - root.selection-spatial);
+    property <length> icon-y: root.has-label ? root.selected-icon-y + root.icon-offset :
+        (root.policy-height - NavigationRailBaselineItemTokens.icon-size) / 2;
+    property <length> label-y: root.selected-icon-y + NavigationRailBaselineItemTokens.icon-size +
+        NavigationRailMetrics.indicator-vertical-padding-with-label() +
+        NavigationRailMetrics.item-vertical-padding() + root.icon-offset;
+    property <length> ripple-y: root.has-label ?
+        root.selected-icon-y - NavigationRailMetrics.indicator-vertical-padding-with-label() +
+            root.icon-offset :
+        (root.policy-height - root.indicator-h) / 2;
+
+    width: max(NavigationRailMetrics.item-width(), root.label-w);
+    height: root.policy-height;
+
+    property <color> icon-color-target: !root.enabled ?
+        NavigationRailColorTokens.item-inactive-icon.with_alpha(0.38) :
+        root.selected ? NavigationRailColorTokens.item-active-icon :
+        NavigationRailColorTokens.item-inactive-icon;
+    property <color> icon-color: root.icon-color-target;
+    animate icon-color {
+        easing: MaterialAnimations.default-effects-spring;
+        enabled: !MaterialPalette.reduced-motion;
+    }
+    property <color> label-color-target: !root.enabled ?
+        NavigationRailColorTokens.item-inactive-label-text.with_alpha(0.38) :
+        root.selected ? NavigationRailColorTokens.item-active-label-text :
+        NavigationRailColorTokens.item-inactive-label-text;
+    property <color> label-color: root.label-color-target;
+    animate label-color {
+        easing: MaterialAnimations.default-effects-spring;
+        enabled: !MaterialPalette.reduced-motion;
+    }
+    property <color> state-layer-color: touch.pressed || touch.enter-pressed ?
+        NavigationRailColorTokens.item-inactive-pressed-state-layer :
+        root.selected ? NavigationRailColorTokens.item-active-hovered-state-layer :
+        NavigationRailColorTokens.item-inactive-hovered-state-layer;
+
+    touch := FocusTouchArea {
+        x: 0;
+        y: 0;
+        width: root.width;
+        height: root.height;
+        enabled: root.enabled;
+
+        clicked => { root.clicked(); }
+        pointer-event(e) => { root.pointer-event(e, { x: self.mouse-x, y: self.mouse-y }); }
+    }
+
+    // `IndicatorRipple` — clipped to the indicator shape, under the
+    // selected pill like upstream.
+    indicator-ripple := Rectangle {
+        x: (root.width - root.indicator-w-total) / 2;
+        y: root.ripple-y;
+        width: root.indicator-w-total;
+        height: root.indicator-h;
+        border-radius: self.height / 2;
+        clip: true;
+
+        if touch.has-focus || touch.has-hover || touch.pressed || touch.enter-pressed :
+            StateLayer {
+            width: 100%;
+            height: 100%;
+            background: root.state-layer-color;
+            border-radius: parent.border-radius;
+            enabled: root.enabled;
+            pressed: touch.pressed || touch.enter-pressed;
+            has-focus: touch.has-focus;
+            has-hover: touch.has-hover;
+        }
+
+        if root.enabled && (touch.pressed || touch.enter-pressed) : Ripple {
+            pressed-x: touch.pressed-x - indicator-ripple.x;
+            pressed-y: touch.pressed-y - indicator-ripple.y;
+            width: 100%;
+            height: 100%;
+            border-radius: parent.border-radius;
+            color: root.state-layer-color;
+        }
+    }
+
+    indicator := Rectangle {
+        x: (root.width - root.animated-indicator-width) / 2;
+        y: root.has-label ? root.ripple-y : (root.policy-height - root.indicator-h) / 2;
+        width: root.animated-indicator-width;
+        height: root.indicator-h;
+        border-radius: self.height / 2;
+        background: NavigationRailColorTokens.item-active-indicator;
+        opacity: root.selection-effects;
+    }
+
+    icon-img := Icon {
+        x: (root.width - self.width) / 2;
+        y: root.icon-y;
+        width: NavigationRailBaselineItemTokens.icon-size;
+        height: self.width;
+        source: root.selected && root.selected-icon.width > 0 ? root.selected-icon : root.icon;
+        colorize: root.icon-color;
+    }
+
+    label := MaterialText {
+        x: (root.width - self.min-width) / 2;
+        y: root.label-y;
+        visible: root.has-label;
+        text: root.text;
+        style: NavigationRailVerticalItemTokens.label-text-font;
+        color: root.label-color;
+        opacity: root.always-show-label ? 1 : root.selection-effects;
+        overflow: clip;
+    }
+
+    // `BadgedBox` — the badge anchors to the item's top end: a content badge
+    // sits `BadgeWithContentHorizontalOffset` (12dp) short of the item's
+    // right edge, a dot `BadgeOffset` (6dp). The badge's
+    // `BadgeEndRuler`/`BadgeTopRuler` providers live on the item's
+    // inner layout and never reach the `BadgedBox` badge slot, so upstream's
+    // `current(±INF)` defaults win: `x = anchorW - offset`, `y = -badgeH +
+    // offset` (Badge.kt, pinned). A non-empty badge is content (12/14),
+    // an empty one is a dot (6/6 over a 6px badge).
+    item-badge := Badge {
+        visible: root.show-badge || root.badge != "";
+        x: root.width - (root.badge != "" ? 12px : 6px);
+        y: root.badge != "" ? 14px - self.height : 0px;
+        text: root.badge;
+    }
+
+    if touch.has-focus && root.enabled : FocusRing {
+        x: indicator-ripple.x;
+        y: indicator-ripple.y;
+        width: indicator-ripple.width;
+        height: indicator-ripple.height;
+        border-radius: self.height / 2;
+    }
+}
+
+/// Material Design navigation rail (`NavigationRail` upstream): the narrow
+/// rail — an 80dp-wide column of top-icon items for medium windows.
+///
+/// The optional header shows a menu button (`has-menu`), a FAB (`fab-icon`)
+/// and any children (e.g. a logo); items come from `items`/`current-index`
+/// like `NavigationBar`. Items stack from the top with 4dp gaps; there is no
+/// arrangement parameter upstream.
+///
+/// For the collapsing/expanding rail see `WideNavigationRail`; for the
+/// dismissible overlay see `ModalWideNavigationRail`.
 export component NavigationRail inherits BaseNavigation {
-    in property <bool> has_menu;
-    in property <image> fab_icon;
-    in property <LayoutAlignment> alignment;
+    /// `NavigationRailItem.alwaysShowLabel` — labels stay visible on
+    /// unselected items when true (upstream default); when false they fade in
+    /// with the selection animation.
+    in property <bool> always-show-label: true;
+    in property <bool> has-menu;
+    in property <image> fab-icon;
+    callback menu-clicked();
+    callback fab-clicked();
 
-    callback menu_clicked();
-    callback fab_clicked();
-
-    min_width: max(MaterialStyleMetrics.size_80, layout.min_width);
+    min-width: max(NavigationRailMetrics.item-width(), layout.min-width);
 
     Rectangle {
-        background: MaterialPalette.surface;
+        background: NavigationRailCollapsedTokens.container-color;
 
+        // Upstream Column: `padding(vertical = 4)`, `spacedBy(4)`, the
+        // header's children as direct Column children, and `Spacer(8)` only
+        // when the header slot is non-null. Slint's `spacing` reserves a gap
+        // for even a zero-height slot, so the gaps are folded into the
+        // children: `header-box` absorbs the header->spacer->item run when
+        // non-empty, each item wrapper carries the gap above it.
         layout := VerticalLayout {
-            padding_top: MaterialStyleMetrics.padding_44;
-            padding_bottom: MaterialStyleMetrics.padding_56;
-            spacing: MaterialStyleMetrics.spacing_4;
+            alignment: start;
+            padding-top: NavigationRailMetrics.vertical-padding();
+            padding-bottom: NavigationRailMetrics.vertical-padding();
+            spacing: 0px;
 
-            if root.has_menu : IconButton {
-                icon: Icons.menu;
+            header-box := Rectangle {
+                height: header-layout.min-height > 0px ?
+                    header-layout.min-height +
+                        NavigationRailMetrics.vertical-padding() +
+                        NavigationRailMetrics.header-padding() : 0px;
 
-                clicked => {
-                    root.menu_clicked();
-                }
-            }
+                // Upstream `header` is a `ColumnScope` lambda: its children
+                // are direct children of the rail's `spacedBy(4)` Column.
+                header-layout := VerticalLayout {
+                    alignment: start;
+                    spacing: NavigationRailMetrics.vertical-padding();
 
-
-            if root.fab_icon.width > 0 && root.fab_icon.height > 0 : HorizontalLayout {
-                alignment: center;
-
-                FloatingActionButton {
-                    icon: root.fab_icon;
-                    style: FABStyle.standard;
-
-                    clicked => {
-                        root.fab_clicked();
-                    }
-                }
-            }
-
-            // helper to place fab at the top if no items are present
-            if root.items.length == 0 : Rectangle {
-                horizontal_stretch: 1;
-            }
-
-            HorizontalLayout {
-                vertical_stretch: 1;
-                alignment: center;
-
-                VerticalLayout {
-                    alignment: root.alignment;
-
-                    for item[index] in root.items : NavigationItemTemplate {
-                        icon: item.icon;
-                        selected_icon: item.selected_icon;
-                        text: item.text;
-                        index: index;
-                        selected: index == root.current_index;
-                        show_badge: item.show_badge;
-                        badge: item.badge;
-                        navitem_padding_top: 0;
-                        navitem_padding_bottom: MaterialStyleMetrics.padding_4;
-
-                        clicked => {
-                            root.select(index);
+                    if root.has-menu : HorizontalLayout {
+                        alignment: center;
+                        IconButton {
+                            icon: Icons.menu;
+                            clicked => { root.menu-clicked(); }
                         }
                     }
+
+                    if root.fab-icon.width > 0 && root.fab-icon.height > 0 : HorizontalLayout {
+                        alignment: center;
+                        headerfab := FloatingActionButton {
+                            icon: root.fab-icon;
+                            style: FABStyle.standard;
+                            clicked => { root.fab-clicked(); }
+                        }
+                    }
+
+                    @children
+                }
+            }
+
+            for item[index] in root.items : VerticalLayout {
+                padding-top: header-box.height > 0px || index > 0 ?
+                    NavigationRailMetrics.vertical-padding() : 0px;
+
+                NavigationRailItemTemplate {
+                    icon: item.icon;
+                    selected-icon: item.selected-icon;
+                    text: item.text;
+                    index: index;
+                    selected: index == root.current-index;
+                    enabled: item.enabled;
+                    always-show-label: root.always-show-label;
+                    show-badge: item.show-badge;
+                    badge: item.badge;
+
+                    clicked => { root.select(index); }
                 }
             }
         }

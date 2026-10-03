@@ -12,6 +12,9 @@ import {
     TextButton,
     ModalNavigationDrawer,
     NavigationRail,
+    WideNavigationRail,
+    ModalWideNavigationRail,
+    NavigationRailArrangement,
     Horizontal,
     NavigationItem,
     TabBar,
@@ -245,7 +248,6 @@ export component NavigationView {
                     NavigationRail {
                         height: 500px;
                         fab_icon: FilledIcons.edit;
-                        alignment: center;
 
                         items: [
                             {
@@ -269,6 +271,124 @@ export component NavigationView {
                                 text: "Trash",
                             }
                         ];
+                    }
+                }
+            }
+
+            ComponentCard {
+                title: "Wide navigation rail";
+
+                Vertical {
+                    spacing: MaterialStyleMetrics.spacing_16;
+                    alignment: start;
+
+                    Horizontal {
+                        alignment: center;
+                        spacing: MaterialStyleMetrics.spacing_16;
+
+                        wide_rail := WideNavigationRail {
+                            height: 500px;
+                            arrangement: NavigationRailArrangement.top;
+                            has-menu: true;
+                            fab-icon: FilledIcons.edit;
+
+                            menu-clicked => {
+                                self.toggle();
+                            }
+
+                            items: [
+                                {
+                                    icon: OutlinedIcons.inbox,
+                                    selected_icon: FilledIcons.inbox,
+                                    text: "Inbox",
+                                },
+                                {
+                                    icon: OutlinedIcons.outbox,
+                                    selected_icon: FilledIcons.outbox,
+                                    text: "Outbox",
+                                },
+                                {
+                                    icon: OutlinedIcons.favorite,
+                                    selected_icon: FilledIcons.favorite,
+                                    text: "Favorites",
+                                },
+                                {
+                                    icon: OutlinedIcons.delete,
+                                    selected_icon: FilledIcons.delete,
+                                    text: "Trash",
+                                }
+                            ];
+                        }
+                    }
+
+                    HorizontalLayout {
+                        alignment: center;
+
+                        Switch {
+                            checked <=> wide_rail.expanded;
+                        }
+
+                        MaterialText {
+                            text: "Expanded";
+                            vertical-alignment: center;
+                        }
+                    }
+                }
+            }
+
+            ComponentCard {
+                title: "Modal wide navigation rail";
+
+                Vertical {
+                    spacing: MaterialStyleMetrics.spacing_16;
+
+                    Horizontal {
+                        alignment: center;
+
+                        modal_rail := ModalWideNavigationRail {
+                            height: 500px;
+                            arrangement: NavigationRailArrangement.top;
+                            has-menu: true;
+
+                            menu-clicked => {
+                                self.toggle();
+                            }
+
+                            items: [
+                                {
+                                    icon: OutlinedIcons.inbox,
+                                    selected_icon: FilledIcons.inbox,
+                                    text: "Inbox",
+                                },
+                                {
+                                    icon: OutlinedIcons.outbox,
+                                    selected_icon: FilledIcons.outbox,
+                                    text: "Outbox",
+                                },
+                                {
+                                    icon: OutlinedIcons.favorite,
+                                    selected_icon: FilledIcons.favorite,
+                                    text: "Favorites",
+                                },
+                                {
+                                    icon: OutlinedIcons.delete,
+                                    selected_icon: FilledIcons.delete,
+                                    text: "Trash",
+                                }
+                            ];
+                        }
+                    }
+
+                    HorizontalLayout {
+                        alignment: center;
+
+                        TextButton {
+                            text: "Show modal rail";
+
+                            clicked => {
+                                modal_rail.expand();
+                            }
+                        }
                     }
                 }
             }
