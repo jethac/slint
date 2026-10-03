@@ -166,9 +166,11 @@ component ShortNavigationBarItemTemplate inherits BaseNavigationItemTemplate {
 
     /// `maxIntrinsicWidth`/`maxIntrinsicHeight` of the item wrapper —
     /// including the `min-size` interactive minimum — the values the bar's
-    /// measure policies query. The vertical policy only overrides
-    /// `maxIntrinsicHeight`, so its intrinsic width is the minimum alone.
-    out property <length> intrinsic-width: root.vertical-item ? root.min-size :
+    /// measure policies query. `TopIconOrIconOnlyMeasurePolicy` overrides
+    /// only `maxIntrinsicHeight`, so its intrinsic width is the widest
+    /// child's: the indicator, the label, or the interactive minimum.
+    out property <length> intrinsic-width: root.vertical-item ?
+        max(root.min-size, root.indicator-w-total, root.label-w) :
         max(root.min-size, root.start-indicator-w-total);
     out property <length> intrinsic-height: root.vertical-item ?
         max(root.min-size, root.icon-size + root.label-h +
@@ -290,13 +292,16 @@ component ShortNavigationBarItemTemplate inherits BaseNavigationItemTemplate {
         overflow: clip;
     }
 
-    // `BadgedBox` — same anchoring as the rail: a content badge sits
-    // `BadgeWithContentHorizontalOffset` (12dp) short of the item's right
-    // edge, a dot `BadgeOffset` (6dp); `current(±INF)` defaults win.
+    // `BadgedBox` — the badge anchors to the icon: its left edge sits
+    // `BadgeWithContentHorizontalOffset` (12dp) left of the icon's right
+    // edge, its bottom `BadgeWithContentVerticalOffset` (14dp) below the
+    // icon's top; a dot uses `BadgeOffset` (6dp). The item's `badgeBounds`
+    // ruler clamps it to the item's right edge.
     item-badge := Badge {
         visible: root.show-badge || root.badge != "";
-        x: root.width - (root.badge != "" ? 12px : 6px);
-        y: root.badge != "" ? 14px - self.height : 0px;
+        x: icon-img.x + min(icon-img.width - (root.badge != "" ? 12px : 6px),
+                root.width - icon-img.x - self.width);
+        y: max(icon-img.y - self.height + (root.badge != "" ? 14px : 6px), 0px);
         text: root.badge;
     }
 
@@ -476,13 +481,16 @@ export component NavigationItemTemplate inherits BaseNavigationItemTemplate {
         overflow: clip;
     }
 
-    // `BadgedBox` — same anchoring as the rail: a content badge sits
-    // `BadgeWithContentHorizontalOffset` (12dp) short of the item's right
-    // edge, a dot `BadgeOffset` (6dp); `current(±INF)` defaults win.
+    // `BadgedBox` — the badge anchors to the icon: its left edge sits
+    // `BadgeWithContentHorizontalOffset` (12dp) left of the icon's right
+    // edge, its bottom `BadgeWithContentVerticalOffset` (14dp) below the
+    // icon's top; a dot uses `BadgeOffset` (6dp). The item's `badgeBounds`
+    // ruler clamps it to the item's right edge.
     item-badge := Badge {
         visible: root.show-badge || root.badge != "";
-        x: root.width - (root.badge != "" ? 12px : 6px);
-        y: root.badge != "" ? 14px - self.height : 0px;
+        x: icon-img.x + min(icon-img.width - (root.badge != "" ? 12px : 6px),
+                root.width - icon-img.x - self.width);
+        y: max(icon-img.y - self.height + (root.badge != "" ? 14px : 6px), 0px);
         text: root.badge;
     }
 
