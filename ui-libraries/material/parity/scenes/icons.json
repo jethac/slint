@@ -1,0 +1,121 @@
+{
+    "name": "icons",
+    "type": "canvas",
+    "parity": "static",
+    "size": [
+        240,
+        176
+    ],
+    "densities": [
+        1,
+        2
+    ],
+    "theme": {
+        "seed": "6750A4",
+        "variant": "tonal-spot",
+        "spec": "spec2025",
+        "platform": "phone",
+        "dark": false,
+        "contrast": 0.0
+    },
+    "fonts": {
+        "plain": "Roboto",
+        "brand": "Roboto"
+    },
+    "widgets": [
+        {
+            "kind": "icon",
+            "icon": "check",
+            "x": 16,
+            "y": 16
+        },
+        {
+            "kind": "icon",
+            "icon": "menu",
+            "x": 56,
+            "y": 16
+        },
+        {
+            "kind": "icon",
+            "icon": "arrow_back",
+            "x": 96,
+            "y": 16,
+            "color": "primary"
+        },
+        {
+            "kind": "icon",
+            "icon": "close",
+            "x": 136,
+            "y": 16,
+            "color": "error"
+        },
+        {
+            "kind": "icon",
+            "icon": "schedule",
+            "x": 176,
+            "y": 16,
+            "color": "on-surface-variant"
+        },
+        {
+            "kind": "icon",
+            "icon": "edit",
+            "x": 16,
+            "y": 64,
+            "width": 40,
+            "height": 40
+        },
+        {
+            "kind": "icon",
+            "icon": "keyboard",
+            "x": 72,
+            "y": 64,
+            "width": 40,
+            "height": 40,
+            "color": "secondary"
+        },
+        {
+            "kind": "icon",
+            "icon": "more_vert",
+            "x": 128,
+            "y": 64,
+            "width": 16,
+            "height": 16
+        },
+        {
+            "kind": "icon",
+            "icon": "add",
+            "x": 160,
+            "y": 64,
+            "width": 48,
+            "height": 48,
+            "color": "tertiary"
+        },
+        {
+            "kind": "icon",
+            "icon": "calendar_today",
+            "x": 16,
+            "y": 128
+        },
+        {
+            "kind": "icon",
+            "icon": "chevron_forward",
+            "x": 56,
+            "y": 128,
+            "color": "outline"
+        }
+    ],
+    "trace_elements": [
+        "icon0",
+        "icon1",
+        "icon2",
+        "icon3",
+        "icon4",
+        "icon5",
+        "icon6",
+        "icon7",
+        "icon8",
+        "icon9",
+        "icon10"
+    ],
+    "trace_props": []
+}

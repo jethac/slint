@@ -508,7 +508,7 @@
     ],
     "needs": "none",
     "notes": "slint component: Icon",
-    "status": "partial"
+    "status": "done"
   },
   "IconButton": {
     "issues": [

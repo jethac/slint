@@ -212,7 +212,7 @@ Sizes: baseline
 
 | Component | Source | Status | Issues | Needs | Notes |
 |---|---|---|---|---|---|
-| Icon | Icon.kt | partial | #11 | none | slint component: Icon |
+| Icon | Icon.kt | done | #11 | none | slint component: Icon |
 
 ### Icon buttons
 

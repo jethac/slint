@@ -8,6 +8,7 @@ import { MaterialText } from "./material_text.slint";
 import { MaterialAnimations } from "../styling/material_animations.slint";
 import { MaterialTypography } from "../styling/material_typography.slint";
 import { ExtendedTouchArea } from "./extended_touch_area.slint";
+import { NavigationBarHorizontalItemTokens } from "../styling/generated/material_component_tokens.slint";
 import { StateLayer, Ripple } from "./state_layer.slint";
 import { Icon } from "./icon.slint";
 import { NavigationItem } from "../items/navigation_item.slint";
@@ -78,6 +79,8 @@ export component NavigationItemTemplate inherits BaseNavigationItemTemplate {
                                     }
 
                                     if root.has_icon || root.has_selected_icon : Icon {
+                                        width: NavigationBarHorizontalItemTokens.icon_size;
+                                        height: self.width;
                                         source: root.icon;
                                         colorize: root.color;
 
