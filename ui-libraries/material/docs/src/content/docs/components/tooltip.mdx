@@ -1,32 +1,86 @@
 ---
-title: ToolTip
-description: ToolTip API.
+title: Tooltip
+description: Tooltip API — TooltipBox anchoring, plain and rich tooltip surfaces.
 ---
 
 import CodeSnippetMD from '@slint/common-files/src/components/CodeSnippetMD.astro';
 import SlintProperty from '@slint/common-files/src/components/SlintProperty.astro';
 
-<CodeSnippetMD imagePath="" noScreenShot scale="3" imageWidth="300" imageHeight="200" imageAlt="">
+<CodeSnippetMD imagePath="/src/assets/generated/tooltip.png" scale="3" imageWidth="360" imageHeight="180" imageAlt="">
 ```slint
-import { ToolTip } from "@material";
+import { TooltipBox, RichTooltip, TextButton } from "@material";
 export component Example inherits Window {
-    width: 200px;
-    height: 100px;
+    width: 360px;
+    height: 180px;
     background: transparent;
-    ToolTip {
-        text: "This is a tooltip";
-        x: 10px;
-        y: 10px;
+
+    TooltipBox {
+        x: 24px;
+        y: 88px;
+        show_tooltip: true;
+        tooltip: "Save document";
+        TextButton { text: "Save"; }
+    }
+    RichTooltip {
+        x: 140px;
+        y: 32px;
+        title: "Permissions";
+        text: "Rich tooltips inform users.";
+        action_text: "MANAGE";
     }
 }
 ```
 </CodeSnippetMD>
 
-A `ToolTip` displays additional information when hovering over a component.
+A tooltip displays a descriptive message about its anchor — `TooltipBox` + the `TooltipScope.PlainTooltip`/`TooltipScope.RichTooltip` surfaces in `Tooltip.kt` upstream.
 
-## Properties
+## TooltipBox
 
-### text
-<SlintProperty propName="text" typeName="string">
-The text to display in the tooltip.
+`TooltipBox` wraps the anchor content and shows the tooltip above it — below when there is not enough room — centered on the anchor like `rememberTooltipPositionProvider` (plain tooltips), or start-aligned with the upstream rich-tooltip fallback chain when `rich_tooltip` is set. The caret (the 16x8 triangle of `TooltipDefaults.caretSize`) points at the anchor's center while `caret` is enabled.
+
+The tooltip shows when the anchor is hovered, holds keyboard focus, or receives a touch long-press (500ms, `BasicTooltipBox`'s `onLongClick`), matching `TooltipState`'s defaults; non-persistent tooltips dismiss themselves after `TooltipDuration` (1500ms). `persistent` (or `has_action`, which implies it) keeps the tooltip up until dismissed — Escape on the keyboard or `dismissed-by-user` upstream. The enter transition is the M3E `FastSpatial` scale (0.8→1) + `FastEffects` fade, suppressed under `MaterialPalette.reduced-motion`.
+
+### tooltip
+<SlintProperty propName="tooltip" typeName="string">
+The plain tooltip text — upstream's `tooltip = { PlainTooltip { Text(text) } }` slot content. Empty shows nothing.
 </SlintProperty>
+
+### rich_tooltip / rich_title / rich_text / rich_action
+<SlintProperty propName="rich_tooltip" typeName="bool" defaultValue="false">
+Draw the `RichTooltip` surface instead: `rich_title` fills the upstream `title` slot, `rich_text` the required text slot, and `rich_action` the `action` slot (an `action` also makes the tooltip persistent, as upstream requires).
+</SlintProperty>
+
+### preferred_position
+<SlintProperty propName="preferred_position" typeName="TooltipAnchorPosition" defaultValue="above">
+`above` or `below` — upstream's `rememberPlainTooltipPositionProvider()`/`rememberRichTooltipPositionProvider()` spacing argument; the provider falls back to the other side when the preferred side does not fit the viewport.
+</SlintProperty>
+
+### enable_user_input / has_action / persistent
+<SlintProperty propName="enable_user_input" typeName="bool" defaultValue="true">
+`BasicTooltipBox`'s `enableUserInput` — disables hover/press triggers. `has_action` forces `persistent` and focuses the tooltip's action, matching upstream.
+</SlintProperty>
+
+### show_tooltip
+<SlintProperty propName="show_tooltip" typeName="bool" defaultValue="false">
+Force the tooltip visible without a trigger — the harness/docs equivalent of calling `TooltipState.show()` once.
+</SlintProperty>
+
+## PlainTooltip
+
+`PlainTooltip` draws the surface itself (InverseSurface on `CornerExtraSmall`, `InverseOnSurface` `BodySmall`, `sizeIn(40px min, 200px max, 24px min)`, 8px horizontal / 4px vertical padding) — use it standalone for scene/tests, or leave `caret` on and place it over an anchor via `caret_edge`/`caret_x`.
+
+## RichTooltip
+
+`RichTooltip` draws the elevated surface (`SurfaceContainer` on `CornerMedium`, `ElevationTokens.Level2` shadow, `sizeIn` max 320px, 16px horizontal padding): `title` as `TitleSmall` on a 28dp first-baseline, `text` as `BodyMedium`, and `action_text` as a `LabelLarge` action row (`requiredHeightIn(36)`, 8dp bottom padding).
+
+## TooltipContent / TooltipAnchorPosition
+
+`TooltipContent` is the positioned surface `TooltipBox` renders — plain or rich by `rich`, following the provider math over `anchor_abs_x`/`anchor_abs_y`/`anchor_width`/`anchor_height`. `TooltipAnchorPosition` is the `above`/`below` enum, `TooltipCaretEdge` the caret's attached `top`/`bottom` edge.
+
+## ToolTip (deprecated)
+
+`ToolTip` is the pre-M3E name kept as an alias of `PlainTooltip`. The `tooltip:`/`tooltip_offset:` convenience props on touch areas (`FocusTouchArea`, `ExtendedTouchArea`) still work — `tooltip` text shows through the new position provider; `tooltip_offset` is ignored, the provider places the tooltip itself.
+
+## Deviations from upstream
+
+The overlay draws in the window's item tree instead of a real platform `Popup` — a composable tooltip inside `TooltipBox` lives above the anchor's own popup layer upstream, and Slint's `PopupWindow` cannot size-to-content before being positioned. Placement still follows the provider math and clamps against `MaterialWindowAdapter.viewport_width`/`viewport_height`. Carets render as the triangular caret only; upstream's `TooltipCaretShape` container-union outline is not reproduced.

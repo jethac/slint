@@ -167,6 +167,12 @@ struct Widget {
     radius: Option<f64>,
     #[serde(default)]
     text: Option<String>,
+    /// `tooltip-rich` optional title (the upstream `title` slot).
+    #[serde(default)]
+    title: Option<String>,
+    /// `tooltip-rich` optional action label (the upstream `action` slot).
+    #[serde(default)]
+    action: Option<String>,
     /// Named icon for `icon-button` kinds or a leading icon on a text
     /// button: the stem of an svg under `src/ui/icons/` (e.g. `check` for
     /// `Icons.check`). The generator copies the svg into the Compose
@@ -731,6 +737,8 @@ fn slint_case(scene: &Scene) -> String {
             "icon" => "Icon",
             // `divider` is the deprecated `HorizontalDivider` alias upstream.
             "divider" | "horizontal-divider" => "HorizontalDivider",
+            "tooltip-plain" => "PlainTooltip",
+            "tooltip-rich" => "RichTooltip",
             "vertical-divider" => "VerticalDivider",
             "badge" => "Badge",
             "badged-box" => "BadgedBox",
@@ -1282,6 +1290,7 @@ fn slint_canvas(s: &mut String, scene: &Scene) {
     let mut dividers = 0;
     let mut badges = 0;
     let mut badged_boxes = 0;
+    let mut tooltips = 0;
     for w in scene.widgets.iter() {
         let component = match w.kind.as_str() {
             "filled-button" => "FilledButton",
@@ -1563,6 +1572,48 @@ fn slint_canvas(s: &mut String, scene: &Scene) {
                     w.x as i64,
                     w.y as i64,
                     w.icon.as_deref().unwrap_or("check"),
+                )
+                .unwrap();
+                continue;
+            }
+            "tooltip-plain" | "tooltip-rich" => {
+                let i = tooltips;
+                tooltips += 1;
+                // Tooltips render inline here — upstream only ever draws
+                // them through `TooltipBox`'s Popup, which Paparazzi can't
+                // capture — so both sides draw the surface structure the
+                // scope composables produce (Tooltip.kt @23327507). Carets
+                // stay off on both sides: upstream's caretShape needs the
+                // box's TooltipScope.
+                let x = w.slint_overrides.get("x").map(widget_num).unwrap_or(w.x);
+                let y = w.slint_overrides.get("y").map(widget_num).unwrap_or(w.y);
+                let container = w
+                    .slint_overrides
+                    .get("color")
+                    .and_then(|v| v.as_str())
+                    .map(str::to_string)
+                    .or_else(|| w.color.clone());
+                let container_prop = container
+                    .map(|c| format!("\n        container_color: MaterialPalette.{};", c.replace('-', "_")))
+                    .unwrap_or_default();
+                let mut body = String::new();
+                if let Some(text) = &w.text {
+                    writeln!(body, "        text: \"{text}\";").unwrap();
+                }
+                if w.kind == "tooltip-rich" {
+                    if let Some(title) = &w.title {
+                        writeln!(body, "        title: \"{title}\";").unwrap();
+                    }
+                    if let Some(action) = &w.action {
+                        writeln!(body, "        action_text: \"{action}\";").unwrap();
+                    }
+                }
+                let component = if w.kind == "tooltip-plain" { "PlainTooltip" } else { "RichTooltip" };
+                writeln!(
+                    s,
+                    "    tooltip{i} := {component} {{\n        x: {}px;\n        y: {}px;\n{body}{container_prop}    }}\n",
+                    x as i64,
+                    y as i64,
                 )
                 .unwrap();
                 continue;

@@ -109,6 +109,7 @@
   "type": "canvas",
   "widgets": [
     {
+      "action": null,
       "alignment": null,
       "checkable": null,
       "checked": false,
@@ -145,6 +146,7 @@
       "target_scale": null,
       "text": null,
       "thickness": null,
+      "title": null,
       "toggle": null,
       "trailing_icon": null,
       "variant": null,

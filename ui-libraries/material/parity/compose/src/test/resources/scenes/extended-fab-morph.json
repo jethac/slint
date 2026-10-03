@@ -129,6 +129,7 @@
   "type": "canvas",
   "widgets": [
     {
+      "action": null,
       "alignment": null,
       "checkable": null,
       "checked": null,
@@ -165,6 +166,7 @@
       "target_scale": null,
       "text": "Create",
       "thickness": null,
+      "title": null,
       "toggle": "expanded",
       "trailing_icon": null,
       "variant": null,
@@ -175,6 +177,7 @@
       "y": 44.0
     },
     {
+      "action": null,
       "alignment": null,
       "checkable": null,
       "checked": null,
@@ -211,6 +214,7 @@
       "target_scale": null,
       "text": "Create",
       "thickness": null,
+      "title": null,
       "toggle": "expanded",
       "trailing_icon": null,
       "variant": null,

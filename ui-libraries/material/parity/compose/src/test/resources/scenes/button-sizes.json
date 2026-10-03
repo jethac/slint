@@ -92,6 +92,7 @@
   "type": "canvas",
   "widgets": [
     {
+      "action": null,
       "alignment": null,
       "checkable": null,
       "checked": null,
@@ -128,6 +129,7 @@
       "target_scale": null,
       "text": "OK",
       "thickness": null,
+      "title": null,
       "toggle": null,
       "trailing_icon": null,
       "variant": null,
@@ -138,6 +140,7 @@
       "y": 128.0
     },
     {
+      "action": null,
       "alignment": null,
       "checkable": null,
       "checked": null,
@@ -174,6 +177,7 @@
       "target_scale": null,
       "text": "OK",
       "thickness": null,
+      "title": null,
       "toggle": null,
       "trailing_icon": null,
       "variant": null,
@@ -184,6 +188,7 @@
       "y": 120.0
     },
     {
+      "action": null,
       "alignment": null,
       "checkable": null,
       "checked": null,
@@ -220,6 +225,7 @@
       "target_scale": null,
       "text": "OK",
       "thickness": null,
+      "title": null,
       "toggle": null,
       "trailing_icon": null,
       "variant": null,
@@ -230,6 +236,7 @@
       "y": 104.0
     },
     {
+      "action": null,
       "alignment": null,
       "checkable": null,
       "checked": null,
@@ -266,6 +273,7 @@
       "target_scale": null,
       "text": "OK",
       "thickness": null,
+      "title": null,
       "toggle": null,
       "trailing_icon": null,
       "variant": null,
@@ -276,6 +284,7 @@
       "y": 64.0
     },
     {
+      "action": null,
       "alignment": null,
       "checkable": null,
       "checked": null,
@@ -312,6 +321,7 @@
       "target_scale": null,
       "text": "OK",
       "thickness": null,
+      "title": null,
       "toggle": null,
       "trailing_icon": null,
       "variant": null,
@@ -322,6 +332,7 @@
       "y": 24.0
     },
     {
+      "action": null,
       "alignment": null,
       "checkable": null,
       "checked": null,
@@ -358,6 +369,7 @@
       "target_scale": null,
       "text": "OK",
       "thickness": null,
+      "title": null,
       "toggle": null,
       "trailing_icon": null,
       "variant": null,
@@ -368,6 +380,7 @@
       "y": 268.0
     },
     {
+      "action": null,
       "alignment": null,
       "checkable": null,
       "checked": null,
@@ -404,6 +417,7 @@
       "target_scale": null,
       "text": "OK",
       "thickness": null,
+      "title": null,
       "toggle": null,
       "trailing_icon": null,
       "variant": null,
@@ -414,6 +428,7 @@
       "y": 260.0
     },
     {
+      "action": null,
       "alignment": null,
       "checkable": null,
       "checked": null,
@@ -450,6 +465,7 @@
       "target_scale": null,
       "text": "OK",
       "thickness": null,
+      "title": null,
       "toggle": null,
       "trailing_icon": null,
       "variant": null,
@@ -460,6 +476,7 @@
       "y": 244.0
     },
     {
+      "action": null,
       "alignment": null,
       "checkable": null,
       "checked": null,
@@ -496,6 +513,7 @@
       "target_scale": null,
       "text": "OK",
       "thickness": null,
+      "title": null,
       "toggle": null,
       "trailing_icon": null,
       "variant": null,
@@ -506,6 +524,7 @@
       "y": 204.0
     },
     {
+      "action": null,
       "alignment": null,
       "checkable": null,
       "checked": null,
@@ -542,6 +561,7 @@
       "target_scale": null,
       "text": "OK",
       "thickness": null,
+      "title": null,
       "toggle": null,
       "trailing_icon": null,
       "variant": null,
