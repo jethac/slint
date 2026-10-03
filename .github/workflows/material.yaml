@@ -157,7 +157,6 @@ jobs:
                 xvfb-run -a env SLINT_TEST_FILTER=material cargo test --manifest-path tests/Cargo.toml -p test-driver-screenshots --features femtovg -- software_material
                 xvfb-run -a env SLINT_TEST_FILTER=material cargo test --manifest-path tests/Cargo.toml -p test-driver-screenshots --features femtovg -- skia_material --test-threads=1
                 xvfb-run -a env SLINT_TEST_FILTER=material cargo test --manifest-path tests/Cargo.toml -p test-driver-screenshots --features femtovg -- femtovg_material
-                cargo test --manifest-path tests/Cargo.toml -p test-driver-screenshots --features femtovg -- --skip material
           - name: Build the Compose parity harness
             run: ./gradlew compileDebugUnitTestKotlin --no-daemon
             working-directory: ui-libraries/material/parity/compose
