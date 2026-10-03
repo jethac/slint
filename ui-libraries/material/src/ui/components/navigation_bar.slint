@@ -1,171 +1,613 @@
 // Copyright © SixtyFPS GmbH <info@slint.dev>
 // SPDX-License-Identifier: MIT
 
-import { Badge, BadgedBox } from "./badge.slint";
-import { MaterialPalette } from "../styling/material_palette.slint";
-import { MaterialStyleMetrics } from "../styling/material_style_metrics.slint";
-import { MaterialText } from "./material_text.slint";
-import { MaterialAnimations } from "../styling/material_animations.slint";
-import { MaterialTypography } from "../styling/material_typography.slint";
-import { ExtendedTouchArea } from "./extended_touch_area.slint";
-import { NavigationBarHorizontalItemTokens } from "../styling/generated/material_component_tokens.slint";
-import { StateLayer, Ripple } from "./state_layer.slint";
-import { Icon } from "./icon.slint";
-import { NavigationBarHorizontalItemTokens } from "../styling/generated/material_component_tokens.slint";
+// Navigation bars, ported from
+//   compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/ShortNavigationBar.kt
+//   compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/NavigationBar.kt
+//   compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/NavigationItem.kt
+// at androidx/androidx@23327507f7fc7d5b19d65fec4b090f60c970079b (the #3 pin):
+// `ShortNavigationBar` — the flexible 64dp bar — and the legacy 80dp
+// `NavigationBar` (upstream's tall variant, kept for back-compat).
+
 import { NavigationItem } from "../items/navigation_item.slint";
+import { MaterialPalette } from "../styling/material_palette.slint";
+import { MaterialAnimations } from "../styling/material_animations.slint";
+import { MaterialStyleMetrics } from "../styling/material_style_metrics.slint";
+import { Icon } from "./icon.slint";
+import { Badge } from "./badge.slint";
+import { MaterialText } from "./material_text.slint";
+import { StateLayer, Ripple, FocusRing, FocusTouchArea } from "./state_layer.slint";
+import {
+    NavigationBarTokens,
+    NavigationBarVerticalItemTokens,
+    NavigationBarHorizontalItemTokens,
+} from "../styling/generated/material_component_tokens.slint";
 import { BaseNavigationItemTemplate, BaseNavigation } from "./base_navigation.slint";
 
-export component NavigationItemTemplate inherits BaseNavigationItemTemplate {
-    property <bool> has_icon: root.icon.width > 0 && root.icon.height > 0;
-    property <bool> has_selected_icon: root.selected_icon.width > 0 || root.selected_icon.height > 0;
-    property <color> color: MaterialPalette.on_surface;
-
-    in property <length> navitem_padding_top: MaterialStyleMetrics.padding_12;
-    in property <length> navitem_padding_bottom: MaterialStyleMetrics.padding_16;
-
-    Rectangle {
-        width: 100%;
-        height: 100%;
-    }
-
-    touch_area := ExtendedTouchArea {
-        HorizontalLayout {
-            alignment: center;
-
-            VerticalLayout {
-                alignment: start;
-                spacing: MaterialStyleMetrics.spacing_4;
-                padding_top: root.navitem_padding_top;
-                padding_bottom: root.navitem_padding_bottom;
-
-                HorizontalLayout {
-                    alignment: center;
-
-                    background_layer := Rectangle {
-                        min_width: state_layout.min_width;
-                        min_height: max(MaterialStyleMetrics.size_32, state_layout.min_height);
-                        border_radius: self.height / 2;
-
-                        state_layer := StateLayer {
-                            background: root.color;
-                            border_radius: parent.border_radius;
-                            enabled: true;
-                            has_focus: touch_area.has_focus;
-                            has_hover: touch_area.has_hover;
-                            pressed: touch_area.pressed || touch_area.enter_pressed;
-                            width: 100%;
-                            height: 100%;
-
-                            if touch_area.pressed && !root.selected : Ripple {
-                                width: root.width;
-                                height: root.height;
-                                pressed_x: touch_area.pressed_x;
-                                pressed_y: touch_area.pressed_y;
-                                color: root.color;
-                            }
-
-                            state_layout := HorizontalLayout {
-                                padding_left: MaterialStyleMetrics.padding_20;
-                                padding_right: self.padding_left;
-                                alignment: center;
-
-                                VerticalLayout {
-                                    alignment: center;
-
-                                    if !root.has_icon && !root.has_selected_icon : Rectangle {
-                                        width: 12px;
-                                        height: self.width;
-                                        border_radius: self.width / 2;
-                                        background: root.color;
-                                    }
-
-                                    if root.has_icon || root.has_selected_icon : BadgedBox {
-                                        // NavigationBarItem anchors the badge to
-                                        // the icon through a BadgedBox upstream.
-                                        badge_text: root.badge;
-                                        badge_visible: root.show_badge || root.badge != "";
-
-                                        Icon {
-                                            // BadgedBox anchors to the icon's
-                                            // measured size — the 24dp token
-                                            // upstream, not Icon's own default.
-                                            width: NavigationBarHorizontalItemTokens.icon_size;
-                                            height: self.width;
-                                            source: root.icon;
-                                            colorize: root.color;
-
-                                            states [
-                                                selected when root.selected && root.has_selected_icon : {
-                                                    source: root.selected_icon;
-                                                }
-                                            ]
-                                        }
-                                    }
-                                }
-                             }
-                        }
-
-                        // A badge with no icon to anchor to keeps its previous
-                        // spot: upstream BadgedBox would measure an empty anchor.
-                        if !root.has_icon && !root.has_selected_icon && (root.show_badge || root.badge != "") : Badge {
-                            x: parent.width / 2;
-                            y: 0;
-                            text: root.badge;
-                        }
-                    }
-                }
-
-                label := MaterialText {
-                    text: root.text;
-                    style: MaterialTypography.label_medium;
-                    color: root.color;
-                    horizontal_alignment: center;
-
-                    animate font-weight {
-                        duration: MaterialAnimations.emphasized_decelerate_duration;
-                        easing: MaterialAnimations.emphasized_easing;
-                    }
-                }
-            }
-        }
-
-        clicked => {
-            root.clicked();
-        }
-    }
-
-    states [
-        selected when root.selected : {
-            background_layer.background: MaterialPalette.secondary_container;
-            state_layer.background: transparent;
-            label.style: MaterialTypography.label_medium_emphasized;
-        }
-    ]
+/// `ShortNavigationBarArrangement` — how a `ShortNavigationBar` distributes
+/// its items.
+export enum ShortNavigationBarArrangement {
+    /// `EqualWeight` — items share the full width equally, for small widths.
+    equal-weight,
+    /// `Centered` — items share the width between edge paddings that grow
+    /// with fewer items, for medium widths.
+    centered,
 }
 
+/// `NavigationItemIconPosition` — where a short-bar item puts its icon.
+export enum NavigationItemIconPosition {
+    /// `Top` — the icon above the label (the `TopIconOrIconOnlyMeasurePolicy`
+    /// layout).
+    top,
+    /// `Start` — the icon before the label inside the indicator pill (the
+    /// `StartIconMeasurePolicy` layout).
+    start,
+}
+
+/// Private constants of ShortNavigationBar.kt / NavigationBar.kt /
+/// NavigationItem.kt.
+global NavigationBarMetrics {
+    /// `TopIconItemVerticalPadding` — `VerticalItemTokens.ContainerBetweenSpace`.
+    pure public function top-icon-item-vertical-padding() -> length {
+        NavigationBarVerticalItemTokens.container_between_space
+    }
+    /// `TopIconIndicatorHorizontalPadding` —
+    /// `(VerticalItemTokens.ActiveIndicatorWidth - IconSize)/2`.
+    pure public function top-icon-indicator-horizontal-padding() -> length {
+        (NavigationBarVerticalItemTokens.active_indicator_width -
+            NavigationBarVerticalItemTokens.icon_size) / 2
+    }
+    /// `TopIconIndicatorVerticalPadding` —
+    /// `(VerticalItemTokens.ActiveIndicatorHeight - IconSize)/2`.
+    pure public function top-icon-indicator-vertical-padding() -> length {
+        (NavigationBarVerticalItemTokens.active_indicator_height -
+            NavigationBarVerticalItemTokens.icon_size) / 2
+    }
+    /// `StartIconIndicatorHorizontalPadding` —
+    /// `HorizontalItemTokens.ActiveIndicatorLeadingSpace`.
+    pure public function start-icon-indicator-horizontal-padding() -> length {
+        NavigationBarHorizontalItemTokens.active_indicator_leading_space
+    }
+    /// `StartIconIndicatorVerticalPadding` —
+    /// `(HorizontalItemTokens.ActiveIndicatorHeight - IconSize)/2`.
+    pure public function start-icon-indicator-vertical-padding() -> length {
+        (NavigationBarHorizontalItemTokens.active_indicator_height -
+            NavigationBarHorizontalItemTokens.icon_size) / 2
+    }
+    /// `TopIconIndicatorToLabelPadding` — hard-coded `4.dp` upstream.
+    pure public function top-icon-indicator-to-label-padding() -> length {
+        4px
+    }
+    /// `StartIconToLabelPadding` —
+    /// `NavigationBarTokens.ItemActiveIndicatorIconLabelSpace`.
+    pure public function start-icon-to-label-padding() -> length {
+        NavigationBarTokens.item_active_indicator_icon_label_space
+    }
+    /// `IndicatorVerticalOffset` — the ripple's mapped vertical press offset.
+    pure public function indicator-vertical-offset() -> length {
+        12px
+    }
+    /// `NavigationBarItemHorizontalPadding` — the tall bar's inter-item
+    /// spacing (hard-coded `8.dp`; the `ItemBetweenSpace` token is 0).
+    pure public function bar-item-horizontal-padding() -> length {
+        8px
+    }
+    /// `NavigationBarIndicatorToLabelPadding` — hard-coded `4.dp` upstream.
+    pure public function bar-indicator-to-label-padding() -> length {
+        4px
+    }
+    /// `NavigationBarHeight` — `NavigationBarTokens.TallContainerHeight`.
+    pure public function tall-container-height() -> length {
+        NavigationBarTokens.tall_container_height
+    }
+}
+
+/// `ShortNavigationBarItem` — an item of the flexible bar. The indicator is
+/// `ItemActiveIndicatorShape` (corner-full): it expands `0 -> full` and fades
+/// in under the single `DefaultSpatial` spring `animateIndicatorProgressAsState`
+/// (progress clamped non-negative like `coerceAtLeast(0f)`); icon and label
+/// colors snap (`StyledLabel(animateColor = false)`).
+component ShortNavigationBarItemTemplate inherits BaseNavigationItemTemplate {
+    /// `iconPosition` — `Top` or `Start`.
+    in property <NavigationItemIconPosition> icon-position: NavigationItemIconPosition.top;
+    /// `LocalMinimumInteractiveComponentSize` — the item's minimum touch
+    /// target; parity scenes clear it to `0.dp` like the Compose harness.
+    in property <length> min-size: 48px;
+
+    property <bool> has-label: root.text != "";
+    // Upstream picks `TopIconOrIconOnlyMeasurePolicy` when
+    // `label == null || iconPosition == Top`.
+    property <bool> vertical-item: root.icon-position == NavigationItemIconPosition.top ||
+        !root.has-label;
+
+    property <float> indicator-progress-raw: root.selected ? 1 : 0;
+    animate indicator-progress-raw {
+        easing: MaterialAnimations.default-spatial-spring;
+        enabled: !MaterialPalette.reduced-motion;
+    }
+    property <float> indicator-progress: max(0.0, root.indicator-progress-raw);
+
+    property <length> label-w: root.has-label ? label.min-width : 0px;
+    property <length> label-h: root.has-label ? label.min-height : 0px;
+    property <length> icon-size: root.icon-position == NavigationItemIconPosition.top ?
+        NavigationBarVerticalItemTokens.icon_size :
+        NavigationBarHorizontalItemTokens.icon_size;
+    property <length> indicator-vertical-padding: root.icon-position ==
+        NavigationItemIconPosition.top ?
+        NavigationBarMetrics.top-icon-indicator-vertical-padding() :
+        NavigationBarMetrics.start-icon-indicator-vertical-padding();
+
+    // ---- `TopIconOrIconOnlyMeasurePolicy` / `placeLabelAndTopIcon` / `placeIcon` ----
+    // `totalIndicatorWidth` / `indicatorHeight` of the vertical item.
+    property <length> indicator-w-total: NavigationBarVerticalItemTokens.active_indicator_width;
+    property <length> animated-indicator-width: root.indicator-w-total * root.indicator-progress;
+    // `contentHeight` = indicator + `IndicatorToLabel` + label; the layout's
+    // height is the content plus `TopIconItemVerticalPadding` twice.
+    property <length> vertical-content-height: NavigationBarVerticalItemTokens.active_indicator_height +
+        NavigationBarMetrics.top-icon-indicator-to-label-padding() + root.label-h;
+    property <length> vertical-icon-y: NavigationBarMetrics.top-icon-item-vertical-padding() +
+        NavigationBarMetrics.top-icon-indicator-vertical-padding();
+    property <length> vertical-indicator-y: NavigationBarMetrics.top-icon-item-vertical-padding();
+    property <length> vertical-label-y: root.vertical-icon-y +
+        NavigationBarVerticalItemTokens.icon_size +
+        NavigationBarMetrics.top-icon-indicator-vertical-padding() +
+        NavigationBarMetrics.top-icon-indicator-to-label-padding();
+
+    // ---- `StartIconMeasurePolicy` / `placeLabelAndStartIcon` ----
+    property <length> start-indicator-w-total: NavigationBarHorizontalItemTokens.icon_size +
+        root.label-w + NavigationBarMetrics.start-icon-to-label-padding() +
+        2 * NavigationBarMetrics.start-icon-indicator-horizontal-padding();
+    property <length> start-indicator-h: max(NavigationBarHorizontalItemTokens.icon_size,
+        root.label-h) + 2 * NavigationBarMetrics.start-icon-indicator-vertical-padding();
+    property <length> start-animated-indicator-width: root.start-indicator-w-total *
+        root.indicator-progress;
+    property <length> start-item-content-w: NavigationBarHorizontalItemTokens.icon_size +
+        NavigationBarMetrics.start-icon-to-label-padding() + root.label-w;
+
+    /// `maxIntrinsicWidth`/`maxIntrinsicHeight` of the item wrapper —
+    /// including the `min-size` interactive minimum — the values the bar's
+    /// measure policies query. The vertical policy only overrides
+    /// `maxIntrinsicHeight`, so its intrinsic width is the minimum alone.
+    out property <length> intrinsic-width: root.vertical-item ? root.min-size :
+        max(root.min-size, root.start-indicator-w-total);
+    out property <length> intrinsic-height: root.vertical-item ?
+        max(root.min-size, root.icon-size + root.label-h +
+            2 * NavigationBarMetrics.top-icon-item-vertical-padding() +
+            2 * root.indicator-vertical-padding +
+            NavigationBarMetrics.top-icon-indicator-to-label-padding()) :
+        max(root.min-size, root.start-indicator-h);
+
+    property <length> active-indicator-w-total: root.vertical-item ? root.indicator-w-total :
+        root.start-indicator-w-total;
+    property <length> active-indicator-h: root.icon-position == NavigationItemIconPosition.top ?
+        NavigationBarVerticalItemTokens.active_indicator_height : root.start-indicator-h;
+    property <length> active-animated-indicator-width: root.vertical-item ?
+        root.animated-indicator-width : root.start-animated-indicator-width;
+
+    // Colors snap (`animateColor = false` for the label, `iconColor` resolved
+    // synchronously); `NavigationItemColors` resolves the selected text color
+    // per icon position — `ItemActiveLabelTextColor` for top,
+    // `ItemActiveIconColor` for start.
+    property <color> icon-color: !root.enabled ?
+        NavigationBarTokens.item_inactive_icon_color.with_alpha(0.38) :
+        root.selected ? NavigationBarTokens.item_active_icon_color :
+        NavigationBarTokens.item_inactive_icon_color;
+    property <color> label-color: !root.enabled ?
+        NavigationBarTokens.item_inactive_label_text_color.with_alpha(0.38) :
+        !root.selected ? NavigationBarTokens.item_inactive_label_text_color :
+        root.icon-position == NavigationItemIconPosition.top ?
+        NavigationBarTokens.item_active_label_text_color :
+        NavigationBarTokens.item_active_icon_color;
+    // No nav-bar state-layer token exists upstream: the item's `ripple()`
+    // indication draws in the bar's `contentColor` (`contentColorFor` of
+    // `SurfaceContainer` -> `onSurface`).
+    property <color> state-layer-color: MaterialPalette.on_surface;
+
+    touch := FocusTouchArea {
+        x: 0;
+        y: 0;
+        width: root.width;
+        height: root.height;
+        enabled: root.enabled;
+
+        clicked => { root.clicked(); }
+        pointer-event(e) => { root.pointer-event(e, { x: self.mouse-x, y: self.mouse-y }); }
+    }
+
+    // `IndicatorRipple` — the full-size indicator bounds, clipped to the
+    // indicator shape; the `MappedInteractionSource` for `Top` items remaps
+    // the press point by `((itemWidth - ActiveIndicatorWidth)/2,
+    // IndicatorVerticalOffset)` so only the pill ripples.
+    indicator-ripple := Rectangle {
+        x: (root.width - root.active-indicator-w-total) / 2;
+        y: root.vertical-item && root.has-label ? root.vertical-indicator-y :
+            (root.height - root.active-indicator-h) / 2;
+        width: root.active-indicator-w-total;
+        height: root.active-indicator-h;
+        border-radius: NavigationBarTokens.item_active_indicator_shape.full ?
+            self.height / 2 : NavigationBarTokens.item_active_indicator_shape.top_left;
+        clip: true;
+
+        if touch.has-focus || touch.has-hover || touch.pressed || touch.enter-pressed :
+            StateLayer {
+            width: 100%;
+            height: 100%;
+            background: root.state-layer-color;
+            border-radius: parent.border-radius;
+            enabled: root.enabled;
+            pressed: touch.pressed || touch.enter-pressed;
+            has-focus: touch.has-focus;
+            has-hover: touch.has-hover;
+        }
+
+        if root.enabled && (touch.pressed || touch.enter-pressed) : Ripple {
+            pressed-x: root.icon-position == NavigationItemIconPosition.top ?
+                touch.pressed-x - (root.width - root.indicator-w-total) / 2 :
+                touch.pressed-x - indicator-ripple.x;
+            pressed-y: root.icon-position == NavigationItemIconPosition.top ?
+                touch.pressed-y - NavigationBarMetrics.indicator-vertical-offset() :
+                touch.pressed-y - indicator-ripple.y;
+            width: 100%;
+            height: 100%;
+            border-radius: parent.border-radius;
+            color: root.state-layer-color;
+        }
+    }
+
+    // `Indicator` — `alpha = indicatorAnimationProgress`,
+    // `width = total * progress` (the spring's overshoot is not capped).
+    indicator := Rectangle {
+        x: (root.width - root.active-animated-indicator-width) / 2;
+        y: indicator-ripple.y;
+        width: root.active-animated-indicator-width;
+        height: root.active-indicator-h;
+        border-radius: NavigationBarTokens.item_active_indicator_shape.full ?
+            self.height / 2 : NavigationBarTokens.item_active_indicator_shape.top_left;
+        background: NavigationBarTokens.item_active_indicator_color;
+        opacity: root.indicator-progress;
+    }
+
+    icon-img := Icon {
+        x: root.vertical-item ? (root.width - self.width) / 2 :
+            (root.width - root.start-item-content-w) / 2;
+        y: root.vertical-item ?
+            (root.has-label ? root.vertical-icon-y : (root.height - self.height) / 2) :
+            (root.height - self.height) / 2;
+        width: root.icon-size;
+        height: self.width;
+        source: root.selected && root.selected-icon.width > 0 ? root.selected-icon : root.icon;
+        colorize: root.icon-color;
+    }
+
+    label := MaterialText {
+        x: root.vertical-item ? (root.width - self.min-width) / 2 :
+            icon-img.x + icon-img.width + NavigationBarMetrics.start-icon-to-label-padding();
+        y: root.vertical-item ? root.vertical-label-y : (root.height - self.min-height) / 2;
+        visible: root.has-label;
+        text: root.text;
+        style: NavigationBarTokens.label_text_font;
+        color: root.label-color;
+        overflow: clip;
+    }
+
+    // `BadgedBox` — same anchoring as the rail: a content badge sits
+    // `BadgeWithContentHorizontalOffset` (12dp) short of the item's right
+    // edge, a dot `BadgeOffset` (6dp); `current(±INF)` defaults win.
+    item-badge := Badge {
+        visible: root.show-badge || root.badge != "";
+        x: root.width - (root.badge != "" ? 12px : 6px);
+        y: root.badge != "" ? 14px - self.height : 0px;
+        text: root.badge;
+    }
+
+    if touch.has-focus && root.enabled : FocusRing {
+        x: indicator-ripple.x;
+        y: indicator-ripple.y;
+        width: indicator-ripple.width;
+        height: indicator-ripple.height;
+        border-radius: self.height / 2;
+    }
+}
+
+/// `NavigationBarItem` of the legacy 80dp `NavigationBar` — the tall item
+/// stacks a 56×32 indicator over the label. The indicator's alpha animates
+/// with `DefaultEffects` (`alphaAnimationProgress`) while its width and the
+/// icon/label positions animate with `FastSpatial` (`sizeAnimationProgress`);
+/// icon and text colors animate with `DefaultEffects`.
+export component NavigationItemTemplate inherits BaseNavigationItemTemplate {
+    /// `NavigationBarItem.alwaysShowLabel` — labels stay visible on
+    /// unselected items when true (upstream default); when false they fade in
+    /// with the selection animation.
+    in property <bool> always-show-label: true;
+
+    property <bool> has-label: root.text != "";
+
+    /// `sizeAnimationProgress` — `FastSpatial`, clamped non-negative like
+    /// `coerceAtLeast(0f)`.
+    property <float> selection-spatial-raw: root.selected ? 1 : 0;
+    animate selection-spatial-raw {
+        easing: MaterialAnimations.fast-spatial-spring;
+        enabled: !MaterialPalette.reduced-motion;
+    }
+    property <float> selection-spatial: max(0.0, root.selection-spatial-raw);
+    /// `alphaAnimationProgress` — `DefaultEffects`.
+    property <float> selection-effects: root.selected ? 1 : 0;
+    animate selection-effects {
+        easing: MaterialAnimations.default-effects-spring;
+        enabled: !MaterialPalette.reduced-motion;
+    }
+
+    property <length> label-w: root.has-label ? label.min-width : 0px;
+    property <length> label-h: root.has-label ? label.min-height : 0px;
+    // `totalIndicatorWidth`/`indicatorHeight` of NavigationBar.kt's item.
+    property <length> indicator-w-total: NavigationBarVerticalItemTokens.icon_size +
+        2 * NavigationBarMetrics.top-icon-indicator-horizontal-padding();
+    property <length> indicator-h: NavigationBarVerticalItemTokens.icon_size +
+        2 * NavigationBarMetrics.top-icon-indicator-vertical-padding();
+    property <length> animated-indicator-width: root.indicator-w-total * root.selection-spatial;
+
+    // `placeLabelAndIcon`: content = icon + `IndicatorVerticalPadding` +
+    // `NavigationBarIndicatorToLabelPadding` + label; `contentVerticalPadding`
+    // centers it against the propagated `minHeight` (`NavigationBarHeight`),
+    // floored at `IndicatorVerticalPadding`.
+    property <length> content-height: NavigationBarVerticalItemTokens.icon_size +
+        NavigationBarMetrics.top-icon-indicator-vertical-padding() +
+        NavigationBarMetrics.bar-indicator-to-label-padding() + root.label-h;
+    property <length> content-vertical-padding: max(
+        (NavigationBarMetrics.tall-container-height() - root.content-height) / 2,
+        NavigationBarMetrics.top-icon-indicator-vertical-padding());
+    property <length> inner-height: root.content-height + 2 * root.content-vertical-padding;
+    // The item's `Box` centers the inner layout vertically.
+    property <length> inner-y: (root.height - root.inner-height) / 2;
+    property <length> selected-icon-y: root.inner-y + root.content-vertical-padding;
+    property <length> unselected-icon-y: root.always-show-label ? root.selected-icon-y :
+        root.inner-y + (root.inner-height - NavigationBarVerticalItemTokens.icon_size) / 2;
+    property <length> icon-offset: (root.unselected-icon-y - root.selected-icon-y) *
+        (1 - root.selection-spatial);
+    property <length> icon-y: root.selected-icon-y + root.icon-offset;
+    property <length> label-y: root.inner-y + root.content-vertical-padding +
+        NavigationBarVerticalItemTokens.icon_size +
+        NavigationBarMetrics.top-icon-indicator-vertical-padding() +
+        NavigationBarMetrics.bar-indicator-to-label-padding() + root.icon-offset;
+    property <length> indicator-y: root.inner-y + root.content-vertical-padding -
+        NavigationBarMetrics.top-icon-indicator-vertical-padding() + root.icon-offset;
+
+    // `placeIcon` (no label): icon, indicator and ripple all centered.
+    property <length> centered-icon-y: (root.height - NavigationBarVerticalItemTokens.icon_size) / 2;
+    property <length> centered-indicator-y: (root.height - root.indicator-h) / 2;
+
+    // Colors animate with `DefaultEffects` (`animateColorAsState` in
+    // `NavigationBarItem` — unlike the shared expressive `NavigationItem`).
+    property <color> icon-color-target: !root.enabled ?
+        NavigationBarTokens.item_inactive_icon_color.with_alpha(0.38) :
+        root.selected ? NavigationBarTokens.item_active_icon_color :
+        NavigationBarTokens.item_inactive_icon_color;
+    property <color> icon-color: root.icon-color-target;
+    animate icon-color {
+        easing: MaterialAnimations.default-effects-spring;
+        enabled: !MaterialPalette.reduced-motion;
+    }
+    property <color> label-color-target: !root.enabled ?
+        NavigationBarTokens.item_inactive_label_text_color.with_alpha(0.38) :
+        root.selected ? NavigationBarTokens.item_active_label_text_color :
+        NavigationBarTokens.item_inactive_label_text_color;
+    property <color> label-color: root.label-color-target;
+    animate label-color {
+        easing: MaterialAnimations.default-effects-spring;
+        enabled: !MaterialPalette.reduced-motion;
+    }
+    property <color> state-layer-color: MaterialPalette.on_surface;
+
+    touch := FocusTouchArea {
+        x: 0;
+        y: 0;
+        width: root.width;
+        height: root.height;
+        enabled: root.enabled;
+
+        clicked => { root.clicked(); }
+        pointer-event(e) => { root.pointer-event(e, { x: self.mouse-x, y: self.mouse-y }); }
+    }
+
+    // `IndicatorRipple` — full indicator bounds, clipped to the indicator
+    // shape; the `MappedInteractionSource` remaps presses by
+    // `((itemWidth - ActiveIndicatorWidth)/2, IndicatorVerticalOffset)`.
+    indicator-ripple := Rectangle {
+        x: (root.width - root.indicator-w-total) / 2;
+        y: root.has-label ? root.indicator-y : root.centered-indicator-y;
+        width: root.indicator-w-total;
+        height: root.indicator-h;
+        border-radius: NavigationBarTokens.item_active_indicator_shape.full ?
+            self.height / 2 : NavigationBarTokens.item_active_indicator_shape.top_left;
+        clip: true;
+
+        if touch.has-focus || touch.has-hover || touch.pressed || touch.enter-pressed :
+            StateLayer {
+            width: 100%;
+            height: 100%;
+            background: root.state-layer-color;
+            border-radius: parent.border-radius;
+            enabled: root.enabled;
+            pressed: touch.pressed || touch.enter-pressed;
+            has-focus: touch.has-focus;
+            has-hover: touch.has-hover;
+        }
+
+        if root.enabled && (touch.pressed || touch.enter-pressed) : Ripple {
+            pressed-x: touch.pressed-x - (root.width - root.indicator-w-total) / 2;
+            pressed-y: touch.pressed-y - NavigationBarMetrics.indicator-vertical-offset();
+            width: 100%;
+            height: 100%;
+            border-radius: parent.border-radius;
+            color: root.state-layer-color;
+        }
+    }
+
+    // `Indicator` — `alpha = alphaAnimationProgress`,
+    // `width = total * sizeAnimationProgress`.
+    indicator := Rectangle {
+        x: (root.width - root.animated-indicator-width) / 2;
+        y: indicator-ripple.y;
+        width: root.animated-indicator-width;
+        height: root.indicator-h;
+        border-radius: NavigationBarTokens.item_active_indicator_shape.full ?
+            self.height / 2 : NavigationBarTokens.item_active_indicator_shape.top_left;
+        background: NavigationBarTokens.item_active_indicator_color;
+        opacity: root.selection-effects;
+    }
+
+    icon-img := Icon {
+        x: (root.width - self.width) / 2;
+        y: root.has-label ? root.icon-y : root.centered-icon-y;
+        width: NavigationBarVerticalItemTokens.icon_size;
+        height: self.width;
+        source: root.selected && root.selected-icon.width > 0 ? root.selected-icon : root.icon;
+        colorize: root.icon-color;
+    }
+
+    label := MaterialText {
+        x: (root.width - self.min-width) / 2;
+        y: root.label-y;
+        visible: root.has-label;
+        text: root.text;
+        style: NavigationBarTokens.label_text_font;
+        color: root.label-color;
+        opacity: root.always-show-label ? 1 : root.selection-effects;
+        overflow: clip;
+    }
+
+    // `BadgedBox` — same anchoring as the rail: a content badge sits
+    // `BadgeWithContentHorizontalOffset` (12dp) short of the item's right
+    // edge, a dot `BadgeOffset` (6dp); `current(±INF)` defaults win.
+    item-badge := Badge {
+        visible: root.show-badge || root.badge != "";
+        x: root.width - (root.badge != "" ? 12px : 6px);
+        y: root.badge != "" ? 14px - self.height : 0px;
+        text: root.badge;
+    }
+
+    if touch.has-focus && root.enabled : FocusRing {
+        x: indicator-ripple.x;
+        y: indicator-ripple.y;
+        width: indicator-ripple.width;
+        height: indicator-ripple.height;
+        border-radius: self.height / 2;
+    }
+}
+
+/// `NavigationBar` — the tall 80dp bar (upstream's legacy component): a
+/// `Row` of weight-1f items spaced `NavigationBarItemHorizontalPadding`
+/// (8dp) apart, over `container-color`. Upstream's `tonalElevation` is
+/// `NavigationBarDefaults.Elevation` = `ElevationTokens.Level0` (the
+/// `ContainerElevation` token says Level2 — the pinned code wins), so no
+/// elevation layer is drawn.
 export component NavigationBar inherits BaseNavigation {
-    min_height: max(MaterialStyleMetrics.size_80, layout.min_height);
+    /// `NavigationBarItem.alwaysShowLabel`, forwarded to every item.
+    in property <bool> always-show-label: true;
+
+    // `Modifier.weight(1f)` — each item gets an equal integer floor share
+    // of the width left over after the inter-item spacing, any remainder
+    // pixels landing on the right edge.
+    property <length> item-width: floor(
+        (root.width - NavigationBarMetrics.bar-item-horizontal-padding() *
+            max(root.items.length - 1, 0)) / max(root.items.length, 1) / 1px) * 1px;
+
+    min-height: NavigationBarMetrics.tall-container-height();
 
     Rectangle {
-        background: MaterialPalette.surface_container;
+        background: NavigationBarTokens.container_color;
 
         layout := HorizontalLayout {
-            padding_left: MaterialStyleMetrics.padding_8;
-            padding_right: self.padding_left;
-            spacing: MaterialStyleMetrics.spacing_8;
+            // `x` takes the layout out of its parent's size computation:
+            // `item-width` reads `root.width`, which stays parent-driven
+            // only while the layout does not size the bar (`fillMaxWidth`).
+            x: 0;
+            alignment: start;
+            spacing: NavigationBarMetrics.bar-item-horizontal-padding();
 
             for item[index] in root.items : NavigationItemTemplate {
+                min-width: root.item-width;
+                horizontal-stretch: 0;
                 icon: item.icon;
-                selected_icon: item.selected_icon;
+                selected-icon: item.selected_icon;
                 text: item.text;
                 index: index;
-                selected: index == root.current_index;
-                show_badge: item.show_badge;
+                selected: index == root.current-index;
+                enabled: item.enabled;
+                always-show-label: root.always-show-label;
+                show-badge: item.show-badge;
                 badge: item.badge;
 
-                clicked => {
-                    root.select(index);
-                }
+                clicked => { root.select(index); }
+            }
+        }
+    }
+}
+
+/// `ShortNavigationBar` — the flexible 64dp navigation bar
+/// (`NavigationBarTokens.ContainerHeight`). `arrangement` picks the measure
+/// policy (`EqualWeight` or `Centered`), `icon-position` the item layout
+/// (`Top` or `Start`), matching `ShortNavigationBarDefaults`.
+export component ShortNavigationBar inherits BaseNavigation {
+    /// `ShortNavigationBarDefaults.arrangement` — `EqualWeight`.
+    in property <ShortNavigationBarArrangement> arrangement: ShortNavigationBarArrangement.equal-weight;
+    /// `ShortNavigationBarItem.iconPosition` — `Top`.
+    in property <NavigationItemIconPosition> icon-position: NavigationItemIconPosition.top;
+    /// `LocalMinimumInteractiveComponentSize` (48dp) for the items.
+    in property <length> item-min-size: 48px;
+
+    property <int> item-count: root.items.length;
+    /// `calculateCenteredContentHorizontalPadding` —
+    /// `roundToInt(((100 - 10*(count+3))/2/100) * barWidth)`.
+    property <length> centered-pad: round(root.width * (50 - 5 * (root.item-count + 3)) / 100 / 1px) * 1px;
+    /// `itemMinWidth`/`itemMaxWidth` of `CenteredContentMeasurePolicy`.
+    property <length> centered-item-min-width: (root.width - 2 * root.centered-pad) /
+        max(root.item-count, 1);
+    property <length> centered-item-max-width: root.width / max(root.item-count, 1);
+    /// `itemWidth` of `EqualWeightContentMeasurePolicy` — `width / itemsCount`
+    /// (integer division upstream).
+    property <length> equal-item-width: floor(root.width / max(root.item-count, 1) / 1px) * 1px;
+
+    min-height: max(NavigationBarTokens.container_height, layout.min-height);
+
+    Rectangle {
+        background: NavigationBarTokens.container_color;
+
+        layout := HorizontalLayout {
+            // The bar is `fillMaxWidth` upstream — its width comes from the
+            // parent, so the items' min-width bindings (which read
+            // `root.width`) must not feed back into this element's
+            // layoutinfo.
+            x: 0;
+            alignment: root.arrangement == ShortNavigationBarArrangement.centered ?
+                center : start;
+            spacing: 0px;
+
+            for item[index] in root.items : ShortNavigationBarItemTemplate {
+                // `Constraints.fixed(width, itemHeight)` upstream: an
+                // equal-weight item is exactly `width/count`; a centered
+                // item is `itemMinWidth`, grown to at most
+                // `min(intrinsicWidth, itemMaxWidth)` when the content
+                // needs more.
+                horizontal-stretch: 0;
+                min-width: root.arrangement == ShortNavigationBarArrangement.equal-weight ?
+                    root.equal-item-width :
+                    root.centered-item-min-width < self.intrinsic-width ?
+                        min(self.intrinsic-width, root.centered-item-max-width) :
+                        root.centered-item-min-width;
+                min-height: self.intrinsic-height;
+                icon-position: root.icon-position;
+                min-size: root.item-min-size;
+                icon: item.icon;
+                selected-icon: item.selected_icon;
+                text: item.text;
+                index: index;
+                selected: index == root.current-index;
+                enabled: item.enabled;
+                show-badge: item.show-badge;
+                badge: item.badge;
+
+                clicked => { root.select(index); }
             }
         }
     }
