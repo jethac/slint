@@ -1685,6 +1685,11 @@ fn build(l: &mut Loader) {
         out property <Point> current-position;
         /// `true` while the gesture is recognized, false otherwise.
         out property <bool> swiping;
+        /// The velocity of the pointer in logical pixels per second at the moment a swipe
+        /// gesture ends, written when the pointer is released while `swiping`.
+        /// Use it as the `initial-velocity` of `animate` blocks or to pick the target of a
+        /// follow-up animation inside `swiped`.
+        out property <Point> release-velocity;
         //! ### Handle swipe directions properties
         /// \default false
         in property <bool> handle-swipe-left;
