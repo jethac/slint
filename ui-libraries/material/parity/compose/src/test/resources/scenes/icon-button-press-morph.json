@@ -116,6 +116,8 @@
   "widgets": [
     {
       "alignment": null,
+      "always_show_label": null,
+      "arrangement": null,
       "checkable": null,
       "checked": null,
       "checked_icon": null,
@@ -125,8 +127,10 @@
       "elevation": null,
       "enabled": null,
       "expanded": null,
+      "fab_icon": null,
       "height": null,
       "height_offset": null,
+      "hide_on_collapse": null,
       "icon": "check",
       "icons": [],
       "indeterminate": null,
@@ -140,6 +144,7 @@
       "position": null,
       "progress": null,
       "radius": null,
+      "rail_items": [],
       "selected_index": null,
       "shape": null,
       "shown": null,

@@ -30,6 +30,9 @@ icon-button-states
 icon-buttons
 loading-indicator-motion
 loading-indicator-states
+modal-navigation-rail
+navigation-rail-labels
+navigation-rails
 negative-button-focus-ring
 negative-button-press-morph
 negative-button-ripple-clip
@@ -46,8 +49,10 @@ negative-fab-size
 negative-focus-layer
 negative-hover-layer
 negative-icon-button-morph
+negative-navigation-rail
 negative-press-overlay
 negative-radius
+negative-rail-indicator
 negative-recolor
 negative-shape-fit
 negative-shape-leak
@@ -70,3 +75,5 @@ spring-motion
 toggle-buttons
 toggle-select-morph
 top-app-bars
+wide-navigation-rail-arrangements
+wide-navigation-rail-expand

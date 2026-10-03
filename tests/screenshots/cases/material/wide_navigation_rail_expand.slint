@@ -1,0 +1,69 @@
+// Copyright © SixtyFPS GmbH <info@slint.dev>
+// SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0
+
+// Scene: wide-navigation-rail-expand — generated from `ui-libraries/material/parity/scenes/wide-navigation-rail-expand.json`
+// (edit the scene, regenerate with `cargo run -p material-parity-generator`).
+//PARITY=xfail: issue #27: the rail events are synchronous Slint key dispatches while the Compose side launches `scope.launch { railState.expand() }`, so the spring starts ~3ms later on the Compose clock — identical-timestamp comparison reports a systematic lead and mid-animation frame pixels disagree. The t=0 `rail_width` prop is also a Compose capture artifact: its getter reads element bounds before the first layout and reports 0 where the Slint out property already reports 96dp.
+//SIZE=400x420
+//TIMES=0,60,120,200,300,450,650,900,1150,1250,1360,1450,1550,1750,2000,2400
+//TRACE_PROPS=rail_width
+//TRACE_ELEMENTS=rail0
+//DENSITIES=1
+import "../../fonts/Roboto-VariableFont.ttf";
+import { Icons, MaterialPalette, MaterialTheme, MaterialWindow, NavigationRailArrangement, WideNavigationRail } from "@material";
+
+export component TestCase inherits MaterialWindow {
+    init => {
+        // The scene pins seed #6750A4, tonal-spot, spec2025, light, contrast 0
+        // (all the library defaults; restated here so a default change can't
+        // silently move the parity baseline).
+        MaterialTheme.seed-color = #6750A4;
+        MaterialTheme.dark = false;
+        MaterialTheme.contrast-level = 0;
+        MaterialTheme.use-platform-color = false;
+        MaterialTheme.plain-family = "Roboto";
+        MaterialTheme.brand-family = "Roboto";
+        // Compose builds its scene scheme from the same seed — use the
+        // runtime-generated scheme, not the static expressive table.
+        MaterialPalette.dynamic = true;
+    }
+
+    rail0 := WideNavigationRail {
+        x: 0px;
+        y: 0px;
+        height: 420px;
+        expanded: false;
+        arrangement: NavigationRailArrangement.center;
+        current-index: 0;
+        has-menu: true;
+        fab-icon: Icons.edit;
+        items: [
+            { icon: Icons.check, selected-icon: Icons.arrow_right, text: "WAV", enabled: true },
+            { icon: Icons.schedule, text: "Sent", enabled: true },
+            { icon: Icons.keyboard, text: "Files", enabled: true },
+            { icon: Icons.close, text: "Trash", enabled: true },
+        ];
+    }
+
+    out property <length> rail_width: rail0.rail-width;
+
+    in-out property <float> rail-event-sync;
+
+    forward-focus: rail-event-scope;
+    //ACTION=key@30:e
+    //ACTION=key@1300:c
+    rail-event-scope := FocusScope {
+        key-pressed(event) => {
+            if event.text == "e" {
+                rail0.expand();
+                rail-event-sync = rail0.expansion + rail0.width-expansion;
+            }
+            if event.text == "c" {
+                rail0.collapse();
+                rail-event-sync = rail0.expansion + rail0.width-expansion;
+            }
+            accept
+        }
+    }
+
+}
