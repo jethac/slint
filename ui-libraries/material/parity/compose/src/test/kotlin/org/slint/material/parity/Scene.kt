@@ -164,11 +164,35 @@ class Widget(json: JSONObject) {
      * unset; `0` is the upstream `Dp.Hairline` (one physical pixel). */
     val thickness: Float = json.optDouble("thickness", 1.0).toFloat()
 
+    /** Slider value in `trackRange` units — `SliderState(value)` /
+     * `RangeSliderState(startValue)`; `value2` is the range slider's end. */
+    val value: Float = json.optDouble("value", 0.5).toFloat()
+    val value2: Float = json.optDouble("value2", 1.0).toFloat()
+    /** `SliderState.trackRange`/`RangeSliderState.trackRange` bounds. */
+    val min: Float = json.optDouble("min", 0.0).toFloat()
+    val max: Float = json.optDouble("max", 1.0).toFloat()
+    /** Discrete `steps` between the endpoints. */
+    val steps: Int = json.optInt("steps", 0)
+    /** `SliderDefaults.CenteredTrack` instead of the default `Track`. */
+    val centered: Boolean = json.optBoolean("centered", false)
+    /** `VerticalSlider(topToBottom)`; default `false` (bottom to top). */
+    val topToBottom: Boolean = json.optBoolean("top_to_bottom", false)
+    /** `LocalLayoutDirection.Rtl`. */
+    val rtl: Boolean = json.optBoolean("rtl", false)
+    /** `Track(…, trackCornerSize)` in dp; `< 0` means `Dp.Unspecified`. */
+    val trackCorner: Float = json.optDouble("track_corner", -1.0).toFloat()
+    /** Which range thumb `state` applies to: `start` (default) or `end`;
+     * `state2` covers the other thumb. */
+    val thumb: String = (json.opt("thumb") as? String) ?: "start"
+    val state2: String? = json.opt("state2") as? String
+
     val isFab: Boolean get() = kind == "fab" || kind == "extended-fab"
     val isSplitButton: Boolean get() = kind.endsWith("split-button")
     val isIconButton: Boolean get() = kind.endsWith("icon-button")
     val isButton: Boolean get() =
         (isIconButton || isSplitButton || kind.endsWith("-button")) && kind != "connected-button"
+    val isSlider: Boolean get() =
+        kind == "slider" || kind == "vertical-slider" || kind == "range-slider"
     /** `elevated-rect` only: the elevation in dp of the Android ambient+spot
      * shadow `Modifier.shadow` draws behind the caster. */
     val elevation: Float = json.optDouble("elevation", 0.0).toFloat()

@@ -1,0 +1,41 @@
+// Copyright © SixtyFPS GmbH <info@slint.dev>
+// SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0
+
+// Scene: negative-slider-gap — generated from `ui-libraries/material/parity/scenes/negative-slider-gap.json`
+// (edit the scene, regenerate with `cargo run -p material-parity-generator`).
+//PARITY=negative: thumbTrackGapSize rendered as 10dp instead of the pin's 6dp — the gap band widens around the handle
+//SIZE=340x80
+//TRACE_ELEMENTS=slider0
+//DENSITIES=1,2
+import "../../fonts/Roboto-VariableFont.ttf";
+import { MaterialPalette, MaterialSliderLabelBehavior, MaterialTheme, MaterialWindow, Slider } from "@material";
+
+export component TestCase inherits MaterialWindow {
+    init => {
+        // The scene pins seed #6750A4, tonal-spot, spec2025, light, contrast 0
+        // (all the library defaults; restated here so a default change can't
+        // silently move the parity baseline).
+        MaterialTheme.seed-color = #6750A4;
+        MaterialTheme.dark = false;
+        MaterialTheme.contrast-level = 0;
+        MaterialTheme.use-platform-color = false;
+        MaterialTheme.plain-family = "Roboto";
+        MaterialTheme.brand-family = "Roboto";
+        // Compose builds its scene scheme from the same seed — use the
+        // runtime-generated scheme, not the static expressive table.
+        MaterialPalette.dynamic = true;
+    }
+
+    slider0 := Slider {
+        x: 16px;
+        y: 20px;
+        minimum: 0;
+        maximum: 1;
+        value: 0.5;
+        thumb-track-gap: 10px;
+        width: 300px;
+        enforce-touch-target: false;
+        label-behavior: MaterialSliderLabelBehavior.gone;
+    }
+
+}

@@ -1,6 +1,6 @@
 ---
 title: Slider
-description: Slider API.
+description: Slider, VerticalSlider and RangeSlider API.
 ---
 
 import CodeSnippetMD from '@slint/common-files/src/components/CodeSnippetMD.astro';
@@ -10,65 +10,199 @@ import SlintProperty from '@slint/common-files/src/components/SlintProperty.astr
 ```slint
 import { Slider } from "@material";
 export component Example inherits Window {
-    width: 200px;
-    height: 100px;
+    width: 300px;
+    height: 200px;
     background: transparent;
     Slider {
-        x: 5px;
-        value: 50;
-        width: parent.width;
+        x: 24px;
+        y: 80px;
+        value: 0.5;
+        width: 252px;
     }
 }
 ```
 </CodeSnippetMD>
 
-Use a `Slider` to allow the user to select a value from a range by moving a thumb along a track. This is useful for adjusting settings such as volume, brightness, or any other scalar value within a specified range.
+Use a `Slider` to select a single value from a continuous or stepped
+range — volume, brightness, or any scalar setting. The handle is a
+pill that narrows while pressed, dragged or focused; `VerticalSlider`
+runs the same widget top to bottom (set `top-to-bottom: false` for a
+bottom-to-top direction), and `RangeSlider` selects a range between
+two thumbs.
 
+<CodeSnippetMD imagePath="/src/assets/generated/slider-sizes.png" scale="3" imageWidth="400" imageHeight="280" imageAlt="">
+```slint
+import { Slider, MaterialSliderSize } from "@material";
+export component Example inherits Window {
+    width: 380px;
+    height: 260px;
+    background: transparent;
+    VerticalLayout {
+        padding: 20px;
+        spacing: 8px;
+        for s in [MaterialSliderSize.extra-small, MaterialSliderSize.small, MaterialSliderSize.medium, MaterialSliderSize.large, MaterialSliderSize.extra-large]: Slider {
+            value: 0.4;
+            size: s;
+            width: parent.width;
+        }
+    }
+}
+```
+</CodeSnippetMD>
+
+`size` picks the track preset from `extra-small` (16px track) through
+`extra-large` (96px). `steps` snaps the value to that many discrete
+stops and draws tick marks; `centered` runs the active track from the
+track's center instead of the leading edge.
+
+<CodeSnippetMD imagePath="/src/assets/generated/slider-range.png" scale="3" imageWidth="400" imageHeight="220" imageAlt="">
+```slint
+import { Slider, RangeSlider, VerticalSlider } from "@material";
+export component Example inherits Window {
+    width: 380px;
+    height: 200px;
+    background: transparent;
+    HorizontalLayout {
+        padding: 20px;
+        spacing: 24px;
+        VerticalLayout {
+            spacing: 12px;
+            Slider {
+                steps: 4;
+                value: 0.4;
+                width: 250px;
+            }
+            RangeSlider {
+                start-value: 0.2;
+                end-value: 0.8;
+                width: 250px;
+            }
+        }
+        VerticalSlider {
+            value: 0.6;
+            height: 150px;
+        }
+    }
+}
+```
+</CodeSnippetMD>
 
 ## Properties
 
-### has-focus
-<SlintProperty propName="has-focus" typeName="bool">
-Whether the component has focus.
-</SlintProperty>
-
-### stop-count
-<SlintProperty propName="stop-count" typeName="float" defaultValue="0">
-The number of discrete divisions in the slider range. If greater than 0, the slider will snap to these divisions.
-</SlintProperty>
-
-### enabled
-<SlintProperty propName="enabled" typeName="bool" defaultValue="true">
-Whether the slider is enabled. When false, the slider cannot be interacted with.
-</SlintProperty>
-
-### maximum
-<SlintProperty propName="maximum" typeName="float" defaultValue="100">
-The maximum value of the slider.
+### value
+<SlintProperty propName="value" typeName="float" propertyVisibility="in-out">
+The selected value, coerced into `minimum..maximum`.
 </SlintProperty>
 
 ### minimum
 <SlintProperty propName="minimum" typeName="float" defaultValue="0">
-The minimum value of the slider.
+The value range's lower bound — `SliderState.valueRange` upstream.
 </SlintProperty>
 
-### value
-<SlintProperty propName="value" typeName="float" propertyVisibility="in-out">
-The current value of the slider.
+### maximum
+<SlintProperty propName="maximum" typeName="float" defaultValue="1">
+The value range's upper bound.
+</SlintProperty>
+
+### steps
+<SlintProperty propName="steps" typeName="int" defaultValue="0">
+The number of discrete stops between `minimum` and `maximum`. Ticks are
+drawn for every stop, including the endpoints.
+</SlintProperty>
+
+### size
+<SlintProperty propName="size" typeName="enum" enumName="MaterialSliderSize" defaultValue="MaterialSliderSize.extra-small">
+The track preset, `extra-small` through `extra-large`.
+</SlintProperty>
+
+### centered
+<SlintProperty propName="centered" typeName="bool" defaultValue="false">
+`SliderDefaults.CenteredTrack` — the active track starts at the center
+of the track, for bipolar values.
+</SlintProperty>
+
+### enabled
+<SlintProperty propName="enabled" typeName="bool" defaultValue="true">
+Whether the slider can be interacted with. Disabled sliders render with
+the disabled color table.
+</SlintProperty>
+
+### enforce-touch-target
+<SlintProperty propName="enforce-touch-target" typeName="bool" defaultValue="true">
+Enforce the 48px minimum interactive size — `minimumInteractiveComponentSize` upstream.
+</SlintProperty>
+
+### top-to-bottom
+<SlintProperty propName="top-to-bottom" typeName="bool" defaultValue="true">
+`VerticalSlider` only: values grow top to bottom when set, bottom to
+top otherwise.
+</SlintProperty>
+
+### mirror
+<SlintProperty propName="mirror" typeName="bool" defaultValue="false">
+`state.isRtl` upstream — mirror the track axis for right-to-left
+layouts.
+</SlintProperty>
+
+### icon-active-start / icon-active-end / icon-inactive-start / icon-inactive-end
+<SlintProperty propName="icon-active-start" typeName="image">
+Inset icons inside the track — `trackIcon{Active,Inactive}{Start,End}`
+in the Material Views spec. Sizes `medium` and up reserve an icon
+region; an icon shows only when the region fits `icon-size + 2·padding`.
+</SlintProperty>
+
+### icon-active-color / icon-inactive-color
+<SlintProperty propName="icon-active-color" typeName="color">
+The tint for the inset icons on the active track and on the inactive
+container.
+</SlintProperty>
+
+### label-behavior
+<SlintProperty propName="label-behavior" typeName="enum" enumName="MaterialSliderLabelBehavior" defaultValue="MaterialSliderLabelBehavior.floating">
+The value indicator: `floating` shows it during interaction,
+`within-bounds` always, `gone` never — `Slider_labelBehavior` in Views.
+</SlintProperty>
+
+### thumb-track-gap
+<SlintProperty propName="thumb-track-gap" typeName="length" defaultValue="SliderTokens.active-handle-leading-space">
+`thumbTrackGapSize` — the gap the track leaves around the handle.
+</SlintProperty>
+
+### track-corner-override
+<SlintProperty propName="track-corner-override" typeName="length" defaultValue="-1px">
+`trackCornerSize` — an explicit corner radius takes the pin's
+corner-shrinking path; `-1px` resolves to the `size` preset's corner.
+</SlintProperty>
+
+### has-focus / pressed / focused / interacting
+<SlintProperty propName="has-focus" typeName="bool" propertyVisibility="out">
+Read-only interaction state. `interacting` is the pin's
+`interactions.isNotEmpty()` — press, drag and focus, not hover.
 </SlintProperty>
 
 ## Callbacks
 
 ### released(value: float)
-Invoked when the slider is released.
+`onValueChangeFinished` — on pointer release and on key-up of a
+navigation key.
 
-### value_changed(value: float)
-Invoked when the slider value changes.
+### value-changed(value: float)
+`onValueChange` — the value the interaction set.
+
+## RangeSlider
+
+`RangeSlider` selects a range between `start-value` and `end-value`
+over the same `minimum..maximum` range. Taps move the nearer thumb,
+drags cannot cross the other thumb, and each thumb has its own focus,
+keyboard control and accessibility semantics. Its `value-changed` and
+`released` callbacks report `(start, end)` pairs.
 
 ## Functions
 
-### clear-focus()
-Clears the focus from the component.
+### set-value(v: float)
+Sets `value`, coerced into `minimum..maximum` — the same path the
+`accessible-action-set-value` handler uses.
 
-### focus()
-Focuses the component.
+### increment-value() / decrement-value()
+Move `value` by one step (`steps > 0`) or one percent of the range —
+the keyboard arrows and `accessible-action-increment`/`decrement` path.
