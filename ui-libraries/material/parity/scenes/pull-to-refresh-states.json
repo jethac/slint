@@ -62,5 +62,6 @@
             }
         ]
     },
-    "eps": 32
+    "parity_eps": 32,
+    "parity_eps_reason": "issue #53 class: the refresh arc is thin stroked ink — AA coverage ramps diverge past the default 8/255 tolerance on the arc edges"
 }

@@ -15,7 +15,8 @@
     },
     "fonts": { "plain": "Roboto", "brand": "Roboto" },
     "times": [500, 1250, 2500],
-    "eps": 16,
+    "parity_eps": 16,
+    "parity_eps_reason": "issue #53 class: the refresh arc is thin stroked ink — AA coverage ramps diverge past the default 8/255 tolerance on the arc edges",
     "trace_elements": ["ind"],
     "mask_inner": { "ind": [500, 1250, 2500] },
     "params": {

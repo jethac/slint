@@ -4,12 +4,13 @@
 // Scene: pull-refresh-refreshing — generated from `ui-libraries/material/parity/scenes/pull-refresh-refreshing.json`
 // (edit the scene, regenerate with `cargo run -p material-parity-generator`).
 //PARITY=xfail:femtovg: the refreshing indicators run infinite animations; Compose launches their LaunchedEffect coroutines ~40ms of frame time after t=0 inside Paparazzi, so identical-timestamp frames sit at different phases of the morph+rotation cycle — the loading indicator's blob interior is masked as mid-flight ink while its static circular container stays strict; femtovg additionally tessellates the spinner's stroked arc with a different AA coverage ramp than layoutlib — isolated edge pixels diverge ~90/255 at d2 while geometry is verified identical on software and skia; a silent pass would mean the harness went blind
+// issue #53 class: the refresh arc is thin stroked ink — AA coverage ramps diverge past the default 8/255 tolerance on the arc edges
+//PARITY_EPS=16
 //SIZE=560x220
 //TIMES=500,1250,2500
 //TRACE_ELEMENTS=ind
 //MASK_INNER=ind@500,1250,2500
 //DENSITIES=1,2
-//PARITY_EPS=16
 import "../../fonts/Roboto-VariableFont.ttf";
 import { MaterialPalette, MaterialTheme, MaterialWindow, PullToRefreshBox, PullToRefreshIndicatorKind } from "@material";
 

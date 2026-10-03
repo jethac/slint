@@ -103,6 +103,11 @@ class Widget(json: JSONObject) {
     val checked: Boolean = json.optBoolean("checked", false)
     /** Icon-button container width `narrow`/`uniform`/`wide`. */
     val widthOption: String = (json.opt("width_option") as? String) ?: "uniform"
+    /** Loading-indicator mode: indeterminate (the continuous morph loop,
+     * default) or driven by [progress]. */
+    val indeterminate: Boolean = json.optBoolean("indeterminate", true)
+    /** Determinate loading-indicator progress, 0–1. */
+    val progress: Float = json.optDouble("progress", 0.0).toFloat()
     /** `top-app-bar` variant: `small` (default), `center`, `medium`,
      * `medium-flexible`, `large`, `large-flexible`, `two-rows`. */
     val variant: String = (json.opt("variant") as? String) ?: "small"
@@ -140,7 +145,26 @@ class Widget(json: JSONObject) {
     val multiSelect: Boolean = json.optBoolean("multi_select", false)
     /** Single-select groups: the checked item (`-1` selects none). */
     val selectedIndex: Int = json.optInt("selected_index", -1)
+    /** `extended-fab` expansion state (`expanded` upstream). */
+    val expanded: Boolean = json.optBoolean("expanded", true)
+    /** `fab`/`extended-fab` visibility — `visible` on
+     * `Modifier.animateFloatingActionButton` upstream. */
+    val shown: Boolean = json.optBoolean("shown", true)
+    /** `animateFloatingActionButton` scale pivot — `Alignment` member name
+     * in snake case (`bottom_end` default). */
+    val alignment: String = (json.opt("alignment") as? String) ?: "bottom_end"
+    /** `animateFloatingActionButton` `targetScale` (0.2 upstream). */
+    val targetScale: Float = json.optDouble("target_scale", 0.2).toFloat()
+    /** The prop a press+release click toggles — `expanded` or `shown`. */
+    val toggle: String? = (json.opt("toggle") as? String)?.takeIf { it.isNotEmpty() }
+    /** `extended-fab` label-slot width pin — `Modifier.width` on the
+     * upstream `text` composable; 0/unset sizes it to the text. */
+    val labelWidth: Float = json.optDouble("label_width", 0.0).toFloat()
+    /** `*-divider` line thickness in dp — `DividerDefaults.Thickness` when
+     * unset; `0` is the upstream `Dp.Hairline` (one physical pixel). */
+    val thickness: Float = json.optDouble("thickness", 1.0).toFloat()
 
+    val isFab: Boolean get() = kind == "fab" || kind == "extended-fab"
     val isSplitButton: Boolean get() = kind.endsWith("split-button")
     val isIconButton: Boolean get() = kind.endsWith("icon-button")
     val isButton: Boolean get() =

@@ -4,9 +4,10 @@
 // Scene: pull-to-refresh-states — generated from `ui-libraries/material/parity/scenes/pull-to-refresh-states.json`
 // (edit the scene, regenerate with `cargo run -p material-parity-generator`).
 //PARITY=static
+// issue #53 class: the refresh arc is thin stroked ink — AA coverage ramps diverge past the default 8/255 tolerance on the arc edges
+//PARITY_EPS=32
 //SIZE=560x400
 //DENSITIES=1,2
-//PARITY_EPS=32
 import "../../fonts/Roboto-VariableFont.ttf";
 import { MaterialPalette, MaterialTheme, MaterialWindow, PullToRefreshBox, PullToRefreshIndicatorKind } from "@material";
 
