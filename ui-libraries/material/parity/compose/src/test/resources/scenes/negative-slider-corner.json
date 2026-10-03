@@ -101,6 +101,7 @@
       "placeholder": null,
       "radius": null,
       "shape": null,
+      "side": null,
       "size": null,
       "slint_overrides": {
         "track_corner": 2
@@ -109,6 +110,7 @@
       "subtitle": null,
       "text": null,
       "track_corner": 12.0,
+      "trailing_icon": null,
       "value": 0.5,
       "variant": null,
       "width": 300.0,

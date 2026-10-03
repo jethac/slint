@@ -115,7 +115,14 @@ class Widget(json: JSONObject) {
     val icons: List<String> =
         json.optJSONArray("icons")?.let { a -> (0 until a.length()).map(a::getString) } ?: emptyList()
     val placeholder: String? = (json.opt("placeholder") as? String)?.takeIf { it.isNotEmpty() }
+    /** `*-split-button` kinds only: which half carries `state` and receives
+     * the scripted pointer gesture — `leading` or `trailing`. */
+    val side: String = (json.opt("side") as? String) ?: "trailing"
+    /** `*-split-button` trailing icon stem — `keyboard_arrow_down`, the
+     * chevron the upstream samples rotate, when unset. */
+    val trailingIcon: String? = (json.opt("trailing_icon") as? String)?.takeIf { it.isNotEmpty() }
 
+<<<<<<< HEAD
     /** Slider value in `trackRange` units — `SliderState(value)` /
      * `RangeSliderState(startValue)`; `value2` is the range slider's end. */
     val value: Float = json.optDouble("value", 0.5).toFloat()
@@ -138,8 +145,9 @@ class Widget(json: JSONObject) {
     val thumb: String = (json.opt("thumb") as? String) ?: "start"
     val state2: String? = json.opt("state2") as? String
 
+    val isSplitButton: Boolean get() = kind.endsWith("split-button")
     val isIconButton: Boolean get() = kind.endsWith("icon-button")
-    val isButton: Boolean get() = isIconButton || kind.endsWith("-button")
+    val isButton: Boolean get() = isIconButton || isSplitButton || kind.endsWith("-button")
     val isSlider: Boolean get() =
         kind == "slider" || kind == "vertical-slider" || kind == "range-slider"
     /** `elevated-rect` only: the elevation in dp of the Android ambient+spot
