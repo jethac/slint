@@ -1,23 +1,29 @@
 ---
 title: FilterChip
-description: FilterChip API.
+description: FilterChip and ElevatedFilterChip API.
 ---
 
 import CodeSnippetMD from '@slint/common-files/src/components/CodeSnippetMD.astro';
 import SlintProperty from '@slint/common-files/src/components/SlintProperty.astro';
 
-<CodeSnippetMD imagePath="/src/assets/generated/filterchip.png" scale="3" imageWidth="300" imageHeight="200" imageAlt="">
+<CodeSnippetMD imagePath="/src/assets/generated/filterchip.png" scale="3" imageWidth="320" imageHeight="140" imageAlt="">
 ```slint
 import { FilterChip } from "@material";
 export component Example inherits Window {
-    width: 200px;
-    height: 100px;
+    width: 300px;
+    height: 120px;
     background: transparent;
-    FilterChip {
-        text: "Filter";
-        icon: @image-url("../icons/filter.svg");
-        width: 100px;
-        height: 32px;
+    HorizontalLayout {
+        padding: 40px;
+        spacing: 20px;
+        alignment: center;
+        FilterChip {
+            text: "Filter";
+        }
+        FilterChip {
+            checked: true;
+            text: "Selected";
+        }
     }
 }
 ```
@@ -25,17 +31,62 @@ export component Example inherits Window {
 
 A `FilterChip` is a chip that can be toggled on and off to filter content. When selected, it displays a checkmark icon and changes its appearance to indicate the active state.
 
+<CodeSnippetMD imagePath="/src/assets/generated/filterchip-elevated.png" scale="3" imageWidth="460" imageHeight="140" imageAlt="">
+```slint
+import { FilterChip, ElevatedFilterChip } from "@material";
+export component Example inherits Window {
+    width: 440px;
+    height: 120px;
+    background: transparent;
+    HorizontalLayout {
+        padding: 40px;
+        spacing: 20px;
+        alignment: center;
+        FilterChip {
+            checked: true;
+            text: "Flat";
+        }
+        ElevatedFilterChip {
+            checked: true;
+            text: "Elevated";
+        }
+        FilterChip {
+            checked: true;
+            expressive: true;
+            text: "Expressive";
+        }
+    }
+}
+```
+</CodeSnippetMD>
+
+The `ElevatedFilterChip` variant rests at elevation level 1 and lifts to level 3 on drag. With `expressive` enabled, the container's corners morph on selection and press using the active motion scheme's spatial springs.
+
 ## Properties
 
 ### checked
 <SlintProperty propName="checked" typeName="bool" propertyVisibility="in-out">
 Whether the filter chip is in the checked (active) state.
+</SlintProperty>
 
+### chip-shapes
+<SlintProperty propName="chip-shapes" typeName="MaterialChipShapes" defaultValue="FilterChipTokens shapes">
+The corner shapes the container morphs between when `expressive` is enabled: `shape` (rest), `selected-shape`, and `pressed-shape`.
+</SlintProperty>
+
+### container-shape
+<SlintProperty propName="container-shape" typeName="MaterialCornerShape" defaultValue="FilterChipTokens.container-shape">
+The static corner shape of the chip container, used when `expressive` is disabled.
 </SlintProperty>
 
 ### enabled
 <SlintProperty propName="enabled" typeName="bool" defaultValue="true">
 Whether the chip is enabled and can be interacted with.
+</SlintProperty>
+
+### expressive
+<SlintProperty propName="expressive" typeName="bool" defaultValue="false">
+Whether the container corners morph between the `chip-shapes` on selection and press.
 </SlintProperty>
 
 ### has-focus
@@ -45,7 +96,7 @@ Whether the component has focus.
 
 ### icon
 <SlintProperty propName="icon" typeName="image">
-An optional icon displayed on the chip.
+An optional icon displayed on the chip, shown while unchecked.
 </SlintProperty>
 
 ### text
@@ -70,6 +121,3 @@ Clears the focus from the component.
 
 ### focus()
 Focuses the component.
-
-### toggle()
-Toggles the filter chip state between checked and unchecked.

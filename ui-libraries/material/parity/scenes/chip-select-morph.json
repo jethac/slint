@@ -1,0 +1,82 @@
+{
+    "name": "chip-select-morph",
+    "type": "canvas",
+    "parity": "xfail",
+    "size": [
+        240,
+        96
+    ],
+    "densities": [
+        1,
+        2
+    ],
+    "theme": {
+        "seed": "6750A4",
+        "variant": "tonal-spot",
+        "spec": "spec2025",
+        "platform": "phone",
+        "dark": false,
+        "contrast": 0.0
+    },
+    "fonts": {
+        "plain": "Roboto",
+        "brand": "Roboto"
+    },
+    "widgets": [
+        {
+            "kind": "filter-chip",
+            "x": 60,
+            "y": 32,
+            "text": "Filter",
+            "variant": "expressive",
+            "checked_icon": "check",
+            "width": 120
+        }
+    ],
+    "trace_elements": [
+        "button0"
+    ],
+    "trace_props": [
+        "corner_top_left"
+    ],
+    "times": [
+        0,
+        15,
+        30,
+        60,
+        120,
+        200,
+        333,
+        500,
+        800,
+        1500
+    ],
+    "actions": [
+        {
+            "kind": "press",
+            "x": 120,
+            "y": 48
+        },
+        {
+            "kind": "release",
+            "x": 120,
+            "y": 48
+        },
+        {
+            "kind": "move",
+            "x": 0,
+            "y": 0,
+            "at": 1
+        }
+    ],
+    "mask_inner": {
+        "button0": [
+            15,
+            30,
+            60,
+            120,
+            200
+        ]
+    },
+    "negative_note": "issue #27: the Compose frame clock starts the press/select morph ~2ms after the Slint dispatch, so identical-timestamp frames report a systematic lead in the corner morph and slot expand \u2014 a silent pass would mean the harness went blind"
+}

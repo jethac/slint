@@ -756,9 +756,19 @@ impl<'a, R: femtovg::Renderer + TextureImporter> ItemRenderer for GLItemRenderer
         }
         let outline = shadow_item.element_outline();
 
-        // The canvas transform already maps item space to device pixels.
+        // The canvas transform maps item space to device pixels, but its
+        // linear part carries no scale: this renderer applies `scale_factor`
+        // to each drawn geometry itself. Fold it into the linear part so the
+        // shadow outline rasterizes at device resolution like the rest.
         let [a, b, c, d, e, f] = self.canvas.borrow().transform().0;
-        let ctm = shadow::Affine::new(a, b, c, d, e, f);
+        let ctm = shadow::Affine::new(
+            a * scale_factor,
+            b * scale_factor,
+            c * scale_factor,
+            d * scale_factor,
+            e,
+            f,
+        );
 
         let adapter = i_slint_core::window::WindowInner::from_pub(self.window).window_adapter();
         let (light, light_radius) = shadow::elevation_light(

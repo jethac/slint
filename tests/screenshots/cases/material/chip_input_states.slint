@@ -1,0 +1,76 @@
+// Copyright © SixtyFPS GmbH <info@slint.dev>
+// SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0
+
+// Scene: chip-input-states — generated from `ui-libraries/material/parity/scenes/chip-input-states.json`
+// (edit the scene, regenerate with `cargo run -p material-parity-generator`).
+//PARITY=static
+//SIZE=592x96
+//TRACE_PROPS=shadow_elevation
+//TRACE_ELEMENTS=button0,button1,button2,button3,button4
+//MASK_INNER=button0@2000
+//MASK_INNER=button1@2000
+//MASK_INNER=button2@2000
+//MASK_INNER=button3@2000
+//MASK_INNER=button4@2000
+//DENSITIES=1,2
+import "../../fonts/Roboto-VariableFont.ttf";
+import { Icons, InputChip, MaterialPalette, MaterialTheme, MaterialWindow } from "@material";
+
+export component TestCase inherits MaterialWindow {
+    init => {
+        // The scene pins seed #6750A4, tonal-spot, spec2025, light, contrast 0
+        // (all the library defaults; restated here so a default change can't
+        // silently move the parity baseline).
+        MaterialTheme.seed-color = #6750A4;
+        MaterialTheme.dark = false;
+        MaterialTheme.contrast-level = 0;
+        MaterialTheme.use-platform-color = false;
+        MaterialTheme.plain-family = "Roboto";
+        MaterialTheme.brand-family = "Roboto";
+        // Compose builds its scene scheme from the same seed — use the
+        // runtime-generated scheme, not the static expressive table.
+        MaterialPalette.dynamic = true;
+    }
+
+    button0 := InputChip {
+        x: 16px;
+        y: 32px;
+        text: "Input";
+    }
+
+    out property <length> shadow_elevation: button0.shadow_elevation;
+
+    button1 := InputChip {
+        x: 136px;
+        y: 32px;
+        text: "Input";
+        avatar_icon: Icons.person;
+    }
+
+    button2 := InputChip {
+        x: 256px;
+        y: 32px;
+        text: "Input";
+        avatar_icon: Icons.person;
+        trailing_icon: Icons.close;
+    }
+
+    button3 := InputChip {
+        x: 376px;
+        y: 32px;
+        text: "Input";
+        avatar_icon: Icons.person;
+        trailing_icon: Icons.close;
+        checked: true;
+    }
+
+    button4 := InputChip {
+        x: 496px;
+        y: 32px;
+        text: "Input";
+        avatar_icon: Icons.person;
+        trailing_icon: Icons.close;
+        enabled: false;
+    }
+
+}

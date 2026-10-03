@@ -163,6 +163,9 @@ class Widget(json: JSONObject) {
     /** `*-divider` line thickness in dp — `DividerDefaults.Thickness` when
      * unset; `0` is the upstream `Dp.Hairline` (one physical pixel). */
     val thickness: Float = json.optDouble("thickness", 1.0).toFloat()
+    /** `input-chip` avatar: icon stem rendered in the 24dp avatar slot
+     * (the upstream samples' `Icon` avatar). */
+    val avatar: String? = (json.opt("avatar") as? String)?.takeIf { it.isNotEmpty() }
 
     val isFab: Boolean get() = kind == "fab" || kind == "extended-fab"
     val isSplitButton: Boolean get() = kind.endsWith("split-button")
