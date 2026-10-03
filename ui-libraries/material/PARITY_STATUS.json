@@ -976,16 +976,16 @@
       11
     ],
     "needs": "none",
-    "notes": "slint component: SnackBar",
-    "status": "partial"
+    "notes": "slint component: SnackBar (legacy layouts - isSnackbarStylingFixEnabled=false at the pin)",
+    "status": "done"
   },
   "SnackbarHost": {
     "issues": [
       11
     ],
     "needs": "none",
-    "notes": "",
-    "status": "missing"
+    "notes": "slint component: SnackBarHost + SnackBarVisuals/SnackBarDuration",
+    "status": "done"
   },
   "SplitButtonLayout": {
     "issues": [

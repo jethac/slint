@@ -1440,8 +1440,14 @@ fn compare_text_metrics<C: i_slint_core::api::ComponentHandle>(
             // ~0.125dp of residual quantization on both sides. Compose's
             // hinted `w`/`frac_w` stay a few px wider by design and are not
             // re-checked here.
-            match m["unhint_w"].as_f64() {
-                Some(unhint_w) if unhint_w.is_finite() => {
+            // Once the text wraps, both `w`/`unhint_w` and the horizontal
+            // placement encode engine-specific line-break positions — the
+            // engines do not wrap to the same widest line. Skip the
+            // horizontal metrics; `x`, `y` and `h` still pin the block.
+            let multi_line = m["lines"].as_u64().unwrap_or(1) > 1;
+            match (multi_line, m["unhint_w"].as_f64()) {
+                (true, _) => {}
+                (_, Some(unhint_w)) if unhint_w.is_finite() => {
                     let slack = sw - unhint_w;
                     let bound = if xfail_text.is_some() { 1.15 } else { 0.5 };
                     if !(-0.15..=bound).contains(&slack) {
@@ -1480,28 +1486,39 @@ fn compare_text_metrics<C: i_slint_core::api::ComponentHandle>(
             // container is the `*item*` element whose bounds contain the
             // text (a `group{n}item{i}` inside a connected button group),
             // else `button<N>` (or `*<N>`), else absolute center.
-            let container = cf["elements"]
-                .as_object()
-                .and_then(|elements| {
-                    elements.iter().find_map(|(eid, ce)| {
-                        parse_item_ref(eid)?;
-                        let (Some(ex), Some(ey), Some(ew), Some(eh)) = (
-                            ce["x"].as_f64(),
-                            ce["y"].as_f64(),
-                            ce["w"].as_f64(),
-                            ce["h"].as_f64(),
-                        ) else {
-                            return None;
-                        };
-                        let (mx, my) = (cx + cw / 2.0, m["y"].as_f64()? + m["h"].as_f64()? / 2.0);
-                        (mx >= ex && mx <= ex + ew && my >= ey && my <= ey + eh)
-                            .then(|| eid.clone())
-                    })
-                })
-                .unwrap_or_else(|| format!("button{n}"));
-            let slint_off = frame.elements.get(&container).map(|g| sx - g[0]);
-            let compose_off =
-                cf["elements"].get(&container).and_then(|ce| ce["x"].as_f64()).map(|bx| cx - bx);
+            // Multi-line texts skip this whole check: their laid-out width
+            // diverges with the line-break positions the engines pick.
+            let container = if multi_line {
+                None
+            } else {
+                Some(
+                    cf["elements"]
+                        .as_object()
+                        .and_then(|elements| {
+                            elements.iter().find_map(|(eid, ce)| {
+                                parse_item_ref(eid)?;
+                                let (Some(ex), Some(ey), Some(ew), Some(eh)) = (
+                                    ce["x"].as_f64(),
+                                    ce["y"].as_f64(),
+                                    ce["w"].as_f64(),
+                                    ce["h"].as_f64(),
+                                ) else {
+                                    return None;
+                                };
+                                let (mx, my) =
+                                    (cx + cw / 2.0, m["y"].as_f64()? + m["h"].as_f64()? / 2.0);
+                                (mx >= ex && mx <= ex + ew && my >= ey && my <= ey + eh)
+                                    .then(|| eid.clone())
+                            })
+                        })
+                        .unwrap_or_else(|| format!("button{n}")),
+                )
+            };
+            let slint_off =
+                container.as_ref().and_then(|c| frame.elements.get(c)).map(|g| sx - g[0]);
+            let compose_off = container.as_ref().and_then(|c| {
+                cf["elements"].get(c).and_then(|ce| ce["x"].as_f64()).map(|bx| cx - bx)
+            });
             match (slint_off, compose_off) {
                 (Some(s_off), Some(c_off)) => {
                     // A centered label's offset within its container carries
@@ -1521,6 +1538,7 @@ fn compare_text_metrics<C: i_slint_core::api::ComponentHandle>(
                         saw_drift = true;
                     }
                 }
+                _ if multi_line => {}
                 _ => {
                     let c_center = cx + cw / 2.0;
                     let drift = m["frac_w"]
