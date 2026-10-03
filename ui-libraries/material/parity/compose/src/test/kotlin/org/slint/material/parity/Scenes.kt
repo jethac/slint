@@ -72,6 +72,8 @@ import androidx.compose.material3.SplitButtonDefaults
 import androidx.compose.material3.SplitButtonLayout
 import androidx.compose.material3.MaterialExpressiveTheme
 import androidx.compose.material3.MotionScheme
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedIconButton
 import androidx.compose.material3.OutlinedIconToggleButton
@@ -533,6 +535,14 @@ private fun CanvasScene(
                     scene,
                     tracer,
                     "text:${buttons}",
+                    "button${buttons++}",
+                    density,
+                    emitPress,
+                )
+                widget.kind == "switch" -> StateSwitch(
+                    widget,
+                    scene,
+                    tracer,
                     "button${buttons++}",
                     density,
                     emitPress,
@@ -1696,6 +1706,83 @@ private fun StateIconButton(
             iconInkColor(widget, checked),
         )
     }
+}
+
+/** `switch` — a hoisted `checked` like every upstream selection control
+ * (`Switch(checked, onCheckedChange, …)`), with a scene-side mirror of
+ * the pin's private `ThumbNode` so `//TRACE_PROPS=thumb_size,thumb_offset`
+ * reads the same value the Slint out properties animate. The targets
+ * (`Switch.kt` L283-306: pressed → `PressedHandleWidth`, `hasContent ||
+ * checked` → `ThumbDiameter`, else `UncheckedThumbDiameter`; pressed pulls
+ * the thumb one `TrackOutlineWidth` off the far edge, `checked` sits at
+ * `(SwitchWidth - ThumbDiameter) - ThumbPadding`) animate on
+ * `SnapSpec` while pressed and `MotionSchemeKeyTokens.FastSpatial`
+ * otherwise. `hasContent` measures the current state's slot — a
+ * `thumbContent` that draws nothing while unchecked reports 0. */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun StateSwitch(
+    widget: Widget,
+    scene: Scene,
+    tracer: Tracer,
+    elementId: String,
+    density: Float,
+    emitPress: java.util.concurrent.CopyOnWriteArrayList<Pair<Long, Runnable>>,
+) {
+    val interactionSource = remember { ReplayableInteractionSource() }
+    var selected by remember { mutableStateOf(widget.checked) }
+    val pressed by interactionSource.collectIsPressedAsState()
+    val hasContent = widget.icon != null
+
+    fun targetSize(): Float =
+        if (pressed) 28f else if (hasContent || selected) 24f else 16f
+    fun targetOffset(size: Float): Float =
+        if (pressed && selected) 22f
+        else if (pressed) 2f
+        else if (selected) 24f
+        else (32f - size) / 2f
+
+    val thumbSize = remember { Animatable(
+        if (hasContent || selected) 24f else 16f) }
+    val thumbOffset = remember { Animatable(
+        if (selected) 24f else (32f - (if (hasContent) 24f else 16f)) / 2f) }
+    val spatialSpec = androidx.compose.material3.MaterialTheme.motionScheme.fastSpatialSpec<Float>()
+    LaunchedEffect(selected, pressed) {
+        val size = targetSize()
+        val offset = targetOffset(size)
+        val spec = if (pressed) androidx.compose.animation.core.snap<Float>() else spatialSpec
+        launch { thumbSize.animateTo(size, spec) }
+        launch { thumbOffset.animateTo(offset, spec) }
+    }
+    tracer.propGetters["thumb_size"] = { thumbSize.value.toDouble() }
+    tracer.propGetters["thumb_offset"] = { thumbOffset.value.toDouble() }
+
+    emitStateInteractions(
+        widget.state,
+        scene,
+        tracer,
+        elementId,
+        interactionSource,
+        emitPress,
+        Offset(16f * density, 16f * density),
+        density,
+        Runnable { selected = !selected },
+    )
+
+    val iconVector = widget.icon?.let { sceneIcon(it) }
+    Switch(
+        checked = selected,
+        onCheckedChange = { selected = it },
+        modifier = Modifier.offset(widget.x.dp, widget.y.dp)
+            .track(tracer, elementId),
+        enabled = widget.enabled,
+        interactionSource = interactionSource,
+        thumbContent = if (iconVector != null) {
+            { Icon(iconVector, contentDescription = null, modifier = Modifier.size(SwitchDefaults.IconSize)) }
+        } else {
+            null
+        },
+    )
 }
 
 /** `bottom_end` → `Alignment.BottomEnd` — `animateFloatingActionButton`'s
