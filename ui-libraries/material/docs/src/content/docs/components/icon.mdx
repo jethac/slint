@@ -1,0 +1,49 @@
+---
+title: Icon
+description: Icon API and the bundled Icons glyph set.
+---
+
+import CodeSnippetMD from '@slint/common-files/src/components/CodeSnippetMD.astro';
+import SlintProperty from '@slint/common-files/src/components/SlintProperty.astro';
+
+<CodeSnippetMD imagePath="/src/assets/generated/icon.png" scale="3" imageWidth="240" imageHeight="88" imageAlt="">
+```slint
+import { Icon, Icons, MaterialPalette, MaterialTheme } from "@material";
+export component Example inherits Window {
+    width: 240px;
+    height: 88px;
+
+    HorizontalLayout {
+        padding: 16px;
+        spacing: 24px;
+        alignment: center;
+        Icon { source: Icons.check; }
+        Icon { source: Icons.schedule; colorize: MaterialPalette.primary; }
+        Icon { source: Icons.keyboard; width: 40px; height: 40px; }
+    }
+}
+```
+</CodeSnippetMD>
+
+An `Icon` is a single-color glyph tinted for the component it sits in — `Icon` in `Icon.kt` upstream. For a clickable icon use `IconButton`; for multicolor artwork, or artwork that should not be tinted, use `Image` directly.
+
+## Icon Properties
+
+`Icon` inherits `Image`, so `source`, `image-fit`, `horizontal-alignment`, `vertical-alignment`, `tiling-*` and the `source-clip-*` properties all apply.
+
+### colorize
+<SlintProperty propName="colorize" typeName="color" defaultValue="MaterialPalette.on_background">
+The tint applied to the glyph — upstream's `tint`, `LocalContentColor.current` by default (`on_surface` on a `Surface`, the same color as `on_background` at the pinned material3 version).
+</SlintProperty>
+
+## Size
+
+`Icon` takes its `source`'s natural size — the bundled `Icons` glyphs are 24px. When the source reports no size it falls back to `SmallIconButtonTokens.icon_size` (24px), upstream's `DefaultIconSizeModifier`. Set `width`/`height` explicitly to scale the glyph (`ContentScale.Fit` — the source letterboxes inside the bounds).
+
+## Icons
+
+`Icons.<name>` is the bundled glyph set — material icon svgs under `src/ui/icons/`, exported as `image` values: `add`, `arrow_back`, `arrow_drop_down`, `arrow_drop_up`, `arrow_right`, `calendar_today`, `check`, `chevron_backward`, `chevron_forward`, `close`, `edit`, `keyboard`, `keyboard_arrow_down`, `menu`, `more_vert`, `remove`, `schedule`.
+
+## Accessibility
+
+Set `accessible-label` as the contentDescription. Upstream adds no semantics at all when the description is null, so set `accessible-role: none` on purely decorative icons to match.

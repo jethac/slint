@@ -6,6 +6,7 @@ import { MaterialPalette } from "../styling/material_palette.slint";
 import { Elevation } from "elevation.slint";
 import { StateLayerArea } from "./state_layer.slint";
 import { MaterialTypography } from "../styling/material_typography.slint";
+import { ListTokens } from "../styling/generated/material_component_tokens.slint";
 import { Icon } from "./icon.slint";
 import { MenuItem } from "../items/menu_item.slint";
 import { MaterialText } from "./material_text.slint";
@@ -41,6 +42,10 @@ export component MenuItemTemplate {
                     alignment: center;
 
                     Icon {
+                        // Upstream DropdownMenuItem wraps the leading icon in a
+                        // `defaultMinSize(ListTokens.ItemLeadingIconSize)` box (Menu.kt).
+                        width: ListTokens.item_leading_icon_size;
+                        height: self.width;
                         source: root.icon;
                         colorize: root.color;
                     }

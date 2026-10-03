@@ -54,6 +54,8 @@ import {
     MaterialAnimations,
     MaterialMotionScheme,
     MaterialTheme,
+    Icon,
+    Icons,
     Slider,
     Switch
 } from "../../../../src/material.slint";
@@ -1020,6 +1022,20 @@ export component ActionsView {
                         VerticalDivider {}
                         VerticalDivider {}
                     }
+                }
+            }
+
+            ComponentCard {
+                title: "Icons";
+
+                Horizontal {
+                    alignment: center;
+                    spacing: MaterialStyleMetrics.spacing_16;
+
+                    // The default content-color tint and the natural 24px size.
+                    Icon { source: Icons.check; }
+                    Icon { source: Icons.schedule; colorize: MaterialPalette.primary; }
+                    Icon { source: Icons.keyboard; width: 40px; height: 40px; }
                 }
             }
         }

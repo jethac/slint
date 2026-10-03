@@ -34,6 +34,7 @@ icon-button-focus
 icon-button-press-morph
 icon-button-states
 icon-buttons
+icons
 loading-indicator-motion
 loading-indicator-states
 negative-button-focus-ring
@@ -54,6 +55,7 @@ negative-fab-size
 negative-focus-layer
 negative-hover-layer
 negative-icon-button-morph
+negative-icon-offset
 negative-press-overlay
 negative-radius
 negative-recolor

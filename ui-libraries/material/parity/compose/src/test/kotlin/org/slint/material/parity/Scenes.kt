@@ -470,6 +470,7 @@ private fun CanvasScene(
         var surfaces = 0
         var appbars = 0
         var groups = 0
+        var icons = 0
         var dividers = 0
         // `text:{n}` spans every text node in scene order — group items
         // interleave with the standalone widgets' labels. Bases are
@@ -600,6 +601,44 @@ private fun CanvasScene(
                             .background(schemeColor(widget.color ?: "surface"))
                             .track(tracer, tag),
                     )
+                }
+                widget.kind == "icon" -> {
+                    // The bare `Icon` takes its painter's intrinsic size
+                    // (or `DefaultIconSizeModifier`'s 24dp when the
+                    // painter has none); `width`/`height` apply upstream's
+                    // `modifier` size and `color` applies `tint`. The
+                    // default tint is `LocalContentColor` — provided here
+                    // as `onSurface`, the content color a `Surface` gives
+                    // (the same value as the Slint default `on_background`
+                    // at the pin).
+                    val tag = "icon${icons++}"
+                    CompositionLocalProvider(
+                        androidx.compose.material3.LocalContentColor provides
+                            scheme.onSurface,
+                    ) {
+                        Icon(
+                            sceneIcon(widget.icon ?: "check"),
+                            contentDescription = null,
+                            modifier = Modifier.offset(widget.x.dp, widget.y.dp)
+                                .then(
+                                    if (widget.width > 0) {
+                                        Modifier.width(widget.width.dp)
+                                    } else {
+                                        Modifier
+                                    },
+                                )
+                                .then(
+                                    if (widget.height > 0) {
+                                        Modifier.height(widget.height.dp)
+                                    } else {
+                                        Modifier
+                                    },
+                                )
+                                .track(tracer, tag),
+                            tint = widget.color?.let { schemeColor(it) }
+                                ?: androidx.compose.material3.LocalContentColor.current,
+                        )
+                    }
                 }
                 widget.kind == "divider" || widget.kind == "horizontal-divider" ||
                     widget.kind == "vertical-divider" -> {
@@ -930,16 +969,18 @@ private fun sceneIcon(name: String): androidx.compose.ui.graphics.vector.ImageVe
     if (vb[0] != 0f || vb[1] != 0f) {
         builder.addGroup(translationX = -vb[0], translationY = -vb[1])
     }
-    Regex("""<path\b([^>]*)>""").findAll(svg).forEach { m ->
-        val attrs = m.groupValues[1]
-        // `fill="none"` paths (the boilerplate full-canvas rect) draw nothing.
-        if (!attrs.contains("fill=\"none\"")) {
-            val d = Regex("""d="([^"]+)"""").find(attrs)!!.groupValues[1]
-            builder.addPath(
-                androidx.compose.ui.graphics.vector.addPathNodes(d),
-                fill = androidx.compose.ui.graphics.SolidColor(Color.Black),
-            )
-        }
+    // Google Material Icon exports carry a viewport-sized `fill="none"`
+    // bounds path that resvg skips — honoring the attribute keeps the
+    // ImageVector identical to what the Slint side rasterizes.
+    Regex("""<path[^>]*>""").findAll(svg).forEach { m ->
+        val tag = m.value
+        if (tag.contains("""fill="none"""")) return@forEach
+        val d = Regex("""d="([^"]+)"""").find(tag)?.groupValues?.get(1)
+            ?: return@forEach
+        builder.addPath(
+            androidx.compose.ui.graphics.vector.addPathNodes(d),
+            fill = androidx.compose.ui.graphics.SolidColor(Color.Black),
+        )
     }
     if (vb[0] != 0f || vb[1] != 0f) {
         builder.clearGroup()
@@ -1498,16 +1539,40 @@ private fun schemeColor(role: String): Color =
     androidx.compose.material3.MaterialTheme.colorScheme.let { scheme ->
         when (role.kebabToCamel()) {
             "primary" -> scheme.primary
+            "onPrimary" -> scheme.onPrimary
             "primaryContainer" -> scheme.primaryContainer
+            "onPrimaryContainer" -> scheme.onPrimaryContainer
             "secondary" -> scheme.secondary
+            "onSecondary" -> scheme.onSecondary
             "secondaryContainer" -> scheme.secondaryContainer
+            "onSecondaryContainer" -> scheme.onSecondaryContainer
             "tertiary" -> scheme.tertiary
+            "onTertiary" -> scheme.onTertiary
             "tertiaryContainer" -> scheme.tertiaryContainer
+            "onTertiaryContainer" -> scheme.onTertiaryContainer
             "surface" -> scheme.surface
+            "onSurface" -> scheme.onSurface
+            "surfaceVariant" -> scheme.surfaceVariant
+            "onSurfaceVariant" -> scheme.onSurfaceVariant
             "inverseSurface" -> scheme.inverseSurface
+            "inverseOnSurface" -> scheme.inverseOnSurface
+            "inversePrimary" -> scheme.inversePrimary
             "background" -> scheme.background
+            "onBackground" -> scheme.onBackground
             "error" -> scheme.error
+            "onError" -> scheme.onError
             "errorContainer" -> scheme.errorContainer
+            "onErrorContainer" -> scheme.onErrorContainer
+            "outline" -> scheme.outline
+            "outlineVariant" -> scheme.outlineVariant
+            "surfaceContainerLowest" -> scheme.surfaceContainerLowest
+            "surfaceContainerLow" -> scheme.surfaceContainerLow
+            "surfaceContainer" -> scheme.surfaceContainer
+            "surfaceContainerHigh" -> scheme.surfaceContainerHigh
+            "surfaceContainerHighest" -> scheme.surfaceContainerHighest
+            "surfaceDim" -> scheme.surfaceDim
+            "surfaceBright" -> scheme.surfaceBright
+            "scrim" -> scheme.scrim
             else -> error("scene catalog has no ColorScheme role for $role")
         }
     }
