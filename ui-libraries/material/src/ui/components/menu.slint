@@ -80,6 +80,9 @@ component MenuItemTemplate {
 
 export component MenuInner {
     in property <[MenuItem]> items;
+    // Entries before `first_index` are not shown, e.g. for an overflow menu
+    // whose leading entries are already visible elsewhere.
+    in property <int> first_index;
     in_out property <int> current_index: -1;
 
     callback activated(index: int);
@@ -105,6 +108,8 @@ export component MenuInner {
                 trailing_text: item.trailing_text;
                 enabled: item.enabled;
                 selected: index == root.current_index;
+                visible: index >= root.first_index;
+                height: index >= root.first_index ? self.min-height : 0px;
 
                 clicked => {
                     root.activated(index);
@@ -116,6 +121,8 @@ export component MenuInner {
 
 export component PopupMenu inherits PopupWindow {
     in property <[MenuItem]> items;
+    // Entries before `first_index` are not shown.
+    in property <int> first_index;
 
     callback activated(index: int);
 
@@ -127,6 +134,7 @@ export component PopupMenu inherits PopupWindow {
 
         inner := MenuInner {
             items: root.items;
+            first_index: root.first_index;
 
             activated(index) => {
                 root.activated(index);

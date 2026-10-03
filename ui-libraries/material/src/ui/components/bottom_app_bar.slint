@@ -2,9 +2,18 @@
 // SPDX-License-Identifier: MIT
 
 import { IconButton } from "./icon_button.slint";
+import { IconButtonWidth, MaterialButtonMetrics, MaterialButtonSize } from "./button_metrics.slint";
 import { FloatingActionButton, FABStyle } from "./floating_action_button.slint";
 import { MaterialPalette } from "../styling/material_palette.slint";
 import { MaterialStyleMetrics } from "../styling/material_style_metrics.slint";
+import { MaterialAnimations } from "../styling/material_animations.slint";
+import { PopupMenu } from "./menu.slint";
+import { MenuItem } from "../items/menu_item.slint";
+import { Icons } from "../icons/icons.slint";
+import {
+    BottomAppBarTokens,
+    DockedToolbarTokens,
+} from "../styling/generated/material_component_tokens.slint";
 
 export struct IconButtonItem {
     icon: image,
@@ -12,50 +21,469 @@ export struct IconButtonItem {
     enabled: bool
 }
 
-export component BottomAppBar {
-    in property <[IconButtonItem]> icon_buttons;
-    in property <image> fab_icon;
+/// One `AppBarScope` item — an icon button with a label for the overflow
+/// menu. `toggleable` items show their checked state in the bar.
+export struct AppBarItem {
+    icon: image,
+    label: string,
+    enabled: bool,
+    toggleable: bool,
+    checked: bool,
+}
 
-    callback fab_clicked();
-    callback icon_button_clicked(index: int);
+/// The overflow-menu arrangement of `FlexibleBottomAppBar`:
+/// `space-between` for the `FlexibleHorizontalArrangement` default,
+/// `spaced` for the `FlexibleFixedHorizontalArrangement` token spacing.
+export enum BottomAppBarArrangement { start, space-between, spaced }
 
-    min_height: max(MaterialStyleMetrics.size_80, layout.min_height);
+/// `AppBarOverflowIndicator` — the trailing button that opens the dropdown
+/// menu of items that did not fit in an `AppBarRow` or `AppBarColumn`.
+export component AppBarOverflowIndicator {
+    in property <[MenuItem]> menu-items;
+    in property <int> first-index;
+    in property <string> tooltip;
+    in property <bool> enabled: true;
 
-    Rectangle {
-        background: MaterialPalette.surface_container;
+    callback activated(index: int);
 
-        layout := HorizontalLayout {
-            padding_left: MaterialStyleMetrics.padding_4;
-            padding_right: MaterialStyleMetrics.padding_16;
+    IconButton {
+        icon: Icons.more_vert;
+        tooltip: root.tooltip;
+        enabled: root.enabled;
 
-            VerticalLayout {
-                alignment: center;
+        clicked => { menu.show(); }
+    }
 
-                HorizontalLayout {
-                    for button[index] in root.icon_buttons : IconButton {
-                        icon: button.icon;
-                        enabled: button.enabled;
-                        tooltip: button.tooltip;
+    menu := PopupMenu {
+        x: 0;
+        y: -self.preferred-height;
+        items: root.menu-items;
+        first-index: root.first-index;
 
-                        clicked => {
-                            root.icon_button_clicked(index);
+        activated(index) => { root.activated(index); }
+    }
+}
+
+/// `AppBarRow` — a horizontal sequence of `AppBarItem`s that moves the ones
+/// that do not fit (or that exceed `max-item-count`) into an overflow menu,
+/// like the `OverflowMeasurePolicy` of the pinned `AppBarRow.kt`. The Slint
+/// item model carries no declared width, so the width check assumes the
+/// default 48dp icon-button slot Compose's `clickableItem`/`toggleableItem`
+/// produce.
+export component AppBarRow {
+    in property <[AppBarItem]> items;
+    /// The menu entries of `items` — the Slint model API cannot derive one
+    /// model from another, so the caller provides the same entries as
+    /// `MenuItem`s; the leading `visible-count` entries are hidden.
+    in property <[MenuItem]> overflow-items;
+    /// `maxItemCount` — 0 means unlimited.
+    in property <int> max-item-count;
+    in property <bool> touch-target: true;
+    in property <length> item-width: MaterialStyleMetrics.size-48;
+    in property <string> overflow-tooltip;
+
+    callback item-clicked(index: int);
+    callback item-checked-changed(index: int, checked: bool);
+
+    out property <int> visible-count: root.max-item-count > 0 && root.items.length > root.max-item-count ?
+        root.max-item-count - 1 :
+        floor((root.width - MaterialStyleMetrics.size-48) / root.item-width) < root.items.length ?
+            max(0, floor((root.width - MaterialStyleMetrics.size-48) / root.item-width)) :
+            root.items.length;
+    out property <int> overflow-count: root.items.length - root.visible-count;
+
+    for item[index] in root.items : IconButton {
+        x: index * root.item-width;
+        width: root.item-width;
+        height: 100%;
+        visible: index < root.visible-count;
+        icon: item.icon;
+        enabled: item.enabled;
+        tooltip: item.label;
+        // `iconButtonColors()` resolves to the bar's `LocalContentColor` —
+        // `contentColorFor(surfaceContainer)`.
+        content-color: MaterialPalette.on_surface;
+        checkable: item.toggleable;
+        checked: item.checked;
+        enforce-touch-target: root.touch-target;
+
+        clicked => {
+            if item.toggleable {
+                self.checked = !self.checked;
+                root.item-checked-changed(index, self.checked);
+            } else {
+                root.item-clicked(index);
+            }
+        }
+    }
+
+    if root.overflow-count > 0 : AppBarOverflowIndicator {
+        x: root.visible-count * root.item-width;
+        height: 100%;
+        tooltip: root.overflow-tooltip;
+        menu-items: root.overflow-items;
+        first-index: root.visible-count;
+
+        activated(index) => { root.item-clicked(index + root.visible-count); }
+    }
+}
+
+/// `AppBarColumn` — the vertical variant of `AppBarRow`.
+export component AppBarColumn {
+    in property <[AppBarItem]> items;
+    in property <[MenuItem]> overflow-items;
+    in property <int> max-item-count;
+    in property <bool> touch-target: true;
+    in property <length> item-height: MaterialStyleMetrics.size-48;
+    in property <string> overflow-tooltip;
+
+    callback item-clicked(index: int);
+    callback item-checked-changed(index: int, checked: bool);
+
+    out property <int> visible-count: root.max-item-count > 0 && root.items.length > root.max-item-count ?
+        root.max-item-count - 1 :
+        floor((root.height - MaterialStyleMetrics.size-48) / root.item-height) < root.items.length ?
+            max(0, floor((root.height - MaterialStyleMetrics.size-48) / root.item-height)) :
+            root.items.length;
+    out property <int> overflow-count: root.items.length - root.visible-count;
+
+    for item[index] in root.items : IconButton {
+        y: index * root.item-height;
+        height: root.item-height;
+        width: 100%;
+        visible: index < root.visible-count;
+        icon: item.icon;
+        enabled: item.enabled;
+        tooltip: item.label;
+        // `iconButtonColors()` resolves to the bar's `LocalContentColor` —
+        // `contentColorFor(surfaceContainer)`.
+        content-color: MaterialPalette.on_surface;
+        checkable: item.toggleable;
+        checked: item.checked;
+        enforce-touch-target: root.touch-target;
+
+        clicked => {
+            if item.toggleable {
+                self.checked = !self.checked;
+                root.item-checked-changed(index, self.checked);
+            } else {
+                root.item-clicked(index);
+            }
+        }
+    }
+
+    if root.overflow-count > 0 : AppBarOverflowIndicator {
+        y: root.visible-count * root.item-height;
+        width: 100%;
+        tooltip: root.overflow-tooltip;
+        menu-items: root.overflow-items;
+        first-index: root.visible-count;
+
+        activated(index) => { root.item-clicked(index + root.visible-count); }
+    }
+}
+
+/// Scroll-offset plumbing for the bottom app bars — the
+/// `ExitAlwaysScrollBehavior` of the pinned `AppBar.kt`: post-scroll deltas
+/// move the bar's height offset in both directions. `scroll-position` binds
+/// to `-content-y` of the scrolled content.
+component BottomAppBarScrollState {
+    in property <bool> scroll-enabled;
+    in property <length> scroll-position;
+    in-out property <length> height-offset;
+    in-out property <length> content-offset;
+    in property <length> collapsible-extent;
+
+    out property <length> height-offset-limit: -root.collapsible-extent;
+    out property <float> collapsed-fraction: root.collapsible-extent > 0 ?
+        min(1, max(0, root.height-offset / root.height-offset-limit)) : 0;
+    out property <length> effective-offset: root.height-offset + settle-offset;
+    in-out property <length> settle-offset;
+    property <length> last-scroll-position;
+
+    changed scroll-position => {
+        if !root.scroll-enabled {
+            return;
+        }
+        let delta = root.scroll-position - root.last-scroll-position;
+        root.last-scroll-position = root.scroll-position;
+        root.content-offset = root.scroll-position;
+        root.height-offset = (root.height-offset - delta).clamp(root.height-offset-limit, 0px);
+        settle-timer.restart();
+    }
+
+    /// `settleAppBarBottom` — snap to the nearer end with the
+    /// `BottomAppBarDefaults.snapAnimationSpec` fast-spatial spring.
+    public function settle() {
+        if root.collapsed-fraction < 0.01 || root.collapsed-fraction == 1 {
+            return;
+        }
+        let target = root.collapsed-fraction < 0.5 ? 0px : root.height-offset-limit;
+        if target != root.height-offset {
+            settle-offset = root.height-offset - target;
+            root.height-offset = target;
+            settle-offset = 0;
+        }
+    }
+    settle-timer := Timer {
+        interval: 120ms;
+        triggered => {
+            root.settle();
+            self.running = false;
+        }
+    }
+}
+
+/// `BottomAppBar` — a bar displaying navigation and key actions at the
+/// bottom of small screens, with an optional FAB at the end.
+export component BottomAppBar inherits Rectangle {
+    in property <[IconButtonItem]> icon-buttons;
+    in property <image> fab-icon;
+    /// `ExitAlwaysScrollBehavior` — the bar slides away while scrolling down
+    /// and slides back while scrolling up.
+    in property <bool> exit-always;
+    /// The scrolled amount of the content above the bar — bind
+    /// `-flickable.content-y`.
+    in property <length> scroll-position;
+    in property <color> container-color: BottomAppBarTokens.container-color;
+    in property <bool> touch-target: true;
+
+    callback fab-clicked();
+    callback icon-button-clicked(index: int);
+
+    in-out property <length> height-offset <=> scroll-state.height-offset;
+    in-out property <length> content-offset <=> scroll-state.content-offset;
+    out property <float> collapsed-fraction <=> scroll-state.collapsed-fraction;
+
+    property <length> icon-slot-width: root.touch-target ? MaterialStyleMetrics.size-48 :
+        MaterialButtonMetrics.icon-container-width(MaterialButtonSize.small, IconButtonWidth.uniform);
+
+    scroll-state := BottomAppBarScrollState {
+        scroll-enabled: root.exit-always;
+        scroll-position: root.scroll-position;
+        collapsible-extent: BottomAppBarTokens.container-height;
+    }
+
+    // The bar's visible band shrinks by `heightOffset` — Compose's
+    // `layoutHeight = maxLayoutHeight + heightOffset` coerceAtLeast(0) — while
+    // the content keeps the full container height and the bottom is clipped.
+    height: max(0px, BottomAppBarTokens.container-height + scroll-state.effective-offset);
+    clip: true;
+
+    bg := Rectangle {
+        x: 0;
+        y: 0;
+        width: 100%;
+        height: BottomAppBarTokens.container-height;
+        property <length> settle-offset <=> scroll-state.settle-offset;
+        animate settle-offset {
+            enabled: !MaterialPalette.reduced-motion;
+            easing: MaterialAnimations.fast-spatial-spring;
+        }
+        background: root.container-color;
+
+        // `appBarDragModifier`: vertically dragging the bar adjusts the
+        // height offset; releasing settles it.
+        if root.exit-always : drag-area := TouchArea {
+            width: 100%;
+            height: 100%;
+            property <length> drag-start-offset;
+            moved => {
+                if self.pressed {
+                    root.height-offset =
+                        (self.drag-start-offset - (self.mouse-y - self.pressed-y))
+                            .clamp(scroll-state.height-offset-limit, 0px);
+                }
+            }
+            changed pressed => {
+                if self.pressed {
+                    self.drag-start-offset = root.height-offset;
+                } else {
+                    scroll-state.settle();
+                }
+            }
+        }
+
+        // `BottomAppBarDefaults.ContentPadding` = (4, 4, 4, 0): the actions
+        // row centers in y4..container-height, not in the full band.
+        actions-row := Rectangle {
+            x: 4px;
+            y: 4px + (parent.height - 4px - self.height) / 2;
+            width: root.icon-buttons.length * root.icon-slot-width;
+            height: root.icon-slot-width;
+
+            for item[index] in root.icon-buttons : IconButton {
+                x: index * root.icon-slot-width;
+                width: root.icon-slot-width;
+                icon: item.icon;
+                enabled: item.enabled;
+                tooltip: item.tooltip;
+                // `iconButtonColors()` resolves to the bar's
+                // `LocalContentColor` — `contentColorFor(surfaceContainer)`.
+                content-color: MaterialPalette.on_surface;
+                enforce-touch-target: root.touch-target;
+
+                clicked => { root.icon-button-clicked(index); }
+            }
+        }
+
+        // `fillMaxHeight().padding(top = FABVerticalPadding, end =
+        // FABHorizontalPadding)` inside the content-padded area: the box
+        // fills the inner height but only shifts the FAB — 4 + 12dp end
+        // margin, 4 + 8dp top, FAB stays 56dp.
+        if root.fab-icon.width > 0 && root.fab-icon.height > 0 : fab-box := Rectangle {
+            x: parent.width - self.width - 4px;
+            y: 4px;
+            width: MaterialStyleMetrics.size-56 + 12px;
+            height: parent.height - 4px;
+            fab := FloatingActionButton {
+                x: 0;
+                y: 8px;
+                icon: root.fab-icon;
+                style: FABStyle.standard;
+
+                clicked => { root.fab-clicked(); }
+            }
+        }
+    }
+}
+
+/// `FlexibleBottomAppBar` — the Expressive bottom app bar: a fixed-height
+/// row with a configurable arrangement of `AppBarItem`s.
+export component FlexibleBottomAppBar inherits Rectangle {
+    in property <[AppBarItem]> items;
+    in property <BottomAppBarArrangement> arrangement: BottomAppBarArrangement.space-between;
+    /// `DockedToolbarTokens.container-max-spacing` for `spaced`.
+    in property <length> spacing: DockedToolbarTokens.container-max-spacing;
+    in property <length> expanded-height: DockedToolbarTokens.container-height;
+    in property <bool> exit-always;
+    in property <length> scroll-position;
+    in property <color> container-color: DockedToolbarTokens.container-color;
+    in property <string> overflow-tooltip;
+    in property <bool> touch-target: true;
+
+    callback item-clicked(index: int);
+    callback item-checked-changed(index: int, checked: bool);
+
+    in-out property <length> height-offset <=> scroll-state.height-offset;
+    in-out property <length> content-offset <=> scroll-state.content-offset;
+    out property <float> collapsed-fraction <=> scroll-state.collapsed-fraction;
+
+    scroll-state := BottomAppBarScrollState {
+        scroll-enabled: root.exit-always;
+        scroll-position: root.scroll-position;
+        collapsible-extent: root.expanded-height;
+    }
+
+    // The bar's visible band shrinks by `heightOffset` while the content keeps
+    // the full container height and the bottom is clipped — see `BottomAppBar`.
+    height: max(0px, root.expanded-height + scroll-state.effective-offset);
+    clip: true;
+
+    bg := Rectangle {
+        x: 0;
+        y: 0;
+        width: 100%;
+        height: root.expanded-height;
+        background: root.container-color;
+        animate settle-offset {
+            enabled: !MaterialPalette.reduced-motion;
+            easing: MaterialAnimations.fast-spatial-spring;
+        }
+        property <length> settle-offset <=> scroll-state.settle-offset;
+
+        if root.exit-always : drag-area := TouchArea {
+            width: 100%;
+            height: 100%;
+            property <length> drag-start-offset;
+            moved => {
+                if self.pressed {
+                    root.height-offset =
+                        (self.drag-start-offset - (self.mouse-y - self.pressed-y))
+                            .clamp(scroll-state.height-offset-limit, 0px);
+                }
+            }
+            changed pressed => {
+                if self.pressed {
+                    self.drag-start-offset = root.height-offset;
+                } else {
+                    scroll-state.settle();
+                }
+            }
+        }
+
+        content-row := Rectangle {
+            x: DockedToolbarTokens.container-leading-space;
+            y: (parent.height - self.height) / 2;
+            width: parent.width - DockedToolbarTokens.container-leading-space -
+                DockedToolbarTokens.container-trailing-space;
+            height: MaterialStyleMetrics.size-48;
+
+            if root.arrangement == BottomAppBarArrangement.start : AppBarRow {
+                x: 0;
+                y: 0;
+                width: parent.width;
+                height: 100%;
+                items: root.items;
+                overflow-tooltip: root.overflow-tooltip;
+                touch-target: root.touch-target;
+
+                item-clicked(index) => { root.item-clicked(index); }
+                item-checked-changed(index, checked) => { root.item-checked-changed(index, checked); }
+            }
+
+            if root.arrangement == BottomAppBarArrangement.space-between : spaced-between := Rectangle {
+                for item[index] in root.items : IconButton {
+                    x: root.items.length <= 1 ? 0 :
+                        index * (parent.width - MaterialStyleMetrics.size-48) / (root.items.length - 1);
+                    width: MaterialStyleMetrics.size-48;
+                    height: 100%;
+                    icon: item.icon;
+                    enabled: item.enabled;
+                    tooltip: item.label;
+                    // `iconButtonColors()` resolves to the bar's
+                    // `LocalContentColor` — `contentColorFor(surfaceContainer)`.
+                    content-color: MaterialPalette.on_surface;
+                    checkable: item.toggleable;
+                    checked: item.checked;
+                    enforce-touch-target: root.touch-target;
+
+                    clicked => {
+                        if item.toggleable {
+                            self.checked = !self.checked;
+                            root.item-checked-changed(index, self.checked);
+                        } else {
+                            root.item-clicked(index);
                         }
                     }
                 }
             }
 
-            // spacer
-            Rectangle {}
-
-            if root.fab_icon.width > 0 && root.fab_icon.height > 0 : VerticalLayout {
-                alignment: center;
-
-                FloatingActionButton {
-                    icon: root.fab_icon;
-                    style: FABStyle.standard;
+            if root.arrangement == BottomAppBarArrangement.spaced : spaced-row := Rectangle {
+                width: parent.width;
+                for item[index] in root.items : IconButton {
+                    x: (parent.width - root.items.length * MaterialStyleMetrics.size-48 -
+                            (root.items.length - 1) * root.spacing) / 2 +
+                        index * (MaterialStyleMetrics.size-48 + root.spacing);
+                    width: MaterialStyleMetrics.size-48;
+                    height: 100%;
+                    icon: item.icon;
+                    enabled: item.enabled;
+                    tooltip: item.label;
+                    // `iconButtonColors()` resolves to the bar's
+                    // `LocalContentColor` — `contentColorFor(surfaceContainer)`.
+                    content-color: MaterialPalette.on_surface;
+                    checkable: item.toggleable;
+                    checked: item.checked;
+                    enforce-touch-target: root.touch-target;
 
                     clicked => {
-                        root.fab_clicked();
+                        if item.toggleable {
+                            self.checked = !self.checked;
+                            root.item-checked-changed(index, self.checked);
+                        } else {
+                            root.item-clicked(index);
+                        }
                     }
                 }
             }

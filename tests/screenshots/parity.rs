@@ -535,6 +535,9 @@ struct LayerResult {
     /// Strict failures inside `count_in` — a negative case asserts its catch
     /// within the region the mutation affected, not anywhere in the frame.
     pub strict_failures_in_region: usize,
+    /// Text cells whose mean diff needed the relaxed `text_cell_eps` bound —
+    /// nonzero means an `xfail_text` relaxation was actually used.
+    pub text_cells_relaxed: usize,
 }
 
 /// Compare `actual` against `expected` under the per-pixel layer mask:
@@ -547,6 +550,7 @@ fn layered_compare(
     mask: Option<&PixelMask>,
     pixel_eps: u8,
     count_in: Option<PxRect>,
+    text_cell_eps: f64,
 ) -> LayerResult {
     if actual.width() != expected.width() || actual.height() != expected.height() {
         return LayerResult {
@@ -561,6 +565,7 @@ fn layered_compare(
             diff: None,
             strict_failures: 0,
             strict_failures_in_region: 0,
+            text_cells_relaxed: 0,
         };
     }
 
@@ -579,6 +584,7 @@ fn layered_compare(
             diff: None,
             strict_failures: 0,
             strict_failures_in_region: 0,
+            text_cells_relaxed: 0,
         };
     }
     let w = actual.width() as usize;
@@ -670,11 +676,22 @@ fn layered_compare(
     }
 
     let mut text_failures = Vec::new();
+    let mut text_cells_relaxed = 0usize;
     for (cell, (sum, outliers, count)) in &cells {
         let mean = sum / *count as f64;
-        if mean > TEXT_CELL_EPS || *outliers as f64 > *count as f64 * TEXT_OUTLIER_FRACTION {
+        if mean > TEXT_CELL_EPS {
+            text_cells_relaxed += 1;
+        }
+        // A `//XFAIL_TEXT=` case relaxes the outlier fraction by the same
+        // factor as the mean: advance drift translates the ink inside the
+        // cell, so nearly every inked pixel can be an outlier by the end of
+        // a longer run — still bounded, so a cell of wholly-missing ink
+        // keeps failing.
+        let outlier_fraction =
+            TEXT_OUTLIER_FRACTION * (text_cell_eps / TEXT_CELL_EPS);
+        if mean > text_cell_eps || *outliers as f64 > *count as f64 * outlier_fraction {
             text_failures.push(format!(
-                "text cell {cell}: mean diff {mean:.1} (max {TEXT_CELL_EPS}), {outliers}/{count} outliers"
+                "text cell {cell}: mean diff {mean:.1} (max {text_cell_eps:.0}), {outliers}/{count} outliers"
             ));
         }
     }
@@ -696,6 +713,7 @@ fn layered_compare(
         diff: if strict_failures == 0 && text_failures.is_empty() { None } else { Some(diff_img) },
         strict_failures,
         strict_failures_in_region,
+        text_cells_relaxed,
     }
 }
 
@@ -1200,12 +1218,15 @@ pub fn compare_traces(
 /// difference (text nodes are centered in their containers). `h` still
 /// compares at 1px (line-height rounding), `baseline`/`lines` have no Slint
 /// introspection — the masked pixel layer covers their visual effect.
+/// Returns the findings plus whether any compared width/offset showed the
+/// ceil-quantization drift `//XFAIL_TEXT=` covers, so the caller can decide
+/// whether the case's marker is still needed.
 fn compare_text_metrics<C: i_slint_core::api::ComponentHandle>(
     component: &C,
     slint: &[TraceFrame],
     compose: &serde_json::Value,
     xfail_text: Option<&str>,
-) -> Vec<String> {
+) -> (Vec<String>, bool) {
     let mut errors = Vec::new();
     let mut saw_drift = false;
     let frames = compose["frames"].as_array().cloned().unwrap_or_default();
@@ -1354,14 +1375,7 @@ fn compare_text_metrics<C: i_slint_core::api::ComponentHandle>(
             }
         }
     }
-    if let Some(reason) = xfail_text {
-        if !saw_drift {
-            errors.push(format!(
-                "text widths all within the strict 0.5px bound but the case is marked XFAIL_TEXT ({reason}) — the #28 divergence is gone; remove the marker"
-            ));
-        }
-    }
-    errors
+    (errors, saw_drift)
 }
 
 /// Serialize a captured trace to the same JSON shape the Compose harness emits.
@@ -1490,7 +1504,7 @@ fn build_frame_mask<C: i_slint_core::api::ComponentHandle>(
     slint_frame: &TraceFrame,
     compose_frame: Option<&serde_json::Value>,
     inner_masked: &[String],
-    decor_masked: &[String],
+    decor_masked: &[(String, f64)],
     png_mask: Option<&SharedPixelBuffer<Rgba8Pixel>>,
     density: f64,
     width: u32,
@@ -1590,12 +1604,16 @@ fn build_frame_mask<C: i_slint_core::api::ComponentHandle>(
                     PixelClass::Skip,
                 );
             }
+            let decor_margin = decor_masked
+                .iter()
+                .find(|(did, _)| did == id)
+                .map(|(_, m)| *m);
             mask.mark_element(
                 slint_rect,
                 compose_rect,
-                DECORATION_MARGIN_DP * d,
+                decor_margin.unwrap_or(DECORATION_MARGIN_DP) * d,
                 OUTLINE_INSET_DP * d,
-                !decor_masked.contains(id),
+                decor_margin.is_none(),
                 inner_masked.contains(id),
             );
         }
@@ -1868,6 +1886,11 @@ pub fn run_parity_case<C: i_slint_core::api::ComponentHandle>(
     // counted across every density and timestamp so a marked case that
     // stops producing any fails "unexpectedly passing" below.
     let mut silhouette_xfail_total = 0usize;
+    // Whether any frame at any density needed the `//XFAIL_TEXT=` marker's
+    // relaxed per-cell pixel bound or showed its metric drift — the marker
+    // is case-level, so the staleness verdict aggregates all densities.
+    let mut xfail_text_pixels_used = false;
+    let mut xfail_text_saw_drift = false;
     for (di, density) in spec.densities.iter().enumerate() {
         let component = make_instance(*density);
 
@@ -2004,11 +2027,11 @@ pub fn run_parity_case<C: i_slint_core::api::ComponentHandle>(
                 .filter(|(_, ts)| *ts == t)
                 .map(|(id, _)| id.clone())
                 .collect();
-            let decor_masked: Vec<String> = spec
+            let decor_masked: Vec<(String, f64)> = spec
                 .mask_decor
                 .iter()
-                .filter(|(_, ts)| *ts == t)
-                .map(|(id, _)| id.clone())
+                .filter(|(_, ts, _)| *ts == t)
+                .map(|(id, _, margin)| (id.clone(), margin.unwrap_or(DECORATION_MARGIN_DP)))
                 .collect();
             let mask = build_frame_mask(
                 &component,
@@ -2021,8 +2044,24 @@ pub fn run_parity_case<C: i_slint_core::api::ComponentHandle>(
                 actual.width(),
                 actual.height(),
             );
-            let result = layered_compare(&actual, &expected, Some(&mask), pixel_eps, region);
+            // `xfail_text` scenes carry the documented issue-#28 advance drift
+            // (Slint ceils text layout widths where Compose keeps fractional
+            // advances): at headline sizes the accumulated drift moves glyph
+            // edges ~1px inside a cell, just past the calibrated bound, so the
+            // annotation also relaxes the per-cell mean — same tolerated
+            // divergence the trace layer already grants it. The drift is a
+            // constant logical-px error per advance, so its device-px
+            // magnitude scales with the scene density: at 2x a barely-1dp
+            // shift lands ~2 device px inside the cell.
+            let text_cell_eps = if spec.xfail_text.is_some() {
+                TEXT_CELL_EPS * 1.25 * *density as f64
+            } else {
+                TEXT_CELL_EPS
+            };
+            let result =
+                layered_compare(&actual, &expected, Some(&mask), pixel_eps, region, text_cell_eps);
             strict_caught += result.strict_failures;
+            xfail_text_pixels_used |= result.text_cells_relaxed > 0;
             if negative
                 && (region.map_or(result.strict_failures, |_| result.strict_failures_in_region)
                     > 0)
@@ -2189,12 +2228,14 @@ pub fn run_parity_case<C: i_slint_core::api::ComponentHandle>(
                 (Vec::new(), None)
             };
             measured_phase = measured_phase.or(phase);
-            errors.extend(compare_text_metrics(
+            let (metric_errors, saw_drift) = compare_text_metrics(
                 &component,
                 &frames,
                 compose,
                 spec.xfail_text.as_deref(),
-            ));
+            );
+            errors.extend(metric_errors);
+            xfail_text_saw_drift |= saw_drift;
             compare_findings += errors.len();
             // A motion-class defect is caught by the trace layer; record the
             // density as caught when any trace/geometry/text finding fired.
@@ -2221,6 +2262,17 @@ pub fn run_parity_case<C: i_slint_core::api::ComponentHandle>(
             for f in &failures {
                 writeln!(report, "- {f}")?;
             }
+        }
+    }
+
+    if let Some(reason) = &spec.xfail_text {
+        // The marker covers both the trace layer (width/center drift) and
+        // the pixel layer (the relaxed per-cell mean it feeds) — only flag
+        // it stale when neither consumer needed it at any density.
+        if !xfail_text_saw_drift && !xfail_text_pixels_used {
+            failures.push(format!(
+                "no #28 text divergence (widths and pixel cells all within strict bounds) but the case is marked XFAIL_TEXT ({reason}) — remove the marker"
+            ));
         }
     }
 
@@ -2334,16 +2386,16 @@ fn comparator_catches_subtle_differences() {
     let mut all_text = PixelMask::new(size, size);
     all_text
         .fill_rect(PxRect { x0: 0.0, y0: 0.0, x1: size as f64, y1: size as f64 }, PixelClass::Text);
-    assert!(layered_compare(&a, &b, Some(&all_text), PIXEL_EPS, None).ok, "identical images must pass");
+    assert!(layered_compare(&a, &b, Some(&all_text), PIXEL_EPS, None, TEXT_CELL_EPS).ok, "identical images must pass");
 
     // 1px color nudge outside text → strict layer fails.
     b.make_mut_slice()[0] = Rgba8Pixel { r: 20, g: 0, b: 0, a: 255 };
     let no_text = PixelMask::new(size, size);
-    assert!(!layered_compare(&a, &b, Some(&no_text), PIXEL_EPS, None).ok, "1px diff must fail");
+    assert!(!layered_compare(&a, &b, Some(&no_text), PIXEL_EPS, None, TEXT_CELL_EPS).ok, "1px diff must fail");
 
     // Same nudge but fully inside the text mask → tolerated by the loose layer.
     assert!(
-        layered_compare(&a, &b, Some(&all_text), PIXEL_EPS, None).ok,
+        layered_compare(&a, &b, Some(&all_text), PIXEL_EPS, None, TEXT_CELL_EPS).ok,
         "small diff inside text mask must pass"
     );
 
@@ -2353,7 +2405,7 @@ fn comparator_catches_subtle_differences() {
         *p = Rgba8Pixel { r: 255, g: 0, b: 0, a: 255 };
     }
     assert!(
-        !layered_compare(&a, &c, Some(&all_text), PIXEL_EPS, None).ok,
+        !layered_compare(&a, &c, Some(&all_text), PIXEL_EPS, None, TEXT_CELL_EPS).ok,
         "wrong text color must fail"
     );
 }

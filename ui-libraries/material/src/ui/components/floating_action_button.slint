@@ -6,6 +6,12 @@ import { BaseButton } from "./base_button.slint";
 import { MaterialTypography } from "../styling/material_typography.slint";
 import { MaterialPalette } from "../styling/material_palette.slint";
 import { MaterialStyleMetrics } from "../styling/material_style_metrics.slint";
+import {
+    FabBaselineTokens,
+    FabLargeTokens,
+    FabPrimaryContainerTokens,
+    FabSmallTokens,
+} from "../styling/generated/material_component_tokens.slint";
 
 export enum FABStyle {
     small,
@@ -27,9 +33,9 @@ export component FloatingActionButton {
     accessible-action-default => { base.clicked(); }
 
     elevation := Elevation {
-        border_radius: root.style == FABStyle.small ? MaterialStyleMetrics.border_radius_12 :
-            root.style == FABStyle.standard ? MaterialStyleMetrics.border_radius_16 : MaterialStyleMetrics.border_radius_28;
-        background: MaterialPalette.primary;
+        border_radius: root.style == FABStyle.small ? FabSmallTokens.container_shape.top_left :
+            root.style == FABStyle.standard ? FabBaselineTokens.container_shape.top_left : FabLargeTokens.container_shape.top_left;
+        background: FabPrimaryContainerTokens.container_color;
         level: 3;
         width: 100%;
         height: 100%;
@@ -37,14 +43,15 @@ export component FloatingActionButton {
 
     base := BaseButton {
         border_radius: elevation.border_radius;
-        color:  MaterialPalette.on_primary;
+        color:  FabPrimaryContainerTokens.icon_color;
         button_vertical_padding: root.style == FABStyle.small ? MaterialStyleMetrics.padding_10 :
             root.style == FABStyle.standard ? MaterialStyleMetrics.padding_14 : MaterialStyleMetrics.padding_30;
         button_horizontal_padding: self.button_vertical_padding;
         min_layout_width: self.min_layout_height;
-        min_layout_height: root.style == FABStyle.small ? MaterialStyleMetrics.size_40 :
-            root.style == FABStyle.standard ? MaterialStyleMetrics.size_56 : MaterialStyleMetrics.size_90;
-        icon_size: root.style != FABStyle.large ? MaterialStyleMetrics.icon_size_24 : MaterialStyleMetrics.icon_size_36;
+        min_layout_height: root.style == FABStyle.small ? FabSmallTokens.container_height :
+            root.style == FABStyle.standard ? FabBaselineTokens.container_height : FabLargeTokens.container_height;
+        icon_size: root.style == FABStyle.small ? FabSmallTokens.icon_size :
+            root.style == FABStyle.standard ? FabBaselineTokens.icon_size : FabLargeTokens.icon_size;
     }
 
     states [
