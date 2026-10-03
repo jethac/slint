@@ -1,0 +1,38 @@
+{
+    "name": "negative-icon-offset",
+    "type": "canvas",
+    "parity": "negative",
+    "negative_note": "The Slint side draws the icon at the wrong offset (shifted 20dp right) — the comparator must flag the glyph's displaced ink.",
+    "size": [
+        96,
+        64
+    ],
+    "densities": [
+        1
+    ],
+    "theme": {
+        "seed": "6750A4",
+        "variant": "tonal-spot",
+        "spec": "spec2025",
+        "platform": "phone",
+        "dark": false,
+        "contrast": 0.0
+    },
+    "fonts": {
+        "plain": "Roboto",
+        "brand": "Roboto"
+    },
+    "widgets": [
+        {
+            "kind": "icon",
+            "icon": "check",
+            "x": 36,
+            "y": 20,
+            "slint_overrides": {
+                "x": 56
+            }
+        }
+    ],
+    "trace_elements": [],
+    "trace_props": []
+}

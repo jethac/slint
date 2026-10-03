@@ -1,0 +1,114 @@
+{
+    "name": "dividers",
+    "type": "canvas",
+    "parity": "static",
+    "size": [
+        320,
+        240
+    ],
+    "densities": [
+        1,
+        2
+    ],
+    "theme": {
+        "seed": "6750A4",
+        "variant": "tonal-spot",
+        "spec": "spec2025",
+        "platform": "phone",
+        "dark": false,
+        "contrast": 0.0
+    },
+    "fonts": {
+        "plain": "Roboto",
+        "brand": "Roboto"
+    },
+    "widgets": [
+        {
+            "kind": "horizontal-divider",
+            "x": 16,
+            "y": 20,
+            "width": 288
+        },
+        {
+            "kind": "horizontal-divider",
+            "x": 16,
+            "y": 40,
+            "width": 288,
+            "thickness": 2
+        },
+        {
+            "kind": "horizontal-divider",
+            "x": 16,
+            "y": 60,
+            "width": 288,
+            "thickness": 4
+        },
+        {
+            "kind": "horizontal-divider",
+            "x": 16,
+            "y": 80,
+            "width": 288,
+            "color": "primary"
+        },
+        {
+            "kind": "horizontal-divider",
+            "x": 16,
+            "y": 100,
+            "width": 288,
+            "thickness": 0
+        },
+        {
+            "kind": "horizontal-divider",
+            "x": 16,
+            "y": 120,
+            "width": 144
+        },
+        {
+            "kind": "divider",
+            "x": 16,
+            "y": 140,
+            "width": 288
+        },
+        {
+            "kind": "vertical-divider",
+            "x": 24,
+            "y": 160,
+            "height": 64
+        },
+        {
+            "kind": "vertical-divider",
+            "x": 40,
+            "y": 160,
+            "height": 64,
+            "thickness": 2
+        },
+        {
+            "kind": "vertical-divider",
+            "x": 56,
+            "y": 160,
+            "height": 64,
+            "thickness": 4,
+            "color": "secondary"
+        },
+        {
+            "kind": "vertical-divider",
+            "x": 72,
+            "y": 160,
+            "height": 32
+        }
+    ],
+    "trace_elements": [
+        "divider0",
+        "divider1",
+        "divider2",
+        "divider3",
+        "divider4",
+        "divider5",
+        "divider6",
+        "divider7",
+        "divider8",
+        "divider9",
+        "divider10"
+    ],
+    "trace_props": []
+}

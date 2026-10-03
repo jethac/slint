@@ -218,8 +218,8 @@
       11
     ],
     "needs": "none",
-    "notes": "",
-    "status": "missing"
+    "notes": "slint component: Divider (deprecated alias for HorizontalDivider)",
+    "status": "done"
   },
   "DockedSearchBar": {
     "issues": [
@@ -475,8 +475,8 @@
       11
     ],
     "needs": "none",
-    "notes": "slint component: HorizontalDivider",
-    "status": "partial"
+    "notes": "slint component: HorizontalDivider; tokens: generated component tokens",
+    "status": "done"
   },
   "HorizontalFloatingToolbar": {
     "issues": [
@@ -508,7 +508,7 @@
     ],
     "needs": "none",
     "notes": "slint component: Icon",
-    "status": "partial"
+    "status": "done"
   },
   "IconButton": {
     "issues": [
@@ -1160,8 +1160,8 @@
       11
     ],
     "needs": "none",
-    "notes": "slint component: VerticalDivider",
-    "status": "partial"
+    "notes": "slint component: VerticalDivider; tokens: generated component tokens",
+    "status": "done"
   },
   "VerticalDragHandle": {
     "issues": [
