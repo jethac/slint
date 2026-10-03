@@ -1,0 +1,195 @@
+// Copyright © SixtyFPS GmbH <info@slint.dev>
+// SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0
+
+// Only the interpreter can compile the material library cheaply; the native
+// drivers would embed the variable fonts into generated code.
+//ignore: rust,cpp,js,pyi
+
+import { SwipeToDismissBox, SwipeToDismissBoxValue } from "../../../ui-libraries/material/src/ui/components/swipe_to_dismiss.slint";
+import { PullToRefreshBox, PullToRefreshIndicatorKind } from "../../../ui-libraries/material/src/ui/components/pull_to_refresh.slint";
+
+export component TestCase inherits Window {
+    width: 200phx;
+    height: 200phx;
+
+    box := SwipeToDismissBox {
+        width: 200phx;
+        height: 100phx;
+        enable-dismiss-from-start-to-end: root.enable-s2e;
+        enable-dismiss-from-end-to-start: root.enable-e2s;
+        on-dismiss(d) => {
+            root.dismissed-kind = d == SwipeToDismissBoxValue.start-to-end ? 1 :
+                d == SwipeToDismissBoxValue.end-to-start ? 2 : 0;
+        }
+        Rectangle { background: #808080; }
+    }
+
+    ptr := PullToRefreshBox {
+        y: 100phx;
+        width: 200phx;
+        height: 100phx;
+        is-refreshing: root.refreshing;
+        on-refresh => {
+            root.refreshed = true;
+        }
+        Rectangle { background: #404040; }
+    }
+
+    in-out property <bool> refreshing;
+    in-out property <bool> enable-s2e: true;
+    in-out property <bool> enable-e2s: true;
+    public function do-snap(v: int) {
+        box.snap-to(v == 1 ? SwipeToDismissBoxValue.start-to-end :
+            v == 2 ? SwipeToDismissBoxValue.end-to-start : SwipeToDismissBoxValue.settled);
+    }
+    public function do-dismiss(v: int) {
+        box.dismiss(v == 1 ? SwipeToDismissBoxValue.start-to-end :
+            v == 2 ? SwipeToDismissBoxValue.end-to-start : SwipeToDismissBoxValue.settled);
+    }
+    public function do-reset() {
+        box.reset();
+    }
+    public function ptr-snap(f: float) {
+        ptr.snap-to(f);
+    }
+    out property <bool> refreshed;
+    // 0 settled, 1 start-to-end, 2 end-to-start
+    out property <int> dismissed-kind;
+    out property <int> settled-kind: box.settled-value == SwipeToDismissBoxValue.start-to-end ? 1 :
+        box.settled-value == SwipeToDismissBoxValue.end-to-start ? 2 : 0;
+    out property <int> current-kind: box.current-value == SwipeToDismissBoxValue.start-to-end ? 1 :
+        box.current-value == SwipeToDismissBoxValue.end-to-start ? 2 : 0;
+    out property <float> ptr-fraction <=> ptr.distance-fraction;
+    out property <float> box-offset: box.offset / 1px;
+    out property <float> box-progress <=> box.progress;
+    out property <bool> test: true;
+}
+
+/*
+```rust
+use slint::platform::WindowEvent;
+use slint_testing::{InternalEvent, LogicalPoint, TouchPhase};
+
+fn touch(instance: &TestCase, id: i64, x: f32, y: f32, phase: TouchPhase) {
+    instance.window().dispatch_event(WindowEvent::internal(
+        InternalEvent::Touch { id, position: LogicalPoint::new(x, y), phase }));
+}
+
+let instance = TestCase::new().unwrap();
+assert_eq!(instance.get_dismissed_kind(), 0);
+assert_eq!(instance.get_box_offset(), 0.);
+
+// Drag right past the 56px positional threshold, release without velocity —
+// settles on start-to-end.
+touch(&instance, 3, 100.0, 50.0, TouchPhase::Started);
+touch(&instance, 3, 160.0, 50.0, TouchPhase::Moved);
+slint_testing::mock_elapsed_time(400);
+touch(&instance, 3, 160.0, 50.0, TouchPhase::Ended);
+slint_testing::mock_elapsed_time(500);
+assert_eq!(instance.get_dismissed_kind(), 1);
+assert_eq!(instance.get_settled_kind(), 1);
+assert_eq!(instance.get_box_offset(), 200.);
+
+// Second instance: a slow release below the threshold settles back.
+let instance = TestCase::new().unwrap();
+touch(&instance, 3, 100.0, 50.0, TouchPhase::Started);
+touch(&instance, 3, 130.0, 50.0, TouchPhase::Moved);
+slint_testing::mock_elapsed_time(400);
+touch(&instance, 3, 130.0, 50.0, TouchPhase::Ended);
+slint_testing::mock_elapsed_time(500);
+assert_eq!(instance.get_dismissed_kind(), 0);
+assert_eq!(instance.get_settled_kind(), 0);
+assert_eq!(instance.get_box_offset(), 0.);
+
+// Third: a fast fling dismisses from a small offset even under the
+// threshold (>= 125px/s release velocity picks the directional anchor).
+let instance = TestCase::new().unwrap();
+touch(&instance, 3, 100.0, 50.0, TouchPhase::Started);
+touch(&instance, 3, 101.0, 50.0, TouchPhase::Moved);
+slint_testing::mock_elapsed_time(50);
+touch(&instance, 3, 130.0, 50.0, TouchPhase::Moved);
+slint_testing::mock_elapsed_time(10);
+touch(&instance, 3, 130.0, 50.0, TouchPhase::Ended);
+slint_testing::mock_elapsed_time(500);
+assert_eq!(instance.get_dismissed_kind(), 1);
+assert_eq!(instance.get_box_offset(), 200.);
+
+// Pull-to-refresh: drag down past 160px (threshold 80 / DragMultiplier
+// 0.5), release → on-refresh fires; the caller flips is-refreshing and the
+// fraction settles at 1.
+let instance = TestCase::new().unwrap();
+touch(&instance, 3, 100.0, 150.0, TouchPhase::Started);
+touch(&instance, 3, 100.0, 151.0, TouchPhase::Moved);
+touch(&instance, 3, 100.0, 320.0, TouchPhase::Moved);
+slint_testing::mock_elapsed_time(100);
+touch(&instance, 3, 100.0, 320.0, TouchPhase::Ended);
+assert!(instance.get_refreshed());
+assert!(!instance.get_refreshing());
+slint_testing::mock_elapsed_time(2000);
+assert_eq!(instance.get_ptr_fraction(), 0.);
+
+// With is-refreshing set, the fraction settles at 1 instead.
+let instance = TestCase::new().unwrap();
+touch(&instance, 3, 100.0, 150.0, TouchPhase::Started);
+touch(&instance, 3, 100.0, 151.0, TouchPhase::Moved);
+touch(&instance, 3, 100.0, 320.0, TouchPhase::Moved);
+slint_testing::mock_elapsed_time(100);
+touch(&instance, 3, 100.0, 320.0, TouchPhase::Ended);
+assert!(instance.get_refreshed());
+instance.set_refreshing(true);
+slint_testing::mock_elapsed_time(2000);
+assert_eq!(instance.get_ptr_fraction(), 1.);
+
+// End-to-start dismiss: drag left past the threshold.
+let instance = TestCase::new().unwrap();
+touch(&instance, 3, 100.0, 50.0, TouchPhase::Started);
+touch(&instance, 3, 40.0, 50.0, TouchPhase::Moved);
+slint_testing::mock_elapsed_time(400);
+touch(&instance, 3, 40.0, 50.0, TouchPhase::Ended);
+slint_testing::mock_elapsed_time(500);
+assert_eq!(instance.get_dismissed_kind(), 2);
+assert_eq!(instance.get_box_offset(), -200.);
+
+// With start-to-end disabled the offset clamps at 0 and a right release
+// settles back; a snap-to on the removed anchor still flips the values.
+let instance = TestCase::new().unwrap();
+instance.set_enable_s2e(false);
+touch(&instance, 3, 100.0, 50.0, TouchPhase::Started);
+touch(&instance, 3, 160.0, 50.0, TouchPhase::Moved);
+assert_eq!(instance.get_box_offset(), 0.);
+slint_testing::mock_elapsed_time(400);
+touch(&instance, 3, 160.0, 50.0, TouchPhase::Ended);
+slint_testing::mock_elapsed_time(500);
+assert_eq!(instance.get_dismissed_kind(), 0);
+assert_eq!(instance.get_settled_kind(), 0);
+instance.invoke_do_snap(1);
+assert_eq!(instance.get_settled_kind(), 1);
+assert_eq!(instance.get_box_offset(), 0.);
+
+// dismiss() with the anchor disabled flips the values instantly.
+let instance = TestCase::new().unwrap();
+instance.set_enable_e2s(false);
+instance.invoke_do_dismiss(2);
+assert_eq!(instance.get_settled_kind(), 2);
+assert_eq!(instance.get_box_offset(), 0.);
+
+// dismiss() + reset() on enabled anchors animate the offset both ways.
+let instance = TestCase::new().unwrap();
+instance.invoke_do_dismiss(1);
+slint_testing::mock_elapsed_time(500);
+assert_eq!(instance.get_settled_kind(), 1);
+assert_eq!(instance.get_dismissed_kind(), 1);
+assert_eq!(instance.get_box_offset(), 200.);
+instance.invoke_do_reset();
+slint_testing::mock_elapsed_time(500);
+assert_eq!(instance.get_settled_kind(), 0);
+assert_eq!(instance.get_box_offset(), 0.);
+
+// PullToRefreshState.snap-to jumps the fraction without animation.
+let instance = TestCase::new().unwrap();
+instance.invoke_ptr_snap(0.6);
+assert_eq!(instance.get_ptr_fraction(), 0.6);
+instance.invoke_ptr_snap(1.4);
+assert_eq!(instance.get_ptr_fraction(), 1.4);
+```
+*/

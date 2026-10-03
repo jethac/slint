@@ -1,0 +1,261 @@
+{
+  "times_ms": [
+    2000
+  ],
+  "frames": [
+    {
+      "t_ms": 1,
+      "props": {},
+      "elements": {
+        "ind": {
+          "x": 386,
+          "y": 230,
+          "w": 48,
+          "h": 48
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 51,
+      "props": {},
+      "elements": {},
+      "text": {}
+    },
+    {
+      "t_ms": 101,
+      "props": {},
+      "elements": {},
+      "text": {}
+    },
+    {
+      "t_ms": 151,
+      "props": {},
+      "elements": {},
+      "text": {}
+    },
+    {
+      "t_ms": 201,
+      "props": {},
+      "elements": {},
+      "text": {}
+    },
+    {
+      "t_ms": 251,
+      "props": {},
+      "elements": {},
+      "text": {}
+    },
+    {
+      "t_ms": 301,
+      "props": {},
+      "elements": {},
+      "text": {}
+    },
+    {
+      "t_ms": 351,
+      "props": {},
+      "elements": {},
+      "text": {}
+    },
+    {
+      "t_ms": 401,
+      "props": {},
+      "elements": {},
+      "text": {}
+    },
+    {
+      "t_ms": 451,
+      "props": {},
+      "elements": {},
+      "text": {}
+    },
+    {
+      "t_ms": 501,
+      "props": {},
+      "elements": {},
+      "text": {}
+    },
+    {
+      "t_ms": 551,
+      "props": {},
+      "elements": {},
+      "text": {}
+    },
+    {
+      "t_ms": 601,
+      "props": {},
+      "elements": {},
+      "text": {}
+    },
+    {
+      "t_ms": 651,
+      "props": {},
+      "elements": {},
+      "text": {}
+    },
+    {
+      "t_ms": 701,
+      "props": {},
+      "elements": {},
+      "text": {}
+    },
+    {
+      "t_ms": 751,
+      "props": {},
+      "elements": {},
+      "text": {}
+    },
+    {
+      "t_ms": 801,
+      "props": {},
+      "elements": {},
+      "text": {}
+    },
+    {
+      "t_ms": 851,
+      "props": {},
+      "elements": {},
+      "text": {}
+    },
+    {
+      "t_ms": 901,
+      "props": {},
+      "elements": {},
+      "text": {}
+    },
+    {
+      "t_ms": 951,
+      "props": {},
+      "elements": {},
+      "text": {}
+    },
+    {
+      "t_ms": 1001,
+      "props": {},
+      "elements": {},
+      "text": {}
+    },
+    {
+      "t_ms": 1051,
+      "props": {},
+      "elements": {},
+      "text": {}
+    },
+    {
+      "t_ms": 1101,
+      "props": {},
+      "elements": {},
+      "text": {}
+    },
+    {
+      "t_ms": 1151,
+      "props": {},
+      "elements": {},
+      "text": {}
+    },
+    {
+      "t_ms": 1201,
+      "props": {},
+      "elements": {},
+      "text": {}
+    },
+    {
+      "t_ms": 1251,
+      "props": {},
+      "elements": {},
+      "text": {}
+    },
+    {
+      "t_ms": 1301,
+      "props": {},
+      "elements": {},
+      "text": {}
+    },
+    {
+      "t_ms": 1351,
+      "props": {},
+      "elements": {},
+      "text": {}
+    },
+    {
+      "t_ms": 1401,
+      "props": {},
+      "elements": {},
+      "text": {}
+    },
+    {
+      "t_ms": 1451,
+      "props": {},
+      "elements": {},
+      "text": {}
+    },
+    {
+      "t_ms": 1501,
+      "props": {},
+      "elements": {},
+      "text": {}
+    },
+    {
+      "t_ms": 1551,
+      "props": {},
+      "elements": {},
+      "text": {}
+    },
+    {
+      "t_ms": 1601,
+      "props": {},
+      "elements": {},
+      "text": {}
+    },
+    {
+      "t_ms": 1651,
+      "props": {},
+      "elements": {},
+      "text": {}
+    },
+    {
+      "t_ms": 1701,
+      "props": {},
+      "elements": {},
+      "text": {}
+    },
+    {
+      "t_ms": 1751,
+      "props": {},
+      "elements": {},
+      "text": {}
+    },
+    {
+      "t_ms": 1801,
+      "props": {},
+      "elements": {},
+      "text": {}
+    },
+    {
+      "t_ms": 1851,
+      "props": {},
+      "elements": {},
+      "text": {}
+    },
+    {
+      "t_ms": 1901,
+      "props": {},
+      "elements": {},
+      "text": {}
+    },
+    {
+      "t_ms": 1951,
+      "props": {},
+      "elements": {},
+      "text": {}
+    },
+    {
+      "t_ms": 2001,
+      "props": {},
+      "elements": {},
+      "text": {}
+    }
+  ],
+  "settle_ms": null
+}

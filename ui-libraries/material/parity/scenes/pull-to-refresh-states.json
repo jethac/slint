@@ -1,0 +1,67 @@
+{
+    "name": "pull-to-refresh-states",
+    "type": "pull-refresh",
+    "parity": "static",
+    "size": [
+        560,
+        400
+    ],
+    "densities": [
+        1,
+        2
+    ],
+    "theme": {
+        "seed": "6750A4",
+        "variant": "tonal-spot",
+        "spec": "spec2025",
+        "platform": "phone",
+        "dark": false,
+        "contrast": 0.0
+    },
+    "fonts": {
+        "plain": "Roboto",
+        "brand": "Roboto"
+    },
+    "params": {
+        "boxes": [
+            {
+                "x": 40,
+                "y": 60,
+                "w": 220,
+                "h": 130,
+                "fraction": 0.5,
+                "kind": "classic",
+                "content": "surface-container"
+            },
+            {
+                "x": 300,
+                "y": 60,
+                "w": 220,
+                "h": 130,
+                "fraction": 1.0,
+                "kind": "classic",
+                "content": "surface-container"
+            },
+            {
+                "x": 40,
+                "y": 230,
+                "w": 220,
+                "h": 130,
+                "fraction": 1.4,
+                "kind": "classic",
+                "content": "surface-container"
+            },
+            {
+                "x": 300,
+                "y": 230,
+                "w": 220,
+                "h": 130,
+                "fraction": 0.6,
+                "kind": "loading",
+                "content": "surface-container"
+            }
+        ]
+    },
+    "parity_eps": 32,
+    "parity_eps_reason": "issue #53 class: the refresh arc is thin stroked ink — AA coverage ramps diverge past the default 8/255 tolerance on the arc edges"
+}

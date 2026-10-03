@@ -100,7 +100,16 @@ import androidx.compose.material3.SearchBar
 import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.AppBarWithSearch
 import androidx.compose.material3.rememberSearchBarState
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
+import androidx.compose.material3.pulltorefresh.PullToRefreshState
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
+import androidx.compose.material3.SwipeToDismissBox
+import androidx.compose.material3.SwipeToDismissBoxValue
+import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.vector.path
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -111,8 +120,10 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.State
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.withFrameNanos
+import kotlinx.coroutines.launch
 import androidx.compose.ui.Modifier
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.draw.clip
@@ -427,6 +438,8 @@ fun SceneContent(
             when (scene.type) {
                 "canvas" -> CanvasScene(scene, tracer, emitPress)
                 "spring-motion" -> SpringMotionScene(scene, tracer)
+                "pull-refresh" -> PullRefreshScene(scene, tracer, emitPress)
+                "swipe-to-dismiss" -> SwipeDismissScene(scene, tracer, emitPress)
                 else -> error("unknown scene type ${scene.type}")
             }
         }
@@ -1300,15 +1313,18 @@ private fun schemeColor(role: String): Color =
             "onError" -> scheme.onError
             "errorContainer" -> scheme.errorContainer
             "onErrorContainer" -> scheme.onErrorContainer
-            "outline" -> scheme.outline
-            "outlineVariant" -> scheme.outlineVariant
-            "surfaceContainerLowest" -> scheme.surfaceContainerLowest
-            "surfaceContainerLow" -> scheme.surfaceContainerLow
+            "onSurface" -> scheme.onSurface
+            "onSurfaceVariant" -> scheme.onSurfaceVariant
+            "surfaceVariant" -> scheme.surfaceVariant
+            "surfaceBright" -> scheme.surfaceBright
+            "surfaceDim" -> scheme.surfaceDim
             "surfaceContainer" -> scheme.surfaceContainer
             "surfaceContainerHigh" -> scheme.surfaceContainerHigh
             "surfaceContainerHighest" -> scheme.surfaceContainerHighest
-            "surfaceDim" -> scheme.surfaceDim
-            "surfaceBright" -> scheme.surfaceBright
+            "surfaceContainerLow" -> scheme.surfaceContainerLow
+            "surfaceContainerLowest" -> scheme.surfaceContainerLowest
+            "outline" -> scheme.outline
+            "outlineVariant" -> scheme.outlineVariant
             "scrim" -> scheme.scrim
             else -> error("scene catalog has no ColorScheme role for $role")
         }
@@ -2951,6 +2967,208 @@ private fun StateConnectedGroup(
             verticalArrangement = Arrangement.spacedBy(2.dp),
         ) {
             itemsContent()
+        }
+    }
+}
+
+/** `pull-refresh` scenes: one [PullToRefreshBox] per `params.boxes` row,
+ * pinned at its authored `distanceFraction` by `state.snapTo` (the call the
+ * Slint case makes from `init`), optionally followed by a settle the
+ * `params.settle` op drives through the public state surface at the same
+ * clock time the Slint `fire` zone's click does. The scene's `actions`
+ * press+release only mark the Slint-side click — this side registers the
+ * emitPress runnable for `at`. */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalMaterial3Api::class)
+@Composable
+private fun PullRefreshScene(
+    scene: Scene,
+    tracer: Tracer,
+    emitPress: java.util.concurrent.CopyOnWriteArrayList<Pair<Long, Runnable>>,
+) {
+    val scope = rememberCoroutineScope()
+    val boxes = scene.params.getJSONArray("boxes")
+    val (w, h) = scene.sizeDp
+    Box(Modifier.testTag("scene-root").size(w.dp, h.dp).background(
+        androidx.compose.material3.MaterialTheme.colorScheme.background
+    )) {
+        val states = List(boxes.length()) { i ->
+            val b = boxes.getJSONObject(i)
+            val state = rememberPullToRefreshState()
+            val fraction = b.optDouble("fraction", 0.0).toFloat()
+            if (fraction != 0f) {
+                LaunchedEffect(Unit) { state.snapTo(fraction) }
+            }
+            val kind = b.optString("kind", "classic")
+            val refreshing = b.optBoolean("refreshing", false)
+            val threshold = b.optDouble("threshold", 80.0)
+            val content = b.optString("content", "surface-container")
+            PullToRefreshBox(
+                isRefreshing = refreshing,
+                onRefresh = {},
+                state = state,
+                modifier =
+                    Modifier.offset(b.getDouble("x").dp, b.getDouble("y").dp)
+                        .size(b.getDouble("w").dp, b.getDouble("h").dp),
+                indicator = {
+                    when (kind) {
+                        "loading" -> {
+                            PullToRefreshDefaults.LoadingIndicator(
+                                state = state,
+                                isRefreshing = refreshing,
+                                modifier = Modifier.align(Alignment.TopCenter),
+                            )
+                            // The IndicatorBox offsets its layer with
+                            // `translationY = distanceFraction * maxDistance
+                            // - size.height`, which `boundsInRoot` cannot
+                            // see — anchor the trace pair on a spacer at
+                            // the translated visual slot instead.
+                            Spacer(
+                                modifier =
+                                    Modifier.align(Alignment.TopCenter)
+                                        .offset {
+                                            androidx.compose.ui.unit.IntOffset(
+                                                0,
+                                                (80.dp * state.distanceFraction - 48.dp)
+                                                    .roundToPx(),
+                                            )
+                                        }
+                                        .size(48.dp)
+                                        .track(tracer, "ind"),
+                            )
+                        }
+                        else ->
+                            PullToRefreshDefaults.Indicator(
+                                state = state,
+                                isRefreshing = refreshing,
+                                modifier = Modifier.align(Alignment.TopCenter),
+                            )
+                    }
+                },
+                threshold = threshold.dp,
+            ) {
+                Box(Modifier.fillMaxSize().background(schemeColor(content)))
+            }
+            tracer.propGetters["fraction$i"] = { state.distanceFraction.toDouble() }
+            state
+        }
+        scene.params.optJSONObject("settle")?.let { settle ->
+            val at = settle.optLong("at", 0L)
+            val box = settle.optInt("box", 0)
+            val op = settle.getString("op")
+            val target = settle.optDouble("target", 0.0).toFloat()
+            val entry = at to Runnable {
+                scope.launch {
+                    when (op) {
+                        "to-hidden" -> states[box].animateToHidden()
+                        "to-threshold" -> states[box].animateToThreshold()
+                        "snap" -> states[box].snapTo(target)
+                        else -> error("unknown pull-refresh settle op $op")
+                    }
+                }
+            }
+            emitPress.add(entry)
+            DisposableEffect(Unit) { onDispose { emitPress.remove(entry) } }
+        }
+    }
+}
+
+/** `swipe-to-dismiss` scenes: one [SwipeToDismissBox] per `params.boxes`
+ * row over a revealed background sibling (upstream's `backgroundContent`),
+ * starting at its authored anchor via `initialValue`, optionally driven by
+ * a `params.settle` op through the public state surface at the same clock
+ * time the Slint `fire` zone's click does. */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun SwipeDismissScene(
+    scene: Scene,
+    tracer: Tracer,
+    emitPress: java.util.concurrent.CopyOnWriteArrayList<Pair<Long, Runnable>>,
+) {
+    val scope = rememberCoroutineScope()
+    val density = androidx.compose.ui.platform.LocalDensity.current.density
+    val boxes = scene.params.getJSONArray("boxes")
+    val (w, h) = scene.sizeDp
+    Box(Modifier.testTag("scene-root").size(w.dp, h.dp).background(
+        androidx.compose.material3.MaterialTheme.colorScheme.background
+    )) {
+        val states = List(boxes.length()) { i ->
+            val b = boxes.getJSONObject(i)
+            val thresholdPx =
+                with(androidx.compose.ui.platform.LocalDensity.current) {
+                    b.optDouble("threshold", 56.0).dp.toPx()
+                }
+            val state = rememberSwipeToDismissBoxState(
+                initialValue =
+                    when (b.optString("initial", "settled")) {
+                        "start-to-end" -> SwipeToDismissBoxValue.StartToEnd
+                        "end-to-start" -> SwipeToDismissBoxValue.EndToStart
+                        else -> SwipeToDismissBoxValue.Settled
+                    },
+                positionalThreshold = { thresholdPx },
+            )
+            val radius = b.optDouble("radius", 0.0).dp
+            val bg = b.optString("bg", "error-container")
+            val content = b.optString("content", "surface-container-high")
+            Box(
+                Modifier.offset(b.getDouble("x").dp, b.getDouble("y").dp)
+                    .size(b.getDouble("w").dp, b.getDouble("h").dp)
+                    .clip(RoundedCornerShapeOrRect(radius))
+                    .background(schemeColor(bg)),
+            )
+            SwipeToDismissBox(
+                state = state,
+                backgroundContent = {},
+                modifier =
+                    Modifier.offset(b.getDouble("x").dp, b.getDouble("y").dp)
+                        .size(b.getDouble("w").dp, b.getDouble("h").dp),
+                enableDismissFromStartToEnd = b.optBoolean("s2e", true),
+                enableDismissFromEndToStart = b.optBoolean("e2s", true),
+            ) {
+                Box(
+                    Modifier.fillMaxSize()
+                        .clip(RoundedCornerShapeOrRect(radius))
+                        .background(schemeColor(content))
+                        .track(tracer, "fg$i"),
+                )
+            }
+            // `state.offset` is internal; `requireOffset` throws before the
+            // anchors' first layout, so the getter guards frame 0.
+            tracer.propGetters["offset$i"] = {
+                (kotlin.runCatching { state.requireOffset() }.getOrDefault(0f) / density)
+                    .toDouble()
+            }
+            tracer.propGetters["progress$i"] = { state.progress.toDouble() }
+            state
+        }
+        scene.params.optJSONObject("settle")?.let { settle ->
+            val at = settle.optLong("at", 0L)
+            val box = settle.optInt("box", 0)
+            val op = settle.getString("op")
+            val dir =
+                if (settle.optString("dir", "end-to-start") == "start-to-end") {
+                    SwipeToDismissBoxValue.StartToEnd
+                } else {
+                    SwipeToDismissBoxValue.EndToStart
+                }
+            val entry = at to Runnable {
+                scope.launch {
+                    when (op) {
+                        "reset" -> states[box].reset()
+                        "dismiss" -> states[box].dismiss(dir)
+                        "snap-value" ->
+                            states[box].snapTo(
+                                when (settle.optString("value", "settled")) {
+                                    "start-to-end" -> SwipeToDismissBoxValue.StartToEnd
+                                    "end-to-start" -> SwipeToDismissBoxValue.EndToStart
+                                    else -> SwipeToDismissBoxValue.Settled
+                                }
+                            )
+                        else -> error("unknown swipe-to-dismiss settle op $op")
+                    }
+                }
+            }
+            emitPress.add(entry)
+            DisposableEffect(Unit) { onDispose { emitPress.remove(entry) } }
         }
     }
 }
