@@ -3,7 +3,7 @@
 
 // Scene: loading-indicator-states — generated from `ui-libraries/material/parity/scenes/loading-indicator-states.json`
 // (edit the scene, regenerate with `cargo run -p material-parity-generator`).
-//PARITY=static
+//PARITY=xfail:femtovg: issue #53: femtovg rasterizes concave fills via stencil+fringe with the AA band running -0.5px inside to +1.5px outside the path edge, so the 50% coverage contour sits ~0.5px outside the silhouette — the scalloped morph indicators ring-diff ~0.5-1px on every edge while coverage-integral drivers (software, skia, Compose) center AA on the edge and match; a silent pass on femtovg would mean the harness went blind
 //SIZE=400x144
 //DENSITIES=1,2
 import "../../fonts/Roboto-VariableFont.ttf";
