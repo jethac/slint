@@ -49,6 +49,13 @@ impl WindowAdapter for FullscreenWindowAdapter {
         self.rotation.screen_size_to_rotated_window_size(self.renderer.size())
     }
 
+    fn display_geometry(
+        &self,
+    ) -> Option<(i_slint_core::api::PhysicalSize, i_slint_core::api::PhysicalPosition)> {
+        // The fullscreen window is the display, at the origin.
+        Some((self.size(), i_slint_core::api::PhysicalPosition::new(0, 0)))
+    }
+
     fn renderer(&self) -> &dyn i_slint_core::renderer::Renderer {
         self.renderer.as_core_renderer()
     }
