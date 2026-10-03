@@ -6,45 +6,89 @@ description: ListTile API.
 import CodeSnippetMD from '@slint/common-files/src/components/CodeSnippetMD.astro';
 import SlintProperty from '@slint/common-files/src/components/SlintProperty.astro';
 
-<CodeSnippetMD imagePath="" noScreenShot scale="3" imageWidth="300" imageHeight="200" imageAlt="">
+<CodeSnippetMD imagePath="/src/assets/generated/listtile.png" scale="3" imageWidth="300" imageHeight="240" imageAlt="">
 ```slint
 import { ListTile } from "@material";
 export component Example inherits Window {
     width: 300px;
-    height: 100px;
+    height: 240px;
     background: transparent;
-    ListTile {
-        text: "List Item";
-        supporting-text: "Supporting text";
-        width: 280px;
-        height: 72px;
+    VerticalLayout {
+        padding: 16px;
+        spacing: 8px;
+        alignment: center;
+        ListTile { text: "One-line item"; }
+        ListTile { text: "Two-line item"; supporting-text: "Secondary text"; }
+        ListTile { text: "Disabled"; supporting-text: "Secondary text"; enabled: false; }
     }
 }
 ```
 </CodeSnippetMD>
 
-A `ListTile` is a single row in a list that can contain text, supporting text, and an optional avatar.
+A `ListTile` is a single row in a list. It shows a headline with an optional overline and supporting text, and optional leading and trailing slots.
+
+Set `interactive` to make the tile respond to pointer, hover, and keyboard input. Set `selectable` (or `checkable`) to let the tile hold a selected state: the container shape and colors spring between their resting and selected forms, like the upstream `ListItem(selected)` overload.
+
+<CodeSnippetMD imagePath="/src/assets/generated/listtile-states.png" scale="3" imageWidth="300" imageHeight="300" imageAlt="">
+```slint
+import { ListTile } from "@material";
+export component Example inherits Window {
+    width: 300px;
+    height: 300px;
+    background: transparent;
+    VerticalLayout {
+        padding: 16px;
+        spacing: 8px;
+        alignment: center;
+        ListTile { text: "Resting"; interactive: true; }
+        ListTile { text: "Hovered"; interactive: true; simulate-hover: true; }
+        ListTile { text: "Selected"; selectable: true; selected: true; }
+        ListTile { text: "Pressed"; interactive: true; simulate-press: true; }
+    }
+}
+```
+</CodeSnippetMD>
 
 ## Properties
 
 ### avatar-background
 <SlintProperty propName="avatar-background" typeName="color">
-The background color for the avatar.
+The background color for the leading avatar.
 </SlintProperty>
 
 ### avatar-foreground
 <SlintProperty propName="avatar-foreground" typeName="color">
-The foreground color for the avatar text or icon.
+The foreground color for the leading avatar text or icon.
 </SlintProperty>
 
 ### avatar-icon
 <SlintProperty propName="avatar-icon" typeName="image">
-An optional icon displayed as an avatar.
+An icon displayed inside the leading avatar circle.
+</SlintProperty>
+
+### avatar-image
+<SlintProperty propName="avatar-image" typeName="image">
+An image displayed inside the leading avatar circle.
 </SlintProperty>
 
 ### avatar-text
 <SlintProperty propName="avatar-text" typeName="string">
-Optional text displayed as an avatar.
+Text displayed inside the leading avatar circle (up to two letters).
+</SlintProperty>
+
+### checkable
+<SlintProperty propName="checkable" typeName="bool">
+Whether the tile toggles `checked` when clicked.
+</SlintProperty>
+
+### checked
+<SlintProperty propName="checked" typeName="bool" propertyVisibility="in-out">
+Whether the tile is checked. The container shape, colors, and elevation animate when it changes.
+</SlintProperty>
+
+### dragged
+<SlintProperty propName="dragged" typeName="bool">
+Whether the tile is being dragged in a reorder gesture; the container takes the dragged item shape and raised elevation.
 </SlintProperty>
 
 ### enabled
@@ -52,17 +96,96 @@ Optional text displayed as an avatar.
 Whether the list tile is enabled and can be interacted with.
 </SlintProperty>
 
+### enforce-touch-target
+<SlintProperty propName="enforce-touch-target" typeName="bool" defaultValue="true">
+Whether the tile extends its touch target to at least 48px when its visual container is smaller.
+</SlintProperty>
+
+### interactive
+<SlintProperty propName="interactive" typeName="bool">
+Whether the tile responds to hover, press, focus, and `clicked` — the upstream `ListItem(onClick)` overload.
+</SlintProperty>
+
+### leading-icon
+<SlintProperty propName="leading-icon" typeName="image">
+An icon displayed in the leading slot.
+</SlintProperty>
+
+### leading-image
+<SlintProperty propName="leading-image" typeName="image">
+An image displayed in the leading slot instead of an icon or avatar.
+</SlintProperty>
+
+### overline-text
+<SlintProperty propName="overline-text" typeName="string">
+Small text displayed above the headline.
+</SlintProperty>
+
+### selectable
+<SlintProperty propName="selectable" typeName="bool">
+Whether the tile holds a `selected` state, toggled on click.
+</SlintProperty>
+
+### selected
+<SlintProperty propName="selected" typeName="bool" propertyVisibility="in-out">
+Whether the tile is selected. The container shape and colors animate when it changes.
+</SlintProperty>
+
+### simulate-hover
+<SlintProperty propName="simulate-hover" typeName="bool">
+Forces the hovered visual state — for examples, documentation, and tests.
+</SlintProperty>
+
+### simulate-press
+<SlintProperty propName="simulate-press" typeName="bool">
+Forces the pressed visual state — for examples, documentation, and tests.
+</SlintProperty>
+
+### supporting-multiline
+<SlintProperty propName="supporting-multiline" typeName="bool">
+Whether the supporting text may wrap to a second line.
+</SlintProperty>
+
 ### supporting-text
 <SlintProperty propName="supporting-text" typeName="string">
-Secondary text displayed below the primary text.
+Secondary text displayed below the headline.
 </SlintProperty>
 
 ### text
 <SlintProperty propName="text" typeName="string">
-The primary text displayed in the list tile.
+The headline text displayed in the list tile.
+</SlintProperty>
+
+### tooltip
+<SlintProperty propName="tooltip" typeName="string">
+A tooltip text that appears when hovering over the tile.
+</SlintProperty>
+
+### trailing-icon
+<SlintProperty propName="trailing-icon" typeName="image">
+An icon displayed in the trailing slot.
+</SlintProperty>
+
+### trailing-text
+<SlintProperty propName="trailing-text" typeName="string">
+Text displayed in the trailing slot (timestamps, counts).
 </SlintProperty>
 
 ## Callbacks
 
 ### clicked()
-Invoked when the list tile is clicked.
+Invoked when the list tile is clicked. Requires `interactive`, `selectable`, or `checkable`.
+
+## Read-only properties
+
+### container-radius
+The top-left corner radius the container currently animates toward — readable for tests and animation wiring.
+
+### has-focus
+Whether the tile currently holds keyboard focus.
+
+### has-hover
+Whether the pointer hovers the tile.
+
+### pressed
+Whether the tile is currently pressed.

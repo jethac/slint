@@ -1,0 +1,106 @@
+// Copyright © SixtyFPS GmbH <info@slint.dev>
+// SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0
+
+// Scene: list-basic — generated from `ui-libraries/material/parity/scenes/list-basic.json`
+// (edit the scene, regenerate with `cargo run -p material-parity-generator`).
+//PARITY=static
+//SIZE=360x592
+//TRACE_ELEMENTS=item0,item1,item2,item3,item4,item5,item6,item7
+//XFAIL_TEXT=issue #28: Slint ceils text layout widths where Compose keeps fractional advances
+//DENSITIES=1,2
+import "../../fonts/Roboto-VariableFont.ttf";
+import { Icons, ListTile, MaterialPalette, MaterialTheme, MaterialWindow } from "@material";
+
+export component TestCase inherits MaterialWindow {
+    init => {
+        // The scene pins seed #6750A4, tonal-spot, spec2025, light, contrast 0
+        // (all the library defaults; restated here so a default change can't
+        // silently move the parity baseline).
+        MaterialTheme.seed-color = #6750A4;
+        MaterialTheme.dark = false;
+        MaterialTheme.contrast-level = 0;
+        MaterialTheme.use-platform-color = false;
+        MaterialTheme.plain-family = "Roboto";
+        MaterialTheme.brand-family = "Roboto";
+        // Compose builds its scene scheme from the same seed — use the
+        // runtime-generated scheme, not the static expressive table.
+        MaterialPalette.dynamic = true;
+    }
+
+    item0 := ListTile {
+        x: 8px;
+        y: 8px;
+        text: "One-line item";
+        width: 344px;
+        enforce_touch_target: false;
+    }
+
+    item1 := ListTile {
+        x: 8px;
+        y: 68px;
+        text: "Two-line item";
+        supporting_text: "Secondary text";
+        width: 344px;
+        enforce_touch_target: false;
+    }
+
+    item2 := ListTile {
+        x: 8px;
+        y: 144px;
+        text: "Three-line item";
+        overline_text: "Overline";
+        supporting_text: "Secondary text";
+        width: 344px;
+        enforce_touch_target: false;
+    }
+
+    item3 := ListTile {
+        x: 8px;
+        y: 236px;
+        text: "Multiline supporting";
+        supporting_text: "Wraps onto a second line";
+        width: 344px;
+        enforce_touch_target: false;
+    }
+
+    item4 := ListTile {
+        x: 8px;
+        y: 312px;
+        text: "With icons";
+        leading_icon: Icons.check;
+        trailing_icon: Icons.menu;
+        width: 344px;
+        enforce_touch_target: false;
+    }
+
+    item5 := ListTile {
+        x: 8px;
+        y: 372px;
+        text: "With avatar";
+        avatar_text: "A";
+        trailing_text: "100+";
+        width: 344px;
+        enforce_touch_target: false;
+    }
+
+    item6 := ListTile {
+        x: 8px;
+        y: 432px;
+        text: "With image";
+        leading_image: Icons.check;
+        width: 344px;
+        enforce_touch_target: false;
+    }
+
+    item7 := ListTile {
+        x: 8px;
+        y: 512px;
+        text: "Disabled item";
+        supporting_text: "Secondary text";
+        interactive: true;
+        enabled: false;
+        width: 344px;
+        enforce_touch_target: false;
+    }
+
+}

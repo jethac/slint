@@ -76,10 +76,16 @@ export component RadioButton {
     ]
 }
 
+// The radio tile is `ListItem(selected, onClick)` upstream: `selectable`
+// gives the row radio-button semantics + selected visuals, and `selected`
+// aliases the trailing `RadioButton`'s `checked`.
 export component RadioButtonTile inherits ListTile {
-    in_out property <bool> checked <=> radio_button.checked;
-
     callback radio_button_clicked();
+
+    interactive: true;
+    selectable: true;
+    checked <=> radio_button.checked;
+    selected <=> root.checked;
 
     Rectangle {
         horizontal_stretch: 0;

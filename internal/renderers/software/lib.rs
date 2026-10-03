@@ -3027,19 +3027,23 @@ impl<'a, T: ProcessScene> SceneBuilder<'a, T> {
             return;
         };
 
-        let mut commands = Vec::new();
-        for contour in contours {
-            let mut points = contour.into_iter().map(|p| {
-                let local: euclid::Vector2D<f32, PhysicalPx> = (p - bounds.origin) * scale_factor;
-                let p = (euclid::Point2D::<f32, PhysicalPx>::origin() + local + shift)
-                    .transformed(rotation);
-                zeno::Point::new(p.x, p.y)
-            });
-            let Some(first) = points.next() else { continue };
-            commands.push(path::Command::MoveTo(first));
-            commands.extend(points.map(path::Command::LineTo));
-            commands.push(path::Command::Close);
-        }
+        let to_commands = |contours: Vec<Vec<i_slint_core::graphics::OutlinePoint>>| {
+            let mut commands = Vec::new();
+            for contour in contours {
+                let mut points = contour.into_iter().map(|p| {
+                    let local: euclid::Vector2D<f32, PhysicalPx> =
+                        (p - bounds.origin) * scale_factor;
+                    let p = (euclid::Point2D::<f32, PhysicalPx>::origin() + local + shift)
+                        .transformed(rotation);
+                    zeno::Point::new(p.x, p.y)
+                });
+                let Some(first) = points.next() else { continue };
+                commands.push(path::Command::MoveTo(first));
+                commands.extend(points.map(path::Command::LineTo));
+                commands.push(path::Command::Close);
+            }
+            commands
+        };
 
         let orientation = self.rotation.orientation;
         let resolve_paint = |brush: Brush| {
@@ -3069,7 +3073,7 @@ impl<'a, T: ProcessScene> SceneBuilder<'a, T> {
             self.processor.process_filled_path(
                 physical_geom,
                 clipped_geom,
-                commands.clone(),
+                to_commands(contours),
                 paint,
                 outline.fill_rule(),
                 &self.rounded_clips,
@@ -3077,10 +3081,19 @@ impl<'a, T: ProcessScene> SceneBuilder<'a, T> {
         }
         let border_width = rect.border_width();
         let border_color = rect.border_color();
+        // Like a CSS border, the stroke lies inside the element: it follows the outline
+        // fitted to the geometry shrunk by half the border width.
+        let border_inset = border_width.cast::<f32>().get() / 2.;
+        let stroke_geom = geom.cast::<f32>().inflate(-border_inset, -border_inset);
         if border_width.get() > 0 as Coord
+            && !stroke_geom.is_empty()
             && !border_color.is_transparent()
             && let Some(paint) = resolve_paint(border_color)
         {
+            let commands = to_commands(outline.flatten(
+                stroke_geom,
+                shape_raster::FLATTEN_TOLERANCE / scale_factor.get(),
+            ));
             let stroke_style = path::StrokeStyle {
                 width: (border_width.cast() * scale_factor).get(),
                 line_cap: i_slint_core::items::LineCap::Butt,

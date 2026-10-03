@@ -1,0 +1,107 @@
+{
+  "name": "list-basic",
+  "type": "canvas",
+  "parity": "static",
+  "size": [
+    360,
+    592
+  ],
+  "densities": [
+    1,
+    2
+  ],
+  "theme": {
+    "seed": "6750A4",
+    "variant": "tonal-spot",
+    "spec": "spec2025",
+    "platform": "phone",
+    "dark": false,
+    "contrast": 0.0
+  },
+  "fonts": {
+    "plain": "Roboto",
+    "brand": "Roboto"
+  },
+  "widgets": [
+    {
+      "kind": "list-item",
+      "x": 8,
+      "y": 8,
+      "width": 344,
+      "text": "One-line item"
+    },
+    {
+      "kind": "list-item",
+      "x": 8,
+      "y": 68,
+      "width": 344,
+      "text": "Two-line item",
+      "supporting": "Secondary text"
+    },
+    {
+      "kind": "list-item",
+      "x": 8,
+      "y": 144,
+      "width": 344,
+      "overline": "Overline",
+      "text": "Three-line item",
+      "supporting": "Secondary text"
+    },
+    {
+      "kind": "list-item",
+      "x": 8,
+      "y": 236,
+      "width": 344,
+      "text": "Multiline supporting",
+      "supporting": "Wraps onto a second line"
+    },
+    {
+      "kind": "list-item",
+      "x": 8,
+      "y": 312,
+      "width": 344,
+      "icon": "check",
+      "text": "With icons",
+      "trailing_icon": "menu"
+    },
+    {
+      "kind": "list-item",
+      "x": 8,
+      "y": 372,
+      "width": 344,
+      "avatar": "A",
+      "text": "With avatar",
+      "trailing_text": "100+"
+    },
+    {
+      "kind": "list-item",
+      "x": 8,
+      "y": 432,
+      "width": 344,
+      "leading_image": "check",
+      "text": "With image"
+    },
+    {
+      "kind": "list-item",
+      "x": 8,
+      "y": 512,
+      "width": 344,
+      "text": "Disabled item",
+      "supporting": "Secondary text",
+      "enabled": false,
+      "interactive": true
+    }
+  ],
+  "trace_elements": [
+    "item0",
+    "item1",
+    "item2",
+    "item3",
+    "item4",
+    "item5",
+    "item6",
+    "item7"
+  ],
+  "trace_props": [],
+  "xfail_text": "issue #28: Slint ceils text layout widths where Compose keeps fractional advances"
+}
