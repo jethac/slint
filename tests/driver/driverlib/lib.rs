@@ -253,7 +253,10 @@ fn test_extract_library_paths() {
 /// - `//MASK_DECOR=id@t1,t2` — at the listed timestamps the element's
 ///   decoration outside its silhouette (a drop shadow, a blur) is not
 ///   comparable on the reference engine; the corner zones fall back to
-///   the normal decoration band. One line per element, may repeat.
+///   the normal decoration band. One line per element, may repeat. An
+///   optional `+N` after the id (`//MASK_DECOR=fab+12@2000`) widens the
+///   decoration band to `N` dp for decorations that spill further than
+///   [`DECORATION_MARGIN_DP`] — a big elevation shadow, for instance.
 /// - `//MASK_SHADOW=id@t1,t2` — at the listed timestamps an elevation
 ///   shadow's spill outside the element's bounds is excluded: the
 ///   reference engine and the Skia renderer draw the Android
@@ -306,8 +309,9 @@ pub struct ParityMarkers {
     pub xfail_silhouette: Option<String>,
     /// `(element-id, t_ms)` pairs from `//MASK_INNER=` markers.
     pub mask_inner: Vec<(String, u64)>,
-    /// `(element-id, t_ms)` pairs from `//MASK_DECOR=` markers.
-    pub mask_decor: Vec<(String, u64)>,
+    /// `(element-id, t_ms, margin)` triples from `//MASK_DECOR=` markers;
+    /// `margin` is `Some(dp)` when the marker carried a `+dp` override.
+    pub mask_decor: Vec<(String, u64, Option<f64>)>,
     /// `(element-id, t_ms)` pairs from `//MASK_SHADOW=` markers.
     pub mask_shadow: Vec<(String, u64)>,
     /// `//PHASE_TOL_MS=` — the anim-launch phase window, 0 unless marked.
@@ -446,13 +450,19 @@ pub fn extract_parity(source: &str) -> ParityMarkers {
     }
 
     let mut mask_decor = Vec::new();
-    static MASK_DECOR_RX: LazyLock<Regex> =
-        LazyLock::new(|| Regex::new(r"//MASK_DECOR=\s*([A-Za-z0-9_>-]+)\s*@\s*([0-9,\s]+)").unwrap());
+    static MASK_DECOR_RX: LazyLock<Regex> = LazyLock::new(|| {
+        Regex::new(r"//MASK_DECOR=\s*([A-Za-z0-9_>-]+)(?:\s*\+\s*([0-9.]+))?\s*@\s*([0-9,\s]+)")
+            .unwrap()
+    });
     for m in MASK_DECOR_RX.captures_iter(source) {
-        for t in m[2].split(',').map(str::trim).filter(|s| !s.is_empty()) {
+        let margin = m.get(2).map(|g| {
+            g.as_str().parse().expect("Cannot parse //MASK_DECOR= margin override")
+        });
+        for t in m[3].split(',').map(str::trim).filter(|s| !s.is_empty()) {
             mask_decor.push((
                 m[1].to_string(),
                 t.parse().expect("Cannot parse //MASK_DECOR= timestamp"),
+                margin,
             ));
         }
     }

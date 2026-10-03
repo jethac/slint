@@ -65,6 +65,10 @@ impl WindowAdapter for AndroidWindowAdapter {
             height: w.height() as u32,
         })
     }
+    fn display_geometry(&self) -> Option<(PhysicalSize, PhysicalPosition)> {
+        // The fullscreen window is the display, at the origin.
+        Some((self.size(), PhysicalPosition::new(0, 0)))
+    }
     fn renderer(&self) -> &dyn i_slint_core::platform::Renderer {
         &self.renderer
     }

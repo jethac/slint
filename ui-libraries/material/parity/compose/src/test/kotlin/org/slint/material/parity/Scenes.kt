@@ -55,6 +55,23 @@ import androidx.compose.material3.ToggleButtonDefaults
 import androidx.compose.material3.Typography
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.material3.toShape
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.MediumTopAppBar
+import androidx.compose.material3.MediumFlexibleTopAppBar
+import androidx.compose.material3.LargeTopAppBar
+import androidx.compose.material3.LargeFlexibleTopAppBar
+import androidx.compose.material3.TwoRowsTopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberTopAppBarState
+import androidx.compose.material3.BottomAppBar
+import androidx.compose.material3.BottomAppBarDefaults
+import androidx.compose.material3.rememberBottomAppBarState
+import androidx.compose.material3.SearchBar
+import androidx.compose.material3.SearchBarDefaults
+import androidx.compose.material3.AppBarWithSearch
+import androidx.compose.material3.rememberSearchBarState
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.ui.graphics.vector.path
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -69,6 +86,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
@@ -413,6 +431,7 @@ private fun CanvasScene(
         var surfaces = 0
         var menus = 0
         var menuTexts = 0
+        var appbars = 0
         scene.widgets.forEach { widget ->
             when {
                 widget.isIconButton -> StateIconButton(
@@ -454,12 +473,32 @@ private fun CanvasScene(
                     // document order across the whole scene.
                     menuTexts += widget.items.size
                 }
+                widget.kind == "top-app-bar" ||
+                    widget.kind == "bottom-app-bar" ||
+                    widget.kind == "search-bar" ||
+                    widget.kind == "app-bar-with-search" ->
+                    StateAppBar(widget, tracer, "appbar${appbars++}")
                 widget.kind == "rect" ->
                     Box(
                         Modifier.offset(widget.x.dp, widget.y.dp)
                             .size(widget.width.dp, widget.height.dp)
                             .clip(RoundedCornerShapeOrRect(widget.radius.dp))
                             .background(schemeColor(widget.color ?: "primary")),
+                    )
+                widget.kind == "elevated-rect" ->
+                    Box(
+                        Modifier.offset(widget.x.dp, widget.y.dp)
+                            .size(widget.width.dp, widget.height.dp)
+                            // Modifier.shadow draws the real Android
+                            // ambient+spot shadow for the shape.
+                            .shadow(
+                                widget.elevation.dp,
+                                RoundedCornerShapeOrRect(widget.radius.dp),
+                            )
+                            .background(
+                                schemeColor(widget.color ?: "primary"),
+                                RoundedCornerShapeOrRect(widget.radius.dp),
+                            ),
                     )
                 widget.kind == "surface" -> {
                     // A clip + color surface: the shape machinery's outline
@@ -666,27 +705,25 @@ private fun sceneIcon(name: String): androidx.compose.ui.graphics.vector.ImageVe
         .bufferedReader().readText()
     val vb = Regex("""viewBox="([\d.\- ]+)"""").find(svg)!!.groupValues[1]
         .trim().split(" ").map { it.toFloat() }
-    // `Icon` sizes itself by `defaultWidth`/`defaultHeight` — pinning 24dp
-    // keeps a 960-unit viewBox (Material's edit/schedule icons) from
-    // inflating the layout; the viewport scaling is unaffected. viewBox is
-    // `minX minY width height` — the viewport is the *size*, not the span.
+    // `Icon` renders an ImageVector at its intrinsic `defaultWidth/Height`
+    // when no explicit size is given, so an icon authored on a non-24
+    // viewBox (e.g. the 960-unit Material Symbols grid) must still declare
+    // a 24dp size — the viewport maps the path data at any grid size.
+    val vpw = vb[2]
+    val vph = vb[3]
     val builder = androidx.compose.ui.graphics.vector.ImageVector.Builder(
         name = name,
-        defaultWidth = 24.dp,
-        defaultHeight = 24.dp,
-        viewportWidth = vb[2],
-        viewportHeight = vb[3],
+        defaultWidth = if (vpw >= vph) 24.dp else (24f * vpw / vph).dp,
+        defaultHeight = if (vph >= vpw) 24.dp else (24f * vph / vpw).dp,
+        viewportWidth = vpw,
+        viewportHeight = vph,
     )
-    // The viewBox's min corner shifts the coordinate space — Material's
-    // icons use `0 -960 960 960`, whose path data is all negative-y.
-    // `ImageVector` has no viewBox offset, so a non-zero origin is applied
-    // as a group translation.
-    builder.addGroup(
-        name = "viewBox",
-        translationX = -vb[0],
-        translationY = -vb[1],
-        clipPathData = emptyList(),
-    )
+    // viewBox carries a nonzero min-x/min-y (e.g. "0 -960 960 960") while
+    // the vector viewport always starts at 0 — wrap the paths in a group
+    // that shifts them back into view.
+    if (vb[0] != 0f || vb[1] != 0f) {
+        builder.addGroup(translationX = -vb[0], translationY = -vb[1])
+    }
     // A `fill="none"` path is a hit-test/bounds rectangle in the SVG —
     // Material's `schedule` icon has one — not a drawable shape.
     Regex("""<path[^>]*>""").findAll(svg).forEach { m ->
@@ -698,7 +735,9 @@ private fun sceneIcon(name: String): androidx.compose.ui.graphics.vector.ImageVe
             fill = androidx.compose.ui.graphics.SolidColor(Color.Black),
         )
     }
-    builder.clearGroup()
+    if (vb[0] != 0f || vb[1] != 0f) {
+        builder.clearGroup()
+    }
     return builder.build()
 }
 
@@ -1660,5 +1699,171 @@ private fun FabMenu(
                 },
             )
         }
+    }
+}
+
+
+/** App-bar family widgets (`top-app-bar` variants, `bottom-app-bar`,
+ * `search-bar`, `app-bar-with-search`): geometry plus the props the Slint
+ * parity case sets. Elements are named `appbar{n}` in scene order. Window
+ * insets are zeroed — the Slint side has no inset concept. */
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun StateAppBar(widget: Widget, tracer: Tracer, tag: String) {
+    val modifier =
+        Modifier.offset(widget.x.dp, widget.y.dp)
+            .width(widget.width.dp)
+            .track(tracer, tag)
+    val navIcon: @Composable (() -> Unit)? = widget.navIcon?.let { icon ->
+        { IconButton(onClick = {}) { Icon(sceneIcon(icon), contentDescription = null) } }
+    }
+    val actions: @Composable androidx.compose.foundation.layout.RowScope.() -> Unit = {
+        widget.icons.forEach { icon ->
+            IconButton(onClick = {}) { Icon(sceneIcon(icon), contentDescription = null) }
+        }
+    }
+    when (widget.kind) {
+        "top-app-bar" -> {
+            val twoRow = widget.variant == "medium-flexible" ||
+                widget.variant == "large-flexible" ||
+                widget.variant == "two-rows"
+            val state = rememberTopAppBarState(
+                initialHeightOffsetLimit = if (twoRow) -Float.MAX_VALUE else 0f,
+                initialHeightOffset = widget.heightOffset,
+                initialContentOffset = widget.contentOffset,
+            )
+            val scrollBehavior =
+                if (twoRow) TopAppBarDefaults.exitUntilCollapsedScrollBehavior(state)
+                else TopAppBarDefaults.pinnedScrollBehavior(state)
+            val title: @Composable () -> Unit = { Text(widget.text ?: "") }
+            val subtitle: (@Composable () -> Unit)? = widget.subtitle?.let { { Text(it) } }
+            val insets = WindowInsets(0, 0, 0, 0)
+            when (widget.variant) {
+                // The no-subtitle overloads keep the single-line paddings —
+                // the subtitle overload changes the title slot's layout.
+                "small" -> if (subtitle == null) TopAppBar(
+                    title, modifier,
+                    navigationIcon = navIcon ?: {},
+                    actions = actions,
+                    windowInsets = insets,
+                    scrollBehavior = scrollBehavior,
+                ) else TopAppBar(
+                    title, subtitle, modifier,
+                    navigationIcon = navIcon ?: {},
+                    actions = actions,
+                    windowInsets = insets,
+                    scrollBehavior = scrollBehavior,
+                )
+                "center" -> CenterAlignedTopAppBar(
+                    title, modifier,
+                    navigationIcon = navIcon ?: {},
+                    actions = actions,
+                    windowInsets = insets,
+                    scrollBehavior = scrollBehavior,
+                )
+                "medium" -> MediumTopAppBar(
+                    title, modifier,
+                    navigationIcon = navIcon ?: {},
+                    actions = actions,
+                    windowInsets = insets,
+                    scrollBehavior = scrollBehavior,
+                )
+                "medium-flexible" -> MediumFlexibleTopAppBar(
+                    title, modifier,
+                    subtitle = subtitle,
+                    navigationIcon = navIcon ?: {},
+                    actions = actions,
+                    windowInsets = insets,
+                    scrollBehavior = scrollBehavior,
+                )
+                "large" -> LargeTopAppBar(
+                    title, modifier,
+                    navigationIcon = navIcon ?: {},
+                    actions = actions,
+                    windowInsets = insets,
+                    scrollBehavior = scrollBehavior,
+                )
+                "large-flexible" -> LargeFlexibleTopAppBar(
+                    title, modifier,
+                    subtitle = subtitle,
+                    navigationIcon = navIcon ?: {},
+                    actions = actions,
+                    windowInsets = insets,
+                    scrollBehavior = scrollBehavior,
+                )
+                "two-rows" -> TwoRowsTopAppBar(
+                    { title() }, modifier,
+                    subtitle = subtitle?.let { sub -> { sub() } },
+                    navigationIcon = navIcon ?: {},
+                    actions = actions,
+                    windowInsets = insets,
+                    scrollBehavior = scrollBehavior,
+                )
+                else -> error("unknown top-app-bar variant ${widget.variant}")
+            }
+        }
+        "bottom-app-bar" -> {
+            val state = rememberBottomAppBarState(
+                initialHeightOffsetLimit = -Float.MAX_VALUE,
+                initialHeightOffset = widget.heightOffset,
+                initialContentOffset = widget.contentOffset,
+            )
+            val fab: (@Composable () -> Unit)? = widget.navIcon?.let { icon ->
+                { androidx.compose.material3.FloatingActionButton(
+                    onClick = {},
+                    modifier = Modifier.track(tracer, "fab"),
+                ) {
+                    Icon(sceneIcon(icon), contentDescription = null) } }
+            }
+            BottomAppBar(
+                actions = actions,
+                modifier = modifier,
+                floatingActionButton = fab,
+                windowInsets = WindowInsets(0, 0, 0, 0),
+                scrollBehavior = BottomAppBarDefaults.exitAlwaysScrollBehavior(state),
+            )
+        }
+        "search-bar" -> {
+            val field: @Composable () -> Unit = {
+                SearchBarDefaults.InputField(
+                    query = widget.text ?: "",
+                    onQueryChange = {},
+                    onSearch = {},
+                    expanded = false,
+                    onExpandedChange = {},
+                    placeholder = widget.placeholder?.let { { Text(it) } },
+                    leadingIcon = navIcon,
+                    trailingIcon = widget.icons.firstOrNull()?.let { icon ->
+                        { Icon(sceneIcon(icon), contentDescription = null) }
+                    },
+                )
+            }
+            SearchBar(
+                state = rememberSearchBarState(),
+                inputField = field,
+                modifier = modifier,
+            )
+        }
+        "app-bar-with-search" -> {
+            val field: @Composable () -> Unit = {
+                SearchBarDefaults.InputField(
+                    query = widget.text ?: "",
+                    onQueryChange = {},
+                    onSearch = {},
+                    expanded = false,
+                    onExpandedChange = {},
+                    placeholder = widget.placeholder?.let { { Text(it) } },
+                )
+            }
+            AppBarWithSearch(
+                state = rememberSearchBarState(),
+                inputField = field,
+                modifier = modifier,
+                navigationIcon = navIcon,
+                actions = actions,
+                windowInsets = WindowInsets(0, 0, 0, 0),
+            )
+        }
+        else -> error("unknown app-bar kind ${widget.kind}")
     }
 }

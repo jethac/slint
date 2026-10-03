@@ -926,9 +926,12 @@ impl<'a, S: PaintScene> GlyphRenderer for AnyrenderItemRenderer<'a, S> {
         // was picked by rendering both ways and comparing which one actually leans right, not
         // derived from a convention doc alone -- kurbo's own `Affine::skew` example assumes a
         // Y-up frame, but empirically vello_cpu's glyph space behaves Y-down here.
-        let glyph_transform = synthesis
-            .skew()
-            .map(|degrees| kurbo::Affine::skew(-degrees.to_radians().tan() as f64, 0.0));
+        let glyph_transform = synthesis.skew().map(|degrees| {
+            kurbo::Affine::skew(
+                -i_slint_core::graphics::math::tanf(degrees.to_radians()) as f64,
+                0.0,
+            )
+        });
         let glyphs: Vec<_> =
             glyphs_it.map(|g| anyrender::Glyph { id: g.id, x: g.x, y: g.y }).collect();
         self.scene.draw_glyphs(
