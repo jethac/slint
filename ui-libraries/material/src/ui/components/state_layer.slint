@@ -40,10 +40,14 @@ export component Ripple {
         border_radius: self.width / 2;
         opacity: MaterialPalette.state_layer_opacity_press;
         background: root.color;
-        width: 0px;
+        // The target stays a live binding: `init` runs before the element's
+        // final layout, so a one-time width assignment would freeze the
+        // circle at whatever size the element had mid-layout.
+        property <bool> created;
+        width: self.created ? root.width * 2 * 1.4142 : 0px;
 
         init => {
-            self.width =  root.width * 2 * 1.4142;
+            self.created = true;
         }
 
         animate width { duration: MaterialAnimations.ripple_duration; easing: MaterialAnimations.ripple_easing; }
@@ -71,15 +75,18 @@ export component Ripple {
             border_radius: self.width / 2;
             opacity: MaterialPalette.state_layer_opacity_press;
             background: root.color;
-            width: 0px;
-
             // The settled circle covers the element: diameter = twice the
-            // distance from the press point to the farthest corner.
+            // distance from the press point to the farthest corner. The
+            // target stays a live binding: `init` runs before the element's
+            // final layout, so a one-time width assignment would freeze the
+            // circle at whatever size the element had mid-layout.
             property <float> dx: Math.max(root.pressed_x / 1px, (root.width - root.pressed_x) / 1px);
             property <float> dy: Math.max(root.pressed_y / 1px, (root.height - root.pressed_y) / 1px);
+            property <bool> created;
+            width: self.created ? Math.sqrt(dx * dx + dy * dy) * 2px : 0px;
 
             init => {
-                self.width = Math.sqrt(dx * dx + dy * dy) * 2px;
+                self.created = true;
             }
 
             animate width { enabled: !MaterialPalette.reduced-motion; duration: MaterialAnimations.ripple_duration; easing: MaterialAnimations.ripple_easing; }

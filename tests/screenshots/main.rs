@@ -12,11 +12,7 @@ pub mod parity;
 /// Compilation helpers shared by the interpreter-based drivers.
 #[cfg(all(
     test,
-    any(
-        feature = "skia",
-        all(feature = "femtovg", target_os = "linux"),
-        feature = "anyrender"
-    )
+    any(feature = "skia", all(feature = "femtovg", target_os = "linux"), feature = "anyrender")
 ))]
 pub mod interpreter;
 

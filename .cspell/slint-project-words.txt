@@ -1,5 +1,6 @@
 AAPI
 ABGR
+Interpolatable
 accentify
 accum
 actionchip
@@ -127,6 +128,7 @@ colprop
 commodo
 compdef
 compilerlib
+connectedbuttongroup
 consectetur
 consequat
 Constexpr
@@ -645,6 +647,7 @@ rasterizing
 RBUTTONUP
 Recip
 recompiles
+recompositions
 rects
 redoable
 REFR

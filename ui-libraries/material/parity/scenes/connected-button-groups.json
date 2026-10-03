@@ -1,0 +1,345 @@
+{
+ "name": "connected-button-groups",
+ "type": "canvas",
+ "parity": "static",
+ "size": [
+  560,
+  560
+ ],
+ "densities": [
+  1,
+  2
+ ],
+ "theme": {
+  "seed": "6750A4",
+  "variant": "tonal-spot",
+  "spec": "spec2025",
+  "platform": "phone",
+  "dark": false,
+  "contrast": 0.0
+ },
+ "fonts": {
+  "plain": "Roboto",
+  "brand": "Roboto"
+ },
+ "widgets": [
+  {
+   "kind": "connected-button-group",
+   "x": 16,
+   "y": 20,
+   "items": [
+    {
+     "text": "Day"
+    },
+    {
+     "text": "Week",
+     "state": "focused"
+    },
+    {
+     "text": "Month"
+    }
+   ],
+   "selected_index": 1
+  },
+  {
+   "kind": "connected-button-group",
+   "x": 16,
+   "y": 84,
+   "multi_select": true,
+   "items": [
+    {
+     "text": "Mon",
+     "checked": true
+    },
+    {
+     "text": "Tue"
+    },
+    {
+     "text": "Wed",
+     "checked": true
+    },
+    {
+     "text": "Thu"
+    }
+   ]
+  },
+  {
+   "kind": "connected-button-group",
+   "x": 16,
+   "y": 148,
+   "items": [
+    {
+     "text": "Edit",
+     "icon": "edit",
+     "checked_icon": "check"
+    },
+    {
+     "text": "Save",
+     "icon": "menu",
+     "checked_icon": "check"
+    },
+    {
+     "text": "Go",
+     "icon": "arrow_right",
+     "checked_icon": "check",
+     "state": "hovered"
+    }
+   ],
+   "selected_index": 2
+  },
+  {
+   "kind": "connected-button-group",
+   "x": 16,
+   "y": 212,
+   "items": [
+    {
+     "text": "One"
+    },
+    {
+     "text": "Two",
+     "state": "pressed"
+    },
+    {
+     "text": "Three"
+    }
+   ]
+  },
+  {
+   "kind": "connected-button-group",
+   "x": 16,
+   "y": 276,
+   "items": [
+    {
+     "text": "Yes"
+    },
+    {
+     "text": "No",
+     "disabled": true
+    },
+    {
+     "text": "Maybe"
+    }
+   ],
+   "selected_index": 0
+  },
+  {
+   "kind": "vertical-connected-button-group",
+   "x": 16,
+   "y": 340,
+   "items": [
+    {
+     "text": "Top"
+    },
+    {
+     "text": "Mid"
+    },
+    {
+     "text": "Bot"
+    }
+   ],
+   "selected_index": 0
+  },
+  {
+   "kind": "connected-button",
+   "x": 300,
+   "y": 340,
+   "text": "Start",
+   "position": "start",
+   "width": 80
+  },
+  {
+   "kind": "connected-button",
+   "x": 300,
+   "y": 404,
+   "text": "Mid",
+   "position": "middle",
+   "icon": "edit",
+   "checked_icon": "check",
+   "checked": true,
+   "width": 90
+  },
+  {
+   "kind": "connected-button",
+   "x": 300,
+   "y": 468,
+   "text": "End",
+   "position": "end",
+   "width": 80
+  }
+ ],
+ "trace_elements": [
+  "group0",
+  "group0item0",
+  "group0item1",
+  "group0item2",
+  "group1",
+  "group1item0",
+  "group1item1",
+  "group1item2",
+  "group1item3",
+  "group2",
+  "group2item0",
+  "group2item1",
+  "group2item2",
+  "group3",
+  "group3item0",
+  "group3item1",
+  "group3item2",
+  "group4",
+  "group4item0",
+  "group4item1",
+  "group4item2",
+  "group5",
+  "group5item0",
+  "group5item1",
+  "group5item2",
+  "button0",
+  "button1",
+  "button2"
+ ],
+ "trace_items": {
+  "group0": [
+   "item",
+   "radio-item"
+  ],
+  "group1": [
+   "item",
+   "radio-item"
+  ],
+  "group2": [
+   "item",
+   "radio-item"
+  ],
+  "group3": [
+   "item",
+   "radio-item"
+  ],
+  "group4": [
+   "item",
+   "radio-item"
+  ],
+  "group5": [
+   "item",
+   "radio-item"
+  ]
+ },
+ "trace_props": [],
+ "xfail_text": "issue #28: Slint ceils text layout widths where Compose keeps fractional advances",
+ "mask_decor": {
+  "group0item0": [
+   0,
+   2000
+  ],
+  "group0item1": {
+   "times": [
+    0,
+    2000
+   ],
+   "margin": 14
+  },
+  "group0item2": [
+   0,
+   2000
+  ],
+  "group1item0": [
+   0,
+   2000
+  ],
+  "group1item1": [
+   0,
+   2000
+  ],
+  "group1item2": [
+   0,
+   2000
+  ],
+  "group1item3": [
+   0,
+   2000
+  ],
+  "group2item0": [
+   0,
+   2000
+  ],
+  "group2item1": [
+   0,
+   2000
+  ],
+  "group2item2": [
+   0,
+   2000
+  ],
+  "group3item0": [
+   0,
+   2000
+  ],
+  "group3item1": [
+   0,
+   2000
+  ],
+  "group3item2": [
+   0,
+   2000
+  ],
+  "group4item0": [
+   0,
+   2000
+  ],
+  "group4item1": [
+   0,
+   2000
+  ],
+  "group4item2": [
+   0,
+   2000
+  ],
+  "group5item0": [
+   0,
+   2000
+  ],
+  "group5item1": [
+   0,
+   2000
+  ],
+  "group5item2": [
+   0,
+   2000
+  ],
+  "button0": [
+   0,
+   2000
+  ],
+  "button1": [
+   0,
+   2000
+  ],
+  "button2": [
+   0,
+   2000
+  ],
+  "group0": [
+   0,
+   2000
+  ],
+  "group1": [
+   0,
+   2000
+  ],
+  "group2": [
+   0,
+   2000
+  ],
+  "group3": [
+   0,
+   2000
+  ],
+  "group4": [
+   0,
+   2000
+  ],
+  "group5": [
+   0,
+   2000
+  ]
+ }
+}

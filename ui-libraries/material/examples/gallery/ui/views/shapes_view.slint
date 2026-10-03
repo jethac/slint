@@ -9,7 +9,7 @@ import {
     MaterialPalette,
     MaterialAnimations,
     Elevation,
-    SegmentedButton,
+    ConnectedButtonGroup,
     IconButton,
     StateLayerArea,
     Vertical,
@@ -175,11 +175,11 @@ export component ShapesView {
                             clicked => { root.auto_morph = !root.auto_morph; }
                         }
 
-                        SegmentedButton {
+                        ConnectedButtonGroup {
                             items: [{ text: "normalized" }, { text: "fill" }, { text: "contain" }, { text: "cover" }];
-                            current_index: root.fit_index;
+                            selected_index: root.fit_index;
 
-                            index_changed(index) => { root.fit_index = index; }
+                            selected_index_changed(index) => { root.fit_index = index; }
                         }
                     }
                 }

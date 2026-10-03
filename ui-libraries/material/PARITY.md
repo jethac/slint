@@ -78,7 +78,7 @@ States: pressed, selected
 
 | Component | Source | Status | Issues | Needs | Notes |
 |---|---|---|---|---|---|
-| ButtonGroup | ButtonGroup.kt | missing | #5, #9, #10 | springs (#5), shapes (#6) | - |
+| ButtonGroup | ButtonGroup.kt | partial | #5, #9, #10 | springs (#5), shapes (#6) | connected variants: slint components ConnectedButtonGroup, ConnectedButton, VerticalConnectedButtonGroup; parity cases: connected-button-groups, connected-button-morph, connected-button-press-morph, negative-connected-button-group; standard variant pending (#10) |
 
 ### Buttons
 
@@ -382,10 +382,10 @@ States: disabled, selected, focused, hovered, pressed, unselected
 
 | Component | Source | Status | Issues | Needs | Notes |
 |---|---|---|---|---|---|
-| MultiChoiceSegmentedButtonRow | SegmentedButton.kt | missing | #10 | springs (#5), shapes (#6) | - |
-| MultiChoiceSegmentedButtonRowScope | SegmentedButton.kt | missing | #10 | springs (#5), shapes (#6) | - |
-| SingleChoiceSegmentedButtonRow | SegmentedButton.kt | missing | #10 | springs (#5), shapes (#6) | - |
-| SingleChoiceSegmentedButtonRowScope | SegmentedButton.kt | missing | #10 | springs (#5), shapes (#6) | - |
+| MultiChoiceSegmentedButtonRow | SegmentedButton.kt | partial | #10 | springs (#5), shapes (#6) | Expressive mapping -> ConnectedButtonGroup; slint SegmentedButton deprecated |
+| MultiChoiceSegmentedButtonRowScope | SegmentedButton.kt | partial | #10 | springs (#5), shapes (#6) | Expressive mapping -> ConnectedButtonGroup; slint SegmentedButton deprecated |
+| SingleChoiceSegmentedButtonRow | SegmentedButton.kt | partial | #10 | springs (#5), shapes (#6) | Expressive mapping -> ConnectedButtonGroup; slint SegmentedButton deprecated |
+| SingleChoiceSegmentedButtonRowScope | SegmentedButton.kt | partial | #10 | springs (#5), shapes (#6) | Expressive mapping -> ConnectedButtonGroup; slint SegmentedButton deprecated |
 
 ### Slider
 

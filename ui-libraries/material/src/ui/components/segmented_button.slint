@@ -59,6 +59,10 @@ component SegmentedItemTemplate {
     ]
 }
 
+/// Deprecated by the Material 3 Expressive mapping (issue #11): use
+/// `ConnectedButtonGroup` instead. Upstream `SegmentedButton` is not marked
+/// `@Deprecated` at the pin — the Expressive button-group API replaces it —
+/// so this component stays working and pixel-correct for its own spec.
 export component SegmentedButton {
     in property <[SegmentedItem]> items;
     in_out property <int> current_index;
