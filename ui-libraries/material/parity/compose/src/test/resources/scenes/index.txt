@@ -5,6 +5,7 @@ alert-dialog-dark
 alert-dialog-no-icon
 alert-dialog-stacked
 alert-dialog
+badges
 basic-alert-dialog
 bottom-app-bars
 button-focus
@@ -43,6 +44,8 @@ negative-alert-dialog-actions
 negative-alert-dialog-container
 negative-alert-dialog-corner
 negative-alert-dialog-padding
+negative-badge-offset
+negative-badge-text
 negative-button-focus-ring
 negative-button-press-morph
 negative-button-ripple-clip
@@ -81,6 +84,10 @@ split-button-sizes
 split-button-states
 split-button-styles
 spring-motion
+switch-hover
+switch-off-morph
+switch-on-morph
+switch-states
 toggle-buttons
 toggle-select-morph
 top-app-bars
