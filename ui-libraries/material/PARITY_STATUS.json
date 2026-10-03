@@ -73,10 +73,11 @@
   },
   "BottomAppBar": {
     "issues": [
+      10,
       11
     ],
-    "needs": "springs (#5), shapes (#6)",
-    "notes": "slint component: BottomAppBar; tokens: generated component tokens; springs via active motion scheme",
+    "needs": "none",
+    "notes": "slint component: BottomAppBar; deprecated per #11 \u2014 replaced by FlexibleBottomAppBar (the docked toolbar); scroll-state plumbing (release-velocity settle, accumulated contentOffset) updated to the pinned ExitAlwaysScrollBehavior",
     "status": "partial"
   },
   "BottomSheet": {
@@ -431,10 +432,11 @@
   },
   "FlexibleBottomAppBar": {
     "issues": [
+      10,
       11
     ],
-    "needs": "springs (#5), shapes (#6)",
-    "notes": "slint component: FlexibleBottomAppBar; tokens: generated component tokens; springs via active motion scheme",
+    "needs": "none",
+    "notes": "slint component: FlexibleBottomAppBar \u2014 the docked toolbar; tokens: DockedToolbarTokens; drag area + BottomAppBarScrollState (release-velocity settle, accumulated contentOffset); `minimumInteractiveBalancedPadding` has no Slint mechanism \u2014 touch-target expansion controlled by `touch-target`",
     "status": "partial"
   },
   "FloatingActionButton": {
@@ -482,9 +484,9 @@
     "issues": [
       10
     ],
-    "needs": "springs (#5), adaptive (#12)",
-    "notes": "",
-    "status": "missing"
+    "needs": "adaptive (#12)",
+    "notes": "slint component: HorizontalFloatingToolbar; tokens: FloatingToolbarTokens; plain + with-FAB variants, standard/vibrant, fast-spatial expand/collapse spring + exit-always scroll behavior with drag area; with-FAB content does not scroll (upstream .horizontalScroll); no RTL \u2014 start/end are LTR-true",
+    "status": "partial"
   },
   "HorizontalMultiBrowseCarousel": {
     "issues": [
@@ -1175,9 +1177,9 @@
     "issues": [
       10
     ],
-    "needs": "springs (#5), adaptive (#12)",
-    "notes": "",
-    "status": "missing"
+    "needs": "adaptive (#12)",
+    "notes": "slint component: VerticalFloatingToolbar; same notes as HorizontalFloatingToolbar",
+    "status": "partial"
   },
   "VerticalSlider": {
     "issues": [

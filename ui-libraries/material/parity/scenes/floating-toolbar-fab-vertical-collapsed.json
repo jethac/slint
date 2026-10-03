@@ -1,0 +1,60 @@
+{
+  "actions": [],
+  "densities": [
+    1,
+    2
+  ],
+  "fonts": {
+    "brand": "Roboto",
+    "plain": "Roboto"
+  },
+  "mask_decor": {
+    "appbar0": {
+      "margin": 8,
+      "times": [
+        2000
+      ]
+    },
+    "fab": {
+      "margin": 12,
+      "times": [
+        2000
+      ]
+    }
+  },
+  "name": "floating-toolbar-fab-vertical-collapsed",
+  "params": {},
+  "parity": "static",
+  "size": [
+    160,
+    280
+  ],
+  "theme": {
+    "contrast": 0.0,
+    "dark": false,
+    "platform": "phone",
+    "seed": "6750A4",
+    "spec": "spec2025",
+    "variant": "tonal-spot"
+  },
+  "trace_elements": [
+    "appbar0",
+    "fab"
+  ],
+  "type": "canvas",
+  "widgets": [
+    {
+      "expanded": false,
+      "fab_icon": "check",
+      "fab_position": "bottom",
+      "icons": [
+        "menu",
+        "check",
+        "close"
+      ],
+      "kind": "vertical-floating-toolbar",
+      "x": 40,
+      "y": 40
+    }
+  ]
+}
