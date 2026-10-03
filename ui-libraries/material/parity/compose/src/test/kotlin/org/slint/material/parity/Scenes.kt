@@ -10,13 +10,19 @@ import androidx.compose.foundation.interaction.FocusInteraction
 import androidx.compose.foundation.interaction.HoverInteraction
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.PressInteraction
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.width
@@ -78,6 +84,7 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationItemIconPosition
 import androidx.compose.material3.ShortNavigationBar
 import androidx.compose.material3.ShortNavigationBarArrangement
+import androidx.compose.ui.Alignment
 import androidx.compose.material3.ShortNavigationBarItem
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.ui.graphics.vector.path
@@ -108,6 +115,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import kotlin.math.PI
+import kotlin.math.roundToInt
 
 /** Every traced element reports its bounds here; ids prefixed `text:` also
  * record text metrics through `trackText`. `track` reads `boundsInRoot`, so
@@ -720,9 +728,15 @@ private fun sceneIcon(name: String): androidx.compose.ui.graphics.vector.ImageVe
     if (vb[0] != 0f || vb[1] != 0f) {
         builder.addGroup(translationX = -vb[0], translationY = -vb[1])
     }
-    Regex("""<path[^>]*d="([^"]+)"""").findAll(svg).forEach { m ->
+    Regex("""<path[^>]*>""").findAll(svg).forEach { m ->
+        val tag = m.groupValues[0]
+        val d = Regex("""d="([^"]+)"""").find(tag)?.groupValues?.get(1) ?: return@forEach
+        // `fill="none"` rect/background paths (e.g. schedule.svg's 24x24
+        // frame) must stay unfilled — filling them draws a solid block.
+        val fill = Regex("""fill="([^"]+)"""").find(tag)?.groupValues?.get(1)
+        if (fill == "none") return@forEach
         builder.addPath(
-            androidx.compose.ui.graphics.vector.addPathNodes(m.groupValues[1]),
+            androidx.compose.ui.graphics.vector.addPathNodes(d),
             fill = androidx.compose.ui.graphics.SolidColor(Color.Black),
         )
     }
@@ -1974,16 +1988,43 @@ private fun StateNavBar(
                 ShortNavigationBarArrangement.Centered else ShortNavigationBarArrangement.EqualWeight,
             windowInsets = insets,
         ) {
-            widget.items.forEachIndexed { i, item ->
-                ShortNavigationBarItem(
-                    selected = i == selectedIndex,
-                    onClick = {},
-                    icon = { NavItemIcon(item, i, selectedIndex) },
-                    enabled = item.enabled,
-                    label = item.text.takeIf { it.isNotEmpty() }?.let { { Text(it) } },
-                    iconPosition = if (widget.iconPosition == "start")
-                        NavigationItemIconPosition.Start else NavigationItemIconPosition.Top,
-                )
+            // alpha18's bar Layout measures `content` as a single measurable
+            // under this harness (the whole lambda is one placeable), so the
+            // arrangement policies — which divide `measurables` — see one
+            // child spanning the bar. One Row child preserves the pinned
+            // math: EqualWeight → weight(1f) cells filling the bar
+            // (EqualWeightContentMeasurePolicy at the #3 pin); Centered →
+            // widthIn(min..max) cells in a centered Row
+            // (CenteredContentMeasurePolicy: padding =
+            // ((100-10*(count+3))/2)% of the bar per side, item min width
+            // (W-2*pad)/count, max W/count).
+            val n = maxOf(widget.items.size, 1)
+            val barW = widget.width
+            Row(
+                modifier = if (widget.navArrangement == "centered")
+                    Modifier.fillMaxHeight().requiredWidth(barW.dp)
+                else Modifier.fillMaxSize(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = if (widget.navArrangement == "centered")
+                    Arrangement.Center else Arrangement.Start,
+            ) {
+                val pad = ((100f - 10f * (n + 3)) / 2f / 100f * barW).roundToInt()
+                val itemMinW = ((barW - pad * 2) / n).toInt().dp
+                val itemMaxW = (barW / n).toInt().dp
+                widget.items.forEachIndexed { i, item ->
+                    ShortNavigationBarItem(
+                        selected = i == selectedIndex,
+                        onClick = {},
+                        icon = { NavItemIcon(item, i, selectedIndex) },
+                        modifier = if (widget.navArrangement == "centered")
+                            Modifier.widthIn(min = itemMinW, max = itemMaxW).fillMaxHeight()
+                        else Modifier.weight(1f).fillMaxHeight(),
+                        enabled = item.enabled,
+                        label = item.text.takeIf { it.isNotEmpty() }?.let { { Text(it) } },
+                        iconPosition = if (widget.iconPosition == "start")
+                            NavigationItemIconPosition.Start else NavigationItemIconPosition.Top,
+                    )
+                }
             }
         }
         "navigation-bar" -> NavigationBar(

@@ -2,8 +2,14 @@
     "name": "navigation-bars",
     "type": "canvas",
     "parity": "static",
-    "size": [360, 420],
-    "densities": [1, 2],
+    "size": [
+        360,
+        420
+    ],
+    "densities": [
+        1,
+        2
+    ],
     "theme": {
         "seed": "6750A4",
         "variant": "tonal-spot",
@@ -19,61 +25,138 @@
     "widgets": [
         {
             "kind": "navigation-bar",
-            "x": 0, "y": 0, "width": 360,
+            "x": 0,
+            "y": 0,
+            "width": 360,
             "selected_index": 0,
             "items": [
-                { "text": "Inbox", "icon": "check", "selected_icon": "arrow_right", "badge": "3" },
-                { "text": "Sent", "icon": "schedule" },
-                { "text": "Files", "icon": "keyboard", "enabled": false },
-                { "text": "Trash", "icon": "close" }
+                {
+                    "text": "Inbox",
+                    "icon": "check",
+                    "selected_icon": "arrow_right",
+                    "badge": "3"
+                },
+                {
+                    "text": "Share",
+                    "icon": "schedule"
+                },
+                {
+                    "text": "Saved",
+                    "icon": "keyboard",
+                    "enabled": false
+                },
+                {
+                    "text": "More",
+                    "icon": "more_vert"
+                }
             ]
         },
         {
             "kind": "navigation-bar",
-            "x": 0, "y": 96, "width": 360,
+            "x": 0,
+            "y": 96,
+            "width": 360,
             "selected_index": 1,
             "always_show_label": false,
             "items": [
-                { "text": "Inbox", "icon": "check" },
-                { "text": "Sent", "icon": "schedule" },
-                { "text": "Files", "icon": "keyboard" },
-                { "text": "Trash", "icon": "close" }
+                {
+                    "text": "Inbox",
+                    "icon": "check"
+                },
+                {
+                    "text": "Share",
+                    "icon": "schedule"
+                },
+                {
+                    "text": "Saved",
+                    "icon": "keyboard"
+                },
+                {
+                    "text": "More",
+                    "icon": "more_vert"
+                }
             ]
         },
         {
             "kind": "short-navigation-bar",
-            "x": 0, "y": 192, "width": 360,
+            "x": 0,
+            "y": 192,
+            "width": 360,
             "selected_index": 0,
             "items": [
-                { "text": "Inbox", "icon": "check", "selected_icon": "arrow_right", "badge": "3" },
-                { "text": "Sent", "icon": "schedule" },
-                { "text": "Files", "icon": "keyboard", "enabled": false }
+                {
+                    "text": "Inbox",
+                    "icon": "check",
+                    "selected_icon": "arrow_right",
+                    "badge": "3"
+                },
+                {
+                    "text": "Share",
+                    "icon": "schedule"
+                },
+                {
+                    "text": "Saved",
+                    "icon": "keyboard",
+                    "enabled": false
+                }
             ]
         },
         {
             "kind": "short-navigation-bar",
-            "x": 0, "y": 272, "width": 360,
+            "x": 0,
+            "y": 272,
+            "width": 360,
             "nav_arrangement": "centered",
-            "icon_position": "start",
             "selected_index": 1,
             "items": [
-                { "text": "Inbox", "icon": "check", "selected_icon": "arrow_right" },
-                { "text": "Sent", "icon": "schedule" },
-                { "text": "Files", "icon": "keyboard", "enabled": false }
+                {
+                    "text": "Inbox",
+                    "icon": "check",
+                    "selected_icon": "arrow_right"
+                },
+                {
+                    "text": "Share",
+                    "icon": "schedule"
+                },
+                {
+                    "text": "Saved",
+                    "icon": "keyboard",
+                    "enabled": false
+                }
             ]
         },
         {
             "kind": "short-navigation-bar",
-            "x": 0, "y": 352, "width": 360,
+            "x": 0,
+            "y": 352,
+            "width": 360,
             "selected_index": 2,
             "items": [
-                { "text": "", "icon": "check" },
-                { "text": "", "icon": "schedule" },
-                { "text": "", "icon": "keyboard" },
-                { "text": "", "icon": "close" }
+                {
+                    "text": "",
+                    "icon": "check"
+                },
+                {
+                    "text": "",
+                    "icon": "schedule"
+                },
+                {
+                    "text": "",
+                    "icon": "keyboard"
+                },
+                {
+                    "text": "",
+                    "icon": "close"
+                }
             ]
         }
     ],
-    "trace_elements": ["navbar0", "navbar1", "navbar2", "navbar3", "navbar4"],
+    "trace_elements": [
+        "navbar0",
+        "navbar1",
+        "navbar2",
+        "navbar3",
+        "navbar4"
+    ],
     "trace_props": []
 }

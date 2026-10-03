@@ -16,6 +16,7 @@ icon-button-press-morph
 icon-button-states
 icon-buttons
 navigation-bar-select-morph
+navigation-bars-start-icons
 navigation-bars
 negative-button-focus-ring
 negative-button-press-morph
