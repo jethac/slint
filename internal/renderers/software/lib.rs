@@ -3933,6 +3933,17 @@ impl<T: ProcessScene> i_slint_core::item_rendering::ItemRenderer for SceneBuilde
             .collect();
         let Some(bounds) = contours_bounds(&contours) else { return };
 
+        // The stroke's ink reaches half a stroke width beyond the path
+        // bounds; admit it for the clip so a zero-area skeleton — a
+        // straight line is invisible itself — still draws its stroke.
+        let stroke_width = path.stroke_width().get() as f32 * scale_factor.get();
+        let stroke_color: PremultipliedRgbaColor = self.alpha_color(path.stroke().color()).into();
+        let draw_bounds = if stroke_width > 0.01 && stroke_color.alpha > 0 {
+            bounds.inflate(stroke_width / 2., stroke_width / 2.)
+        } else {
+            bounds
+        };
+
         let physical_clip =
             (self.current_state.clip.translate(self.current_state.offset.to_vector()).cast()
                 * self.scale_factor)
@@ -3940,7 +3951,7 @@ impl<T: ProcessScene> i_slint_core::item_rendering::ItemRenderer for SceneBuilde
                 .cast::<i16>()
                 .transformed(self.rotation);
 
-        let Some(clipped_geom) = bounds.round_out().cast().intersection(&physical_clip) else {
+        let Some(clipped_geom) = draw_bounds.round_out().cast().intersection(&physical_clip) else {
             return;
         };
 
@@ -3963,8 +3974,6 @@ impl<T: ProcessScene> i_slint_core::item_rendering::ItemRenderer for SceneBuilde
         }
 
         // Stroke: outline the path, then fill the outline like a fill.
-        let stroke_width = path.stroke_width().get() as f32 * scale_factor.get();
-        let stroke_color: PremultipliedRgbaColor = self.alpha_color(path.stroke().color()).into();
         if stroke_width > 0.01 && stroke_color.alpha > 0 {
             let stroke_contours = shape_raster::stroke_to_fill(
                 &contours,
