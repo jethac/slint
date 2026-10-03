@@ -347,15 +347,7 @@ fn write_parity_test(
         .replace(std::path::MAIN_SEPARATOR, "/");
     let abs = testcase.absolute_path.to_string_lossy();
 
-    let mut forwarded: Vec<String> = markers.parity.trace_props.clone();
-    for (_, names) in &markers.parity.trace_element_props {
-        for name in names {
-            if !forwarded.contains(name) {
-                forwarded.push(name.clone());
-            }
-        }
-    }
-    if forwarded.is_empty() {
+    if markers.parity.trace_props.is_empty() {
         writeln!(
             output,
             "impl TestCase {{ fn slint_parity_prop(&self, _name: &str) -> Option<crate::parity::TraceValue> {{ None }} }}"
@@ -365,7 +357,7 @@ fn write_parity_test(
             output,
             "impl TestCase {{ fn slint_parity_prop(&self, name: &str) -> Option<crate::parity::TraceValue> {{ match name {{"
         )?;
-        for prop in &forwarded {
+        for prop in &markers.parity.trace_props {
             let snake = prop.replace('-', "_");
             writeln!(output, "        \"{prop}\" => Some(self.get_{snake}().into()),")?;
         }

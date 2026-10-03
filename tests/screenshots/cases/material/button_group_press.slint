@@ -7,8 +7,8 @@
 //SIZE=340x96
 //TRACE_PROPS=g0i0_w,g0i1_w,g0i2_w,g0i1_x
 //TRACE_ELEMENTS=group0
-//TRACE_ELEMENT_PROPS=button0:button0_x:button0_y:button0_w:button0_h,button1:button1_x:button1_y:button1_w:button1_h,button2:button2_x:button2_y:button2_w:button2_h
-//MASK_INNER=button1@2000
+//TRACE_ITEMS=group0:item+indicator
+//MASK_INNER=group0item1@2000
 //XFAIL_TEXT=*1.5: issue #28: Slint ceils text layout widths where Compose keeps fractional advances
 //DENSITIES=1,2
 import "../../fonts/Roboto-VariableFont.ttf";
@@ -45,20 +45,5 @@ export component TestCase inherits MaterialWindow {
     out property <length> g0i2_w: group0.items[2].final-w;
 
     out property <length> g0i1_x: group0.items[1].x-pos;
-
-    out property <length> button0_x: group0.items[0].abs-x;
-    out property <length> button0_y: group0.items[0].abs-y;
-    out property <length> button0_w: group0.items[0].final-w;
-    out property <length> button0_h: group0.items[0].item-h;
-
-    out property <length> button1_x: group0.items[1].abs-x;
-    out property <length> button1_y: group0.items[1].abs-y;
-    out property <length> button1_w: group0.items[1].final-w;
-    out property <length> button1_h: group0.items[1].item-h;
-
-    out property <length> button2_x: group0.items[2].abs-x;
-    out property <length> button2_y: group0.items[2].abs-y;
-    out property <length> button2_w: group0.items[2].final-w;
-    out property <length> button2_h: group0.items[2].item-h;
 
 }

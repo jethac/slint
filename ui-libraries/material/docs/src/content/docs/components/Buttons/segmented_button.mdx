@@ -26,6 +26,8 @@ export component Example inherits Window {
 
 A `SegmentedButton` displays a group of related options as a single control, where only one option can be selected at a time.
 
+Deprecated by the Expressive spec and mapped here: `SegmentedButton` → [`ConnectedButtonGroup`](connected_button_group) (kept working and pixel-correct against the pin, which carries no `@Deprecated` on `SegmentedButton`). Single-select groups map `current-index`/`index-changed` to `selected-index`/`selected-index-changed` and `select(index)` to assigning `selected-index`; per-item checked state maps to `multi-select` items' `checked` flags and `item-checked-changed`.
+
 ## Properties
 
 ### current-index

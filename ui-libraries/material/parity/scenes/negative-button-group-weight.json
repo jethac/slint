@@ -1,59 +1,59 @@
 {
-    "name": "negative-button-group-weight",
-    "type": "canvas",
-    "parity": "negative",
-    "negative_note": "Slint lays the weighted group out 40px narrower \u2014 a weight split that misses the measure target must fail",
-    "size": [
-        320,
-        80
-    ],
-    "densities": [
-        1,
-        2
-    ],
-    "theme": {
-        "seed": "6750A4",
-        "variant": "tonal-spot",
-        "spec": "spec2025",
-        "platform": "phone",
-        "dark": false,
-        "contrast": 0.0
-    },
-    "fonts": {
-        "plain": "Roboto",
-        "brand": "Roboto"
-    },
-    "widgets": [
+  "name": "negative-button-group-weight",
+  "type": "canvas",
+  "parity": "negative",
+  "negative_note": "Slint lays the weighted group out 40px narrower \u2014 a weight split that misses the measure target must fail",
+  "size": [
+    320,
+    80
+  ],
+  "densities": [
+    1,
+    2
+  ],
+  "theme": {
+    "seed": "6750A4",
+    "variant": "tonal-spot",
+    "spec": "spec2025",
+    "platform": "phone",
+    "dark": false,
+    "contrast": 0.0
+  },
+  "fonts": {
+    "plain": "Roboto",
+    "brand": "Roboto"
+  },
+  "widgets": [
+    {
+      "kind": "button-group",
+      "x": 16,
+      "y": 20,
+      "width": 288,
+      "items": [
         {
-            "kind": "button-group",
-            "x": 16,
-            "y": 20,
-            "width": 288,
-            "items": [
-                {
-                    "text": "Day",
-                    "weight": 1
-                },
-                {
-                    "text": "Week",
-                    "weight": 2
-                },
-                {
-                    "text": "Month",
-                    "weight": 1
-                }
-            ],
-            "slint_overrides": {
-                "width": 248
-            }
+          "text": "Day",
+          "weight": 1
+        },
+        {
+          "text": "Week",
+          "weight": 2
+        },
+        {
+          "text": "Month",
+          "weight": 1
         }
-    ],
-    "trace_props": [
-        "g0i0_w",
-        "g0i1_w",
-        "g0i2_w"
-    ],
-    "trace_elements": [
-        "group0"
-    ]
+      ],
+      "slint_overrides": {
+        "width": 248
+      }
+    }
+  ],
+  "trace_props": [
+    "g0i0_w",
+    "g0i1_w",
+    "g0i2_w"
+  ],
+  "trace_elements": [
+    "group0"
+  ]
 }

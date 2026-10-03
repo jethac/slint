@@ -64,9 +64,6 @@ export struct ButtonGroupItem {
     w-growth: length,
     final-w: length,
     x-pos: length,
-    abs-x: length,
-    abs-y: length,
-    item-h: length,
     shown: bool = true,
 }
 
@@ -187,9 +184,6 @@ component ButtonGroupItemDelegate {
         w-growth: self.w-growth,
         final-w: self.final-w,
         x-pos: self.x-pos,
-        abs-x: self.absolute_position.x,
-        abs-y: self.absolute_position.y,
-        item-h: self.height,
         shown: self.shown,
     };
 
@@ -210,9 +204,6 @@ component ButtonGroupItemDelegate {
         if (root.model[root.index].w-growth != root.w-growth) { root.model[root.index].w-growth = root.w-growth; }
         if (root.model[root.index].final-w != root.final-w) { root.model[root.index].final-w = root.final-w; }
         if (root.model[root.index].x-pos != root.x-pos) { root.model[root.index].x-pos = root.x-pos; }
-        if (root.model[root.index].abs-x != self.absolute_position.x) { root.model[root.index].abs-x = self.absolute_position.x; }
-        if (root.model[root.index].abs-y != self.absolute_position.y) { root.model[root.index].abs-y = self.absolute_position.y; }
-        if (root.model[root.index].item-h != self.height) { root.model[root.index].item-h = self.height; }
         if (root.model[root.index].shown != root.shown) { root.model[root.index].shown = root.shown; }
     }
 
@@ -357,14 +348,6 @@ export component ButtonGroup {
         (item-count > 0 ? items[item-count - 1].cum-shown-w : 0px) + spacing * shown-count;
     out property <bool> overflow-needed:
         item-count > 0 && desired-total + spacing * max(0, item-count - 1) > root.width;
-
-    // The overflow indicator as a flat geometry — the parity harness's
-    // `//TRACE_ELEMENT_PROPS=` binds these like an item's `abs-*`/`final-w`.
-    // Zeroed while hidden so the indicator never asserts a position.
-    out property <length> indicator-x: indicator.visible ? indicator.absolute_position.x : 0px;
-    out property <length> indicator-y: indicator.visible ? indicator.absolute_position.y : 0px;
-    out property <length> indicator-w: indicator.visible ? indicator.width : 0px;
-    out property <length> indicator-h: indicator.visible ? indicator.height : 0px;
 
     // `mainAxisLayoutSize = max(mainSpace, mainAxisMin)` — the group asks for
     // the full unwrapped content width; a narrower constraint turns overflow

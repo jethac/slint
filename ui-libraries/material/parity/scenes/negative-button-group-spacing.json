@@ -1,50 +1,50 @@
 {
-    "name": "negative-button-group-spacing",
-    "type": "canvas",
-    "parity": "negative",
-    "negative_note": "Slint renders the row with zero BetweenSpace \u2014 a group whose item spacing collapses must fail",
-    "size": [
-        340,
-        96
-    ],
-    "densities": [
-        1,
-        2
-    ],
-    "theme": {
-        "seed": "6750A4",
-        "variant": "tonal-spot",
-        "spec": "spec2025",
-        "platform": "phone",
-        "dark": false,
-        "contrast": 0.0
-    },
-    "fonts": {
-        "plain": "Roboto",
-        "brand": "Roboto"
-    },
-    "widgets": [
+  "name": "negative-button-group-spacing",
+  "type": "canvas",
+  "parity": "negative",
+  "negative_note": "Slint renders the row with zero BetweenSpace \u2014 a group whose item spacing collapses must fail",
+  "size": [
+    340,
+    96
+  ],
+  "densities": [
+    1,
+    2
+  ],
+  "theme": {
+    "seed": "6750A4",
+    "variant": "tonal-spot",
+    "spec": "spec2025",
+    "platform": "phone",
+    "dark": false,
+    "contrast": 0.0
+  },
+  "fonts": {
+    "plain": "Roboto",
+    "brand": "Roboto"
+  },
+  "widgets": [
+    {
+      "kind": "button-group",
+      "x": 16,
+      "y": 28,
+      "items": [
         {
-            "kind": "button-group",
-            "x": 16,
-            "y": 28,
-            "items": [
-                {
-                    "text": "Day"
-                },
-                {
-                    "text": "Week"
-                },
-                {
-                    "text": "Month"
-                }
-            ],
-            "slint_overrides": {
-                "spacing": 0
-            }
+          "text": "Day"
+        },
+        {
+          "text": "Week"
+        },
+        {
+          "text": "Month"
         }
-    ],
-    "trace_elements": [
-        "group0"
-    ]
+      ],
+      "slint_overrides": {
+        "spacing": 0
+      }
+    }
+  ],
+  "trace_elements": [
+    "group0"
+  ]
 }

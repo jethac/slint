@@ -1,73 +1,83 @@
 {
-    "name": "button-group",
-    "type": "canvas",
-    "parity": "motion",
-    "size": [
-        400,
-        140
-    ],
-    "densities": [
-        1,
-        2
-    ],
-    "theme": {
-        "seed": "6750A4",
-        "variant": "tonal-spot",
-        "spec": "spec2025",
-        "platform": "phone",
-        "dark": false,
-        "contrast": 0.0
-    },
-    "fonts": {
-        "plain": "Roboto",
-        "brand": "Roboto"
-    },
-    "widgets": [
+  "name": "button-group",
+  "type": "canvas",
+  "parity": "motion",
+  "size": [
+    400,
+    140
+  ],
+  "densities": [
+    1,
+    2
+  ],
+  "theme": {
+    "seed": "6750A4",
+    "variant": "tonal-spot",
+    "spec": "spec2025",
+    "platform": "phone",
+    "dark": false,
+    "contrast": 0.0
+  },
+  "fonts": {
+    "plain": "Roboto",
+    "brand": "Roboto"
+  },
+  "widgets": [
+    {
+      "kind": "button-group",
+      "x": 16,
+      "y": 24,
+      "items": [
         {
-            "kind": "button-group",
-            "x": 16,
-            "y": 24,
-            "items": [
-                {
-                    "text": "Day"
-                },
-                {
-                    "text": "Week"
-                },
-                {
-                    "text": "Month"
-                }
-            ]
+          "text": "Day"
         },
         {
-            "kind": "button-group",
-            "x": 16,
-            "y": 80,
-            "items": [
-                {
-                    "text": "Day",
-                    "icon": "calendar_today"
-                },
-                {
-                    "text": "Week",
-                    "icon": "schedule"
-                },
-                {
-                    "text": "Month",
-                    "icon": "edit"
-                }
-            ]
+          "text": "Week"
+        },
+        {
+          "text": "Month"
         }
+      ]
+    },
+    {
+      "kind": "button-group",
+      "x": 16,
+      "y": 80,
+      "items": [
+        {
+          "text": "Day",
+          "icon": "calendar_today"
+        },
+        {
+          "text": "Week",
+          "icon": "schedule"
+        },
+        {
+          "text": "Month",
+          "icon": "edit"
+        }
+      ]
+    }
+  ],
+  "trace_elements": [
+    "group0",
+    "group1",
+    "group0item0",
+    "group0item1",
+    "group0item2",
+    "group1item0",
+    "group1item1",
+    "group1item2"
+  ],
+  "xfail_text": "*1.5: issue #28: Slint ceils text layout widths where Compose keeps fractional advances",
+  "trace_items": {
+    "group0": [
+      "item",
+      "indicator"
     ],
-    "trace_elements": [
-        "group0",
-        "group1",
-        "button0",
-        "button1",
-        "button2",
-        "button4",
-        "button5",
-        "button6"
-    ],
-    "xfail_text": "*1.5: issue #28: Slint ceils text layout widths where Compose keeps fractional advances"
+    "group1": [
+      "item",
+      "indicator"
+    ]
+  }
 }
