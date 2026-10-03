@@ -110,6 +110,13 @@ fn rect_with_radius_to_path(
     let y = rect.origin.y;
     let width = rect.size.width;
     let height = rect.size.height;
+    // Clamp every corner to half the shorter side like the software
+    // renderer and `ElementOutline` do. `rounded_rect_varying` otherwise
+    // follows the CSS overlapping-curves rule and shrinks all radii
+    // together when two corners overflow a side.
+    let border_radius = border_radius
+        .min(PhysicalBorderRadius::from_length(PhysicalLength::new(width / 2.)))
+        .min(PhysicalBorderRadius::from_length(PhysicalLength::new(height / 2.)));
     if let Some(border_radius) = border_radius.as_uniform() {
         // If we're drawing a circle, use directly connected bezier curves instead of
         // ones with intermediate LineTo verbs, as `rounded_rect` creates, to avoid

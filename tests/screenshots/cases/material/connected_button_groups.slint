@@ -1,0 +1,142 @@
+// Copyright © SixtyFPS GmbH <info@slint.dev>
+// SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0
+
+// Scene: connected-button-groups — generated from `ui-libraries/material/parity/scenes/connected-button-groups.json`
+// (edit the scene, regenerate with `cargo run -p material-parity-generator`).
+//PARITY=static
+//SIZE=560x560
+//TRACE_ELEMENTS=group0,group1,group2,group3,group4,group5,button0,button1,button2
+//TRACE_ITEMS=group0:item+radio-item,group1:item+radio-item,group2:item+radio-item,group3:item+radio-item,group4:item+radio-item,group5:item+radio-item
+//ACTION=key:Tab
+//ACTION=key:Tab
+//MASK_DECOR=button0@0,2000
+//MASK_DECOR=button1@0,2000
+//MASK_DECOR=button2@0,2000
+//MASK_DECOR=group0@0,2000
+//MASK_DECOR=group0item0@0,2000
+//MASK_DECOR=group0item1+14@0,2000
+//MASK_DECOR=group0item2@0,2000
+//MASK_DECOR=group1@0,2000
+//MASK_DECOR=group1item0@0,2000
+//MASK_DECOR=group1item1@0,2000
+//MASK_DECOR=group1item2@0,2000
+//MASK_DECOR=group1item3@0,2000
+//MASK_DECOR=group2@0,2000
+//MASK_DECOR=group2item0@0,2000
+//MASK_DECOR=group2item1@0,2000
+//MASK_DECOR=group2item2@0,2000
+//MASK_DECOR=group3@0,2000
+//MASK_DECOR=group3item0@0,2000
+//MASK_DECOR=group3item1@0,2000
+//MASK_DECOR=group3item2@0,2000
+//MASK_DECOR=group4@0,2000
+//MASK_DECOR=group4item0@0,2000
+//MASK_DECOR=group4item1@0,2000
+//MASK_DECOR=group4item2@0,2000
+//MASK_DECOR=group5@0,2000
+//MASK_DECOR=group5item0@0,2000
+//MASK_DECOR=group5item1@0,2000
+//MASK_DECOR=group5item2@0,2000
+//XFAIL_TEXT=issue #28: Slint ceils text layout widths where Compose keeps fractional advances
+//DENSITIES=1,2
+import "../../fonts/Roboto-VariableFont.ttf";
+import { ConnectedButton, ConnectedButtonGroup, ConnectedButtonPosition, Icons, MaterialPalette, MaterialTheme, MaterialWindow, VerticalConnectedButtonGroup } from "@material";
+
+export component TestCase inherits MaterialWindow {
+    init => {
+        // The scene pins seed #6750A4, tonal-spot, spec2025, light, contrast 0
+        // (all the library defaults; restated here so a default change can't
+        // silently move the parity baseline).
+        MaterialTheme.seed-color = #6750A4;
+        MaterialTheme.dark = false;
+        MaterialTheme.contrast-level = 0;
+        MaterialTheme.use-platform-color = false;
+        MaterialTheme.plain-family = "Roboto";
+        MaterialTheme.brand-family = "Roboto";
+        // Compose builds its scene scheme from the same seed — use the
+        // runtime-generated scheme, not the static expressive table.
+        MaterialPalette.dynamic = true;
+    }
+
+    group0 := ConnectedButtonGroup {
+        x: 16px;
+        y: 20px;
+        items: [{ icon: @image-url(""), checked_icon: @image-url(""), text: "Day", tooltip: "", disabled: false, checked: false }, { icon: @image-url(""), checked_icon: @image-url(""), text: "Week", tooltip: "", disabled: false, checked: false }, { icon: @image-url(""), checked_icon: @image-url(""), text: "Month", tooltip: "", disabled: false, checked: false }];
+        selected_index: 1;
+        enforce_touch_target: false;
+    }
+
+    group1 := ConnectedButtonGroup {
+        x: 16px;
+        y: 84px;
+        items: [{ icon: @image-url(""), checked_icon: @image-url(""), text: "Mon", tooltip: "", disabled: false, checked: true }, { icon: @image-url(""), checked_icon: @image-url(""), text: "Tue", tooltip: "", disabled: false, checked: false }, { icon: @image-url(""), checked_icon: @image-url(""), text: "Wed", tooltip: "", disabled: false, checked: true }, { icon: @image-url(""), checked_icon: @image-url(""), text: "Thu", tooltip: "", disabled: false, checked: false }];
+        multi_select: true;
+        selected_index: -1;
+        enforce_touch_target: false;
+    }
+
+    group2 := ConnectedButtonGroup {
+        x: 16px;
+        y: 148px;
+        items: [{ icon: Icons.edit, checked_icon: Icons.check, text: "Edit", tooltip: "", disabled: false, checked: false }, { icon: Icons.menu, checked_icon: Icons.check, text: "Save", tooltip: "", disabled: false, checked: false }, { icon: Icons.arrow_right, checked_icon: Icons.check, text: "Go", tooltip: "", disabled: false, checked: false }];
+        selected_index: 2;
+        simulate_hover_index: 2;
+        enforce_touch_target: false;
+    }
+
+    group3 := ConnectedButtonGroup {
+        x: 16px;
+        y: 212px;
+        items: [{ icon: @image-url(""), checked_icon: @image-url(""), text: "One", tooltip: "", disabled: false, checked: false }, { icon: @image-url(""), checked_icon: @image-url(""), text: "Two", tooltip: "", disabled: false, checked: false }, { icon: @image-url(""), checked_icon: @image-url(""), text: "Three", tooltip: "", disabled: false, checked: false }];
+        selected_index: -1;
+        simulate_press_index: 1;
+        enforce_touch_target: false;
+    }
+
+    group4 := ConnectedButtonGroup {
+        x: 16px;
+        y: 276px;
+        items: [{ icon: @image-url(""), checked_icon: @image-url(""), text: "Yes", tooltip: "", disabled: false, checked: false }, { icon: @image-url(""), checked_icon: @image-url(""), text: "No", tooltip: "", disabled: true, checked: false }, { icon: @image-url(""), checked_icon: @image-url(""), text: "Maybe", tooltip: "", disabled: false, checked: false }];
+        selected_index: 0;
+        enforce_touch_target: false;
+    }
+
+    group5 := VerticalConnectedButtonGroup {
+        x: 16px;
+        y: 340px;
+        items: [{ icon: @image-url(""), checked_icon: @image-url(""), text: "Top", tooltip: "", disabled: false, checked: false }, { icon: @image-url(""), checked_icon: @image-url(""), text: "Mid", tooltip: "", disabled: false, checked: false }, { icon: @image-url(""), checked_icon: @image-url(""), text: "Bot", tooltip: "", disabled: false, checked: false }];
+        selected_index: 0;
+        enforce_touch_target: false;
+    }
+
+    button0 := ConnectedButton {
+        x: 300px;
+        y: 340px;
+        position: ConnectedButtonPosition.start;
+        text: "Start";
+        width: 80px;
+        enforce_touch_target: false;
+    }
+
+    button1 := ConnectedButton {
+        x: 300px;
+        y: 404px;
+        position: ConnectedButtonPosition.middle;
+        text: "Mid";
+        icon: Icons.edit;
+        checked_icon: Icons.check;
+        checked: true;
+        width: 90px;
+        enforce_touch_target: false;
+    }
+
+    button2 := ConnectedButton {
+        x: 300px;
+        y: 468px;
+        position: ConnectedButtonPosition.end;
+        text: "End";
+        width: 80px;
+        enforce_touch_target: false;
+    }
+
+}

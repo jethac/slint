@@ -51,6 +51,21 @@ use std::io::Write;
 use std::path::{Path, PathBuf};
 use test_driver_lib::{ParityAction, ParityMarkers};
 
+/// `<container>item<i>` — the repeated-child convention `//TRACE_ITEMS=`
+/// emits (`group0item0`) and the Compose emitter's `track` tags share.
+fn parse_item_ref(id: &str) -> Option<(String, usize)> {
+    let digits = id.len() - id.trim_end_matches(|c: char| c.is_ascii_digit()).len();
+    if digits == 0 {
+        return None;
+    }
+    let (stem, num) = id.split_at(id.len() - digits);
+    let container = stem.strip_suffix("item")?;
+    if container.is_empty() {
+        return None;
+    }
+    Some((container.to_string(), num.parse().ok()?))
+}
+
 /// Strict layer: maximum absolute per-channel difference allowed on
 /// non-text pixels. 8 is well below the channel difference any wrong
 /// token (color role, corner radius, size) produces, and above the
@@ -393,6 +408,17 @@ impl PixelMask {
             let outer = r.dilated(margin);
             let inner =
                 PxRect { x0: r.x0 + inset, y0: r.y0 + inset, x1: r.x1 - inset, y1: r.y1 - inset };
+            // `//MASK_DECOR=` widens the masked zone inside the outline too:
+            // inset decorations (a focus ring's inner strokes, which reach
+            // only `inner_stroke_inset + inner_stroke_width` under the edge)
+            // share the bounds' drift exactly like the outline itself does,
+            // so the decor band applies both ways, not just outward.
+            let inner_decor = PxRect {
+                x0: r.x0 + margin,
+                y0: r.y0 + margin,
+                x1: r.x1 - margin,
+                y1: r.y1 - margin,
+            };
             for y in outer.y0.floor().max(0.0) as usize..(outer.y1.ceil() as usize).min(self.h) {
                 for x in outer.x0.floor().max(0.0) as usize..(outer.x1.ceil() as usize).min(self.w)
                 {
@@ -425,10 +451,18 @@ impl PixelMask {
                                 self.set(x, y, PixelClass::Strict)
                             }
                         }
-                        Some(_) => {}
-                        None if !inner.contains(px, py) => {
+                        // For a decor element, decorations inset from the
+                        // outline (a focus ring's strokes) share the bounds'
+                        // drift exactly like the outline itself does, so the
+                        // widened inner band applies inside the corner zones
+                        // too — deeper cells keep their class.
+                        Some(CornerCell::Inside)
+                            if !corners_strict && !inner_decor.contains(px, py) =>
+                        {
                             self.set(x, y, PixelClass::Skip)
                         }
+                        Some(_) => {}
+                        None if !inner.contains(px, py) => self.set(x, y, PixelClass::Skip),
                         _ => {}
                     }
                 }
@@ -687,8 +721,7 @@ fn layered_compare(
         // cell, so nearly every inked pixel can be an outlier by the end of
         // a longer run — still bounded, so a cell of wholly-missing ink
         // keeps failing.
-        let outlier_fraction =
-            TEXT_OUTLIER_FRACTION * (text_cell_eps / TEXT_CELL_EPS);
+        let outlier_fraction = TEXT_OUTLIER_FRACTION * (text_cell_eps / TEXT_CELL_EPS);
         if mean > text_cell_eps || *outliers as f64 > *count as f64 * outlier_fraction {
             text_failures.push(format!(
                 "text cell {cell}: mean diff {mean:.1} (max {text_cell_eps:.0}), {outliers}/{count} outliers"
@@ -829,8 +862,7 @@ pub fn capture_trace<C: i_slint_core::api::ComponentHandle>(
     spec: &ParityMarkers,
     prop_value: &PropGetter<C>,
 ) -> TraceFrame {
-    let mut frame = TraceFrame::default();
-    frame.t_ms = t_ms;
+    let mut frame = TraceFrame { t_ms, ..Default::default() };
     for name in &spec.trace_props {
         match prop_value(component, name) {
             Some(v) => {
@@ -869,6 +901,57 @@ pub fn capture_trace<C: i_slint_core::api::ComponentHandle>(
                 handle.computed_opacity() as f64,
             ],
         );
+    }
+    for (container, locals) in &spec.trace_items {
+        let container_owned = container.clone();
+        let container_handle = i_slint_backend_testing::ElementQuery::from_root(component)
+            .match_predicate(move |e| {
+                e.id()
+                    .map(|candidate| {
+                        let candidate = candidate.as_str();
+                        candidate == container_owned
+                            || candidate.ends_with(&format!("::{container_owned}"))
+                    })
+                    .unwrap_or(false)
+            })
+            .find_first();
+        let Some(container_handle) = container_handle else {
+            panic!("TRACE_ITEMS names container '{container}' but no element has that id")
+        };
+        let suffixes: Vec<String> = locals.iter().map(|l| format!("::{l}")).collect();
+        let handles = container_handle
+            .query_descendants()
+            .match_predicate(move |e| {
+                e.id()
+                    .map(|id| suffixes.iter().any(|s| id.as_str().ends_with(s.as_str())))
+                    .unwrap_or(false)
+            })
+            .find_all();
+        let local = &locals[0];
+        if handles.is_empty() {
+            let mut seen = Vec::new();
+            let _: Option<()> = container_handle.visit_descendants(|e| {
+                seen.push(format!("{:?}", e.id()));
+                std::ops::ControlFlow::Continue(())
+            });
+            panic!(
+                "TRACE_ITEMS names '{container}:{local}' but no such child exists; descendants: {seen:?}"
+            )
+        }
+        for (i, handle) in handles.iter().enumerate() {
+            let pos = handle.absolute_position();
+            let size = handle.size();
+            frame.elements.insert(
+                format!("{container}{local}{i}"),
+                [
+                    pos.x as f64,
+                    pos.y as f64,
+                    size.width as f64,
+                    size.height as f64,
+                    handle.computed_opacity() as f64,
+                ],
+            );
+        }
     }
     frame
 }
@@ -961,11 +1044,11 @@ fn settle_time_ms(frames: &[TraceFrame]) -> Option<u64> {
             }
         }
         for (id, geo) in &frame.elements {
-            if let Some(end) = last.elements.get(id) {
-                if geo.iter().zip(end).any(|(a, b)| (a - b).abs() > SETTLE_EPS) {
-                    settle = frame.t_ms;
-                    moved = true;
-                }
+            if let Some(end) = last.elements.get(id)
+                && geo.iter().zip(end).any(|(a, b)| (a - b).abs() > SETTLE_EPS)
+            {
+                settle = frame.t_ms;
+                moved = true;
             }
         }
     }
@@ -1054,9 +1137,8 @@ pub fn compare_traces(
     // millisecond, so a missing frame is itself a finding, not something to
     // approximate by a neighbor. The measured clock offset is reported below
     // for the xfail note; it is never applied to the comparison.
-    let compose_at = |t: u64| -> Vec<&serde_json::Value> {
-        by_time.get(&t).copied().into_iter().collect()
-    };
+    let compose_at =
+        |t: u64| -> Vec<&serde_json::Value> { by_time.get(&t).copied().into_iter().collect() };
 
     // The hinted drift `|w - unhinted advance|` of `text:<N>` is a constant
     // of the string, face and density — `onTextLayout` hasn't run yet on the
@@ -1066,9 +1148,7 @@ pub fn compare_traces(
     for cf in &frames {
         if let Some(texts) = cf["text"].as_object() {
             for (tid, m) in texts {
-                let Some(unhinted) =
-                    m["unhint_w"].as_f64().or_else(|| m["frac_w"].as_f64())
-                else {
+                let Some(unhinted) = m["unhint_w"].as_f64().or_else(|| m["frac_w"].as_f64()) else {
                     continue;
                 };
                 let d = (m["w"].as_f64().unwrap_or(unhinted) - unhinted).abs();
@@ -1126,10 +1206,50 @@ pub fn compare_traces(
                 _ => {}
             }
         }
+        // The text a traced item's bounds contain: its label's hinted drift
+        // bounds how far the item's own `w` may diverge, and a row of items
+        // shifts each following item's `x` by the summed label drift of the
+        // items before it.
+        let drift_inside = |cf: &serde_json::Value, rect: &serde_json::Value| -> f64 {
+            let (Some(rx), Some(ry), Some(rw), Some(rh)) =
+                (rect["x"].as_f64(), rect["y"].as_f64(), rect["w"].as_f64(), rect["h"].as_f64())
+            else {
+                return 0.0;
+            };
+            let Some(texts) = cf["text"].as_object() else { return 0.0 };
+            for (tid, m) in texts {
+                let (Some(x), Some(y), Some(w), Some(h)) =
+                    (m["x"].as_f64(), m["y"].as_f64(), m["w"].as_f64(), m["h"].as_f64())
+                else {
+                    continue;
+                };
+                let (cx, cy) = (x + w / 2.0, y + h / 2.0);
+                if cx >= rx && cx <= rx + rw && cy >= ry && cy <= ry + rh {
+                    return text_drift.get(tid).copied().unwrap_or(0.0);
+                }
+            }
+            0.0
+        };
+        // `<container>item<i>`: summed hinted drift of the labels inside the
+        // same container's items `0..i` — the slack `x` of item `i` inherits.
+        let item_x_eps = |cf: &serde_json::Value, container: &str, idx: usize| -> f64 {
+            let Some(elements) = cf["elements"].as_object() else { return GEOM_EPS };
+            let mut eps = GEOM_EPS;
+            for k in 0..idx {
+                let key = format!("{container}item{k}");
+                if let Some(rect) = elements.get(&key) {
+                    eps += drift_inside(cf, rect) + 1.15;
+                }
+            }
+            eps
+        };
         for (id, geo) in &frame.elements {
+            let item_ref = parse_item_ref(id);
             // An element named `button<N>` (or any `*<N>`) sizes itself to
             // `text:<N>`: its w legitimately differs by that text's hinting
-            // drift, bounded here instead of pixel-strict.
+            // drift, bounded here instead of pixel-strict. A `<c>item<i>`
+            // element instead sizes to the text inside its own bounds, and a
+            // container `<c>` widens its w bound by every item's drift.
             let drift = id
                 .chars()
                 .rev()
@@ -1138,20 +1258,44 @@ pub fn compare_traces(
                 .chars()
                 .rev()
                 .collect::<String>();
-            let drift_eps = || -> f64 {
-                text_drift.get(&format!("text:{drift}")).copied().unwrap_or(0.0)
-                    + GEOM_EPS
-                    + 1.0
+            let drift_eps = |cf: &serde_json::Value| -> f64 {
+                if item_ref.is_some() {
+                    return cf["elements"]
+                        .get(id)
+                        .map(|rect| drift_inside(cf, rect))
+                        .unwrap_or(0.0)
+                        + GEOM_EPS
+                        + 1.0;
+                }
+                if let Some(elements) = cf["elements"].as_object()
+                    && elements.keys().any(|k| k.starts_with(&format!("{id}item")))
+                {
+                    return elements
+                        .keys()
+                        .filter(|k| k.starts_with(&format!("{id}item")))
+                        .fold(GEOM_EPS, |eps, k| eps + drift_inside(cf, &elements[k]) + 1.15);
+                }
+                text_drift.get(&format!("text:{drift}")).copied().unwrap_or(0.0) + GEOM_EPS + 1.0
             };
             let mut best: Option<(&serde_json::Value, f64, u64)> = None;
             for cf in &candidates {
                 let Some(ce) = cf["elements"].get(id) else { continue };
-                let w_eps = if drift.is_empty() { GEOM_EPS } else { drift_eps() };
+                let w_eps = if drift.is_empty() { GEOM_EPS } else { drift_eps(cf) };
+                let x_eps = item_ref
+                    .as_ref()
+                    .map(|(container, idx)| item_x_eps(cf, container, *idx))
+                    .unwrap_or(GEOM_EPS);
                 let err: f64 = ["x", "y", "w", "h", "opacity"]
                     .iter()
                     .enumerate()
                     .filter_map(|(i, key)| {
-                        let eps = if *key == "w" { w_eps } else { GEOM_EPS };
+                        let eps = if *key == "w" {
+                            w_eps
+                        } else if *key == "x" {
+                            x_eps
+                        } else {
+                            GEOM_EPS
+                        };
                         ce[key].as_f64().map(|e| (geo[i] - e).abs() / eps.max(GEOM_EPS))
                     })
                     .fold(0.0, f64::max);
@@ -1164,10 +1308,20 @@ pub fn compare_traces(
                     .push(format!("t={}ms element '{id}' missing from Compose trace", frame.t_ms)),
                 Some((cf, err, ct)) if err > 1.0 => {
                     let ce = &cf["elements"][id];
-                    let w_eps = if drift.is_empty() { GEOM_EPS } else { drift_eps() };
+                    let w_eps = if drift.is_empty() { GEOM_EPS } else { drift_eps(cf) };
+                    let x_eps = item_ref
+                        .as_ref()
+                        .map(|(container, idx)| item_x_eps(cf, container, *idx))
+                        .unwrap_or(GEOM_EPS);
                     for (i, key) in ["x", "y", "w", "h", "opacity"].iter().enumerate() {
                         let Some(e) = ce[key].as_f64() else { continue };
-                        let eps = if *key == "w" { w_eps } else { GEOM_EPS };
+                        let eps = if *key == "w" {
+                            w_eps
+                        } else if *key == "x" {
+                            x_eps
+                        } else {
+                            GEOM_EPS
+                        };
                         if (geo[i] - e).abs() > eps {
                             errors.push(format!(
                                 "t={}ms element '{id}'.{key}: slint {} vs compose@{ct}ms {e} (eps {eps:.2})",
@@ -1323,11 +1477,31 @@ fn compare_text_metrics<C: i_slint_core::api::ComponentHandle>(
             }
 
             // Label placement inside its container: compare the text's x
-            // offset within the element `button<N>` (or `*<N>`) that holds
-            // it on both sides — the container widths legitimately differ
-            // by the summed hinting drift, so absolute centers would carry
-            // half of it. Falls back to absolute center without a container.
-            let container = format!("button{n}");
+            // offset within the element that holds it on both sides — the
+            // container widths legitimately differ by the summed hinting
+            // drift, so absolute centers would carry half of it. The
+            // container is the `*item*` element whose bounds contain the
+            // text (a `group{n}item{i}` inside a connected button group),
+            // else `button<N>` (or `*<N>`), else absolute center.
+            let container = cf["elements"]
+                .as_object()
+                .and_then(|elements| {
+                    elements.iter().find_map(|(eid, ce)| {
+                        parse_item_ref(eid)?;
+                        let (Some(ex), Some(ey), Some(ew), Some(eh)) = (
+                            ce["x"].as_f64(),
+                            ce["y"].as_f64(),
+                            ce["w"].as_f64(),
+                            ce["h"].as_f64(),
+                        ) else {
+                            return None;
+                        };
+                        let (mx, my) = (cx + cw / 2.0, m["y"].as_f64()? + m["h"].as_f64()? / 2.0);
+                        (mx >= ex && mx <= ex + ew && my >= ey && my <= ey + eh)
+                            .then(|| eid.clone())
+                    })
+                })
+                .unwrap_or_else(|| format!("button{n}"));
             let slint_off = frame.elements.get(&container).map(|g| sx - g[0]);
             let compose_off =
                 cf["elements"].get(&container).and_then(|ce| ce["x"].as_f64()).map(|bx| cx - bx);
@@ -1587,8 +1761,7 @@ fn build_frame_mask<C: i_slint_core::api::ComponentHandle>(
                 x1: (geo[0] + geo[2]) * d,
                 y1: (geo[1] + geo[3]) * d,
             };
-            let compose_rect =
-                PxRect { x0: x * d, y0: y * d, x1: (x + w) * d, y1: (y + h) * d };
+            let compose_rect = PxRect { x0: x * d, y0: y * d, x1: (x + w) * d, y1: (y + h) * d };
             if inner_masked.contains(id) {
                 // `//MASK_INNER=` — overlay ink (the ripple) is mid-animation
                 // at this timestamp: skip the element interior. Ripple ink
@@ -1607,10 +1780,7 @@ fn build_frame_mask<C: i_slint_core::api::ComponentHandle>(
                     PixelClass::Skip,
                 );
             }
-            let decor_margin = decor_masked
-                .iter()
-                .find(|(did, _)| did == id)
-                .map(|(_, m)| *m);
+            let decor_margin = decor_masked.iter().find(|(did, _)| did == id).map(|(_, m)| *m);
             mask.mark_element(
                 slint_rect,
                 compose_rect,
@@ -1690,8 +1860,7 @@ fn corner_silhouette_findings(
         };
         let r_pill = u.width().min(u.height()) / 2.0;
         let zone = r_pill + margin;
-        for (along_x, side) in
-            [(true, "left"), (true, "right"), (false, "top"), (false, "bottom")]
+        for (along_x, side) in [(true, "left"), (true, "right"), (false, "top"), (false, "bottom")]
         {
             // Scan each boundary side inward from just outside each render's
             // own bound: the outside origin, the inward step, the scan's
@@ -1759,9 +1928,7 @@ fn corner_silhouette_findings(
                         while (p - p_end) * step <= 0 {
                             let cell = if along_x { get(img, p, f) } else { get(img, f, p) };
                             match cell {
-                                Some(c) if channel_diff(&c, outside) > eps => {
-                                    return Some(p)
-                                }
+                                Some(c) if channel_diff(&c, outside) > eps => return Some(p),
                                 Some(_) => p += step,
                                 None => break,
                             }
@@ -1924,16 +2091,13 @@ pub fn run_parity_case<C: i_slint_core::api::ComponentHandle>(
             .as_ref()
             .and_then(|c| c["frames"].as_array().and_then(|f| f.last()))
             .and_then(|f| f["elements"].as_object())
-            .map(|els| {
+            .and_then(|els| {
                 let mut u: Option<PxRect> = None;
                 for id in &spec.trace_elements {
                     let Some(e) = els.get(id) else { continue };
-                    let (Some(x), Some(y), Some(w), Some(h)) = (
-                        e["x"].as_f64(),
-                        e["y"].as_f64(),
-                        e["w"].as_f64(),
-                        e["h"].as_f64(),
-                    ) else {
+                    let (Some(x), Some(y), Some(w), Some(h)) =
+                        (e["x"].as_f64(), e["y"].as_f64(), e["w"].as_f64(), e["h"].as_f64())
+                    else {
                         continue;
                     };
                     let r = PxRect {
@@ -1953,8 +2117,7 @@ pub fn run_parity_case<C: i_slint_core::api::ComponentHandle>(
                     });
                 }
                 u.map(|u| u.dilated((DECORATION_MARGIN_DP + 4.0) * *density as f64))
-            })
-            .flatten();
+            });
 
         // The actions are input delivered at t=0: the frame at the first time
         // captures the pre-gesture state, so they dispatch right after it.
@@ -1982,8 +2145,7 @@ pub fn run_parity_case<C: i_slint_core::api::ComponentHandle>(
         // the first post-action frame's coverage per element.
         let mut baseline_actual: Option<SharedPixelBuffer<Rgba8Pixel>> = None;
         let mut baseline_expected: Option<SharedPixelBuffer<Rgba8Pixel>> = None;
-        let mut early_coverage: std::collections::HashMap<String, (f64, f64)> =
-            Default::default();
+        let mut early_coverage: std::collections::HashMap<String, (f64, f64)> = Default::default();
         for &t in &times {
             // Actions timed inside the frame sequence fire at their own
             // clock time before this frame renders.
@@ -2055,9 +2217,14 @@ pub fn run_parity_case<C: i_slint_core::api::ComponentHandle>(
             // divergence the trace layer already grants it. The drift is a
             // constant logical-px error per advance, so its device-px
             // magnitude scales with the scene density: at 2x a barely-1dp
-            // shift lands ~2 device px inside the cell.
+            // shift lands ~2 device px inside the cell. And where a label's
+            // position follows the width of preceding siblings — every item
+            // of a button-group row centering its own label — the per-advance
+            // error accumulates into the label's placement before the glyph
+            // even starts, so the relaxation needs headroom past the
+            // single-label 1.25×.
             let text_cell_eps = if spec.xfail_text.is_some() {
-                TEXT_CELL_EPS * 1.25 * *density as f64
+                TEXT_CELL_EPS * 1.5 * *density as f64
             } else {
                 TEXT_CELL_EPS
             };
@@ -2066,8 +2233,7 @@ pub fn run_parity_case<C: i_slint_core::api::ComponentHandle>(
             strict_caught += result.strict_failures;
             xfail_text_pixels_used |= result.text_cells_relaxed > 0;
             if negative
-                && (region.map_or(result.strict_failures, |_| result.strict_failures_in_region)
-                    > 0)
+                && (region.map_or(result.strict_failures, |_| result.strict_failures_in_region) > 0)
             {
                 caught_at_density[di] = true;
             }
@@ -2085,119 +2251,107 @@ pub fn run_parity_case<C: i_slint_core::api::ComponentHandle>(
             // while every unmarked case runs the check strictly on all
             // drivers. Negative cases run it strictly regardless: a defect
             // finding inside the mutated region counts wherever it fires.
-            if !inner_masked.is_empty() {
-                if let Some(compose_elements) = compose
+            if !inner_masked.is_empty()
+                && let Some(compose_elements) = compose
                     .as_ref()
                     .and_then(|c| compose_frame_at(c, t))
                     .and_then(|cf| cf["elements"].as_object())
-                {
-                    let d = *density as f64;
-                    let slint_frame = frames.last().unwrap();
-                    let pairs: Vec<(PxRect, PxRect, String)> = inner_masked
-                        .iter()
-                        .filter_map(|id| {
-                            let geo = slint_frame.elements.get(id)?;
-                            let ce = compose_elements.get(id)?;
-                            let (x, y, w, h) = (
-                                ce["x"].as_f64()?,
-                                ce["y"].as_f64()?,
-                                ce["w"].as_f64()?,
-                                ce["h"].as_f64()?,
-                            );
-                            Some((
-                                PxRect {
-                                    x0: geo[0] * d,
-                                    y0: geo[1] * d,
-                                    x1: (geo[0] + geo[2]) * d,
-                                    y1: (geo[1] + geo[3]) * d,
-                                },
-                                PxRect {
-                                    x0: x * d,
-                                    y0: y * d,
-                                    x1: (x + w) * d,
-                                    y1: (y + h) * d,
-                                },
-                                id.clone(),
-                            ))
-                        })
-                        .collect();
-                    for (msg, sx, sy) in corner_silhouette_findings(
-                        &actual,
-                        &expected,
-                        &pairs,
-                        DECORATION_MARGIN_DP * d,
-                        pixel_eps,
-                    ) {
-                        strict_caught += 1;
-                        if driver == "software" && !negative && spec.xfail_silhouette.is_some() {
-                            silhouette_xfail += 1;
-                            silhouette_xfail_total += 1;
-                            continue;
-                        }
-                        silhouette_failed = true;
-                        if negative && region.map_or(true, |r| r.contains(sx, sy)) {
-                            caught_at_density[di] = true;
-                        }
-                        failures.push(format!("d{density} t={tag}: {msg}"));
+            {
+                let d = *density as f64;
+                let slint_frame = frames.last().unwrap();
+                let pairs: Vec<(PxRect, PxRect, String)> = inner_masked
+                    .iter()
+                    .filter_map(|id| {
+                        let geo = slint_frame.elements.get(id)?;
+                        let ce = compose_elements.get(id)?;
+                        let (x, y, w, h) = (
+                            ce["x"].as_f64()?,
+                            ce["y"].as_f64()?,
+                            ce["w"].as_f64()?,
+                            ce["h"].as_f64()?,
+                        );
+                        Some((
+                            PxRect {
+                                x0: geo[0] * d,
+                                y0: geo[1] * d,
+                                x1: (geo[0] + geo[2]) * d,
+                                y1: (geo[1] + geo[3]) * d,
+                            },
+                            PxRect { x0: x * d, y0: y * d, x1: (x + w) * d, y1: (y + h) * d },
+                            id.clone(),
+                        ))
+                    })
+                    .collect();
+                for (msg, sx, sy) in corner_silhouette_findings(
+                    &actual,
+                    &expected,
+                    &pairs,
+                    DECORATION_MARGIN_DP * d,
+                    pixel_eps,
+                ) {
+                    strict_caught += 1;
+                    if driver == "software" && !negative && spec.xfail_silhouette.is_some() {
+                        silhouette_xfail += 1;
+                        silhouette_xfail_total += 1;
+                        continue;
                     }
-                    // `//MASK_INNER=` skips the ripple ink's coverage
-                    // entirely — the circle's shape and growth rate differ
-                    // legitimately between engines. What cannot differ is
-                    // that it grows: an instantly full-size ripple (the
-                    // f579301e2 defect) covers ~the whole interior from the
-                    // first post-action frame. Measure each image's ink
-                    // coverage against its own baseline, and require the
-                    // first post-action frame to sit well below the settled
-                    // coverage. Layoutlib's recorded ripple fades early on
-                    // Compose, so the bound applies only where the settle
-                    // frame proves ink actually reached the interior.
-                    //
-                    // The metric is coverage *against the baseline frame* —
-                    // it isolates ink only where ink is the only interior
-                    // change. Motion scenes (and mutated negative cases built
-                    // on them) animate the container shape on the same frames,
-                    // so coverage at the first post-action frame is dominated
-                    // by the morph, not the ripple — skip it there.
-                    let morphs = matches!(
-                        spec.parity.as_deref(),
-                        Some("motion") | Some("negative")
-                    );
-                    if let (Some(ba), Some(be), false) =
-                        (&baseline_actual, &baseline_expected, morphs)
-                    {
-                        for (slint_r, compose_r, id) in &pairs {
-                            let inset = CORNER_BAND + 2.0 * d;
-                            let ca = ink_coverage(&actual, ba, slint_r, inset, pixel_eps);
-                            let ce = ink_coverage(&expected, be, compose_r, inset, pixel_eps);
-                            if Some(&t) == times.get(1) {
-                                early_coverage.insert(id.clone(), (ca, ce));
-                            }
-                            if t == *times.last().unwrap() {
-                                let Some(&(early_a, early_c)) = early_coverage.get(id)
-                                else {
-                                    continue;
-                                };
-                                for (early, cov, img_name) in
-                                    [(early_a, ca, "slint"), (early_c, ce, "compose")]
-                                {
-                                    if cov > INK_SETTLED_MIN && early > cov - INK_GROWTH_MARGIN
+                    silhouette_failed = true;
+                    if negative && region.is_none_or(|r| r.contains(sx, sy)) {
+                        caught_at_density[di] = true;
+                    }
+                    failures.push(format!("d{density} t={tag}: {msg}"));
+                }
+                // `//MASK_INNER=` skips the ripple ink's coverage
+                // entirely — the circle's shape and growth rate differ
+                // legitimately between engines. What cannot differ is
+                // that it grows: an instantly full-size ripple (the
+                // f579301e2 defect) covers ~the whole interior from the
+                // first post-action frame. Measure each image's ink
+                // coverage against its own baseline, and require the
+                // first post-action frame to sit well below the settled
+                // coverage. Layoutlib's recorded ripple fades early on
+                // Compose, so the bound applies only where the settle
+                // frame proves ink actually reached the interior.
+                //
+                // The metric is coverage *against the baseline frame* —
+                // it isolates ink only where ink is the only interior
+                // change. Motion scenes (and mutated negative cases built
+                // on them) animate the container shape on the same frames,
+                // so coverage at the first post-action frame is dominated
+                // by the morph, not the ripple — skip it there.
+                let morphs = matches!(spec.parity.as_deref(), Some("motion") | Some("negative"));
+                if let (Some(ba), Some(be), false) = (&baseline_actual, &baseline_expected, morphs)
+                {
+                    for (slint_r, compose_r, id) in &pairs {
+                        let inset = CORNER_BAND + 2.0 * d;
+                        let ca = ink_coverage(&actual, ba, slint_r, inset, pixel_eps);
+                        let ce = ink_coverage(&expected, be, compose_r, inset, pixel_eps);
+                        if Some(&t) == times.get(1) {
+                            early_coverage.insert(id.clone(), (ca, ce));
+                        }
+                        if t == *times.last().unwrap() {
+                            let Some(&(early_a, early_c)) = early_coverage.get(id) else {
+                                continue;
+                            };
+                            for (early, cov, img_name) in
+                                [(early_a, ca, "slint"), (early_c, ce, "compose")]
+                            {
+                                if cov > INK_SETTLED_MIN && early > cov - INK_GROWTH_MARGIN {
+                                    strict_caught += 1;
+                                    silhouette_failed = true;
+                                    failures.push(format!(
+                                        "d{density} t={tag}: {id} {img_name} ink coverage already {early:.2} at t={}ms, the first post-action frame; settled {cov:.2} — expected a growing ripple",
+                                        times[1]
+                                    ));
+                                    if negative
+                                        && region.is_none_or(|r| {
+                                            r.contains(
+                                                (slint_r.x0 + slint_r.x1) / 2.0,
+                                                (slint_r.y0 + slint_r.y1) / 2.0,
+                                            )
+                                        })
                                     {
-                                        strict_caught += 1;
-                                        silhouette_failed = true;
-                                        failures.push(format!(
-                                            "d{density} t={tag}: {id} {img_name} ink coverage already {early:.2} at t={}ms, the first post-action frame; settled {cov:.2} — expected a growing ripple",
-                                            times[1]
-                                        ));
-                                        if negative
-                                            && region.map_or(true, |r| {
-                                                r.contains(
-                                                    (slint_r.x0 + slint_r.x1) / 2.0,
-                                                    (slint_r.y0 + slint_r.y1) / 2.0,
-                                                )
-                                            })
-                                        {
-                                            caught_at_density[di] = true;
-                                        }
+                                        caught_at_density[di] = true;
                                     }
                                 }
                             }
@@ -2210,7 +2364,8 @@ pub fn run_parity_case<C: i_slint_core::api::ComponentHandle>(
                     "parity: xfail-silhouette {case_rel} d{density} t={tag}: {silhouette_xfail} findings on software (issue #6: software clip is axis-aligned, bounded ripple ink fills the corner cells — silhouette edge unverifiable)"
                 );
             }
-            if !result.ok || silhouette_failed || std::env::var_os("PARITY_DUMP_ACTUALS").is_some() {
+            if !result.ok || silhouette_failed || std::env::var_os("PARITY_DUMP_ACTUALS").is_some()
+            {
                 let dir = artifacts_dir(driver, case_rel);
                 write_png(&dir.join(format!("actual_d{density}_{tag}.png")), &actual)?;
                 write_png(&dir.join(format!("expected_d{density}_{tag}.png")), &expected)?;
@@ -2231,12 +2386,8 @@ pub fn run_parity_case<C: i_slint_core::api::ComponentHandle>(
                 (Vec::new(), None)
             };
             measured_phase = measured_phase.or(phase);
-            let (metric_errors, saw_drift) = compare_text_metrics(
-                &component,
-                &frames,
-                compose,
-                spec.xfail_text.as_deref(),
-            );
+            let (metric_errors, saw_drift) =
+                compare_text_metrics(&component, &frames, compose, spec.xfail_text.as_deref());
             errors.extend(metric_errors);
             xfail_text_saw_drift |= saw_drift;
             compare_findings += errors.len();
@@ -2328,8 +2479,7 @@ pub fn run_parity_case<C: i_slint_core::api::ComponentHandle>(
     // `xfail:<driver>:` expects the divergence only on the named drivers;
     // everywhere else the case is a positive and must pass clean.
     let xfail_here = xfail
-        && (spec.xfail_renderers.is_empty()
-            || spec.xfail_renderers.iter().any(|d| d == driver));
+        && (spec.xfail_renderers.is_empty() || spec.xfail_renderers.iter().any(|d| d == driver));
 
     if xfail_here {
         if references_missing {
@@ -2389,12 +2539,18 @@ fn comparator_catches_subtle_differences() {
     let mut all_text = PixelMask::new(size, size);
     all_text
         .fill_rect(PxRect { x0: 0.0, y0: 0.0, x1: size as f64, y1: size as f64 }, PixelClass::Text);
-    assert!(layered_compare(&a, &b, Some(&all_text), PIXEL_EPS, None, TEXT_CELL_EPS).ok, "identical images must pass");
+    assert!(
+        layered_compare(&a, &b, Some(&all_text), PIXEL_EPS, None, TEXT_CELL_EPS).ok,
+        "identical images must pass"
+    );
 
     // 1px color nudge outside text → strict layer fails.
     b.make_mut_slice()[0] = Rgba8Pixel { r: 20, g: 0, b: 0, a: 255 };
     let no_text = PixelMask::new(size, size);
-    assert!(!layered_compare(&a, &b, Some(&no_text), PIXEL_EPS, None, TEXT_CELL_EPS).ok, "1px diff must fail");
+    assert!(
+        !layered_compare(&a, &b, Some(&no_text), PIXEL_EPS, None, TEXT_CELL_EPS).ok,
+        "1px diff must fail"
+    );
 
     // Same nudge but fully inside the text mask → tolerated by the loose layer.
     assert!(
