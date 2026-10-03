@@ -901,7 +901,7 @@ pub struct SwipeGestureHandler {
     pressed_flag: Cell<bool>,
     // the pointer position of the previous move event, for the velocity ring buffer
     last_position: Cell<LogicalPoint>,
-    velocity_rb: RefCell<VelocityRingBuffer<5>>,
+    velocity_rb: SwipeVelocityDataBox,
     /// FIXME: remove this
     pub cached_rendering_data: CachedRenderingData,
 }
@@ -1157,9 +1157,72 @@ impl SwipeGestureHandler {
     }
 }
 
+/// The velocity ring buffer's storage — `VelocityRingBuffer<N>` is a generic
+/// Rust type the generated C++ header can only see forward-declared, so the
+/// item holds it behind an opaque pointer.
+struct SwipeVelocityData {
+    velocity_rb: RefCell<VelocityRingBuffer<5>>,
+}
+
+/// Opaque box holding SwipeVelocityData, allocated lazily on first use
+#[repr(C)]
+pub(crate) struct SwipeVelocityDataBox(core::cell::Cell<*mut SwipeVelocityData>);
+
+impl Default for SwipeVelocityDataBox {
+    fn default() -> Self {
+        SwipeVelocityDataBox(core::cell::Cell::new(core::ptr::null_mut()))
+    }
+}
+impl SwipeVelocityDataBox {
+    fn get_or_init(&self) -> &SwipeVelocityData {
+        if self.0.get().is_null() {
+            self.0.set(Box::leak(Box::new(SwipeVelocityData { velocity_rb: RefCell::default() })));
+        }
+        // Safety: the pointer is guaranteed non-null above, and was created from a Box::leak
+        unsafe { &*self.0.get() }
+    }
+}
+impl Drop for SwipeVelocityDataBox {
+    fn drop(&mut self) {
+        let ptr = self.0.get();
+        if !ptr.is_null() {
+            // Safety: ptr was constructed from a Box::leak in get_or_init
+            drop(unsafe { Box::from_raw(ptr) });
+        }
+    }
+}
+impl core::ops::Deref for SwipeVelocityDataBox {
+    type Target = RefCell<VelocityRingBuffer<5>>;
+    fn deref(&self) -> &Self::Target {
+        &self.get_or_init().velocity_rb
+    }
+}
+
 #[cfg(feature = "ffi")]
 mod ffi {
     use super::*;
+
+    /// # Safety
+    /// This must be called using a non-null pointer pointing to a chunk of memory big enough to
+    /// hold a SwipeVelocityDataBox
+    #[unsafe(no_mangle)]
+    pub(crate) unsafe extern "C" fn slint_swipegesturehandler_velocity_rb_init(
+        data: *mut SwipeVelocityDataBox,
+    ) {
+        unsafe {
+            core::ptr::write(data, SwipeVelocityDataBox::default());
+        }
+    }
+
+    /// # Safety
+    /// This must be called using a non-null pointer pointing to an initialized
+    /// SwipeVelocityDataBox
+    #[unsafe(no_mangle)]
+    pub(crate) unsafe extern "C" fn slint_swipegesturehandler_velocity_rb_free(
+        data: *mut SwipeVelocityDataBox,
+    ) {
+        unsafe { core::ptr::drop_in_place(data) };
+    }
 
     #[unsafe(no_mangle)]
     pub unsafe extern "C" fn slint_swipegesturehandler_cancel(
