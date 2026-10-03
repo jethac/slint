@@ -593,8 +593,8 @@
       11
     ],
     "needs": "shapes (#6)",
-    "notes": "slint component: ListTile",
-    "status": "partial"
+    "notes": "slint component: ListTile — interactive/selectable/checkable, interactive shape morph",
+    "status": "done"
   },
   "LoadingIndicator": {
     "issues": [
@@ -901,8 +901,8 @@
       11
     ],
     "needs": "shapes (#6)",
-    "notes": "",
-    "status": "missing"
+    "notes": "slint component: SegmentedListItem — index/count segmentedShapes positions",
+    "status": "done"
   },
   "SelectableDropdownMenuItem": {
     "issues": [
