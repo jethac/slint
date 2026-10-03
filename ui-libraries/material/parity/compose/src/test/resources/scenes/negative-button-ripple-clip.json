@@ -102,6 +102,7 @@
       "placeholder": null,
       "radius": null,
       "shape": null,
+      "side": null,
       "size": "s",
       "slint_overrides": {
         "inline": true
@@ -109,6 +110,7 @@
       "state": "pressed",
       "subtitle": null,
       "text": null,
+      "trailing_icon": null,
       "variant": null,
       "width": null,
       "width_option": null,
