@@ -39,8 +39,8 @@ export component TestCase inherits MaterialWindow {
     }
 
     picker0 := DatePickerDialogContent {
-        x: (parent.width - self.width) / 2;
-        y: (parent.height - self.height) / 2;
+        x: Math.round((parent.width - self.width) / 1phx / 2) * 1phx;
+        y: Math.round((parent.height - self.height) / 1phx / 2) * 1phx;
         enforce_touch_target: false;
         confirm_enabled: true;
 

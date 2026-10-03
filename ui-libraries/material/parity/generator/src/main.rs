@@ -2333,9 +2333,14 @@ fn date_picker_widget(s: &mut String, w: &Widget, i: usize) {
         }
     }
 
-    writeln!(
+            // Compose lays out in physical pixels: `Center` snaps an odd
+        // (size - content) delta to an integer *device* pixel. `phx`
+        // rounds the same quantity in the same space - logical `px`
+        // rounding would be a half-pixel off at density 1 and a full one
+        // at density 2.
+writeln!(
         s,
-        "    picker{i} := DatePickerDialogContent {{\n        x: (parent.width - self.width) / 2;\n        y: (parent.height - self.height) / 2;\n{p}\n        {component} {{\n{inner}        }}\n    }}\n",
+        "    picker{i} := DatePickerDialogContent {{\n        x: Math.round((parent.width - self.width) / 1phx / 2) * 1phx;\n        y: Math.round((parent.height - self.height) / 1phx / 2) * 1phx;\n{p}\n        {component} {{\n{inner}        }}\n    }}\n",
     )
     .unwrap();
 }

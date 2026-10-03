@@ -19,9 +19,8 @@
   },
   "mask_inner": {},
   "name": "date-picker-range-input",
-  "negative_note": "slint's skia renderer AA-covers the 4px field-border corner tips ~1px tighter than layoutlib and slint-software (12 interior px inside the untraceable DateInputTextField borders); the software driver still verifies the full scene, and xfail fails-if-passes so the marker must be removed when the rasterizer is fixed",
   "params": {},
-  "parity": "xfail:skia",
+  "parity": "parity",
   "scheme": {
     "background": "FFFDF7FE",
     "error": "FFA8364B",
