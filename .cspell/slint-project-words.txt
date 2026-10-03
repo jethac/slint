@@ -696,6 +696,7 @@ sharedvector
 shiki
 shikijs
 Shmelt
+shortnavigationbar
 signalsafe
 signum
 SIGUSR

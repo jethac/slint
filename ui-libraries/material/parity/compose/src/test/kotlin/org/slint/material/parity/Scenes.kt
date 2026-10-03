@@ -437,7 +437,7 @@ private fun CanvasScene(
         var buttons = 0
         var surfaces = 0
         var appbars = 0
-        var navbars = 0
+        var nav_bars = 0
         scene.widgets.forEach { widget ->
             when {
                 widget.isIconButton -> StateIconButton(
@@ -473,7 +473,7 @@ private fun CanvasScene(
                     StateAppBar(widget, tracer, "appbar${appbars++}")
                 widget.kind == "navigation-bar" ||
                     widget.kind == "short-navigation-bar" ->
-                    StateNavBar(widget, scene, tracer, "navbar${navbars++}", emitPress)
+                    StateNavBar(widget, scene, tracer, "navbar${nav_bars++}", emitPress)
                 widget.kind == "rect" ->
                     Box(
                         Modifier.offset(widget.x.dp, widget.y.dp)

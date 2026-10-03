@@ -962,7 +962,7 @@ fn slint_canvas(s: &mut String, scene: &Scene) {
     let mut buttons = 0;
     let mut surfaces = 0;
     let mut appbars = 0;
-    let mut navbars = 0;
+    let mut nav_bars = 0;
     for w in scene.widgets.iter() {
         let component = match w.kind.as_str() {
             "filled-button" => "FilledButton",
@@ -1060,8 +1060,8 @@ fn slint_canvas(s: &mut String, scene: &Scene) {
                 continue;
             }
             "navigation-bar" | "short-navigation-bar" => {
-                let i = navbars;
-                navbars += 1;
+                let i = nav_bars;
+                nav_bars += 1;
                 navbar_widget(s, w, i);
                 continue;
             }
