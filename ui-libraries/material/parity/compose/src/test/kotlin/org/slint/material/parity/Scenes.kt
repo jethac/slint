@@ -28,6 +28,9 @@ import androidx.compose.animation.core.VectorConverter
 import androidx.compose.animation.core.updateTransition
 import androidx.compose.foundation.interaction.DragInteraction
 import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.foundation.text.input.TextObfuscationMode
+import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.requiredWidth
@@ -87,6 +90,12 @@ import androidx.compose.material3.MaterialExpressiveTheme
 import androidx.compose.material3.MotionScheme
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
+import androidx.compose.material3.TextField
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.SecureTextField
+import androidx.compose.material3.OutlinedSecureTextField
+import androidx.compose.material3.TextFieldLabelPosition
+import androidx.compose.material3.TextFieldLabelScope
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedIconButton
 import androidx.compose.material3.OutlinedIconToggleButton
@@ -545,6 +554,7 @@ private fun CanvasScene(
         var badges = 0
         var badgedBoxes = 0
         var nav_bars = 0
+        var fields = 0
         // `text:{n}` spans every text node in scene order — group items
         // interleave with the standalone widgets' labels. Bases are
         // precomputed per widget so recompositions can't renumber them.
@@ -701,6 +711,14 @@ private fun CanvasScene(
                 widget.kind == "navigation-bar" ||
                     widget.kind == "short-navigation-bar" ->
                     StateNavBar(widget, scene, tracer, "navbar${nav_bars++}", emitPress)
+                widget.kind.endsWith("text-field") -> StateTextField(
+                    widget,
+                    scene,
+                    tracer,
+                    "field${fields++}",
+                    density,
+                    emitPress,
+                )
                 widget.kind == "rect" ->
                     Box(
                         Modifier.offset(widget.x.dp, widget.y.dp)
@@ -4281,6 +4299,135 @@ private fun StateConnectedGroup(
         ) {
             itemsContent()
         }
+    }
+}
+/** The `*-text-field` kinds — [TextField], [OutlinedTextField],
+ * [SecureTextField] or [OutlinedSecureTextField]. `text` is the entered
+ * value (hoisted for the value/`onValueChange` overloads; a
+ * [TextFieldState] on the secure kinds, whose only editable-value API is
+ * `state`). `state: "focused"` goes to the interaction source: the Slint
+ * side binds `simulate_focus` so the decoration (label morph, indicator /
+ * outline width and color) matches without a caret the snapshot could
+ * catch mid-blink. */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun StateTextField(
+    widget: Widget,
+    scene: Scene,
+    tracer: Tracer,
+    elementId: String,
+    density: Float,
+    emitPress: java.util.concurrent.CopyOnWriteArrayList<Pair<Long, Runnable>>,
+) {
+    val interactionSource = remember { ReplayableInteractionSource() }
+    emitStateInteractions(
+        widget.state,
+        scene,
+        tracer,
+        elementId,
+        interactionSource,
+        emitPress,
+        Offset(16f * density, 16f * density),
+        density,
+        null,
+    )
+
+
+    val modifier = Modifier
+        .offset(widget.x.dp, widget.y.dp)
+        .then(if (widget.width > 0f) Modifier.width(widget.width.dp) else Modifier)
+        .then(if (widget.height > 0f) Modifier.height(widget.height.dp) else Modifier)
+        .track(tracer, elementId)
+    val fieldState: TextFieldState = rememberTextFieldState(widget.text ?: "")
+    // `TextFieldLabelPosition.Above` — the default attached position
+    // morphs inside (filled) or notches (outlined); `Above` keeps it
+    // minimized over the container.
+    val labelPosition: TextFieldLabelPosition =
+        if (widget.labelAbove) TextFieldLabelPosition.Above() else TextFieldLabelPosition.Attached()
+    val label: (@Composable TextFieldLabelScope.() -> Unit)? =
+        widget.label?.let { l -> { Text(l) } }
+    val placeholder: (@Composable () -> Unit)? =
+        widget.placeholder?.let { p -> { Text(p) } }
+    val supporting: (@Composable () -> Unit)? =
+        widget.subtitle?.let { s -> { Text(s) } }
+    val prefix: (@Composable () -> Unit)? = widget.prefix?.let { p -> { Text(p) } }
+    val suffix: (@Composable () -> Unit)? = widget.suffix?.let { s -> { Text(s) } }
+    val leading: (@Composable () -> Unit)? =
+        widget.icon?.let { i -> { Icon(sceneIcon(i), contentDescription = null) } }
+    val trailing: (@Composable () -> Unit)? =
+        widget.trailingIcon?.let { i -> { Icon(sceneIcon(i), contentDescription = null) } }
+
+    when (widget.kind) {
+        "secure-text-field" -> SecureTextField(
+            state = fieldState,
+            modifier = modifier,
+            enabled = widget.enabled,
+            labelPosition = labelPosition,
+            label = label,
+            placeholder = placeholder,
+            leadingIcon = leading,
+            trailingIcon = trailing,
+            prefix = prefix,
+            suffix = suffix,
+            supportingText = supporting,
+            isError = widget.error,
+            textObfuscationMode = if (widget.obscure) {
+                TextObfuscationMode.RevealLastTyped
+            } else {
+                TextObfuscationMode.Visible
+            },
+            interactionSource = interactionSource,
+        )
+        "outlined-secure-text-field" -> OutlinedSecureTextField(
+            state = fieldState,
+            modifier = modifier,
+            enabled = widget.enabled,
+            labelPosition = labelPosition,
+            label = label,
+            placeholder = placeholder,
+            leadingIcon = leading,
+            trailingIcon = trailing,
+            prefix = prefix,
+            suffix = suffix,
+            supportingText = supporting,
+            isError = widget.error,
+            textObfuscationMode = if (widget.obscure) {
+                TextObfuscationMode.RevealLastTyped
+            } else {
+                TextObfuscationMode.Visible
+            },
+            interactionSource = interactionSource,
+        )
+        "outlined-text-field" -> OutlinedTextField(
+            state = fieldState,
+            modifier = modifier,
+            enabled = widget.enabled,
+            labelPosition = labelPosition,
+            label = label,
+            placeholder = placeholder,
+            leadingIcon = leading,
+            trailingIcon = trailing,
+            prefix = prefix,
+            suffix = suffix,
+            supportingText = supporting,
+            isError = widget.error,
+            interactionSource = interactionSource,
+        )
+        else -> TextField(
+            state = fieldState,
+            modifier = modifier,
+            enabled = widget.enabled,
+            labelPosition = labelPosition,
+            label = label,
+            placeholder = placeholder,
+            leadingIcon = leading,
+            trailingIcon = trailing,
+            prefix = prefix,
+            suffix = suffix,
+            supportingText = supporting,
+            isError = widget.error,
+            interactionSource = interactionSource,
+        )
     }
 }
 

@@ -1,0 +1,80 @@
+// Copyright © SixtyFPS GmbH <info@slint.dev>
+// SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0
+
+// Scene: text-field-adornments — generated from `ui-libraries/material/parity/scenes/text-field-adornments.json`
+// (edit the scene, regenerate with `cargo run -p material-parity-generator`).
+//PARITY=static
+// the outlined label-notch edge sits at label bounds + 4dp of OutlinedTextFieldInnerPadding, so its device-px position tracks the measured label width — past the built-in 2px mask dilation when the engines glyph metrics disagree
+//TEXT_DILATE=6
+//SIZE=340x476
+//TRACE_ELEMENTS=field0,field1,field2,field3,field4
+//XFAIL_TEXT=the fields dense glyph cells (mask characters, prefix/suffix runs) and the label-notch-adjacent cells track measured advances; Slint lands ~1px off Compose per string — the documented issue-#28 advance-drift class
+//DENSITIES=1,2
+import "../../fonts/Roboto-VariableFont.ttf";
+import { Icons, MaterialPalette, MaterialTheme, MaterialWindow, OutlinedTextField, TextField } from "@material";
+
+export component TestCase inherits MaterialWindow {
+    init => {
+        // The scene pins seed #6750A4, tonal-spot, spec2025, light, contrast 0
+        // (all the library defaults; restated here so a default change can't
+        // silently move the parity baseline).
+        MaterialTheme.seed-color = #6750A4;
+        MaterialTheme.dark = false;
+        MaterialTheme.contrast-level = 0;
+        MaterialTheme.use-platform-color = false;
+        MaterialTheme.plain-family = "Roboto";
+        MaterialTheme.brand-family = "Roboto";
+        // Compose builds its scene scheme from the same seed — use the
+        // runtime-generated scheme, not the static expressive table.
+        MaterialPalette.dynamic = true;
+    }
+
+    field0 := TextField {
+        x: 16px;
+        y: 8px;
+        text: "Oct 3";
+        label: "Date";
+        leading_icon: Icons.calendar_today;
+        width: 300px;
+    }
+
+    field1 := TextField {
+        x: 16px;
+        y: 104px;
+        text: "slint";
+        label: "Query";
+        trailing_icon: Icons.close;
+        width: 300px;
+    }
+
+    field2 := TextField {
+        x: 16px;
+        y: 200px;
+        text: "42";
+        label: "Price";
+        prefix: "$";
+        suffix: ".00";
+        width: 300px;
+    }
+
+    field3 := OutlinedTextField {
+        x: 16px;
+        y: 296px;
+        text: "x";
+        label: "Field";
+        leading_icon: Icons.check;
+        trailing_icon: Icons.close;
+        width: 300px;
+    }
+
+    field4 := TextField {
+        x: 16px;
+        y: 392px;
+        label: "Label";
+        placeholder: "Hint";
+        supporting_text: "Helper";
+        width: 300px;
+        label_above: true;
+    }
+
+}

@@ -90,6 +90,7 @@ negative-split-button-spacing
 negative-thumb-offset
 negative-toggle-select
 negative-wrong-shadow
+outlined-text-field-states
 radio-check-morph
 radio-hover
 radio-states
@@ -97,6 +98,7 @@ radio-uncheck-morph
 scaffold-drag
 scaffold-ops
 search-bars
+secure-text-fields
 segmented-list
 sheet-commit-hide
 sheet-drag-expand
@@ -117,6 +119,8 @@ switch-hover
 switch-off-morph
 switch-on-morph
 switch-states
+text-field-adornments
+text-field-states
 toggle-buttons
 toggle-select-morph
 top-app-bars
