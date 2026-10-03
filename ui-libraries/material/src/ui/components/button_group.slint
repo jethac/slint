@@ -58,7 +58,7 @@ export struct ButtonGroupItem {
     cum-ordinal: int,
     cum-shown: int,
     cum-shown-w: length,
-    cum-wsize: length,
+    cum-w-size: length,
     take-left: length,
     take-right: length,
     w-growth: length,
@@ -106,16 +106,16 @@ component ButtonGroupItemDelegate {
     property <int> weight-count: count > 0 ? model[count - 1].cum-ordinal : 0;
     property <length> remaining-to-target: max(0px, available - fixed-total - spacing * max(0, weight-count - 1));
     property <float> weight-unit: total-weight > 0 ? remaining-to-target / 1px / total-weight : 0;
-    // Upstream's `weightedSize.fastRoundToInt()` share; `cum-wsize` folds
+    // Upstream's `weightedSize.fastRoundToInt()` share; `cum-w-size` folds
     // them so `remainder` — `remainingToTarget − Σ rounded` — can hand a
     // ±1px unit to the first |remainder| weighted children in index order.
-    property <length> wsize: weighted ? max(0px, round(weight-unit * itm.weight) * 1px) : 0px;
-    property <length> cum-wsize: (index == 0 ? 0px : model[max(0, index - 1)].cum-wsize) + wsize;
-    property <int> remainder: weight-count > 0 ? (remaining-to-target - model[count - 1].cum-wsize) / 1px : 0;
+    property <length> w-size: weighted ? max(0px, round(weight-unit * itm.weight) * 1px) : 0px;
+    property <length> cum-w-size: (index == 0 ? 0px : model[max(0, index - 1)].cum-w-size) + w-size;
+    property <int> remainder: weight-count > 0 ? (remaining-to-target - model[count - 1].cum-w-size) / 1px : 0;
     property <int> rem-unit: weighted && cum-ordinal <= abs(remainder) ? (remainder > 0 ? 1 : -1) : 0;
     property <length> intrinsic: btn.min-width;
     property <length> desired:
-        weighted ? max(0px, wsize + rem-unit * 1px) : intrinsic;
+        weighted ? max(0px, w-size + rem-unit * 1px) : intrinsic;
     // `spaceAfterLastNoWeight` — included for every unweighted item, exactly
     // as upstream (it is only rolled back when nothing is weighted).
     property <length> space-after:
@@ -181,7 +181,7 @@ component ButtonGroupItemDelegate {
         cum-ordinal: self.cum-ordinal,
         cum-shown: self.cum-shown,
         cum-shown-w: self.cum-shown-w,
-        cum-wsize: self.cum-wsize,
+        cum-w-size: self.cum-w-size,
         take-left: self.take-left,
         take-right: self.take-right,
         w-growth: self.w-growth,
@@ -204,7 +204,7 @@ component ButtonGroupItemDelegate {
         if (root.model[root.index].cum-ordinal != root.cum-ordinal) { root.model[root.index].cum-ordinal = root.cum-ordinal; }
         if (root.model[root.index].cum-shown != root.cum-shown) { root.model[root.index].cum-shown = root.cum-shown; }
         if (root.model[root.index].cum-shown-w != root.cum-shown-w) { root.model[root.index].cum-shown-w = root.cum-shown-w; }
-        if (root.model[root.index].cum-wsize != root.cum-wsize) { root.model[root.index].cum-wsize = root.cum-wsize; }
+        if (root.model[root.index].cum-w-size != root.cum-w-size) { root.model[root.index].cum-w-size = root.cum-w-size; }
         if (root.model[root.index].take-left != root.take-left) { root.model[root.index].take-left = root.take-left; }
         if (root.model[root.index].take-right != root.take-right) { root.model[root.index].take-right = root.take-right; }
         if (root.model[root.index].w-growth != root.w-growth) { root.model[root.index].w-growth = root.w-growth; }
@@ -360,7 +360,7 @@ export component ButtonGroup {
 
     // The overflow indicator as a flat geometry — the parity harness's
     // `//TRACE_ELEMENT_PROPS=` binds these like an item's `abs-*`/`final-w`.
-    // Zeroed while hidden so an unshown indicator never asserts a position.
+    // Zeroed while hidden so the indicator never asserts a position.
     out property <length> indicator-x: indicator.visible ? indicator.absolute_position.x : 0px;
     out property <length> indicator-y: indicator.visible ? indicator.absolute_position.y : 0px;
     out property <length> indicator-w: indicator.visible ? indicator.width : 0px;
