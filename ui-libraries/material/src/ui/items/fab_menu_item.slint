@@ -1,0 +1,13 @@
+// Copyright © SixtyFPS GmbH <info@slint.dev>
+// SPDX-License-Identifier: MIT
+
+/// One entry of `FloatingActionButtonMenu.items` — the data backing a
+/// `FloatingActionButtonMenuItem` (upstream
+/// `FloatingActionButtonMenuScope.FloatingActionButtonMenuItem`).
+export struct FabMenuItem {
+    /// Optional leading icon drawn at the `list_item_icon_size` token.
+    icon: image,
+    /// The item label, rendered with `title_medium`.
+    text: string,
+    enabled: bool
+}

@@ -451,16 +451,16 @@
       10
     ],
     "needs": "springs (#5), shapes (#6)",
-    "notes": "",
-    "status": "missing"
+    "notes": "slint component: FloatingActionButtonMenu",
+    "status": "partial"
   },
   "FloatingActionButtonMenuScope": {
     "issues": [
       10
     ],
     "needs": "springs (#5), shapes (#6)",
-    "notes": "",
-    "status": "missing"
+    "notes": "slint component: FloatingActionButtonMenuItem (scope members of FloatingActionButtonMenu)",
+    "status": "partial"
   },
   "HorizontalCenteredHeroCarousel": {
     "issues": [
@@ -1105,8 +1105,8 @@
       10
     ],
     "needs": "springs (#5), shapes (#6)",
-    "notes": "",
-    "status": "missing"
+    "notes": "slint component: ToggleFloatingActionButton",
+    "status": "partial"
   },
   "TooltipBox": {
     "issues": [

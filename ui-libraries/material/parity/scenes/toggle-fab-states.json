@@ -1,0 +1,312 @@
+{
+    "name": "toggle-fab-states",
+    "type": "canvas",
+    "parity": "static",
+    "size": [
+        640,
+        690
+    ],
+    "densities": [
+        1,
+        2
+    ],
+    "theme": {
+        "seed": "6750A4",
+        "variant": "tonal-spot",
+        "spec": "spec2025",
+        "platform": "phone",
+        "dark": false,
+        "contrast": 0.0
+    },
+    "fonts": {
+        "plain": "Roboto",
+        "brand": "Roboto"
+    },
+    "widgets": [
+        {
+            "kind": "toggle-fab",
+            "x": 30,
+            "y": 15,
+            "icon": "edit",
+            "checked_icon": "close"
+        },
+        {
+            "kind": "toggle-fab",
+            "x": 240,
+            "y": 15,
+            "fab_size": "medium",
+            "icon": "edit",
+            "checked_icon": "close"
+        },
+        {
+            "kind": "toggle-fab",
+            "x": 460,
+            "y": 15,
+            "fab_size": "large",
+            "icon": "edit",
+            "checked_icon": "close"
+        },
+        {
+            "kind": "toggle-fab",
+            "x": 30,
+            "y": 145,
+            "icon": "edit",
+            "checked_icon": "close",
+            "state": "hovered"
+        },
+        {
+            "kind": "toggle-fab",
+            "x": 240,
+            "y": 145,
+            "fab_size": "medium",
+            "icon": "edit",
+            "checked_icon": "close",
+            "state": "hovered"
+        },
+        {
+            "kind": "toggle-fab",
+            "x": 460,
+            "y": 145,
+            "fab_size": "large",
+            "icon": "edit",
+            "checked_icon": "close",
+            "state": "hovered"
+        },
+        {
+            "kind": "toggle-fab",
+            "x": 30,
+            "y": 275,
+            "icon": "edit",
+            "checked_icon": "close",
+            "state": "pressed"
+        },
+        {
+            "kind": "toggle-fab",
+            "x": 240,
+            "y": 275,
+            "fab_size": "medium",
+            "icon": "edit",
+            "checked_icon": "close",
+            "state": "pressed"
+        },
+        {
+            "kind": "toggle-fab",
+            "x": 460,
+            "y": 275,
+            "fab_size": "large",
+            "icon": "edit",
+            "checked_icon": "close",
+            "state": "pressed"
+        },
+        {
+            "kind": "toggle-fab",
+            "x": 30,
+            "y": 405,
+            "icon": "edit",
+            "checked_icon": "close",
+            "checked": true
+        },
+        {
+            "kind": "toggle-fab",
+            "x": 240,
+            "y": 405,
+            "fab_size": "medium",
+            "icon": "edit",
+            "checked_icon": "close",
+            "checked": true
+        },
+        {
+            "kind": "toggle-fab",
+            "x": 460,
+            "y": 405,
+            "fab_size": "large",
+            "icon": "edit",
+            "checked_icon": "close",
+            "checked": true
+        },
+        {
+            "kind": "toggle-fab",
+            "x": 30,
+            "y": 535,
+            "icon": "edit",
+            "checked_icon": "close",
+            "checked": true,
+            "state": "hovered"
+        },
+        {
+            "kind": "toggle-fab",
+            "x": 240,
+            "y": 535,
+            "fab_size": "medium",
+            "icon": "edit",
+            "checked_icon": "close",
+            "checked": true,
+            "state": "hovered"
+        },
+        {
+            "kind": "toggle-fab",
+            "x": 460,
+            "y": 535,
+            "fab_size": "large",
+            "icon": "edit",
+            "checked_icon": "close",
+            "checked": true,
+            "state": "hovered"
+        }
+    ],
+    "trace_elements": [
+        "button0",
+        "button1",
+        "button2",
+        "button3",
+        "button4",
+        "button5",
+        "button6",
+        "button7",
+        "button8",
+        "button9",
+        "button10",
+        "button11",
+        "button12",
+        "button13",
+        "button14",
+        "button0>button-bg",
+        "button1>button-bg",
+        "button2>button-bg",
+        "button3>button-bg",
+        "button4>button-bg",
+        "button5>button-bg",
+        "button6>button-bg",
+        "button7>button-bg",
+        "button8>button-bg",
+        "button9>button-bg",
+        "button10>button-bg",
+        "button11>button-bg",
+        "button12>button-bg",
+        "button13>button-bg",
+        "button14>button-bg"
+    ],
+    "trace_props": [],
+    "mask_shadow": {
+        "button0": [
+            0,
+            2000
+        ],
+        "button1": [
+            0,
+            2000
+        ],
+        "button2": [
+            0,
+            2000
+        ],
+        "button3": [
+            0,
+            2000
+        ],
+        "button4": [
+            0,
+            2000
+        ],
+        "button5": [
+            0,
+            2000
+        ],
+        "button6": [
+            0,
+            2000
+        ],
+        "button7": [
+            0,
+            2000
+        ],
+        "button8": [
+            0,
+            2000
+        ],
+        "button9": [
+            0,
+            2000
+        ],
+        "button10": [
+            0,
+            2000
+        ],
+        "button11": [
+            0,
+            2000
+        ],
+        "button12": [
+            0,
+            2000
+        ],
+        "button13": [
+            0,
+            2000
+        ],
+        "button14": [
+            0,
+            2000
+        ],
+        "button0>button-bg0": [
+            0,
+            2000
+        ],
+        "button1>button-bg0": [
+            0,
+            2000
+        ],
+        "button2>button-bg0": [
+            0,
+            2000
+        ],
+        "button3>button-bg0": [
+            0,
+            2000
+        ],
+        "button4>button-bg0": [
+            0,
+            2000
+        ],
+        "button5>button-bg0": [
+            0,
+            2000
+        ],
+        "button6>button-bg0": [
+            0,
+            2000
+        ],
+        "button7>button-bg0": [
+            0,
+            2000
+        ],
+        "button8>button-bg0": [
+            0,
+            2000
+        ],
+        "button9>button-bg0": [
+            0,
+            2000
+        ],
+        "button10>button-bg0": [
+            0,
+            2000
+        ],
+        "button11>button-bg0": [
+            0,
+            2000
+        ],
+        "button12>button-bg0": [
+            0,
+            2000
+        ],
+        "button13>button-bg0": [
+            0,
+            2000
+        ],
+        "button14>button-bg0": [
+            0,
+            2000
+        ]
+    }
+}
