@@ -765,17 +765,17 @@
     "issues": [
       11
     ],
-    "needs": "shapes (#6), variable fonts (#7)",
-    "notes": "",
-    "status": "missing"
+    "needs": "springs (#5), shapes (#6)",
+    "notes": "slint component: OutlinedSecureTextField; same obfuscation + notch provenance as SecureTextField/OutlinedTextField; gap: RevealLastTyped timing not implemented (all-masked settled state only); parity case: secure-text-fields",
+    "status": "done"
   },
   "OutlinedTextField": {
     "issues": [
       11
     ],
-    "needs": "shapes (#6), variable fonts (#7)",
-    "notes": "slint component: TextField",
-    "status": "partial"
+    "needs": "springs (#5), shapes (#6)",
+    "notes": "slint component: OutlinedTextField; tokens: OutlinedTextFieldTokens (generated); outline notch tracks labelWidth x progress + 4dp OutlinedTextFieldInnerPadding (OutlinedTextField.kt); parity case: outlined-text-field-states (//TEXT_DILATE=6 masks the notch edge, which follows the measured label width)",
+    "status": "done"
   },
   "OutlinedToggleButton": {
     "issues": [
@@ -895,9 +895,9 @@
     "issues": [
       11
     ],
-    "needs": "shapes (#6), variable fonts (#7)",
-    "notes": "",
-    "status": "missing"
+    "needs": "springs (#5), shapes (#6)",
+    "notes": "slint component: SecureTextField; obfuscation via new TextInput password-character builtin (all renderers via shared layout); gap: obscure is the all-masked settled state — upstream default TextObfuscationMode.RevealLastTyped briefly reveals the last typed char; parity case: secure-text-fields",
+    "status": "done"
   },
   "SegmentedListItem": {
     "issues": [
@@ -1055,9 +1055,9 @@
     "issues": [
       11
     ],
-    "needs": "shapes (#6), variable fonts (#7)",
-    "notes": "slint component: TextField",
-    "status": "partial"
+    "needs": "springs (#5), shapes (#6)",
+    "notes": "slint component: TextField; tokens: FilledTextFieldTokens (generated); label morph + placeholder opacity via motion-scheme springs; parity case: text-field-states",
+    "status": "done"
   },
   "TimeInput": {
     "issues": [
