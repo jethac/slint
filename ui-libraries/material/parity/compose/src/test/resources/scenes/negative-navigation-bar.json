@@ -128,6 +128,7 @@
       "radius": null,
       "selected_index": 0,
       "shape": null,
+      "side": null,
       "size": null,
       "slint_overrides": {
         "selected_index": 2
@@ -135,6 +136,7 @@
       "state": null,
       "subtitle": null,
       "text": null,
+      "trailing_icon": null,
       "variant": null,
       "width": 360.0,
       "width_option": null,
@@ -186,6 +188,7 @@
       "radius": null,
       "selected_index": 0,
       "shape": null,
+      "side": null,
       "size": null,
       "slint_overrides": {
         "nav_arrangement": "equal-weight"
@@ -193,6 +196,7 @@
       "state": null,
       "subtitle": null,
       "text": null,
+      "trailing_icon": null,
       "variant": null,
       "width": 360.0,
       "width_option": null,
