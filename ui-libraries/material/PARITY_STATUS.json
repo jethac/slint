@@ -485,7 +485,7 @@
       10
     ],
     "needs": "adaptive (#12)",
-    "notes": "slint component: HorizontalFloatingToolbar; tokens: FloatingToolbarTokens; plain + with-FAB variants, standard/vibrant, fast-spatial expand/collapse spring + exit-always scroll behavior with drag area; with-FAB content unscrollable (upstream .horizontalScroll); no RTL \u2014 start/end are LTR-true",
+    "notes": "slint component: HorizontalFloatingToolbar; tokens: FloatingToolbarTokens; plain + with-FAB variants, standard/vibrant, fast-spatial expand/collapse spring + exit-always scroll behavior with drag area; with-FAB content does not scroll (upstream .horizontalScroll); no RTL \u2014 start/end are LTR-true",
     "status": "partial"
   },
   "HorizontalMultiBrowseCarousel": {
