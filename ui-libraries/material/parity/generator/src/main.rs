@@ -21,7 +21,9 @@ use std::collections::BTreeSet;
 use std::fmt::Write as _;
 use std::path::{Path, PathBuf};
 
-use material_color_utils::dynamiccolor::{DynamicScheme, MaterialDynamicColors, Platform, SpecVersion};
+use material_color_utils::dynamiccolor::{
+    DynamicScheme, MaterialDynamicColors, Platform, SpecVersion,
+};
 use material_color_utils::hct::Hct;
 use material_color_utils::scheme;
 
@@ -276,10 +278,13 @@ struct Widget {
     #[serde(default)]
     shape: Option<String>,
     /// Loading-indicator mode: indeterminate (default — the continuous
-    /// morph loop) or driven by `progress`.
+    /// morph loop) or driven by `progress`; the progress-indicator family
+    /// renders the indeterminate variant (the no-progress
+    /// `*ProgressIndicator()` overloads on the Compose side).
     #[serde(default)]
     indeterminate: Option<bool>,
-    /// Determinate loading-indicator progress, 0–1.
+    /// Determinate loading-indicator progress, 0–1; the progress-indicator
+    /// family's determinate fraction. Ignored when `indeterminate` is set.
     #[serde(default)]
     progress: Option<f64>,
     /// `elevated-rect` only: the elevation in dp of the Android ambient+spot
@@ -358,7 +363,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             .map_err(|e| format!("{}: {e}", path.display()))?;
         let case_rel = format!("material/{}", scene.name.replace('-', "_"));
 
-        emit_or_check(&cases_dir.join(format!("{}.slint", scene.name.replace('-', "_"))), &slint_case(&scene), check)?;
+        emit_or_check(
+            &cases_dir.join(format!("{}.slint", scene.name.replace('-', "_"))),
+            &slint_case(&scene),
+            check,
+        )?;
         emit_or_check(
             &resources_dir.join(format!("{}.json", scene.name)),
             &serde_json::to_string_pretty(&resolved_scene(&scene, &case_rel))?,
@@ -380,13 +389,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 let src = repo_root
                     .join("ui-libraries/material/src/ui/icons")
                     .join(format!("{icon}.svg"));
-                let dst = resources_dir
-                    .parent()
-                    .unwrap()
-                    .join("icons")
-                    .join(format!("{icon}.svg"));
-                let svg = std::fs::read_to_string(&src)
-                    .map_err(|e| format!("{}: {e}", src.display()))?;
+                let dst = resources_dir.parent().unwrap().join("icons").join(format!("{icon}.svg"));
+                let svg =
+                    std::fs::read_to_string(&src).map_err(|e| format!("{}: {e}", src.display()))?;
                 emit_or_check(&dst, &svg, check)?;
             }
         }
@@ -396,11 +401,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // The Compose harness renders text in the same font the Slint driver
     // registers (the variable Roboto in `tests/screenshots/fonts/`).
-    let font_src =
-        repo_root.join("tests/screenshots/fonts/Roboto-VariableFont.ttf");
+    let font_src = repo_root.join("tests/screenshots/fonts/Roboto-VariableFont.ttf");
     let font_dst = parity_dir.join("compose/src/test/resources/fonts/roboto.ttf");
-    let font = std::fs::read(&font_src)
-        .map_err(|e| format!("{}: {e}", font_src.display()))?;
+    let font = std::fs::read(&font_src).map_err(|e| format!("{}: {e}", font_src.display()))?;
     if check {
         let on_disk = std::fs::read(&font_dst)
             .map_err(|e| format!("{}: {e} (regenerate)", font_dst.display()))?;
@@ -417,10 +420,18 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 /// Writes `content` at `path`, or — in `--check` mode — fails when `path`
 /// doesn't hold exactly `content`.
-fn emit_or_check(path: &Path, content: &str, check: bool) -> Result<(), Box<dyn std::error::Error>> {
+fn emit_or_check(
+    path: &Path,
+    content: &str,
+    check: bool,
+) -> Result<(), Box<dyn std::error::Error>> {
     if check {
-        let on_disk = std::fs::read_to_string(path)
-            .map_err(|e| format!("{}: {e} (regenerate with `cargo run -p material-parity-generator`)", path.display()))?;
+        let on_disk = std::fs::read_to_string(path).map_err(|e| {
+            format!(
+                "{}: {e} (regenerate with `cargo run -p material-parity-generator`)",
+                path.display()
+            )
+        })?;
         if on_disk != content {
             return Err(format!(
                 "{} is stale — regenerate with `cargo run -p material-parity-generator`",
@@ -552,10 +563,7 @@ fn scheme_argbs(theme: &Theme) -> serde_json::Map<String, serde_json::Value> {
     roles
         .into_iter()
         .map(|(name, color)| {
-            (
-                name.to_string(),
-                format!("{:08X}", dynamic.get_argb(&color) as u64 as u32).into(),
-            )
+            (name.to_string(), format!("{:08X}", dynamic.get_argb(&color) as u64 as u32).into())
         })
         .collect()
 }
@@ -744,6 +752,10 @@ fn slint_case(scene: &Scene) -> String {
             "bottom-app-bar" => "BottomAppBar",
             "search-bar" => "SearchBar",
             "app-bar-with-search" => "AppBarWithSearch",
+            "linear-progress" => "LinearProgressIndicator",
+            "circular-progress" => "CircularProgressIndicator",
+            "linear-wavy-progress" => "LinearWavyProgressIndicator",
+            "circular-wavy-progress" => "CircularWavyProgressIndicator",
             "connected-button" => "ConnectedButton",
             "connected-button-group" => "ConnectedButtonGroup",
             "vertical-connected-button-group" => "VerticalConnectedButtonGroup",
@@ -779,11 +791,7 @@ fn slint_case(scene: &Scene) -> String {
     }
     if scene.widgets.iter().any(|w| w.kind == "surface") {
         imports.push("Elevation");
-        if scene
-            .widgets
-            .iter()
-            .any(|w| w.shape.as_deref().is_some_and(|sh| sh != "rect"))
-        {
+        if scene.widgets.iter().any(|w| w.shape.as_deref().is_some_and(|sh| sh != "rect")) {
             imports.push("MaterialShapes");
         }
     }
@@ -914,11 +922,11 @@ fn widget_actions(scene: &Scene) -> Vec<Action> {
         }
     }
     for w in &scene.widgets {
-        match w
-            .state
-            .as_deref()
-            .unwrap_or(if w.enabled == Some(false) { "disabled" } else { "enabled" })
-        {
+        match w.state.as_deref().unwrap_or(if w.enabled == Some(false) {
+            "disabled"
+        } else {
+            "enabled"
+        }) {
             "hovered" | "pressed" | "enabled" | "disabled" | "focused" => {}
             other => panic!("unknown widget state {other:?}"),
         }
@@ -954,11 +962,8 @@ fn button_props(w: &Widget, timed: bool) -> String {
     if let Some(text) = &w.text {
         writeln!(p, "        text: \"{text}\";").unwrap();
     }
-    let size = over
-        .get("size")
-        .and_then(|v| v.as_str())
-        .map(str::to_string)
-        .or_else(|| w.size.clone());
+    let size =
+        over.get("size").and_then(|v| v.as_str()).map(str::to_string).or_else(|| w.size.clone());
     if let Some(size) = size {
         writeln!(p, "        size: MaterialButtonSize.{};", size_variant(&size)).unwrap();
     }
@@ -987,11 +992,8 @@ fn button_props(w: &Widget, timed: bool) -> String {
     if let Some(width) = width {
         writeln!(p, "        width_option: IconButtonWidth.{width};").unwrap();
     }
-    let icon = over
-        .get("icon")
-        .and_then(|v| v.as_str())
-        .map(str::to_string)
-        .or_else(|| w.icon.clone());
+    let icon =
+        over.get("icon").and_then(|v| v.as_str()).map(str::to_string).or_else(|| w.icon.clone());
     if let Some(icon) = icon {
         writeln!(p, "        icon: Icons.{icon};").unwrap();
     }
@@ -1229,6 +1231,7 @@ fn slint_canvas(s: &mut String, scene: &Scene) {
     let mut buttons = 0;
     let mut surfaces = 0;
     let mut appbars = 0;
+    let mut progresses = 0;
     let mut groups = 0;
     let mut icons = 0;
     let mut dividers = 0;
@@ -1352,6 +1355,15 @@ fn slint_canvas(s: &mut String, scene: &Scene) {
                 appbar_widget(s, w, i);
                 continue;
             }
+            "linear-progress"
+            | "circular-progress"
+            | "linear-wavy-progress"
+            | "circular-wavy-progress" => {
+                let i = progresses;
+                progresses += 1;
+                progress_widget(s, w, i);
+                continue;
+            }
             "connected-button" => {
                 let i = buttons;
                 buttons += 1;
@@ -1453,12 +1465,8 @@ fn slint_canvas(s: &mut String, scene: &Scene) {
                 continue;
             }
             "rect" => {
-                let radius = w
-                    .slint_overrides
-                    .get("radius")
-                    .map(widget_num)
-                    .or(w.radius)
-                    .unwrap_or(0.0);
+                let radius =
+                    w.slint_overrides.get("radius").map(widget_num).or(w.radius).unwrap_or(0.0);
                 writeln!(
                     s,
                     "    Rectangle {{\n        x: {}px;\n        y: {}px;\n        width: {}px;\n        height: {}px;\n        border-radius: {}px;\n        background: MaterialPalette.{};\n    }}\n",
@@ -1812,16 +1820,9 @@ fn appbar_widget(s: &mut String, w: &Widget, i: usize) {
         match w.kind.as_str() {
             "bottom-app-bar" => writeln!(p, "        fab-icon: Icons.{icon};").unwrap(),
             "search-bar" => writeln!(p, "        leading-icon: Icons.{icon};").unwrap(),
-            "app-bar-with-search" => {
-                writeln!(p, "        leading-icon: Icons.{icon};").unwrap()
-            }
-            _ => {
-                writeln!(
-                    p,
-                    "        leading-button: {{ icon: Icons.{icon}, enabled: true }};"
-                )
-                .unwrap()
-            }
+            "app-bar-with-search" => writeln!(p, "        leading-icon: Icons.{icon};").unwrap(),
+            _ => writeln!(p, "        leading-button: {{ icon: Icons.{icon}, enabled: true }};")
+                .unwrap(),
         }
     }
     if !w.icons.is_empty() {
@@ -1872,6 +1873,51 @@ fn appbar_widget(s: &mut String, w: &Widget, i: usize) {
     writeln!(
         s,
         "    appbar{i} := {component} {{\n        x: {}px;\n        y: {}px;\n{}    }}\n",
+        w.x as i64, w.y as i64, p,
+    )
+    .unwrap();
+}
+
+/// One progress-indicator family widget (`linear-progress`,
+/// `circular-progress`, `linear-wavy-progress`, `circular-wavy-progress`):
+/// `progress` and `indeterminate` mirror the `Widget` fields; explicit
+/// `width`/`height` pin the drawn size like the Compose `Modifier.size`.
+/// Elements are named `progress{n}` in scene order.
+fn progress_widget(s: &mut String, w: &Widget, i: usize) {
+    let component = match w.kind.as_str() {
+        "linear-progress" => "LinearProgressIndicator",
+        "circular-progress" => "CircularProgressIndicator",
+        "linear-wavy-progress" => "LinearWavyProgressIndicator",
+        "circular-wavy-progress" => "CircularWavyProgressIndicator",
+        other => panic!("unknown progress kind {other:?}"),
+    };
+    let mut p = String::new();
+    let over = &w.slint_overrides;
+    if w.indeterminate == Some(true) {
+        p.push_str("        indeterminate: true;\n");
+    } else if let Some(progress) = w.progress {
+        writeln!(p, "        progress: {progress};").unwrap();
+    }
+    // `slint_overrides` — the negative scenes' deliberate defects: a wrong
+    // `gap-size`, `wavelength` or a flat `amplitude` only the Slint side
+    // renders.
+    for (key, prop) in [("gap_size", "gap-size"), ("wavelength", "wavelength")] {
+        if let Some(v) = over.get(key) {
+            writeln!(p, "        {prop}: {}px;", widget_num(v)).unwrap();
+        }
+    }
+    if let Some(v) = over.get("amplitude") {
+        writeln!(p, "        amplitude: {};", widget_num(v)).unwrap();
+    }
+    if let Some(width) = w.width {
+        writeln!(p, "        width: {width}px;").unwrap();
+    }
+    if let Some(height) = w.height {
+        writeln!(p, "        height: {height}px;").unwrap();
+    }
+    writeln!(
+        s,
+        "    progress{i} := {component} {{\n        x: {}px;\n        y: {}px;\n{}    }}\n",
         w.x as i64, w.y as i64, p,
     )
     .unwrap();

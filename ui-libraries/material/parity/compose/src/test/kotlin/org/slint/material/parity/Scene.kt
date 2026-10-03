@@ -103,10 +103,15 @@ class Widget(json: JSONObject) {
     val checked: Boolean = json.optBoolean("checked", false)
     /** Icon-button container width `narrow`/`uniform`/`wide`. */
     val widthOption: String = (json.opt("width_option") as? String) ?: "uniform"
-    /** Loading-indicator mode: indeterminate (the continuous morph loop,
-     * default) or driven by [progress]. */
-    val indeterminate: Boolean = json.optBoolean("indeterminate", true)
-    /** Determinate loading-indicator progress, 0–1. */
+    /** Loading/progress-indicator mode: `indeterminate` renders the
+     * continuous morph loop / the no-progress overloads. The default
+     * differs per family — loading indicators default to indeterminate,
+     * progress indicators to determinate. */
+    val indeterminate: Boolean = json.optBoolean(
+        "indeterminate",
+        kind == "loading-indicator" || kind == "contained-loading-indicator",
+    )
+    /** Determinate progress, 0–1. Ignored when `indeterminate` is set. */
     val progress: Float = json.optDouble("progress", 0.0).toFloat()
     /** `top-app-bar` variant: `small` (default), `center`, `medium`,
      * `medium-flexible`, `large`, `large-flexible`, `two-rows`. */

@@ -1,0 +1,37 @@
+{
+    "name": "negative-progress-gap",
+    "type": "canvas",
+    "parity": "negative",
+    "negative_note": "the Slint side draws a 12px track gap instead of the token's 4px \u2014 the wider void between bar and track must fail the strict layer",
+    "size": [
+        280,
+        60
+    ],
+    "densities": [
+        1,
+        2
+    ],
+    "theme": {
+        "seed": "6750A4",
+        "variant": "tonal-spot",
+        "spec": "spec2025",
+        "platform": "phone",
+        "dark": false,
+        "contrast": 0.0
+    },
+    "fonts": {
+        "plain": "Roboto",
+        "brand": "Roboto"
+    },
+    "widgets": [
+        {
+            "kind": "linear-progress",
+            "x": 20,
+            "y": 24,
+            "progress": 0.5,
+            "slint_overrides": {
+                "gap_size": 12
+            }
+        }
+    ]
+}

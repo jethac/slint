@@ -49,6 +49,7 @@ negative-hover-layer
 negative-icon-button-morph
 negative-icon-offset
 negative-press-overlay
+negative-progress-gap
 negative-radius
 negative-recolor
 negative-shape-fit
@@ -60,6 +61,8 @@ negative-split-button-spacing
 negative-thumb-offset
 negative-toggle-select
 negative-wrong-shadow
+progress-indeterminate
+progress-indicators
 search-bars
 split-button-check-morph
 split-button-check-rotate

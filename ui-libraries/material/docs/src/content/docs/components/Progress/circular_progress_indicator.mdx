@@ -15,23 +15,54 @@ export component Example inherits Window {
     background: transparent;
     CircularProgressIndicator {
         progress: 0.75;
-        width: 80px;
-        height: 80px;
+        x: 30px;
+        y: 30px;
     }
 }
 ```
 </CodeSnippetMD>
 
 A `CircularProgressIndicator` displays progress in a circular form, typically used for loading or processing tasks.
+Its own size is the spec's 40dp container; `width`/`height` resize it for custom layouts.
+
+Deprecated for the indeterminate use case: Material 3 Expressive replaces the
+indeterminate circular progress indicator with the loading indicator —
+prefer `LoadingIndicator`/`ContainedLoadingIndicator` (issue #10). Keep this
+component for determinate use and for compatibility.
 
 ## Properties
 
 ### indeterminate
 <SlintProperty propName="indeterminate" typeName="bool">
-Whether the indicator is in indeterminate mode (shows a looping animation instead of a specific value).
+Whether the indicator is in indeterminate mode — deprecated in most uses; prefer the loading indicator.
 </SlintProperty>
 
 ### progress
 <SlintProperty propName="progress" typeName="float">
 The progress value, between 0 and 1.
+</SlintProperty>
+
+### color
+<SlintProperty propName="color" typeName="brush">
+The active indicator color — `ProgressIndicatorTokens.activeIndicatorColor` (primary).
+</SlintProperty>
+
+### track-color
+<SlintProperty propName="track-color" typeName="brush">
+The determinate track color — `ProgressIndicatorTokens.trackColor` (secondary container). The indeterminate track is transparent in the pinned source.
+</SlintProperty>
+
+### stroke-width
+<SlintProperty propName="stroke-width" typeName="length">
+`strokeWidth` — the indicator and track thickness (`CircularProgressIndicatorTokens.trackThickness`, 4dp).
+</SlintProperty>
+
+### stroke-cap
+<SlintProperty propName="stroke-cap" typeName="enum" enumName="LineCap">
+`strokeCap` — the cap on the indicator and track ends (`LineCap.round` default).
+</SlintProperty>
+
+### gap-size
+<SlintProperty propName="gap-size" typeName="length">
+`gapSize` — the space between the indicator arc and the track (`CircularProgressIndicatorTokens.trackActiveSpace`, 4dp).
 </SlintProperty>
