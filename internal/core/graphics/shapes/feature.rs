@@ -201,6 +201,48 @@ pub(crate) fn detect_features(cubics: &[Cubic]) -> Vec<Feature> {
     result
 }
 
+/// Variant of [detect_features] that detects the same feature boundaries but keeps
+/// the original cubics inside each feature instead of merging them with [extend].
+/// [detect_features] collapses aligned cubics into a single approximation, which is
+/// what upstream wants when constructing a [RoundedPolygon] from a cubic list. A
+/// [Morph](crate::graphics::shapes::Morph)'s interpolated outline is drawn verbatim
+/// upstream (`Morph.toPath` writes `asCubics` into the path), so shapes built from a
+/// morph must not deform it: each feature here holds the streak of source cubics the
+/// merged cubic would have replaced.
+pub(crate) fn detect_features_grouped(cubics: &[Cubic]) -> Vec<Feature> {
+    if cubics.is_empty() {
+        return Vec::new();
+    }
+
+    let mut result = Vec::new();
+    let mut current = cubics[0];
+    let mut streak_start = 0usize;
+
+    for i in 0..cubics.len() {
+        let next = cubics[(i + 1) % cubics.len()];
+
+        if i < cubics.len() - 1 && current.aligns_ish_with(&next) {
+            current = extend(current, next);
+            continue;
+        }
+
+        let streak = cubics[streak_start..=i].to_vec();
+        result.push(if current.straight_ish() {
+            Feature::Edge(streak)
+        } else {
+            Feature::Corner { cubics: streak, convex: current.convex_to(&next) }
+        });
+
+        if !current.smoothes_into_ish(&next) {
+            result.push(Cubic::empty(current.anchor1_x(), current.anchor1_y()).as_feature(&next));
+        }
+
+        current = next;
+        streak_start = i + 1;
+    }
+    result
+}
+
 impl Cubic {
     /// Convert to [Feature::Edge] if this cubic describes a straight line, otherwise
     /// to a [Feature::Corner]. Corner convexity is determined by `convex`.

@@ -10,7 +10,7 @@
 
 use super::ShapeError;
 use super::cubic::Cubic;
-use super::feature::{Feature, detect_features};
+use super::feature::{Feature, detect_features_grouped};
 use super::morph::Morph;
 use super::next_shape_id;
 use super::rounded_polygon::RoundedPolygon;
@@ -598,7 +598,9 @@ fn empty_polygon() -> RoundedPolygon {
 /// Builds a [Shape] from a morph's interpolated cubics at `progress`.
 /// When `endpoints` are given, the result's center is the linear interpolation of
 /// the endpoints' centers; otherwise the centroid of the outline is used.
-/// Features are re-detected on the interpolated outline (needed for chained morphs).
+/// Feature boundaries are re-detected on the interpolated outline (needed for
+/// chained morphs) but its cubics are kept verbatim: upstream `Morph.toPath` draws
+/// `asCubics` without the merging `detectFeatures` applies to polygons.
 fn morph_to_shape(morph: &Morph, progress: f32, endpoints: Option<(&Shape, &Shape)>) -> Shape {
     let cubics = morph.as_cubics(progress);
     if cubics.is_empty() {
@@ -608,7 +610,7 @@ fn morph_to_shape(morph: &Morph, progress: f32, endpoints: Option<(&Shape, &Shap
         x: interpolate(a.center.x, b.center.x, progress),
         y: interpolate(a.center.y, b.center.y, progress),
     });
-    let features = detect_features(&cubics);
+    let features = detect_features_grouped(&cubics);
     match RoundedPolygon::from_features(features, center) {
         Ok(p) => {
             let mut shape = Shape::from_polygon(&p);
