@@ -163,8 +163,17 @@ class Widget(json: JSONObject) {
     /** `*-divider` line thickness in dp — `DividerDefaults.Thickness` when
      * unset; `0` is the upstream `Dp.Hairline` (one physical pixel). */
     val thickness: Float = json.optDouble("thickness", 1.0).toFloat()
+    /** `*-card` kinds only: `true` picks the upstream `onClick` overload —
+     * the card is clickable, ripples, and takes focus; `false` is the
+     * plain `Surface` overload with no `interactionSource`. */
+    val clickable: Boolean = json.optBoolean("clickable", false)
+    /** `*-card` kinds only: the hoisted `DragInteraction` — `true` emits a
+     * live `DragInteraction.Start` on the card's `interactionSource`. */
+    val dragged: Boolean = json.optBoolean("dragged", false)
 
     val isFab: Boolean get() = kind == "fab" || kind == "extended-fab"
+    val isCard: Boolean get() =
+        kind == "elevated-card" || kind == "filled-card" || kind == "outlined-card"
     val isSplitButton: Boolean get() = kind.endsWith("split-button")
     val isIconButton: Boolean get() = kind.endsWith("icon-button")
     val isButton: Boolean get() =

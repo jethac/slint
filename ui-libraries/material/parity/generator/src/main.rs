@@ -315,6 +315,16 @@ struct Widget {
     /// Single-select groups: the checked item (`-1` selects none).
     #[serde(default)]
     selected_index: Option<i64>,
+    /// `*-card` kinds only: the upstream `onClick` overload — the card is
+    /// clickable, ripples, and takes focus; `false` (or unset) is the
+    /// plain `Surface` overload with no `interactionSource`.
+    #[serde(default)]
+    clickable: Option<bool>,
+    /// `*-card` kinds only: the hoisted `DragInteraction` — `true` emits a
+    /// live `DragInteraction.Start` on the Compose side and `dragged`
+    /// on the Slint side. Only meaningful on a `clickable` card.
+    #[serde(default)]
+    dragged: Option<bool>,
 }
 
 /// One item of a `connected-button-group`: the label, an optional leading
@@ -747,9 +757,16 @@ fn slint_case(scene: &Scene) -> String {
             "connected-button" => "ConnectedButton",
             "connected-button-group" => "ConnectedButtonGroup",
             "vertical-connected-button-group" => "VerticalConnectedButtonGroup",
+            "elevated-card" => "ElevatedCard",
+            "filled-card" => "FilledCard",
+            "outlined-card" => "OutlinedCard",
             other => panic!("unknown widget kind {other:?}"),
         };
         imports.push(component);
+        if w.kind.ends_with("-card") && w.text.is_some() {
+            imports.push("MaterialText");
+            imports.push("MaterialTypography");
+        }
         if w.kind.starts_with("connected-button") || w.kind == "vertical-connected-button-group" {
             imports.push("ConnectedButtonPosition");
         }
@@ -851,6 +868,10 @@ fn widget_actions(scene: &Scene) -> Vec<Action> {
             // does not consume focus ordinals.
             continue;
         }
+        if w.clickable == Some(false) {
+            // A non-clickable card has no `interactionSource` — no Tab stop.
+            continue;
+        }
         if w.state.as_deref() == Some("focused") {
             // Focused split halves: `leading` is the first of the pair.
             let target = if w.kind.ends_with("split-button")
@@ -893,6 +914,11 @@ fn widget_actions(scene: &Scene) -> Vec<Action> {
     // bucket's drawn container (XS is 40x32 with a 48dp touch area).
     if !scene.times.is_empty() {
         for w in &scene.widgets {
+            if w.clickable == Some(false) {
+                // A non-clickable card has no `interactionSource` — no
+                // scripted gesture ever applies to it.
+                continue;
+            }
             let kind = match w.state.as_deref() {
                 Some("pressed") => "press",
                 Some("hovered") => "move",
@@ -1232,6 +1258,7 @@ fn slint_canvas(s: &mut String, scene: &Scene) {
     let mut groups = 0;
     let mut icons = 0;
     let mut dividers = 0;
+    let mut cards = 0;
     for w in scene.widgets.iter() {
         let component = match w.kind.as_str() {
             "filled-button" => "FilledButton",
@@ -1362,6 +1389,12 @@ fn slint_canvas(s: &mut String, scene: &Scene) {
                 let i = groups;
                 groups += 1;
                 connected_group_widget(s, w, i, scene);
+                continue;
+            }
+            "elevated-card" | "filled-card" | "outlined-card" => {
+                let i = cards;
+                cards += 1;
+                card_widget(s, w, i, scene);
                 continue;
             }
             "icon" => {
@@ -1645,6 +1678,88 @@ fn connected_button_widget(s: &mut String, w: &Widget, i: usize, scene: &Scene) 
         }
     }
     emit_button_cover(s, w, i);
+}
+
+/// An `ElevatedCard`/`FilledCard`/`OutlinedCard` — named `card{n}`.
+/// `enabled`/`clickable`/`dragged` bind as authored; a static scene's
+/// `hovered`/`pressed` `state` comes through the `simulate_*` hooks (motion
+/// scenes drive the same pointer gesture the buttons get). A card's `text`
+/// renders as the `Text` in the upstream `Column` content slot — a
+/// `MaterialText` at the container's top-start, clipped by its shape.
+/// `slint_overrides` shadow `container_shape`/`container_color` for the
+/// negative cases.
+fn card_widget(s: &mut String, w: &Widget, i: usize, scene: &Scene) {
+    let component = match w.kind.as_str() {
+        "elevated-card" => "ElevatedCard",
+        "filled-card" => "FilledCard",
+        "outlined-card" => "OutlinedCard",
+        other => panic!("unknown card kind {other:?}"),
+    };
+    let over = &w.slint_overrides;
+    let mut p = String::new();
+    if let Some(v) = w.clickable {
+        writeln!(p, "        clickable: {v};").unwrap();
+    }
+    if let Some(v) = w.enabled {
+        writeln!(p, "        enabled: {v};").unwrap();
+    }
+    if let Some(v) = w.dragged {
+        writeln!(p, "        dragged: {v};").unwrap();
+    }
+    if scene.times.is_empty() {
+        match w.state.as_deref() {
+            Some("hovered") => writeln!(p, "        simulate_hover: true;").unwrap(),
+            Some("pressed") => writeln!(p, "        simulate_press: true;").unwrap(),
+            _ => {}
+        }
+    }
+    // The same `MaterialCornerShape` literal language the button group's
+    // `container_shape` override uses.
+    if let Some(shape) = over.get("container_shape").and_then(|v| v.as_str()) {
+        let lit = match shape {
+            "corner_full" => "{ top_left: 0px, top_right: 0px, bottom_right: 0px, bottom_left: 0px, full: true }",
+            "corner_none" => "{ top_left: 0px, top_right: 0px, bottom_right: 0px, bottom_left: 0px, full: false }",
+            other => panic!("slint_overrides.container_shape: unsupported shape {other:?}"),
+        };
+        writeln!(p, "        container_shape: {lit};").unwrap();
+    }
+    if let Some(c) = over.get("container_color").and_then(|v| v.as_str()) {
+        let color = if c.starts_with('#') {
+            c.to_lowercase()
+        } else {
+            format!("MaterialPalette.{}", c.replace('-', "_"))
+        };
+        writeln!(p, "        container_color: {color};").unwrap();
+    }
+    writeln!(
+        s,
+        "    card{i} := {component} {{\n        x: {}px;\n        y: {}px;\n        width: {}px;\n        height: {}px;\n{p}    }}\n",
+        w.x as i64,
+        w.y as i64,
+        w.width.unwrap_or(0.) as i64,
+        w.height.unwrap_or(0.) as i64,
+    )
+    .unwrap();
+    if let Some(text) = &w.text {
+        // `Text` inside the upstream `Card`'s `Column` sits at the
+        // container's top-start with its intrinsic size — emit a sibling
+        // so the trace reports the text bounds, not the stretched child.
+        writeln!(
+            s,
+            "    MaterialText {{\n        x: {}px;\n        y: {}px;\n        text: \"{text}\";\n        style: MaterialTypography.body_large;\n        color: card{i}.resolved_content_color;\n    }}\n",
+            w.x as i64,
+            w.y as i64,
+        )
+        .unwrap();
+    }
+    // `TRACE_PROPS` reads properties on the test-case root — forward the
+    // widget's live values through, same role as on `button0`.
+    if i == 0 {
+        for prop in &scene.trace_props {
+            let ty = trace_prop_type(prop);
+            writeln!(s, "    out property <{ty}> {prop}: card{i}.{prop};\n").unwrap();
+        }
+    }
 }
 
 /// A `ConnectedButtonGroup`/`VerticalConnectedButtonGroup` — named

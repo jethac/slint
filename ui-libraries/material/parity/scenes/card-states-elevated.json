@@ -1,0 +1,85 @@
+{
+  "type": "canvas",
+  "parity": "static",
+  "densities": [
+    1,
+    2
+  ],
+  "theme": {
+    "seed": "6750A4",
+    "variant": "tonal-spot",
+    "spec": "spec2025",
+    "platform": "phone",
+    "dark": false,
+    "contrast": 0.0
+  },
+  "fonts": {
+    "plain": "Roboto",
+    "brand": "Roboto"
+  },
+  "name": "card-states-elevated",
+  "size": [
+    856,
+    112
+  ],
+  "widgets": [
+    {
+      "kind": "elevated-card",
+      "x": 16,
+      "y": 16,
+      "width": 120,
+      "height": 80,
+      "clickable": true
+    },
+    {
+      "kind": "elevated-card",
+      "x": 156,
+      "y": 16,
+      "width": 120,
+      "height": 80,
+      "clickable": true,
+      "state": "hovered"
+    },
+    {
+      "kind": "elevated-card",
+      "x": 296,
+      "y": 16,
+      "width": 120,
+      "height": 80,
+      "clickable": true,
+      "enabled": false
+    },
+    {
+      "kind": "elevated-card",
+      "x": 436,
+      "y": 16,
+      "width": 120,
+      "height": 80,
+      "clickable": true,
+      "dragged": true
+    }
+  ],
+  "trace_elements": [
+    "card0",
+    "card1",
+    "card2",
+    "card3"
+  ],
+  "mask_decor": {
+    "card0": [
+      2000
+    ],
+    "card1": [
+      2000
+    ],
+    "card2": [
+      2000
+    ],
+    "card3": {
+      "times": [
+        2000
+      ],
+      "margin": 18
+    }
+  }
+}

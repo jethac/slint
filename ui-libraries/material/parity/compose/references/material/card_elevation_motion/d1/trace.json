@@ -1,0 +1,6429 @@
+{
+  "times_ms": [
+    0,
+    15,
+    30,
+    60,
+    120,
+    200,
+    400
+  ],
+  "frames": [
+    {
+      "t_ms": 0,
+      "props": {
+        "shadow_elevation": 1
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 1,
+      "props": {
+        "shadow_elevation": 1
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 2,
+      "props": {
+        "shadow_elevation": 1
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 3,
+      "props": {
+        "shadow_elevation": 1
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 4,
+      "props": {
+        "shadow_elevation": 1
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 5,
+      "props": {
+        "shadow_elevation": 1
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 6,
+      "props": {
+        "shadow_elevation": 1
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 7,
+      "props": {
+        "shadow_elevation": 1
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 8,
+      "props": {
+        "shadow_elevation": 1
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 9,
+      "props": {
+        "shadow_elevation": 1
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 10,
+      "props": {
+        "shadow_elevation": 1
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 11,
+      "props": {
+        "shadow_elevation": 1
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 12,
+      "props": {
+        "shadow_elevation": 1
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 13,
+      "props": {
+        "shadow_elevation": 1
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 14,
+      "props": {
+        "shadow_elevation": 1
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 15,
+      "props": {
+        "shadow_elevation": 1
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 16,
+      "props": {
+        "shadow_elevation": 1
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 17,
+      "props": {
+        "shadow_elevation": 1.0010294914245605
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 18,
+      "props": {
+        "shadow_elevation": 1.004186749458313
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 19,
+      "props": {
+        "shadow_elevation": 1.0095808506011963
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 20,
+      "props": {
+        "shadow_elevation": 1.017328143119812
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 21,
+      "props": {
+        "shadow_elevation": 1.0275537967681885
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 22,
+      "props": {
+        "shadow_elevation": 1.040390968322754
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 23,
+      "props": {
+        "shadow_elevation": 1.055983304977417
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 24,
+      "props": {
+        "shadow_elevation": 1.07448410987854
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 25,
+      "props": {
+        "shadow_elevation": 1.0960580110549927
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 26,
+      "props": {
+        "shadow_elevation": 1.1208815574645996
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 27,
+      "props": {
+        "shadow_elevation": 1.1491421461105347
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 28,
+      "props": {
+        "shadow_elevation": 1.1810410022735596
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 29,
+      "props": {
+        "shadow_elevation": 1.2167924642562866
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 30,
+      "props": {
+        "shadow_elevation": 1.2566251754760742
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 31,
+      "props": {
+        "shadow_elevation": 1.300781011581421
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 32,
+      "props": {
+        "shadow_elevation": 1.349515676498413
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 33,
+      "props": {
+        "shadow_elevation": 1.403096318244934
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 34,
+      "props": {
+        "shadow_elevation": 1.4618018865585327
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 35,
+      "props": {
+        "shadow_elevation": 1.525918960571289
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 36,
+      "props": {
+        "shadow_elevation": 1.595738410949707
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 37,
+      "props": {
+        "shadow_elevation": 1.6715497970581055
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 38,
+      "props": {
+        "shadow_elevation": 1.7536343336105347
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 39,
+      "props": {
+        "shadow_elevation": 1.8422510623931885
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 40,
+      "props": {
+        "shadow_elevation": 1.9376285076141357
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 41,
+      "props": {
+        "shadow_elevation": 2.039947748184204
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 42,
+      "props": {
+        "shadow_elevation": 2.149322509765625
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 43,
+      "props": {
+        "shadow_elevation": 2.265780448913574
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 44,
+      "props": {
+        "shadow_elevation": 2.3892338275909424
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 45,
+      "props": {
+        "shadow_elevation": 2.519465923309326
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 46,
+      "props": {
+        "shadow_elevation": 2.656111717224121
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 47,
+      "props": {
+        "shadow_elevation": 2.7986435890197754
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 48,
+      "props": {
+        "shadow_elevation": 2.9463768005371094
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 49,
+      "props": {
+        "shadow_elevation": 3.0984742641448975
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 50,
+      "props": {
+        "shadow_elevation": 3.25398588180542
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 51,
+      "props": {
+        "shadow_elevation": 3.4118738174438477
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 52,
+      "props": {
+        "shadow_elevation": 3.571068286895752
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 53,
+      "props": {
+        "shadow_elevation": 3.7305092811584473
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 54,
+      "props": {
+        "shadow_elevation": 3.889191150665283
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 55,
+      "props": {
+        "shadow_elevation": 4.046205520629883
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 56,
+      "props": {
+        "shadow_elevation": 4.20076322555542
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 57,
+      "props": {
+        "shadow_elevation": 4.352204322814941
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 58,
+      "props": {
+        "shadow_elevation": 4.500001907348633
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 59,
+      "props": {
+        "shadow_elevation": 4.643755912780762
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 60,
+      "props": {
+        "shadow_elevation": 4.783185958862305
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 61,
+      "props": {
+        "shadow_elevation": 4.918107986450195
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 62,
+      "props": {
+        "shadow_elevation": 5.048425674438477
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 63,
+      "props": {
+        "shadow_elevation": 5.174102783203125
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 64,
+      "props": {
+        "shadow_elevation": 5.295163154602051
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 65,
+      "props": {
+        "shadow_elevation": 5.411671161651611
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 66,
+      "props": {
+        "shadow_elevation": 5.5237226486206055
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 67,
+      "props": {
+        "shadow_elevation": 5.631434917449951
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 68,
+      "props": {
+        "shadow_elevation": 5.734939098358154
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 69,
+      "props": {
+        "shadow_elevation": 5.834377288818359
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 70,
+      "props": {
+        "shadow_elevation": 5.929895877838135
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 71,
+      "props": {
+        "shadow_elevation": 6.0216450691223145
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 72,
+      "props": {
+        "shadow_elevation": 6.109771728515625
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 73,
+      "props": {
+        "shadow_elevation": 6.194426536560059
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 74,
+      "props": {
+        "shadow_elevation": 6.2757463455200195
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 75,
+      "props": {
+        "shadow_elevation": 6.353872299194336
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 76,
+      "props": {
+        "shadow_elevation": 6.4289326667785645
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 77,
+      "props": {
+        "shadow_elevation": 6.501060962677002
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 78,
+      "props": {
+        "shadow_elevation": 6.570374011993408
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 79,
+      "props": {
+        "shadow_elevation": 6.636991500854492
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 80,
+      "props": {
+        "shadow_elevation": 6.701024055480957
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 81,
+      "props": {
+        "shadow_elevation": 6.762576580047607
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 82,
+      "props": {
+        "shadow_elevation": 6.821748733520508
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 83,
+      "props": {
+        "shadow_elevation": 6.878634929656982
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 84,
+      "props": {
+        "shadow_elevation": 6.933326244354248
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 85,
+      "props": {
+        "shadow_elevation": 6.985907554626465
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 86,
+      "props": {
+        "shadow_elevation": 7.036458969116211
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 87,
+      "props": {
+        "shadow_elevation": 7.085057258605957
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 88,
+      "props": {
+        "shadow_elevation": 7.131775379180908
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 89,
+      "props": {
+        "shadow_elevation": 7.1766839027404785
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 90,
+      "props": {
+        "shadow_elevation": 7.219845294952393
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 91,
+      "props": {
+        "shadow_elevation": 7.26132345199585
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 92,
+      "props": {
+        "shadow_elevation": 7.301177024841309
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 93,
+      "props": {
+        "shadow_elevation": 7.339463710784912
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 94,
+      "props": {
+        "shadow_elevation": 7.376235008239746
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 95,
+      "props": {
+        "shadow_elevation": 7.411542892456055
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 96,
+      "props": {
+        "shadow_elevation": 7.445433616638184
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 97,
+      "props": {
+        "shadow_elevation": 7.477954864501953
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 98,
+      "props": {
+        "shadow_elevation": 7.509147644042969
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 99,
+      "props": {
+        "shadow_elevation": 7.539056777954102
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 100,
+      "props": {
+        "shadow_elevation": 7.567720890045166
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 101,
+      "props": {
+        "shadow_elevation": 7.59517765045166
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 102,
+      "props": {
+        "shadow_elevation": 7.621464729309082
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 103,
+      "props": {
+        "shadow_elevation": 7.646615028381348
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 104,
+      "props": {
+        "shadow_elevation": 7.670662879943848
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 105,
+      "props": {
+        "shadow_elevation": 7.693639755249023
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 106,
+      "props": {
+        "shadow_elevation": 7.715575218200684
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 107,
+      "props": {
+        "shadow_elevation": 7.736498832702637
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 108,
+      "props": {
+        "shadow_elevation": 7.756438732147217
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 109,
+      "props": {
+        "shadow_elevation": 7.775420665740967
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 110,
+      "props": {
+        "shadow_elevation": 7.793471336364746
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 111,
+      "props": {
+        "shadow_elevation": 7.810614109039307
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 112,
+      "props": {
+        "shadow_elevation": 7.826873779296875
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 113,
+      "props": {
+        "shadow_elevation": 7.842270374298096
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 114,
+      "props": {
+        "shadow_elevation": 7.8568291664123535
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 115,
+      "props": {
+        "shadow_elevation": 7.870569229125977
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 116,
+      "props": {
+        "shadow_elevation": 7.883511543273926
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 117,
+      "props": {
+        "shadow_elevation": 7.895674228668213
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 118,
+      "props": {
+        "shadow_elevation": 7.907075881958008
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 119,
+      "props": {
+        "shadow_elevation": 7.917734622955322
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 120,
+      "props": {
+        "shadow_elevation": 7.927669525146484
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 121,
+      "props": {
+        "shadow_elevation": 7.93689489364624
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 122,
+      "props": {
+        "shadow_elevation": 7.945427894592285
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 123,
+      "props": {
+        "shadow_elevation": 7.953284740447998
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 124,
+      "props": {
+        "shadow_elevation": 7.960477828979492
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 125,
+      "props": {
+        "shadow_elevation": 7.967024803161621
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 126,
+      "props": {
+        "shadow_elevation": 7.972938537597656
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 127,
+      "props": {
+        "shadow_elevation": 7.978231906890869
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 128,
+      "props": {
+        "shadow_elevation": 7.9829182624816895
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 129,
+      "props": {
+        "shadow_elevation": 7.987010955810547
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 130,
+      "props": {
+        "shadow_elevation": 7.990521430969238
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 131,
+      "props": {
+        "shadow_elevation": 7.993461608886719
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 132,
+      "props": {
+        "shadow_elevation": 7.995843887329102
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 133,
+      "props": {
+        "shadow_elevation": 7.997677326202393
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 134,
+      "props": {
+        "shadow_elevation": 7.998974800109863
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 135,
+      "props": {
+        "shadow_elevation": 7.999745845794678
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 136,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 137,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 138,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 139,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 140,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 141,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 142,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 143,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 144,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 145,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 146,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 147,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 148,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 149,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 150,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 151,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 152,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 153,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 154,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 155,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 156,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 157,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 158,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 159,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 160,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 161,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 162,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 163,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 164,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 165,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 166,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 167,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 168,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 169,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 170,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 171,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 172,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 173,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 174,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 175,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 176,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 177,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 178,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 179,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 180,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 181,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 182,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 183,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 184,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 185,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 186,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 187,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 188,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 189,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 190,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 191,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 192,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 193,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 194,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 195,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 196,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 197,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 198,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 199,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 200,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 201,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 202,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 203,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 204,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 205,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 206,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 207,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 208,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 209,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 210,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 211,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 212,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 213,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 214,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 215,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 216,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 217,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 218,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 219,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 220,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 221,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 222,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 223,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 224,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 225,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 226,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 227,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 228,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 229,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 230,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 231,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 232,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 233,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 234,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 235,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 236,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 237,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 238,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 239,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 240,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 241,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 242,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 243,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 244,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 245,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 246,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 247,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 248,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 249,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 250,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 251,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 252,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 253,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 254,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 255,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 256,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 257,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 258,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 259,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 260,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 261,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 262,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 263,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 264,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 265,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 266,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 267,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 268,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 269,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 270,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 271,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 272,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 273,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 274,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 275,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 276,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 277,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 278,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 279,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 280,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 281,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 282,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 283,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 284,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 285,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 286,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 287,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 288,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 289,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 290,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 291,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 292,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 293,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 294,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 295,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 296,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 297,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 298,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 299,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 300,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 301,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 302,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 303,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 304,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 305,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 306,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 307,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 308,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 309,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 310,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 311,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 312,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 313,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 314,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 315,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 316,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 317,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 318,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 319,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 320,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 321,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 322,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 323,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 324,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 325,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 326,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 327,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 328,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 329,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 330,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 331,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 332,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 333,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 334,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 335,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 336,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 337,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 338,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 339,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 340,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 341,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 342,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 343,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 344,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 345,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 346,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 347,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 348,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 349,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 350,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 351,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 352,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 353,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 354,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 355,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 356,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 357,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 358,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 359,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 360,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 361,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 362,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 363,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 364,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 365,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 366,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 367,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 368,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 369,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 370,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 371,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 372,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 373,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 374,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 375,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 376,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 377,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 378,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 379,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 380,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 381,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 382,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 383,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 384,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 385,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 386,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 387,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 388,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 389,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 390,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 391,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 392,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 393,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 394,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 395,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 396,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 397,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 398,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 399,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 400,
+      "props": {
+        "shadow_elevation": 8
+      },
+      "elements": {
+        "card0": {
+          "x": 60,
+          "y": 40,
+          "w": 120,
+          "h": 80,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    }
+  ],
+  "settle_ms": 122
+}

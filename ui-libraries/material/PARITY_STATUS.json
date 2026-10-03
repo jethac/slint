@@ -119,7 +119,7 @@
     ],
     "needs": "none",
     "notes": "slint component: ElevatedCard/FilledCard/OutlinedCard",
-    "status": "partial"
+    "status": "done"
   },
   "CenterAlignedTopAppBar": {
     "issues": [
@@ -291,7 +291,7 @@
     ],
     "needs": "none",
     "notes": "slint component: ElevatedCard",
-    "status": "partial"
+    "status": "done"
   },
   "ElevatedFilterChip": {
     "issues": [
@@ -743,7 +743,7 @@
     ],
     "needs": "none",
     "notes": "slint component: OutlinedCard",
-    "status": "partial"
+    "status": "done"
   },
   "OutlinedIconButton": {
     "issues": [

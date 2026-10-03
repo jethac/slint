@@ -9,6 +9,11 @@ button-release-morph
 button-sizes
 button-states
 button-styles
+card-elevation-motion
+card-states-elevated
+card-states-filled
+card-states-outlined
+card-variants
 connected-button-groups
 connected-button-morph
 connected-button-press-morph
@@ -35,6 +40,8 @@ negative-button-focus-ring
 negative-button-press-morph
 negative-button-ripple-clip
 negative-button-role
+negative-card-color
+negative-card-shape
 negative-connected-button-group
 negative-corner-leak-dark
 negative-corner-leak

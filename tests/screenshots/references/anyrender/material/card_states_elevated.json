@@ -1,0 +1,268 @@
+[
+  {
+    "Fill": {
+      "brush": {
+        "Image": {
+          "image": 0,
+          "sampler": {
+            "alpha": 1.0,
+            "quality": "Medium",
+            "x_extend": "Pad",
+            "y_extend": "Pad"
+          }
+        }
+      },
+      "brush_transform": null,
+      "fill": "NonZero",
+      "shape": "M0,0 L122,0 L122,82 L0,82 Z",
+      "transform": [
+        1.0,
+        0.0,
+        0.0,
+        1.0,
+        15.0,
+        15.0
+      ]
+    }
+  },
+  {
+    "Fill": {
+      "brush": {
+        "Image": {
+          "image": 1,
+          "sampler": {
+            "alpha": 1.0,
+            "quality": "Medium",
+            "x_extend": "Pad",
+            "y_extend": "Pad"
+          }
+        }
+      },
+      "brush_transform": null,
+      "fill": "NonZero",
+      "shape": "M0,0 L127,0 L127,87 L0,87 Z",
+      "transform": [
+        1.0,
+        0.0,
+        0.0,
+        1.0,
+        13.0,
+        13.0
+      ]
+    }
+  },
+  {
+    "Fill": {
+      "brush": {
+        "Solid": {
+          "components": [
+            0.9725,
+            0.9451,
+            0.9804,
+            1.0
+          ]
+        }
+      },
+      "brush_transform": null,
+      "fill": "NonZero",
+      "shape": "M0,12 C0,5.3726 5.3726,0 12,0 L108,0 C114.6274,0 120,5.3726 120,12 L120,68 C120,74.6274 114.6274,80 108,80 L12,80 C5.3726,80 0,74.6274 0,68 Z",
+      "transform": [
+        1.0,
+        0.0,
+        0.0,
+        1.0,
+        16.0,
+        16.0
+      ]
+    }
+  },
+  {
+    "PushLayer": {
+      "alpha": 0.0,
+      "backdrop_filter": null,
+      "blend": {
+        "compose": "SrcOver",
+        "mix": "Normal"
+      },
+      "clip": "M0,0 L1000000000,0 L1000000000,1000000000 L0,1000000000 Z",
+      "filter": null,
+      "transform": [
+        1.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0
+      ]
+    }
+  },
+  "PopLayer",
+  {
+    "PushClipLayer": {
+      "clip": "M0,12 C0,5.3726 5.3726,0 12,0 L108,0 C114.6274,0 120,5.3726 120,12 L120,68 C120,74.6274 114.6274,80 108,80 L12,80 C5.3726,80 0,74.6274 0,68 Z",
+      "transform": [
+        1.0,
+        0.0,
+        0.0,
+        1.0,
+        16.0,
+        16.0
+      ]
+    }
+  },
+  "PopLayer",
+  {
+    "PushLayer": {
+      "alpha": 0.08,
+      "backdrop_filter": null,
+      "blend": {
+        "compose": "SrcOver",
+        "mix": "Normal"
+      },
+      "clip": "M0,0 L1000000000,0 L1000000000,1000000000 L0,1000000000 Z",
+      "filter": null,
+      "transform": [
+        1.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0
+      ]
+    }
+  },
+  "PopLayer",
+  {
+    "PushClipLayer": {
+      "clip": "M0,12 C0,5.3726 5.3726,0 12,0 L108,0 C114.6274,0 120,5.3726 120,12 L120,68 C120,74.6274 114.6274,80 108,80 L12,80 C5.3726,80 0,74.6274 0,68 Z",
+      "transform": [
+        1.0,
+        0.0,
+        0.0,
+        1.0,
+        156.0,
+        16.0
+      ]
+    }
+  },
+  "PopLayer",
+  {
+    "PushLayer": {
+      "alpha": 0.0,
+      "backdrop_filter": null,
+      "blend": {
+        "compose": "SrcOver",
+        "mix": "Normal"
+      },
+      "clip": "M0,0 L1000000000,0 L1000000000,1000000000 L0,1000000000 Z",
+      "filter": null,
+      "transform": [
+        1.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0
+      ]
+    }
+  },
+  "PopLayer",
+  {
+    "PushClipLayer": {
+      "clip": "M0,12 C0,5.3726 5.3726,0 12,0 L108,0 C114.6274,0 120,5.3726 120,12 L120,68 C120,74.6274 114.6274,80 108,80 L12,80 C5.3726,80 0,74.6274 0,68 Z",
+      "transform": [
+        1.0,
+        0.0,
+        0.0,
+        1.0,
+        156.0,
+        16.0
+      ]
+    }
+  },
+  "PopLayer",
+  {
+    "PushLayer": {
+      "alpha": 0.0,
+      "backdrop_filter": null,
+      "blend": {
+        "compose": "SrcOver",
+        "mix": "Normal"
+      },
+      "clip": "M0,0 L1000000000,0 L1000000000,1000000000 L0,1000000000 Z",
+      "filter": null,
+      "transform": [
+        1.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0
+      ]
+    }
+  },
+  "PopLayer",
+  {
+    "PushClipLayer": {
+      "clip": "M0,12 C0,5.3726 5.3726,0 12,0 L108,0 C114.6274,0 120,5.3726 120,12 L120,68 C120,74.6274 114.6274,80 108,80 L12,80 C5.3726,80 0,74.6274 0,68 Z",
+      "transform": [
+        1.0,
+        0.0,
+        0.0,
+        1.0,
+        296.0,
+        16.0
+      ]
+    }
+  },
+  "PopLayer",
+  {
+    "PushClipLayer": {
+      "clip": "M0,12 C0,5.3726 5.3726,0 12,0 L108,0 C114.6274,0 120,5.3726 120,12 L120,68 C120,74.6274 114.6274,80 108,80 L12,80 C5.3726,80 0,74.6274 0,68 Z",
+      "transform": [
+        1.0,
+        0.0,
+        0.0,
+        1.0,
+        296.0,
+        16.0
+      ]
+    }
+  },
+  "PopLayer",
+  {
+    "PushLayer": {
+      "alpha": 0.0,
+      "backdrop_filter": null,
+      "blend": {
+        "compose": "SrcOver",
+        "mix": "Normal"
+      },
+      "clip": "M0,0 L1000000000,0 L1000000000,1000000000 L0,1000000000 Z",
+      "filter": null,
+      "transform": [
+        1.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0
+      ]
+    }
+  },
+  "PopLayer",
+  {
+    "PushClipLayer": {
+      "clip": "M0,12 C0,5.3726 5.3726,0 12,0 L108,0 C114.6274,0 120,5.3726 120,12 L120,68 C120,74.6274 114.6274,80 108,80 L12,80 C5.3726,80 0,74.6274 0,68 Z",
+      "transform": [
+        1.0,
+        0.0,
+        0.0,
+        1.0,
+        436.0,
+        16.0
+      ]
+    }
+  },
+  "PopLayer"
+]

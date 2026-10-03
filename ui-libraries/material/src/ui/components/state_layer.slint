@@ -105,6 +105,9 @@ export component StateLayer {
     in property <bool> pressed;
     in property <bool> has_focus;
     in property <bool> has_hover;
+    /// A live `DragInteraction` — the `ripple` indication's drag overlay
+    /// (`enableDragIndication`, `StateTokens.DraggedStateLayerOpacity`).
+    in property <bool> dragged;
     /// When true, focus is communicated by a `FocusRing` the caller draws
     /// and the opacity layer is skipped — the `InsetRing` ripple theme
     /// upstream (`RippleThemeConfiguration.Focus.InsetRing`).
@@ -157,6 +160,9 @@ export component StateLayer {
         }
         focus when root.enabled && root.has_focus && !root.focus_ring : {
             root.state_layer_opacity: MaterialPalette.state_layer_opacity_focus;
+        }
+        drag when root.enabled && root.dragged : {
+            root.state_layer_opacity: MaterialPalette.state_layer_opacity_drag;
         }
         hover when root.enabled && root.has_hover && !MaterialWindowAdapter.disable_hover : {
             root.state_layer_opacity: MaterialPalette.state_layer_opacity_hover;
@@ -297,6 +303,8 @@ export component StateLayerArea inherits FocusTouchArea {
     /// while upstream's per-widget `InteractionSource` can.
     in property <bool> simulate_hover;
     in property <bool> simulate_press;
+    /// A hoisted `DragInteraction` — see `StateLayer.dragged`.
+    in property <bool> dragged;
     /// `pressed` limited to pointer-downs that started inside the shape.
     out property <bool> effective_pressed: (root.pressed && root.pointer_inside) || root.enter_pressed || root.simulate_press;
     /// `has_hover` limited to pointer positions inside the shape.
@@ -367,7 +375,7 @@ export component StateLayerArea inherits FocusTouchArea {
         }
     }
 
-    if !root.enabled || (root.enabled && (root.has_focus || root.effective_pressed || root.effective_hover)) : StateLayer {
+    if !root.enabled || (root.enabled && (root.has_focus || root.effective_pressed || root.effective_hover || root.dragged)) : StateLayer {
         width: 100%;
         height: 100%;
         background: root.transparent_background ? transparent : root.color;
@@ -380,6 +388,7 @@ export component StateLayerArea inherits FocusTouchArea {
         pressed: root.effective_pressed;
         has_focus: root.has_focus;
         has_hover: root.effective_hover;
+        dragged: root.dragged;
         display_background: root.display_background;
         focus_ring: root.focus_ring;
     }
