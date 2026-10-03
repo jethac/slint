@@ -1,0 +1,251 @@
+// Copyright © SixtyFPS GmbH <info@slint.dev>
+// SPDX-License-Identifier: MIT
+
+import { LoadingIndicatorTokens } from "../styling/generated/material_component_tokens.slint";
+import { MaterialShapes } from "../styling/generated/material_shapes.slint";
+import { MaterialCornerShape, ShapeTokens } from "../styling/generated/material_shape_tokens.slint";
+import { MaterialPalette } from "../styling/material_palette.slint";
+
+// The polygon sequences of `LoadingIndicatorDefaults` in LoadingIndicator.kt
+// (androidx @ 23327507f7fc7d5b19d65fec4b090f60c970079b). The members of
+// `MaterialShapes` are already normalized; the `normalized()` calls the
+// component applies are idempotent on them.
+global LoadingIndicatorShapes {
+    /// `IndeterminateIndicatorPolygons`: the seven shapes the indeterminate
+    /// indicator morphs between.
+    out property <[shape]> indeterminate: [
+        MaterialShapes.soft-burst,
+        MaterialShapes.cookie-9-sided,
+        MaterialShapes.pentagon,
+        MaterialShapes.pill,
+        MaterialShapes.sunny,
+        MaterialShapes.cookie-4-sided,
+        MaterialShapes.oval,
+    ];
+    /// `DeterminateIndicatorPolygons`: a circle rotated 360°/20 so the morph
+    /// into the soft-burst lines up smoothly, then the soft-burst itself.
+    out property <[shape]> determinate: [
+        Shapes.normalized(Shapes.rotated(Shapes.circle(10), 18deg)),
+        MaterialShapes.soft-burst,
+    ];
+}
+
+// The shared implementation — `LoadingIndicatorImpl` in LoadingIndicator.kt.
+// Draws the container box (48×48, clipped to the container shape) with a
+// centered 1:1 child that paints the morphing polygon.
+component LoadingIndicatorImpl {
+    in property <bool> indeterminate: true;
+    /// `progress()` — the determinate mode's progress in 0.0-1.0, coerced
+    /// into the range. Ignored when `indeterminate` is set.
+    in property <float> progress;
+    /// `indicatorPolygons` — the shapes the indicator morphs between.
+    /// Expected to hold at least two items, like the upstream API.
+    in property <[shape]> polygons;
+    /// `calculateScaleFactor(polygons) * ActiveIndicatorScale`: the factor
+    /// `processPath` scales the normalized morph by so a rotating shape is
+    /// never clipped. The defaults bound it to the exact constants for the
+    /// built-in sequences; callers passing custom `polygons` must supply the
+    /// matching value computed on the raw shapes — the `.slint` `Shapes`
+    /// namespace has no `bounds`/`max-bounds` builtins to derive it here.
+    in property <float> active-scale;
+    in property <color> indicator-color;
+    in property <color> container-color: transparent;
+    in property <MaterialCornerShape> container-shape;
+
+    accessible-role: progress-indicator;
+    accessible-value: root.indeterminate ? "" : root.progress;
+    accessible-value-minimum: 0;
+    accessible-value-maximum: 1;
+
+    width: LoadingIndicatorTokens.container_width;
+    height: LoadingIndicatorTokens.container_height;
+
+    container := Rectangle {
+        width: 100%;
+        height: 100%;
+        clip: true;
+        border_radius: root.container-shape.full ? min(self.width, self.height) / 2 : root.container-shape.top-left;
+        background: root.container-color;
+
+        // The indeterminate branch — `LoadingIndicatorImpl` without a
+        // `progress` parameter. In Compose, a `LaunchedEffect` launches a
+        // `morphProgress.animateTo(1f)` spring every `MorphIntervalMillis`
+        // (650ms) and an `infiniteRepeatable` tween drives `globalRotation`.
+        // Both the morph and the rotation are therefore pure functions of
+        // `elapsed`: the spring's damped-oscillator closed form — the same
+        // analytic solution `SpringSimulation.updateValues` and Slint's own
+        // `spring()` easing evaluate — and a linear 360° ramp. `epoch`
+        // anchors the cycle at component creation.
+        if root.indeterminate: ind := Rectangle {
+            width: min(parent.width, parent.height);
+            height: self.width;
+            x: (parent.width - self.width) / 2;
+            y: (parent.height - self.height) / 2;
+
+            property <bool> animate: !MaterialPalette.reduced-motion;
+            property <duration> epoch;
+            property <duration> elapsed: ind.animate ? animation-tick() - ind.epoch : 0ms;
+            property <int> count: max(root.polygons.length, 1);
+            // `currentMorphIndex` — the running spring's target morph.
+            property <int> cycle-index: floor(ind.elapsed / 650ms);
+            // Seconds into the current `MorphIntervalMillis` cycle.
+            property <float> phase: mod(ind.elapsed, 650ms) / 1s;
+
+            // `morphProgress` — `spring(dampingRatio = 0.6f,
+            // stiffness = 200f, visibilityThreshold = 0.1f)`. The underdamped
+            // solution is `x(t) = 1 - e^(rt)(cos(w_d t) + (r/w_d)sin(w_d t))`
+            // with `r = -ζw_n = -0.6√200` and `w_d = w_n√(1-ζ²)`; the
+            // coefficients below evaluate it with `t` in seconds. The
+            // spring's `animateTo` finishes at the estimated envelope
+            // crossing `ln(delta/c)/r` (`delta = 0.1`, `c = 1.25` for a 0→1
+            // spring at rest) ≈ 0.2977s; Compose then snaps to the next
+            // polygon and holds it until the next cycle starts.
+            property <float> spring-progress: ind.phase >= 0.2977 ? 1 :
+                1 - exp(-8.4852814 * ind.phase)
+                    * (cos(11.3137085 * ind.phase * 1rad)
+                       + 0.75 * sin(11.3137085 * ind.phase * 1rad));
+
+            init => {
+                ind.epoch = animation-tick();
+            }
+
+            // `morphSequence[currentMorphIndex].toPath(morphProgress)` —
+            // the morph between this and the next polygon, sampled at the
+            // uncoerced spring progress.
+            // `rotate(QuarterRotation + morphProgress * 90 +
+            // morphRotationTargetAngle + globalRotation)`, clockwise around
+            // the box center. `morphProgress * 90` and
+            // `morphRotationTargetAngle` collapse into
+            // `90 * (cycle-index + spring-progress)`: each cycle sweeps +90°
+            // and the +90° step applied at spring finish cancels the
+            // progress snap to 0. `globalRotation` is the
+            // `GlobalRotationDurationMillis` (4666ms) linear ramp.
+            // The rotation is baked into the shape itself rather than
+            // applied as an element transform so renderers without
+            // transform support draw it identically.
+            shape: Shapes.rotated(
+                Shapes.scaled(
+                    Shapes.morph(
+                        Shapes.normalized(root.polygons[mod(ind.cycle-index, ind.count)]),
+                        Shapes.normalized(root.polygons[mod(ind.cycle-index + 1, ind.count)]),
+                        ind.spring-progress),
+                    root.active-scale, root.active-scale),
+                90deg
+                    + 90deg * (ind.cycle-index + ind.spring-progress)
+                    + mod(ind.elapsed, 4666ms) / 4666ms * 360deg);
+            shape-fit: ShapeFit.normalized;
+            background: root.indicator-color;
+        }
+
+        // The determinate branch — `LoadingIndicatorImpl(progress, ...)`,
+        // whose `morphSequence(polygons, circularSequence = false)` holds
+        // `polygons.length - 1` morphs indexed by progress.
+        if !root.indeterminate: det := Rectangle {
+            width: min(parent.width, parent.height);
+            height: self.width;
+            x: (parent.width - self.width) / 2;
+            y: (parent.height - self.height) / 2;
+
+            property <float> p: Math.min(Math.max(root.progress, 0), 1);
+            property <int> morphs: max(root.polygons.length - 1, 1);
+            // `activeMorphIndex` — `min(int(size * progress), size - 1)`.
+            property <int> active-morph-index: min(floor(morphs * p), morphs - 1);
+            // `adjustedProgressValue` — `(progress * size) % 1`, except at
+            // `progress == 1` on the last morph, where it is held at 1.
+            property <float> adjusted-progress:
+                p == 1 && active-morph-index == morphs - 1 ? 1 : mod(p * morphs, 1);
+
+            // `rotate(-progress * 180)` — counterclockwise, baked into the
+            // shape so renderers without transform support draw it
+            // identically.
+            shape: Shapes.rotated(
+                Shapes.scaled(
+                    Shapes.morph(
+                        Shapes.normalized(root.polygons[active-morph-index]),
+                        Shapes.normalized(root.polygons[min(active-morph-index + 1, root.polygons.length - 1)]),
+                        adjusted-progress),
+                    root.active-scale, root.active-scale),
+                -p * 180deg);
+            shape-fit: ShapeFit.normalized;
+            background: root.indicator-color;
+        }
+    }
+}
+
+/// A Material Design loading indicator — the plain `LoadingIndicator` of
+/// LoadingIndicator.kt. With `indeterminate` set (the default) it animates a
+/// continuous morph through `polygons`; otherwise the morph is driven by
+/// `progress` in 0.0-1.0.
+export component LoadingIndicator {
+    /// `false` selects the determinate overload `LoadingIndicator(progress)`.
+    in property <bool> indeterminate: true;
+    /// The determinate mode's progress in 0.0-1.0.
+    in property <float> progress;
+    /// `color` — the active indicator color; `ActiveIndicatorColor` (primary)
+    /// by default.
+    in property <color> indicator-color: LoadingIndicatorTokens.active_indicator_color;
+    /// `polygons` — the morph sequence, defaulting per mode to the
+    /// `IndeterminateIndicatorPolygons`/`DeterminateIndicatorPolygons` lists
+    /// of `LoadingIndicatorDefaults`.
+    in property <[shape]> polygons: root.indeterminate
+        ? LoadingIndicatorShapes.indeterminate
+        : LoadingIndicatorShapes.determinate;
+    /// `calculateScaleFactor(polygons) * ActiveIndicatorScale` — the
+    /// anti-clip factor. These defaults are the exact computed values for the
+    /// built-in sequences; override when passing custom `polygons`.
+    in property <float> active-scale: root.indeterminate ? 0.68525416 : 0.79166669;
+    width: LoadingIndicatorTokens.container_width;
+    height: LoadingIndicatorTokens.container_height;
+
+    impl := LoadingIndicatorImpl {
+        width: 100%;
+        height: 100%;
+        indeterminate: root.indeterminate;
+        progress: root.progress;
+        polygons: root.polygons;
+        active-scale: root.active-scale;
+        indicator-color: root.indicator-color;
+        container-shape: LoadingIndicatorTokens.container_shape;
+    }
+}
+
+/// A Material Design contained loading indicator —
+/// `ContainedLoadingIndicator` of LoadingIndicator.kt: the same morphing
+/// indicator inside a filled, clipped container.
+export component ContainedLoadingIndicator {
+    /// `false` selects the determinate overload
+    /// `ContainedLoadingIndicator(progress)`.
+    in property <bool> indeterminate: true;
+    /// The determinate mode's progress in 0.0-1.0.
+    in property <float> progress;
+    /// `indicatorColor` — `ContainedActiveColor` (on-primary-container) by
+    /// default.
+    in property <color> indicator-color: LoadingIndicatorTokens.contained_active_color;
+    /// `containerColor` — `ContainedContainerColor` (primary-container) by
+    /// default.
+    in property <color> container-color: LoadingIndicatorTokens.contained_container_color;
+    /// `containerShape` — `LoadingIndicatorDefaults.containerShape`
+    /// (`ContainerShape`, the full-corner token) by default.
+    in property <MaterialCornerShape> container-shape: LoadingIndicatorTokens.container_shape;
+    /// `polygons` — see `LoadingIndicator.polygons`.
+    in property <[shape]> polygons: root.indeterminate
+        ? LoadingIndicatorShapes.indeterminate
+        : LoadingIndicatorShapes.determinate;
+    /// `calculateScaleFactor(polygons) * ActiveIndicatorScale` — see
+    /// `LoadingIndicator.active-scale`.
+    in property <float> active-scale: root.indeterminate ? 0.68525416 : 0.79166669;
+    width: LoadingIndicatorTokens.container_width;
+    height: LoadingIndicatorTokens.container_height;
+
+    impl := LoadingIndicatorImpl {
+        width: 100%;
+        height: 100%;
+        indeterminate: root.indeterminate;
+        progress: root.progress;
+        polygons: root.polygons;
+        active-scale: root.active-scale;
+        indicator-color: root.indicator-color;
+        container-color: root.container-color;
+        container-shape: root.container-shape;
+    }
+}

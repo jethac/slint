@@ -54,7 +54,7 @@ pub use corner::CornerRounding;
 pub use cubic::Cubic;
 pub use feature::Feature;
 pub use mapping::{DoubleMapper, ProgressableFeature};
-pub use measure::{LengthMeasurer, MeasuredCubic, MeasuredPolygon, Measurer};
+pub use measure::{AngleMeasurer, LengthMeasurer, MeasuredCubic, MeasuredPolygon, Measurer};
 pub use morph::Morph;
 pub use rounded_polygon::RoundedPolygon;
 pub use shape::{MorphCache, Shape, ShapeFeature, ShapeFeatureKind, ShapePoint};

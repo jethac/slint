@@ -20,6 +20,7 @@ import androidx.annotation.FloatRange
 import androidx.collection.FloatFloatPair
 import androidx.collection.FloatList
 import androidx.collection.MutableFloatList
+import kotlin.math.abs
 
 internal class MeasuredPolygon : AbstractList<MeasuredPolygon.MeasuredCubic> {
     private val measurer: Measurer
@@ -280,7 +281,9 @@ internal class MeasuredPolygon : AbstractList<MeasuredPolygon.MeasuredCubic> {
                     val ix = featureToCubic[i].second
                     add(
                         ProgressableFeature(
-                            positiveModulo((outlineProgress[ix] + outlineProgress[ix + 1]) / 2, 1f),
+                            // graphics-shapes 1.0.1 keeps the raw cubic-endpoint
+                            // midpoint; a feature at the outline's end may sit at 1.0.
+                            (outlineProgress[ix] + outlineProgress[ix + 1]) / 2,
                             featureToCubic[i].first,
                         )
                     )
@@ -351,6 +354,46 @@ internal class LengthMeasurer() : Measurer {
         }
 
         return FloatFloatPair(1.0f, total)
+    }
+}
+
+/**
+ * This measurer uses the angle of each cubic around the shape. This works well for current Polygon
+ * shapes, but there are important assumptions which will break down for more general shapes:
+ * 1) Curves along the shape outline proceed in order; there is no reverse or self-intersecting
+ *    allowed. This guarantees that angle measurements are unique for every curve.
+ * 2) There is a given 'center' for a shape. If the geometry is more arbitrary, there may be no
+ *    concept of a center, or the angles computed for an arbitrary center point might not be
+ *    consistent enough across the curves to work for general measurement.
+ *
+ * Ported from graphics-shapes 1.0.1; packaged Compose M3 Expressive builds
+ * measure morph features by angle about the polygon center.
+ */
+internal class AngleMeasurer(val centerX: Float, val centerY: Float) : Measurer {
+
+    /**
+     * The measurement for a given cubic is the difference in angles between the start and end
+     * points (first and last anchors) of the cubic.
+     */
+    override fun measureCubic(c: Cubic) =
+        positiveModulo(
+                angle(c.anchor1X - centerX, c.anchor1Y - centerY) -
+                    angle(c.anchor0X - centerX, c.anchor0Y - centerY),
+                TwoPi
+            )
+            .let {
+                // Avoid an empty cubic to measure almost TwoPi
+                if (it > TwoPi - DistanceEpsilon) 0f else it
+            }
+
+    override fun findCubicCutPoint(c: Cubic, m: Float): Float {
+        val angle0 = angle(c.anchor0X - centerX, c.anchor0Y - centerY)
+        // TODO: use binary search.
+        return findMinimum(0f, 1f, tolerance = 1e-5f) { t ->
+            val curvePoint = c.pointOnCurve(t)
+            val angle = angle(curvePoint.x - centerX, curvePoint.y - centerY)
+            abs(positiveModulo(angle - angle0, TwoPi) - m)
+        }
     }
 }
 

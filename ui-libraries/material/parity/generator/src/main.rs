@@ -244,6 +244,13 @@ struct Widget {
     /// (default) for the `radius` field's rounded rectangle.
     #[serde(default)]
     shape: Option<String>,
+    /// Loading-indicator mode: indeterminate (default — the continuous
+    /// morph loop) or driven by `progress`.
+    #[serde(default)]
+    indeterminate: Option<bool>,
+    /// Determinate loading-indicator progress, 0–1.
+    #[serde(default)]
+    progress: Option<f64>,
     /// `elevated-rect` only: the elevation in dp of the Android ambient+spot
     /// shadow — the Slint side sets a plain `Rectangle`'s `elevation`, the
     /// Compose side `Modifier.shadow`'s dp.
@@ -664,6 +671,8 @@ fn slint_case(scene: &Scene) -> String {
             "filled-icon-button" => "FilledIconButton",
             "tonal-icon-button" => "TonalIconButton",
             "outlined-icon-button" => "OutlineIconButton",
+            "loading-indicator" => "LoadingIndicator",
+            "contained-loading-indicator" => "ContainedLoadingIndicator",
             "filled-split-button" => "FilledSplitButton",
             "tonal-split-button" => "TonalSplitButton",
             "elevated-split-button" => "ElevatedSplitButton",
@@ -1051,6 +1060,28 @@ fn slint_canvas(s: &mut String, scene: &Scene) {
             "filled-icon-button" => "FilledIconButton",
             "tonal-icon-button" => "TonalIconButton",
             "outlined-icon-button" => "OutlineIconButton",
+            "loading-indicator" | "contained-loading-indicator" => {
+                let component = match w.kind.as_str() {
+                    "loading-indicator" => "LoadingIndicator",
+                    _ => "ContainedLoadingIndicator",
+                };
+                let indeterminate = w.indeterminate.unwrap_or(true);
+                // `progress` only binds in determinate mode — the upstream
+                // indeterminate composable takes no progress parameter.
+                let progress = if indeterminate {
+                    String::new()
+                } else {
+                    format!("\n        progress: {};", w.progress.unwrap_or(0.))
+                };
+                writeln!(
+                    s,
+                    "    {component} {{\n        x: {}px;\n        y: {}px;\n        indeterminate: {indeterminate};{progress}\n    }}\n",
+                    w.x as i64,
+                    w.y as i64,
+                )
+                .unwrap();
+                continue;
+            }
             "filled-split-button" => "FilledSplitButton",
             "tonal-split-button" => "TonalSplitButton",
             "elevated-split-button" => "ElevatedSplitButton",
