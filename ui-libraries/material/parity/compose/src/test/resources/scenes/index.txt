@@ -56,6 +56,9 @@ negative-radius
 negative-recolor
 negative-shape-fit
 negative-shape-leak
+negative-snackbar-action-color
+negative-snackbar-color
+negative-snackbar-radius
 negative-split-button-checked-overlay
 negative-split-button-inner-corner
 negative-split-button-outer-corner
@@ -64,6 +67,7 @@ negative-thumb-offset
 negative-toggle-select
 negative-wrong-shadow
 search-bars
+snackbars
 split-button-check-morph
 split-button-check-rotate
 split-button-elevated

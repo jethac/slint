@@ -1,88 +1,262 @@
 // Copyright © SixtyFPS GmbH <info@slint.dev>
 // SPDX-License-Identifier: MIT
 
-import { MaterialStyleMetrics } from "../styling/material_style_metrics.slint";
 import { MaterialTypography } from "../styling/material_typography.slint";
+import { MaterialCornerRadii } from "./state_layer.slint";
 import { Elevation } from "elevation.slint";
 import { MaterialText } from "./material_text.slint";
-import { TextButton } from "./text_button.slint";
+import { MaterialButtonBase } from "./button_base.slint";
 import { IconButton } from "./icon_button.slint";
 import { MaterialPalette } from "../styling/material_palette.slint";
-import { Icons } from "../icons/icons.slint";
 import { MaterialAnimations } from "../styling/material_animations.slint";
+import { Icons } from "../icons/icons.slint";
+import { SnackbarTokens, TextButtonTokens } from "../styling/generated/material_component_tokens.slint";
 
-export component SnackBar inherits PopupWindow {
+/// How long a snackbar stays up — upstream `SnackbarDuration`
+/// (SnackbarHost.kt @ 23327507f7fc7d5b19d65fec4b090f60c970079b).
+export enum SnackBarDuration { short, long, indefinite }
+
+/// One queued snackbar — upstream `SnackbarVisuals`. `action_label == ""`
+/// draws no action (upstream `actionLabel: String? = null`).
+export struct SnackBarVisuals {
+    message: string,
+    action_label: string,
+    with_dismiss_action: bool,
+    duration: SnackBarDuration,
+}
+
+/// How a snackbar left the screen — upstream `SnackbarResult`.
+export enum SnackBarResult { dismissed, action-performed }
+
+/// The snackbar surface — upstream `Snackbar` (Snackbar.kt). The pinned
+/// sources ship `ComposeMaterial3Flags.isSnackbarStylingFixEnabled = false`,
+/// so the *legacy* layouts are the parity target: `LegacyOneRowSnackbar`,
+/// or `LegacyNewLineButtonSnackbar` when `action_on_new_line` and an action
+/// exists. `SnackBarHost` adds the queue, duration and enter/exit motion.
+export component SnackBar {
+    /// Upstream `content` as plain text (`SnackbarVisuals.message`).
     in property <string> text;
+    /// Upstream `action`'s label — empty draws no action.
     in property <string> action_text;
+    /// Upstream `dismissAction != null`.
     in property <bool> has_close_button;
-
-    close_policy: no_auto_close;
+    /// Upstream `actionOnNewLine` — moves the action+dismiss row under the
+    /// text (`LegacyNewLineButtonSnackbar`); only applies when `action_text`
+    /// is set, like upstream's `actionOnNewLine && action != null` gate.
+    in property <bool> action_on_new_line;
+    in property <bool> enabled: true;
+    /// The incoming width cap — upstream's `Modifier.widthIn(max = …)` on
+    /// the `Snackbar` call. The surface self-sizes to `min(constraint, 600
+    /// plus the layout's horizontal padding)`.
+    in property <length> constraint_width: 624px;
+    /// Upstream `shape` — `SnackbarDefaults.shape` =
+    /// `SnackbarTokens.ContainerShape` (CornerExtraSmall).
+    in property <length> border_radius: SnackbarTokens.container_shape.top_left;
+    in property <MaterialCornerRadii> corners;
+    in property <bool> shaped_corners;
+    /// Upstream `containerColor` — `SnackbarTokens.ContainerColor`.
+    in property <color> container_color: SnackbarTokens.container_color;
+    /// Upstream `contentColor` — `SnackbarTokens.SupportingTextColor`.
+    in property <color> content_color: SnackbarTokens.supporting_text_color;
+    /// Upstream `actionContentColor` — `SnackbarTokens.ActionLabelTextColor`.
+    in property <color> action_color: SnackbarTokens.action_label_text_color;
+    /// Upstream `dismissActionContentColor` — `SnackbarTokens.IconColor`.
+    in property <color> dismiss_action_color: SnackbarTokens.icon_color;
+    /// Reserve a 48x48 touch target around each inner button (default on,
+    /// mirroring `LocalMinimumInteractiveComponentEnforcement`).
+    in property <bool> enforce_touch_target: true;
 
     callback action_clicked();
+    callback dismiss_clicked();
 
-    snack_bar := Elevation {
-        x: (parent.width - self.width) / 2;
-        y: parent.height - self.height;
-        width: MaterialStyleMetrics.size_344;
-        level: 3;
+    // Upstream private constants (Snackbar.kt lines 603-621).
+    property <length> container_max_width: 600px;      // ContainerMaxWidth
+    property <length> height_to_first_line: 30px;      // HeightToFirstLine
+    property <length> horizontal_spacing: 16px;        // HorizontalSpacing
+    property <length> button_side_spacing: 8px;        // HorizontalSpacingButtonSide
+    property <length> separate_button_extra_y: 2px;    // SeparateButtonExtraY
+    property <length> legacy_text_padding: 6px;        // LegacySnackbarVerticalPadding
+    property <length> text_end_extra_spacing: 8px;     // TextEndExtraSpacing
+    property <length> long_button_vertical_offset: 12px; // LongButtonVerticalOffset
 
-        background_layer := Rectangle {
-            background: MaterialPalette.inverse_surface;
-            border_radius: MaterialStyleMetrics.border_radius_4;
+    property <bool> has_action: root.action_text != "";
+    // `actionOnNewLine && action != null` — otherwise the one-row layout runs.
+    property <bool> new_line: root.action_on_new_line && root.has_action;
+    // `if (dismissAction == null) HorizontalSpacingButtonSide else 0` —
+    // the trailing layout padding. `TextEndExtraSpacing` is a second 8dp the
+    // text box reserves under the same condition.
+    property <length> end_padding: root.has_close_button ? 0px : root.button_side_spacing;
+    property <length> extra_spacing: root.has_close_button ? 0px : root.text_end_extra_spacing;
 
-            HorizontalLayout {
-                padding_left: MaterialStyleMetrics.padding_16;
-                padding_right: self.padding_left;
-                padding_top: MaterialStyleMetrics.padding_10;
-                padding_bottom: self.padding_top;
-                spacing: MaterialStyleMetrics.spacing_4;
+    // Buttons measure before the text in the layout lambda, against the
+    // unconstrained max — their preferred sizes.
+    property <length> action_width: root.has_action ? action_button.preferred_width : 0px;
+    property <length> action_height: root.has_action ? action_button.preferred_height : 0px;
+    property <length> dismiss_width: root.has_close_button ? dismiss_button.preferred_width : 0px;
+    property <length> dismiss_height: root.has_close_button ? dismiss_button.preferred_height : 0px;
 
-                MaterialText {
-                    text: root.text;
-                    vertical_alignment: center;
-                    horizontal_alignment: left;
-                    wrap: word_wrap;
-                    style: MaterialTypography.body_medium;
-                    color: MaterialPalette.inverse_on_surface;
-                }
+    // `containerWidth = min(constraints.maxWidth, ContainerMaxWidth)` — the
+    // constraint is the content area, so the outer surface adds the start/end
+    // padding back. The new-line Column instead caps at `min(w, 600)` with
+    // its `padding(start = 16, bottom = 2)` inside.
+    property <length> surface_width: root.new_line ?
+        min(root.constraint_width, root.container_max_width) :
+        min(root.constraint_width, root.container_max_width + root.horizontal_spacing + root.end_padding);
+    property <length> container_width: root.surface_width - root.horizontal_spacing - root.end_padding;
+    property <length> text_max_width: max(root.container_width - root.action_width - root.dismiss_width - root.extra_spacing, 0px);
 
-                if root.action_text != "" : TextButton {
-                    text: root.action_text;
-                    inverse: true;
+    // `firstTextBaseline == lastTextBaseline`: one rendered line at the
+    // measured max width. `preferred_height` counts wrapped lines already.
+    property <bool> one_line: snackbar_text.preferred_height < snackbar_text.line_height * 1.5;
 
-                    clicked => {
-                        root.raise_action();
-                    }
-                }
+    // The upstream text measurable carries `padding(vertical = 6dp)`; its
+    // baselines sit `6dp + ascent` below the box top. Compose's reported
+    // `firstBaseline` already includes the centered half-leading (the
+    // `line_height` box is taller than the font's ascent+descent), and
+    // alignment lines are integers — `ceil` mirrors that rounding.
+    property <length> text_box_height: snackbar_text.preferred_height + 2 * root.legacy_text_padding;
+    // `font_metrics.descent` is negative below the baseline, so the font's
+    // natural height is `ascent - descent`.
+    property <length> text_leading_half: max((snackbar_text.line_height - snackbar_text.font_metrics.ascent
+        + snackbar_text.font_metrics.descent) / 2, 0px);
+    property <length> text_baseline_offset: ceil((snackbar_text.font_metrics.ascent + root.text_leading_half) / 1px) * 1px;
+    property <length> first_text_baseline: root.legacy_text_padding + root.text_baseline_offset;
 
-                if root.has_close_button : IconButton {
-                    icon: Icons.close;
-                    inverse: true;
+    // The last baseline for `paddingFromBaseline`'s bottom measure:
+    // `first + (lines - 1) * line_height`. `preferred_height` counts whole
+    // lines already, so the line count is a plain division.
+    property <int> text_lines: max(1, floor(snackbar_text.preferred_height / snackbar_text.line_height));
+    property <length> last_text_baseline: root.text_baseline_offset + (root.text_lines - 1) * snackbar_text.line_height;
 
-                    clicked => {
-                        root.close();
-                    }
-                }
-            }
-        }
+    // The action's FirstBaseline is its label's baseline inside the centered
+    // button row: `(height - label_height) / 2 + label_baseline`.
+    property <length> action_baseline_offset: ceil((action_label_metrics.font_metrics.ascent
+        + max((action_label_metrics.line_height - action_label_metrics.font_metrics.ascent
+        + action_label_metrics.font_metrics.descent) / 2, 0px)) / 1px) * 1px;
+    property <length> action_first_baseline: (root.action_height - action_label_metrics.preferred_height) / 2 + root.action_baseline_offset;
 
-        animate y, height { enabled: !MaterialPalette.reduced-motion;
-            duration: MaterialAnimations.standard_accelerate_duration;
-            easing: MaterialAnimations.standard_easing;
-        }
+    // `LegacyOneRowSnackbar` geometry. The single-line/multi-line branches
+    // stay split so no binding reads its own downstream value.
+    property <length> single_line_height: max(SnackbarTokens.single_line_container_height, max(root.action_height, root.dismiss_height));
+    property <length> multi_text_box_y: root.height_to_first_line - root.first_text_baseline;
+    property <length> multi_height: max(SnackbarTokens.two_lines_container_height, root.multi_text_box_y + root.text_box_height);
+    property <length> one_row_height: root.one_line ? root.single_line_height : root.multi_height;
+    property <length> one_row_text_box_y: root.one_line ? (root.one_row_height - root.text_box_height) / 2 : root.multi_text_box_y;
+    property <length> one_row_action_y: root.one_line ?
+        root.one_row_text_box_y + root.first_text_baseline - root.action_first_baseline :
+        (root.one_row_height - root.action_height) / 2;
+
+    // `LegacyNewLineButtonSnackbar` geometry: `paddingFromBaseline(30, 12)`
+    // pads `(30 - first_baseline)` above the text and `max(0, 12 - (height -
+    // last_baseline))` below it; the action row follows.
+    property <length> new_line_text_box_height: root.height_to_first_line - root.text_baseline_offset
+        + snackbar_text.preferred_height
+        + max(root.long_button_vertical_offset - (snackbar_text.preferred_height - root.last_text_baseline), 0px);
+    property <length> row_height: max(root.action_height, root.dismiss_height);
+    property <length> new_line_height: root.new_line_text_box_height + root.row_height + root.separate_button_extra_y;
+
+    property <length> container_height: root.new_line ? root.new_line_height : root.one_row_height;
+
+    // The trailing edge the action row aligns to: with a dismiss action the
+    // buttons sit flush against the end, otherwise `end_padding` insets them.
+    // The new-line Column pads only its start — the row's end pad is the
+    // conditional `HorizontalSpacingButtonSide`.
+    property <length> buttons_right: root.new_line ?
+        root.surface_width - (root.has_close_button ? 0px : root.button_side_spacing) :
+        root.horizontal_spacing + root.container_width - root.dismiss_width - root.action_width;
+
+    min_width: 0px;
+    min_height: root.container_height;
+    preferred_width: root.surface_width;
+    preferred_height: root.container_height;
+
+    elevation := Elevation {
+        x: 0;
+        y: 0;
+        width: root.surface_width;
+        height: root.container_height;
+        level: 3;   // `shadowElevation = SnackbarTokens.ContainerElevation` (Level3 6px)
+        background: root.container_color;
+        border_radius: root.border_radius;
+        corners: root.corners;
+        shaped_corners: root.shaped_corners;
     }
 
-     Timer {
-        interval: 50ms;
-
-        triggered => {
-            snack_bar.y = root.height - snack_bar.height - MaterialStyleMetrics.padding_30;
-            self.running = false;
-        }
+    snackbar_text := MaterialText {
+        x: root.horizontal_spacing;
+        y: root.new_line ? root.height_to_first_line - root.text_baseline_offset :
+            root.one_row_text_box_y + root.legacy_text_padding;
+        // Upstream's text measurable wraps its content (`maxWidth`), so the
+        // reported bounds are the laid-out line width, not the constraint.
+        width: min(snackbar_text.preferred_width, root.new_line ?
+            max(root.surface_width - root.horizontal_spacing - root.button_side_spacing, 0px) : root.text_max_width);
+        text: root.text;
+        style: SnackbarTokens.supporting_text_font;
+        color: root.content_color;
+        wrap: word-wrap;
+        overflow: clip;
+        // Keeps `font_metrics` resolvable for the baseline math.
+        horizontal_alignment: left;
+        vertical_alignment: top;
     }
 
-    function raise_action() {
-        root.action_clicked();
-        root.close();
+    // One row: action then dismiss flush at the content end. New line: the
+    // row sits under the text, aligned to `buttons_right`.
+    action_button := MaterialButtonBase {
+        visible: root.has_action;
+        x: root.new_line ? root.buttons_right - root.dismiss_width - root.action_width :
+            root.horizontal_spacing + root.container_width - root.dismiss_width - root.action_width;
+        // Compose's action `Row` defaults to `Alignment.Top`.
+        y: root.new_line ? root.new_line_text_box_height : root.one_row_action_y;
+        // The snackbar's `action` slot holds a legacy `TextButton`
+        // (Button.kt @ the pin): `TextButtonContentPadding` is 12/8, the
+        // min size `ButtonDefaults.MinWidth`/`MinHeight` (58/40) and the
+        // shape the resting stadium — not the expressive size buckets the
+        // `TextButton` component uses.
+        container_height: 40px;
+        min_button_width: 58px;
+        resting_radius: 20px;
+        pressed_radius: 20px;
+        checked_radius: 20px;
+        padding_horizontal: 12px;
+        padding_vertical: 8px;
+        icon_size: 18px;
+        icon_spacing: 8px;
+        container_color: transparent;
+        content_color: root.action_color;
+        disabled_container_color: transparent;
+        disabled_content_color: TextButtonTokens.disabled_label_color.with_alpha(TextButtonTokens.disabled_label_opacity);
+        enforce_touch_target: root.enforce_touch_target;
+        label_style: SnackbarTokens.action_label_text_font;
+        text: root.action_text;
+        enabled: root.enabled;
+
+        clicked => { root.action_clicked(); }
+    }
+
+    dismiss_button := IconButton {
+        visible: root.has_close_button;
+        x: root.new_line ? root.buttons_right - root.dismiss_width :
+            root.horizontal_spacing + root.container_width - root.dismiss_width;
+        y: root.new_line ? root.new_line_text_box_height :
+            (root.one_row_height - root.dismiss_height) / 2;
+        icon: Icons.close;
+        content-color: root.dismiss_action_color;
+        enabled: root.enabled;
+        enforce_touch_target: root.enforce_touch_target;
+        // `Strings.SnackbarDismiss` resolves to "Dismiss" and the icon sits
+        // in a `TooltipBox` with that label.
+        tooltip: "Dismiss";
+
+        clicked => { root.dismiss_clicked(); }
+    }
+
+    // Declared last so the traceable `Text` order is message, action label,
+    // then this off-screen metric probe — `match_inherits("Text")` walks the
+    // tree in order and the parity text ids pair by index.
+    action_label_metrics := MaterialText {
+        style: SnackbarTokens.action_label_text_font;
+        text: "0";
+        visible: false;
     }
 }
