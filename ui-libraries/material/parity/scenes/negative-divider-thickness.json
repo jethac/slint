@@ -1,0 +1,38 @@
+{
+    "name": "negative-divider-thickness",
+    "type": "canvas",
+    "parity": "negative",
+    "negative_note": "The Slint side draws a 4dp divider where 1dp was authored — the band's height diff must be flagged.",
+    "size": [
+        320,
+        64
+    ],
+    "densities": [
+        1
+    ],
+    "theme": {
+        "seed": "6750A4",
+        "variant": "tonal-spot",
+        "spec": "spec2025",
+        "platform": "phone",
+        "dark": false,
+        "contrast": 0.0
+    },
+    "fonts": {
+        "plain": "Roboto",
+        "brand": "Roboto"
+    },
+    "widgets": [
+        {
+            "kind": "horizontal-divider",
+            "x": 16,
+            "y": 24,
+            "width": 288,
+            "slint_overrides": {
+                "thickness": 4
+            }
+        }
+    ],
+    "trace_elements": [],
+    "trace_props": []
+}

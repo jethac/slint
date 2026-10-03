@@ -173,9 +173,9 @@ Token objects: DividerTokens
 
 | Component | Source | Status | Issues | Needs | Notes |
 |---|---|---|---|---|---|
-| Divider | Divider.kt | missing | #11 | none | - |
-| HorizontalDivider | Divider.kt | partial | #11 | none | slint component: HorizontalDivider |
-| VerticalDivider | Divider.kt | partial | #11 | none | slint component: VerticalDivider |
+| Divider | Divider.kt | done | #11 | none | slint component: Divider (deprecated alias for HorizontalDivider) |
+| HorizontalDivider | Divider.kt | done | #11 | none | slint component: HorizontalDivider; tokens: generated component tokens |
+| VerticalDivider | Divider.kt | done | #11 | none | slint component: VerticalDivider; tokens: generated component tokens |
 
 ### FAB
 
