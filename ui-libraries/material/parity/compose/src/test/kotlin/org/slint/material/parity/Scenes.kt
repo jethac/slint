@@ -76,6 +76,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedIconButton
 import androidx.compose.material3.OutlinedIconToggleButton
 import androidx.compose.material3.OutlinedToggleButton
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.ToggleButton
@@ -477,7 +478,10 @@ private fun CanvasScene(
                 texts += when {
                     w.kind == "connected-button-group" ||
                         w.kind == "vertical-connected-button-group" -> w.items.size
-                    w.kind == "connected-button" || w.isButton -> 1
+                    // `radio-button` renders no Text — the single text
+                    // slot is only for button-family widgets.
+                    w.kind == "connected-button" ||
+                        (w.isButton && w.kind != "radio-button") -> 1
                     else -> 0
                 }
             }
@@ -527,6 +531,16 @@ private fun CanvasScene(
                     scene,
                     tracer,
                     "text:${buttons}",
+                    "button${buttons++}",
+                    density,
+                    emitPress,
+                )
+                // `radio-button` ends in "-button" (isButton): dispatch
+                // ahead of the button-family branches.
+                widget.kind == "radio-button" -> StateRadioButton(
+                    widget,
+                    scene,
+                    tracer,
                     "button${buttons++}",
                     density,
                     emitPress,
@@ -651,6 +665,57 @@ private fun CanvasScene(
             }
         }
     }
+}
+
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun StateRadioButton(
+    widget: Widget,
+    scene: Scene,
+    tracer: Tracer,
+    elementId: String,
+    density: Float,
+    emitPress: java.util.concurrent.CopyOnWriteArrayList<Pair<Long, Runnable>>,
+) {
+    val interactionSource = remember { ReplayableInteractionSource() }
+    // `selected` is the hoisted radio state — a scene click flips it at
+    // release the way a group's sibling selection would.
+    var selected by remember { mutableStateOf(widget.checked) }
+    // `animatedDotRadius` lives inside `RadioButtonImpl`'s private
+    // `animateDpAsState` — mirror the pin's FastSpatial spec with a
+    // scene-side animatable so `//TRACE_PROPS=` reads the same value the
+    // Slint `dot_radius` out property animates (dp units — the same
+    // logical number the Slint length reports).
+    val dotRadius = remember { Animatable(if (selected) 6f else 0f) }
+    var previousSelected by remember { mutableStateOf(selected) }
+    val spatialSpec = androidx.compose.material3.MaterialTheme.motionScheme.fastSpatialSpec<Float>()
+    LaunchedEffect(selected) {
+        val from = previousSelected
+        previousSelected = selected
+        if (from != selected) {
+            launch { dotRadius.animateTo(if (selected) 6f else 0f, spatialSpec) }
+        }
+    }
+    tracer.propGetters["dot_radius"] = { dotRadius.value.toDouble() }
+    emitStateInteractions(
+        widget.state,
+        scene,
+        tracer,
+        elementId,
+        interactionSource,
+        emitPress,
+        Offset(12f * density, 12f * density),
+        density,
+        Runnable { selected = !selected },
+    )
+
+    RadioButton(
+        selected = selected,
+        onClick = { selected = !selected },
+        modifier = Modifier.offset(widget.x.dp, widget.y.dp).track(tracer, elementId),
+        enabled = widget.enabled,
+        interactionSource = interactionSource,
+    )
 }
 
 /** Container height per size bucket (dp) — `ButtonDefaults` `*ContainerHeight`. */
