@@ -17,6 +17,9 @@ export component TextField {
     in property <bool> has_error;
     in property <image> leading_icon;
     in property <image> trailing_icon;
+    /// `Modifier.rotate` on the trailing icon (e.g. the exposed-dropdown
+    /// arrow's 180deg flip while `expanded`).
+    in property <angle> trailing_icon_rotation;
     in property <bool> enabled: true;
     in property <bool> read_only <=> input.read_only;
     out property <bool> has_focus: input.has_focus;
@@ -142,6 +145,7 @@ export component TextField {
                     icon: root.trailing_icon;
                     enabled: root.enabled;
                     has_error: root.has_error;
+                    transform-rotation: root.trailing_icon_rotation;
 
                     clicked => {
                         root.trailing_icon_clicked();
