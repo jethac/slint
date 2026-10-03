@@ -1,0 +1,54 @@
+// Copyright © SixtyFPS GmbH <info@slint.dev>
+// SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0
+
+// Scene: date-picker-range-input — generated from `ui-libraries/material/parity/scenes/date-picker-range-input.json`
+// (edit the scene, regenerate with `cargo run -p material-parity-generator`).
+//PARITY=xfail:skia: slint's skia renderer AA-covers the 4px field-border corner tips ~1px tighter than layoutlib and slint-software (12 interior px inside the untraceable DateInputTextField borders); the software driver still verifies the full scene, and xfail fails-if-passes so the marker must be removed when the rasterizer is fixed
+//SIZE=500x420
+//TRACE_ELEMENTS=scrim0,picker0
+//MASK_DECOR=picker0+4@2000
+//XFAIL_TEXT=issue #28: Slint ceils text layout widths where Compose keeps fractional advances
+//DENSITIES=1,2
+import "../../fonts/Roboto-VariableFont.ttf";
+import { DatePickerDialogContent, DatePickerDisplayMode, DateRangePicker, MaterialPalette, MaterialTheme, MaterialWindow } from "@material";
+
+export component TestCase inherits MaterialWindow {
+    init => {
+        // The scene pins seed #6750A4, tonal-spot, spec2025, light, contrast 0
+        // (all the library defaults; restated here so a default change can't
+        // silently move the parity baseline).
+        MaterialTheme.seed-color = #6750A4;
+        MaterialTheme.dark = false;
+        MaterialTheme.contrast-level = 0;
+        MaterialTheme.use-platform-color = false;
+        MaterialTheme.plain-family = "Roboto";
+        MaterialTheme.brand-family = "Roboto";
+        // Compose builds its scene scheme from the same seed — use the
+        // runtime-generated scheme, not the static expressive table.
+        MaterialPalette.dynamic = true;
+    }
+
+    scrim0 := Rectangle {
+        x: 0px;
+        y: 0px;
+        width: 100%;
+        height: 100%;
+        background: MaterialPalette.background_modal;
+    }
+
+    picker0 := DatePickerDialogContent {
+        x: (parent.width - self.width) / 2;
+        y: (parent.height - self.height) / 2;
+        enforce_touch_target: false;
+        confirm_enabled: true;
+
+        DateRangePicker {
+            display_mode: DatePickerDisplayMode.input;
+            enforce_touch_target: false;
+            displayed_date: { day: 1, month: 3, year: 2031 };
+            selected_start_date: { day: 14, month: 3, year: 2031 };
+            selected_end_date: { day: 21, month: 3, year: 2031 };
+        }
+    }
+
+}

@@ -1,0 +1,50 @@
+{
+  "densities": [
+    1,
+    2
+  ],
+  "fonts": {
+    "brand": "Roboto",
+    "plain": "Roboto"
+  },
+  "name": "date-picker-range-input",
+  "parity": "xfail:skia",
+  "size": [
+    500,
+    420
+  ],
+  "theme": {
+    "contrast": 0.0,
+    "dark": false,
+    "platform": "phone",
+    "seed": "6750A4",
+    "spec": "spec2025",
+    "variant": "tonal-spot"
+  },
+  "trace_elements": [
+    "scrim0",
+    "picker0"
+  ],
+  "trace_items": {},
+  "trace_props": [],
+  "type": "canvas",
+  "widgets": [
+    {
+      "display_mode": "input",
+      "displayed": "2031-03",
+      "kind": "date-range-picker",
+      "selected_end": "2031-03-21",
+      "selected_start": "2031-03-14"
+    }
+  ],
+  "xfail_text": "issue #28: Slint ceils text layout widths where Compose keeps fractional advances",
+  "mask_decor": {
+    "picker0": {
+      "times": [
+        2000
+      ],
+      "margin": 4
+    }
+  },
+  "negative_note": "slint's skia renderer AA-covers the 4px field-border corner tips ~1px tighter than layoutlib and slint-software (12 interior px inside the untraceable DateInputTextField borders); the software driver still verifies the full scene, and xfail fails-if-passes so the marker must be removed when the rasterizer is fixed"
+}
