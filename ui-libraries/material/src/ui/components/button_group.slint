@@ -1,0 +1,445 @@
+// Copyright © SixtyFPS GmbH <info@slint.dev>
+// SPDX-License-Identifier: MIT
+
+import { MaterialStyleMetrics } from "../styling/material_style_metrics.slint";
+import { MaterialPalette } from "../styling/material_palette.slint";
+import { MaterialAnimations } from "../styling/material_animations.slint";
+import { MaterialButtonMetrics, MaterialButtonShape, MaterialButtonSize } from "./button_metrics.slint";
+import { ButtonGroupSmallTokens, BaselineButtonTokens } from "../styling/generated/material_component_tokens.slint";
+import { FilledButton } from "./filled_button.slint";
+import { FilledIconButton } from "./filled_icon_button.slint";
+import { Elevation } from "./elevation.slint";
+import { MenuItemTemplate } from "./menu.slint";
+import { Icons } from "../icons/icons.slint";
+
+/// Per-item vertical alignment inside a `ButtonGroup`. `inherit` follows
+/// the group's `vertical_alignment` (upstream `Modifier.align` — the
+/// parent-data alignment overrides the group's `verticalAlignment`).
+export enum ButtonGroupItemAlignment {
+    inherit,
+    top,
+    center,
+    bottom,
+}
+
+/// How `checked` behaves across the items of a `ButtonGroup`:
+/// `none` — plain clickable items; `single` — at most one item checked at a
+/// time via `current_index`; `multiple` — every item toggles independently.
+export enum ButtonGroupSelection {
+    none,
+    single,
+    multiple,
+}
+
+/// One item of a `ButtonGroup` — the upstream `clickableItem`/`toggleableItem`
+/// pair folded into a single struct. `weight > 0` opts into weighted sizing.
+///
+/// The `internal-*` fields are scratch storage the component writes back into
+/// the model so that each delegate can read its neighbors' live values — the
+/// Slint port of the sequential expand/compress loop in
+/// `ButtonGroupMeasurePolicy`. Never set them from application code.
+export struct ButtonGroupItem {
+    text: string,
+    icon: image,
+    checked: bool,
+    enabled: bool = true,
+    weight: float,
+    alignment: ButtonGroupItemAlignment,
+    /// How far neighbors may compress this item — upstream `compressionLimit`,
+    /// which defaults to `ContentPadding`'s trailing padding (24px).
+    compression-limit: length = 24px,
+
+    // --- internal layout chain (written back by the delegates) ---
+    press: float,
+    desired: length,
+    cum-desired: length,
+    cum-fixed: length,
+    cum-weight: float,
+    cum-ordinal: int,
+    cum-shown: int,
+    cum-shown-w: length,
+    cum-w-size: length,
+    take-left: length,
+    take-right: length,
+    w-growth: length,
+    final-w: length,
+    x-pos: length,
+    shown: bool = true,
+}
+
+// A single group item: the button visuals plus the local slice of the
+// sequential width redistribution. `ButtonGroupMeasurePolicy` folds left to
+// right — each delegate publishes its own results into `model[index]` where
+// the next delegate (and this component's parents) can read them.
+component ButtonGroupItemDelegate {
+    in property <ButtonGroupItem> itm;
+    in-out property <[ButtonGroupItem]> model;
+    in property <int> index;
+    in property <length> spacing;
+    in property <length> available;
+    in property <length> overflow-width;
+    in property <float> expanded-ratio;
+    in property <ButtonGroupItemAlignment> group-alignment;
+    in property <MaterialButtonSize> size;
+    in property <MaterialButtonShape> button-shape;
+    in property <ButtonGroupSelection> selection;
+    in property <bool> group-enabled;
+    in property <bool> simulate-hover;
+    in property <bool> simulate-press;
+    in property <length> group-height;
+    in-out property <int> current-index;
+    in-out property <bool> checked;
+
+    callback activated(index: int);
+
+    property <int> count: model.length;
+    property <ButtonGroupItemAlignment> effective-alignment:
+        itm.alignment == ButtonGroupItemAlignment.inherit ? group-alignment : itm.alignment;
+
+    // --- size resolution (upstream's first measure pass) ---
+    property <bool> weighted: itm.weight > 0;
+    property <float> total-weight: count > 0 ? model[count - 1].cum-weight : 0;
+    property <length> fixed-total: count > 0 ? model[count - 1].cum-fixed : 0px;
+    property <int> weight-count: count > 0 ? model[count - 1].cum-ordinal : 0;
+    property <length> remaining-to-target: max(0px, available - fixed-total - spacing * max(0, weight-count - 1));
+    property <float> weight-unit: total-weight > 0 ? remaining-to-target / 1px / total-weight : 0;
+    // Upstream's `weightedSize.fastRoundToInt()` share; `cum-w-size` folds
+    // them so `remainder` — `remainingToTarget − Σ rounded` — can hand a
+    // ±1px unit to the first |remainder| weighted children in index order.
+    property <length> w-size: weighted ? max(0px, round(weight-unit * itm.weight) * 1px) : 0px;
+    property <length> cum-w-size: (index == 0 ? 0px : model[max(0, index - 1)].cum-w-size) + w-size;
+    property <int> remainder: weight-count > 0 ? (remaining-to-target - model[count - 1].cum-w-size) / 1px : 0;
+    property <int> rem-unit: weighted && cum-ordinal <= abs(remainder) ? (remainder > 0 ? 1 : -1) : 0;
+    property <length> intrinsic: btn.min-width;
+    property <length> desired:
+        weighted ? max(0px, w-size + rem-unit * 1px) : intrinsic;
+    // `spaceAfterLastNoWeight` — included for every unweighted item, exactly
+    // as upstream (it is only rolled back when nothing is weighted).
+    property <length> space-after:
+        weighted ? 0px : min(spacing, max(0px, available - fixed-before - desired));
+    property <length> fixed-before: index == 0 ? 0px : model[max(0, index - 1)].cum-fixed;
+    property <length> cum-fixed: fixed-before + (weighted ? 0px : desired + space-after);
+    property <float> cum-weight: (index == 0 ? 0 : model[max(0, index - 1)].cum-weight) + (weighted ? itm.weight : 0);
+    property <int> cum-ordinal: (index == 0 ? 0 : model[max(0, index - 1)].cum-ordinal) + (weighted ? 1 : 0);
+    property <length> cum-desired: (index == 0 ? 0px : model[max(0, index - 1)].cum-desired) + desired;
+
+    // --- overflow (upstream's adaptive branch) ---
+    property <bool> overflow-needed:
+        count > 0 && model[count - 1].cum-desired + spacing * (count - 1) > available;
+    property <bool> shown:
+        !overflow-needed || cum-desired + spacing * index <= available - overflow-width;
+    property <int> cum-shown: (index == 0 ? 0 : model[max(0, index - 1)].cum-shown) + (shown ? 1 : 0);
+    property <length> cum-shown-w:
+        (index == 0 ? 0px : model[max(0, index - 1)].cum-shown-w) + (shown ? desired : 0px);
+    property <bool> last-shown:
+        shown && (index + 1 >= count || !model[min(count - 1, index + 1)].shown);
+
+    // --- press animatable (`EnlargeOnPressNode`) ---
+    // Release waits for the up-animation to cross 0.75 before coming back
+    // down (upstream `waitUntil { value > 0.75f }`); a re-press cancels the
+    // pending release like upstream's `collectLatest`.
+    out property <bool> was-pressed: btn.pressed;
+    property <bool> hold;
+    out property <float> pp: btn.pressed || hold ? 1 : 0;
+    animate pp { easing: MaterialAnimations.fast-spatial-spring; enabled: !MaterialPalette.reduced-motion; }
+
+    // --- expand/compress fold (`widths[]` mutation loop) ---
+    property <bool> participates: shown && count > 1;
+    property <bool> is-first: index == 0;
+    property <bool> is-last: last-shown;
+    property <bool> is-middle: participates && !is-first && !is-last;
+    property <length> lim-prev: index == 0 ? 0px : model[max(0, index - 1)].compression-limit;
+    property <length> lim-next: index + 1 >= count ? 0px : model[min(count - 1, index + 1)].compression-limit;
+    property <length> desired-next: index + 1 >= count ? 0px : model[min(count - 1, index + 1)].desired;
+    property <length> w-step: desired - (index == 0 ? 0px : model[max(0, index - 1)].take-right);
+    property <length> target-growth:
+        is-middle ? round(pp * min(expanded-ratio * w-step / 2, min(lim-prev, lim-next)) / 1px) * 1px :
+        is-first && participates ? round(pp * min(expanded-ratio * w-step, lim-next) / 1px) * 1px :
+        is-last ? round(pp * min(expanded-ratio * w-step, lim-prev) / 1px) * 1px : 0px;
+    property <length> take-left:
+        is-middle || is-last ? min(target-growth, index == 0 ? 0px : model[max(0, index - 1)].w-growth) : 0px;
+    property <length> take-right:
+        is-middle || (is-first && participates) ? min(target-growth, desired-next) : 0px;
+    property <length> w-growth: w-step + take-left + take-right;
+    property <length> final-w:
+        shown ? w-growth - (is-last || index + 1 >= count ? 0px : model[min(count - 1, index + 1)].take-left) : 0px;
+    property <length> x-pos:
+        index == 0 ? 0px : model[max(0, index - 1)].x-pos + model[max(0, index - 1)].final-w + spacing;
+
+    // Everything a neighbor can read is mirrored into this row: bindings
+    // can't reach into sibling delegates, so each delegate publishes its own
+    // results into `model[index]` on `init` and on every change.
+    out property <ButtonGroupItem> published: {
+        press: self.pp,
+        desired: self.desired,
+        cum-desired: self.cum-desired,
+        cum-fixed: self.cum-fixed,
+        cum-weight: self.cum-weight,
+        cum-ordinal: self.cum-ordinal,
+        cum-shown: self.cum-shown,
+        cum-shown-w: self.cum-shown-w,
+        cum-w-size: self.cum-w-size,
+        take-left: self.take-left,
+        take-right: self.take-right,
+        w-growth: self.w-growth,
+        final-w: self.final-w,
+        x-pos: self.x-pos,
+        shown: self.shown,
+    };
+
+    function push() {
+        // Guarded writes — a same-value write would re-mark the model dirty
+        // and keep the notification chain alive forever.
+        if (root.model[root.index].press != root.pp) { root.model[root.index].press = root.pp; }
+        if (root.model[root.index].desired != root.desired) { root.model[root.index].desired = root.desired; }
+        if (root.model[root.index].cum-desired != root.cum-desired) { root.model[root.index].cum-desired = root.cum-desired; }
+        if (root.model[root.index].cum-fixed != root.cum-fixed) { root.model[root.index].cum-fixed = root.cum-fixed; }
+        if (root.model[root.index].cum-weight != root.cum-weight) { root.model[root.index].cum-weight = root.cum-weight; }
+        if (root.model[root.index].cum-ordinal != root.cum-ordinal) { root.model[root.index].cum-ordinal = root.cum-ordinal; }
+        if (root.model[root.index].cum-shown != root.cum-shown) { root.model[root.index].cum-shown = root.cum-shown; }
+        if (root.model[root.index].cum-shown-w != root.cum-shown-w) { root.model[root.index].cum-shown-w = root.cum-shown-w; }
+        if (root.model[root.index].cum-w-size != root.cum-w-size) { root.model[root.index].cum-w-size = root.cum-w-size; }
+        if (root.model[root.index].take-left != root.take-left) { root.model[root.index].take-left = root.take-left; }
+        if (root.model[root.index].take-right != root.take-right) { root.model[root.index].take-right = root.take-right; }
+        if (root.model[root.index].w-growth != root.w-growth) { root.model[root.index].w-growth = root.w-growth; }
+        if (root.model[root.index].final-w != root.final-w) { root.model[root.index].final-w = root.final-w; }
+        if (root.model[root.index].x-pos != root.x-pos) { root.model[root.index].x-pos = root.x-pos; }
+        if (root.model[root.index].shown != root.shown) { root.model[root.index].shown = root.shown; }
+    }
+
+    init => {
+        push();
+        if (root.selection == ButtonGroupSelection.single && root.checked && root.current-index == -1) {
+            root.current-index = root.index;
+        } else if (root.selection == ButtonGroupSelection.single && !root.checked
+            && root.current-index == root.index) {
+            root.checked = true;
+        }
+    }
+
+    changed published => { push(); }
+
+    changed was-pressed => {
+        // Release before the up-animation reached 0.75 holds the expanded
+        // target until `pp` gets there; `MAX_WAIT_TIME_MILLIS` only guards a
+        // stalled upstream animatable, which a spring cannot be.
+        root.hold = !was-pressed && root.pp > 0 && root.pp < 0.75;
+    }
+
+    changed pp => {
+        if (root.hold && root.pp >= 0.75) {
+            root.hold = false;
+        }
+    }
+
+    changed checked => {
+        if (root.selection == ButtonGroupSelection.single) {
+            if (root.checked && root.current-index != root.index) {
+                root.current-index = root.index;
+            } else if (!root.checked && root.current-index == root.index) {
+                root.current-index = -1;
+            }
+        }
+    }
+
+    changed current-index => {
+        if (root.selection == ButtonGroupSelection.single && (root.current-index == root.index) != root.checked) {
+            root.checked = root.current-index == root.index;
+        }
+    }
+
+    x: self.x-pos;
+    y: effective-alignment == ButtonGroupItemAlignment.bottom ? group-height - self.height :
+        effective-alignment == ButtonGroupItemAlignment.center ? (group-height - self.height) / 2 : 0;
+    width: self.final-w;
+    height: MaterialButtonMetrics.container-height(root.size);
+    visible: self.shown;
+
+    accessible-role: list-item;
+    accessible-label: itm.text;
+    accessible-item-index: index;
+    accessible-item-selectable: selection != ButtonGroupSelection.none;
+    accessible-item-selected: checked;
+
+    btn := FilledButton {
+        width: 100%;
+        height: 100%;
+        text: itm.text;
+        icon: itm.icon;
+        size: root.size;
+        button_shape: root.button-shape;
+        checkable: root.selection != ButtonGroupSelection.none;
+        // `clickableItem` resolves the static `Button(shape:)` overload — no
+        // press morph; `toggleableItem`'s `ToggleButton` morphs shapes.
+        press_shape_morph: root.selection != ButtonGroupSelection.none;
+        checked <=> root.checked;
+        enabled: root.group-enabled && itm.enabled;
+        enforce_touch_target: false;
+        simulate_hover: root.simulate-hover;
+        simulate_press: root.simulate-press;
+        // `clickableItem`/`toggleableItem` pass `ContentPadding` (24/8/24/8)
+        // or `ButtonWithIconContentPadding` (16/8/24/8) for icon items —
+        // explicit values, not `contentPaddingFor`.
+        padding_leading: itm.icon.width > 0 ? 16px : BaselineButtonTokens.leading_space;
+        padding_trailing: BaselineButtonTokens.trailing_space;
+        padding_vertical: 8px;
+
+        clicked => {
+            root.activated(root.index);
+        }
+    }
+}
+
+/// Standard button group — the upstream `ButtonGroup` (not the connected
+/// variant): equally-sized buttons in a spaced row where pressing an item
+/// expands it by `expanded_ratio` of its width, squeezing its neighbors, and
+/// items that do not fit collapse into an overflow menu.
+export component ButtonGroup {
+    /// The items; `checked`, `enabled`, `weight`, `alignment` and
+    /// `compression-limit` configure each one. Internal fields are written
+    /// back into the model — preserve them when producing a new array.
+    in-out property <[ButtonGroupItem]> items;
+    /// `none` for clickable items, `single`/`multiple` for toggle items.
+    in property <ButtonGroupSelection> selection: ButtonGroupSelection.none;
+    /// The selected item in `single` selection mode; -1 selects none.
+    in-out property <int> current-index: -1;
+    /// Fires when any item is activated, from the row or the overflow menu.
+    callback activated(index: int);
+    /// `ButtonGroupDefaults.ExpandedRatio` (0.15) — fraction of a pressed
+    /// item's width redistributed from its neighbors.
+    in property <float> expanded-ratio: 0.15;
+    /// `ButtonGroupDefaults.HorizontalArrangement` — `ButtonGroupSmallTokens.BetweenSpace`.
+    in property <length> spacing: ButtonGroupSmallTokens.between_space;
+    /// Default vertical alignment of the items (`Alignment.Top` upstream).
+    in property <ButtonGroupItemAlignment> vertical-alignment: ButtonGroupItemAlignment.top;
+    /// Upstream pins items at the small bucket (40px); other sizes follow
+    /// the button metrics tokens.
+    in property <MaterialButtonSize> size: MaterialButtonSize.small;
+    in property <MaterialButtonShape> button-shape: MaterialButtonShape.round;
+    in property <bool> enabled: true;
+    /// Overflow indicator — upstream `ButtonGroupDefaults.OverflowIndicator`
+    /// shows `Icons.Filled.MoreVert` with the "More options" tooltip
+    /// (`m3c_button_group_more_options`).
+    in property <image> overflow-icon: Icons.more_vert;
+    in property <string> overflow-tooltip: "More options";
+    /// Parity-harness hooks: `simulate_*` apply to `simulate-index` only.
+    in property <int> simulate-index: -1;
+    in property <bool> simulate-hover;
+    in property <bool> simulate-press;
+
+    /// Marks `index` checked in `single` selection mode (items keep their own
+    /// checked state in `multiple` mode).
+    public function select(index: int) {
+        if index < 0 || index >= root.items.length {
+            return;
+        }
+
+        root.items[index].checked = true;
+        root.current-index = index;
+    }
+
+    accessible-role: list;
+    accessible-item-count: items.length;
+
+    property <int> item-count: items.length;
+    property <length> desired-total: item-count > 0 ? items[item-count - 1].cum-desired : 0px;
+    out property <int> shown-count: item-count > 0 ? items[item-count - 1].cum-shown : 0;
+    property <length> shown-space:
+        (item-count > 0 ? items[item-count - 1].cum-shown-w : 0px) + spacing * shown-count;
+    out property <bool> overflow-needed:
+        item-count > 0 && desired-total + spacing * max(0, item-count - 1) > root.width;
+
+    // `mainAxisLayoutSize = max(mainSpace, mainAxisMin)` — the group asks for
+    // the full unwrapped content width; a narrower constraint turns overflow
+    // on instead (see `overflow-needed`). Keeping `min_width` independent of
+    // `root.width` is what avoids a layout binding loop.
+    min_width: desired-total + spacing * max(0, item-count - 1);
+    min_height: MaterialButtonMetrics.container-height(root.size);
+    preferred_width: root.min_width;
+    preferred_height: root.min_height;
+
+    row := Rectangle {
+        x: 0;
+        y: 0;
+        width: 100%;
+        height: 100%;
+        clip: true;
+
+        for itm[index] in root.items : item := ButtonGroupItemDelegate {
+            itm: itm;
+            model <=> root.items;
+            index: index;
+            spacing: root.spacing;
+            available: root.width;
+            overflow-width: indicator.min-width;
+            expanded-ratio: root.expanded-ratio;
+            group-alignment: root.vertical-alignment;
+            size: root.size;
+            button-shape: root.button-shape;
+            selection: root.selection;
+            group-enabled: root.enabled;
+            simulate-hover: root.simulate-hover && index == root.simulate-index;
+            simulate-press: root.simulate-press && index == root.simulate-index;
+            checked <=> itm.checked;
+            current-index <=> root.current-index;
+            group-height: row.height;
+
+            activated => {
+                root.activated(index);
+            }
+        }
+
+        // `ButtonGroupDefaults.OverflowIndicator` — a filled icon button at
+        // `shownItemSpace` that opens the overflow menu.
+        indicator := FilledIconButton {
+            visible: root.overflow-needed;
+            x: root.shown-space;
+            y: root.vertical-alignment == ButtonGroupItemAlignment.bottom ? row.height - self.height :
+                root.vertical-alignment == ButtonGroupItemAlignment.center ? (row.height - self.height) / 2 : 0;
+            height: MaterialButtonMetrics.container-height(root.size);
+            size: root.size;
+            icon: root.overflow-icon;
+            tooltip: root.overflow-tooltip;
+            enabled: root.enabled;
+            enforce_touch_target: false;
+
+            clicked => {
+                menu.show();
+            }
+        }
+    }
+
+    menu := PopupWindow {
+        x: indicator.x;
+        y: indicator.y + indicator.height;
+        width: menu-layout.min-width;
+        close_policy: close_on_click_outside;
+
+        menu-frame := Elevation {
+            level: 2;
+            border_radius: MaterialStyleMetrics.border_radius_4;
+            background: MaterialPalette.surface_container;
+            width: 100%;
+
+            menu-layout := VerticalLayout {
+                padding_top: MaterialStyleMetrics.padding_8;
+                padding_bottom: self.padding_top;
+
+                for itm2[index] in root.items : MenuItemTemplate {
+                    visible: index >= root.shown-count;
+                    icon: itm2.icon;
+                    text: itm2.text;
+                    enabled: root.enabled && itm2.enabled;
+
+                    clicked => {
+                        if (root.selection != ButtonGroupSelection.none) {
+                            root.items[index].checked = !root.items[index].checked;
+                        }
+                        menu.close();
+                        root.activated(index);
+                    }
+                }
+            }
+        }
+    }
+}

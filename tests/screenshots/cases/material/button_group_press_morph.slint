@@ -1,0 +1,52 @@
+// Copyright © SixtyFPS GmbH <info@slint.dev>
+// SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0
+
+// Scene: button-group-press-morph — generated from `ui-libraries/material/parity/scenes/button-group-press-morph.json`
+// (edit the scene, regenerate with `cargo run -p material-parity-generator`).
+//PARITY=xfail: issue #10: the Compose frame clock starts the press ~2ms after the Slint dispatch (same skew as button-press-morph, issue #27), so identical-timestamp frames report a systematic lead in the neighbor-width morph — a silent pass would mean the harness went blind
+//SIZE=340x96
+//TIMES=0,33,66,100,150,200,300,400,600
+//TRACE_PROPS=g0i0_w,g0i1_w,g0i2_w,g0i1_x,g0i2_x
+//TRACE_ELEMENTS=group0
+//TRACE_ITEMS=group0:item+indicator
+//ACTION=press:150,48
+//ACTION=release@350:150,48
+//MASK_INNER=group0item1@33,66,100,150,200,300,400,600
+//XFAIL_TEXT=issue #28: Slint ceils text layout widths where Compose keeps fractional advances
+//DENSITIES=1,2
+import "../../fonts/Roboto-VariableFont.ttf";
+import { ButtonGroup, ButtonGroupSelection, MaterialPalette, MaterialTheme, MaterialWindow } from "@material";
+
+export component TestCase inherits MaterialWindow {
+    init => {
+        // The scene pins seed #6750A4, tonal-spot, spec2025, light, contrast 0
+        // (all the library defaults; restated here so a default change can't
+        // silently move the parity baseline).
+        MaterialTheme.seed-color = #6750A4;
+        MaterialTheme.dark = false;
+        MaterialTheme.contrast-level = 0;
+        MaterialTheme.use-platform-color = false;
+        MaterialTheme.plain-family = "Roboto";
+        MaterialTheme.brand-family = "Roboto";
+        // Compose builds its scene scheme from the same seed — use the
+        // runtime-generated scheme, not the static expressive table.
+        MaterialPalette.dynamic = true;
+    }
+
+    group0 := ButtonGroup {
+        x: 16px;
+        y: 28px;
+        items: [{ text: "Day", }, { text: "Week", }, { text: "Month", }];
+    }
+
+    out property <length> g0i0_w: group0.items[0].final-w;
+
+    out property <length> g0i1_w: group0.items[1].final-w;
+
+    out property <length> g0i2_w: group0.items[2].final-w;
+
+    out property <length> g0i1_x: group0.items[1].x-pos;
+
+    out property <length> g0i2_x: group0.items[2].x-pos;
+
+}

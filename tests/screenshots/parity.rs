@@ -406,8 +406,15 @@ impl PixelMask {
         };
         for r in [a, b] {
             let outer = r.dilated(margin);
-            let inner =
-                PxRect { x0: r.x0 + inset, y0: r.y0 + inset, x1: r.x1 - inset, y1: r.y1 - inset };
+            // Straight edges take the same drift slack the corner cells get:
+            // a boundary displaced by the traced bounds' drift is still the
+            // same boundary, so the strict band starts `drift` deeper in.
+            let inner = PxRect {
+                x0: r.x0 + inset + drift,
+                y0: r.y0 + inset + drift,
+                x1: r.x1 - inset - drift,
+                y1: r.y1 - inset - drift,
+            };
             // `//MASK_DECOR=` widens the masked zone inside the outline too:
             // inset decorations (a focus ring's inner strokes, which reach
             // only `inner_stroke_inset + inner_stroke_width` under the edge)
@@ -1690,9 +1697,12 @@ fn build_frame_mask<C: i_slint_core::api::ComponentHandle>(
         .unwrap_or_else(|| PixelMask::new(width, height));
     let d = density;
     // Text regions from both sides — a label's ink lives inside its bounds.
-    // The 2px dilation covers a centered label's position drift: inside a
+    // The dilation covers a centered label's position drift: inside a
     // pinned-width container the label block itself lands ~1px off between
     // engines (half the width slack), and its cells still check the ink.
+    // Glyph ink overhangs the layout box by ~1px at the edges — `frac_w`/
+    // `unhint_w` understate the rasterized span — so text bounds dilate
+    // wider than other element margins.
     for handle in i_slint_backend_testing::ElementQuery::from_root(component)
         .match_inherits("Text")
         .find_all()
@@ -1706,7 +1716,7 @@ fn build_frame_mask<C: i_slint_core::api::ComponentHandle>(
                 x1: (p.x + s.width) as f64 * d,
                 y1: (p.y + s.height) as f64 * d,
             }
-            .dilated(2.0),
+            .dilated(4.0),
             PixelClass::Text,
         );
     }
@@ -1739,7 +1749,7 @@ fn build_frame_mask<C: i_slint_core::api::ComponentHandle>(
                 continue;
             };
             mask.fill_rect(
-                PxRect { x0: x * d, y0: y * d, x1: (x + w) * d, y1: (y + h) * d }.dilated(2.0),
+                PxRect { x0: x * d, y0: y * d, x1: (x + w) * d, y1: (y + h) * d }.dilated(4.0),
                 PixelClass::Text,
             );
         }
@@ -2058,6 +2068,16 @@ pub fn run_parity_case<C: i_slint_core::api::ComponentHandle>(
     // is case-level, so the staleness verdict aggregates all densities.
     let mut xfail_text_pixels_used = false;
     let mut xfail_text_saw_drift = false;
+    // `//XFAIL_TEXT=` may scope itself to the drivers whose rasterizer
+    // differs from the expected frames' (layoutlib is skia) — elsewhere it
+    // stays inert so the marker never reads stale there.
+    let xfail_text = spec
+        .xfail_text
+        .as_deref()
+        .filter(|_| {
+            spec.xfail_text_renderers.is_empty()
+                || spec.xfail_text_renderers.iter().any(|d| d.as_str() == driver)
+        });
     for (di, density) in spec.densities.iter().enumerate() {
         let component = make_instance(*density);
 
@@ -2220,8 +2240,8 @@ pub fn run_parity_case<C: i_slint_core::api::ComponentHandle>(
             // error accumulates into the label's placement before the glyph
             // even starts, so the relaxation needs headroom past the
             // single-label 1.25×.
-            let text_cell_eps = if spec.xfail_text.is_some() {
-                TEXT_CELL_EPS * 1.5 * *density as f64
+            let text_cell_eps = if xfail_text.is_some() {
+                TEXT_CELL_EPS * 1.5 * *density as f64 * spec.xfail_text_scale
             } else {
                 TEXT_CELL_EPS
             };
@@ -2384,7 +2404,7 @@ pub fn run_parity_case<C: i_slint_core::api::ComponentHandle>(
             };
             measured_phase = measured_phase.or(phase);
             let (metric_errors, saw_drift) =
-                compare_text_metrics(&component, &frames, compose, spec.xfail_text.as_deref());
+                compare_text_metrics(&component, &frames, compose, xfail_text);
             errors.extend(metric_errors);
             xfail_text_saw_drift |= saw_drift;
             compare_findings += errors.len();
@@ -2416,7 +2436,7 @@ pub fn run_parity_case<C: i_slint_core::api::ComponentHandle>(
         }
     }
 
-    if let Some(reason) = &spec.xfail_text {
+    if let Some(reason) = xfail_text {
         // The marker covers both the trace layer (width/center drift) and
         // the pixel layer (the relaxed per-cell mean it feeds) — only flag
         // it stale when neither consumer needed it at any density.

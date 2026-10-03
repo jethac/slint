@@ -1,0 +1,100 @@
+{
+  "name": "button-group-press-morph",
+  "type": "canvas",
+  "parity": "xfail",
+  "negative_note": "issue #10: the Compose frame clock starts the press ~2ms after the Slint dispatch (same skew as button-press-morph, issue #27), so identical-timestamp frames report a systematic lead in the neighbor-width morph \u2014 a silent pass would mean the harness went blind",
+  "size": [
+    340,
+    96
+  ],
+  "densities": [
+    1,
+    2
+  ],
+  "theme": {
+    "seed": "6750A4",
+    "variant": "tonal-spot",
+    "spec": "spec2025",
+    "platform": "phone",
+    "dark": false,
+    "contrast": 0.0
+  },
+  "fonts": {
+    "plain": "Roboto",
+    "brand": "Roboto"
+  },
+  "times": [
+    0,
+    33,
+    66,
+    100,
+    150,
+    200,
+    300,
+    400,
+    600
+  ],
+  "widgets": [
+    {
+      "kind": "button-group",
+      "x": 16,
+      "y": 28,
+      "items": [
+        {
+          "text": "Day"
+        },
+        {
+          "text": "Week"
+        },
+        {
+          "text": "Month"
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "kind": "press",
+      "x": 150,
+      "y": 48
+    },
+    {
+      "kind": "release",
+      "x": 150,
+      "y": 48,
+      "at": 350
+    }
+  ],
+  "trace_props": [
+    "g0i0_w",
+    "g0i1_w",
+    "g0i2_w",
+    "g0i1_x",
+    "g0i2_x"
+  ],
+  "mask_inner": {
+    "group0item1": [
+      33,
+      66,
+      100,
+      150,
+      200,
+      300,
+      400,
+      600
+    ]
+  },
+  "xfail_text": "issue #28: Slint ceils text layout widths where Compose keeps fractional advances",
+  "trace_elements": [
+    "group0",
+    "group0item0",
+    "group0item1",
+    "group0item2"
+  ],
+  "trace_items": {
+    "group0": [
+      "item",
+      "indicator"
+    ]
+  }
+}
