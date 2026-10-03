@@ -1005,6 +1005,7 @@ private fun StateButton(
 
     if (pressInk.value) {
         PressInkOverlay(
+            widget,
             tracer,
             elementId,
             density,
@@ -1427,6 +1428,7 @@ private fun StateIconButton(
 
     if (pressInk.value) {
         PressInkOverlay(
+            widget,
             tracer,
             elementId,
             density,
@@ -1820,6 +1822,7 @@ private fun pressInkMarker(
  * keep their tone. */
 @Composable
 private fun PressInkOverlay(
+    widget: Widget,
     tracer: Tracer,
     elementId: String,
     density: Float,
@@ -2175,6 +2178,7 @@ private fun StateConnectedButton(
 
     if (pressInk.value) {
         PressInkOverlay(
+            widget,
             tracer,
             elementId,
             density,

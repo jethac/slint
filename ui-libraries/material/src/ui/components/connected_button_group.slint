@@ -72,11 +72,13 @@ export component ConnectedButton {
     out property <bool> pressed <=> base.pressed;
     out property <bool> has_hover <=> base.has_hover;
     /// The live per-corner radii of the morphing shape — the parity
-    /// harness's motion trace.
-    out property <length> corner_top_left <=> base.corner_tl;
-    out property <length> corner_top_right <=> base.corner_tr;
-    out property <length> corner_bottom_right <=> base.corner_br;
-    out property <length> corner_bottom_left <=> base.corner_bl;
+    /// harness's motion trace. `CornerSize(percent)` resolves against the
+    /// item's shorter side, so cap each reported radius at `min(w,h)` —
+    /// the Compose side records `toPx`'s `minDimension * percent`.
+    out property <length> corner_top_left: Math.min(base.corner_tl, Math.min(root.width, root.height));
+    out property <length> corner_top_right: Math.min(base.corner_tr, Math.min(root.width, root.height));
+    out property <length> corner_bottom_right: Math.min(base.corner_br, Math.min(root.width, root.height));
+    out property <length> corner_bottom_left: Math.min(base.corner_bl, Math.min(root.width, root.height));
 
     // `ToggleButton` carries `Role.Checkbox` upstream; the single-select
     // group wraps this in `Role.RadioButton` items like the samples.
@@ -92,11 +94,15 @@ export component ConnectedButton {
 
     property <length> inner: ConnectedButtonGroupSmallTokens.inner_corner_corner_size;
     property <length> pressed_inner: ConnectedButtonGroupSmallTokens.pressed_inner_corner_corner_size;
-    /// `ShapeDefaults.CornerFull` = `CornerSize(percent = 100)` — the
-    /// radius is the shape's whole shorter side (upstream's internal
-    /// `RoundedCornerShape` clamps it to a stadium edge when drawing).
-    /// The container is `container_height` tall and fills the item's width.
-    property <length> outer: Math.min(root.width, ConnectedButtonGroupSmallTokens.container_height);
+    /// `ShapeDefaults.CornerFull` = `CornerSize(percent = 100)` — its
+    /// `toPx` resolves to the shape's shorter side. The container is
+    /// `container_height` tall, so the shorter side is `container_height`
+    /// for any item wider than tall (a `Math.min(width, …)` here would
+    /// feed layout output back into `MaterialButtonBase`'s corners,
+    /// which feed `optical_offset`'s layout padding — a binding loop).
+    /// The renderers clamp each corner to `min(w,h)/2` at draw, matching
+    /// `RoundedCornerShape`'s outline clamp.
+    property <length> outer: ConnectedButtonGroupSmallTokens.container_height;
     /// `CornerSize(100)` of the vertical variant's first/last items.
     property <length> cap: root.outer;
 
@@ -151,13 +157,15 @@ export component ConnectedButton {
         // every `*_corners` field is set above.
         resting_radius: root.inner;
         pressed_radius: root.vertical ? 6px : root.pressed_inner;
-        checked_radius: root.outer;
+        checked_radius: root.outer / 2;
         shaped_corners: true;
         resting_corners: root.resting_corners;
         pressed_corners: root.pressed_corners;
-        // `connectedButtonCheckedShape` = `ShapeDefaults.CornerFull` for
-        // every position and both orientations.
-        checked_corners: { top_left: root.outer, top_right: root.outer, bottom_right: root.outer, bottom_left: root.outer };
+        // `ButtonGroupDefaults.connectedButtonCheckedShape` =
+        // `CornerSize(percent = SelectedInnerCornerCornerSizePercent)`
+        // (50): `toPx` is `min(w,h)/2`, `container_height/2` on the
+        // 40px container, for every position and both orientations.
+        checked_corners: { top_left: root.outer / 2, top_right: root.outer / 2, bottom_right: root.outer / 2, bottom_left: root.outer / 2 };
         fast_spatial: true;
 
         // `FilledToggleButtonColors` — the same `FilledButtonTokens` table
