@@ -138,6 +138,7 @@
       "subtitle": null,
       "target_scale": null,
       "text": "A dialog is a type of modal window that appears in front of app content to provide critical information or ask for a decision.",
+      "thickness": null,
       "title": "Discard draft?",
       "toggle": null,
       "trailing_icon": null,

@@ -162,6 +162,9 @@ class Widget(json: JSONObject) {
     /** `extended-fab` label-slot width pin — `Modifier.width` on the
      * upstream `text` composable; 0/unset sizes it to the text. */
     val labelWidth: Float = json.optDouble("label_width", 0.0).toFloat()
+    /** `*-divider` line thickness in dp — `DividerDefaults.Thickness` when
+     * unset; `0` is the upstream `Dp.Hairline` (one physical pixel). */
+    val thickness: Float = json.optDouble("thickness", 1.0).toFloat()
 
     val isFab: Boolean get() = kind == "fab" || kind == "extended-fab"
     val isSplitButton: Boolean get() = kind.endsWith("split-button")
