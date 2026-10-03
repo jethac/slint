@@ -2,11 +2,18 @@
 // SPDX-License-Identifier: MIT
 
 import { MaterialPalette } from "../styling/material_palette.slint";
-import { MaterialTypography } from "../styling/material_typography.slint";
+import { MaterialAnimations } from "../styling/material_animations.slint";
 import { MaterialStyleMetrics } from "../styling/material_style_metrics.slint";
-import { StateLayerArea } from "./state_layer.slint";
+import { StateLayerArea, FocusRing } from "./state_layer.slint";
 import { MaterialText } from "./material_text.slint";
 import { Icon } from "./icon.slint";
+import { Elevation } from "./elevation.slint";
+import {
+    ListTokens,
+    ReorderListTokens,
+} from "../styling/generated/material_component_tokens.slint";
+import { MaterialCornerShape } from "../styling/generated/material_shape_tokens.slint";
+import { MaterialListItemMetrics, MaterialListItemType } from "./list_metrics.slint";
 
 export component Avatar {
     in property <image> image;
@@ -28,80 +35,642 @@ export component Avatar {
     }
 }
 
-export component ListTile {
+/// The shared shell behind `ListTile` and `SegmentedListItem` — the
+/// `InteractiveListItem` of the pinned `ListItem.kt` (@ 23327507f7fc):
+/// the animated container shape (`shapeForInteraction`,
+/// pressed→dragged→selected→focused→hovered→default, morphing on the fast
+/// spatial spec), the `ListItemColors` state table (`updateTransition` on
+/// the default effects spec), the dragged elevation, the state layer +
+/// ripple clipped to the live shape, and the inset focus ring.
+///
+/// Callers supply the slot contents (overline/headline/supporting texts,
+/// leading icon/avatar/image, trailing icon/text or `@children`) and the
+/// state inputs; this component owns the state machine and layout policy
+/// of `InteractiveListItemMeasurePolicy`.
+component MaterialListItemBase {
+    // Content slots.
     in property <string> text;
+    in property <string> overline_text;
     in property <string> supporting_text;
+    /// `isSupportingMultilineHeuristic` (`FirstBaseline != LastBaseline` —
+    /// line counts are only known after layout, so callers that author a
+    /// wrapping supporting text set this; it only affects the 72/88dp
+    /// minimum-height choice).
+    in property <bool> supporting_multiline;
+    /// A 24px icon in the leading slot (`ItemLeadingIconSize`).
+    in property <image> leading_icon;
+    /// A 56x56 image in the leading slot (`ItemLeadingImageWidth/Height`,
+    /// `ItemLeadingImageExpressiveShape` = corner small).
+    in property <image> leading_image;
+    /// A 40px avatar circle (`ItemLeadingAvatarSize`) showing `avatar_icon`,
+    /// `avatar_text` (title-medium label) or `avatar_image`.
     in property <image> avatar_icon;
     in property <string> avatar_text;
-    in property <color> avatar_background;
-    in property <color> avatar_foreground;
-    in property <bool> enabled <=> state_layer.enabled;
+    in property <image> avatar_image;
+    in property <color> avatar_background: ListTokens.item_leading_avatar_color;
+    in property <color> avatar_foreground: ListTokens.item_leading_avatar_label_color;
+    /// A 24px icon in the trailing slot (`ItemTrailingIconSize`).
+    in property <image> trailing_icon;
+    /// Label-small supporting text in the trailing slot.
+    in property <string> trailing_text;
+    /// Custom content appended at the end of the row — the `trailingContent`
+    /// slot. The internal spacing (`ItemBetweenSpace`) applies between it
+    /// and the text column.
+    // (@children)
 
-    property <color> color: MaterialPalette.on_surface;
+    // Interaction and state.
+    /// Whether the item is clickable — the `onClick` overload upstream
+    /// (`combinedClickable` with `Role.Button`). `selectable`/`checkable`
+    /// imply it.
+    in property <bool> interactive;
+    /// The `ListItem(selected, onClick)` overload: `selected` visuals +
+    /// `AccessibleRole.radio-button`. Selection is caller-managed.
+    in property <bool> selectable;
+    /// The `ListItem(checked, onCheckedChange)` overload: `checked` visuals
+    /// + `AccessibleRole.checkbox`, toggling on click.
+    in property <bool> checkable;
+    in-out property <bool> selected;
+    in-out property <bool> checked;
+    in property <bool> enabled: true;
+    /// `DragInteraction` visual state (container/content colors from
+    /// `ReorderListTokens`, dragged shape, level-4 elevation). Driven by the
+    /// host's reorder gesture; the library does not implement the gesture.
+    in property <bool> dragged;
+    /// `SegmentedListItem`: the resting shape takes `ListTokens.container_shape`'s
+    /// outer corners by `index`/`count` (`segmentedShapes`) and the
+    /// segmented container color applies.
+    in property <bool> segmented;
+    in property <int> index;
+    in property <int> count: 1;
+    in property <string> tooltip;
+    /// See `StateLayerArea.simulate_hover` / `simulate_press`.
+    in property <bool> simulate_hover;
+    in property <bool> simulate_press;
+    /// `minimumInteractiveComponentSize` — 48px minimum for interactive
+    /// items; the parity harness composes with `0.dp`.
+    in property <bool> enforce_touch_target: true;
 
-    callback clicked <=> state_layer.clicked;
+    callback clicked;
+    out property <bool> has_focus <=> area.has_focus;
+    out property <bool> pressed <=> area.effective_pressed;
+    out property <bool> has_hover <=> area.effective_hover;
+    /// The live, animating top-left corner radius — traced by the parity
+    /// harness.
+    out property <length> container_radius <=> root.current_radius_tl;
 
-    min_height: max(MaterialStyleMetrics.size_72, layout.min_height);
+    property <bool> is_interactive: root.interactive || root.selectable || root.checkable;
+    /// `selected` of `InteractiveListItem`: `checked` for the
+    /// `onCheckedChange` overload, `selected` otherwise.
+    property <bool> selected_effective: root.selectable ? root.selected :
+        root.checkable ? root.checked : false;
+    property <MaterialListItemType> item_type: MaterialListItemMetrics.item-type(
+        root.overline_text != "", root.supporting_text != "", root.supporting_multiline);
+    /// The symmetric content inset — `InteractiveListTopPadding`/
+    /// `BottomPadding` (`ItemTopSpace`/`ItemBottomSpace`) on the interactive
+    /// path, `verticalPadding(listItemType)` on the legacy `ListItem` path.
+    property <length> vertical_space: root.is_interactive
+        ? MaterialListItemMetrics.top_space
+        : MaterialListItemMetrics.legacy-vertical-space(
+            root.item_type == MaterialListItemType.three-line);
+    /// Interactive items apply `ListItemDefaults.verticalAlignment()`: below
+    /// `InteractiveListVerticalAlignmentBreakpoint` children center in the
+    /// padded space, at or above it they pin to the top. The legacy
+    /// `ListItem` instead pins three-line items to `topPadding` and centers
+    /// everything else.
+    property <bool> align_top: root.is_interactive
+        ? root.height - 2 * root.vertical_space >= MaterialListItemMetrics.alignment_breakpoint
+        : root.item_type == MaterialListItemType.three-line;
 
-    state_layer := StateLayerArea {
-        color: root.color;
+    property <bool> has_avatar: root.avatar_icon.width > 0 || root.avatar_text != "" ||
+        root.avatar_image.width > 0;
+    property <bool> has_leading: root.has_avatar || root.leading_icon.width > 0 ||
+        root.leading_image.width > 0;
+    property <bool> has_trailing: root.trailing_icon.width > 0 || root.trailing_text != "";
 
-        layout := HorizontalLayout {
-            padding_left: MaterialStyleMetrics.padding_16;
-            padding_right: MaterialStyleMetrics.padding_24;
-            padding_top: MaterialStyleMetrics.padding_8;
-            padding_bottom: self.padding_top;
-            spacing: MaterialStyleMetrics.spacing_16;
+    // `ListItemShapes.shapeForInteraction` — pressed wins, then dragged,
+    // then selected, focused, hovered; else the resting shape.
+    property <MaterialCornerShape> target_shape: MaterialListItemMetrics.state-shape(
+        root.pressed, root.dragged, root.selected_effective,
+        root.has_focus, root.has_hover,
+        MaterialListItemMetrics.container-shape(root.segmented, root.is_interactive, root.index, root.count));
 
-            if root.avatar_background != #00000000 ||  root.avatar_text != "" || (root.avatar_icon.width > 0 && root.avatar_icon.height > 0) : Rectangle {
-                width: self.height;
-                border_radius: self.height / 2;
-                background: root.avatar_background;
-                clip: true;
+    // `rememberAnimatedShape`: one fast-spatial spring per corner radius.
+    // The four corners share identical dynamics and start together, which
+    // is the same path Compose's single-progress `Morph` takes between two
+    // rounded-corner shapes.
+    property <length> current_radius_tl: root.target_shape.full ?
+        Math.min(root.width, root.height) / 2 : root.target_shape.top_left;
+    property <length> current_radius_tr: root.target_shape.full ?
+        Math.min(root.width, root.height) / 2 : root.target_shape.top_right;
+    property <length> current_radius_br: root.target_shape.full ?
+        Math.min(root.width, root.height) / 2 : root.target_shape.bottom_right;
+    property <length> current_radius_bl: root.target_shape.full ?
+        Math.min(root.width, root.height) / 2 : root.target_shape.bottom_left;
+    animate current_radius_tl, current_radius_tr, current_radius_br, current_radius_bl {
+        easing: MaterialAnimations.fast-spatial-spring;
+        enabled: !MaterialPalette.reduced-motion;
+    }
+    // The per-corner radii live in the animated props so the focus ring and
+    // the parity tracer read the same values; `ShapeFit.fill` maps the
+    // px-authored polygon onto the container without rescaling.
+    property <shape> live_shape: Shapes.rectangle(
+        Math.max(root.width / 1px, 0), Math.max(root.height / 1px, 0),
+        [{radius: root.current_radius_tl / 1px, smoothing: 0},
+         {radius: root.current_radius_tr / 1px, smoothing: 0},
+         {radius: root.current_radius_br / 1px, smoothing: 0},
+         {radius: root.current_radius_bl / 1px, smoothing: 0}]);
+    property <MaterialCornerShape> live_corners: {
+        top_left: root.current_radius_tl,
+        top_right: root.current_radius_tr,
+        bottom_right: root.current_radius_br,
+        bottom_left: root.current_radius_bl,
+        full: false,
+    };
 
-                if root.avatar_text != "" : MaterialText {
-                    text: root.avatar_text;
-                    vertical_alignment: center;
-                    horizontal_alignment: center;
-                    color: root.avatar_foreground;
-                    style: MaterialTypography.title_medium;
-                }
+    // `ListItemColors` — `!enabled` → disabled, `dragged` → reorder colors,
+    // `selected` → selected colors, else the (segmented) defaults. The
+    // container keeps its plain color when disabled — upstream does not
+    // alpha it — while content colors take their disabled opacity.
+    property <color> current_container_color:
+        !root.enabled ?
+            (root.segmented ? ListTokens.item_segmented_container_color : ListTokens.item_container_color) :
+        root.dragged ? ReorderListTokens.item_container_color :
+        root.selected_effective ? ListTokens.item_selected_container_color :
+        root.segmented ? ListTokens.item_segmented_container_color : ListTokens.item_container_color;
+    property <color> current_content_color:
+        !root.enabled ?
+            ListTokens.item_disabled_label_text_color.with_alpha(ListTokens.item_disabled_label_text_opacity) :
+        root.dragged ? ReorderListTokens.item_label_text_color :
+        root.selected_effective ? ListTokens.item_selected_label_text_color :
+        ListTokens.item_label_text_color;
+    property <color> current_leading_color:
+        !root.enabled ?
+            ListTokens.item_disabled_leading_icon_color.with_alpha(ListTokens.item_disabled_leading_icon_opacity) :
+        root.dragged ? ReorderListTokens.item_leading_icon_color :
+        root.selected_effective ? ListTokens.item_selected_leading_icon_color :
+        ListTokens.item_leading_icon_color;
+    property <color> current_trailing_color:
+        !root.enabled ?
+            ListTokens.item_disabled_trailing_icon_color.with_alpha(ListTokens.item_disabled_trailing_icon_opacity) :
+        root.dragged ? ReorderListTokens.item_trailing_icon_color :
+        root.selected_effective ? ListTokens.item_selected_trailing_icon_color :
+        ListTokens.item_trailing_icon_color;
+    property <color> current_overline_color:
+        !root.enabled ?
+            ListTokens.item_disabled_overline_color.with_alpha(ListTokens.item_disabled_overline_opacity) :
+        root.dragged ? ReorderListTokens.item_overline_color :
+        root.selected_effective ? ListTokens.item_selected_overline_color :
+        ListTokens.item_overline_color;
+    property <color> current_supporting_color:
+        !root.enabled ?
+            ListTokens.item_disabled_supporting_text_color.with_alpha(ListTokens.item_disabled_supporting_text_opacity) :
+        root.dragged ? ReorderListTokens.item_supporting_text_color :
+        root.selected_effective ? ListTokens.item_selected_supporting_text_color :
+        ListTokens.item_supporting_text_color;
 
-                if root.avatar_icon.width > 0 && root.avatar_icon.height > 0 : Icon {
-                    width: parent.width;
-                    source: root.avatar_icon;
-                    colorize: root.avatar_foreground;
-                }
+    animate current_container_color, current_content_color, current_leading_color,
+        current_trailing_color, current_overline_color, current_supporting_color {
+        easing: MaterialAnimations.default-effects-spring;
+        enabled: !MaterialPalette.reduced-motion;
+    }
+
+    // `defaultMinHeight` covers the `minimumInteractiveComponentSize` slot
+    // for every stock item height (56/72/88 > 48); the `enforce_touch_target`
+    // prop keeps the contract explicit for parity's `0.dp` override.
+    property <length> touch: root.is_interactive && root.enforce_touch_target ? 48px : 0px;
+    min_height: max(MaterialListItemMetrics.min-height(root.is_interactive, root.item_type),
+        root.touch, area.min_height);
+    min_width: area.min_width;
+    preferred_width: root.min_width;
+    preferred_height: root.min_height;
+
+    container := Elevation {
+        x: 0;
+        y: 0;
+        width: 100%;
+        height: 100%;
+        // `elevationAnimationSpec` = `MotionSchemeKeyTokens.FastSpatial`,
+        // `ItemContainerElevation`/`ItemDraggedContainerElevation` as M3
+        // levels — the drag drives both the level and the interaction flag,
+        // and upstream's spatial spec has no in/out direction split.
+        level: root.dragged ? 4 : 0;
+        interaction_active: root.dragged;
+        in_easing: MaterialAnimations.fast-spatial-spring;
+        out_easing: MaterialAnimations.fast-spatial-spring;
+        background: root.current_container_color;
+        shape: root.live_shape;
+        shape-fit: ShapeFit.fill;
+    }
+
+    area := StateLayerArea {
+        x: 0;
+        y: 0;
+        width: 100%;
+        height: 100%;
+        enabled: root.is_interactive && root.enabled;
+        color: root.current_content_color;
+        border_radius: root.current_radius_tl;
+        // `shape` is the element-level prop — with it bound, the engine's
+        // `boundary_shape().hit_test` clips presses and hovers to the live
+        // per-corner outline exactly; `hit_radius`/`point_inside` are only
+        // the uniform-radius fallback.
+        shape: root.live_shape;
+        shape-fit: ShapeFit.fill;
+        tooltip: root.tooltip;
+        display_background: false;
+        focus_ring: root.is_interactive;
+        clip_ripple: true;
+        simulate_hover: root.is_interactive && root.simulate_hover;
+        simulate_press: root.is_interactive && root.simulate_press;
+
+        clicked() => {
+            if !area.pointer_inside && !area.enter_pressed {
+                return;
             }
+            root.activate();
+        }
 
-            title_layout := VerticalLayout {
-                alignment: center;
-                horizontal_stretch: 1;
+        // `.clip(shape)` upstream: content is clipped to the animating
+        // outline.
+        content_clip := Rectangle {
+            width: 100%;
+            height: 100%;
+            clip: true;
+            shape: root.live_shape;
+            shape-fit: ShapeFit.fill;
 
-                MaterialText {
-                    text: root.text;
-                    color: root.color;
-                    overflow: elide;
-                    style: MaterialTypography.body_large;
+            layout := HorizontalLayout {
+                padding_left: MaterialListItemMetrics.leading_space;
+                padding_right: MaterialListItemMetrics.trailing_space;
+                padding_top: root.vertical_space;
+                padding_bottom: root.vertical_space;
+                // `InteractiveListInternalSpacing` between the slots on the
+                // interactive path, `LeadingContentEndPadding`/
+                // `TrailingContentStartPadding` on the legacy one.
+                spacing: root.is_interactive ? MaterialListItemMetrics.between_space
+                    : MaterialListItemMetrics.legacy_between_space;
+                cross_axis_alignment: root.align_top ? start : center;
+
+                if root.has_leading : HorizontalLayout {
+                    spacing: 0;
+                    cross_axis_alignment: center;
+
+                    if root.has_avatar : Rectangle {
+                        width: MaterialListItemMetrics.leading_avatar_size;
+                        height: self.width;
+                        border_radius: self.width / 2;
+                        background: root.avatar_background;
+                        clip: true;
+
+                        if root.avatar_text != "" : MaterialText {
+                            text: root.avatar_text;
+                            style: MaterialListItemMetrics.avatar_label_font;
+                            color: root.avatar_foreground;
+                            overflow: clip;
+                            horizontal_alignment: center;
+                            vertical_alignment: center;
+                        }
+
+                        if root.avatar_icon.width > 0 : Icon {
+                            width: MaterialListItemMetrics.leading_icon_size;
+                            source: root.avatar_icon;
+                            colorize: root.avatar_foreground;
+                        }
+
+                        if root.avatar_image.width > 0 : Image {
+                            source: root.avatar_image;
+                            width: 100%;
+                            height: 100%;
+                            image_fit: cover;
+                        }
+                    }
+
+                    if !root.has_avatar && root.leading_icon.width > 0 : Icon {
+                        width: MaterialListItemMetrics.leading_icon_size;
+                        source: root.leading_icon;
+                        colorize: root.current_leading_color;
+                    }
+
+                    if !root.has_avatar && root.leading_icon.width <= 0 && root.leading_image.width > 0 : Rectangle {
+                        width: MaterialListItemMetrics.leading_image_width;
+                        height: MaterialListItemMetrics.leading_image_height;
+                        border_radius: ListTokens.item_leading_image_expressive_shape.top_left;
+                        clip: true;
+
+                        Image {
+                            source: root.leading_image;
+                            width: 100%;
+                            height: 100%;
+                            image_fit: cover;
+                        }
+                    }
                 }
 
-                if root.supporting_text != "" : MaterialText {
-                    text: root.supporting_text;
-                    color: root.color;
-                    overflow: elide;
-                    style: MaterialTypography.body_medium;
+                main := VerticalLayout {
+                    horizontal_stretch: 1;
+                    alignment: center;
+                    spacing: 0;
+
+                    // Each slot's text sits in a horizontal wrapper so the
+                    // `Text` element's laid-out bounds hug the glyphs like
+                    // upstream's `Text`; `word-wrap` mirrors `softWrap` —
+                    // an overlong string wraps onto extra lines instead of
+                    // being sized to the column's constraint.
+                    if root.overline_text != "" : HorizontalLayout {
+                        spacing: 0;
+                        alignment: start;
+
+                        MaterialText {
+                            text: root.overline_text;
+                            style: MaterialListItemMetrics.overline_font;
+                            color: root.current_overline_color;
+                            overflow: clip;
+                            wrap: word-wrap;
+                            horizontal-stretch: 0;
+                        }
+                    }
+
+                    HorizontalLayout {
+                        spacing: 0;
+                        alignment: start;
+
+                        MaterialText {
+                            text: root.text;
+                            style: MaterialListItemMetrics.label_font;
+                            color: root.current_content_color;
+                            overflow: clip;
+                            wrap: word-wrap;
+                            horizontal-stretch: 0;
+                        }
+                    }
+
+                    if root.supporting_text != "" : HorizontalLayout {
+                        spacing: 0;
+                        alignment: start;
+
+                        MaterialText {
+                            text: root.supporting_text;
+                            style: MaterialListItemMetrics.supporting_font;
+                            color: root.current_supporting_color;
+                            overflow: clip;
+                            wrap: word-wrap;
+                            horizontal-stretch: 0;
+                        }
+                    }
                 }
+
+                if root.has_trailing : HorizontalLayout {
+                    spacing: 0;
+                    cross_axis_alignment: center;
+
+                    if root.trailing_icon.width > 0 : Icon {
+                        width: MaterialListItemMetrics.trailing_icon_size;
+                        source: root.trailing_icon;
+                        colorize: root.current_trailing_color;
+                    }
+
+                    if root.trailing_text != "" : MaterialText {
+                        text: root.trailing_text;
+                        style: MaterialListItemMetrics.trailing_font;
+                        color: root.current_trailing_color;
+                        overflow: clip;
+                    }
+                }
+
+                @children
             }
-
-            @children
         }
     }
 
-    states [
-        disabled when !root.enabled : {
-            state_layer.display_background: false;
-            title_layout.opacity: 38%;
+    // The inset ring follows the live shape — including mid-morph.
+    if root.is_interactive && root.enabled && area.has_focus : FocusRing {
+        x: 0;
+        y: 0;
+        width: container.width;
+        height: container.height;
+        corner_radii: root.live_corners;
+    }
+
+    // Activation shared by pointer and `accessible-action-default`: the
+    // pointer path gates on `pointer_inside`, the a11y path does not.
+    public function activate() {
+        if !root.is_interactive || !root.enabled {
+            return;
         }
-    ]
+        if root.checkable {
+            root.checked = !root.checked;
+        }
+        root.clicked();
+    }
+
+    // Upstream picks the semantics role per overload (`Role.Button`,
+    // `Role.RadioButton`, `Role.Checkbox`); `accessible-role` is
+    // compile-time constant, so each role lives on a conditional element.
+    if root.checkable : Rectangle {
+        accessible-role: AccessibleRole.checkbox;
+        accessible-checkable: true;
+        accessible-checked <=> root.checked;
+        accessible-enabled: root.enabled;
+        accessible-label: root.text;
+        accessible-action-default => { root.activate(); }
+    }
+
+    if !root.checkable && root.selectable : Rectangle {
+        accessible-role: AccessibleRole.radio_button;
+        accessible-checkable: true;
+        accessible-checked <=> root.selected;
+        accessible-enabled: root.enabled;
+        accessible-label: root.text;
+        accessible-action-default => { root.activate(); }
+    }
+
+    if !root.checkable && !root.selectable && root.is_interactive : Rectangle {
+        accessible-role: AccessibleRole.button;
+        accessible-enabled: root.enabled;
+        accessible-label: root.text;
+        accessible-action-default => { root.activate(); }
+    }
 }
 
+/// A single list row — the M3 expressive `ListItem` (`ListItem.kt`).
+///
+/// Covers all four upstream overloads: the plain item (`interactive` off,
+/// still selectable text slots), `ListItem(onClick)` via `interactive`,
+/// `ListItem(selected, onClick)` via `selectable` + `selected`, and
+/// `ListItem(checked, onCheckedChange)` via `checkable` + `checked`.
+/// `trailingContent` is `@children`.
+export component ListTile {
+    // Content slots.
+    in property <string> text;
+    in property <string> overline_text;
+    in property <string> supporting_text;
+    in property <bool> supporting_multiline;
+    in property <image> leading_icon;
+    in property <image> leading_image;
+    in property <image> avatar_icon;
+    in property <string> avatar_text;
+    in property <image> avatar_image;
+    in property <color> avatar_background: ListTokens.item_leading_avatar_color;
+    in property <color> avatar_foreground: ListTokens.item_leading_avatar_label_color;
+    in property <image> trailing_icon;
+    in property <string> trailing_text;
+
+    // Interaction and state.
+    in property <bool> interactive;
+    in property <bool> selectable;
+    in property <bool> checkable;
+    in-out property <bool> selected;
+    in-out property <bool> checked;
+    in property <bool> enabled: true;
+    in property <bool> dragged;
+    in property <string> tooltip;
+    in property <bool> simulate_hover;
+    in property <bool> simulate_press;
+    in property <bool> enforce_touch_target: true;
+
+    callback clicked <=> base.clicked;
+    out property <bool> has_focus <=> base.has_focus;
+    out property <bool> pressed <=> base.pressed;
+    out property <bool> has_hover <=> base.has_hover;
+    out property <length> container_radius <=> base.container_radius;
+
+    accessible-role: AccessibleRole.list_item;
+    accessible-label: root.text;
+    accessible-enabled: root.enabled;
+    accessible-item-selectable: root.selectable;
+    accessible-item-selected: root.selected;
+
+    min_height: base.min_height;
+    min_width: base.min_width;
+    preferred_width: base.preferred_width;
+    preferred_height: base.preferred_height;
+
+    base := MaterialListItemBase {
+        width: 100%;
+        height: 100%;
+
+        text: root.text;
+        overline_text: root.overline_text;
+        supporting_text: root.supporting_text;
+        supporting_multiline: root.supporting_multiline;
+        leading_icon: root.leading_icon;
+        leading_image: root.leading_image;
+        avatar_icon: root.avatar_icon;
+        avatar_text: root.avatar_text;
+        avatar_image: root.avatar_image;
+        avatar_background: root.avatar_background;
+        avatar_foreground: root.avatar_foreground;
+        trailing_icon: root.trailing_icon;
+        trailing_text: root.trailing_text;
+
+        interactive: root.interactive;
+        selectable: root.selectable;
+        checkable: root.checkable;
+        selected <=> root.selected;
+        checked <=> root.checked;
+        enabled: root.enabled;
+        dragged: root.dragged;
+        tooltip: root.tooltip;
+        simulate_hover: root.simulate_hover;
+        simulate_press: root.simulate_press;
+        enforce_touch_target: root.enforce_touch_target;
+
+        @children
+    }
+}
+
+/// A `SegmentedListItem` — a `ListTile` whose resting shape is picked by
+/// its position in a segmented group: `index == 0` takes the container
+/// shape's top corners, `index == count - 1` its bottom corners, and a
+/// single-item group all four (`ListItemDefaults.segmentedShapes`). Place
+/// items `MaterialListItemMetrics.segmented_gap` (2px) apart.
+export component SegmentedListItem {
+    // Content slots.
+    in property <string> text;
+    in property <string> overline_text;
+    in property <string> supporting_text;
+    in property <bool> supporting_multiline;
+    in property <image> leading_icon;
+    in property <image> leading_image;
+    in property <image> avatar_icon;
+    in property <string> avatar_text;
+    in property <image> avatar_image;
+    in property <color> avatar_background: ListTokens.item_leading_avatar_color;
+    in property <color> avatar_foreground: ListTokens.item_leading_avatar_label_color;
+    in property <image> trailing_icon;
+    in property <string> trailing_text;
+
+    // Position in the segmented group — required, like upstream's
+    // `segmentedShapes(index, count)`.
+    in property <int> index;
+    in property <int> count: 1;
+
+    // Interaction and state.
+    in property <bool> interactive;
+    in property <bool> selectable;
+    in property <bool> checkable;
+    in-out property <bool> selected;
+    in-out property <bool> checked;
+    in property <bool> enabled: true;
+    in property <bool> dragged;
+    in property <string> tooltip;
+    in property <bool> simulate_hover;
+    in property <bool> simulate_press;
+    in property <bool> enforce_touch_target: true;
+
+    callback clicked <=> base.clicked;
+    out property <bool> has_focus <=> base.has_focus;
+    out property <bool> pressed <=> base.pressed;
+    out property <bool> has_hover <=> base.has_hover;
+    out property <length> container_radius <=> base.container_radius;
+
+    accessible-role: AccessibleRole.list_item;
+    accessible-label: root.text;
+    accessible-enabled: root.enabled;
+    accessible-item-selectable: root.selectable;
+    accessible-item-selected: root.selected;
+    accessible-item-index: root.index;
+    accessible-item-count: root.count;
+
+    min_height: base.min_height;
+    min_width: base.min_width;
+    preferred_width: base.preferred_width;
+    preferred_height: base.preferred_height;
+
+    base := MaterialListItemBase {
+        width: 100%;
+        height: 100%;
+
+        text: root.text;
+        overline_text: root.overline_text;
+        supporting_text: root.supporting_text;
+        supporting_multiline: root.supporting_multiline;
+        leading_icon: root.leading_icon;
+        leading_image: root.leading_image;
+        avatar_icon: root.avatar_icon;
+        avatar_text: root.avatar_text;
+        avatar_image: root.avatar_image;
+        avatar_background: root.avatar_background;
+        avatar_foreground: root.avatar_foreground;
+        trailing_icon: root.trailing_icon;
+        trailing_text: root.trailing_text;
+
+        segmented: true;
+        index: root.index;
+        count: root.count;
+
+        interactive: root.interactive;
+        selectable: root.selectable;
+        checkable: root.checkable;
+        selected <=> root.selected;
+        checked <=> root.checked;
+        enabled: root.enabled;
+        dragged: root.dragged;
+        tooltip: root.tooltip;
+        simulate_hover: root.simulate_hover;
+        simulate_press: root.simulate_press;
+        enforce_touch_target: root.enforce_touch_target;
+
+        @children
+    }
+}

@@ -4,6 +4,7 @@
 import { MaterialAnimations } from "../styling/material_animations.slint";
 import { MaterialPalette } from "../styling/material_palette.slint";
 import { MaterialFocusIndicator, MaterialFocusRing } from "../styling/generated/material_state_tokens.slint";
+import { MaterialCornerShape } from "../styling/generated/material_shape_tokens.slint";
 import { ToolTip } from "./tooltip.slint";
 import { MaterialWindowAdapter } from "./material_window.slint";
 
@@ -175,16 +176,41 @@ export component StateLayer {
 /// layer, and show it while the component has keyboard focus.
 export component FocusRing {
     in property <length> border_radius;
+    /// Per-corner radii of the element's live shape (px). When set, each
+    /// stroke draws a per-corner rounded outline — the shape inset by the
+    /// stroke's own inset, i.e. each radius reduced by it — instead of the
+    /// uniform `border_radius`. `full` resolves to `min(w,h)/2` per stroke,
+    /// like the tokens' `MaterialCornerShape` contract.
+    in property <MaterialCornerShape> corner_radii;
     /// Per-corner radii; used instead of `border_radius` when `shaped_corners`.
     in property <MaterialCornerRadii> corners;
     in property <bool> shaped_corners;
     property <MaterialFocusRing> ring: MaterialFocusIndicator.ring;
+    property <bool> has_radii: root.corner_radii.full || root.corner_radii.top_left > 0px ||
+        root.corner_radii.top_right > 0px || root.corner_radii.bottom_right > 0px ||
+        root.corner_radii.bottom_left > 0px;
+
+    // One stroke's rounded-corner outline at its own bounds: `CornerBasedShape`
+    // inset by `inset` reduces each corner radius by exactly that amount.
+    pure function stroke_shape(w: length, h: length, inset: length) -> shape {
+        Shapes.rectangle(w / 1px, h / 1px,
+            [{radius: root.stroke_radius(root.corner_radii.top_left, w, h, inset) / 1px, smoothing: 0},
+             {radius: root.stroke_radius(root.corner_radii.top_right, w, h, inset) / 1px, smoothing: 0},
+             {radius: root.stroke_radius(root.corner_radii.bottom_right, w, h, inset) / 1px, smoothing: 0},
+             {radius: root.stroke_radius(root.corner_radii.bottom_left, w, h, inset) / 1px, smoothing: 0}])
+    }
+    pure function stroke_radius(r: length, w: length, h: length, inset: length) -> length {
+        Math.max(0px, (root.corner_radii.full ? Math.min(w, h) / 2 : r) - inset)
+    }
+    // An unset `shape` so the strokes fall back to `border_radius` when no
+    // per-corner radii are set.
+    property <shape> no_shape;
 
     // Upstream `BorderLogic` insets each stroke from the element edge by its
     // own inset and draws the inner stroke first: the inner band covers
     // `inner_stroke_inset..+inner_stroke_width` and the outer
     // `outer_stroke_inset..+outer_stroke_width` on top of it.
-    Rectangle {
+    inner := Rectangle {
         property <length> inset: root.ring.inner_stroke_inset;
         x: inset;
         y: inset;
@@ -198,6 +224,8 @@ export component FocusRing {
         border-bottom-right-radius: max(0px, (root.shaped_corners ? root.corners.bottom_right : root.border_radius) - inset);
         border-bottom-left-radius: max(0px, (root.shaped_corners ? root.corners.bottom_left : root.border_radius) - inset);
         border_color: MaterialPalette.on_secondary;
+        shape: root.has_radii ? root.stroke_shape(self.width, self.height, inset) : root.no_shape;
+        shape-fit: ShapeFit.fill;
     }
 
     Rectangle {
@@ -214,6 +242,8 @@ export component FocusRing {
         border-bottom-right-radius: max(0px, (root.shaped_corners ? root.corners.bottom_right : root.border_radius) - inset);
         border-bottom-left-radius: max(0px, (root.shaped_corners ? root.corners.bottom_left : root.border_radius) - inset);
         border_color: MaterialPalette.secondary;
+        shape: root.has_radii ? root.stroke_shape(self.width, self.height, inset) : root.no_shape;
+        shape-fit: ShapeFit.fill;
     }
 }
 

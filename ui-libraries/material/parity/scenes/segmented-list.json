@@ -1,0 +1,78 @@
+{
+  "name": "segmented-list",
+  "type": "canvas",
+  "parity": "static",
+  "size": [
+    360,
+    262
+  ],
+  "densities": [
+    1,
+    2
+  ],
+  "theme": {
+    "seed": "6750A4",
+    "variant": "tonal-spot",
+    "spec": "spec2025",
+    "platform": "phone",
+    "dark": false,
+    "contrast": 0.0
+  },
+  "fonts": {
+    "plain": "Roboto",
+    "brand": "Roboto"
+  },
+  "widgets": [
+    {
+      "kind": "segmented-list-item",
+      "x": 8,
+      "y": 8,
+      "width": 344,
+      "index": 0,
+      "count": 3,
+      "text": "First",
+      "selectable": true
+    },
+    {
+      "kind": "segmented-list-item",
+      "x": 8,
+      "y": 66,
+      "width": 344,
+      "index": 1,
+      "count": 3,
+      "text": "Second",
+      "selectable": true,
+      "selected": true
+    },
+    {
+      "kind": "segmented-list-item",
+      "x": 8,
+      "y": 124,
+      "width": 344,
+      "index": 2,
+      "count": 3,
+      "text": "Third",
+      "selectable": true
+    },
+    {
+      "kind": "segmented-list-item",
+      "x": 8,
+      "y": 198,
+      "width": 344,
+      "index": 0,
+      "count": 1,
+      "text": "Single item",
+      "interactive": true
+    }
+  ],
+  "trace_elements": [
+    "item0",
+    "item1",
+    "item2",
+    "item3"
+  ],
+  "trace_props": [],
+  "xfail_text": "issue #28: Slint ceils text layout widths where Compose keeps fractional advances",
+  "eps": 10,
+  "eps_note": "the corner arc of a shape-drawn container lands ~0.5px off Compose's conic-rounded-rect rasterization (worst channel diff 9); the strict layer's edge-pixels eps needs a step more than the flat-region default"
+}

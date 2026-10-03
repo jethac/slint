@@ -1,0 +1,47 @@
+---
+title: SegmentedListItem
+description: SegmentedListItem API.
+---
+
+import CodeSnippetMD from '@slint/common-files/src/components/CodeSnippetMD.astro';
+import SlintProperty from '@slint/common-files/src/components/SlintProperty.astro';
+
+<CodeSnippetMD imagePath="/src/assets/generated/segmentedlistitem.png" scale="3" imageWidth="300" imageHeight="220" imageAlt="">
+```slint
+import { SegmentedListItem } from "@material";
+export component Example inherits Window {
+    width: 300px;
+    height: 220px;
+    background: transparent;
+    VerticalLayout {
+        padding: 16px;
+        spacing: 2px;
+        alignment: center;
+        SegmentedListItem { text: "First"; index: 0; count: 3; }
+        SegmentedListItem { text: "Middle"; index: 1; count: 3; }
+        SegmentedListItem { text: "Last"; index: 2; count: 3; }
+    }
+}
+```
+</CodeSnippetMD>
+
+A `SegmentedListItem` is a `ListTile` whose resting shape is picked by its position in a segmented group, like the upstream `SegmentedListItem` composable: the first item takes the segment group's top corners, the last its bottom corners, middle items small corners all around, and a single-item group all four large. Place siblings `MaterialListItemMetrics.segmented_gap` (2px) apart.
+
+## Properties
+
+`SegmentedListItem` accepts every `ListTile` property — content slots (`text`, `overline-text`, `supporting-text`, leading/trailing icons and images, avatar), state (`interactive`, `selectable`, `checkable`, `selected`, `checked`, `enabled`, `dragged`), and `tooltip`/`simulate-*`/`enforce-touch-target` — plus the two positional properties below. See <a href={`${import.meta.env.BASE_URL}components/list_tile/`}>ListTile</a> for the full reference.
+
+### index
+<SlintProperty propName="index" typeName="int">
+The item's position in its segmented group: `0` is the first item, `count - 1` the last.
+</SlintProperty>
+
+### count
+<SlintProperty propName="count" typeName="int" defaultValue="1">
+The number of items in the segmented group.
+</SlintProperty>
+
+## Callbacks
+
+### clicked()
+Invoked when the item is clicked. Requires `interactive`, `selectable`, or `checkable`.

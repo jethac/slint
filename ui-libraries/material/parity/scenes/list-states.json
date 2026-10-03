@@ -1,0 +1,91 @@
+{
+  "name": "list-states",
+  "type": "canvas",
+  "parity": "static",
+  "size": [
+    360,
+    340
+  ],
+  "densities": [
+    1,
+    2
+  ],
+  "theme": {
+    "seed": "6750A4",
+    "variant": "tonal-spot",
+    "spec": "spec2025",
+    "platform": "phone",
+    "dark": false,
+    "contrast": 0.0
+  },
+  "fonts": {
+    "plain": "Roboto",
+    "brand": "Roboto"
+  },
+  "widgets": [
+    {
+      "kind": "list-item",
+      "x": 12,
+      "y": 16,
+      "width": 336,
+      "text": "Focused",
+      "interactive": true,
+      "state": "focused"
+    },
+    {
+      "kind": "list-item",
+      "x": 12,
+      "y": 80,
+      "width": 336,
+      "text": "Hovered",
+      "interactive": true,
+      "state": "hovered"
+    },
+    {
+      "kind": "list-item",
+      "x": 12,
+      "y": 144,
+      "width": 336,
+      "text": "Selected",
+      "selectable": true,
+      "selected": true
+    },
+    {
+      "kind": "list-item",
+      "x": 12,
+      "y": 208,
+      "width": 336,
+      "text": "Disabled",
+      "interactive": true,
+      "enabled": false
+    },
+    {
+      "kind": "list-item",
+      "x": 12,
+      "y": 272,
+      "width": 336,
+      "text": "Checked",
+      "checkable": true,
+      "checked": true
+    }
+  ],
+  "trace_elements": [
+    "item0",
+    "item1",
+    "item2",
+    "item3",
+    "item4"
+  ],
+  "trace_props": [
+    "container_radius"
+  ],
+  "mask_decor": {
+    "item0": [
+      0,
+      2000
+    ]
+  },
+  "xfail_text": "issue #28: Slint ceils text layout widths where Compose keeps fractional advances",
+  "eps": 10,
+  "eps_note": "the corner arc of a shape-drawn container lands ~0.5px off Compose's conic-rounded-rect rasterization (worst channel diff 9); the strict layer's edge-pixels eps needs a step more than the flat-region default"
+}

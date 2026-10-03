@@ -1,0 +1,86 @@
+// Copyright © SixtyFPS GmbH <info@slint.dev>
+// SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0
+
+// Scene: segmented-list — generated from `ui-libraries/material/parity/scenes/segmented-list.json`
+// (edit the scene, regenerate with `cargo run -p material-parity-generator`).
+//PARITY=static
+//SIZE=360x262
+//TRACE_ELEMENTS=item0,item1,item2,item3
+//XFAIL_TEXT=issue #28: Slint ceils text layout widths where Compose keeps fractional advances
+// the corner arc of a shape-drawn container lands ~0.5px off Compose's conic-rounded-rect rasterization (worst channel diff 9); the strict layer's edge-pixels eps needs a step more than the flat-region default
+//PARITY_EPS=10
+//DENSITIES=1,2
+import "../../fonts/Roboto-VariableFont.ttf";
+import { MaterialPalette, MaterialTheme, MaterialWindow, SegmentedListItem } from "@material";
+
+export component TestCase inherits MaterialWindow {
+    init => {
+        // The scene pins seed #6750A4, tonal-spot, spec2025, light, contrast 0
+        // (all the library defaults; restated here so a default change can't
+        // silently move the parity baseline).
+        MaterialTheme.seed-color = #6750A4;
+        MaterialTheme.dark = false;
+        MaterialTheme.contrast-level = 0;
+        MaterialTheme.use-platform-color = false;
+        MaterialTheme.plain-family = "Roboto";
+        MaterialTheme.brand-family = "Roboto";
+        // Compose builds its scene scheme from the same seed — use the
+        // runtime-generated scheme, not the static expressive table.
+        MaterialPalette.dynamic = true;
+    }
+
+    item0 := SegmentedListItem {
+        x: 8px;
+        y: 8px;
+        text: "First";
+        index: 0;
+        count: 3;
+        selectable: true;
+        width: 344px;
+        enforce_touch_target: false;
+        clicked => {
+            self.selected = !self.selected;
+        }
+    }
+
+    item1 := SegmentedListItem {
+        x: 8px;
+        y: 66px;
+        text: "Second";
+        index: 1;
+        count: 3;
+        selectable: true;
+        selected: true;
+        width: 344px;
+        enforce_touch_target: false;
+        clicked => {
+            self.selected = !self.selected;
+        }
+    }
+
+    item2 := SegmentedListItem {
+        x: 8px;
+        y: 124px;
+        text: "Third";
+        index: 2;
+        count: 3;
+        selectable: true;
+        width: 344px;
+        enforce_touch_target: false;
+        clicked => {
+            self.selected = !self.selected;
+        }
+    }
+
+    item3 := SegmentedListItem {
+        x: 8px;
+        y: 198px;
+        text: "Single item";
+        index: 0;
+        count: 1;
+        interactive: true;
+        width: 344px;
+        enforce_touch_target: false;
+    }
+
+}
