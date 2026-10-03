@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MIT
 
 import { NavigationItem } from "../items/navigation_item.slint";
-import { FloatingActionButton, FABStyle } from "./floating_action_button.slint";
+import { FloatingActionButton } from "./floating_action_button.slint";
 import { MaterialStyleMetrics } from "../styling/material_style_metrics.slint";
 import { MaterialPalette } from "../styling/material_palette.slint";
 import { IconButton } from "icon_button.slint";
@@ -42,7 +42,6 @@ export component NavigationRail inherits BaseNavigation {
 
                 FloatingActionButton {
                     icon: root.fab_icon;
-                    style: FABStyle.standard;
 
                     clicked => {
                         root.fab_clicked();

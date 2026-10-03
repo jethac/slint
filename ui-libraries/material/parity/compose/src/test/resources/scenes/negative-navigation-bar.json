@@ -84,6 +84,7 @@
   "type": "canvas",
   "widgets": [
     {
+      "alignment": null,
       "always_show_label": null,
       "checkable": null,
       "checked": null,
@@ -93,13 +94,16 @@
       "corner": null,
       "elevation": null,
       "enabled": null,
+      "expanded": null,
       "height": null,
       "height_offset": null,
       "icon": null,
       "icon_position": null,
       "icons": [],
+      "indeterminate": null,
       "items": [],
       "kind": "short-navigation-bar",
+      "label_width": null,
       "level": null,
       "multi_select": null,
       "nav_arrangement": null,
@@ -107,6 +111,7 @@
       "nav_selected_index": 0,
       "placeholder": null,
       "position": null,
+      "progress": null,
       "radius": null,
       "rail_items": [
         {
@@ -133,6 +138,7 @@
       ],
       "selected_index": null,
       "shape": null,
+      "shown": null,
       "side": null,
       "size": null,
       "slint_overrides": {
@@ -140,7 +146,10 @@
       },
       "state": null,
       "subtitle": null,
+      "target_scale": null,
       "text": null,
+      "thickness": null,
+      "toggle": null,
       "trailing_icon": null,
       "variant": null,
       "vertical": null,
@@ -150,6 +159,7 @@
       "y": 0.0
     },
     {
+      "alignment": null,
       "always_show_label": null,
       "checkable": null,
       "checked": null,
@@ -159,13 +169,16 @@
       "corner": null,
       "elevation": null,
       "enabled": null,
+      "expanded": null,
       "height": null,
       "height_offset": null,
       "icon": null,
       "icon_position": null,
       "icons": [],
+      "indeterminate": null,
       "items": [],
       "kind": "short-navigation-bar",
+      "label_width": null,
       "level": null,
       "multi_select": null,
       "nav_arrangement": "centered",
@@ -173,6 +186,7 @@
       "nav_selected_index": 0,
       "placeholder": null,
       "position": null,
+      "progress": null,
       "radius": null,
       "rail_items": [
         {
@@ -199,6 +213,7 @@
       ],
       "selected_index": null,
       "shape": null,
+      "shown": null,
       "side": null,
       "size": null,
       "slint_overrides": {
@@ -206,7 +221,10 @@
       },
       "state": null,
       "subtitle": null,
+      "target_scale": null,
       "text": null,
+      "thickness": null,
+      "toggle": null,
       "trailing_icon": null,
       "variant": null,
       "vertical": null,
