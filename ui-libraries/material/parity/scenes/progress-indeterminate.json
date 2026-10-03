@@ -41,6 +41,6 @@
             "indeterminate": true
         }
     ],
-    "eps": 16,
+    "parity_eps": 16,
     "negative_note": "femtovg tessellates stroked arcs and small round caps with a slightly different AA coverage ramp than layoutlib \u2014 a handful of isolated edge pixels diverge ~90/255 at d2 while geometry is verified identical on software and skia; a silent pass would mean the harness went blind"
 }

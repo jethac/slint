@@ -4,9 +4,10 @@
 // Scene: progress-indicators — generated from `ui-libraries/material/parity/scenes/progress-indicators.json`
 // (edit the scene, regenerate with `cargo run -p material-parity-generator`).
 //PARITY=xfail:femtovg: femtovg tessellates stroked arcs and small round caps with a slightly different AA coverage ramp than layoutlib — a handful of isolated edge pixels diverge ~90/255 at d2 while geometry is verified identical on software and skia; a silent pass would mean the harness went blind
+// (undocumented)
+//PARITY_EPS=16
 //SIZE=280x200
 //DENSITIES=1,2
-//PARITY_EPS=16
 import "../../fonts/Roboto-VariableFont.ttf";
 import { CircularProgressIndicator, LinearProgressIndicator, MaterialPalette, MaterialTheme, MaterialWindow } from "@material";
 

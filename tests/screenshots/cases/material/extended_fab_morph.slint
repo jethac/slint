@@ -1,0 +1,64 @@
+// Copyright © SixtyFPS GmbH <info@slint.dev>
+// SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0
+
+// Scene: extended-fab-morph — generated from `ui-libraries/material/parity/scenes/extended-fab-morph.json`
+// (edit the scene, regenerate with `cargo run -p material-parity-generator`).
+//PARITY=xfail: issue #27: the Compose frame clock starts the expand/collapse animatables ~2ms after the Slint dispatch, so identical-timestamp frames report a systematic lead — a silent pass would mean the harness went blind
+//SIZE=360x128
+//TIMES=0,60,120,200,333,500,800,1500
+//TRACE_PROPS=expand_progress,label_alpha
+//TRACE_ELEMENTS=button0,button1
+//ACTION=press:60,72
+//ACTION=release@200:60,72
+//ACTION=move@201:0,0
+//MASK_INNER=button0@200,333,500,800
+//MASK_INNER=button1@200,333,500,800
+//XFAIL_TEXT=issue #28: Slint ceils text layout widths where Compose keeps fractional advances
+//DENSITIES=1,2
+import "../../fonts/Roboto-VariableFont.ttf";
+import { ExtendedFabSize, ExtendedFloatingActionButton, FabAlignment, FabElevation, FabSize, IconButtonWidth, Icons, MaterialButtonShape, MaterialButtonSize, MaterialPalette, MaterialTheme, MaterialWindow } from "@material";
+
+export component TestCase inherits MaterialWindow {
+    init => {
+        // The scene pins seed #6750A4, tonal-spot, spec2025, light, contrast 0
+        // (all the library defaults; restated here so a default change can't
+        // silently move the parity baseline).
+        MaterialTheme.seed-color = #6750A4;
+        MaterialTheme.dark = false;
+        MaterialTheme.contrast-level = 0;
+        MaterialTheme.use-platform-color = false;
+        MaterialTheme.plain-family = "Roboto";
+        MaterialTheme.brand-family = "Roboto";
+        // Compose builds its scene scheme from the same seed — use the
+        // runtime-generated scheme, not the static expressive table.
+        MaterialPalette.dynamic = true;
+    }
+
+    button0 := ExtendedFloatingActionButton {
+        x: 16px;
+        y: 44px;
+        text: "Create";
+        label-width: 52px;
+        expanded: true;
+        icon: Icons.add;
+        clicked => { self.expanded = !self.expanded; }
+        enforce_touch_target: false;
+    }
+
+    out property <float> expand_progress: button0.expand_progress;
+
+    out property <float> label_alpha: button0.label_alpha;
+
+    button1 := ExtendedFloatingActionButton {
+        x: 172px;
+        y: 24px;
+        text: "Create";
+        label-width: 78px;
+        expanded: true;
+        size: ExtendedFabSize.medium;
+        icon: Icons.add;
+        clicked => { self.expanded = !self.expanded; }
+        enforce_touch_target: false;
+    }
+
+}
