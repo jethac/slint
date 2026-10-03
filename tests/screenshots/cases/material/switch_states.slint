@@ -1,0 +1,93 @@
+// Copyright © SixtyFPS GmbH <info@slint.dev>
+// SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0
+
+// Scene: switch-states — generated from `ui-libraries/material/parity/scenes/switch-states.json`
+// (edit the scene, regenerate with `cargo run -p material-parity-generator`).
+//PARITY=xfail:femtovg: issue #53 class: femtovg rasterizes edges via stencil+fringe with the AA band running -0.5px inside to +1.5px outside, so a border edge landing at a fractional device position covers a device-px sliver differently than coverage-integral drivers (software, skia, vello, Compose) — every switch track outline ring-diffs ~0.5-1px at d2 with a few strict pixels left in the edge slivers while track fill, thumb and geometry match; a silent pass on femtovg would mean the harness went blind
+//SIZE=532x96
+//TRACE_ELEMENTS=button0,button1,button2,button3,button4,button5,button6,button7
+//ACTION=key:Tab
+//ACTION=key:Tab
+//ACTION=key:Tab
+//MASK_DECOR=button2@0,2000
+//MASK_DECOR=button3@0,2000
+//DENSITIES=1,2
+import "../../fonts/Roboto-VariableFont.ttf";
+import { Icons, MaterialPalette, MaterialTheme, MaterialWindow, Switch } from "@material";
+
+export component TestCase inherits MaterialWindow {
+    init => {
+        // The scene pins seed #6750A4, tonal-spot, spec2025, light, contrast 0
+        // (all the library defaults; restated here so a default change can't
+        // silently move the parity baseline).
+        MaterialTheme.seed-color = #6750A4;
+        MaterialTheme.dark = false;
+        MaterialTheme.contrast-level = 0;
+        MaterialTheme.use-platform-color = false;
+        MaterialTheme.plain-family = "Roboto";
+        MaterialTheme.brand-family = "Roboto";
+        // Compose builds its scene scheme from the same seed — use the
+        // runtime-generated scheme, not the static expressive table.
+        MaterialPalette.dynamic = true;
+    }
+
+    button0 := Switch {
+        x: 16px;
+        y: 32px;
+        enforce_touch_target: false;
+    }
+
+    button1 := Switch {
+        x: 80px;
+        y: 32px;
+        checked: true;
+        enforce_touch_target: false;
+    }
+
+    button2 := Switch {
+        x: 144px;
+        y: 32px;
+        checked: true;
+        enforce_touch_target: false;
+    }
+
+    button3 := Switch {
+        x: 208px;
+        y: 32px;
+        simulate_hover: true;
+        enforce_touch_target: false;
+    }
+
+    button4 := Switch {
+        x: 272px;
+        y: 32px;
+        checked: true;
+        on_icon: Icons.check;
+        off_icon: Icons.check;
+        enforce_touch_target: false;
+    }
+
+    button5 := Switch {
+        x: 336px;
+        y: 32px;
+        on_icon: Icons.check;
+        off_icon: Icons.check;
+        enforce_touch_target: false;
+    }
+
+    button6 := Switch {
+        x: 400px;
+        y: 32px;
+        checked: true;
+        enabled: false;
+        enforce_touch_target: false;
+    }
+
+    button7 := Switch {
+        x: 464px;
+        y: 32px;
+        enabled: false;
+        enforce_touch_target: false;
+    }
+
+}
