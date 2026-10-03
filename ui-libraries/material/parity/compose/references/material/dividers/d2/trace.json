@@ -1,0 +1,3155 @@
+{
+  "times_ms": [
+    2000
+  ],
+  "frames": [
+    {
+      "t_ms": 1,
+      "props": {},
+      "elements": {
+        "divider0": {
+          "x": 16,
+          "y": 20,
+          "w": 288,
+          "h": 1
+        },
+        "divider1": {
+          "x": 16,
+          "y": 40,
+          "w": 288,
+          "h": 2
+        },
+        "divider2": {
+          "x": 16,
+          "y": 60,
+          "w": 288,
+          "h": 4
+        },
+        "divider3": {
+          "x": 16,
+          "y": 80,
+          "w": 288,
+          "h": 1
+        },
+        "divider4": {
+          "x": 0,
+          "y": 0,
+          "w": 0,
+          "h": 0
+        },
+        "divider5": {
+          "x": 16,
+          "y": 120,
+          "w": 144,
+          "h": 1
+        },
+        "divider7": {
+          "x": 24,
+          "y": 160,
+          "w": 1,
+          "h": 64
+        },
+        "divider8": {
+          "x": 40,
+          "y": 160,
+          "w": 2,
+          "h": 64
+        },
+        "divider9": {
+          "x": 56,
+          "y": 160,
+          "w": 4,
+          "h": 64
+        },
+        "divider10": {
+          "x": 72,
+          "y": 160,
+          "w": 1,
+          "h": 32
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 51,
+      "props": {},
+      "elements": {
+        "divider0": {
+          "x": 16,
+          "y": 20,
+          "w": 288,
+          "h": 1,
+          "opacity": 1
+        },
+        "divider1": {
+          "x": 16,
+          "y": 40,
+          "w": 288,
+          "h": 2,
+          "opacity": 1
+        },
+        "divider2": {
+          "x": 16,
+          "y": 60,
+          "w": 288,
+          "h": 4,
+          "opacity": 1
+        },
+        "divider3": {
+          "x": 16,
+          "y": 80,
+          "w": 288,
+          "h": 1,
+          "opacity": 1
+        },
+        "divider4": {
+          "x": 0,
+          "y": 0,
+          "w": 0,
+          "h": 0,
+          "opacity": 1
+        },
+        "divider5": {
+          "x": 16,
+          "y": 120,
+          "w": 144,
+          "h": 1,
+          "opacity": 1
+        },
+        "divider7": {
+          "x": 24,
+          "y": 160,
+          "w": 1,
+          "h": 64,
+          "opacity": 1
+        },
+        "divider8": {
+          "x": 40,
+          "y": 160,
+          "w": 2,
+          "h": 64,
+          "opacity": 1
+        },
+        "divider9": {
+          "x": 56,
+          "y": 160,
+          "w": 4,
+          "h": 64,
+          "opacity": 1
+        },
+        "divider10": {
+          "x": 72,
+          "y": 160,
+          "w": 1,
+          "h": 32,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 101,
+      "props": {},
+      "elements": {
+        "divider0": {
+          "x": 16,
+          "y": 20,
+          "w": 288,
+          "h": 1,
+          "opacity": 1
+        },
+        "divider1": {
+          "x": 16,
+          "y": 40,
+          "w": 288,
+          "h": 2,
+          "opacity": 1
+        },
+        "divider2": {
+          "x": 16,
+          "y": 60,
+          "w": 288,
+          "h": 4,
+          "opacity": 1
+        },
+        "divider3": {
+          "x": 16,
+          "y": 80,
+          "w": 288,
+          "h": 1,
+          "opacity": 1
+        },
+        "divider4": {
+          "x": 0,
+          "y": 0,
+          "w": 0,
+          "h": 0,
+          "opacity": 1
+        },
+        "divider5": {
+          "x": 16,
+          "y": 120,
+          "w": 144,
+          "h": 1,
+          "opacity": 1
+        },
+        "divider7": {
+          "x": 24,
+          "y": 160,
+          "w": 1,
+          "h": 64,
+          "opacity": 1
+        },
+        "divider8": {
+          "x": 40,
+          "y": 160,
+          "w": 2,
+          "h": 64,
+          "opacity": 1
+        },
+        "divider9": {
+          "x": 56,
+          "y": 160,
+          "w": 4,
+          "h": 64,
+          "opacity": 1
+        },
+        "divider10": {
+          "x": 72,
+          "y": 160,
+          "w": 1,
+          "h": 32,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 151,
+      "props": {},
+      "elements": {
+        "divider0": {
+          "x": 16,
+          "y": 20,
+          "w": 288,
+          "h": 1,
+          "opacity": 1
+        },
+        "divider1": {
+          "x": 16,
+          "y": 40,
+          "w": 288,
+          "h": 2,
+          "opacity": 1
+        },
+        "divider2": {
+          "x": 16,
+          "y": 60,
+          "w": 288,
+          "h": 4,
+          "opacity": 1
+        },
+        "divider3": {
+          "x": 16,
+          "y": 80,
+          "w": 288,
+          "h": 1,
+          "opacity": 1
+        },
+        "divider4": {
+          "x": 0,
+          "y": 0,
+          "w": 0,
+          "h": 0,
+          "opacity": 1
+        },
+        "divider5": {
+          "x": 16,
+          "y": 120,
+          "w": 144,
+          "h": 1,
+          "opacity": 1
+        },
+        "divider7": {
+          "x": 24,
+          "y": 160,
+          "w": 1,
+          "h": 64,
+          "opacity": 1
+        },
+        "divider8": {
+          "x": 40,
+          "y": 160,
+          "w": 2,
+          "h": 64,
+          "opacity": 1
+        },
+        "divider9": {
+          "x": 56,
+          "y": 160,
+          "w": 4,
+          "h": 64,
+          "opacity": 1
+        },
+        "divider10": {
+          "x": 72,
+          "y": 160,
+          "w": 1,
+          "h": 32,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 201,
+      "props": {},
+      "elements": {
+        "divider0": {
+          "x": 16,
+          "y": 20,
+          "w": 288,
+          "h": 1,
+          "opacity": 1
+        },
+        "divider1": {
+          "x": 16,
+          "y": 40,
+          "w": 288,
+          "h": 2,
+          "opacity": 1
+        },
+        "divider2": {
+          "x": 16,
+          "y": 60,
+          "w": 288,
+          "h": 4,
+          "opacity": 1
+        },
+        "divider3": {
+          "x": 16,
+          "y": 80,
+          "w": 288,
+          "h": 1,
+          "opacity": 1
+        },
+        "divider4": {
+          "x": 0,
+          "y": 0,
+          "w": 0,
+          "h": 0,
+          "opacity": 1
+        },
+        "divider5": {
+          "x": 16,
+          "y": 120,
+          "w": 144,
+          "h": 1,
+          "opacity": 1
+        },
+        "divider7": {
+          "x": 24,
+          "y": 160,
+          "w": 1,
+          "h": 64,
+          "opacity": 1
+        },
+        "divider8": {
+          "x": 40,
+          "y": 160,
+          "w": 2,
+          "h": 64,
+          "opacity": 1
+        },
+        "divider9": {
+          "x": 56,
+          "y": 160,
+          "w": 4,
+          "h": 64,
+          "opacity": 1
+        },
+        "divider10": {
+          "x": 72,
+          "y": 160,
+          "w": 1,
+          "h": 32,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 251,
+      "props": {},
+      "elements": {
+        "divider0": {
+          "x": 16,
+          "y": 20,
+          "w": 288,
+          "h": 1,
+          "opacity": 1
+        },
+        "divider1": {
+          "x": 16,
+          "y": 40,
+          "w": 288,
+          "h": 2,
+          "opacity": 1
+        },
+        "divider2": {
+          "x": 16,
+          "y": 60,
+          "w": 288,
+          "h": 4,
+          "opacity": 1
+        },
+        "divider3": {
+          "x": 16,
+          "y": 80,
+          "w": 288,
+          "h": 1,
+          "opacity": 1
+        },
+        "divider4": {
+          "x": 0,
+          "y": 0,
+          "w": 0,
+          "h": 0,
+          "opacity": 1
+        },
+        "divider5": {
+          "x": 16,
+          "y": 120,
+          "w": 144,
+          "h": 1,
+          "opacity": 1
+        },
+        "divider7": {
+          "x": 24,
+          "y": 160,
+          "w": 1,
+          "h": 64,
+          "opacity": 1
+        },
+        "divider8": {
+          "x": 40,
+          "y": 160,
+          "w": 2,
+          "h": 64,
+          "opacity": 1
+        },
+        "divider9": {
+          "x": 56,
+          "y": 160,
+          "w": 4,
+          "h": 64,
+          "opacity": 1
+        },
+        "divider10": {
+          "x": 72,
+          "y": 160,
+          "w": 1,
+          "h": 32,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 301,
+      "props": {},
+      "elements": {
+        "divider0": {
+          "x": 16,
+          "y": 20,
+          "w": 288,
+          "h": 1,
+          "opacity": 1
+        },
+        "divider1": {
+          "x": 16,
+          "y": 40,
+          "w": 288,
+          "h": 2,
+          "opacity": 1
+        },
+        "divider2": {
+          "x": 16,
+          "y": 60,
+          "w": 288,
+          "h": 4,
+          "opacity": 1
+        },
+        "divider3": {
+          "x": 16,
+          "y": 80,
+          "w": 288,
+          "h": 1,
+          "opacity": 1
+        },
+        "divider4": {
+          "x": 0,
+          "y": 0,
+          "w": 0,
+          "h": 0,
+          "opacity": 1
+        },
+        "divider5": {
+          "x": 16,
+          "y": 120,
+          "w": 144,
+          "h": 1,
+          "opacity": 1
+        },
+        "divider7": {
+          "x": 24,
+          "y": 160,
+          "w": 1,
+          "h": 64,
+          "opacity": 1
+        },
+        "divider8": {
+          "x": 40,
+          "y": 160,
+          "w": 2,
+          "h": 64,
+          "opacity": 1
+        },
+        "divider9": {
+          "x": 56,
+          "y": 160,
+          "w": 4,
+          "h": 64,
+          "opacity": 1
+        },
+        "divider10": {
+          "x": 72,
+          "y": 160,
+          "w": 1,
+          "h": 32,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 351,
+      "props": {},
+      "elements": {
+        "divider0": {
+          "x": 16,
+          "y": 20,
+          "w": 288,
+          "h": 1,
+          "opacity": 1
+        },
+        "divider1": {
+          "x": 16,
+          "y": 40,
+          "w": 288,
+          "h": 2,
+          "opacity": 1
+        },
+        "divider2": {
+          "x": 16,
+          "y": 60,
+          "w": 288,
+          "h": 4,
+          "opacity": 1
+        },
+        "divider3": {
+          "x": 16,
+          "y": 80,
+          "w": 288,
+          "h": 1,
+          "opacity": 1
+        },
+        "divider4": {
+          "x": 0,
+          "y": 0,
+          "w": 0,
+          "h": 0,
+          "opacity": 1
+        },
+        "divider5": {
+          "x": 16,
+          "y": 120,
+          "w": 144,
+          "h": 1,
+          "opacity": 1
+        },
+        "divider7": {
+          "x": 24,
+          "y": 160,
+          "w": 1,
+          "h": 64,
+          "opacity": 1
+        },
+        "divider8": {
+          "x": 40,
+          "y": 160,
+          "w": 2,
+          "h": 64,
+          "opacity": 1
+        },
+        "divider9": {
+          "x": 56,
+          "y": 160,
+          "w": 4,
+          "h": 64,
+          "opacity": 1
+        },
+        "divider10": {
+          "x": 72,
+          "y": 160,
+          "w": 1,
+          "h": 32,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 401,
+      "props": {},
+      "elements": {
+        "divider0": {
+          "x": 16,
+          "y": 20,
+          "w": 288,
+          "h": 1,
+          "opacity": 1
+        },
+        "divider1": {
+          "x": 16,
+          "y": 40,
+          "w": 288,
+          "h": 2,
+          "opacity": 1
+        },
+        "divider2": {
+          "x": 16,
+          "y": 60,
+          "w": 288,
+          "h": 4,
+          "opacity": 1
+        },
+        "divider3": {
+          "x": 16,
+          "y": 80,
+          "w": 288,
+          "h": 1,
+          "opacity": 1
+        },
+        "divider4": {
+          "x": 0,
+          "y": 0,
+          "w": 0,
+          "h": 0,
+          "opacity": 1
+        },
+        "divider5": {
+          "x": 16,
+          "y": 120,
+          "w": 144,
+          "h": 1,
+          "opacity": 1
+        },
+        "divider7": {
+          "x": 24,
+          "y": 160,
+          "w": 1,
+          "h": 64,
+          "opacity": 1
+        },
+        "divider8": {
+          "x": 40,
+          "y": 160,
+          "w": 2,
+          "h": 64,
+          "opacity": 1
+        },
+        "divider9": {
+          "x": 56,
+          "y": 160,
+          "w": 4,
+          "h": 64,
+          "opacity": 1
+        },
+        "divider10": {
+          "x": 72,
+          "y": 160,
+          "w": 1,
+          "h": 32,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 451,
+      "props": {},
+      "elements": {
+        "divider0": {
+          "x": 16,
+          "y": 20,
+          "w": 288,
+          "h": 1,
+          "opacity": 1
+        },
+        "divider1": {
+          "x": 16,
+          "y": 40,
+          "w": 288,
+          "h": 2,
+          "opacity": 1
+        },
+        "divider2": {
+          "x": 16,
+          "y": 60,
+          "w": 288,
+          "h": 4,
+          "opacity": 1
+        },
+        "divider3": {
+          "x": 16,
+          "y": 80,
+          "w": 288,
+          "h": 1,
+          "opacity": 1
+        },
+        "divider4": {
+          "x": 0,
+          "y": 0,
+          "w": 0,
+          "h": 0,
+          "opacity": 1
+        },
+        "divider5": {
+          "x": 16,
+          "y": 120,
+          "w": 144,
+          "h": 1,
+          "opacity": 1
+        },
+        "divider7": {
+          "x": 24,
+          "y": 160,
+          "w": 1,
+          "h": 64,
+          "opacity": 1
+        },
+        "divider8": {
+          "x": 40,
+          "y": 160,
+          "w": 2,
+          "h": 64,
+          "opacity": 1
+        },
+        "divider9": {
+          "x": 56,
+          "y": 160,
+          "w": 4,
+          "h": 64,
+          "opacity": 1
+        },
+        "divider10": {
+          "x": 72,
+          "y": 160,
+          "w": 1,
+          "h": 32,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 501,
+      "props": {},
+      "elements": {
+        "divider0": {
+          "x": 16,
+          "y": 20,
+          "w": 288,
+          "h": 1,
+          "opacity": 1
+        },
+        "divider1": {
+          "x": 16,
+          "y": 40,
+          "w": 288,
+          "h": 2,
+          "opacity": 1
+        },
+        "divider2": {
+          "x": 16,
+          "y": 60,
+          "w": 288,
+          "h": 4,
+          "opacity": 1
+        },
+        "divider3": {
+          "x": 16,
+          "y": 80,
+          "w": 288,
+          "h": 1,
+          "opacity": 1
+        },
+        "divider4": {
+          "x": 0,
+          "y": 0,
+          "w": 0,
+          "h": 0,
+          "opacity": 1
+        },
+        "divider5": {
+          "x": 16,
+          "y": 120,
+          "w": 144,
+          "h": 1,
+          "opacity": 1
+        },
+        "divider7": {
+          "x": 24,
+          "y": 160,
+          "w": 1,
+          "h": 64,
+          "opacity": 1
+        },
+        "divider8": {
+          "x": 40,
+          "y": 160,
+          "w": 2,
+          "h": 64,
+          "opacity": 1
+        },
+        "divider9": {
+          "x": 56,
+          "y": 160,
+          "w": 4,
+          "h": 64,
+          "opacity": 1
+        },
+        "divider10": {
+          "x": 72,
+          "y": 160,
+          "w": 1,
+          "h": 32,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 551,
+      "props": {},
+      "elements": {
+        "divider0": {
+          "x": 16,
+          "y": 20,
+          "w": 288,
+          "h": 1,
+          "opacity": 1
+        },
+        "divider1": {
+          "x": 16,
+          "y": 40,
+          "w": 288,
+          "h": 2,
+          "opacity": 1
+        },
+        "divider2": {
+          "x": 16,
+          "y": 60,
+          "w": 288,
+          "h": 4,
+          "opacity": 1
+        },
+        "divider3": {
+          "x": 16,
+          "y": 80,
+          "w": 288,
+          "h": 1,
+          "opacity": 1
+        },
+        "divider4": {
+          "x": 0,
+          "y": 0,
+          "w": 0,
+          "h": 0,
+          "opacity": 1
+        },
+        "divider5": {
+          "x": 16,
+          "y": 120,
+          "w": 144,
+          "h": 1,
+          "opacity": 1
+        },
+        "divider7": {
+          "x": 24,
+          "y": 160,
+          "w": 1,
+          "h": 64,
+          "opacity": 1
+        },
+        "divider8": {
+          "x": 40,
+          "y": 160,
+          "w": 2,
+          "h": 64,
+          "opacity": 1
+        },
+        "divider9": {
+          "x": 56,
+          "y": 160,
+          "w": 4,
+          "h": 64,
+          "opacity": 1
+        },
+        "divider10": {
+          "x": 72,
+          "y": 160,
+          "w": 1,
+          "h": 32,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 601,
+      "props": {},
+      "elements": {
+        "divider0": {
+          "x": 16,
+          "y": 20,
+          "w": 288,
+          "h": 1,
+          "opacity": 1
+        },
+        "divider1": {
+          "x": 16,
+          "y": 40,
+          "w": 288,
+          "h": 2,
+          "opacity": 1
+        },
+        "divider2": {
+          "x": 16,
+          "y": 60,
+          "w": 288,
+          "h": 4,
+          "opacity": 1
+        },
+        "divider3": {
+          "x": 16,
+          "y": 80,
+          "w": 288,
+          "h": 1,
+          "opacity": 1
+        },
+        "divider4": {
+          "x": 0,
+          "y": 0,
+          "w": 0,
+          "h": 0,
+          "opacity": 1
+        },
+        "divider5": {
+          "x": 16,
+          "y": 120,
+          "w": 144,
+          "h": 1,
+          "opacity": 1
+        },
+        "divider7": {
+          "x": 24,
+          "y": 160,
+          "w": 1,
+          "h": 64,
+          "opacity": 1
+        },
+        "divider8": {
+          "x": 40,
+          "y": 160,
+          "w": 2,
+          "h": 64,
+          "opacity": 1
+        },
+        "divider9": {
+          "x": 56,
+          "y": 160,
+          "w": 4,
+          "h": 64,
+          "opacity": 1
+        },
+        "divider10": {
+          "x": 72,
+          "y": 160,
+          "w": 1,
+          "h": 32,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 651,
+      "props": {},
+      "elements": {
+        "divider0": {
+          "x": 16,
+          "y": 20,
+          "w": 288,
+          "h": 1,
+          "opacity": 1
+        },
+        "divider1": {
+          "x": 16,
+          "y": 40,
+          "w": 288,
+          "h": 2,
+          "opacity": 1
+        },
+        "divider2": {
+          "x": 16,
+          "y": 60,
+          "w": 288,
+          "h": 4,
+          "opacity": 1
+        },
+        "divider3": {
+          "x": 16,
+          "y": 80,
+          "w": 288,
+          "h": 1,
+          "opacity": 1
+        },
+        "divider4": {
+          "x": 0,
+          "y": 0,
+          "w": 0,
+          "h": 0,
+          "opacity": 1
+        },
+        "divider5": {
+          "x": 16,
+          "y": 120,
+          "w": 144,
+          "h": 1,
+          "opacity": 1
+        },
+        "divider7": {
+          "x": 24,
+          "y": 160,
+          "w": 1,
+          "h": 64,
+          "opacity": 1
+        },
+        "divider8": {
+          "x": 40,
+          "y": 160,
+          "w": 2,
+          "h": 64,
+          "opacity": 1
+        },
+        "divider9": {
+          "x": 56,
+          "y": 160,
+          "w": 4,
+          "h": 64,
+          "opacity": 1
+        },
+        "divider10": {
+          "x": 72,
+          "y": 160,
+          "w": 1,
+          "h": 32,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 701,
+      "props": {},
+      "elements": {
+        "divider0": {
+          "x": 16,
+          "y": 20,
+          "w": 288,
+          "h": 1,
+          "opacity": 1
+        },
+        "divider1": {
+          "x": 16,
+          "y": 40,
+          "w": 288,
+          "h": 2,
+          "opacity": 1
+        },
+        "divider2": {
+          "x": 16,
+          "y": 60,
+          "w": 288,
+          "h": 4,
+          "opacity": 1
+        },
+        "divider3": {
+          "x": 16,
+          "y": 80,
+          "w": 288,
+          "h": 1,
+          "opacity": 1
+        },
+        "divider4": {
+          "x": 0,
+          "y": 0,
+          "w": 0,
+          "h": 0,
+          "opacity": 1
+        },
+        "divider5": {
+          "x": 16,
+          "y": 120,
+          "w": 144,
+          "h": 1,
+          "opacity": 1
+        },
+        "divider7": {
+          "x": 24,
+          "y": 160,
+          "w": 1,
+          "h": 64,
+          "opacity": 1
+        },
+        "divider8": {
+          "x": 40,
+          "y": 160,
+          "w": 2,
+          "h": 64,
+          "opacity": 1
+        },
+        "divider9": {
+          "x": 56,
+          "y": 160,
+          "w": 4,
+          "h": 64,
+          "opacity": 1
+        },
+        "divider10": {
+          "x": 72,
+          "y": 160,
+          "w": 1,
+          "h": 32,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 751,
+      "props": {},
+      "elements": {
+        "divider0": {
+          "x": 16,
+          "y": 20,
+          "w": 288,
+          "h": 1,
+          "opacity": 1
+        },
+        "divider1": {
+          "x": 16,
+          "y": 40,
+          "w": 288,
+          "h": 2,
+          "opacity": 1
+        },
+        "divider2": {
+          "x": 16,
+          "y": 60,
+          "w": 288,
+          "h": 4,
+          "opacity": 1
+        },
+        "divider3": {
+          "x": 16,
+          "y": 80,
+          "w": 288,
+          "h": 1,
+          "opacity": 1
+        },
+        "divider4": {
+          "x": 0,
+          "y": 0,
+          "w": 0,
+          "h": 0,
+          "opacity": 1
+        },
+        "divider5": {
+          "x": 16,
+          "y": 120,
+          "w": 144,
+          "h": 1,
+          "opacity": 1
+        },
+        "divider7": {
+          "x": 24,
+          "y": 160,
+          "w": 1,
+          "h": 64,
+          "opacity": 1
+        },
+        "divider8": {
+          "x": 40,
+          "y": 160,
+          "w": 2,
+          "h": 64,
+          "opacity": 1
+        },
+        "divider9": {
+          "x": 56,
+          "y": 160,
+          "w": 4,
+          "h": 64,
+          "opacity": 1
+        },
+        "divider10": {
+          "x": 72,
+          "y": 160,
+          "w": 1,
+          "h": 32,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 801,
+      "props": {},
+      "elements": {
+        "divider0": {
+          "x": 16,
+          "y": 20,
+          "w": 288,
+          "h": 1,
+          "opacity": 1
+        },
+        "divider1": {
+          "x": 16,
+          "y": 40,
+          "w": 288,
+          "h": 2,
+          "opacity": 1
+        },
+        "divider2": {
+          "x": 16,
+          "y": 60,
+          "w": 288,
+          "h": 4,
+          "opacity": 1
+        },
+        "divider3": {
+          "x": 16,
+          "y": 80,
+          "w": 288,
+          "h": 1,
+          "opacity": 1
+        },
+        "divider4": {
+          "x": 0,
+          "y": 0,
+          "w": 0,
+          "h": 0,
+          "opacity": 1
+        },
+        "divider5": {
+          "x": 16,
+          "y": 120,
+          "w": 144,
+          "h": 1,
+          "opacity": 1
+        },
+        "divider7": {
+          "x": 24,
+          "y": 160,
+          "w": 1,
+          "h": 64,
+          "opacity": 1
+        },
+        "divider8": {
+          "x": 40,
+          "y": 160,
+          "w": 2,
+          "h": 64,
+          "opacity": 1
+        },
+        "divider9": {
+          "x": 56,
+          "y": 160,
+          "w": 4,
+          "h": 64,
+          "opacity": 1
+        },
+        "divider10": {
+          "x": 72,
+          "y": 160,
+          "w": 1,
+          "h": 32,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 851,
+      "props": {},
+      "elements": {
+        "divider0": {
+          "x": 16,
+          "y": 20,
+          "w": 288,
+          "h": 1,
+          "opacity": 1
+        },
+        "divider1": {
+          "x": 16,
+          "y": 40,
+          "w": 288,
+          "h": 2,
+          "opacity": 1
+        },
+        "divider2": {
+          "x": 16,
+          "y": 60,
+          "w": 288,
+          "h": 4,
+          "opacity": 1
+        },
+        "divider3": {
+          "x": 16,
+          "y": 80,
+          "w": 288,
+          "h": 1,
+          "opacity": 1
+        },
+        "divider4": {
+          "x": 0,
+          "y": 0,
+          "w": 0,
+          "h": 0,
+          "opacity": 1
+        },
+        "divider5": {
+          "x": 16,
+          "y": 120,
+          "w": 144,
+          "h": 1,
+          "opacity": 1
+        },
+        "divider7": {
+          "x": 24,
+          "y": 160,
+          "w": 1,
+          "h": 64,
+          "opacity": 1
+        },
+        "divider8": {
+          "x": 40,
+          "y": 160,
+          "w": 2,
+          "h": 64,
+          "opacity": 1
+        },
+        "divider9": {
+          "x": 56,
+          "y": 160,
+          "w": 4,
+          "h": 64,
+          "opacity": 1
+        },
+        "divider10": {
+          "x": 72,
+          "y": 160,
+          "w": 1,
+          "h": 32,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 901,
+      "props": {},
+      "elements": {
+        "divider0": {
+          "x": 16,
+          "y": 20,
+          "w": 288,
+          "h": 1,
+          "opacity": 1
+        },
+        "divider1": {
+          "x": 16,
+          "y": 40,
+          "w": 288,
+          "h": 2,
+          "opacity": 1
+        },
+        "divider2": {
+          "x": 16,
+          "y": 60,
+          "w": 288,
+          "h": 4,
+          "opacity": 1
+        },
+        "divider3": {
+          "x": 16,
+          "y": 80,
+          "w": 288,
+          "h": 1,
+          "opacity": 1
+        },
+        "divider4": {
+          "x": 0,
+          "y": 0,
+          "w": 0,
+          "h": 0,
+          "opacity": 1
+        },
+        "divider5": {
+          "x": 16,
+          "y": 120,
+          "w": 144,
+          "h": 1,
+          "opacity": 1
+        },
+        "divider7": {
+          "x": 24,
+          "y": 160,
+          "w": 1,
+          "h": 64,
+          "opacity": 1
+        },
+        "divider8": {
+          "x": 40,
+          "y": 160,
+          "w": 2,
+          "h": 64,
+          "opacity": 1
+        },
+        "divider9": {
+          "x": 56,
+          "y": 160,
+          "w": 4,
+          "h": 64,
+          "opacity": 1
+        },
+        "divider10": {
+          "x": 72,
+          "y": 160,
+          "w": 1,
+          "h": 32,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 951,
+      "props": {},
+      "elements": {
+        "divider0": {
+          "x": 16,
+          "y": 20,
+          "w": 288,
+          "h": 1,
+          "opacity": 1
+        },
+        "divider1": {
+          "x": 16,
+          "y": 40,
+          "w": 288,
+          "h": 2,
+          "opacity": 1
+        },
+        "divider2": {
+          "x": 16,
+          "y": 60,
+          "w": 288,
+          "h": 4,
+          "opacity": 1
+        },
+        "divider3": {
+          "x": 16,
+          "y": 80,
+          "w": 288,
+          "h": 1,
+          "opacity": 1
+        },
+        "divider4": {
+          "x": 0,
+          "y": 0,
+          "w": 0,
+          "h": 0,
+          "opacity": 1
+        },
+        "divider5": {
+          "x": 16,
+          "y": 120,
+          "w": 144,
+          "h": 1,
+          "opacity": 1
+        },
+        "divider7": {
+          "x": 24,
+          "y": 160,
+          "w": 1,
+          "h": 64,
+          "opacity": 1
+        },
+        "divider8": {
+          "x": 40,
+          "y": 160,
+          "w": 2,
+          "h": 64,
+          "opacity": 1
+        },
+        "divider9": {
+          "x": 56,
+          "y": 160,
+          "w": 4,
+          "h": 64,
+          "opacity": 1
+        },
+        "divider10": {
+          "x": 72,
+          "y": 160,
+          "w": 1,
+          "h": 32,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 1001,
+      "props": {},
+      "elements": {
+        "divider0": {
+          "x": 16,
+          "y": 20,
+          "w": 288,
+          "h": 1,
+          "opacity": 1
+        },
+        "divider1": {
+          "x": 16,
+          "y": 40,
+          "w": 288,
+          "h": 2,
+          "opacity": 1
+        },
+        "divider2": {
+          "x": 16,
+          "y": 60,
+          "w": 288,
+          "h": 4,
+          "opacity": 1
+        },
+        "divider3": {
+          "x": 16,
+          "y": 80,
+          "w": 288,
+          "h": 1,
+          "opacity": 1
+        },
+        "divider4": {
+          "x": 0,
+          "y": 0,
+          "w": 0,
+          "h": 0,
+          "opacity": 1
+        },
+        "divider5": {
+          "x": 16,
+          "y": 120,
+          "w": 144,
+          "h": 1,
+          "opacity": 1
+        },
+        "divider7": {
+          "x": 24,
+          "y": 160,
+          "w": 1,
+          "h": 64,
+          "opacity": 1
+        },
+        "divider8": {
+          "x": 40,
+          "y": 160,
+          "w": 2,
+          "h": 64,
+          "opacity": 1
+        },
+        "divider9": {
+          "x": 56,
+          "y": 160,
+          "w": 4,
+          "h": 64,
+          "opacity": 1
+        },
+        "divider10": {
+          "x": 72,
+          "y": 160,
+          "w": 1,
+          "h": 32,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 1051,
+      "props": {},
+      "elements": {
+        "divider0": {
+          "x": 16,
+          "y": 20,
+          "w": 288,
+          "h": 1,
+          "opacity": 1
+        },
+        "divider1": {
+          "x": 16,
+          "y": 40,
+          "w": 288,
+          "h": 2,
+          "opacity": 1
+        },
+        "divider2": {
+          "x": 16,
+          "y": 60,
+          "w": 288,
+          "h": 4,
+          "opacity": 1
+        },
+        "divider3": {
+          "x": 16,
+          "y": 80,
+          "w": 288,
+          "h": 1,
+          "opacity": 1
+        },
+        "divider4": {
+          "x": 0,
+          "y": 0,
+          "w": 0,
+          "h": 0,
+          "opacity": 1
+        },
+        "divider5": {
+          "x": 16,
+          "y": 120,
+          "w": 144,
+          "h": 1,
+          "opacity": 1
+        },
+        "divider7": {
+          "x": 24,
+          "y": 160,
+          "w": 1,
+          "h": 64,
+          "opacity": 1
+        },
+        "divider8": {
+          "x": 40,
+          "y": 160,
+          "w": 2,
+          "h": 64,
+          "opacity": 1
+        },
+        "divider9": {
+          "x": 56,
+          "y": 160,
+          "w": 4,
+          "h": 64,
+          "opacity": 1
+        },
+        "divider10": {
+          "x": 72,
+          "y": 160,
+          "w": 1,
+          "h": 32,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 1101,
+      "props": {},
+      "elements": {
+        "divider0": {
+          "x": 16,
+          "y": 20,
+          "w": 288,
+          "h": 1,
+          "opacity": 1
+        },
+        "divider1": {
+          "x": 16,
+          "y": 40,
+          "w": 288,
+          "h": 2,
+          "opacity": 1
+        },
+        "divider2": {
+          "x": 16,
+          "y": 60,
+          "w": 288,
+          "h": 4,
+          "opacity": 1
+        },
+        "divider3": {
+          "x": 16,
+          "y": 80,
+          "w": 288,
+          "h": 1,
+          "opacity": 1
+        },
+        "divider4": {
+          "x": 0,
+          "y": 0,
+          "w": 0,
+          "h": 0,
+          "opacity": 1
+        },
+        "divider5": {
+          "x": 16,
+          "y": 120,
+          "w": 144,
+          "h": 1,
+          "opacity": 1
+        },
+        "divider7": {
+          "x": 24,
+          "y": 160,
+          "w": 1,
+          "h": 64,
+          "opacity": 1
+        },
+        "divider8": {
+          "x": 40,
+          "y": 160,
+          "w": 2,
+          "h": 64,
+          "opacity": 1
+        },
+        "divider9": {
+          "x": 56,
+          "y": 160,
+          "w": 4,
+          "h": 64,
+          "opacity": 1
+        },
+        "divider10": {
+          "x": 72,
+          "y": 160,
+          "w": 1,
+          "h": 32,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 1151,
+      "props": {},
+      "elements": {
+        "divider0": {
+          "x": 16,
+          "y": 20,
+          "w": 288,
+          "h": 1,
+          "opacity": 1
+        },
+        "divider1": {
+          "x": 16,
+          "y": 40,
+          "w": 288,
+          "h": 2,
+          "opacity": 1
+        },
+        "divider2": {
+          "x": 16,
+          "y": 60,
+          "w": 288,
+          "h": 4,
+          "opacity": 1
+        },
+        "divider3": {
+          "x": 16,
+          "y": 80,
+          "w": 288,
+          "h": 1,
+          "opacity": 1
+        },
+        "divider4": {
+          "x": 0,
+          "y": 0,
+          "w": 0,
+          "h": 0,
+          "opacity": 1
+        },
+        "divider5": {
+          "x": 16,
+          "y": 120,
+          "w": 144,
+          "h": 1,
+          "opacity": 1
+        },
+        "divider7": {
+          "x": 24,
+          "y": 160,
+          "w": 1,
+          "h": 64,
+          "opacity": 1
+        },
+        "divider8": {
+          "x": 40,
+          "y": 160,
+          "w": 2,
+          "h": 64,
+          "opacity": 1
+        },
+        "divider9": {
+          "x": 56,
+          "y": 160,
+          "w": 4,
+          "h": 64,
+          "opacity": 1
+        },
+        "divider10": {
+          "x": 72,
+          "y": 160,
+          "w": 1,
+          "h": 32,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 1201,
+      "props": {},
+      "elements": {
+        "divider0": {
+          "x": 16,
+          "y": 20,
+          "w": 288,
+          "h": 1,
+          "opacity": 1
+        },
+        "divider1": {
+          "x": 16,
+          "y": 40,
+          "w": 288,
+          "h": 2,
+          "opacity": 1
+        },
+        "divider2": {
+          "x": 16,
+          "y": 60,
+          "w": 288,
+          "h": 4,
+          "opacity": 1
+        },
+        "divider3": {
+          "x": 16,
+          "y": 80,
+          "w": 288,
+          "h": 1,
+          "opacity": 1
+        },
+        "divider4": {
+          "x": 0,
+          "y": 0,
+          "w": 0,
+          "h": 0,
+          "opacity": 1
+        },
+        "divider5": {
+          "x": 16,
+          "y": 120,
+          "w": 144,
+          "h": 1,
+          "opacity": 1
+        },
+        "divider7": {
+          "x": 24,
+          "y": 160,
+          "w": 1,
+          "h": 64,
+          "opacity": 1
+        },
+        "divider8": {
+          "x": 40,
+          "y": 160,
+          "w": 2,
+          "h": 64,
+          "opacity": 1
+        },
+        "divider9": {
+          "x": 56,
+          "y": 160,
+          "w": 4,
+          "h": 64,
+          "opacity": 1
+        },
+        "divider10": {
+          "x": 72,
+          "y": 160,
+          "w": 1,
+          "h": 32,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 1251,
+      "props": {},
+      "elements": {
+        "divider0": {
+          "x": 16,
+          "y": 20,
+          "w": 288,
+          "h": 1,
+          "opacity": 1
+        },
+        "divider1": {
+          "x": 16,
+          "y": 40,
+          "w": 288,
+          "h": 2,
+          "opacity": 1
+        },
+        "divider2": {
+          "x": 16,
+          "y": 60,
+          "w": 288,
+          "h": 4,
+          "opacity": 1
+        },
+        "divider3": {
+          "x": 16,
+          "y": 80,
+          "w": 288,
+          "h": 1,
+          "opacity": 1
+        },
+        "divider4": {
+          "x": 0,
+          "y": 0,
+          "w": 0,
+          "h": 0,
+          "opacity": 1
+        },
+        "divider5": {
+          "x": 16,
+          "y": 120,
+          "w": 144,
+          "h": 1,
+          "opacity": 1
+        },
+        "divider7": {
+          "x": 24,
+          "y": 160,
+          "w": 1,
+          "h": 64,
+          "opacity": 1
+        },
+        "divider8": {
+          "x": 40,
+          "y": 160,
+          "w": 2,
+          "h": 64,
+          "opacity": 1
+        },
+        "divider9": {
+          "x": 56,
+          "y": 160,
+          "w": 4,
+          "h": 64,
+          "opacity": 1
+        },
+        "divider10": {
+          "x": 72,
+          "y": 160,
+          "w": 1,
+          "h": 32,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 1301,
+      "props": {},
+      "elements": {
+        "divider0": {
+          "x": 16,
+          "y": 20,
+          "w": 288,
+          "h": 1,
+          "opacity": 1
+        },
+        "divider1": {
+          "x": 16,
+          "y": 40,
+          "w": 288,
+          "h": 2,
+          "opacity": 1
+        },
+        "divider2": {
+          "x": 16,
+          "y": 60,
+          "w": 288,
+          "h": 4,
+          "opacity": 1
+        },
+        "divider3": {
+          "x": 16,
+          "y": 80,
+          "w": 288,
+          "h": 1,
+          "opacity": 1
+        },
+        "divider4": {
+          "x": 0,
+          "y": 0,
+          "w": 0,
+          "h": 0,
+          "opacity": 1
+        },
+        "divider5": {
+          "x": 16,
+          "y": 120,
+          "w": 144,
+          "h": 1,
+          "opacity": 1
+        },
+        "divider7": {
+          "x": 24,
+          "y": 160,
+          "w": 1,
+          "h": 64,
+          "opacity": 1
+        },
+        "divider8": {
+          "x": 40,
+          "y": 160,
+          "w": 2,
+          "h": 64,
+          "opacity": 1
+        },
+        "divider9": {
+          "x": 56,
+          "y": 160,
+          "w": 4,
+          "h": 64,
+          "opacity": 1
+        },
+        "divider10": {
+          "x": 72,
+          "y": 160,
+          "w": 1,
+          "h": 32,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 1351,
+      "props": {},
+      "elements": {
+        "divider0": {
+          "x": 16,
+          "y": 20,
+          "w": 288,
+          "h": 1,
+          "opacity": 1
+        },
+        "divider1": {
+          "x": 16,
+          "y": 40,
+          "w": 288,
+          "h": 2,
+          "opacity": 1
+        },
+        "divider2": {
+          "x": 16,
+          "y": 60,
+          "w": 288,
+          "h": 4,
+          "opacity": 1
+        },
+        "divider3": {
+          "x": 16,
+          "y": 80,
+          "w": 288,
+          "h": 1,
+          "opacity": 1
+        },
+        "divider4": {
+          "x": 0,
+          "y": 0,
+          "w": 0,
+          "h": 0,
+          "opacity": 1
+        },
+        "divider5": {
+          "x": 16,
+          "y": 120,
+          "w": 144,
+          "h": 1,
+          "opacity": 1
+        },
+        "divider7": {
+          "x": 24,
+          "y": 160,
+          "w": 1,
+          "h": 64,
+          "opacity": 1
+        },
+        "divider8": {
+          "x": 40,
+          "y": 160,
+          "w": 2,
+          "h": 64,
+          "opacity": 1
+        },
+        "divider9": {
+          "x": 56,
+          "y": 160,
+          "w": 4,
+          "h": 64,
+          "opacity": 1
+        },
+        "divider10": {
+          "x": 72,
+          "y": 160,
+          "w": 1,
+          "h": 32,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 1401,
+      "props": {},
+      "elements": {
+        "divider0": {
+          "x": 16,
+          "y": 20,
+          "w": 288,
+          "h": 1,
+          "opacity": 1
+        },
+        "divider1": {
+          "x": 16,
+          "y": 40,
+          "w": 288,
+          "h": 2,
+          "opacity": 1
+        },
+        "divider2": {
+          "x": 16,
+          "y": 60,
+          "w": 288,
+          "h": 4,
+          "opacity": 1
+        },
+        "divider3": {
+          "x": 16,
+          "y": 80,
+          "w": 288,
+          "h": 1,
+          "opacity": 1
+        },
+        "divider4": {
+          "x": 0,
+          "y": 0,
+          "w": 0,
+          "h": 0,
+          "opacity": 1
+        },
+        "divider5": {
+          "x": 16,
+          "y": 120,
+          "w": 144,
+          "h": 1,
+          "opacity": 1
+        },
+        "divider7": {
+          "x": 24,
+          "y": 160,
+          "w": 1,
+          "h": 64,
+          "opacity": 1
+        },
+        "divider8": {
+          "x": 40,
+          "y": 160,
+          "w": 2,
+          "h": 64,
+          "opacity": 1
+        },
+        "divider9": {
+          "x": 56,
+          "y": 160,
+          "w": 4,
+          "h": 64,
+          "opacity": 1
+        },
+        "divider10": {
+          "x": 72,
+          "y": 160,
+          "w": 1,
+          "h": 32,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 1451,
+      "props": {},
+      "elements": {
+        "divider0": {
+          "x": 16,
+          "y": 20,
+          "w": 288,
+          "h": 1,
+          "opacity": 1
+        },
+        "divider1": {
+          "x": 16,
+          "y": 40,
+          "w": 288,
+          "h": 2,
+          "opacity": 1
+        },
+        "divider2": {
+          "x": 16,
+          "y": 60,
+          "w": 288,
+          "h": 4,
+          "opacity": 1
+        },
+        "divider3": {
+          "x": 16,
+          "y": 80,
+          "w": 288,
+          "h": 1,
+          "opacity": 1
+        },
+        "divider4": {
+          "x": 0,
+          "y": 0,
+          "w": 0,
+          "h": 0,
+          "opacity": 1
+        },
+        "divider5": {
+          "x": 16,
+          "y": 120,
+          "w": 144,
+          "h": 1,
+          "opacity": 1
+        },
+        "divider7": {
+          "x": 24,
+          "y": 160,
+          "w": 1,
+          "h": 64,
+          "opacity": 1
+        },
+        "divider8": {
+          "x": 40,
+          "y": 160,
+          "w": 2,
+          "h": 64,
+          "opacity": 1
+        },
+        "divider9": {
+          "x": 56,
+          "y": 160,
+          "w": 4,
+          "h": 64,
+          "opacity": 1
+        },
+        "divider10": {
+          "x": 72,
+          "y": 160,
+          "w": 1,
+          "h": 32,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 1501,
+      "props": {},
+      "elements": {
+        "divider0": {
+          "x": 16,
+          "y": 20,
+          "w": 288,
+          "h": 1,
+          "opacity": 1
+        },
+        "divider1": {
+          "x": 16,
+          "y": 40,
+          "w": 288,
+          "h": 2,
+          "opacity": 1
+        },
+        "divider2": {
+          "x": 16,
+          "y": 60,
+          "w": 288,
+          "h": 4,
+          "opacity": 1
+        },
+        "divider3": {
+          "x": 16,
+          "y": 80,
+          "w": 288,
+          "h": 1,
+          "opacity": 1
+        },
+        "divider4": {
+          "x": 0,
+          "y": 0,
+          "w": 0,
+          "h": 0,
+          "opacity": 1
+        },
+        "divider5": {
+          "x": 16,
+          "y": 120,
+          "w": 144,
+          "h": 1,
+          "opacity": 1
+        },
+        "divider7": {
+          "x": 24,
+          "y": 160,
+          "w": 1,
+          "h": 64,
+          "opacity": 1
+        },
+        "divider8": {
+          "x": 40,
+          "y": 160,
+          "w": 2,
+          "h": 64,
+          "opacity": 1
+        },
+        "divider9": {
+          "x": 56,
+          "y": 160,
+          "w": 4,
+          "h": 64,
+          "opacity": 1
+        },
+        "divider10": {
+          "x": 72,
+          "y": 160,
+          "w": 1,
+          "h": 32,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 1551,
+      "props": {},
+      "elements": {
+        "divider0": {
+          "x": 16,
+          "y": 20,
+          "w": 288,
+          "h": 1,
+          "opacity": 1
+        },
+        "divider1": {
+          "x": 16,
+          "y": 40,
+          "w": 288,
+          "h": 2,
+          "opacity": 1
+        },
+        "divider2": {
+          "x": 16,
+          "y": 60,
+          "w": 288,
+          "h": 4,
+          "opacity": 1
+        },
+        "divider3": {
+          "x": 16,
+          "y": 80,
+          "w": 288,
+          "h": 1,
+          "opacity": 1
+        },
+        "divider4": {
+          "x": 0,
+          "y": 0,
+          "w": 0,
+          "h": 0,
+          "opacity": 1
+        },
+        "divider5": {
+          "x": 16,
+          "y": 120,
+          "w": 144,
+          "h": 1,
+          "opacity": 1
+        },
+        "divider7": {
+          "x": 24,
+          "y": 160,
+          "w": 1,
+          "h": 64,
+          "opacity": 1
+        },
+        "divider8": {
+          "x": 40,
+          "y": 160,
+          "w": 2,
+          "h": 64,
+          "opacity": 1
+        },
+        "divider9": {
+          "x": 56,
+          "y": 160,
+          "w": 4,
+          "h": 64,
+          "opacity": 1
+        },
+        "divider10": {
+          "x": 72,
+          "y": 160,
+          "w": 1,
+          "h": 32,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 1601,
+      "props": {},
+      "elements": {
+        "divider0": {
+          "x": 16,
+          "y": 20,
+          "w": 288,
+          "h": 1,
+          "opacity": 1
+        },
+        "divider1": {
+          "x": 16,
+          "y": 40,
+          "w": 288,
+          "h": 2,
+          "opacity": 1
+        },
+        "divider2": {
+          "x": 16,
+          "y": 60,
+          "w": 288,
+          "h": 4,
+          "opacity": 1
+        },
+        "divider3": {
+          "x": 16,
+          "y": 80,
+          "w": 288,
+          "h": 1,
+          "opacity": 1
+        },
+        "divider4": {
+          "x": 0,
+          "y": 0,
+          "w": 0,
+          "h": 0,
+          "opacity": 1
+        },
+        "divider5": {
+          "x": 16,
+          "y": 120,
+          "w": 144,
+          "h": 1,
+          "opacity": 1
+        },
+        "divider7": {
+          "x": 24,
+          "y": 160,
+          "w": 1,
+          "h": 64,
+          "opacity": 1
+        },
+        "divider8": {
+          "x": 40,
+          "y": 160,
+          "w": 2,
+          "h": 64,
+          "opacity": 1
+        },
+        "divider9": {
+          "x": 56,
+          "y": 160,
+          "w": 4,
+          "h": 64,
+          "opacity": 1
+        },
+        "divider10": {
+          "x": 72,
+          "y": 160,
+          "w": 1,
+          "h": 32,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 1651,
+      "props": {},
+      "elements": {
+        "divider0": {
+          "x": 16,
+          "y": 20,
+          "w": 288,
+          "h": 1,
+          "opacity": 1
+        },
+        "divider1": {
+          "x": 16,
+          "y": 40,
+          "w": 288,
+          "h": 2,
+          "opacity": 1
+        },
+        "divider2": {
+          "x": 16,
+          "y": 60,
+          "w": 288,
+          "h": 4,
+          "opacity": 1
+        },
+        "divider3": {
+          "x": 16,
+          "y": 80,
+          "w": 288,
+          "h": 1,
+          "opacity": 1
+        },
+        "divider4": {
+          "x": 0,
+          "y": 0,
+          "w": 0,
+          "h": 0,
+          "opacity": 1
+        },
+        "divider5": {
+          "x": 16,
+          "y": 120,
+          "w": 144,
+          "h": 1,
+          "opacity": 1
+        },
+        "divider7": {
+          "x": 24,
+          "y": 160,
+          "w": 1,
+          "h": 64,
+          "opacity": 1
+        },
+        "divider8": {
+          "x": 40,
+          "y": 160,
+          "w": 2,
+          "h": 64,
+          "opacity": 1
+        },
+        "divider9": {
+          "x": 56,
+          "y": 160,
+          "w": 4,
+          "h": 64,
+          "opacity": 1
+        },
+        "divider10": {
+          "x": 72,
+          "y": 160,
+          "w": 1,
+          "h": 32,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 1701,
+      "props": {},
+      "elements": {
+        "divider0": {
+          "x": 16,
+          "y": 20,
+          "w": 288,
+          "h": 1,
+          "opacity": 1
+        },
+        "divider1": {
+          "x": 16,
+          "y": 40,
+          "w": 288,
+          "h": 2,
+          "opacity": 1
+        },
+        "divider2": {
+          "x": 16,
+          "y": 60,
+          "w": 288,
+          "h": 4,
+          "opacity": 1
+        },
+        "divider3": {
+          "x": 16,
+          "y": 80,
+          "w": 288,
+          "h": 1,
+          "opacity": 1
+        },
+        "divider4": {
+          "x": 0,
+          "y": 0,
+          "w": 0,
+          "h": 0,
+          "opacity": 1
+        },
+        "divider5": {
+          "x": 16,
+          "y": 120,
+          "w": 144,
+          "h": 1,
+          "opacity": 1
+        },
+        "divider7": {
+          "x": 24,
+          "y": 160,
+          "w": 1,
+          "h": 64,
+          "opacity": 1
+        },
+        "divider8": {
+          "x": 40,
+          "y": 160,
+          "w": 2,
+          "h": 64,
+          "opacity": 1
+        },
+        "divider9": {
+          "x": 56,
+          "y": 160,
+          "w": 4,
+          "h": 64,
+          "opacity": 1
+        },
+        "divider10": {
+          "x": 72,
+          "y": 160,
+          "w": 1,
+          "h": 32,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 1751,
+      "props": {},
+      "elements": {
+        "divider0": {
+          "x": 16,
+          "y": 20,
+          "w": 288,
+          "h": 1,
+          "opacity": 1
+        },
+        "divider1": {
+          "x": 16,
+          "y": 40,
+          "w": 288,
+          "h": 2,
+          "opacity": 1
+        },
+        "divider2": {
+          "x": 16,
+          "y": 60,
+          "w": 288,
+          "h": 4,
+          "opacity": 1
+        },
+        "divider3": {
+          "x": 16,
+          "y": 80,
+          "w": 288,
+          "h": 1,
+          "opacity": 1
+        },
+        "divider4": {
+          "x": 0,
+          "y": 0,
+          "w": 0,
+          "h": 0,
+          "opacity": 1
+        },
+        "divider5": {
+          "x": 16,
+          "y": 120,
+          "w": 144,
+          "h": 1,
+          "opacity": 1
+        },
+        "divider7": {
+          "x": 24,
+          "y": 160,
+          "w": 1,
+          "h": 64,
+          "opacity": 1
+        },
+        "divider8": {
+          "x": 40,
+          "y": 160,
+          "w": 2,
+          "h": 64,
+          "opacity": 1
+        },
+        "divider9": {
+          "x": 56,
+          "y": 160,
+          "w": 4,
+          "h": 64,
+          "opacity": 1
+        },
+        "divider10": {
+          "x": 72,
+          "y": 160,
+          "w": 1,
+          "h": 32,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 1801,
+      "props": {},
+      "elements": {
+        "divider0": {
+          "x": 16,
+          "y": 20,
+          "w": 288,
+          "h": 1,
+          "opacity": 1
+        },
+        "divider1": {
+          "x": 16,
+          "y": 40,
+          "w": 288,
+          "h": 2,
+          "opacity": 1
+        },
+        "divider2": {
+          "x": 16,
+          "y": 60,
+          "w": 288,
+          "h": 4,
+          "opacity": 1
+        },
+        "divider3": {
+          "x": 16,
+          "y": 80,
+          "w": 288,
+          "h": 1,
+          "opacity": 1
+        },
+        "divider4": {
+          "x": 0,
+          "y": 0,
+          "w": 0,
+          "h": 0,
+          "opacity": 1
+        },
+        "divider5": {
+          "x": 16,
+          "y": 120,
+          "w": 144,
+          "h": 1,
+          "opacity": 1
+        },
+        "divider7": {
+          "x": 24,
+          "y": 160,
+          "w": 1,
+          "h": 64,
+          "opacity": 1
+        },
+        "divider8": {
+          "x": 40,
+          "y": 160,
+          "w": 2,
+          "h": 64,
+          "opacity": 1
+        },
+        "divider9": {
+          "x": 56,
+          "y": 160,
+          "w": 4,
+          "h": 64,
+          "opacity": 1
+        },
+        "divider10": {
+          "x": 72,
+          "y": 160,
+          "w": 1,
+          "h": 32,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 1851,
+      "props": {},
+      "elements": {
+        "divider0": {
+          "x": 16,
+          "y": 20,
+          "w": 288,
+          "h": 1,
+          "opacity": 1
+        },
+        "divider1": {
+          "x": 16,
+          "y": 40,
+          "w": 288,
+          "h": 2,
+          "opacity": 1
+        },
+        "divider2": {
+          "x": 16,
+          "y": 60,
+          "w": 288,
+          "h": 4,
+          "opacity": 1
+        },
+        "divider3": {
+          "x": 16,
+          "y": 80,
+          "w": 288,
+          "h": 1,
+          "opacity": 1
+        },
+        "divider4": {
+          "x": 0,
+          "y": 0,
+          "w": 0,
+          "h": 0,
+          "opacity": 1
+        },
+        "divider5": {
+          "x": 16,
+          "y": 120,
+          "w": 144,
+          "h": 1,
+          "opacity": 1
+        },
+        "divider7": {
+          "x": 24,
+          "y": 160,
+          "w": 1,
+          "h": 64,
+          "opacity": 1
+        },
+        "divider8": {
+          "x": 40,
+          "y": 160,
+          "w": 2,
+          "h": 64,
+          "opacity": 1
+        },
+        "divider9": {
+          "x": 56,
+          "y": 160,
+          "w": 4,
+          "h": 64,
+          "opacity": 1
+        },
+        "divider10": {
+          "x": 72,
+          "y": 160,
+          "w": 1,
+          "h": 32,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 1901,
+      "props": {},
+      "elements": {
+        "divider0": {
+          "x": 16,
+          "y": 20,
+          "w": 288,
+          "h": 1,
+          "opacity": 1
+        },
+        "divider1": {
+          "x": 16,
+          "y": 40,
+          "w": 288,
+          "h": 2,
+          "opacity": 1
+        },
+        "divider2": {
+          "x": 16,
+          "y": 60,
+          "w": 288,
+          "h": 4,
+          "opacity": 1
+        },
+        "divider3": {
+          "x": 16,
+          "y": 80,
+          "w": 288,
+          "h": 1,
+          "opacity": 1
+        },
+        "divider4": {
+          "x": 0,
+          "y": 0,
+          "w": 0,
+          "h": 0,
+          "opacity": 1
+        },
+        "divider5": {
+          "x": 16,
+          "y": 120,
+          "w": 144,
+          "h": 1,
+          "opacity": 1
+        },
+        "divider7": {
+          "x": 24,
+          "y": 160,
+          "w": 1,
+          "h": 64,
+          "opacity": 1
+        },
+        "divider8": {
+          "x": 40,
+          "y": 160,
+          "w": 2,
+          "h": 64,
+          "opacity": 1
+        },
+        "divider9": {
+          "x": 56,
+          "y": 160,
+          "w": 4,
+          "h": 64,
+          "opacity": 1
+        },
+        "divider10": {
+          "x": 72,
+          "y": 160,
+          "w": 1,
+          "h": 32,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 1951,
+      "props": {},
+      "elements": {
+        "divider0": {
+          "x": 16,
+          "y": 20,
+          "w": 288,
+          "h": 1,
+          "opacity": 1
+        },
+        "divider1": {
+          "x": 16,
+          "y": 40,
+          "w": 288,
+          "h": 2,
+          "opacity": 1
+        },
+        "divider2": {
+          "x": 16,
+          "y": 60,
+          "w": 288,
+          "h": 4,
+          "opacity": 1
+        },
+        "divider3": {
+          "x": 16,
+          "y": 80,
+          "w": 288,
+          "h": 1,
+          "opacity": 1
+        },
+        "divider4": {
+          "x": 0,
+          "y": 0,
+          "w": 0,
+          "h": 0,
+          "opacity": 1
+        },
+        "divider5": {
+          "x": 16,
+          "y": 120,
+          "w": 144,
+          "h": 1,
+          "opacity": 1
+        },
+        "divider7": {
+          "x": 24,
+          "y": 160,
+          "w": 1,
+          "h": 64,
+          "opacity": 1
+        },
+        "divider8": {
+          "x": 40,
+          "y": 160,
+          "w": 2,
+          "h": 64,
+          "opacity": 1
+        },
+        "divider9": {
+          "x": 56,
+          "y": 160,
+          "w": 4,
+          "h": 64,
+          "opacity": 1
+        },
+        "divider10": {
+          "x": 72,
+          "y": 160,
+          "w": 1,
+          "h": 32,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 2001,
+      "props": {},
+      "elements": {
+        "divider0": {
+          "x": 16,
+          "y": 20,
+          "w": 288,
+          "h": 1,
+          "opacity": 1
+        },
+        "divider1": {
+          "x": 16,
+          "y": 40,
+          "w": 288,
+          "h": 2,
+          "opacity": 1
+        },
+        "divider2": {
+          "x": 16,
+          "y": 60,
+          "w": 288,
+          "h": 4,
+          "opacity": 1
+        },
+        "divider3": {
+          "x": 16,
+          "y": 80,
+          "w": 288,
+          "h": 1,
+          "opacity": 1
+        },
+        "divider4": {
+          "x": 0,
+          "y": 0,
+          "w": 0,
+          "h": 0,
+          "opacity": 1
+        },
+        "divider5": {
+          "x": 16,
+          "y": 120,
+          "w": 144,
+          "h": 1,
+          "opacity": 1
+        },
+        "divider7": {
+          "x": 24,
+          "y": 160,
+          "w": 1,
+          "h": 64,
+          "opacity": 1
+        },
+        "divider8": {
+          "x": 40,
+          "y": 160,
+          "w": 2,
+          "h": 64,
+          "opacity": 1
+        },
+        "divider9": {
+          "x": 56,
+          "y": 160,
+          "w": 4,
+          "h": 64,
+          "opacity": 1
+        },
+        "divider10": {
+          "x": 72,
+          "y": 160,
+          "w": 1,
+          "h": 32,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    }
+  ],
+  "settle_ms": 1
+}

@@ -1,0 +1,109 @@
+// Copyright © SixtyFPS GmbH <info@slint.dev>
+// SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0
+
+// Scene: icons — generated from `ui-libraries/material/parity/scenes/icons.json`
+// (edit the scene, regenerate with `cargo run -p material-parity-generator`).
+//PARITY=static
+//SIZE=240x176
+//TRACE_ELEMENTS=icon0,icon1,icon2,icon3,icon4,icon5,icon6,icon7,icon8,icon9,icon10
+//DENSITIES=1,2
+import "../../fonts/Roboto-VariableFont.ttf";
+import { Icon, Icons, MaterialPalette, MaterialTheme, MaterialWindow } from "@material";
+
+export component TestCase inherits MaterialWindow {
+    init => {
+        // The scene pins seed #6750A4, tonal-spot, spec2025, light, contrast 0
+        // (all the library defaults; restated here so a default change can't
+        // silently move the parity baseline).
+        MaterialTheme.seed-color = #6750A4;
+        MaterialTheme.dark = false;
+        MaterialTheme.contrast-level = 0;
+        MaterialTheme.use-platform-color = false;
+        MaterialTheme.plain-family = "Roboto";
+        MaterialTheme.brand-family = "Roboto";
+        // Compose builds its scene scheme from the same seed — use the
+        // runtime-generated scheme, not the static expressive table.
+        MaterialPalette.dynamic = true;
+    }
+
+    icon0 := Icon {
+        x: 16px;
+        y: 16px;
+        source: Icons.check;
+    }
+
+    icon1 := Icon {
+        x: 56px;
+        y: 16px;
+        source: Icons.menu;
+    }
+
+    icon2 := Icon {
+        x: 96px;
+        y: 16px;
+        source: Icons.arrow_back;
+        colorize: MaterialPalette.primary;
+    }
+
+    icon3 := Icon {
+        x: 136px;
+        y: 16px;
+        source: Icons.close;
+        colorize: MaterialPalette.error;
+    }
+
+    icon4 := Icon {
+        x: 176px;
+        y: 16px;
+        source: Icons.schedule;
+        colorize: MaterialPalette.on_surface_variant;
+    }
+
+    icon5 := Icon {
+        x: 16px;
+        y: 64px;
+        source: Icons.edit;
+        width: 40px;
+        height: 40px;
+    }
+
+    icon6 := Icon {
+        x: 72px;
+        y: 64px;
+        source: Icons.keyboard;
+        width: 40px;
+        height: 40px;
+        colorize: MaterialPalette.secondary;
+    }
+
+    icon7 := Icon {
+        x: 128px;
+        y: 64px;
+        source: Icons.more_vert;
+        width: 16px;
+        height: 16px;
+    }
+
+    icon8 := Icon {
+        x: 160px;
+        y: 64px;
+        source: Icons.add;
+        width: 48px;
+        height: 48px;
+        colorize: MaterialPalette.tertiary;
+    }
+
+    icon9 := Icon {
+        x: 16px;
+        y: 128px;
+        source: Icons.calendar_today;
+    }
+
+    icon10 := Icon {
+        x: 56px;
+        y: 128px;
+        source: Icons.chevron_forward;
+        colorize: MaterialPalette.outline;
+    }
+
+}

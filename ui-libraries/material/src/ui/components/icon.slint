@@ -2,10 +2,27 @@
 // SPDX-License-Identifier: MIT
 
 import { MaterialPalette } from "../styling/material_palette.slint";
-import { MaterialStyleMetrics } from "../styling/material_style_metrics.slint";
+import { SmallIconButtonTokens } from "../styling/generated/material_component_tokens.slint";
 
+/// A Material Design icon, tinted and sized like upstream `Icon.kt`.
+///
+/// `Icon` is meant for single-color glyphs so they can be tinted for the
+/// component they sit in; for multicolor artwork, or artwork that should
+/// not be tinted, use `Image` directly (upstream's `Color.Unspecified`
+/// tint), and for a clickable icon use `IconButton`.
+///
+/// The component takes the `source`'s natural size — the bundled
+/// `Icons.<name>` svg glyphs are 24px — and falls back to
+/// `SmallIconButtonTokens.icon_size` when the source reports no size,
+/// upstream's `DefaultIconSizeModifier`. `colorize` plays the role of
+/// upstream's `tint` (`LocalContentColor.current`, which is `on_surface`
+/// on a `Surface` — the same color as `on_background` at the pin).
+///
+/// Set `accessible-label` as the contentDescription. Upstream adds no
+/// semantics at all when the description is null, so set
+/// `accessible-role: none` on purely decorative icons to match.
 export component Icon inherits Image {
-    width: MaterialStyleMetrics.icon_size_18;
-    height: self.width;
+    width: self.source.width <= 0 ? SmallIconButtonTokens.icon_size : self.source.width * 1px;
+    height: self.source.height <= 0 ? SmallIconButtonTokens.icon_size : self.source.height * 1px;
     colorize: MaterialPalette.on_background;
 }
