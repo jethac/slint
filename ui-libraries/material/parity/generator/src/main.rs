@@ -760,6 +760,7 @@ fn slint_case(scene: &Scene) -> String {
             "outlined-split-button" => "OutlineSplitButton",
             "fab" => "FloatingActionButton",
             "extended-fab" => "ExtendedFloatingActionButton",
+            "switch" => "Switch",
             // `surface` imports `Elevation`/`MaterialShapes` below instead;
             // `rect`/`elevated-rect` are plain `Rectangle`s — no import.
             "rect" | "surface" | "elevated-rect" => continue,
@@ -767,6 +768,8 @@ fn slint_case(scene: &Scene) -> String {
             // `divider` is the deprecated `HorizontalDivider` alias upstream.
             "divider" | "horizontal-divider" => "HorizontalDivider",
             "vertical-divider" => "VerticalDivider",
+            "badge" => "Badge",
+            "badged-box" => "BadgedBox",
             "top-app-bar" => match w.variant.as_deref().unwrap_or("small") {
                 "small" => "TopAppBar",
                 "center" => "CenterAlignedTopAppBar",
@@ -787,6 +790,9 @@ fn slint_case(scene: &Scene) -> String {
             other => panic!("unknown widget kind {other:?}"),
         };
         imports.push(component);
+        if w.kind == "badged-box" {
+            imports.push("Icon");
+        }
         if w.kind.starts_with("connected-button") || w.kind == "vertical-connected-button-group" {
             imports.push("ConnectedButtonPosition");
         }
@@ -950,6 +956,11 @@ fn widget_actions(scene: &Scene) -> Vec<Action> {
                 && w.width.is_some()
             {
                 w.x + w.width.unwrap() - 16.0
+            } else if w.kind == "switch" {
+                // A switch's gesture lands on the thumb's resting center:
+                // 16px in when unchecked (offset 8 + radius 8), 36px when
+                // checked (offset 24 + radius 12).
+                w.x + if w.checked == Some(true) { 36.0 } else { 16.0 }
             } else {
                 w.x + 20.0
             };
@@ -1265,6 +1276,43 @@ fn fab_props(w: &Widget, timed: bool) -> String {
     p
 }
 
+/// `switch` props — the 52x32dp control slot: `checked`, `enabled`, the
+/// `simulate_*` states, an `icon` drawn as the thumb content in both
+/// states (upstream `thumbContent` is one composable — emitted as both
+/// `on_icon` and `off_icon`), and `enforce_touch_target: false` like
+/// Compose's `LocalMinimumInteractiveComponentSize provides 0.dp`. The
+/// component's own `clicked` flips `in_out checked`, so a scene
+/// press+release needs no extra wiring (unlike `RadioButton`, whose
+/// `checked` is a pure input).
+fn switch_props(w: &Widget, timed: bool) -> String {
+    let mut p = String::new();
+    let over = &w.slint_overrides;
+    let bool_over = |k: &str, authored: Option<bool>| -> bool {
+        over.get(k).and_then(|v| v.as_bool()).unwrap_or(authored.unwrap_or(false))
+    };
+    if w.checked == Some(true) {
+        p.push_str("        checked: true;\n");
+    }
+    if let Some(icon) = &w.icon {
+        writeln!(p, "        on_icon: Icons.{icon};").unwrap();
+        writeln!(p, "        off_icon: Icons.{icon};").unwrap();
+    }
+    if !bool_over("enabled", w.enabled.or(Some(true))) {
+        p.push_str("        enabled: false;\n");
+    }
+    if !timed {
+        match w.state.as_deref() {
+            Some("hovered") => p.push_str("        simulate_hover: true;\n"),
+            Some("pressed") => p.push_str("        simulate_press: true;\n"),
+            _ => {}
+        }
+    }
+    if !bool_over("enforce_touch_target", None) {
+        p.push_str("        enforce_touch_target: false;\n");
+    }
+    p
+}
+
 fn slint_canvas(s: &mut String, scene: &Scene) {
     // Buttons are named `button{n}` by count of button-family widgets, not
     // widget index — a backdrop `rect` ahead of a button leaves `button0`
@@ -1275,6 +1323,8 @@ fn slint_canvas(s: &mut String, scene: &Scene) {
     let mut groups = 0;
     let mut icons = 0;
     let mut dividers = 0;
+    let mut badges = 0;
+    let mut badged_boxes = 0;
     for w in scene.widgets.iter() {
         let component = match w.kind.as_str() {
             "button-group" => {
@@ -1437,6 +1487,7 @@ fn slint_canvas(s: &mut String, scene: &Scene) {
             "outlined-split-button" => "OutlineSplitButton",
             "fab" => "FloatingActionButton",
             "extended-fab" => "ExtendedFloatingActionButton",
+            "switch" => "Switch",
             "surface" => {
                 let i = surfaces;
                 surfaces += 1;
@@ -1618,6 +1669,70 @@ fn slint_canvas(s: &mut String, scene: &Scene) {
                 .unwrap();
                 continue;
             }
+            "badge" => {
+                let i = badges;
+                badges += 1;
+                // `color` is the upstream `containerColor`; the content
+                // color follows `contentColorFor` on both sides.
+                // `slint_overrides` shadow the authored values for the
+                // negative scenes.
+                let container = w
+                    .slint_overrides
+                    .get("color")
+                    .and_then(|v| v.as_str())
+                    .map(str::to_string)
+                    .or_else(|| w.color.clone());
+                let container_prop = container
+                    .map(|c| format!("\n        container_color: MaterialPalette.{};", c.replace('-', "_")))
+                    .unwrap_or_default();
+                let text_prop = w
+                    .text
+                    .as_deref()
+                    .map(|t| format!("\n        text: \"{t}\";"))
+                    .unwrap_or_default();
+                let x = w.slint_overrides.get("x").map(widget_num).unwrap_or(w.x);
+                let y = w.slint_overrides.get("y").map(widget_num).unwrap_or(w.y);
+                writeln!(
+                    s,
+                    "    badge{i} := Badge {{\n        x: {}px;\n        y: {}px;{text_prop}{container_prop}\n    }}\n",
+                    x as i64,
+                    y as i64,
+                )
+                .unwrap();
+                continue;
+            }
+            "badged-box" => {
+                let i = badged_boxes;
+                badged_boxes += 1;
+                let container = w
+                    .slint_overrides
+                    .get("color")
+                    .and_then(|v| v.as_str())
+                    .map(str::to_string)
+                    .or_else(|| w.color.clone());
+                let container_prop = container
+                    .map(|c| format!("\n        badge_container_color: MaterialPalette.{};", c.replace('-', "_")))
+                    .unwrap_or_default();
+                let badge_text = w
+                    .slint_overrides
+                    .get("text")
+                    .and_then(|v| v.as_str())
+                    .map(str::to_string)
+                    .or_else(|| w.text.clone());
+                let text_prop = badge_text
+                    .as_deref()
+                    .map(|t| format!("\n        badge_text: \"{t}\";"))
+                    .unwrap_or_default();
+                writeln!(
+                    s,
+                    "    badged_box{i} := BadgedBox {{\n        x: {}px;\n        y: {}px;{text_prop}{container_prop}\n\n        // The upstream demos anchor to a 24dp icon (the badge hangs off\n        // the anchor's measured bounds); the Compose side draws\n        // `Icon(sceneIcon)` at its intrinsic 24dp.\n        Icon {{\n            width: 24px;\n            height: 24px;\n            source: Icons.{};\n        }}\n    }}\n",
+                    w.x as i64,
+                    w.y as i64,
+                    w.icon.as_deref().unwrap_or("check"),
+                )
+                .unwrap();
+                continue;
+            }
             "rect" => {
                 let radius = w
                     .slint_overrides
@@ -1651,6 +1766,8 @@ fn slint_canvas(s: &mut String, scene: &Scene) {
                 split_button_props(w, !scene.times.is_empty())
             } else if w.kind == "fab" || w.kind == "extended-fab" {
                 fab_props(w, !scene.times.is_empty())
+            } else if w.kind == "switch" {
+                switch_props(w, !scene.times.is_empty())
             } else {
                 button_props(w, !scene.times.is_empty())
             },
@@ -1683,6 +1800,8 @@ fn trace_prop_type(prop: &str) -> &'static str {
         | "corner_bottom_left"
         | "box_width"
         | "slot_width"
+        | "thumb_size"
+        | "thumb_offset"
         | "shadow_elevation" => "length",
         "trailing_icon_rotation" => "angle",
         "label_alpha" | "show_scale" | "show_alpha" | "expand_progress" => "float",
