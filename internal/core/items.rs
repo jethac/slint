@@ -1618,6 +1618,8 @@ impl WindowItem {
             // A non-positive length means unset; it maps to None rather than collapsing lines.
             line_height: (local_line_height.get() > 0 as Coord).then_some(local_line_height),
             italic: local_italic,
+            underline: false,
+            strikeout: false,
             stretch: {
                 if local_font_stretch == 0.0 {
                     Self::resolve_font_property(

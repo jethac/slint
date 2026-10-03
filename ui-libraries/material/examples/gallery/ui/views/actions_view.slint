@@ -1025,6 +1025,39 @@ export component ActionsView {
             title: "Theme";
 
             ComponentCard {
+                title: "Typography";
+
+                VerticalLayout {
+                    spacing: MaterialStyleMetrics.spacing_4;
+
+                    MaterialText {
+                        text: "Display small";
+                        style: MaterialTypography.display_small;
+                    }
+
+                    MaterialText {
+                        text: "Headline medium";
+                        style: MaterialTypography.headline_medium;
+                    }
+
+                    MaterialText {
+                        text: "Title large emphasized";
+                        style: MaterialTypography.title_large_emphasized;
+                    }
+
+                    MaterialText {
+                        text: "Body medium";
+                        style: MaterialTypography.body_medium;
+                    }
+
+                    MaterialText {
+                        text: "Label small emphasized";
+                        style: MaterialTypography.label_small_emphasized;
+                    }
+                }
+            }
+
+            ComponentCard {
                 title: "Motion & contrast";
 
                 Horizontal {

@@ -1,0 +1,81 @@
+[
+  {
+    "PushClipLayer": {
+      "clip": "M0,0 L322,0 L322,64 L0,64 Z",
+      "transform": [
+        1.0,
+        0.0,
+        0.0,
+        1.0,
+        16.0,
+        8.0
+      ]
+    }
+  },
+  {
+    "GlyphRun": {
+      "brush": {
+        "Solid": {
+          "components": [
+            0.2039,
+            0.1922,
+            0.2275,
+            1.0
+          ]
+        }
+      },
+      "brush_alpha": 1.0,
+      "embolden": {
+        "x": 0.0,
+        "y": 0.0
+      },
+      "font_data": {
+        "index": 0,
+        "resource_id": 0
+      },
+      "font_size": 57.0,
+      "glyph_transform": null,
+      "glyphs": [
+        {
+          "id": 40,
+          "x": 0.0,
+          "y": 51.4824
+        },
+        {
+          "id": 77,
+          "x": 37.2062,
+          "y": 51.4824
+        },
+        {
+          "id": 87,
+          "x": 50.8666,
+          "y": 51.4824
+        },
+        {
+          "id": 84,
+          "x": 80.0851,
+          "y": 51.4824
+        },
+        {
+          "id": 80,
+          "x": 111.8919,
+          "y": 51.4824
+        }
+      ],
+      "hint": false,
+      "normalized_coords": [],
+      "style": {
+        "Fill": "NonZero"
+      },
+      "transform": [
+        1.0,
+        0.0,
+        0.0,
+        1.0,
+        16.0,
+        8.0
+      ]
+    }
+  },
+  "PopLayer"
+]

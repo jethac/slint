@@ -142,6 +142,12 @@ impl LayoutWithoutLineBreaksBuilder {
             } else {
                 parley::style::FontStyle::Normal
             }));
+            if font_request.underline {
+                builder.push_default(parley::StyleProperty::Underline(true));
+            }
+            if font_request.strikeout {
+                builder.push_default(parley::StyleProperty::Strikethrough(true));
+            }
         }
         builder.push_default(parley::StyleProperty::FontSize(self.pixel_size.get()));
         builder.push_default(parley::StyleProperty::WordBreak(match self.text_wrap {

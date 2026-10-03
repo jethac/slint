@@ -55,9 +55,12 @@ pub struct ComplexText {
     pub horizontal_alignment: Property<TextHorizontalAlignment>,
     pub vertical_alignment: Property<TextVerticalAlignment>,
     pub max_lines: Property<i32>,
+    pub min_lines: Property<i32>,
 
     pub font_family: Property<SharedString>,
     pub font_italic: Property<bool>,
+    pub font_underline: Property<bool>,
+    pub font_strikeout: Property<bool>,
     pub font_stretch: Property<f32>,
     pub font_optical_sizing: Property<FontOpticalSizing>,
     pub font_variation_settings: Property<FontVariationModel>,
@@ -181,7 +184,7 @@ impl ItemConsts for ComplexText {
 
 impl HasFont for ComplexText {
     fn font_request(self: Pin<&Self>, self_rc: &crate::items::ItemRc) -> FontRequest {
-        crate::items::WindowItem::resolved_font_request(
+        let mut request = crate::items::WindowItem::resolved_font_request(
             self_rc,
             self.font_family(),
             self.font_weight(),
@@ -193,7 +196,10 @@ impl HasFont for ComplexText {
             self.font_stretch(),
             self.font_optical_sizing(),
             self.font_variation_settings(),
-        )
+        );
+        request.underline = self.font_underline();
+        request.strikeout = self.font_strikeout();
+        request
     }
 }
 
@@ -204,6 +210,10 @@ impl RenderString for ComplexText {
 
     fn max_lines(self: Pin<&Self>) -> i32 {
         Self::FIELD_OFFSETS.max_lines().apply_pin(self).get()
+    }
+
+    fn min_lines(self: Pin<&Self>) -> i32 {
+        Self::FIELD_OFFSETS.min_lines().apply_pin(self).get()
     }
 
     fn stroke(self: Pin<&Self>) -> (Brush, LogicalLength, TextStrokeStyle) {
@@ -503,6 +513,7 @@ pub struct SimpleText {
     pub horizontal_alignment: Property<TextHorizontalAlignment>,
     pub vertical_alignment: Property<TextVerticalAlignment>,
     pub max_lines: Property<i32>,
+    pub min_lines: Property<i32>,
 
     pub cached_rendering_data: CachedRenderingData,
 }
@@ -640,6 +651,10 @@ impl RenderString for SimpleText {
     fn max_lines(self: Pin<&Self>) -> i32 {
         Self::FIELD_OFFSETS.max_lines().apply_pin(self).get()
     }
+
+    fn min_lines(self: Pin<&Self>) -> i32 {
+        Self::FIELD_OFFSETS.min_lines().apply_pin(self).get()
+    }
 }
 
 impl RenderText for SimpleText {
@@ -740,7 +755,7 @@ fn text_layout_info(
             LayoutInfo { min: min.ceil(), preferred: preferred.ceil(), ..LayoutInfo::default() }
         }
         Orientation::Vertical => {
-            let h = match text.wrap() {
+            let mut h = match text.wrap() {
                 TextWrap::NoWrap => single_line_height(window_adapter, text, self_rc)
                     .unwrap_or_else(|| implicit_size(None, TextWrap::NoWrap).height),
                 wrap @ (TextWrap::WordWrap | TextWrap::CharWrap) => {
@@ -753,6 +768,14 @@ fn text_layout_info(
                 }
             }
             .ceil();
+            if let min_lines @ 1.. = text.min_lines()
+                && let Some(line_height) = window_adapter
+                    .renderer()
+                    .text_line_height(text.font_request(self_rc))
+                    .map(|h| h.get())
+            {
+                h = h.max(line_height * min_lines as Coord).ceil();
+            }
             LayoutInfo { min: h, preferred: h, ..LayoutInfo::default() }
         }
     }
