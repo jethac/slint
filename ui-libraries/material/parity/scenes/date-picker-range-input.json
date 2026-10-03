@@ -1,40 +1,50 @@
 {
-  "name": "date-picker-range-input",
-  "type": "canvas",
-  "parity": "static",
-  "size": [
-    500,
-    420
-  ],
   "densities": [
     1,
     2
   ],
-  "theme": {
-    "seed": "6750A4",
-    "variant": "tonal-spot",
-    "spec": "spec2025",
-    "platform": "phone",
-    "dark": false,
-    "contrast": 0.0
-  },
   "fonts": {
-    "plain": "Roboto",
-    "brand": "Roboto"
+    "brand": "Roboto",
+    "plain": "Roboto"
   },
-  "widgets": [
-    {
-      "kind": "date-range-picker",
-      "display_mode": "input",
-      "selected_start": "2031-03-14",
-      "selected_end": "2031-03-21",
-      "displayed": "2031-03"
-    }
+  "name": "date-picker-range-input",
+  "parity": "xfail:skia",
+  "size": [
+    500,
+    420
   ],
+  "theme": {
+    "contrast": 0.0,
+    "dark": false,
+    "platform": "phone",
+    "seed": "6750A4",
+    "spec": "spec2025",
+    "variant": "tonal-spot"
+  },
   "trace_elements": [
     "scrim0",
     "picker0"
   ],
   "trace_items": {},
-  "trace_props": []
+  "trace_props": [],
+  "type": "canvas",
+  "widgets": [
+    {
+      "display_mode": "input",
+      "displayed": "2031-03",
+      "kind": "date-range-picker",
+      "selected_end": "2031-03-21",
+      "selected_start": "2031-03-14"
+    }
+  ],
+  "xfail_text": "issue #28: Slint ceils text layout widths where Compose keeps fractional advances",
+  "mask_decor": {
+    "picker0": {
+      "times": [
+        2000
+      ],
+      "margin": 4
+    }
+  },
+  "negative_note": "slint's skia renderer AA-covers the 4px field-border corner tips ~1px tighter than layoutlib and slint-software (12 interior px inside the untraceable DateInputTextField borders); the software driver still verifies the full scene, and xfail fails-if-passes so the marker must be removed when the rasterizer is fixed"
 }

@@ -1,41 +1,42 @@
 {
+  "densities": [
+    1,
+    2
+  ],
+  "fonts": {
+    "brand": "Roboto",
+    "plain": "Roboto"
+  },
   "name": "date-picker-disabled",
-  "type": "canvas",
   "parity": "static",
   "size": [
     500,
     620
   ],
-  "densities": [
-    1,
-    2
-  ],
   "theme": {
-    "seed": "6750A4",
-    "variant": "tonal-spot",
-    "spec": "spec2025",
-    "platform": "phone",
+    "contrast": 0.0,
     "dark": false,
-    "contrast": 0.0
+    "platform": "phone",
+    "seed": "6750A4",
+    "spec": "spec2025",
+    "variant": "tonal-spot"
   },
-  "fonts": {
-    "plain": "Roboto",
-    "brand": "Roboto"
-  },
-  "widgets": [
-    {
-      "kind": "date-picker",
-      "title": "Select date",
-      "selected": "2031-03-14",
-      "displayed": "2031-03",
-      "selectable_from": "2031-03-10",
-      "selectable_to": "2031-03-20"
-    }
-  ],
   "trace_elements": [
     "scrim0",
     "picker0"
   ],
   "trace_items": {},
-  "trace_props": []
+  "trace_props": [],
+  "type": "canvas",
+  "widgets": [
+    {
+      "displayed": "2031-03",
+      "kind": "date-picker",
+      "selectable_from": "2031-03-10",
+      "selectable_to": "2031-03-20",
+      "selected": "2031-03-14",
+      "title": "Select date"
+    }
+  ],
+  "xfail_text": "issue #28: Slint ceils text layout widths where Compose keeps fractional advances"
 }

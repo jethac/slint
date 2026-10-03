@@ -9,7 +9,14 @@
     "brand": "Roboto",
     "plain": "Roboto"
   },
-  "mask_decor": {},
+  "mask_decor": {
+    "picker0": {
+      "margin": 4.0,
+      "times": [
+        2000
+      ]
+    }
+  },
   "mask_inner": {},
   "name": "date-picker-dark",
   "params": {},

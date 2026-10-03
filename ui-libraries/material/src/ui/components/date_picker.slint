@@ -378,8 +378,10 @@ component MonthsNavigation {
         alignment: center;
         spacing: 0;
 
+        // `Icons.AutoMirrored.Filled.KeyboardArrowLeft` — the classic 24dp
+        // material path (DatePicker.kt `SwitchToPreviousMonth`).
         prev_button := IconButton {
-            icon: Icons.chevron_backward;
+            icon: Icons.keyboard_arrow_left;
             accessible_label: @tr("Previous month");
             enabled: root.previous_available;
             enforce_touch_target: root.enforce_touch_target;
@@ -389,8 +391,9 @@ component MonthsNavigation {
             }
         }
 
+        // `Icons.AutoMirrored.Filled.KeyboardArrowRight` — `SwitchToNextMonth`.
         next_button := IconButton {
-            icon: Icons.chevron_forward;
+            icon: Icons.keyboard_arrow_right;
             accessible_label: @tr("Next month");
             enabled: root.next_available;
             enforce_touch_target: root.enforce_touch_target;
@@ -500,8 +503,10 @@ component CalendarMonth {
         property <int> cell_row: floor(index / 7);
         property <int> cell_day_index: root.month_first + self.day_index;
 
-        x: root.h_space + self.cell_col * (root.cell + root.h_space);
-        y: root.v_space + self.cell_row * (root.cell + root.v_space);
+        // `SpaceEvenly` rounds each child's position to whole device px
+        // (`roundToInt` on the px value), so quantize in `phx` not `px`.
+        x: Math.round((root.h_space + self.cell_col * (root.cell + root.h_space)) / 1phx) * 1phx;
+        y: Math.round((root.v_space + self.cell_row * (root.cell + root.v_space)) / 1phx) * 1phx;
         cell_size: root.cell;
         visible: self.has_day;
         text: self.day_index + 1;
@@ -529,7 +534,7 @@ component WeekdayRow {
     height: 48px; // RecommendedSizeForAccessibility
 
     for index in 7 : WeekdayCell {
-        x: root.h_space + index * (root.cell + root.h_space);
+        x: Math.round((root.h_space + index * (root.cell + root.h_space)) / 1phx) * 1phx;
         y: (parent.height - self.height) / 2;
         cell_size: root.cell;
         text: CalendarMath.weekday_letter(index);
@@ -557,10 +562,17 @@ component DatePickerHeader {
     property <string> start_text: root.headline_start != "" ? root.headline_start : @tr("Start date");
     property <string> end_text: root.headline_end != "" ? root.headline_end : @tr("End date");
 
-    // With a title the column gets `defaultMinSize(minHeight)`; without one
-    // it is just the headline row at its natural height (upstream
-    // `DatePickerHeader` composes the row regardless).
-    height: root.title != "" ? (root.range ? 68px : 120px) : 52px;
+    // With a title the column gets `defaultMinSize(minHeight)` —
+    // `HeaderContainerHeight` (120) or the range picker's 68 — covering the
+    // title, the headline row, and the divider that closes the column. The
+    // row is `max(toggle, headline + bottom padding 12)` and can push the
+    // column past the minimum when the headline wraps to a second line.
+    // Compose text measurements land on whole px; the slint preferred
+    // heights feed a heightIn-style bound, so ceil them the way the
+    // measured layout does.
+    height: max(root.title != "" ? (root.range ? 68px : 120px) : 0px,
+        (root.title != "" ? Math.ceil(title_label.preferred_height / 1px) * 1px : 0px)
+            + headline_row.height + 1px);
     visible: root.title != "" || root.show_mode_toggle;
 
     // `DatePickerTitlePadding` (start 24, end 12, top 16) /
@@ -577,59 +589,77 @@ component DatePickerHeader {
 
     headline_row := Rectangle {
         x: 0;
-        y: parent.height - self.height;
+        y: parent.height - self.height - 1px;
         width: parent.width;
-        height: 52px;
+        height: max(52px, Math.ceil(range_end.preferred_height / 1px) * 1px + 12px);
 
         // `DatePickerHeadlinePadding` (start 24, end 12, bottom 12) /
-        // `DateRangePickerHeadlinePadding` (start 64, end 12, bottom 12)
+        // `DateRangePickerHeadlinePadding` (start 64, end 12, bottom 12).
+        // Upstream's headline `Text` sits TopStart in its weighted box, so
+        // the labels draw at the row top and only the bottom padding is real.
         headline_area := Rectangle {
             x: 0;
             width: parent.width - (root.show_mode_toggle ? 52px : 0);
 
-            if !root.range : headline_label := MaterialText {
+            headline_label := MaterialText {
                 x: root.title_start_padding;
-                y: (parent.height - self.preferred_height) / 2 - 6px; // centered minus half the bottom padding
+                y: 0;
                 style: DatePickerModalTokens.header_headline_font;
                 color: DatePickerModalTokens.header_headline_color;
-                text: root.headline_text;
+                text: !root.range ? root.headline_text : "";
+                visible: !root.range;
             }
 
-            // Range headline — `Row(spacedBy 4)`: start, "-", end.
-            if root.range : HorizontalLayout {
+            // Range headline — upstream `RangePickerHeadline` is a
+            // `Row(spacedBy 4.dp, CenterVertically)` of three Texts
+            // (DateRangePicker.kt: `Text(formatterStartDate)`, `datesDelimiter`,
+            // `Text(formatterEndDate)`). The Row measures children left to
+            // right against the remaining width, so only the end date wraps
+            // when the pair overflows the weighted headline box.
+            range_start := MaterialText {
                 x: root.title_start_padding;
-                height: 100%;
-                spacing: 4px;
-                alignment: start;
+                y: (headline_row.height - 12px - self.height) / 2;
+                style: DatePickerModalTokens.range_selection_header_headline_font;
+                color: DatePickerModalTokens.header_headline_color;
+                text: root.range ? root.start_text : "";
+                wrap: no-wrap;
+                visible: root.range;
+            }
 
-                MaterialText {
-                    style: DatePickerModalTokens.range_selection_header_headline_font;
-                    color: DatePickerModalTokens.header_headline_color;
-                    text: root.start_text;
-                    vertical_alignment: center;
-                }
+            range_delim := MaterialText {
+                x: range_start.x + range_start.preferred_width + 4px;
+                y: (headline_row.height - 12px - self.height) / 2;
+                style: DatePickerModalTokens.range_selection_header_headline_font;
+                color: DatePickerModalTokens.header_headline_color;
+                text: "-";
+                wrap: no-wrap;
+                visible: root.range;
+            }
 
-                MaterialText {
-                    style: DatePickerModalTokens.range_selection_header_headline_font;
-                    color: DatePickerModalTokens.header_headline_color;
-                    text: "-";
-                    vertical_alignment: center;
-                }
-
-                MaterialText {
-                    style: DatePickerModalTokens.range_selection_header_headline_font;
-                    color: DatePickerModalTokens.header_headline_color;
-                    text: root.end_text;
-                    vertical_alignment: center;
-                }
+            range_end := MaterialText {
+                x: range_delim.x + range_delim.preferred_width + 4px;
+                y: (headline_row.height - 12px - self.height) / 2;
+                width: headline_area.width - 12px - self.x;
+                style: DatePickerModalTokens.range_selection_header_headline_font;
+                color: DatePickerModalTokens.header_headline_color;
+                text: root.range ? root.end_text : "";
+                wrap: word-wrap;
+                overflow: clip;
+                visible: root.range;
             }
         }
 
         // `DisplayModeToggleButton` — `DatePickerModeTogglePadding` (end 12, bottom 12)
         if root.show_mode_toggle : mode_toggle := IconButton {
             x: parent.width - self.width - 12px;
-            y: parent.height - self.height - 12px;
-            icon: root.input_mode ? Icons.calendar_today : Icons.edit;
+            // The IconButton's `DatePickerModeTogglePadding` box (40 + end 12 /
+            // bottom 12) is centered in the headline row like every other
+            // child — the button sits at the top of that padded box.
+            y: (parent.height - 12px - self.height) / 2;
+            // `Icons.Filled.DateRange` switches back to the calendar;
+            // `Icons.Filled.Edit` opens the input — the classic material
+            // paths from DatePicker.kt's mode toggle.
+            icon: root.input_mode ? Icons.date_range : Icons.edit_filled;
             enforce_touch_target: root.enforce_touch_target;
             accessible_label: root.input_mode ? @tr("Switch to calendar input") : @tr("Switch to text input");
 
@@ -637,6 +667,14 @@ component DatePickerHeader {
                 root.toggle_input_mode();
             }
         }
+    }
+
+    // The `HorizontalDivider` that closes `DatePickerHeader`'s content
+    // column — drawn whenever there is a title, headline, or mode toggle.
+    HorizontalDivider {
+        x: 0;
+        y: parent.height - 1px;
+        width: parent.width;
     }
 }
 
@@ -674,7 +712,9 @@ component YearPicker inherits Rectangle {
             property <bool> selected: self.year == root.displayed_year;
             property <bool> is_current: self.year == root.current_year;
 
-            x: root.item_space + mod(index, 3) * (self.width + root.item_space);
+            // The LazyVerticalGrid's `SpaceEvenly` also rounds slot starts
+            // to whole device px like the month grid's `SpaceEvenly` rows.
+            x: Math.round((root.item_space + mod(index, 3) * (self.width + root.item_space)) / 1phx) * 1phx;
             y: floor(index / 3) * (DatePickerModalTokens.selection_year_container_height + 16px);
             width: DatePickerModalTokens.selection_year_container_width;
             height: DatePickerModalTokens.selection_year_container_height;
@@ -731,10 +771,11 @@ component YearPicker inherits Rectangle {
     }
 }
 
-// The input mode's `DateInputTextField` — an `OutlinedTextField` (56 high,
-// CornerExtraSmall border, floated label) with `DateInputModalTokens`
-// padding. Kept minimal for the picker; the standalone `OutlinedTextField`
-// parity row belongs to the text-field family.
+// The input mode's `DateInputTextField` — an `OutlinedTextField` whose
+// measured height is ~80: the floated-label zone (~8) above the 56-high
+// CornerExtraSmall border box plus the `supportingText` slot's empty
+// reserve (~16) below it. Kept minimal for the picker; the standalone
+// `OutlinedTextField` parity row belongs to the text-field family.
 component DateInputField {
     in property <string> label_text: @tr("Date");
     in-out property <string> text: "";
@@ -742,15 +783,20 @@ component DateInputField {
     // upstream `placeholder` composable (`inputPlaceholderColor`).
     in property <string> placeholder_text: @tr("MM/DD/YYYY");
     in property <bool> has_error;
+    // `supportingText` shows the validation error when it is non-blank;
+    // the slot reserves its height either way.
+    in property <string> error_text: "";
 
     callback edited(text: string);
     callback accepted(text: string);
 
-    height: 56px; // OutlinedTextFieldTokens.container_height
+    height: 80px; // label zone 8 + field 56 + supporting reserve 16
 
     background := Rectangle {
+        x: 0;
+        y: 8px;
         width: 100%;
-        height: 100%;
+        height: 56px;
         border_radius: 4px; // corner_extra_small
         border_width: input.has_focus || root.has_error ? 2px : 1px;
         border_color: root.has_error ? MaterialPalette.error : input.has_focus ? MaterialPalette.primary : MaterialPalette.outline;
@@ -759,7 +805,7 @@ component DateInputField {
     // Floated label cut out of the top border.
     Rectangle {
         x: 12px;
-        y: -(floated_label.preferred_height / 2);
+        y: 8px - (floated_label.preferred_height / 2);
         height: floated_label.preferred_height;
         width: floated_label.preferred_width + 8px;
         background: DatePickerModalTokens.container_color;
@@ -774,18 +820,28 @@ component DateInputField {
 
     if root.text == "" : placeholder_label := MaterialText {
         x: 16px;
-        y: 0;
-        height: parent.height;
+        y: 8px;
+        height: 56px;
         vertical_alignment: center;
         style: MaterialTypography.body_large;
         color: MaterialPalette.on_surface_variant;
         text: root.placeholder_text;
     }
 
+    // `supportingText` zone — `SupportingTopPadding` (4) above the text.
+    if root.error_text != "" : MaterialText {
+        x: 16px;
+        y: 64px + 4px;
+        style: MaterialTypography.body_small;
+        color: root.has_error ? MaterialPalette.error : MaterialPalette.on_surface_variant;
+        text: root.error_text;
+    }
+
     input := TextInput {
         x: 16px;
+        y: 8px;
         width: parent.width - 32px;
-        height: parent.height;
+        height: 56px;
         text <=> root.text;
         vertical_alignment: center;
         color: MaterialPalette.on_surface;
@@ -997,7 +1053,7 @@ export component DatePicker {
     property <bool> has_selection: CalendarMath.valid_date(root.selected_date);
 
     min_width: DatePickerModalTokens.container_width;
-    min_height: header.height + 1px + content.height;
+    min_height: header.height + content.height;
     background-rect := Rectangle {
         width: 100%;
         height: 100%;
@@ -1008,10 +1064,14 @@ export component DatePicker {
         x: 0;
         y: 0;
         width: parent.width;
-        title: root.show_title ? (root.input_mode ? @tr("Enter date") : root.title) : "";
+        // `Strings.DatePickerTitle`/`DateInputTitle` are both "Select date"
+        // in the pin — the title does not change with the display mode.
+        title: root.show_title ? root.title : "";
         input_mode: root.input_mode;
         show_mode_toggle: root.show_mode_toggle;
-        headline_text: root.has_selection ? CalendarMath.format_date(root.selected_date) : (root.input_mode ? @tr("Enter date") : @tr("Select date"));
+        // Empty headline: `Strings.DatePickerHeadline` "Selected date" /
+        // `Strings.DateInputHeadline` "Entered date".
+        headline_text: root.has_selection ? CalendarMath.format_date(root.selected_date) : (root.input_mode ? @tr("Entered date") : @tr("Selected date"));
         enforce_touch_target: root.enforce_touch_target;
 
         toggle_input_mode => {
@@ -1019,20 +1079,15 @@ export component DatePicker {
         }
     }
 
-    divider := HorizontalDivider {
+    content := Rectangle {
         x: 0;
         y: header.height;
         width: parent.width;
-    }
-
-    content := Rectangle {
-        x: 0;
-        y: divider.y + 1px;
-        width: parent.width;
-        // InputTextFieldPadding (top 10, bottom 16 when no error) + the 56dp
-        // field; picker is navigation (56) + year grid (335) or the weekday
+        // InputTextFieldPadding (top 10, bottom 16 when no error) + the
+        // ~80dp field (label zone + border box + supporting reserve);
+        // picker is navigation (56) + year grid (335) or the weekday
         // row (48) + day grid (288).
-        height: root.input_mode ? 82px : (root.year_selection ? 391px : 392px);
+        height: root.input_mode ? 106px : (root.year_selection ? 391px : 392px);
 
         if !root.input_mode : picker_content := DatePickerContent {
             width: parent.width;
@@ -1128,7 +1183,7 @@ export component DateRangePicker {
     property <length> months_natural: 48px + root.months_to_show * (48px + 288px);
 
     min_width: DatePickerModalTokens.container_width;
-    min_height: min(header.height + 1px + (root.input_mode ? 82px : root.months_natural),
+    min_height: min(header.height + (root.input_mode ? 106px : root.months_natural),
         DatePickerModalTokens.container_height - 48px);
 
     background-rect := Rectangle {
@@ -1155,15 +1210,9 @@ export component DateRangePicker {
         }
     }
 
-    divider := HorizontalDivider {
-        x: 0;
-        y: header.height;
-        width: parent.width;
-    }
-
     months_area := Rectangle {
         x: 0;
-        y: divider.y + 1px;
+        y: header.height;
         width: parent.width;
         clip: true;
 
@@ -1173,7 +1222,7 @@ export component DateRangePicker {
         // The `LazyColumn` fills whatever height the parent leaves it: the
         // dialog clamps at 568 and the list shows a clipped trailing month.
         property <length> month_block: 48px + 288px;
-        height: root.input_mode ? 82px
+        height: root.input_mode ? 106px
             : min(root.months_natural, max(0px, parent.height - 69px));
 
         if !root.input_mode : weekdays := WeekdayRow {
@@ -1294,7 +1343,10 @@ export component DatePickerDialogContent inherits Rectangle {
     callback dismiss_clicked();
 
     width: DatePickerModalTokens.container_width;
-    height: min(surface_column.min_height, DatePickerModalTokens.container_height);
+    // `heightIn(max)` wraps the integer-measured column; ceilling here keeps
+    // the centered surface on the physical-pixel grid like Compose's
+    // integer-placed bounds.
+    height: min(Math.ceil(surface_column.min_height / 1px) * 1px, DatePickerModalTokens.container_height);
     border_radius: root.container_shape.top_left;
     clip: true;
     background: root.container_color;
