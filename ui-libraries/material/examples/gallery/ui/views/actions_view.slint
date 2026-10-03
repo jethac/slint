@@ -27,6 +27,8 @@ import {
     NavigationBar,
     CircularProgressIndicator,
     LinearProgressIndicator,
+    LoadingIndicator,
+    ContainedLoadingIndicator,
     SnackBar,
     ModalBottomSheet,
     MaterialText,
@@ -655,6 +657,24 @@ export component ActionsView {
                         alignment: center;
 
                         LinearProgressIndicator {
+                            indeterminate: pi.indeterminate;
+                            progress: 0.5;
+                        }
+                    }
+
+                    VerticalLayout {
+                        alignment: center;
+
+                        LoadingIndicator {
+                            indeterminate: pi.indeterminate;
+                            progress: 0.5;
+                        }
+                    }
+
+                    VerticalLayout {
+                        alignment: center;
+
+                        ContainedLoadingIndicator {
                             indeterminate: pi.indeterminate;
                             progress: 0.5;
                         }

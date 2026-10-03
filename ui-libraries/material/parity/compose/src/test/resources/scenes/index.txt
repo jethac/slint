@@ -13,6 +13,8 @@ icon-button-focus
 icon-button-press-morph
 icon-button-states
 icon-buttons
+loading-indicator-motion
+loading-indicator-states
 negative-button-focus-ring
 negative-button-press-morph
 negative-button-ripple-clip

@@ -252,8 +252,8 @@ States: active
 
 | Component | Source | Status | Issues | Needs | Notes |
 |---|---|---|---|---|---|
-| ContainedLoadingIndicator | LoadingIndicator.kt | missing | #5, #6, #10 | springs (#5), shapes (#6) | - |
-| LoadingIndicator | LoadingIndicator.kt | missing | #5, #6, #10 | springs (#5), shapes (#6) | - |
+| ContainedLoadingIndicator | LoadingIndicator.kt | partial | #5, #6, #10 | springs (#5), shapes (#6) | slint component: ContainedLoadingIndicator; parity scenes: loading-indicator-states, loading-indicator-motion (xfail, #27-class launch jitter) |
+| LoadingIndicator | LoadingIndicator.kt | partial | #5, #6, #10 | springs (#5), shapes (#6) | slint component: LoadingIndicator; parity scenes: loading-indicator-states, loading-indicator-motion (xfail, #27-class launch jitter) |
 
 ### Menus
 

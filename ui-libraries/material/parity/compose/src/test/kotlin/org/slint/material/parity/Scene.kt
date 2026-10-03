@@ -100,6 +100,11 @@ class Widget(json: JSONObject) {
     val checked: Boolean = json.optBoolean("checked", false)
     /** Icon-button container width `narrow`/`uniform`/`wide`. */
     val widthOption: String = (json.opt("width_option") as? String) ?: "uniform"
+    /** Loading-indicator mode: indeterminate (the continuous morph loop,
+     * default) or driven by [progress]. */
+    val indeterminate: Boolean = json.optBoolean("indeterminate", true)
+    /** Determinate loading-indicator progress, 0–1. */
+    val progress: Float = json.optDouble("progress", 0.0).toFloat()
 
     val isIconButton: Boolean get() = kind.endsWith("icon-button")
     val isButton: Boolean get() = isIconButton || kind.endsWith("-button")

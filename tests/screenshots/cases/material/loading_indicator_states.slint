@@ -1,0 +1,84 @@
+// Copyright © SixtyFPS GmbH <info@slint.dev>
+// SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0
+
+// Scene: loading-indicator-states — generated from `ui-libraries/material/parity/scenes/loading-indicator-states.json`
+// (edit the scene, regenerate with `cargo run -p material-parity-generator`).
+//PARITY=static
+//SIZE=400x144
+//DENSITIES=1,2
+import "../../fonts/Roboto-VariableFont.ttf";
+import { ContainedLoadingIndicator, LoadingIndicator, MaterialPalette, MaterialTheme, MaterialWindow } from "@material";
+
+export component TestCase inherits MaterialWindow {
+    init => {
+        // The scene pins seed #6750A4, tonal-spot, spec2025, light, contrast 0
+        // (all the library defaults; restated here so a default change can't
+        // silently move the parity baseline).
+        MaterialTheme.seed-color = #6750A4;
+        MaterialTheme.dark = false;
+        MaterialTheme.contrast-level = 0;
+        MaterialTheme.use-platform-color = false;
+        MaterialTheme.plain-family = "Roboto";
+        MaterialTheme.brand-family = "Roboto";
+        // Compose builds its scene scheme from the same seed — use the
+        // runtime-generated scheme, not the static expressive table.
+        MaterialPalette.dynamic = true;
+    }
+
+    LoadingIndicator {
+        x: 24px;
+        y: 24px;
+        indeterminate: false;
+        progress: 0;
+    }
+
+    LoadingIndicator {
+        x: 96px;
+        y: 24px;
+        indeterminate: false;
+        progress: 0.35;
+    }
+
+    LoadingIndicator {
+        x: 168px;
+        y: 24px;
+        indeterminate: false;
+        progress: 0.75;
+    }
+
+    LoadingIndicator {
+        x: 240px;
+        y: 24px;
+        indeterminate: false;
+        progress: 1;
+    }
+
+    ContainedLoadingIndicator {
+        x: 24px;
+        y: 88px;
+        indeterminate: false;
+        progress: 0;
+    }
+
+    ContainedLoadingIndicator {
+        x: 96px;
+        y: 88px;
+        indeterminate: false;
+        progress: 0.35;
+    }
+
+    ContainedLoadingIndicator {
+        x: 168px;
+        y: 88px;
+        indeterminate: false;
+        progress: 0.75;
+    }
+
+    ContainedLoadingIndicator {
+        x: 240px;
+        y: 88px;
+        indeterminate: false;
+        progress: 1;
+    }
+
+}
