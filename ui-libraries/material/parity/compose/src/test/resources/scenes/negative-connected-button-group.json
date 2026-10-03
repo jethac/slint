@@ -85,6 +85,7 @@
   "type": "canvas",
   "widgets": [
     {
+      "alignment": null,
       "checkable": null,
       "checked": null,
       "checked_icon": null,
@@ -93,6 +94,7 @@
       "corner": null,
       "elevation": null,
       "enabled": null,
+      "expanded": null,
       "height": null,
       "height_offset": null,
       "icon": null,
@@ -125,6 +127,7 @@
         }
       ],
       "kind": "connected-button-group",
+      "label_width": null,
       "level": null,
       "multi_select": null,
       "nav_icon": null,
@@ -134,6 +137,7 @@
       "radius": null,
       "selected_index": 1,
       "shape": null,
+      "shown": null,
       "side": null,
       "size": null,
       "slint_overrides": {
@@ -141,7 +145,9 @@
       },
       "state": null,
       "subtitle": null,
+      "target_scale": null,
       "text": null,
+      "toggle": null,
       "trailing_icon": null,
       "variant": null,
       "vertical": null,
@@ -151,6 +157,7 @@
       "y": 20.0
     },
     {
+      "alignment": null,
       "checkable": null,
       "checked": null,
       "checked_icon": null,
@@ -159,6 +166,7 @@
       "corner": null,
       "elevation": null,
       "enabled": null,
+      "expanded": null,
       "height": null,
       "height_offset": null,
       "icon": null,
@@ -166,6 +174,7 @@
       "indeterminate": null,
       "items": [],
       "kind": "connected-button",
+      "label_width": null,
       "level": null,
       "multi_select": null,
       "nav_icon": null,
@@ -175,6 +184,7 @@
       "radius": null,
       "selected_index": null,
       "shape": null,
+      "shown": null,
       "side": null,
       "size": null,
       "slint_overrides": {
@@ -182,7 +192,9 @@
       },
       "state": null,
       "subtitle": null,
+      "target_scale": null,
       "text": "Start",
+      "toggle": null,
       "trailing_icon": null,
       "variant": null,
       "vertical": null,

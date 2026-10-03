@@ -1,0 +1,203 @@
+{
+  "name": "extended-fab-sizes",
+  "type": "canvas",
+  "parity": "static",
+  "size": [
+    728,
+    352
+  ],
+  "densities": [
+    1,
+    2
+  ],
+  "theme": {
+    "seed": "6750A4",
+    "variant": "tonal-spot",
+    "spec": "spec2025",
+    "platform": "phone",
+    "dark": false,
+    "contrast": 0.0
+  },
+  "fonts": {
+    "plain": "Roboto",
+    "brand": "Roboto"
+  },
+  "widgets": [
+    {
+      "kind": "extended-fab",
+      "x": 8,
+      "y": 56,
+      "icon": "add",
+      "text": "Create",
+      "label_width": 52,
+      "size": "baseline"
+    },
+    {
+      "kind": "extended-fab",
+      "x": 160,
+      "y": 64,
+      "icon": "add",
+      "text": "Create",
+      "label_width": 58,
+      "size": "small"
+    },
+    {
+      "kind": "extended-fab",
+      "x": 300,
+      "y": 40,
+      "icon": "add",
+      "text": "Create",
+      "label_width": 78,
+      "size": "medium"
+    },
+    {
+      "kind": "extended-fab",
+      "x": 500,
+      "y": 16,
+      "icon": "add",
+      "text": "Create",
+      "label_width": 108,
+      "size": "large"
+    },
+    {
+      "kind": "extended-fab",
+      "x": 8,
+      "y": 168,
+      "icon": "add",
+      "text": "Create",
+      "label_width": 52,
+      "size": "baseline",
+      "expanded": false
+    },
+    {
+      "kind": "extended-fab",
+      "x": 160,
+      "y": 176,
+      "icon": "add",
+      "text": "Create",
+      "label_width": 58,
+      "size": "small",
+      "expanded": false
+    },
+    {
+      "kind": "extended-fab",
+      "x": 300,
+      "y": 152,
+      "icon": "add",
+      "text": "Create",
+      "label_width": 78,
+      "size": "medium",
+      "expanded": false
+    },
+    {
+      "kind": "extended-fab",
+      "x": 500,
+      "y": 128,
+      "icon": "add",
+      "text": "Create",
+      "label_width": 108,
+      "size": "large",
+      "expanded": false
+    },
+    {
+      "kind": "extended-fab",
+      "x": 8,
+      "y": 280,
+      "text": "Create",
+      "label_width": 52,
+      "size": "baseline"
+    },
+    {
+      "kind": "extended-fab",
+      "x": 160,
+      "y": 288,
+      "text": "Create",
+      "label_width": 58,
+      "size": "small"
+    },
+    {
+      "kind": "extended-fab",
+      "x": 300,
+      "y": 264,
+      "text": "Create",
+      "label_width": 78,
+      "size": "medium"
+    },
+    {
+      "kind": "extended-fab",
+      "x": 500,
+      "y": 240,
+      "text": "Create",
+      "label_width": 108,
+      "size": "large"
+    }
+  ],
+  "trace_elements": [
+    "button0",
+    "button1",
+    "button2",
+    "button3",
+    "button4",
+    "button5",
+    "button6",
+    "button7",
+    "button8",
+    "button9",
+    "button10",
+    "button11"
+  ],
+  "trace_props": [],
+  "mask_decor": {
+    "button0": [
+      0,
+      2000
+    ],
+    "button1": [
+      0,
+      2000
+    ],
+    "button2": [
+      0,
+      2000
+    ],
+    "button3": [
+      0,
+      2000
+    ],
+    "button4": [
+      0,
+      2000
+    ],
+    "button5": [
+      0,
+      2000
+    ],
+    "button6": [
+      0,
+      2000
+    ],
+    "button7": [
+      0,
+      2000
+    ],
+    "button8": [
+      0,
+      2000
+    ],
+    "button9": [
+      0,
+      2000
+    ],
+    "button10": [
+      0,
+      2000
+    ],
+    "button11": [
+      0,
+      2000
+    ]
+  },
+  "xfail_text": "issue #28: Slint ceils text layout widths where Compose keeps fractional advances",
+  "parity_eps": 16,
+  "parity_eps_reason": "issue #6: the layoutlib-vs-SkShadowUtils elevation shadow penumbra diverges ~11-20 channels around 6-8dp widgets at 2x; the container silhouette itself matches within 1px"
+}

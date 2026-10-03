@@ -1,0 +1,45 @@
+{
+  "name": "negative-fab-color",
+  "type": "canvas",
+  "parity": "negative",
+  "negative_note": "slint_overrides.cover repaints the container secondary-container where Compose renders primary-container",
+  "size": [
+    128,
+    112
+  ],
+  "densities": [
+    1,
+    2
+  ],
+  "theme": {
+    "seed": "6750A4",
+    "variant": "tonal-spot",
+    "spec": "spec2025",
+    "platform": "phone",
+    "dark": false,
+    "contrast": 0.0
+  },
+  "fonts": {
+    "plain": "Roboto",
+    "brand": "Roboto"
+  },
+  "widgets": [
+    {
+      "kind": "fab",
+      "x": 36,
+      "y": 28,
+      "icon": "add",
+      "slint_overrides": {
+        "cover": {
+          "fill": "secondary-container",
+          "radius": 16,
+          "label": false
+        }
+      }
+    }
+  ],
+  "trace_elements": [
+    "button0"
+  ],
+  "trace_props": []
+}

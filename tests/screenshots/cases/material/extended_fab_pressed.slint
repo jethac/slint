@@ -1,0 +1,47 @@
+// Copyright © SixtyFPS GmbH <info@slint.dev>
+// SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0
+
+// Scene: extended-fab-pressed — generated from `ui-libraries/material/parity/scenes/extended-fab-pressed.json`
+// (edit the scene, regenerate with `cargo run -p material-parity-generator`).
+//PARITY=static
+// issue #6: the layoutlib-vs-SkShadowUtils elevation shadow penumbra diverges ~11-20 channels around 6-8dp widgets at 2x; the container silhouette itself matches within 1px
+//PARITY_EPS=32
+//SIZE=272x120
+//TRACE_PROPS=shadow_elevation
+//TRACE_ELEMENTS=button0
+//MASK_INNER=button0@2000
+//MASK_DECOR=button0@0,2000
+//DENSITIES=1
+import "../../fonts/Roboto-VariableFont.ttf";
+import { ExtendedFabSize, ExtendedFloatingActionButton, FabAlignment, FabElevation, FabSize, Icons, MaterialPalette, MaterialTheme, MaterialWindow } from "@material";
+
+export component TestCase inherits MaterialWindow {
+    init => {
+        // The scene pins seed #6750A4, tonal-spot, spec2025, light, contrast 0
+        // (all the library defaults; restated here so a default change can't
+        // silently move the parity baseline).
+        MaterialTheme.seed-color = #6750A4;
+        MaterialTheme.dark = false;
+        MaterialTheme.contrast-level = 0;
+        MaterialTheme.use-platform-color = false;
+        MaterialTheme.plain-family = "Roboto";
+        MaterialTheme.brand-family = "Roboto";
+        // Compose builds its scene scheme from the same seed — use the
+        // runtime-generated scheme, not the static expressive table.
+        MaterialPalette.dynamic = true;
+    }
+
+    button0 := ExtendedFloatingActionButton {
+        x: 56px;
+        y: 32px;
+        text: "Create";
+        label-width: 52px;
+        expanded: true;
+        icon: Icons.add;
+        simulate_press: true;
+        enforce_touch_target: false;
+    }
+
+    out property <length> shadow_elevation: button0.shadow_elevation;
+
+}
