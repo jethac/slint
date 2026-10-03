@@ -1,7 +1,7 @@
 // Copyright © SixtyFPS GmbH <info@slint.dev>
 // SPDX-License-Identifier: MIT
 
-import { Badge } from "./badge.slint";
+import { Badge, BadgedBox } from "./badge.slint";
 import { MaterialPalette } from "../styling/material_palette.slint";
 import { MaterialStyleMetrics } from "../styling/material_style_metrics.slint";
 import { MaterialText } from "./material_text.slint";
@@ -11,6 +11,7 @@ import { ExtendedTouchArea } from "./extended_touch_area.slint";
 import { NavigationBarHorizontalItemTokens } from "../styling/generated/material_component_tokens.slint";
 import { StateLayer, Ripple } from "./state_layer.slint";
 import { Icon } from "./icon.slint";
+import { NavigationBarHorizontalItemTokens } from "../styling/generated/material_component_tokens.slint";
 import { NavigationItem } from "../items/navigation_item.slint";
 import { BaseNavigationItemTemplate, BaseNavigation } from "./base_navigation.slint";
 
@@ -78,23 +79,35 @@ export component NavigationItemTemplate inherits BaseNavigationItemTemplate {
                                         background: root.color;
                                     }
 
-                                    if root.has_icon || root.has_selected_icon : Icon {
-                                        width: NavigationBarHorizontalItemTokens.icon_size;
-                                        height: self.width;
-                                        source: root.icon;
-                                        colorize: root.color;
+                                    if root.has_icon || root.has_selected_icon : BadgedBox {
+                                        // NavigationBarItem anchors the badge to
+                                        // the icon through a BadgedBox upstream.
+                                        badge_text: root.badge;
+                                        badge_visible: root.show_badge || root.badge != "";
 
-                                        states [
-                                            selected when root.selected && root.has_selected_icon : {
-                                                source: root.selected_icon;
-                                            }
-                                        ]
+                                        Icon {
+                                            // BadgedBox anchors to the icon's
+                                            // measured size — the 24dp token
+                                            // upstream, not Icon's own default.
+                                            width: NavigationBarHorizontalItemTokens.icon_size;
+                                            height: self.width;
+                                            source: root.icon;
+                                            colorize: root.color;
+
+                                            states [
+                                                selected when root.selected && root.has_selected_icon : {
+                                                    source: root.selected_icon;
+                                                }
+                                            ]
+                                        }
                                     }
                                 }
                              }
                         }
 
-                        if root.show_badge || root.badge != "" : Badge {
+                        // A badge with no icon to anchor to keeps its previous
+                        // spot: upstream BadgedBox would measure an empty anchor.
+                        if !root.has_icon && !root.has_selected_icon && (root.show_badge || root.badge != "") : Badge {
                             x: parent.width / 2;
                             y: 0;
                             text: root.badge;

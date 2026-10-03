@@ -1,0 +1,39 @@
+{
+    "name": "negative-badge-text",
+    "type": "canvas",
+    "parity": "negative",
+    "negative_note": "The Slint side draws a wider content badge than Compose (text \"999+\" where the authored badge reads \"3\") — the widened stadium must flag outside the text-relaxed cells.",
+    "size": [
+        96,
+        64
+    ],
+    "densities": [
+        1
+    ],
+    "theme": {
+        "seed": "6750A4",
+        "variant": "tonal-spot",
+        "spec": "spec2025",
+        "platform": "phone",
+        "dark": false,
+        "contrast": 0.0
+    },
+    "fonts": {
+        "plain": "Roboto",
+        "brand": "Roboto"
+    },
+    "widgets": [
+        {
+            "kind": "badged-box",
+            "icon": "check",
+            "text": "3",
+            "x": 32,
+            "y": 32,
+            "slint_overrides": {
+                "text": "999+"
+            }
+        }
+    ],
+    "trace_elements": [],
+    "trace_props": []
+}

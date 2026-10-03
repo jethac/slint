@@ -1,0 +1,98 @@
+{
+    "name": "badges",
+    "type": "canvas",
+    "parity": "static",
+    "xfail_text": "badge content width follows the label's advance: the issue-#28 ceil drift moves the label and the text-derived stadium cap ~1px (the standalone badges compare geometry as traced elements; badged-boxes carry fixed-width badges only, so the drift never reaches a strict edge there)",
+    "size": [
+        240,
+        176
+    ],
+    "densities": [
+        1,
+        2
+    ],
+    "theme": {
+        "seed": "6750A4",
+        "variant": "tonal-spot",
+        "spec": "spec2025",
+        "platform": "phone",
+        "dark": false,
+        "contrast": 0.0
+    },
+    "fonts": {
+        "plain": "Roboto",
+        "brand": "Roboto"
+    },
+    "widgets": [
+        {
+            "kind": "badge",
+            "x": 16,
+            "y": 16
+        },
+        {
+            "kind": "badge",
+            "text": "1",
+            "x": 56,
+            "y": 16
+        },
+        {
+            "kind": "badge",
+            "text": "7",
+            "x": 96,
+            "y": 16
+        },
+        {
+            "kind": "badge",
+            "text": "99+",
+            "x": 136,
+            "y": 16
+        },
+        {
+            "kind": "badge",
+            "text": "5",
+            "color": "primary",
+            "x": 184,
+            "y": 16
+        },
+        {
+            "kind": "badged-box",
+            "icon": "check",
+            "x": 16,
+            "y": 72
+        },
+        {
+            "kind": "badged-box",
+            "icon": "menu",
+            "text": "3",
+            "x": 80,
+            "y": 72
+        },
+        {
+            "kind": "badged-box",
+            "icon": "schedule",
+            "text": "9",
+            "x": 144,
+            "y": 72
+        },
+        {
+            "kind": "badged-box",
+            "icon": "add",
+            "text": "5",
+            "color": "secondary",
+            "x": 200,
+            "y": 72
+        }
+    ],
+    "trace_elements": [
+        "badge0",
+        "badge1",
+        "badge2",
+        "badge3",
+        "badge4",
+        "badged-box0",
+        "badged-box1",
+        "badged-box2",
+        "badged-box3"
+    ],
+    "trace_props": []
+}

@@ -731,6 +731,8 @@ fn slint_case(scene: &Scene) -> String {
             // `divider` is the deprecated `HorizontalDivider` alias upstream.
             "divider" | "horizontal-divider" => "HorizontalDivider",
             "vertical-divider" => "VerticalDivider",
+            "badge" => "Badge",
+            "badged-box" => "BadgedBox",
             "top-app-bar" => match w.variant.as_deref().unwrap_or("small") {
                 "small" => "TopAppBar",
                 "center" => "CenterAlignedTopAppBar",
@@ -750,6 +752,9 @@ fn slint_case(scene: &Scene) -> String {
             other => panic!("unknown widget kind {other:?}"),
         };
         imports.push(component);
+        if w.kind == "badged-box" {
+            imports.push("Icon");
+        }
         if w.kind.starts_with("connected-button") || w.kind == "vertical-connected-button-group" {
             imports.push("ConnectedButtonPosition");
         }
@@ -1232,6 +1237,8 @@ fn slint_canvas(s: &mut String, scene: &Scene) {
     let mut groups = 0;
     let mut icons = 0;
     let mut dividers = 0;
+    let mut badges = 0;
+    let mut badged_boxes = 0;
     for w in scene.widgets.iter() {
         let component = match w.kind.as_str() {
             "filled-button" => "FilledButton",
@@ -1448,6 +1455,70 @@ fn slint_canvas(s: &mut String, scene: &Scene) {
                     "    divider{i} := {component} {{\n        x: {}px;\n        y: {}px;\n        width: {width}px;\n        height: {height}px;{thickness_prop}{color_prop}\n    }}\n",
                     w.x as i64,
                     w.y as i64,
+                )
+                .unwrap();
+                continue;
+            }
+            "badge" => {
+                let i = badges;
+                badges += 1;
+                // `color` is the upstream `containerColor`; the content
+                // color follows `contentColorFor` on both sides.
+                // `slint_overrides` shadow the authored values for the
+                // negative scenes.
+                let container = w
+                    .slint_overrides
+                    .get("color")
+                    .and_then(|v| v.as_str())
+                    .map(str::to_string)
+                    .or_else(|| w.color.clone());
+                let container_prop = container
+                    .map(|c| format!("\n        container_color: MaterialPalette.{};", c.replace('-', "_")))
+                    .unwrap_or_default();
+                let text_prop = w
+                    .text
+                    .as_deref()
+                    .map(|t| format!("\n        text: \"{t}\";"))
+                    .unwrap_or_default();
+                let x = w.slint_overrides.get("x").map(widget_num).unwrap_or(w.x);
+                let y = w.slint_overrides.get("y").map(widget_num).unwrap_or(w.y);
+                writeln!(
+                    s,
+                    "    badge{i} := Badge {{\n        x: {}px;\n        y: {}px;{text_prop}{container_prop}\n    }}\n",
+                    x as i64,
+                    y as i64,
+                )
+                .unwrap();
+                continue;
+            }
+            "badged-box" => {
+                let i = badged_boxes;
+                badged_boxes += 1;
+                let container = w
+                    .slint_overrides
+                    .get("color")
+                    .and_then(|v| v.as_str())
+                    .map(str::to_string)
+                    .or_else(|| w.color.clone());
+                let container_prop = container
+                    .map(|c| format!("\n        badge_container_color: MaterialPalette.{};", c.replace('-', "_")))
+                    .unwrap_or_default();
+                let badge_text = w
+                    .slint_overrides
+                    .get("text")
+                    .and_then(|v| v.as_str())
+                    .map(str::to_string)
+                    .or_else(|| w.text.clone());
+                let text_prop = badge_text
+                    .as_deref()
+                    .map(|t| format!("\n        badge_text: \"{t}\";"))
+                    .unwrap_or_default();
+                writeln!(
+                    s,
+                    "    badged_box{i} := BadgedBox {{\n        x: {}px;\n        y: {}px;{text_prop}{container_prop}\n\n        // The upstream demos anchor to a 24dp icon (the badge hangs off\n        // the anchor's measured bounds); the Compose side draws\n        // `Icon(sceneIcon)` at its intrinsic 24dp.\n        Icon {{\n            width: 24px;\n            height: 24px;\n            source: Icons.{};\n        }}\n    }}\n",
+                    w.x as i64,
+                    w.y as i64,
+                    w.icon.as_deref().unwrap_or("check"),
                 )
                 .unwrap();
                 continue;
