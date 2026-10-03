@@ -1,0 +1,48 @@
+{
+    "name": "navigation-bar-select-morph",
+    "type": "canvas",
+    "parity": "xfail",
+    "size": [360, 160],
+    "densities": [1],
+    "theme": {
+        "seed": "6750A4",
+        "variant": "tonal-spot",
+        "spec": "spec2025",
+        "platform": "phone",
+        "dark": false,
+        "contrast": 0.0
+    },
+    "fonts": {
+        "plain": "Roboto",
+        "brand": "Roboto"
+    },
+    "params": {
+        "nav_events": [["select", 0, 1, 30]]
+    },
+    "times": [0, 30, 60, 120, 200, 300, 450, 650, 900, 1200, 1600],
+    "widgets": [
+        {
+            "kind": "short-navigation-bar",
+            "x": 0, "y": 0, "width": 360,
+            "nav_selected_index": 0,
+            "rail_items": [
+                { "text": "Inbox", "icon": "check" },
+                { "text": "Sent", "icon": "schedule" },
+                { "text": "Files", "icon": "keyboard" }
+            ]
+        },
+        {
+            "kind": "navigation-bar",
+            "x": 0, "y": 80, "width": 360,
+            "nav_selected_index": 0,
+            "rail_items": [
+                { "text": "Inbox", "icon": "check" },
+                { "text": "Sent", "icon": "schedule" },
+                { "text": "Files", "icon": "keyboard" }
+            ]
+        }
+    ],
+    "trace_elements": ["navbar0", "navbar1"],
+    "trace_props": [],
+    "negative_note": "issue #27 class: the Slint key dispatch is synchronous while the Compose `selected` state flips inside the frame pump, so identical-timestamp frames report a systematic lead during the DefaultSpatial/FastSpatial indicator expansion — a silent pass would mean the harness went blind"
+}

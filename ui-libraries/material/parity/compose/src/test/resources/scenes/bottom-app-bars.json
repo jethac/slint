@@ -93,6 +93,7 @@
   "widgets": [
     {
       "alignment": null,
+      "always_show_label": null,
       "checkable": null,
       "checked": null,
       "checked_icon": null,
@@ -105,6 +106,7 @@
       "height": null,
       "height_offset": null,
       "icon": null,
+      "icon_position": null,
       "icons": [
         "menu",
         "check",
@@ -116,11 +118,14 @@
       "label_width": null,
       "level": null,
       "multi_select": null,
+      "nav_arrangement": null,
       "nav_icon": "edit",
+      "nav_selected_index": null,
       "placeholder": null,
       "position": null,
       "progress": null,
       "radius": null,
+      "rail_items": [],
       "selected_index": null,
       "shape": null,
       "shown": null,
@@ -143,6 +148,7 @@
     },
     {
       "alignment": null,
+      "always_show_label": null,
       "checkable": null,
       "checked": null,
       "checked_icon": null,
@@ -155,6 +161,7 @@
       "height": null,
       "height_offset": -20.0,
       "icon": null,
+      "icon_position": null,
       "icons": [
         "menu",
         "check"
@@ -165,11 +172,14 @@
       "label_width": null,
       "level": null,
       "multi_select": null,
+      "nav_arrangement": null,
       "nav_icon": null,
+      "nav_selected_index": null,
       "placeholder": null,
       "position": null,
       "progress": null,
       "radius": null,
+      "rail_items": [],
       "selected_index": null,
       "shape": null,
       "shown": null,

@@ -166,12 +166,44 @@ class Widget(json: JSONObject) {
 
     val isFab: Boolean get() = kind == "fab" || kind == "extended-fab"
     val isSplitButton: Boolean get() = kind.endsWith("split-button")
+    // --- navigation-rail / navigation-bar kinds ---
+    /** Rail items: `[{ "text": "Inbox", "icon": "inbox",
+     * "selected_icon": "inbox", "badge": "3", "enabled": false }]`.
+     * `rail_items` in the scene JSON — `items` is `button-group`'s. */
+    val railItems: List<RailItem> =
+        json.optJSONArray("rail_items")?.let { a -> (0 until a.length()).map { RailItem(a.getJSONObject(it)) } }
+            ?: emptyList()
+    /** `NavigationRailItem.alwaysShowLabel` / `NavigationBarItem.alwaysShowLabel`
+     * — narrow rail and tall navigation bar only. */
+    val alwaysShowLabel: Boolean = json.optBoolean("always_show_label", true)
+    /** The selected item index (`current-index` on the Slint side).
+     * `nav_selected_index` in the scene JSON — `selected_index` is
+     * `button-group`'s. */
+    val navSelectedIndex: Int = json.optInt("nav_selected_index", 0)
+    /** `ShortNavigationBarArrangement` — `equal-weight` (default) or
+     * `centered`. */
+    val navArrangement: String = (json.opt("nav_arrangement") as? String) ?: "equal-weight"
+    /** `NavigationItemIconPosition` — `top` (default) or `start`. */
+    val iconPosition: String = (json.opt("icon_position") as? String) ?: "top"
+
     val isIconButton: Boolean get() = kind.endsWith("icon-button")
     val isButton: Boolean get() =
         (isIconButton || isSplitButton || kind.endsWith("-button")) && kind != "connected-button"
     /** `elevated-rect` only: the elevation in dp of the Android ambient+spot
      * shadow `Modifier.shadow` draws behind the caster. */
     val elevation: Float = json.optDouble("elevation", 0.0).toFloat()
+}
+
+/** One rail item (`NavigationItem` on the Slint side): `{ "text": "Inbox",
+ * "icon": "inbox", "selected_icon": "inbox", "badge": "3",
+ * "enabled": false }`. */
+class RailItem(json: JSONObject) {
+    val text: String = json.optString("text", "")
+    val icon: String? = (json.opt("icon") as? String)?.takeIf { it.isNotEmpty() }
+    val selectedIcon: String? =
+        (json.opt("selected_icon") as? String)?.takeIf { it.isNotEmpty() }
+    val badge: String? = (json.opt("badge") as? String)?.takeIf { it.isNotEmpty() }
+    val enabled: Boolean = json.optBoolean("enabled", true)
 }
 
 /** One item of a `connected-button-group`: the label, an optional leading

@@ -1,0 +1,162 @@
+{
+    "name": "navigation-bars",
+    "type": "canvas",
+    "parity": "static",
+    "size": [
+        360,
+        420
+    ],
+    "densities": [
+        1,
+        2
+    ],
+    "theme": {
+        "seed": "6750A4",
+        "variant": "tonal-spot",
+        "spec": "spec2025",
+        "platform": "phone",
+        "dark": false,
+        "contrast": 0.0
+    },
+    "fonts": {
+        "plain": "Roboto",
+        "brand": "Roboto"
+    },
+    "widgets": [
+        {
+            "kind": "navigation-bar",
+            "x": 0,
+            "y": 0,
+            "width": 360,
+            "nav_selected_index": 0,
+            "rail_items": [
+                {
+                    "text": "Inbox",
+                    "icon": "check",
+                    "selected_icon": "arrow_right",
+                    "badge": "3"
+                },
+                {
+                    "text": "Share",
+                    "icon": "schedule"
+                },
+                {
+                    "text": "Saved",
+                    "icon": "keyboard",
+                    "enabled": false
+                },
+                {
+                    "text": "More",
+                    "icon": "more_vert"
+                }
+            ]
+        },
+        {
+            "kind": "navigation-bar",
+            "x": 0,
+            "y": 96,
+            "width": 360,
+            "nav_selected_index": 1,
+            "always_show_label": false,
+            "rail_items": [
+                {
+                    "text": "Inbox",
+                    "icon": "check"
+                },
+                {
+                    "text": "Share",
+                    "icon": "schedule"
+                },
+                {
+                    "text": "Saved",
+                    "icon": "keyboard"
+                },
+                {
+                    "text": "More",
+                    "icon": "more_vert"
+                }
+            ]
+        },
+        {
+            "kind": "short-navigation-bar",
+            "x": 0,
+            "y": 192,
+            "width": 360,
+            "nav_selected_index": 0,
+            "rail_items": [
+                {
+                    "text": "Inbox",
+                    "icon": "check",
+                    "selected_icon": "arrow_right",
+                    "badge": "3"
+                },
+                {
+                    "text": "Share",
+                    "icon": "schedule"
+                },
+                {
+                    "text": "Saved",
+                    "icon": "keyboard",
+                    "enabled": false
+                }
+            ]
+        },
+        {
+            "kind": "short-navigation-bar",
+            "x": 0,
+            "y": 272,
+            "width": 360,
+            "nav_arrangement": "centered",
+            "nav_selected_index": 1,
+            "rail_items": [
+                {
+                    "text": "Inbox",
+                    "icon": "check",
+                    "selected_icon": "arrow_right"
+                },
+                {
+                    "text": "Share",
+                    "icon": "schedule"
+                },
+                {
+                    "text": "Saved",
+                    "icon": "keyboard",
+                    "enabled": false
+                }
+            ]
+        },
+        {
+            "kind": "short-navigation-bar",
+            "x": 0,
+            "y": 352,
+            "width": 360,
+            "nav_selected_index": 2,
+            "rail_items": [
+                {
+                    "text": "",
+                    "icon": "check"
+                },
+                {
+                    "text": "",
+                    "icon": "schedule"
+                },
+                {
+                    "text": "",
+                    "icon": "keyboard"
+                },
+                {
+                    "text": "",
+                    "icon": "close"
+                }
+            ]
+        }
+    ],
+    "trace_elements": [
+        "navbar0",
+        "navbar1",
+        "navbar2",
+        "navbar3",
+        "navbar4"
+    ],
+    "trace_props": []
+}

@@ -1,0 +1,82 @@
+{
+    "name": "navigation-bars-start-icons",
+    "type": "canvas",
+    "parity": "xfail",
+    "size": [
+        360,
+        152
+    ],
+    "densities": [
+        1
+    ],
+    "theme": {
+        "seed": "6750A4",
+        "variant": "tonal-spot",
+        "spec": "spec2025",
+        "platform": "phone",
+        "dark": false,
+        "contrast": 0.0
+    },
+    "fonts": {
+        "plain": "Roboto",
+        "brand": "Roboto"
+    },
+    "widgets": [
+        {
+            "kind": "short-navigation-bar",
+            "x": 0,
+            "y": 0,
+            "width": 360,
+            "icon_position": "start",
+            "nav_selected_index": 0,
+            "rail_items": [
+                {
+                    "text": "Inbox",
+                    "icon": "check",
+                    "selected_icon": "arrow_right",
+                    "badge": "3"
+                },
+                {
+                    "text": "Share",
+                    "icon": "schedule"
+                },
+                {
+                    "text": "Saved",
+                    "icon": "keyboard",
+                    "enabled": false
+                }
+            ]
+        },
+        {
+            "kind": "short-navigation-bar",
+            "x": 0,
+            "y": 80,
+            "width": 360,
+            "nav_arrangement": "centered",
+            "icon_position": "start",
+            "nav_selected_index": 1,
+            "rail_items": [
+                {
+                    "text": "Inbox",
+                    "icon": "check",
+                    "selected_icon": "arrow_right"
+                },
+                {
+                    "text": "Share",
+                    "icon": "schedule"
+                },
+                {
+                    "text": "Saved",
+                    "icon": "keyboard",
+                    "enabled": false
+                }
+            ]
+        }
+    ],
+    "trace_elements": [
+        "navbar0",
+        "navbar1"
+    ],
+    "trace_props": [],
+    "negative_note": "issue #28: Slint ceils text layout widths where Compose keeps fractional advances; start-icon item geometry is label-width-driven, so icon/pill/badge positions shift ~1px (strict-pixel-only divergence)"
+}

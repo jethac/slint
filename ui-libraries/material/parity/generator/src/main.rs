@@ -287,6 +287,29 @@ struct Widget {
     /// Compose side `Modifier.shadow`'s dp.
     #[serde(default)]
     elevation: Option<f64>,
+    /// Rail items (`navigation-rail`, `wide-navigation-rail`,
+    /// `modal-navigation-rail`, and the navigation bars): `[{ "text":
+    /// "Inbox", "icon": "inbox", "selected_icon": "inbox", "badge": "3",
+    /// "enabled": false }]`.
+    /// Named `rail_items` in the scene JSON: `items` belongs to
+    /// `connected-button-group`.
+    #[serde(default)]
+    rail_items: Vec<RailItem>,
+    /// `NavigationBarItem.alwaysShowLabel` — the tall navigation bar only.
+    #[serde(default)]
+    always_show_label: Option<bool>,
+    /// The selected item index (`current-index` on the Slint side).
+    /// Named `nav_selected_index` in the scene JSON: `selected_index`
+    /// belongs to `connected-button-group`.
+    #[serde(default)]
+    nav_selected_index: Option<i64>,
+    /// `ShortNavigationBarArrangement` — `equal-weight` (default) or
+    /// `centered`.
+    #[serde(default)]
+    nav_arrangement: Option<String>,
+    /// `NavigationItemIconPosition` — `top` (default) or `start`.
+    #[serde(default)]
+    icon_position: Option<String>,
     /// What this widget deliberately gets wrong on the Slint side
     /// (`negative` scenes only). Keys shadow the widget's own fields.
     #[serde(default)]
@@ -340,6 +363,21 @@ struct GroupItem {
     state: Option<String>,
 }
 
+/// One rail item (`NavigationItem` on the Slint side).
+#[derive(serde::Deserialize, serde::Serialize)]
+struct RailItem {
+    #[serde(default)]
+    text: String,
+    #[serde(default)]
+    icon: Option<String>,
+    #[serde(default)]
+    selected_icon: Option<String>,
+    #[serde(default)]
+    badge: Option<String>,
+    #[serde(default)]
+    enabled: Option<bool>,
+}
+
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let check = std::env::args().any(|a| a == "--check");
     let parity_dir: PathBuf = [env!("CARGO_MANIFEST_DIR"), ".."].iter().collect();
@@ -375,6 +413,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 .chain(w.nav_icon.iter())
                 .chain(w.icons.iter())
                 .chain(w.trailing_icon.iter())
+                .chain(w.rail_items.iter().flat_map(|i| [i.icon.iter(), i.selected_icon.iter()].into_iter().flatten()))
                 .chain(w.items.iter().flat_map(|item| item.icon.iter().chain(item.checked_icon.iter())))
             {
                 let src = repo_root
@@ -743,12 +782,20 @@ fn slint_case(scene: &Scene) -> String {
             "bottom-app-bar" => "BottomAppBar",
             "search-bar" => "SearchBar",
             "app-bar-with-search" => "AppBarWithSearch",
+            "navigation-bar" => "NavigationBar",
+            "short-navigation-bar" => "ShortNavigationBar",
             "connected-button" => "ConnectedButton",
             "connected-button-group" => "ConnectedButtonGroup",
             "vertical-connected-button-group" => "VerticalConnectedButtonGroup",
             other => panic!("unknown widget kind {other:?}"),
         };
         imports.push(component);
+        if w.nav_arrangement.is_some() {
+            imports.push("ShortNavigationBarArrangement");
+        }
+        if w.icon_position.is_some() {
+            imports.push("NavigationItemIconPosition");
+        }
         if w.kind.starts_with("connected-button") || w.kind == "vertical-connected-button-group" {
             imports.push("ConnectedButtonPosition");
         }
@@ -757,6 +804,7 @@ fn slint_case(scene: &Scene) -> String {
             || w.nav_icon.is_some()
             || !w.icons.is_empty()
             || w.kind.ends_with("split-button")
+            || w.rail_items.iter().any(|i| i.icon.is_some() || i.selected_icon.is_some())
             || w.items.iter().any(|item| item.icon.is_some() || item.checked_icon.is_some())
         {
             needs_icons = true;
@@ -1228,6 +1276,7 @@ fn slint_canvas(s: &mut String, scene: &Scene) {
     let mut buttons = 0;
     let mut surfaces = 0;
     let mut appbars = 0;
+    let mut nav_bars = 0;
     let mut groups = 0;
     let mut dividers = 0;
     for w in scene.widgets.iter() {
@@ -1350,6 +1399,12 @@ fn slint_canvas(s: &mut String, scene: &Scene) {
                 appbar_widget(s, w, i);
                 continue;
             }
+            "navigation-bar" | "short-navigation-bar" => {
+                let i = nav_bars;
+                nav_bars += 1;
+                navbar_widget(s, w, i);
+                continue;
+            }
             "connected-button" => {
                 let i = buttons;
                 buttons += 1;
@@ -1453,6 +1508,34 @@ fn slint_canvas(s: &mut String, scene: &Scene) {
             }
         }
         emit_button_cover(s, w, i);
+    }
+
+    // `nav_events` drive a selection change on `navbar{i}` after the baseline
+    // frame: each `["select", bar, item, ms]` becomes a letter-key `//ACTION=`
+    // dispatched at `ms`, and the FocusScope below maps the letter back to a
+    // `current-index` write — a real key event on the Slint mock clock,
+    // matching the Compose side's `emitPress` runnable that flips the bar's
+    // `selectedIndex` state.
+    if let Some(events) = scene.params.get("nav_events").and_then(|v| v.as_array()) {
+        let mut keys = String::new();
+        for (e, ev) in events.iter().enumerate() {
+            assert_eq!(ev[0].as_str().unwrap(), "select", "unknown nav event {ev:?}");
+            let key = (b'a' + e as u8) as char;
+            let bar = ev[1].as_i64().unwrap();
+            let item = ev[2].as_i64().unwrap();
+            let at = ev[3].as_i64().unwrap();
+            writeln!(s, "    //ACTION=key@{at}:{key}").unwrap();
+            writeln!(
+                keys,
+                "            if event.text == \"{key}\" {{ navbar{bar}.current-index = {item}; }}"
+            )
+            .unwrap();
+        }
+        writeln!(
+            s,
+            "\n    forward-focus: fs;\n    fs := FocusScope {{\n        key-pressed(event) => {{\n{keys}            accept\n        }}\n    }}"
+        )
+        .unwrap();
     }
 }
 
@@ -1826,6 +1909,101 @@ fn appbar_widget(s: &mut String, w: &Widget, i: usize) {
         s,
         "    appbar{i} := {component} {{\n        x: {}px;\n        y: {}px;\n{}    }}\n",
         w.x as i64, w.y as i64, p,
+    )
+    .unwrap();
+}
+
+/// One navigation-bar family widget (`navigation-bar`, the 80dp tall bar;
+/// `short-navigation-bar`, the 64dp expressive bar). Elements are named
+/// `navbar{n}` in scene order.
+///
+/// `nav_arrangement` selects `ShortNavigationBarArrangement` (`equal-weight`
+/// default, `centered`), `icon_position` `NavigationItemIconPosition`
+/// (`top` default, `start`), `always_show_label` the tall bar's
+/// `NavigationBarItem.alwaysShowLabel`, and `nav_selected_index` the bar's
+/// `current-index`.
+///
+/// The Compose harness clears `LocalMinimumInteractiveComponentSize` to
+/// `0.dp`; `item-min-size: 0px` mirrors that on the Slint side.
+fn navbar_widget(s: &mut String, w: &Widget, i: usize) {
+    let component = match w.kind.as_str() {
+        "navigation-bar" => "NavigationBar",
+        "short-navigation-bar" => "ShortNavigationBar",
+        other => panic!("unknown navigation-bar kind {other:?}"),
+    };
+    let mut p = String::new();
+    writeln!(p, "        x: {}px;\n        y: {}px;", w.x as i64, w.y as i64).unwrap();
+    if let Some(width) = w.width {
+        writeln!(p, "        width: {width}px;").unwrap();
+    }
+    if w.kind == "short-navigation-bar" {
+        let arrangement = w
+            .slint_overrides
+            .get("nav_arrangement")
+            .and_then(|v| v.as_str())
+            .map(str::to_string)
+            .or_else(|| w.nav_arrangement.clone());
+        if let Some(a) = arrangement {
+            writeln!(
+                p,
+                "        arrangement: ShortNavigationBarArrangement.{};",
+                a.replace('-', "_")
+            )
+            .unwrap();
+        }
+        let icon_position = w
+            .slint_overrides
+            .get("icon_position")
+            .and_then(|v| v.as_str())
+            .map(str::to_string)
+            .or_else(|| w.icon_position.clone());
+        if let Some(pos) = icon_position {
+            writeln!(p, "        icon-position: NavigationItemIconPosition.{pos};").unwrap();
+        }
+        p.push_str("        item-min-size: 0px;\n");
+    } else {
+        let always = w
+            .slint_overrides
+            .get("always_show_label")
+            .and_then(|v| v.as_bool())
+            .or(w.always_show_label);
+        if let Some(v) = always {
+            writeln!(p, "        always-show-label: {v};").unwrap();
+        }
+    }
+    let selected = w
+        .slint_overrides
+        .get("nav_selected_index")
+        .and_then(|v| v.as_i64())
+        .or(w.nav_selected_index);
+    if let Some(v) = selected {
+        writeln!(p, "        current-index: {v};").unwrap();
+    }
+    if !w.rail_items.is_empty() {
+        writeln!(p, "        items: [").unwrap();
+        for item in &w.rail_items {
+            let mut entry = String::new();
+            if let Some(icon) = &item.icon {
+                entry.push_str(&format!("icon: Icons.{icon}, "));
+            }
+            if let Some(icon) = &item.selected_icon {
+                entry.push_str(&format!("selected-icon: Icons.{icon}, "));
+            }
+            entry.push_str(&format!("text: {:?}", item.text));
+            if let Some(b) = &item.badge {
+                entry.push_str(&format!(", badge: {b:?}, show-badge: true"));
+            }
+            // `NavigationItem.enabled` is a plain bool — unset means `false`
+            // in Slint (the Compose `RailItem` defaults it to `true`), so it
+            // must be emitted unconditionally.
+            entry.push_str(&format!(", enabled: {}", item.enabled.unwrap_or(true)));
+            writeln!(p, "            {{ {entry} }},").unwrap();
+        }
+        writeln!(p, "        ];").unwrap();
+    }
+    writeln!(
+        s,
+        "    navbar{i} := {component} {{\n{p}    }}\n",
     )
     .unwrap();
 }
