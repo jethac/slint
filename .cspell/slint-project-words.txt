@@ -81,6 +81,7 @@ buildcode
 builtinfunctions
 bytemuck
 calloop
+cand
 caplog
 casesensitive
 Casteljau
@@ -127,6 +128,7 @@ compilerlib
 consectetur
 consequat
 Constexpr
+containedloadingindicator
 contextid
 CONTEXTMENU
 contextmenuarea
@@ -454,6 +456,7 @@ Literata
 Llff
 Lmaterial
 LOADADDR
+loadingindicator
 LOWORD
 lpfn
 lpsz
@@ -816,6 +819,7 @@ udivdi
 uintptr
 ullamco
 unclipped
+uncoerced
 Uncontained
 unfocusable
 unhinted
@@ -890,6 +894,7 @@ xcassets
 xcent
 xchg
 xcrun
+xfail
 xfer
 xfixes
 Xiaolin
