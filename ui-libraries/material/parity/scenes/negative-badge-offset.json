@@ -1,0 +1,38 @@
+{
+    "name": "negative-badge-offset",
+    "type": "canvas",
+    "parity": "negative",
+    "negative_note": "The Slint side draws the badge 20dp to the right of its authored position — the displaced stadium ink must land on strict background and flag.",
+    "size": [
+        96,
+        64
+    ],
+    "densities": [
+        1
+    ],
+    "theme": {
+        "seed": "6750A4",
+        "variant": "tonal-spot",
+        "spec": "spec2025",
+        "platform": "phone",
+        "dark": false,
+        "contrast": 0.0
+    },
+    "fonts": {
+        "plain": "Roboto",
+        "brand": "Roboto"
+    },
+    "widgets": [
+        {
+            "kind": "badge",
+            "text": "999+",
+            "x": 28,
+            "y": 24,
+            "slint_overrides": {
+                "x": 48
+            }
+        }
+    ],
+    "trace_elements": [],
+    "trace_props": []
+}

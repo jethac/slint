@@ -1,32 +1,84 @@
 ---
 title: Badge
-description: Badge API.
+description: Badge API — dot and count badges, plus the BadgedBox anchor container.
 ---
 
 import CodeSnippetMD from '@slint/common-files/src/components/CodeSnippetMD.astro';
 import SlintProperty from '@slint/common-files/src/components/SlintProperty.astro';
 
-<CodeSnippetMD imagePath="" noScreenShot scale="3" imageWidth="300" imageHeight="200" imageAlt="">
+<CodeSnippetMD imagePath="/src/assets/generated/badge.png" scale="3" imageWidth="240" imageHeight="88" imageAlt="">
 ```slint
-import { Badge } from "@material";
+import { Badge, BadgedBox, Icon, Icons, MaterialPalette } from "@material";
 export component Example inherits Window {
-    width: 100px;
-    height: 50px;
-    background: transparent;
-    Badge {
-        text: "3";
-        x: 10px;
-        y: 10px;
+    width: 240px;
+    height: 88px;
+
+    HorizontalLayout {
+        padding: 16px;
+        spacing: 24px;
+        alignment: center;
+        Badge {}
+        Badge { text: "999+"; }
+        BadgedBox {
+            badge_text: "3";
+            Icon { source: Icons.menu; width: 24px; height: 24px; }
+        }
+        BadgedBox {
+            Icon { source: Icons.schedule; width: 24px; height: 24px; }
+        }
     }
 }
 ```
 </CodeSnippetMD>
 
-A `Badge` is a small status indicator, often used to display a count or status on top of another component (such as an icon or button).
+A `Badge` is a small status indicator anchored to another component — `Badge` and `BadgedBox` in `Badge.kt` upstream. Empty `text` draws the small 6px dot; any text draws the large badge, exactly the upstream `content == null` branch.
 
-## Properties
+## Badge Properties
 
 ### text
 <SlintProperty propName="text" typeName="string">
-The text or number displayed inside the badge. If empty, the badge is shown as a small dot.
+The count or label inside the badge — upstream's `content` slot. Leave empty for the dot.
 </SlintProperty>
+
+### container_color
+<SlintProperty propName="container_color" typeName="color" defaultValue="BadgeTokens.color">
+The badge background — upstream's `containerColor`, `BadgeTokens.color` (`error`).
+</SlintProperty>
+
+### content_color
+<SlintProperty propName="content_color" typeName="color" defaultValue="content-color-for(container-color)">
+The text color — upstream's `contentColor`, `ColorScheme.contentColorFor(containerColor)` (`on_error` for the default error container) falling back to `LocalContentColor.current` (`on_background` stands in for it).
+</SlintProperty>
+
+## BadgedBox
+
+`BadgedBox` wraps the anchor content (usually an `Icon`) and overlaps the badge at its top end corner — a dot sits `BadgeOffset` (6px) from the end/top edge, a content badge `BadgeWithContentHorizontalOffset` (12px) from the end with `BadgeWithContentVerticalOffset` (14px) of overlap, the offset table in Badge.kt. The badge never contributes to the layout: the box takes the anchor's size.
+
+```slint
+BadgedBox {
+    badge_text: "12";
+    badge_visible: unread-count > 0;
+    Icon { source: Icons.menu; width: 24px; height: 24px; }
+}
+```
+
+### badge_text
+<SlintProperty propName="badge_text" typeName="string">
+Forwarded to the badge's `text`.
+</SlintProperty>
+
+### badge_visible
+<SlintProperty propName="badge_visible" typeName="bool" defaultValue="true">
+Show or hide the badge without removing it — upstream expresses this with a conditional `badge` slot.
+</SlintProperty>
+
+### badge_container_color / badge_content_color
+<SlintProperty propName="badge_container_color" typeName="color" defaultValue="BadgeTokens.color">
+Forwarded to the badge's `container_color`/`content_color`.
+</SlintProperty>
+
+Upstream places the badge with `placeRelative`, mirroring under RTL; Slint has no RTL, so the badge always anchors to the top right. Upstream's `badgeBounds()` modifier clamps the badge inside a parent's icon bounds and is applied only by the navigation items and `Tab` — since `BadgedBox` here wraps the anchor directly, the geometry is already the same.
+
+## Accessibility
+
+`Badge` adds no semantics of its own, like upstream — the badge counts toward the description of its anchor. Set `accessible-label` on the anchored component (`Icon`, `IconButton`, or navigation item) so the count is announced.

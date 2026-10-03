@@ -48,8 +48,8 @@ Token objects: BadgeTokens
 
 | Component | Source | Status | Issues | Needs | Notes |
 |---|---|---|---|---|---|
-| Badge | Badge.kt | partial | #11 | none | slint component: Badge |
-| BadgedBox | Badge.kt | partial | #11 | none | slint component: Badge |
+| Badge | Badge.kt | done | #11 | none | slint component: Badge |
+| BadgedBox | Badge.kt | done | #11 | none | slint component: BadgedBox |
 
 ### Bottom app bar
 

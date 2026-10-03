@@ -1,0 +1,43 @@
+// Copyright © SixtyFPS GmbH <info@slint.dev>
+// SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0
+
+// Scene: negative-badge-text — generated from `ui-libraries/material/parity/scenes/negative-badge-text.json`
+// (edit the scene, regenerate with `cargo run -p material-parity-generator`).
+//PARITY=negative: The Slint side draws a wider content badge than Compose (text "999+" where the authored badge reads "3") — the widened stadium must flag outside the text-relaxed cells.
+//SIZE=96x64
+//DENSITIES=1
+import "../../fonts/Roboto-VariableFont.ttf";
+import { BadgedBox, Icon, Icons, MaterialPalette, MaterialTheme, MaterialWindow } from "@material";
+
+export component TestCase inherits MaterialWindow {
+    init => {
+        // The scene pins seed #6750A4, tonal-spot, spec2025, light, contrast 0
+        // (all the library defaults; restated here so a default change can't
+        // silently move the parity baseline).
+        MaterialTheme.seed-color = #6750A4;
+        MaterialTheme.dark = false;
+        MaterialTheme.contrast-level = 0;
+        MaterialTheme.use-platform-color = false;
+        MaterialTheme.plain-family = "Roboto";
+        MaterialTheme.brand-family = "Roboto";
+        // Compose builds its scene scheme from the same seed — use the
+        // runtime-generated scheme, not the static expressive table.
+        MaterialPalette.dynamic = true;
+    }
+
+    badged_box0 := BadgedBox {
+        x: 32px;
+        y: 32px;
+        badge_text: "999+";
+
+        // The upstream demos anchor to a 24dp icon (the badge hangs off
+        // the anchor's measured bounds); the Compose side draws
+        // `Icon(sceneIcon)` at its intrinsic 24dp.
+        Icon {
+            width: 24px;
+            height: 24px;
+            source: Icons.check;
+        }
+    }
+
+}

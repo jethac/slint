@@ -82,6 +82,9 @@ import androidx.compose.material3.ToggleButton
 import androidx.compose.material3.ToggleButtonDefaults
 import androidx.compose.material3.Typography
 import androidx.compose.material3.VerticalDivider
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
+import androidx.compose.material3.BadgeDefaults
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.material3.toShape
 import androidx.compose.material3.TopAppBar
@@ -469,6 +472,8 @@ private fun CanvasScene(
         var groups = 0
         var icons = 0
         var dividers = 0
+        var badges = 0
+        var badgedBoxes = 0
         // `text:{n}` spans every text node in scene order — group items
         // interleave with the standalone widgets' labels. Bases are
         // precomputed per widget so recompositions can't renumber them.
@@ -665,7 +670,63 @@ private fun CanvasScene(
                         }
                     }
                 }
-                widget.kind == "loading-indicator" ||
+                widget.kind == "badge" -> {
+                    // Upstream `Badge`: an empty `text` is the null-content
+                    // branch (the `BadgeTokens.Size` dot), any text the
+                    // large badge — a null-and-empty content lambda is not
+                    // the same thing upstream, so the two calls differ in
+                    // kind, not just arguments.
+                    val tag = "badge${badges++}"
+                    val container = widget.color?.let { schemeColor(it) }
+                        ?: BadgeDefaults.containerColor
+                    val mods = Modifier.offset(widget.x.dp, widget.y.dp)
+                        .track(tracer, tag)
+                    if (widget.text != null) {
+                        Badge(modifier = mods, containerColor = container) {
+                            Text(widget.text)
+                        }
+                    } else {
+                        Badge(modifier = mods, containerColor = container)
+                    }
+                }
+                widget.kind == "badged-box" -> {
+                    // The upstream `BadgedBox`: the badge hangs at the
+                    // anchor's top end corner — a dot `BadgeOffset`, a
+                    // content badge `BadgeWithContentHorizontalOffset` /
+                    // `BadgeWithContentVerticalOffset`.
+                    val tag = "badged-box${badgedBoxes++}"
+                    val container = widget.color?.let { schemeColor(it) }
+                        ?: BadgeDefaults.containerColor
+                    BadgedBox(
+                        badge = {
+                            // Same null-content rule as the `badge` widgets:
+                            // a non-null lambda that draws nothing still
+                            // counts as content upstream (`LargeSize`).
+                            if (widget.text != null) {
+                                Badge(containerColor = container) {
+                                    Text(widget.text)
+                                }
+                            } else {
+                                Badge(containerColor = container)
+                            }
+                        },
+                        modifier = Modifier.offset(widget.x.dp, widget.y.dp)
+                            .track(tracer, tag),
+                    ) {
+                        // The same `LocalContentColor` provision the `icon`
+                        // widgets get — `onSurface` (the `on_background`
+                        // stand-in on the Slint side, equal at the pin).
+                        CompositionLocalProvider(
+                            androidx.compose.material3.LocalContentColor provides
+                                scheme.onSurface,
+                        ) {
+                            Icon(
+                                sceneIcon(widget.icon ?: "check"),
+                                contentDescription = null,
+                            )
+                        }
+                    }
+                }                widget.kind == "loading-indicator" ||
                     widget.kind == "contained-loading-indicator" -> {
                     // The 48dp indicator draws at the scene's declared
                     // coordinates on both sides.
