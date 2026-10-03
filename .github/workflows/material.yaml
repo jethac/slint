@@ -96,7 +96,9 @@ jobs:
           CARGO_PROFILE_RELEASE_OPT_LEVEL: s
           CARGO_INCREMENTAL: false
           PARITY_REQUIRE_REFS: "1"
-          PARITY_ARTIFACT_DIR: target/parity-artifacts
+          # Absolute: the test binaries run with CWD = tests/, so a relative
+          # path would dump artifacts under tests/target/ instead of here.
+          PARITY_ARTIFACT_DIR: ${{ github.workspace }}/target/parity-artifacts
           SLINT_TEST_REQUIRE_WGPU: "1"
       runs-on: ubuntu-latest
       steps:
