@@ -1,0 +1,104 @@
+// Copyright © SixtyFPS GmbH <info@slint.dev>
+// SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0
+
+// Scene: swipe-to-dismiss-settle — generated from `ui-libraries/material/parity/scenes/swipe-to-dismiss-settle.json`
+// (edit the scene, regenerate with `cargo run -p material-parity-generator`).
+//PARITY=xfail: issue #27: the Compose frame clock starts the animation ~2ms after the Slint dispatch, so identical-timestamp comparison reports a systematic lead — a silent pass would mean the harness went blind
+//SIZE=420x300
+//TIMES=0,400,450,500,550,600,650,700,750,900
+//TRACE_PROPS=offset0,progress0,offset1,progress1
+//TRACE_ELEMENTS=fg0,fg1
+//ACTION=press@400:8,8
+//ACTION=release@400:8,8
+//DENSITIES=1,2
+import "../../fonts/Roboto-VariableFont.ttf";
+import { MaterialPalette, MaterialTheme, MaterialWindow, SwipeToDismissBox, SwipeToDismissBoxValue } from "@material";
+
+export component TestCase inherits MaterialWindow {
+    init => {
+        // The scene pins seed #6750A4, tonal-spot, spec2025, light, contrast 0
+        // (all the library defaults; restated here so a default change can't
+        // silently move the parity baseline).
+        MaterialTheme.seed-color = #6750A4;
+        MaterialTheme.dark = false;
+        MaterialTheme.contrast-level = 0;
+        MaterialTheme.use-platform-color = false;
+        MaterialTheme.plain-family = "Roboto";
+        MaterialTheme.brand-family = "Roboto";
+        // Compose builds its scene scheme from the same seed — use the
+        // runtime-generated scheme, not the static expressive table.
+        MaterialPalette.dynamic = true;
+    }
+
+    sd_bg0 := Rectangle {
+        x: 60px;
+        y: 50px;
+        width: 300px;
+        height: 72px;
+        border-radius: 8px;
+        background: MaterialPalette.error_container;
+    }
+
+    box0 := SwipeToDismissBox {
+        x: 60px;
+        y: 50px;
+        width: 300px;
+        height: 72px;
+        initial-value: SwipeToDismissBoxValue.start-to-end;
+        enable-dismiss-from-start-to-end: true;
+        enable-dismiss-from-end-to-start: true;
+        positional-threshold: 56px;
+
+        fg0 := Rectangle {
+            border-radius: 8px;
+            background: MaterialPalette.surface_container_highest;
+        }
+    }
+
+    sd_bg1 := Rectangle {
+        x: 60px;
+        y: 170px;
+        width: 300px;
+        height: 72px;
+        border-radius: 8px;
+        background: MaterialPalette.error_container;
+    }
+
+    box1 := SwipeToDismissBox {
+        x: 60px;
+        y: 170px;
+        width: 300px;
+        height: 72px;
+        initial-value: SwipeToDismissBoxValue.settled;
+        enable-dismiss-from-start-to-end: true;
+        enable-dismiss-from-end-to-start: true;
+        positional-threshold: 56px;
+
+        fg1 := Rectangle {
+            border-radius: 8px;
+            background: MaterialPalette.surface_container_highest;
+        }
+    }
+
+    // The `fire` zone: the timed press/release action clicks it and
+    // the scripted state call runs at the same clock time the Compose
+    // side's emitPress runnable does.
+    fire := TouchArea {
+        x: 0px;
+        y: 0px;
+        width: 20px;
+        height: 20px;
+        clicked => {
+            box0.reset();
+        }
+    }
+
+    out property <length> offset0: box0.offset;
+
+    out property <float> progress0: box0.progress;
+
+    out property <length> offset1: box1.offset;
+
+    out property <float> progress1: box1.progress;
+
+}

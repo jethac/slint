@@ -29,6 +29,7 @@ negative-focus-layer
 negative-hover-layer
 negative-icon-button-morph
 negative-press-overlay
+negative-pull-refresh-fraction
 negative-radius
 negative-recolor
 negative-shape-fit
@@ -37,9 +38,14 @@ negative-split-button-checked-overlay
 negative-split-button-inner-corner
 negative-split-button-outer-corner
 negative-split-button-spacing
+negative-swipe-dismiss-initial
 negative-thumb-offset
 negative-toggle-select
 negative-wrong-shadow
+pull-refresh-refreshing
+pull-refresh-settle
+pull-refresh-threshold-settle
+pull-to-refresh-states
 search-bars
 split-button-check-morph
 split-button-check-rotate
@@ -49,6 +55,9 @@ split-button-sizes
 split-button-states
 split-button-styles
 spring-motion
+swipe-to-dismiss-dismiss
+swipe-to-dismiss-settle
+swipe-to-dismiss-states
 toggle-buttons
 toggle-select-morph
 top-app-bars

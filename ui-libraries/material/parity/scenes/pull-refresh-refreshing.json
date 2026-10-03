@@ -1,0 +1,27 @@
+{
+    "name": "pull-refresh-refreshing",
+    "type": "pull-refresh",
+    "parity": "xfail:femtovg",
+    "negative_note": "the refreshing indicators run infinite animations; Compose launches their LaunchedEffect coroutines ~40ms of frame time after t=0 inside Paparazzi, so identical-timestamp frames sit at different phases of the morph+rotation cycle — the loading indicator's blob interior is masked as mid-flight ink while its static circular container stays strict; femtovg additionally tessellates the spinner's stroked arc with a different AA coverage ramp than layoutlib — isolated edge pixels diverge ~90/255 at d2 while geometry is verified identical on software and skia; a silent pass would mean the harness went blind",
+    "size": [560, 220],
+    "densities": [1, 2],
+    "theme": {
+        "seed": "6750A4",
+        "variant": "tonal-spot",
+        "spec": "spec2025",
+        "platform": "phone",
+        "dark": false,
+        "contrast": 0.0
+    },
+    "fonts": { "plain": "Roboto", "brand": "Roboto" },
+    "times": [500, 1250, 2500],
+    "eps": 16,
+    "trace_elements": ["ind"],
+    "mask_inner": { "ind": [500, 1250, 2500] },
+    "params": {
+        "boxes": [
+            { "x": 40, "y": 60, "w": 220, "h": 130, "fraction": 1.0, "kind": "classic", "refreshing": true, "content": "surface-container" },
+            { "x": 300, "y": 60, "w": 220, "h": 130, "fraction": 1.0, "kind": "loading", "refreshing": true, "content": "surface-container" }
+        ]
+    }
+}

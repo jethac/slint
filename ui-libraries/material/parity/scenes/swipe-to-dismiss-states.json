@@ -1,0 +1,23 @@
+{
+    "name": "swipe-to-dismiss-states",
+    "type": "swipe-to-dismiss",
+    "parity": "static",
+    "size": [420, 380],
+    "densities": [1, 2],
+    "theme": {
+        "seed": "6750A4",
+        "variant": "tonal-spot",
+        "spec": "spec2025",
+        "platform": "phone",
+        "dark": false,
+        "contrast": 0.0
+    },
+    "fonts": { "plain": "Roboto", "brand": "Roboto" },
+    "params": {
+        "boxes": [
+            { "x": 60, "y": 40, "w": 300, "h": 72, "initial": "settled", "bg": "error-container", "content": "surface-container-highest", "radius": 8 },
+            { "x": 60, "y": 140, "w": 300, "h": 72, "initial": "end-to-start", "bg": "error-container", "content": "surface-container-highest", "radius": 8 },
+            { "x": 60, "y": 240, "w": 300, "h": 72, "initial": "start-to-end", "bg": "error-container", "content": "surface-container-highest", "radius": 8 }
+        ]
+    }
+}
