@@ -12,32 +12,32 @@
       11
     ],
     "needs": "springs (#5), shapes (#6)",
-    "notes": "",
-    "status": "missing"
+    "notes": "slint component: AppBarColumn; tokens: generated component tokens; springs via active motion scheme",
+    "status": "partial"
   },
   "AppBarOverflowIndicator": {
     "issues": [
       11
     ],
     "needs": "springs (#5), shapes (#6)",
-    "notes": "",
-    "status": "missing"
+    "notes": "slint component: AppBarOverflowIndicator (via AppBarRow/AppBarColumn overflow); tokens: generated component tokens; springs via active motion scheme",
+    "status": "partial"
   },
   "AppBarRow": {
     "issues": [
       11
     ],
     "needs": "springs (#5), shapes (#6)",
-    "notes": "",
-    "status": "missing"
+    "notes": "slint component: AppBarRow; tokens: generated component tokens; springs via active motion scheme",
+    "status": "partial"
   },
   "AppBarWithSearch": {
     "issues": [
       11
     ],
     "needs": "springs (#5)",
-    "notes": "",
-    "status": "missing"
+    "notes": "slint component: AppBarWithSearch; tokens: generated component tokens; springs via active motion scheme",
+    "status": "partial"
   },
   "AssistChip": {
     "issues": [
@@ -76,7 +76,7 @@
       11
     ],
     "needs": "springs (#5), shapes (#6)",
-    "notes": "slint component: BottomAppBar",
+    "notes": "slint component: BottomAppBar; tokens: generated component tokens; springs via active motion scheme",
     "status": "partial"
   },
   "BottomSheet": {
@@ -126,7 +126,7 @@
       11
     ],
     "needs": "springs (#5), shapes (#6)",
-    "notes": "slint component: AppBar",
+    "notes": "slint component: CenterAlignedTopAppBar; tokens: generated component tokens; springs via active motion scheme",
     "status": "partial"
   },
   "CheckableDropdownMenuItem": {
@@ -226,7 +226,7 @@
       11
     ],
     "needs": "springs (#5)",
-    "notes": "slint component: SearchBar",
+    "notes": "deprecated at pin; covered by SearchBar expanded-state API; tokens: generated component tokens; springs via active motion scheme",
     "status": "partial"
   },
   "DropdownMenu": {
@@ -322,32 +322,32 @@
       11
     ],
     "needs": "springs (#5)",
-    "notes": "",
-    "status": "missing"
+    "notes": "slint component: ExpandedDockedSearchBar; tokens: generated component tokens; springs via active motion scheme",
+    "status": "partial"
   },
   "ExpandedDockedSearchBarWithGap": {
     "issues": [
       11
     ],
     "needs": "springs (#5)",
-    "notes": "",
-    "status": "missing"
+    "notes": "slint component: ExpandedDockedSearchBarWithGap; tokens: generated component tokens; springs via active motion scheme",
+    "status": "partial"
   },
   "ExpandedFullScreenContainedSearchBar": {
     "issues": [
       11
     ],
     "needs": "springs (#5)",
-    "notes": "",
-    "status": "missing"
+    "notes": "slint component: ExpandedFullScreenContainedSearchBar; tokens: generated component tokens; springs via active motion scheme",
+    "status": "partial"
   },
   "ExpandedFullScreenSearchBar": {
     "issues": [
       11
     ],
     "needs": "springs (#5)",
-    "notes": "",
-    "status": "missing"
+    "notes": "slint component: ExpandedFullScreenSearchBar; tokens: generated component tokens; springs via active motion scheme",
+    "status": "partial"
   },
   "ExposedDropdownMenuBox": {
     "issues": [
@@ -434,8 +434,8 @@
       11
     ],
     "needs": "springs (#5), shapes (#6)",
-    "notes": "",
-    "status": "missing"
+    "notes": "slint component: FlexibleBottomAppBar; tokens: generated component tokens; springs via active motion scheme",
+    "status": "partial"
   },
   "FloatingActionButton": {
     "issues": [
@@ -547,8 +547,8 @@
       11
     ],
     "needs": "springs (#5), shapes (#6)",
-    "notes": "",
-    "status": "missing"
+    "notes": "slint component: LargeFlexibleTopAppBar; tokens: generated component tokens; springs via active motion scheme",
+    "status": "partial"
   },
   "LargeFloatingActionButton": {
     "issues": [
@@ -563,8 +563,8 @@
       11
     ],
     "needs": "springs (#5), shapes (#6)",
-    "notes": "",
-    "status": "missing"
+    "notes": "slint component: LargeTopAppBar; tokens: generated component tokens; springs via active motion scheme",
+    "status": "partial"
   },
   "LeadingIconTab": {
     "issues": [
@@ -622,8 +622,8 @@
       11
     ],
     "needs": "springs (#5), shapes (#6)",
-    "notes": "",
-    "status": "missing"
+    "notes": "slint component: MediumFlexibleTopAppBar; tokens: generated component tokens; springs via active motion scheme",
+    "status": "partial"
   },
   "MediumFloatingActionButton": {
     "issues": [
@@ -638,7 +638,7 @@
       11
     ],
     "needs": "springs (#5), shapes (#6)",
-    "notes": "slint component: MediumAppBar",
+    "notes": "slint component: MediumTopAppBar; tokens: generated component tokens; springs via active motion scheme",
     "status": "partial"
   },
   "ModalBottomSheet": {
@@ -872,7 +872,7 @@
       11
     ],
     "needs": "springs (#5)",
-    "notes": "slint component: SearchBar",
+    "notes": "slint component: SearchBar (SearchBarState API: expanded/text); tokens: generated component tokens; springs via active motion scheme",
     "status": "partial"
   },
   "SecondaryScrollableTabRow": {
@@ -1129,7 +1129,7 @@
       11
     ],
     "needs": "springs (#5), shapes (#6)",
-    "notes": "slint component: AppBar/SmallAppBar",
+    "notes": "slint component: TopAppBar; tokens: generated component tokens; springs via active motion scheme",
     "status": "partial"
   },
   "TopSearchBar": {
@@ -1137,8 +1137,8 @@
       11
     ],
     "needs": "springs (#5)",
-    "notes": "",
-    "status": "missing"
+    "notes": "deprecated at pin; covered by AppBarWithSearch; tokens: generated component tokens; springs via active motion scheme",
+    "status": "partial"
   },
   "TriStateCheckbox": {
     "issues": [
@@ -1153,8 +1153,8 @@
       11
     ],
     "needs": "springs (#5), shapes (#6)",
-    "notes": "",
-    "status": "missing"
+    "notes": "slint component: TwoRowsTopAppBar; tokens: generated component tokens; springs via active motion scheme",
+    "status": "partial"
   },
   "VerticalDivider": {
     "issues": [

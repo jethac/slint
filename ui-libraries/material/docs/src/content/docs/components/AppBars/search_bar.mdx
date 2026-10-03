@@ -1,109 +1,95 @@
 ---
-title: SearchBar
-description: SearchBar API.
+title: Search bars
+description: SearchBar and AppBarWithSearch API.
 ---
 
 import CodeSnippetMD from '@slint/common-files/src/components/CodeSnippetMD.astro';
 import SlintProperty from '@slint/common-files/src/components/SlintProperty.astro';
 
-<CodeSnippetMD imagePath="/src/assets/generated/searchbar.png" scale="3" imageWidth="300" imageHeight="200" imageAlt="">
+<CodeSnippetMD imagePath="/src/assets/generated/search_bar.png" scale="3" imageWidth="400" imageHeight="120" imageAlt="">
 ```slint
-import { SearchBar } from "@material";
+import { SearchBar, Icons } from "@material";
 export component Example inherits Window {
-    width: 300px;
-    height: 100px;
+    width: 400px;
+    height: 120px;
     background: transparent;
     SearchBar {
-        placeholder-text: "Search...";
-        width: 280px;
-        height: 56px;
+        x: 8px;
+        y: 32px;
+        width: parent.width - 16px;
+        leading-icon: Icons.menu;
+        placeholder-text: "Search";
     }
 }
 ```
 </CodeSnippetMD>
 
-A `SearchBar` is a text input field designed for search functionality, with optional leading/trailing icons and avatar.
+`SearchBar` is a 56dp pill-shaped search field on
+`surface-container-high`. The `expanded` property plays the role of
+`SearchBarState.isExpanded`: setting it (or clicking the bar) opens the
+expanded surface chosen by `expansion`, and
+`expanded-fraction` mirrors `currentTransitionAnimationProgress` — animated
+with the active motion scheme's fast-spatial spring, disabled under reduced
+motion.
+
+The `expansion` variants map to the pinned expanded composables:
+
+- `docked` → `ExpandedDockedSearchBar`
+- `docked-with-gap` → `ExpandedDockedSearchBarWithGap`
+  (`dropdown-gap-size`, 2dp default)
+- `full-screen` → `ExpandedFullScreenSearchBar` (72dp header)
+- `full-screen-contained` → `ExpandedFullScreenContainedSearchBar`
+  (contained colors, rounded corners)
+- `none` → collapsed bar only
+
+The four expanded overlays are also exported standalone —
+`ExpandedDockedSearchBar`, `ExpandedDockedSearchBarWithGap`,
+`ExpandedFullScreenSearchBar`,
+`ExpandedFullScreenContainedSearchBar` — for layouts that place them
+independently of a `SearchBar`. `AppBarWithSearch` embeds a `SearchBar` in a
+single-row top app bar with a navigation icon and action buttons and colors
+from `SearchBarDefaults.appBarWithSearchColors`.
+
+Deprecated at the pin and mapped here: `TopSearchBar` → `AppBarWithSearch`;
+the `SearchBar(query, onQueryChange, …)`/`DockedSearchBar` query-state
+overloads → the `expanded`/`text` state properties.
 
 ## Properties
 
-### avatar
-<SlintProperty propName="avatar-icon" typeName="image">
-An optional avatar image displayed in the search bar.
+### text
+<SlintProperty propName="text" typeName="string">
+The query text (in-out).
 </SlintProperty>
 
-### avatar-background
-<SlintProperty propName="avatar-background" typeName="color" defaultValue="#00000000">
-The background color for the avatar.
+### expanded
+<SlintProperty propName="expanded" typeName="bool">
+`SearchBarState.isExpanded` — opens/closes the expanded surface (in-out).
 </SlintProperty>
 
-### current-index
-<SlintProperty propName="current-index" typeName="int" propertyVisibility="in-out">
-The index of the currently selected search result item.
-</SlintProperty>
-
-### empty-text
-<SlintProperty propName="empty-text" typeName="string">
-Text displayed when there are no search results.
-</SlintProperty>
-
-### has-focus
-<SlintProperty propName="has-focus" typeName="bool">
-Whether the component has focus.
+### expansion
+<SlintProperty propName="expansion" typeName="enum" enumName="SearchBarExpansion">
+Which expanded surface the bar opens.
 </SlintProperty>
 
 ### items
-<SlintProperty propName="items" typeName="[struct]" structName="ListItem">
-An array of search result items to display.
+<SlintProperty propName="items" typeName="struct" structName="ListItem">
+Result rows shown in the expanded surface.
 </SlintProperty>
 
-### leading-icon
-<SlintProperty propName="leading-icon" typeName="image">
-The icon displayed at the start of the search bar.
-</SlintProperty>
-
-### placeholder-text
-<SlintProperty propName="placeholder-text" typeName="string">
-The placeholder text displayed when the search bar is empty.
-</SlintProperty>
-
-### text
-<SlintProperty propName="text" typeName="string" propertyVisibility="in-out">
-The current text in the search bar.
-</SlintProperty>
-
-### trailing-icon
-<SlintProperty propName="trailing-icon" typeName="image">
-The icon displayed at the end of the search bar.
+### expanded-width / expanded-height
+<SlintProperty propName="expanded-width" typeName="length">
+Outer size of the expanded surface — size `full-screen*` variants to the
+window.
 </SlintProperty>
 
 ## Callbacks
 
+### accepted(text) / edited(text)
+Invoked when the query is submitted or edited.
 
-### action-button-clicked(index: int)
-Invoked when a search result item action is triggered.
+### item-activated(index) -> bool
+Invoked when a result row is activated; return true to keep the entered
+text.
 
-### accepted(text: string)
-Invoked when the user presses Enter in the search bar.
-
-### edited(text: string)
-Invoked when the text in the search bar changes.
-
-### key-pressed(event: KeyEvent) -> EventResult
-Invoked when a key is pressed in the search bar.
-
-### key-released(event: KeyEvent) -> EventResult
-Invoked when a key is released in the search bar.
-
-### item-activated(index: int) -> bool
-Invoked when a search item is clicked.  If a callback returns 'true', then do not perform the default behavior of changing the search text.
-
-## Functions
-
-### clear-focus()
-Clears the focus from the component.
-
-### focus()
-Focuses the component.
-
-### close-popup()
-Closes the popup if open.
+### action-button-clicked(index)
+Invoked when a result row's action icon is clicked.

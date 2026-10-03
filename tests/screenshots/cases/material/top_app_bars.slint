@@ -1,0 +1,111 @@
+// Copyright © SixtyFPS GmbH <info@slint.dev>
+// SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0
+
+// Scene: top-app-bars — generated from `ui-libraries/material/parity/scenes/top-app-bars.json`
+// (edit the scene, regenerate with `cargo run -p material-parity-generator`).
+//PARITY=static
+//SIZE=360x660
+//TRACE_ELEMENTS=appbar0,appbar1,appbar2,appbar3,appbar4,appbar5,appbar6,appbar7
+//XFAIL_TEXT=issue #28: Slint ceils text layout widths where Compose keeps fractional advances
+//DENSITIES=1,2
+import "../../fonts/Roboto-VariableFont.ttf";
+import { CenterAlignedTopAppBar, Icons, LargeFlexibleTopAppBar, LargeTopAppBar, MaterialPalette, MaterialTheme, MaterialWindow, MediumFlexibleTopAppBar, MediumTopAppBar, TopAppBar } from "@material";
+
+export component TestCase inherits MaterialWindow {
+    init => {
+        // The scene pins seed #6750A4, tonal-spot, spec2025, light, contrast 0
+        // (all the library defaults; restated here so a default change can't
+        // silently move the parity baseline).
+        MaterialTheme.seed-color = #6750A4;
+        MaterialTheme.dark = false;
+        MaterialTheme.contrast-level = 0;
+        MaterialTheme.use-platform-color = false;
+        MaterialTheme.plain-family = "Roboto";
+        MaterialTheme.brand-family = "Roboto";
+        // Compose builds its scene scheme from the same seed — use the
+        // runtime-generated scheme, not the static expressive table.
+        MaterialPalette.dynamic = true;
+    }
+
+    appbar0 := TopAppBar {
+        x: 0px;
+        y: 0px;
+        title: "Small";
+        leading-button: { icon: Icons.menu, enabled: true };
+        trailing-buttons: [{ icon: Icons.more_vert, enabled: true }];
+        width: 360px;
+        touch-target: false;
+    }
+
+    appbar1 := CenterAlignedTopAppBar {
+        x: 0px;
+        y: 64px;
+        title: "Centered";
+        leading-button: { icon: Icons.arrow_back, enabled: true };
+        trailing-buttons: [{ icon: Icons.more_vert, enabled: true }];
+        width: 360px;
+        touch-target: false;
+    }
+
+    appbar2 := MediumTopAppBar {
+        x: 0px;
+        y: 128px;
+        title: "Medium";
+        leading-button: { icon: Icons.arrow_back, enabled: true };
+        trailing-buttons: [{ icon: Icons.more_vert, enabled: true }];
+        width: 360px;
+        touch-target: false;
+    }
+
+    appbar3 := MediumFlexibleTopAppBar {
+        x: 0px;
+        y: 240px;
+        title: "Medium flex";
+        subtitle: "Subtitle";
+        leading-button: { icon: Icons.arrow_back, enabled: true };
+        trailing-buttons: [{ icon: Icons.more_vert, enabled: true }];
+        width: 360px;
+        touch-target: false;
+    }
+
+    appbar4 := LargeTopAppBar {
+        x: 0px;
+        y: 376px;
+        title: "Large";
+        leading-button: { icon: Icons.arrow_back, enabled: true };
+        trailing-buttons: [{ icon: Icons.more_vert, enabled: true }];
+        width: 360px;
+        touch-target: false;
+    }
+
+    appbar5 := LargeFlexibleTopAppBar {
+        x: 0px;
+        y: 528px;
+        title: "Large flex";
+        subtitle: "Subtitle";
+        leading-button: { icon: Icons.arrow_back, enabled: true };
+        trailing-buttons: [{ icon: Icons.more_vert, enabled: true }];
+        width: 360px;
+        touch-target: false;
+    }
+
+    appbar6 := TopAppBar {
+        x: 0px;
+        y: 640px;
+        title: "Scrolled";
+        content-offset: 10px;
+        width: 360px;
+        touch-target: false;
+    }
+
+    appbar7 := MediumFlexibleTopAppBar {
+        x: 0px;
+        y: 704px;
+        title: "Collapsed";
+        subtitle: "Subtitle";
+        height-offset: -36px;
+        width: 360px;
+        touch-target: false;
+    }
+
+}

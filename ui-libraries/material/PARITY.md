@@ -23,18 +23,18 @@ Sizes: large, medium, small
 
 | Component | Source | Status | Issues | Needs | Notes |
 |---|---|---|---|---|---|
-| AppBarColumn | AppBarColumn.kt | missing | #11 | springs (#5), shapes (#6) | - |
-| AppBarOverflowIndicator | AppBarDsl.kt | missing | #11 | springs (#5), shapes (#6) | - |
-| AppBarRow | AppBarRow.kt | missing | #11 | springs (#5), shapes (#6) | - |
-| BottomAppBar | AppBar.kt | partial | #11 | springs (#5), shapes (#6) | slint component: BottomAppBar |
-| CenterAlignedTopAppBar | AppBar.kt | partial | #11 | springs (#5), shapes (#6) | slint component: AppBar |
-| FlexibleBottomAppBar | AppBar.kt | missing | #11 | springs (#5), shapes (#6) | - |
-| LargeFlexibleTopAppBar | AppBar.kt | missing | #11 | springs (#5), shapes (#6) | - |
-| LargeTopAppBar | AppBar.kt | missing | #11 | springs (#5), shapes (#6) | - |
-| MediumFlexibleTopAppBar | AppBar.kt | missing | #11 | springs (#5), shapes (#6) | - |
-| MediumTopAppBar | AppBar.kt | partial | #11 | springs (#5), shapes (#6) | slint component: MediumAppBar |
-| TopAppBar | AppBar.kt | partial | #11 | springs (#5), shapes (#6) | slint component: AppBar/SmallAppBar |
-| TwoRowsTopAppBar | AppBar.kt | missing | #11 | springs (#5), shapes (#6) | - |
+| AppBarColumn | AppBarColumn.kt | partial | #11 | springs (#5), shapes (#6) | slint component: AppBarColumn; tokens: generated component tokens; springs via active motion scheme |
+| AppBarOverflowIndicator | AppBarDsl.kt | partial | #11 | springs (#5), shapes (#6) | slint component: AppBarOverflowIndicator (via AppBarRow/AppBarColumn overflow); tokens: generated component tokens; springs via active motion scheme |
+| AppBarRow | AppBarRow.kt | partial | #11 | springs (#5), shapes (#6) | slint component: AppBarRow; tokens: generated component tokens; springs via active motion scheme |
+| BottomAppBar | AppBar.kt | partial | #11 | springs (#5), shapes (#6) | slint component: BottomAppBar; tokens: generated component tokens; springs via active motion scheme |
+| CenterAlignedTopAppBar | AppBar.kt | partial | #11 | springs (#5), shapes (#6) | slint component: CenterAlignedTopAppBar; tokens: generated component tokens; springs via active motion scheme |
+| FlexibleBottomAppBar | AppBar.kt | partial | #11 | springs (#5), shapes (#6) | slint component: FlexibleBottomAppBar; tokens: generated component tokens; springs via active motion scheme |
+| LargeFlexibleTopAppBar | AppBar.kt | partial | #11 | springs (#5), shapes (#6) | slint component: LargeFlexibleTopAppBar; tokens: generated component tokens; springs via active motion scheme |
+| LargeTopAppBar | AppBar.kt | partial | #11 | springs (#5), shapes (#6) | slint component: LargeTopAppBar; tokens: generated component tokens; springs via active motion scheme |
+| MediumFlexibleTopAppBar | AppBar.kt | partial | #11 | springs (#5), shapes (#6) | slint component: MediumFlexibleTopAppBar; tokens: generated component tokens; springs via active motion scheme |
+| MediumTopAppBar | AppBar.kt | partial | #11 | springs (#5), shapes (#6) | slint component: MediumTopAppBar; tokens: generated component tokens; springs via active motion scheme |
+| TopAppBar | AppBar.kt | partial | #11 | springs (#5), shapes (#6) | slint component: TopAppBar; tokens: generated component tokens; springs via active motion scheme |
+| TwoRowsTopAppBar | AppBar.kt | partial | #11 | springs (#5), shapes (#6) | slint component: TwoRowsTopAppBar; tokens: generated component tokens; springs via active motion scheme |
 
 ### Autocomplete
 
@@ -365,14 +365,14 @@ States: focused, hovered, pressed
 
 | Component | Source | Status | Issues | Needs | Notes |
 |---|---|---|---|---|---|
-| AppBarWithSearch | SearchBar.kt | missing | #11 | springs (#5) | - |
-| DockedSearchBar | SearchBar.kt | partial | #11 | springs (#5) | slint component: SearchBar |
-| ExpandedDockedSearchBar | SearchBar.kt | missing | #11 | springs (#5) | - |
-| ExpandedDockedSearchBarWithGap | SearchBar.kt | missing | #11 | springs (#5) | - |
-| ExpandedFullScreenContainedSearchBar | SearchBar.kt | missing | #11 | springs (#5) | - |
-| ExpandedFullScreenSearchBar | SearchBar.kt | missing | #11 | springs (#5) | - |
-| SearchBar | SearchBar.kt | partial | #11 | springs (#5) | slint component: SearchBar |
-| TopSearchBar | SearchBar.kt | missing | #11 | springs (#5) | - |
+| AppBarWithSearch | SearchBar.kt | partial | #11 | springs (#5) | slint component: AppBarWithSearch; tokens: generated component tokens; springs via active motion scheme |
+| DockedSearchBar | SearchBar.kt | partial | #11 | springs (#5) | deprecated at pin; covered by SearchBar expanded-state API; tokens: generated component tokens; springs via active motion scheme |
+| ExpandedDockedSearchBar | SearchBar.kt | partial | #11 | springs (#5) | slint component: ExpandedDockedSearchBar; tokens: generated component tokens; springs via active motion scheme |
+| ExpandedDockedSearchBarWithGap | SearchBar.kt | partial | #11 | springs (#5) | slint component: ExpandedDockedSearchBarWithGap; tokens: generated component tokens; springs via active motion scheme |
+| ExpandedFullScreenContainedSearchBar | SearchBar.kt | partial | #11 | springs (#5) | slint component: ExpandedFullScreenContainedSearchBar; tokens: generated component tokens; springs via active motion scheme |
+| ExpandedFullScreenSearchBar | SearchBar.kt | partial | #11 | springs (#5) | slint component: ExpandedFullScreenSearchBar; tokens: generated component tokens; springs via active motion scheme |
+| SearchBar | SearchBar.kt | partial | #11 | springs (#5) | slint component: SearchBar (SearchBarState API: expanded/text); tokens: generated component tokens; springs via active motion scheme |
+| TopSearchBar | SearchBar.kt | partial | #11 | springs (#5) | deprecated at pin; covered by AppBarWithSearch; tokens: generated component tokens; springs via active motion scheme |
 
 ### Segmented buttons
 

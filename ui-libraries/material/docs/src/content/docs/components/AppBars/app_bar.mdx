@@ -1,49 +1,112 @@
 ---
-title: AppBar
-description: AppBar API.
+title: Top app bars
+description: TopAppBar family API.
 ---
 
 import CodeSnippetMD from '@slint/common-files/src/components/CodeSnippetMD.astro';
 import SlintProperty from '@slint/common-files/src/components/SlintProperty.astro';
 
-<CodeSnippetMD imagePath="" noScreenShot scale="3" imageWidth="300" imageHeight="200" imageAlt="">
+<CodeSnippetMD imagePath="/src/assets/generated/app_bar.png" scale="3" imageWidth="400" imageHeight="120" imageAlt="">
 ```slint
-import { AppBar } from "@material";
+import { TopAppBar } from "@material";
 export component Example inherits Window {
     width: 400px;
-    height: 200px;
+    height: 120px;
     background: transparent;
-    AppBar {
-        title: "My App";
-        width: parent.width;
-        height: parent.height;
+    VerticalLayout {
+        TopAppBar {
+            title: "My App";
+            width: parent.width;
+        }
+        Rectangle {}
     }
 }
 ```
 </CodeSnippetMD>
 
-An `AppBar` is a top-level navigation component that displays the app title and optional action buttons. It provides a consistent way to present the app's primary navigation and actions.
+The top app bar family displays the screen title and navigation and action
+icons at the top of the screen. All variants expose `leading-button` and
+`trailing-buttons` slots, drive their colors from the `AppBarTokens` role
+values, and support scroll-driven collapse through `scroll-position` and
+`scroll-behavior`.
+
+The `MediumTopAppBar` and `LargeTopAppBar` variants place the title in a
+second row, `MediumFlexibleTopAppBar` and `LargeFlexibleTopAppBar`
+additionally render a `subtitle`, and `TwoRowsTopAppBar` is the generic base
+for custom two-row layouts.
+
+<CodeSnippetMD imagePath="/src/assets/generated/app_bar_variants.png" scale="3" imageWidth="400" imageHeight="450" imageAlt="">
+```slint
+import { MediumFlexibleTopAppBar, LargeFlexibleTopAppBar } from "@material";
+export component Example inherits Window {
+    width: 400px;
+    height: 450px;
+    background: transparent;
+    VerticalLayout {
+        MediumFlexibleTopAppBar {
+            title: "Title";
+            subtitle: "Subtitle";
+            width: parent.width;
+        }
+        LargeFlexibleTopAppBar {
+            title: "Title";
+            subtitle: "Subtitle";
+            width: parent.width;
+        }
+        Rectangle {}
+    }
+}
+```
+</CodeSnippetMD>
+
+## Scroll behavior
+
+Bind `scroll-position` to `-flickable.content-y` of the scrolled content.
+`exit-until-collapsed` shrinks the bar on scroll-down and re-expands when the
+content is scrolled back to the top. `enter-always` consumes deltas in both
+directions. The `height-offset`, `content-offset`, `collapsed-fraction` and
+`overlapped-fraction` properties mirror the `TopAppBarState` of Compose
+Material 3, and the container color cross-fades to
+`scrolled-container-color` with the `FastOutLinearInEasing` curve. Releasing
+a partial collapse snaps the bar with the active motion scheme's
+default-effects spring (`TopAppBarDefaults.snapAnimationSpec`).
 
 ## Properties
 
-### show-background
-<SlintProperty propName="show-background" typeName="bool">
-Whether to show show the background color of the app bar or be transparent.
+### title
+<SlintProperty propName="title" typeName="string">
+The primary title text.
+</SlintProperty>
+
+### subtitle
+<SlintProperty propName="subtitle" typeName="string">
+A second line of text under the title (`MediumFlexibleTopAppBar`,
+`LargeFlexibleTopAppBar`, `TwoRowsTopAppBar`).
 </SlintProperty>
 
 ### leading-button
 <SlintProperty propName="leading-button" typeName="struct" structName="IconButtonItem">
-An icon button item displayed at the start of the app bar, typically used for navigation.
+An icon button item displayed at the start of the app bar.
 </SlintProperty>
 
-### title
-<SlintProperty propName="title" typeName="string">
-The title text displayed in the app bar.
+### trailing-buttons
+<SlintProperty propName="trailing-buttons" typeName="struct" structName="IconButtonItem">
+Icon button items displayed at the end of the app bar.
 </SlintProperty>
 
-### trailing-button
-<SlintProperty propName="trailing-button" typeName="struct" structName="IconButtonItem">
-An icon button item displayed at the end of the app bar, typically used for actions.
+### scroll-behavior
+<SlintProperty propName="scroll-behavior" typeName="enum" enumName="TopAppBarScrollBehavior">
+`pinned`, `exit-until-collapsed`, or `enter-always`.
+</SlintProperty>
+
+### scroll-position
+<SlintProperty propName="scroll-position" typeName="length">
+The scrolled amount of the content; bind `-flickable.content-y`.
+</SlintProperty>
+
+### title-horizontal-alignment
+<SlintProperty propName="title-horizontal-alignment" typeName="enum" enumName="TextHorizontalAlignment">
+`start` or `center` (`CenterAlignedTopAppBar` presets `center`).
 </SlintProperty>
 
 ## Callbacks
@@ -51,5 +114,5 @@ An icon button item displayed at the end of the app bar, typically used for acti
 ### leading-button-clicked()
 Invoked when the leading icon is clicked.
 
-### trailing-button-clicked()
-Invoked when the trailing icon is clicked.
+### trailing-button-clicked(index)
+Invoked when a trailing icon is clicked.
