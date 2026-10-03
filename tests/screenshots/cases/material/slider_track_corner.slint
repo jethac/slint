@@ -3,7 +3,7 @@
 
 // Scene: slider-track-corner — generated from `ui-libraries/material/parity/scenes/slider-track-corner.json`
 // (edit the scene, regenerate with `cargo run -p material-parity-generator`).
-//PARITY=xfail:software: issue #50 — the software renderer quantizes element geometry to integer device pixels; fractional track edges diverge up to ~1 device px
+//PARITY=xfail:software,skia,femtovg: issue #50 — the software renderer quantizes element geometry to integer device pixels; fractional track edges diverge up to ~1 device px. skia/femtovg at 2x additionally diverge on the 20px corner-override slider: Slint's cross-renderer model clamps each corner independently to half the shorter side (#47 connected-button semantics), while the Android RoundRect the Compose reference draws through scales all radii proportionally — the gap-side cap edge shifts ~1 device px on the overflow corner
 //SIZE=340x260
 //TRACE_ELEMENTS=slider0,slider1,slider2,slider3
 //DENSITIES=1,2

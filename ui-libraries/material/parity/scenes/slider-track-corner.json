@@ -1,7 +1,7 @@
 {
   "name": "slider-track-corner",
   "type": "canvas",
-  "parity": "xfail:software",
+  "parity": "xfail:software,skia,femtovg",
   "size": [
     340,
     260
@@ -64,5 +64,5 @@
     "slider2",
     "slider3"
   ],
-  "negative_note": "issue #50 \u2014 the software renderer quantizes element geometry to integer device pixels; fractional track edges diverge up to ~1 device px"
+  "negative_note": "issue #50 \u2014 the software renderer quantizes element geometry to integer device pixels; fractional track edges diverge up to ~1 device px. skia/femtovg at 2x additionally diverge on the 20px corner-override slider: Slint's cross-renderer model clamps each corner independently to half the shorter side (#47 connected-button semantics), while the Android RoundRect the Compose reference draws through scales all radii proportionally — the gap-side cap edge shifts ~1 device px on the overflow corner"
 }

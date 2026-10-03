@@ -78,7 +78,7 @@ States: pressed, selected
 
 | Component | Source | Status | Issues | Needs | Notes |
 |---|---|---|---|---|---|
-| ButtonGroup | ButtonGroup.kt | missing | #5, #9, #10 | springs (#5), shapes (#6) | - |
+| ButtonGroup | ButtonGroup.kt | partial | #5, #9, #10 | springs (#5), shapes (#6) | connected variants: slint components ConnectedButtonGroup, ConnectedButton, VerticalConnectedButtonGroup; parity cases: connected-button-groups, connected-button-morph, connected-button-press-morph, negative-connected-button-group; standard variant pending (#10) |
 
 ### Buttons
 
@@ -173,9 +173,9 @@ Token objects: DividerTokens
 
 | Component | Source | Status | Issues | Needs | Notes |
 |---|---|---|---|---|---|
-| Divider | Divider.kt | missing | #11 | none | - |
-| HorizontalDivider | Divider.kt | partial | #11 | none | slint component: HorizontalDivider |
-| VerticalDivider | Divider.kt | partial | #11 | none | slint component: VerticalDivider |
+| Divider | Divider.kt | done | #11 | none | slint component: Divider (deprecated alias for HorizontalDivider) |
+| HorizontalDivider | Divider.kt | done | #11 | none | slint component: HorizontalDivider; tokens: generated component tokens |
+| VerticalDivider | Divider.kt | done | #11 | none | slint component: VerticalDivider; tokens: generated component tokens |
 
 ### FAB
 
@@ -187,14 +187,14 @@ States: focused, hovered, pressed
 
 | Component | Source | Status | Issues | Needs | Notes |
 |---|---|---|---|---|---|
-| ExtendedFloatingActionButton | FloatingActionButton.kt | partial | #9 | springs (#5), shapes (#6) | slint component: FloatingActionButton |
-| FloatingActionButton | FloatingActionButton.kt | partial | #9 | springs (#5), shapes (#6) | slint component: FloatingActionButton |
-| LargeExtendedFloatingActionButton | FloatingActionButton.kt | missing | #9 | springs (#5), shapes (#6) | - |
-| LargeFloatingActionButton | FloatingActionButton.kt | missing | #9 | springs (#5), shapes (#6) | - |
-| MediumExtendedFloatingActionButton | FloatingActionButton.kt | missing | #9 | springs (#5), shapes (#6) | - |
-| MediumFloatingActionButton | FloatingActionButton.kt | missing | #9 | springs (#5), shapes (#6) | - |
-| SmallExtendedFloatingActionButton | FloatingActionButton.kt | missing | #9 | springs (#5), shapes (#6) | - |
-| SmallFloatingActionButton | FloatingActionButton.kt | missing | #9 | springs (#5), shapes (#6) | - |
+| ExtendedFloatingActionButton | FloatingActionButton.kt | done | #11 | springs (#5), shapes (#6) | slint component: ExtendedFloatingActionButton; tokens: generated component tokens; springs via active motion scheme |
+| FloatingActionButton | FloatingActionButton.kt | done | #11 | springs (#5), shapes (#6) | slint component: FloatingActionButton; tokens: generated component tokens; springs via active motion scheme |
+| LargeExtendedFloatingActionButton | FloatingActionButton.kt | done | #11 | springs (#5), shapes (#6) | slint component: ExtendedFloatingActionButton; tokens: generated component tokens; springs via active motion scheme |
+| LargeFloatingActionButton | FloatingActionButton.kt | done | #11 | springs (#5), shapes (#6) | slint component: FloatingActionButton; tokens: generated component tokens; springs via active motion scheme |
+| MediumExtendedFloatingActionButton | FloatingActionButton.kt | done | #11 | springs (#5), shapes (#6) | slint component: ExtendedFloatingActionButton; tokens: generated component tokens; springs via active motion scheme |
+| MediumFloatingActionButton | FloatingActionButton.kt | done | #11 | springs (#5), shapes (#6) | slint component: FloatingActionButton; tokens: generated component tokens; springs via active motion scheme |
+| SmallExtendedFloatingActionButton | FloatingActionButton.kt | done | #11 | springs (#5), shapes (#6) | slint component: ExtendedFloatingActionButton; tokens: generated component tokens; springs via active motion scheme |
+| SmallFloatingActionButton | FloatingActionButton.kt | done | #11 | springs (#5), shapes (#6) | slint component: FloatingActionButton; tokens: generated component tokens; springs via active motion scheme |
 
 ### FAB menu
 
@@ -252,8 +252,8 @@ States: active
 
 | Component | Source | Status | Issues | Needs | Notes |
 |---|---|---|---|---|---|
-| ContainedLoadingIndicator | LoadingIndicator.kt | missing | #5, #6, #10 | springs (#5), shapes (#6) | - |
-| LoadingIndicator | LoadingIndicator.kt | missing | #5, #6, #10 | springs (#5), shapes (#6) | - |
+| ContainedLoadingIndicator | LoadingIndicator.kt | partial | #5, #6, #10 | springs (#5), shapes (#6) | slint component: ContainedLoadingIndicator; parity scenes: loading-indicator-states (xfail on femtovg, #53 concave-fill AA fringe), loading-indicator-motion (xfail, #27-class launch jitter) |
+| LoadingIndicator | LoadingIndicator.kt | partial | #5, #6, #10 | springs (#5), shapes (#6) | slint component: LoadingIndicator; parity scenes: loading-indicator-states (xfail on femtovg, #53 concave-fill AA fringe), loading-indicator-motion (xfail, #27-class launch jitter) |
 
 ### Menus
 
@@ -382,10 +382,10 @@ States: disabled, selected, focused, hovered, pressed, unselected
 
 | Component | Source | Status | Issues | Needs | Notes |
 |---|---|---|---|---|---|
-| MultiChoiceSegmentedButtonRow | SegmentedButton.kt | missing | #10 | springs (#5), shapes (#6) | - |
-| MultiChoiceSegmentedButtonRowScope | SegmentedButton.kt | missing | #10 | springs (#5), shapes (#6) | - |
-| SingleChoiceSegmentedButtonRow | SegmentedButton.kt | missing | #10 | springs (#5), shapes (#6) | - |
-| SingleChoiceSegmentedButtonRowScope | SegmentedButton.kt | missing | #10 | springs (#5), shapes (#6) | - |
+| MultiChoiceSegmentedButtonRow | SegmentedButton.kt | partial | #10 | springs (#5), shapes (#6) | Expressive mapping -> ConnectedButtonGroup; slint SegmentedButton deprecated |
+| MultiChoiceSegmentedButtonRowScope | SegmentedButton.kt | partial | #10 | springs (#5), shapes (#6) | Expressive mapping -> ConnectedButtonGroup; slint SegmentedButton deprecated |
+| SingleChoiceSegmentedButtonRow | SegmentedButton.kt | partial | #10 | springs (#5), shapes (#6) | Expressive mapping -> ConnectedButtonGroup; slint SegmentedButton deprecated |
+| SingleChoiceSegmentedButtonRowScope | SegmentedButton.kt | partial | #10 | springs (#5), shapes (#6) | Expressive mapping -> ConnectedButtonGroup; slint SegmentedButton deprecated |
 
 ### Slider
 
