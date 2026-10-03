@@ -46,6 +46,8 @@ list-select-morph
 list-states
 loading-indicator-motion
 loading-indicator-states
+material-text-behaviors
+material-text-styles
 modal-scrim-dismiss
 navigation-bar-select-morph
 navigation-bars-start-icons
