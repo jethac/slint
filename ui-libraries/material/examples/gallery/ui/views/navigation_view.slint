@@ -38,6 +38,7 @@ import {
     Switch,
     Slider,
     TextField,
+    RadioButton,
     RadioButtonTile,
     PopupMenu,
     DropDownMenu,
@@ -392,6 +393,17 @@ export component NavigationView {
                 title: "RadioButtons";
 
                 Vertical {
+                    Horizontal {
+                        spacing: 8px;
+                        alignment: center;
+
+                        RadioButton {}
+
+                        RadioButton {
+                            checked: true;
+                        }
+                    }
+
                     RadioButtonTile {
                         text: "Option 1";
                         checked: NavigationViewAdapter.radio_buttons[0];
