@@ -90,6 +90,7 @@
   "type": "canvas",
   "widgets": [
     {
+      "action": null,
       "alignment": null,
       "checkable": null,
       "checked": null,
@@ -128,6 +129,7 @@
       "target_scale": null,
       "text": "Small",
       "thickness": null,
+      "title": null,
       "toggle": null,
       "trailing_icon": null,
       "variant": "small",
@@ -138,6 +140,7 @@
       "y": 0.0
     },
     {
+      "action": null,
       "alignment": null,
       "checkable": null,
       "checked": null,
@@ -176,6 +179,7 @@
       "target_scale": null,
       "text": "Centered",
       "thickness": null,
+      "title": null,
       "toggle": null,
       "trailing_icon": null,
       "variant": "center",
@@ -186,6 +190,7 @@
       "y": 64.0
     },
     {
+      "action": null,
       "alignment": null,
       "checkable": null,
       "checked": null,
@@ -224,6 +229,7 @@
       "target_scale": null,
       "text": "Medium",
       "thickness": null,
+      "title": null,
       "toggle": null,
       "trailing_icon": null,
       "variant": "medium",
@@ -234,6 +240,7 @@
       "y": 128.0
     },
     {
+      "action": null,
       "alignment": null,
       "checkable": null,
       "checked": null,
@@ -272,6 +279,7 @@
       "target_scale": null,
       "text": "Medium flex",
       "thickness": null,
+      "title": null,
       "toggle": null,
       "trailing_icon": null,
       "variant": "medium-flexible",
@@ -282,6 +290,7 @@
       "y": 240.0
     },
     {
+      "action": null,
       "alignment": null,
       "checkable": null,
       "checked": null,
@@ -320,6 +329,7 @@
       "target_scale": null,
       "text": "Large",
       "thickness": null,
+      "title": null,
       "toggle": null,
       "trailing_icon": null,
       "variant": "large",
@@ -330,6 +340,7 @@
       "y": 376.0
     },
     {
+      "action": null,
       "alignment": null,
       "checkable": null,
       "checked": null,
@@ -368,6 +379,7 @@
       "target_scale": null,
       "text": "Large flex",
       "thickness": null,
+      "title": null,
       "toggle": null,
       "trailing_icon": null,
       "variant": "large-flexible",
@@ -378,6 +390,7 @@
       "y": 528.0
     },
     {
+      "action": null,
       "alignment": null,
       "checkable": null,
       "checked": null,
@@ -414,6 +427,7 @@
       "target_scale": null,
       "text": "Scrolled",
       "thickness": null,
+      "title": null,
       "toggle": null,
       "trailing_icon": null,
       "variant": "small",
@@ -424,6 +438,7 @@
       "y": 640.0
     },
     {
+      "action": null,
       "alignment": null,
       "checkable": null,
       "checked": null,
@@ -460,6 +475,7 @@
       "target_scale": null,
       "text": "Collapsed",
       "thickness": null,
+      "title": null,
       "toggle": null,
       "trailing_icon": null,
       "variant": "medium-flexible",

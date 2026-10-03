@@ -1,0 +1,38 @@
+{
+    "name": "negative-tooltip-offset",
+    "type": "canvas",
+    "parity": "negative",
+    "negative_note": "The Slint side draws the tooltip 24dp to the right of its authored position — the displaced container ink must land on strict background and flag. Uses the wide wrapping tooltip because a minimum-size tooltip's ink never reaches strict class.",
+    "size": [
+        280,
+        140
+    ],
+    "densities": [
+        1
+    ],
+    "theme": {
+        "seed": "6750A4",
+        "variant": "tonal-spot",
+        "spec": "spec2025",
+        "platform": "phone",
+        "dark": false,
+        "contrast": 0.0
+    },
+    "fonts": {
+        "plain": "Roboto",
+        "brand": "Roboto"
+    },
+    "widgets": [
+        {
+            "kind": "tooltip-plain",
+            "text": "Tooltips display informative text when users hover over an element.",
+            "x": 24,
+            "y": 16,
+            "slint_overrides": {
+                "x": 48
+            }
+        }
+    ],
+    "trace_elements": [],
+    "trace_props": []
+}

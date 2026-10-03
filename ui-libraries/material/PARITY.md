@@ -521,8 +521,8 @@ States: focused, hovered, pressed
 
 | Component | Source | Status | Issues | Needs | Notes |
 |---|---|---|---|---|---|
-| TooltipBox | Tooltip.kt | partial | #11 | none | slint component: ToolTip |
-| TooltipScope | Tooltip.kt | missing | #11 | none | - |
+| TooltipBox | Tooltip.kt | done | #11 | none | TooltipBox (hover/focus/long-press triggers, position provider, caret) + PlainTooltip/RichTooltip surfaces; ToolTip kept as deprecated alias |
+| TooltipScope | Tooltip.kt | done | #11 | none | Scope slots map to props: caret/caret_edge/caret_x on PlainTooltip+RichTooltip, content via tooltip/rich_* props on TooltipBox |
 
 ## Token reference
 

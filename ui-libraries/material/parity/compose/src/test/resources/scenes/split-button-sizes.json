@@ -87,6 +87,7 @@
   "type": "canvas",
   "widgets": [
     {
+      "action": null,
       "alignment": null,
       "checkable": true,
       "checked": null,
@@ -123,6 +124,7 @@
       "target_scale": null,
       "text": null,
       "thickness": null,
+      "title": null,
       "toggle": null,
       "trailing_icon": null,
       "variant": null,
@@ -133,6 +135,7 @@
       "y": 24.0
     },
     {
+      "action": null,
       "alignment": null,
       "checkable": true,
       "checked": null,
@@ -169,6 +172,7 @@
       "target_scale": null,
       "text": null,
       "thickness": null,
+      "title": null,
       "toggle": null,
       "trailing_icon": null,
       "variant": null,
@@ -179,6 +183,7 @@
       "y": 24.0
     },
     {
+      "action": null,
       "alignment": null,
       "checkable": true,
       "checked": null,
@@ -215,6 +220,7 @@
       "target_scale": null,
       "text": null,
       "thickness": null,
+      "title": null,
       "toggle": null,
       "trailing_icon": null,
       "variant": null,
@@ -225,6 +231,7 @@
       "y": 24.0
     },
     {
+      "action": null,
       "alignment": null,
       "checkable": true,
       "checked": null,
@@ -261,6 +268,7 @@
       "target_scale": null,
       "text": null,
       "thickness": null,
+      "title": null,
       "toggle": null,
       "trailing_icon": null,
       "variant": null,
@@ -271,6 +279,7 @@
       "y": 24.0
     },
     {
+      "action": null,
       "alignment": null,
       "checkable": true,
       "checked": null,
@@ -307,6 +316,7 @@
       "target_scale": null,
       "text": null,
       "thickness": null,
+      "title": null,
       "toggle": null,
       "trailing_icon": null,
       "variant": null,

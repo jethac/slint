@@ -48,6 +48,7 @@ import {
     Badge,
     BadgedBox,
     Icon,
+    TooltipBox,
     Dialog,
     FullscreenDialog,
     MaterialAnimations,
@@ -775,6 +776,46 @@ export component ActionsView {
                              badge: "3"
                           },
                     ];
+                }
+            }
+
+            ComponentCard {
+                title: "Tooltips";
+
+                HorizontalLayout {
+                    alignment: start;
+                    spacing: MaterialStyleMetrics.spacing_8;
+                    padding-bottom: MaterialStyleMetrics.spacing_8;
+
+                    TooltipBox {
+                        tooltip: "Save document";
+
+                        TextButton {
+                            text: "Hover me";
+                        }
+                    }
+
+                    TooltipBox {
+                        tooltip: "Pinned";
+                        show_tooltip: true;
+
+                        TextButton {
+                            text: "Plain";
+                        }
+                    }
+
+                    TooltipBox {
+                        rich_tooltip: true;
+                        rich_title: "Permissions";
+                        rich_text: "Rich tooltips inform users.";
+                        rich_action: "MANAGE";
+                        show_tooltip: true;
+                        has_action: true;
+
+                        TextButton {
+                            text: "Rich";
+                        }
+                    }
                 }
             }
 

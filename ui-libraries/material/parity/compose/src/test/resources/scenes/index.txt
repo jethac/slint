@@ -62,6 +62,8 @@ negative-split-button-outer-corner
 negative-split-button-spacing
 negative-thumb-offset
 negative-toggle-select
+negative-tooltip-color
+negative-tooltip-offset
 negative-wrong-shadow
 search-bars
 split-button-check-morph
@@ -78,4 +80,5 @@ switch-on-morph
 switch-states
 toggle-buttons
 toggle-select-morph
+tooltips
 top-app-bars
