@@ -1056,6 +1056,11 @@ fn build(l: &mut Loader) {
         /// Values less than or equal to zero don't limit the number of lines.
         /// \default 0
         in property <int> max-lines;
+        /// The minimum number of lines the element is sized to: the text's height never
+        /// falls below `min-lines` times the line height, even when the text has fewer
+        /// lines or is empty. Values less than or equal to zero reserve no minimum.
+        /// \default 0
+        in property <int> min-lines;
         /// The text rendered.
         /// \default ""
         in property <string> text;
@@ -1095,6 +1100,32 @@ fn build(l: &mut Loader) {
         /// ```
         /// \default false
         in property <bool> font-italic;
+        /// Whether or not a line should be drawn under the text, like the CSS
+        /// `text-decoration: underline` declaration.
+        ///
+        /// ```slint "font-underline: true;" imageAlt="text font-underline" width="200" height="200" needsBackground
+        /// Text {
+        ///     text: "Underlined";
+        ///     color: black;
+        ///     font-underline: true;
+        ///     font-size: 40pt;
+        /// }
+        /// ```
+        /// \default false
+        in property <bool> font-underline;
+        /// Whether or not a line should be drawn through the text, like the CSS
+        /// `text-decoration: line-through` declaration.
+        ///
+        /// ```slint "font-strikeout: true;" imageAlt="text font-strikeout" width="200" height="200" needsBackground
+        /// Text {
+        ///     text: "Struck out";
+        ///     color: black;
+        ///     font-strikeout: true;
+        ///     font-size: 40pt;
+        /// }
+        /// ```
+        /// \default false
+        in property <bool> font-strikeout;
         /// The width of the font, like the CSS `font-stretch` property, expressed as a
         /// percentage where `100%` is the normal width. Smaller percentages select a
         /// condensed face, larger ones an expanded face. When the selected font is a

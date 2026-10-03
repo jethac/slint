@@ -494,6 +494,11 @@ pub trait RenderString: HasFont {
     fn max_lines(self: Pin<&Self>) -> i32 {
         0
     }
+    /// The minimum number of lines the text box is sized to, from the `min-lines` property.
+    /// Property values less than or equal to zero reserve no minimum.
+    fn min_lines(self: Pin<&Self>) -> i32 {
+        0
+    }
     /// The maximum number of lines to lay out and render, from the `max-lines` property.
     /// Property values less than or equal to zero mean no limit.
     fn line_limit(self: Pin<&Self>) -> Option<usize> {
