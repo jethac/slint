@@ -211,7 +211,16 @@ pub fn stroke_to_fill(
         if n < 2 {
             continue;
         }
-        let pts = &contour[..n];
+        // Flattened paths repeat the seam vertex between curve segments;
+        // a zero-length segment has no direction and would poison the joins
+        // of the vertex that follows it.
+        let mut deduped: alloc::vec::Vec<Point> = contour[..n].to_vec();
+        deduped.dedup_by(|a, b| (a.x - b.x).abs() < 1e-6 && (a.y - b.y).abs() < 1e-6);
+        if deduped.len() < 2 {
+            continue;
+        }
+        let n = deduped.len();
+        let pts = &deduped[..];
 
         // Segment directions.
         let seg_count = if closed { n } else { n - 1 };
@@ -1018,5 +1027,50 @@ mod tests {
         let mut dst = [0u8; 4];
         gaussian_blur(&src, &mut dst, 4, 1, 0.3);
         assert_eq!(dst, src);
+    }
+
+    /// A closed contour whose vertices repeat at the curve seams (what
+    /// `ElementOutline::flatten` emits) must stroke to a uniform band: the
+    /// zero-length segments carry no direction and must not poison the joins
+    /// of the vertex that follows them.
+    #[test]
+    fn stroke_dedupes_seam_vertices() {
+        // A rounded-rectangle contour in the style `ElementOutline::flatten`
+        // produces: each edge's end point repeats as the next curve's start.
+        let contour = vec![
+            pt(40., 6.),
+            pt(40., 6.),
+            pt(38., 8.),
+            pt(36., 10.),
+            pt(36., 10.),
+            pt(8., 10.),
+            pt(8., 10.),
+            pt(4., 8.),
+            pt(2., 6.),
+            pt(2., 6.),
+            pt(2., 4.),
+            pt(2., 4.),
+            pt(4., 4.),
+            pt(6., 2.),
+            pt(6., 2.),
+            pt(34., 2.),
+            pt(34., 2.),
+            pt(38., 4.),
+            pt(40., 6.),
+            pt(40., 6.),
+        ];
+        let stroked = stroke_to_fill(&[contour], 2., LineCap::Butt, LineJoin::Miter, 4.);
+        let grid = rasterize(&stroked, FillRule::Nonzero, 0, 0, 42, 14);
+        // The band along the bottom edge (the path at y10, stroke ±1 covers
+        // rows 9 and 10 between the two arcs) is fully covered — the same
+        // holds for the top edge at rows 1 and 2.
+        for x in 10..=32 {
+            for y in [9usize, 10usize] {
+                assert_eq!(grid[y][x], 255, "bottom edge at {x},{y}");
+            }
+            for y in [1usize, 2usize] {
+                assert_eq!(grid[y][x], 255, "top edge at {x},{y}");
+            }
+        }
     }
 }

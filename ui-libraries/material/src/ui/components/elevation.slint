@@ -8,6 +8,10 @@ export component Elevation {
     in property <brush> background;
     in property <length> border_radius;
     in property <int> level;
+    /// The animation spec for `shadow_height` changes — the default is the
+    // `animateElevation` tween; the active motion scheme's springs can be
+    // passed where upstream uses them (e.g. lists use `FastSpatial`).
+    in property <easing> shadow_easing: cubic-bezier(0.4, 0, 0.2, 1);
     // `shape` is an element-level property: `Elevation { shape: X }` binds it
     // on this component's root element and `root.shape` forwards it to the
     // caster. When unset it stays empty and the caster uses `border_radius`.
@@ -30,7 +34,7 @@ export component Elevation {
     animate shadow_height {
         enabled: !MaterialPalette.reduced-motion;
         duration: 150ms;
-        easing: cubic-bezier(0.4, 0, 0.2, 1);
+        easing: root.shadow_easing;
     }
 
     // The `elevation`/`ambient-shadow-color`/`spot-shadow-color` bindings are

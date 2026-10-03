@@ -68,6 +68,15 @@ struct Scene {
     /// 0.5 px of the unhinted Compose advance.
     #[serde(default)]
     xfail_text: Option<String>,
+    /// `//PARITY_EPS=<n>` — per-channel strict-pixel tolerance override;
+    /// the paired `eps_note` is emitted as the required justification
+    /// comment above the directive.
+    #[serde(default)]
+    eps: Option<u32>,
+    /// Why this case needs a raised `eps` — emitted as a `//` line just
+    /// above `//PARITY_EPS=`.
+    #[serde(default)]
+    eps_note: Option<String>,
     /// `//XFAIL_SILHOUETTE=<reason>` — on the software driver (axis-aligned
     /// clip, issue #6) the silhouette findings are an expected divergence;
     /// the case fails when they stop occurring.
@@ -155,6 +164,55 @@ struct Widget {
     /// Icon-button container width: `narrow`, `uniform` (default), `wide`.
     #[serde(default)]
     width_option: Option<String>,
+    /// `ListItem(onClick)` overload — `interactive` on the Slint side;
+    /// `selectable`/`checkable` already imply it.
+    #[serde(default)]
+    interactive: Option<bool>,
+    /// `ListItem(selected, onClick)` overload — `selectable` on the Slint side.
+    #[serde(default)]
+    selectable: Option<bool>,
+    /// The `selected` visual state (`item_selected_*` colors + selected
+    /// container shape). The `checked` field plays the same role for
+    /// `checkable` widgets.
+    #[serde(default)]
+    selected: Option<bool>,
+    /// `DragInteraction` visual state on a list item (`ReorderListTokens`
+    /// colors, dragged shape, dragged elevation). Scenes should not use it:
+    /// the platform shadow it needs deadlocks layoutlib's renderer.
+    #[serde(default)]
+    dragged: Option<bool>,
+    /// `segmentedShapes(index, count)` position — emitted as `index:`/`count:`
+    /// on `SegmentedListItem` and as the `segmentedShapes(index, count)` call
+    /// on the Compose side.
+    #[serde(default)]
+    index: Option<i64>,
+    #[serde(default)]
+    count: Option<i64>,
+    /// `overlineContent` text on a list item.
+    #[serde(default)]
+    overline: Option<String>,
+    /// `supportingContent` text on a list item.
+    #[serde(default)]
+    supporting: Option<String>,
+    /// The supporting text wraps to a second line — the upstream
+    /// `isSupportingMultiline` heuristic input to `ListItemType`.
+    #[serde(default)]
+    supporting_multiline: Option<bool>,
+    /// 40px avatar circle with this label in the leading slot
+    /// (`avatar_text` on the Slint side, `ItemLeadingAvatar*` upstream).
+    #[serde(default)]
+    avatar: Option<String>,
+    /// Icon stem (`Icons.*`) in the trailing slot; `icon` fills the leading
+    /// slot. `trailing_text` adds the label-small meta text.
+    #[serde(default)]
+    trailing_icon: Option<String>,
+    #[serde(default)]
+    trailing_text: Option<String>,
+    /// `leading_image`: the `icon` stem doubles as the 56x56 image source —
+    /// both sides rasterize the identical svg path, clipped to the
+    /// corner-small image shape.
+    #[serde(default)]
+    leading_image: Option<String>,
     /// M3 elevation level (0–5) for `surface` widgets: the Slint side sets
     /// `Elevation.level`, the Compose side sets `Modifier.shadow`'s dp.
     #[serde(default)]
@@ -199,7 +257,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         // Compose side rasterizes literally the same path the Slint
         // `Icons.<name>` image does.
         for w in &scene.widgets {
-            if let Some(icon) = &w.icon {
+            for icon in [&w.icon, &w.trailing_icon, &w.leading_image].into_iter().flatten() {
                 let src = repo_root
                     .join("ui-libraries/material/src/ui/icons")
                     .join(format!("{icon}.svg"));
@@ -469,6 +527,12 @@ fn slint_case(scene: &Scene) -> String {
     if let Some(reason) = &scene.xfail_text {
         writeln!(s, "//XFAIL_TEXT={reason}").unwrap();
     }
+    if let Some(eps) = scene.eps {
+        if let Some(note) = &scene.eps_note {
+            writeln!(s, "// {note}").unwrap();
+        }
+        writeln!(s, "//PARITY_EPS={eps}").unwrap();
+    }
     if let Some(reason) = &scene.xfail_silhouette {
         writeln!(s, "//XFAIL_SILHOUETTE={reason}").unwrap();
     }
@@ -492,12 +556,14 @@ fn slint_case(scene: &Scene) -> String {
             "filled-icon-button" => "FilledIconButton",
             "tonal-icon-button" => "TonalIconButton",
             "outlined-icon-button" => "OutlineIconButton",
+            "list-item" => "ListTile",
+            "segmented-list-item" => "SegmentedListItem",
             // `surface` imports `Elevation`/`MaterialShapes` below instead.
             "rect" | "surface" => continue,
             other => panic!("unknown widget kind {other:?}"),
         };
         imports.push(component);
-        if w.icon.is_some() {
+        if w.icon.is_some() || w.trailing_icon.is_some() || w.leading_image.is_some() {
             needs_icons = true;
         }
         if w.size.is_some() || w.corner.is_some() || w.width_option.is_some() {
@@ -573,7 +639,19 @@ fn widget_actions(scene: &Scene) -> Vec<Action> {
     let mut tabs_emitted = 0usize;
     let mut ordinal = 0usize;
     for w in &scene.widgets {
-        if w.enabled == Some(false) {
+        // A Tab step only lands on a widget Slint can actually focus:
+        // buttons are always focusable; a list item is focusable only when
+        // one of its interactive flags makes `is_interactive` true.
+        let focusable = match w.kind.as_str() {
+            "list-item" | "segmented-list-item" => {
+                w.interactive == Some(true)
+                    || w.selectable == Some(true)
+                    || w.checkable == Some(true)
+            }
+            "rect" | "surface" => false,
+            _ => true,
+        };
+        if !focusable || w.enabled == Some(false) {
             continue;
         }
         if w.state.as_deref() == Some("focused") {
@@ -715,12 +793,106 @@ fn button_props(w: &Widget, timed: bool) -> String {
     p
 }
 
+/// The property lines every list-item widget takes — the `ListTile` /
+/// `SegmentedListItem` slot contents plus the interaction-state inputs.
+/// `slint_overrides` entries shadow the authored values for the negative
+/// scenes' deliberate defects.
+fn list_props(w: &Widget, timed: bool, segmented: bool) -> String {
+    let mut p = String::new();
+    let over = &w.slint_overrides;
+    let bool_over = |k: &str, authored: Option<bool>| -> bool {
+        over.get(k).and_then(|v| v.as_bool()).unwrap_or(authored.unwrap_or(false))
+    };
+    let str_over = |k: &str, authored: &Option<String>| -> Option<String> {
+        over.get(k)
+            .and_then(|v| v.as_str())
+            .map(str::to_string)
+            .or_else(|| authored.clone())
+    };
+    if let Some(text) = str_over("text", &w.text) {
+        writeln!(p, "        text: \"{text}\";").unwrap();
+    }
+    if let Some(overline) = str_over("overline", &w.overline) {
+        writeln!(p, "        overline_text: \"{overline}\";").unwrap();
+    }
+    if let Some(supporting) = str_over("supporting", &w.supporting) {
+        writeln!(p, "        supporting_text: \"{supporting}\";").unwrap();
+    }
+    if bool_over("supporting_multiline", w.supporting_multiline) {
+        p.push_str("        supporting_multiline: true;\n");
+    }
+    if let Some(icon) = str_over("icon", &w.icon) {
+        writeln!(p, "        leading_icon: Icons.{icon};").unwrap();
+    }
+    if let Some(image) = str_over("leading_image", &w.leading_image) {
+        writeln!(p, "        leading_image: Icons.{image};").unwrap();
+    }
+    if let Some(avatar) = str_over("avatar", &w.avatar) {
+        writeln!(p, "        avatar_text: \"{avatar}\";").unwrap();
+    }
+    if let Some(trailing_icon) = str_over("trailing_icon", &w.trailing_icon) {
+        writeln!(p, "        trailing_icon: Icons.{trailing_icon};").unwrap();
+    }
+    if let Some(trailing_text) = str_over("trailing_text", &w.trailing_text) {
+        writeln!(p, "        trailing_text: \"{trailing_text}\";").unwrap();
+    }
+    if segmented {
+        // `slint_overrides.index`/`count` shadow the position — the
+        // negative scene's wrong-corners defect.
+        let index = over.get("index").and_then(|v| v.as_i64()).or(w.index).unwrap_or(0);
+        let count = over.get("count").and_then(|v| v.as_i64()).or(w.count).unwrap_or(1);
+        writeln!(p, "        index: {index};\n        count: {count};").unwrap();
+    }
+    if bool_over("interactive", w.interactive) {
+        p.push_str("        interactive: true;\n");
+    }
+    if bool_over("selectable", w.selectable) {
+        p.push_str("        selectable: true;\n");
+    }
+    if bool_over("checkable", w.checkable) {
+        p.push_str("        checkable: true;\n");
+    }
+    if bool_over("selected", w.selected) {
+        p.push_str("        selected: true;\n");
+    }
+    if bool_over("checked", w.checked) {
+        p.push_str("        checked: true;\n");
+    }
+    if bool_over("dragged", w.dragged) {
+        p.push_str("        dragged: true;\n");
+    }
+    if !bool_over("enabled", w.enabled.or(Some(true))) {
+        p.push_str("        enabled: false;\n");
+    }
+    if let Some(width) = w.width {
+        writeln!(p, "        width: {width}px;").unwrap();
+    }
+    if !timed {
+        match w.state.as_deref() {
+            Some("hovered") => p.push_str("        simulate_hover: true;\n"),
+            Some("pressed") => p.push_str("        simulate_press: true;\n"),
+            _ => {}
+        }
+    }
+    if !bool_over("enforce_touch_target", None) {
+        p.push_str("        enforce_touch_target: false;\n");
+    }
+    // `ListItem(selected, onClick)` upstream: the host owns the selection —
+    // the generated case flips it so a press+release action animates the
+    // morph, like `checkable`'s self-toggle.
+    if bool_over("selectable", w.selectable) {
+        p.push_str("        clicked => {\n            self.selected = !self.selected;\n        }\n");
+    }
+    p
+}
+
 fn slint_canvas(s: &mut String, scene: &Scene) {
     // Buttons are named `button{n}` by count of button-family widgets, not
     // widget index — a backdrop `rect` ahead of a button leaves `button0`
-    // intact.
+    // intact; list items follow the same rule as `item{n}`.
     let mut buttons = 0;
     let mut surfaces = 0;
+    let mut items = 0;
     for w in scene.widgets.iter() {
         let component = match w.kind.as_str() {
             "filled-button" => "FilledButton",
@@ -786,6 +958,31 @@ fn slint_canvas(s: &mut String, scene: &Scene) {
                         cover["opacity"].as_f64().unwrap_or(1.0),
                     )
                     .unwrap();
+                }
+                continue;
+            }
+            "list-item" | "segmented-list-item" => {
+                let i = items;
+                items += 1;
+                let component = if w.kind == "list-item" { "ListTile" } else { "SegmentedListItem" };
+                writeln!(
+                    s,
+                    "    item{i} := {component} {{\n        x: {}px;\n        y: {}px;\n{}    }}\n",
+                    w.x as i64,
+                    w.y as i64,
+                    list_props(w, !scene.times.is_empty(), w.kind == "segmented-list-item"),
+                )
+                .unwrap();
+                // `container_radius` forwards the live corner morph to the
+                // tracer, exactly like the button arm.
+                if i == 0 {
+                    for prop in &scene.trace_props {
+                        let ty = match prop.as_str() {
+                            "container_radius" => "length",
+                            other => panic!("no forwarding type known for trace prop {other:?}"),
+                        };
+                        writeln!(s, "    out property <{ty}> {prop}: item{i}.{prop};\n").unwrap();
+                    }
                 }
                 continue;
             }
