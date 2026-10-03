@@ -1,0 +1,91 @@
+{
+  "name": "chip-elevated-filter-states",
+  "type": "canvas",
+  "parity": "xfail:skia,femtovg",
+  "size": [
+    712,
+    96
+  ],
+  "densities": [
+    1,
+    2
+  ],
+  "theme": {
+    "seed": "6750A4",
+    "variant": "tonal-spot",
+    "spec": "spec2025",
+    "platform": "phone",
+    "dark": false,
+    "contrast": 0.0
+  },
+  "fonts": {
+    "plain": "Roboto",
+    "brand": "Roboto"
+  },
+  "widgets": [
+    {
+      "kind": "elevated-filter-chip",
+      "x": 16,
+      "y": 32,
+      "text": "Filter"
+    },
+    {
+      "kind": "elevated-filter-chip",
+      "x": 136,
+      "y": 32,
+      "text": "Filter",
+      "checked": true,
+      "checked_icon": "check"
+    },
+    {
+      "kind": "elevated-filter-chip",
+      "x": 256,
+      "y": 32,
+      "text": "Filter",
+      "state": "hovered"
+    },
+    {
+      "kind": "elevated-filter-chip",
+      "x": 376,
+      "y": 32,
+      "text": "Filter",
+      "state": "pressed"
+    },
+    {
+      "kind": "elevated-filter-chip",
+      "x": 496,
+      "y": 32,
+      "text": "Filter",
+      "enabled": false
+    },
+    {
+      "kind": "elevated-filter-chip",
+      "x": 616,
+      "y": 32,
+      "text": "Filter",
+      "checked": true,
+      "checked_icon": "check",
+      "enabled": false
+    }
+  ],
+  "trace_elements": [
+    "button0",
+    "button1",
+    "button2",
+    "button3",
+    "button4",
+    "button5"
+  ],
+  "trace_props": [
+    "shadow_elevation"
+  ],
+  "mask_inner": {
+    "button3": [
+      2000
+    ]
+  },
+  "negative_note": "compose references never render a chip's held press (the emitted PressInteraction produces no ripple ink, corner morph, or Level3 shadow in the layoutlib refs \u2014 the same gap behind the chip-*-morph xfails) so the pressed chip's silhouette edge is unverifiable on GPU drivers; software keeps the pixel check with the silhouette findings waived under issue #6's axis-aligned clip",
+  "parity_eps": 16,
+  "parity_eps_reason": "issue #6: the pressed elevated chip's graphicsLayer-softened edge and shadow penumbra land ~1px inside the strict band (residual <=14 channel diff); the silhouette boundary check stays strict (band 2.0)",
+  "xfail_silhouette": "issue #6: the software driver can't clip the pressed chip's shadow to the rounded shape \u2014 silhouette edge unverifiable; the strict interior stays masked"
+}

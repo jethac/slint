@@ -308,6 +308,10 @@ struct Widget {
     /// `connected-button-group`/`vertical-connected-button-group` items.
     #[serde(default)]
     items: Vec<GroupItem>,
+    /// `input-chip` avatar: icon stem rendered in the 24dp avatar slot
+    /// (the upstream samples' `Icon` avatar).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    avatar: Option<String>,
     /// Groups: every item carries its own checked state instead of one
     /// `selected_index`.
     #[serde(default)]
@@ -375,6 +379,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 .chain(w.nav_icon.iter())
                 .chain(w.icons.iter())
                 .chain(w.trailing_icon.iter())
+                .chain(w.avatar.iter())
                 .chain(w.items.iter().flat_map(|item| item.icon.iter().chain(item.checked_icon.iter())))
             {
                 let src = repo_root
@@ -747,6 +752,13 @@ fn slint_case(scene: &Scene) -> String {
             "connected-button" => "ConnectedButton",
             "connected-button-group" => "ConnectedButtonGroup",
             "vertical-connected-button-group" => "VerticalConnectedButtonGroup",
+            "assist-chip" => "AssistChip",
+            "elevated-assist-chip" => "ElevatedAssistChip",
+            "filter-chip" => "FilterChip",
+            "elevated-filter-chip" => "ElevatedFilterChip",
+            "input-chip" => "InputChip",
+            "suggestion-chip" => "SuggestionChip",
+            "elevated-suggestion-chip" => "ElevatedSuggestionChip",
             other => panic!("unknown widget kind {other:?}"),
         };
         imports.push(component);
@@ -756,6 +768,7 @@ fn slint_case(scene: &Scene) -> String {
         if w.icon.is_some()
             || w.checked_icon.is_some()
             || w.nav_icon.is_some()
+            || w.avatar.is_some()
             || !w.icons.is_empty()
             || w.kind.ends_with("split-button")
             || w.items.iter().any(|item| item.icon.is_some() || item.checked_icon.is_some())
@@ -1222,6 +1235,114 @@ fn fab_props(w: &Widget, timed: bool) -> String {
     p
 }
 
+/// `*-chip` props — text, the leading icon/avatar and trailing icon
+/// slots, `checked`, `expressive` (the `shapes:` overload), the width pin
+/// and the `simulate_*` state hooks.
+fn chip_props(w: &Widget, timed: bool) -> String {
+    let mut p = String::new();
+    let over = &w.slint_overrides;
+    let bool_over = |k: &str, authored: Option<bool>| -> bool {
+        over.get(k).and_then(|v| v.as_bool()).unwrap_or(authored.unwrap_or(false))
+    };
+    if let Some(text) = &w.text {
+        writeln!(p, "        text: \"{text}\";").unwrap();
+    }
+    // `icon` fills the leading slot; `input-chip`'s is `leading_icon`.
+    let icon = over
+        .get("icon")
+        .and_then(|v| v.as_str())
+        .map(str::to_string)
+        .or_else(|| w.icon.clone());
+    let checked_icon = over
+        .get("checked_icon")
+        .and_then(|v| v.as_str())
+        .map(str::to_string)
+        .or_else(|| w.checked_icon.clone());
+    // A `checked_icon` swaps the leading slot while checked — the upstream
+    // samples' `leadingIcon = if (selected) { check } else { icon }`.
+    let icon_expr = match (icon, checked_icon) {
+        (Some(icon), Some(checked_icon)) => {
+            Some(format!("self.checked ? Icons.{checked_icon} : Icons.{icon}"))
+        }
+        (None, Some(checked_icon)) => {
+            Some(format!("self.checked ? Icons.{checked_icon} : @image-url(\"\")"))
+        }
+        (Some(icon), None) => Some(format!("Icons.{icon}")),
+        (None, None) => None,
+    };
+    if let Some(icon_expr) = icon_expr {
+        let prop = if w.kind == "input-chip" { "leading_icon" } else { "icon" };
+        writeln!(p, "        {prop}: {icon_expr};").unwrap();
+    }
+    // `container_shape` overrides the `shape:` token (negative cases only).
+    if let Some(shape) = over.get("container_shape").and_then(|v| v.as_str()) {
+        let lit = match shape {
+            // MaterialCornerShape literal — CornerFull ignores the per-corner
+            // values and uses min(w,h)/2.
+            "corner_full" => "{ top_left: 0px, top_right: 0px, bottom_right: 0px, bottom_left: 0px, full: true }",
+            "corner_none" => "{ top_left: 0px, top_right: 0px, bottom_right: 0px, bottom_left: 0px, full: false }",
+            other => panic!("slint_overrides.container_shape: unsupported shape {other:?}"),
+        };
+        writeln!(p, "        container_shape: {lit};").unwrap();
+    }
+    // `chip_shapes` overrides the `shapes:` table wholesale (negative cases
+    // only) — same literal language as `container_shape`, one key per slot.
+    if let Some(shapes) = over.get("chip_shapes").and_then(|v| v.as_object()) {
+        let lit = |key: &str| match shapes.get(key).and_then(|v| v.as_str()) {
+            Some("corner_full") => "{ top_left: 0px, top_right: 0px, bottom_right: 0px, bottom_left: 0px, full: true }",
+            Some("corner_none") => "{ top_left: 0px, top_right: 0px, bottom_right: 0px, bottom_left: 0px, full: false }",
+            Some(other) => panic!("slint_overrides.chip_shapes.{key}: unsupported shape {other:?}"),
+            None => panic!("slint_overrides.chip_shapes: missing {key}"),
+        };
+        writeln!(
+            p,
+            "        chip_shapes: {{ shape: {}, selected_shape: {}, pressed_shape: {} }};",
+            lit("shape"),
+            lit("selected_shape"),
+            lit("pressed_shape")
+        )
+        .unwrap();
+    }
+    let avatar = over
+        .get("avatar")
+        .and_then(|v| v.as_str())
+        .map(str::to_string)
+        .or_else(|| w.avatar.clone());
+    if let Some(avatar) = avatar {
+        writeln!(p, "        avatar_icon: Icons.{avatar};").unwrap();
+    }
+    let trailing_icon = over
+        .get("trailing_icon")
+        .and_then(|v| v.as_str())
+        .map(str::to_string)
+        .or_else(|| w.trailing_icon.clone());
+    if let Some(trailing_icon) = trailing_icon {
+        writeln!(p, "        trailing_icon: Icons.{trailing_icon};").unwrap();
+    }
+    if bool_over("checked", w.checked) {
+        p.push_str("        checked: true;\n");
+    }
+    // `variant: "expressive"` selects the `shapes:` overload (corner
+    // morphing); every other chip draws its static `shape`.
+    if w.variant.as_deref() == Some("expressive") {
+        p.push_str("        expressive: true;\n");
+    }
+    if !bool_over("enabled", w.enabled.or(Some(true))) {
+        p.push_str("        enabled: false;\n");
+    }
+    if let Some(width) = w.width {
+        writeln!(p, "        width: {width}px;").unwrap();
+    }
+    if !timed {
+        match w.state.as_deref() {
+            Some("hovered") => p.push_str("        simulate_hover: true;\n"),
+            Some("pressed") => p.push_str("        simulate_press: true;\n"),
+            _ => {}
+        }
+    }
+    p
+}
+
 fn slint_canvas(s: &mut String, scene: &Scene) {
     // Buttons are named `button{n}` by count of button-family widgets, not
     // widget index — a backdrop `rect` ahead of a button leaves `button0`
@@ -1358,6 +1479,13 @@ fn slint_canvas(s: &mut String, scene: &Scene) {
                 connected_button_widget(s, w, i, scene);
                 continue;
             }
+            "assist-chip" => "AssistChip",
+            "elevated-assist-chip" => "ElevatedAssistChip",
+            "filter-chip" => "FilterChip",
+            "elevated-filter-chip" => "ElevatedFilterChip",
+            "input-chip" => "InputChip",
+            "suggestion-chip" => "SuggestionChip",
+            "elevated-suggestion-chip" => "ElevatedSuggestionChip",
             "connected-button-group" | "vertical-connected-button-group" => {
                 let i = groups;
                 groups += 1;
@@ -1485,6 +1613,8 @@ fn slint_canvas(s: &mut String, scene: &Scene) {
                 split_button_props(w, !scene.times.is_empty())
             } else if w.kind == "fab" || w.kind == "extended-fab" {
                 fab_props(w, !scene.times.is_empty())
+            } else if w.kind.ends_with("chip") {
+                chip_props(w, !scene.times.is_empty())
             } else {
                 button_props(w, !scene.times.is_empty())
             },
@@ -1519,6 +1649,7 @@ fn trace_prop_type(prop: &str) -> &'static str {
         | "slot_width"
         | "shadow_elevation" => "length",
         "trailing_icon_rotation" => "angle",
+        "resolved_content_color" => "color",
         "label_alpha" | "show_scale" | "show_alpha" | "expand_progress" => "float",
         other => panic!("no forwarding type known for trace prop {other:?}"),
     }

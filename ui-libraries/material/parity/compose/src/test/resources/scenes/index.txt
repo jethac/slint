@@ -9,6 +9,15 @@ button-release-morph
 button-sizes
 button-states
 button-styles
+chip-elevated-filter-states
+chip-elevated-states
+chip-filter-states
+chip-icons
+chip-input-states
+chip-press-morph
+chip-select-morph
+chip-states
+chip-suggestion-states
 connected-button-groups
 connected-button-morph
 connected-button-press-morph
@@ -35,6 +44,8 @@ negative-button-focus-ring
 negative-button-press-morph
 negative-button-ripple-clip
 negative-button-role
+negative-chip-color
+negative-chip-shape
 negative-connected-button-group
 negative-corner-leak-dark
 negative-corner-leak
