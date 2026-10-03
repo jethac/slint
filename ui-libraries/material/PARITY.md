@@ -464,7 +464,7 @@ States: active, focused, hovered, pressed, inactive
 | Component | Source | Status | Issues | Needs | Notes |
 |---|---|---|---|---|---|
 | ProvideTextStyle | Text.kt | missing | #7 | variable fonts (#7), adaptive (#12) | - |
-| Text | Text.kt | partial | #11 | variable fonts (#7), adaptive (#12) | slint component: MaterialText |
+| Text | Text.kt | done | #11 | variable fonts (#7), adaptive (#12) | slint component: MaterialText; tokens: generated type tokens — all 15 base + 15 emphasized roles (androidx/androidx@23327507f7fc, material3 1.5.0-alpha18); upstream defaults restored — bodyLarge LocalTextStyle, TextOverflow.Clip; new engine props min-lines, font-underline, font-strikeout (all renderers via sharedparley); parity scenes: material-text-styles/material-text-behaviors (xfail: Compose lays text out at natural font metrics regardless of lineHeight while slint's line-height hard-sets the line box and parley splits the leading half above/below — ink ~1-3px off vertically, element h differs; parley appends letter-spacing to the trailing cluster; width-constrained text reports the pin as element w); gaps: onTextLayout/TextLayoutResult callback, auto-size text (TextAutoSize), LinkAnnotation/inline content, SelectableText |
 
 ### Text fields
 

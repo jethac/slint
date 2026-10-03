@@ -1,1214 +1,1214 @@
 {
-  "AlertDialog": {
-    "issues": [
-      11
-    ],
-    "needs": "none",
-    "notes": "slint component: Dialog",
-    "status": "partial"
-  },
-  "AppBarColumn": {
-    "issues": [
-      11
-    ],
-    "needs": "springs (#5), shapes (#6)",
-    "notes": "slint component: AppBarColumn; tokens: generated component tokens; springs via active motion scheme",
-    "status": "partial"
-  },
-  "AppBarOverflowIndicator": {
-    "issues": [
-      11
-    ],
-    "needs": "springs (#5), shapes (#6)",
-    "notes": "slint component: AppBarOverflowIndicator (via AppBarRow/AppBarColumn overflow); tokens: generated component tokens; springs via active motion scheme",
-    "status": "partial"
-  },
-  "AppBarRow": {
-    "issues": [
-      11
-    ],
-    "needs": "springs (#5), shapes (#6)",
-    "notes": "slint component: AppBarRow; tokens: generated component tokens; springs via active motion scheme",
-    "status": "partial"
-  },
-  "AppBarWithSearch": {
-    "issues": [
-      11
-    ],
-    "needs": "springs (#5)",
-    "notes": "slint component: AppBarWithSearch; tokens: generated component tokens; springs via active motion scheme",
-    "status": "partial"
-  },
-  "AssistChip": {
-    "issues": [
-      11
-    ],
-    "needs": "shapes (#6)",
-    "notes": "slint component: Chip",
-    "status": "partial"
-  },
-  "Badge": {
-    "issues": [
-      11
-    ],
-    "needs": "none",
-    "notes": "slint component: Badge",
-    "status": "done"
-  },
-  "BadgedBox": {
-    "issues": [
-      11
-    ],
-    "needs": "none",
-    "notes": "slint component: BadgedBox",
-    "status": "done"
-  },
-  "BasicAlertDialog": {
-    "issues": [
-      11
-    ],
-    "needs": "none",
-    "notes": "",
-    "status": "missing"
-  },
-  "BottomAppBar": {
-    "issues": [
-      11
-    ],
-    "needs": "springs (#5), shapes (#6)",
-    "notes": "slint component: BottomAppBar; tokens: generated component tokens; springs via active motion scheme",
-    "status": "partial"
-  },
-  "BottomSheet": {
-    "issues": [
-      11
-    ],
-    "needs": "springs (#5)",
-    "notes": "",
-    "status": "missing"
-  },
-  "BottomSheetScaffold": {
-    "issues": [
-      11
-    ],
-    "needs": "springs (#5)",
-    "notes": "",
-    "status": "missing"
-  },
-  "Button": {
-    "issues": [
-      9
-    ],
-    "needs": "springs (#5), shapes (#6)",
-    "notes": "slint component: FilledButton",
-    "status": "partial"
-  },
-  "ButtonGroup": {
-    "issues": [
-      5,
-      9,
-      10
-    ],
-    "needs": "springs (#5), shapes (#6)",
-    "notes": "connected variants: slint components ConnectedButtonGroup, ConnectedButton, VerticalConnectedButtonGroup; parity cases: connected-button-groups, connected-button-morph, connected-button-press-morph, negative-connected-button-group; standard variant pending (#10)",
-    "status": "partial"
-  },
-  "Card": {
-    "issues": [
-      11
-    ],
-    "needs": "none",
-    "notes": "slint component: ElevatedCard/FilledCard/OutlinedCard",
-    "status": "partial"
-  },
-  "CenterAlignedTopAppBar": {
-    "issues": [
-      11
-    ],
-    "needs": "springs (#5), shapes (#6)",
-    "notes": "slint component: CenterAlignedTopAppBar; tokens: generated component tokens; springs via active motion scheme",
-    "status": "partial"
-  },
-  "CheckableDropdownMenuItem": {
-    "issues": [
-      11
-    ],
-    "needs": "springs (#5), shapes (#6)",
-    "notes": "",
-    "status": "missing"
-  },
-  "Checkbox": {
-    "issues": [
-      11
-    ],
-    "needs": "shapes (#6)",
-    "notes": "slint component: CheckBox",
-    "status": "partial"
-  },
-  "CircularProgressIndicator": {
-    "issues": [
-      11
-    ],
-    "needs": "springs (#5), shapes (#6)",
-    "notes": "slint component: CircularProgressIndicator",
-    "status": "partial"
-  },
-  "CircularWavyProgressIndicator": {
-    "issues": [
-      6,
-      11
-    ],
-    "needs": "springs (#5), shapes (#6)",
-    "notes": "",
-    "status": "missing"
-  },
-  "ContainedLoadingIndicator": {
-    "issues": [
-      5,
-      6,
-      10
-    ],
-    "needs": "springs (#5), shapes (#6)",
-    "notes": "slint component: ContainedLoadingIndicator; parity scenes: loading-indicator-states (xfail on femtovg, #53 concave-fill AA fringe), loading-indicator-motion (xfail, #27-class launch jitter)",
-    "status": "partial"
-  },
-  "DatePicker": {
-    "issues": [
-      11
-    ],
-    "needs": "none",
-    "notes": "slint component: DatePickerPopup",
-    "status": "partial"
-  },
-  "DatePickerDialog": {
-    "issues": [
-      11
-    ],
-    "needs": "none",
-    "notes": "slint component: DatePickerPopup",
-    "status": "partial"
-  },
-  "DateRangePicker": {
-    "issues": [
-      11
-    ],
-    "needs": "none",
-    "notes": "",
-    "status": "missing"
-  },
-  "DismissibleDrawerSheet": {
-    "issues": [
-      11,
-      12
-    ],
-    "needs": "adaptive (#12)",
-    "notes": "",
-    "status": "missing"
-  },
-  "DismissibleNavigationDrawer": {
-    "issues": [
-      12
-    ],
-    "needs": "adaptive (#12)",
-    "notes": "slint component: ModalDrawer",
-    "status": "partial"
-  },
-  "Divider": {
-    "issues": [
-      11
-    ],
-    "needs": "none",
-    "notes": "slint component: Divider (deprecated alias for HorizontalDivider)",
-    "status": "done"
-  },
-  "DockedSearchBar": {
-    "issues": [
-      11
-    ],
-    "needs": "springs (#5)",
-    "notes": "deprecated at pin; covered by SearchBar expanded-state API; tokens: generated component tokens; springs via active motion scheme",
-    "status": "partial"
-  },
-  "DropdownMenu": {
-    "issues": [
-      11
-    ],
-    "needs": "springs (#5), shapes (#6)",
-    "notes": "slint component: DropDownMenu/PopupMenu",
-    "status": "partial"
-  },
-  "DropdownMenuGroup": {
-    "issues": [
-      11
-    ],
-    "needs": "springs (#5), shapes (#6)",
-    "notes": "",
-    "status": "missing"
-  },
-  "DropdownMenuItem": {
-    "issues": [
-      11
-    ],
-    "needs": "springs (#5), shapes (#6)",
-    "notes": "slint component: MenuItem in DropDownMenu",
-    "status": "partial"
-  },
-  "DropdownMenuItemLegacy": {
-    "issues": [
-      11
-    ],
-    "needs": "springs (#5), shapes (#6)",
-    "notes": "",
-    "status": "missing"
-  },
-  "DropdownMenuPopup": {
-    "issues": [
-      11
-    ],
-    "needs": "springs (#5), shapes (#6)",
-    "notes": "",
-    "status": "missing"
-  },
-  "ElevatedAssistChip": {
-    "issues": [
-      9
-    ],
-    "needs": "shapes (#6)",
-    "notes": "",
-    "status": "missing"
-  },
-  "ElevatedButton": {
-    "issues": [
-      9
-    ],
-    "needs": "springs (#5), shapes (#6)",
-    "notes": "slint component: ElevatedButton",
-    "status": "partial"
-  },
-  "ElevatedCard": {
-    "issues": [
-      11
-    ],
-    "needs": "none",
-    "notes": "slint component: ElevatedCard",
-    "status": "partial"
-  },
-  "ElevatedFilterChip": {
-    "issues": [
-      9
-    ],
-    "needs": "shapes (#6)",
-    "notes": "",
-    "status": "missing"
-  },
-  "ElevatedSuggestionChip": {
-    "issues": [
-      9
-    ],
-    "needs": "shapes (#6)",
-    "notes": "",
-    "status": "missing"
-  },
-  "ElevatedToggleButton": {
-    "issues": [
-      9
-    ],
-    "needs": "springs (#5), shapes (#6)",
-    "notes": "",
-    "status": "missing"
-  },
-  "ExpandedDockedSearchBar": {
-    "issues": [
-      11
-    ],
-    "needs": "springs (#5)",
-    "notes": "slint component: ExpandedDockedSearchBar; tokens: generated component tokens; springs via active motion scheme",
-    "status": "partial"
-  },
-  "ExpandedDockedSearchBarWithGap": {
-    "issues": [
-      11
-    ],
-    "needs": "springs (#5)",
-    "notes": "slint component: ExpandedDockedSearchBarWithGap; tokens: generated component tokens; springs via active motion scheme",
-    "status": "partial"
-  },
-  "ExpandedFullScreenContainedSearchBar": {
-    "issues": [
-      11
-    ],
-    "needs": "springs (#5)",
-    "notes": "slint component: ExpandedFullScreenContainedSearchBar; tokens: generated component tokens; springs via active motion scheme",
-    "status": "partial"
-  },
-  "ExpandedFullScreenSearchBar": {
-    "issues": [
-      11
-    ],
-    "needs": "springs (#5)",
-    "notes": "slint component: ExpandedFullScreenSearchBar; tokens: generated component tokens; springs via active motion scheme",
-    "status": "partial"
-  },
-  "ExposedDropdownMenuBox": {
-    "issues": [
-      11
-    ],
-    "needs": "springs (#5), shapes (#6)",
-    "notes": "",
-    "status": "missing"
-  },
-  "ExposedDropdownMenuBoxScope": {
-    "issues": [
-      11
-    ],
-    "needs": "springs (#5), shapes (#6)",
-    "notes": "",
-    "status": "missing"
-  },
-  "ExtendedFloatingActionButton": {
-    "issues": [
-      11
-    ],
-    "needs": "springs (#5), shapes (#6)",
-    "notes": "slint component: ExtendedFloatingActionButton; tokens: generated component tokens; springs via active motion scheme",
-    "status": "done"
-  },
-  "FilledIconButton": {
-    "issues": [
-      9
-    ],
-    "needs": "springs (#5), shapes (#6)",
-    "notes": "slint component: FilledIconButton",
-    "status": "partial"
-  },
-  "FilledIconToggleButton": {
-    "issues": [
-      9
-    ],
-    "needs": "springs (#5), shapes (#6)",
-    "notes": "",
-    "status": "missing"
-  },
-  "FilledTonalButton": {
-    "issues": [
-      9
-    ],
-    "needs": "springs (#5), shapes (#6)",
-    "notes": "slint component: TonalButton",
-    "status": "partial"
-  },
-  "FilledTonalIconButton": {
-    "issues": [
-      9
-    ],
-    "needs": "springs (#5), shapes (#6)",
-    "notes": "slint component: TonalIconButton",
-    "status": "partial"
-  },
-  "FilledTonalIconToggleButton": {
-    "issues": [
-      9
-    ],
-    "needs": "springs (#5), shapes (#6)",
-    "notes": "",
-    "status": "missing"
-  },
-  "FilledTonalToggleButton": {
-    "issues": [
-      9
-    ],
-    "needs": "springs (#5), shapes (#6)",
-    "notes": "",
-    "status": "missing"
-  },
-  "FilterChip": {
-    "issues": [
-      11
-    ],
-    "needs": "shapes (#6)",
-    "notes": "slint component: Chip",
-    "status": "partial"
-  },
-  "FlexibleBottomAppBar": {
-    "issues": [
-      11
-    ],
-    "needs": "springs (#5), shapes (#6)",
-    "notes": "slint component: FlexibleBottomAppBar; tokens: generated component tokens; springs via active motion scheme",
-    "status": "partial"
-  },
-  "FloatingActionButton": {
-    "issues": [
-      11
-    ],
-    "needs": "springs (#5), shapes (#6)",
-    "notes": "slint component: FloatingActionButton; tokens: generated component tokens; springs via active motion scheme",
-    "status": "done"
-  },
-  "FloatingActionButtonMenu": {
-    "issues": [
-      5,
-      10
-    ],
-    "needs": "springs (#5), shapes (#6)",
-    "notes": "",
-    "status": "missing"
-  },
-  "FloatingActionButtonMenuScope": {
-    "issues": [
-      10
-    ],
-    "needs": "springs (#5), shapes (#6)",
-    "notes": "",
-    "status": "missing"
-  },
-  "HorizontalCenteredHeroCarousel": {
-    "issues": [
-      11
-    ],
-    "needs": "springs (#5), shapes (#6)",
-    "notes": "",
-    "status": "missing"
-  },
-  "HorizontalDivider": {
-    "issues": [
-      11
-    ],
-    "needs": "none",
-    "notes": "slint component: HorizontalDivider; tokens: generated component tokens",
-    "status": "done"
-  },
-  "HorizontalFloatingToolbar": {
-    "issues": [
-      10
-    ],
-    "needs": "springs (#5), adaptive (#12)",
-    "notes": "",
-    "status": "missing"
-  },
-  "HorizontalMultiBrowseCarousel": {
-    "issues": [
-      11
-    ],
-    "needs": "springs (#5), shapes (#6)",
-    "notes": "",
-    "status": "missing"
-  },
-  "HorizontalUncontainedCarousel": {
-    "issues": [
-      11
-    ],
-    "needs": "springs (#5), shapes (#6)",
-    "notes": "",
-    "status": "missing"
-  },
-  "Icon": {
-    "issues": [
-      11
-    ],
-    "needs": "none",
-    "notes": "slint component: Icon",
-    "status": "done"
-  },
-  "IconButton": {
-    "issues": [
-      9
-    ],
-    "needs": "springs (#5), shapes (#6)",
-    "notes": "slint component: IconButton",
-    "status": "partial"
-  },
-  "IconToggleButton": {
-    "issues": [
-      9
-    ],
-    "needs": "springs (#5), shapes (#6)",
-    "notes": "",
-    "status": "missing"
-  },
-  "InputChip": {
-    "issues": [
-      11
-    ],
-    "needs": "shapes (#6)",
-    "notes": "slint component: Chip",
-    "status": "partial"
-  },
-  "LargeExtendedFloatingActionButton": {
-    "issues": [
-      11
-    ],
-    "needs": "springs (#5), shapes (#6)",
-    "notes": "slint component: ExtendedFloatingActionButton; tokens: generated component tokens; springs via active motion scheme",
-    "status": "done"
-  },
-  "LargeFlexibleTopAppBar": {
-    "issues": [
-      11
-    ],
-    "needs": "springs (#5), shapes (#6)",
-    "notes": "slint component: LargeFlexibleTopAppBar; tokens: generated component tokens; springs via active motion scheme",
-    "status": "partial"
-  },
-  "LargeFloatingActionButton": {
-    "issues": [
-      11
-    ],
-    "needs": "springs (#5), shapes (#6)",
-    "notes": "slint component: FloatingActionButton; tokens: generated component tokens; springs via active motion scheme",
-    "status": "done"
-  },
-  "LargeTopAppBar": {
-    "issues": [
-      11
-    ],
-    "needs": "springs (#5), shapes (#6)",
-    "notes": "slint component: LargeTopAppBar; tokens: generated component tokens; springs via active motion scheme",
-    "status": "partial"
-  },
-  "LeadingIconTab": {
-    "issues": [
-      11
-    ],
-    "needs": "none",
-    "notes": "",
-    "status": "missing"
-  },
-  "LinearProgressIndicator": {
-    "issues": [
-      11
-    ],
-    "needs": "springs (#5), shapes (#6)",
-    "notes": "slint component: LinearProgressIndicator",
-    "status": "partial"
-  },
-  "LinearWavyProgressIndicator": {
-    "issues": [
-      6,
-      11
-    ],
-    "needs": "springs (#5), shapes (#6)",
-    "notes": "",
-    "status": "missing"
-  },
-  "ListItem": {
-    "issues": [
-      11
-    ],
-    "needs": "shapes (#6)",
-    "notes": "slint component: ListTile",
-    "status": "partial"
-  },
-  "LoadingIndicator": {
-    "issues": [
-      5,
-      6,
-      10
-    ],
-    "needs": "springs (#5), shapes (#6)",
-    "notes": "slint component: LoadingIndicator; parity scenes: loading-indicator-states (xfail on femtovg, #53 concave-fill AA fringe), loading-indicator-motion (xfail, #27-class launch jitter)",
-    "status": "partial"
-  },
-  "MediumExtendedFloatingActionButton": {
-    "issues": [
-      11
-    ],
-    "needs": "springs (#5), shapes (#6)",
-    "notes": "slint component: ExtendedFloatingActionButton; tokens: generated component tokens; springs via active motion scheme",
-    "status": "done"
-  },
-  "MediumFlexibleTopAppBar": {
-    "issues": [
-      11
-    ],
-    "needs": "springs (#5), shapes (#6)",
-    "notes": "slint component: MediumFlexibleTopAppBar; tokens: generated component tokens; springs via active motion scheme",
-    "status": "partial"
-  },
-  "MediumFloatingActionButton": {
-    "issues": [
-      11
-    ],
-    "needs": "springs (#5), shapes (#6)",
-    "notes": "slint component: FloatingActionButton; tokens: generated component tokens; springs via active motion scheme",
-    "status": "done"
-  },
-  "MediumTopAppBar": {
-    "issues": [
-      11
-    ],
-    "needs": "springs (#5), shapes (#6)",
-    "notes": "slint component: MediumTopAppBar; tokens: generated component tokens; springs via active motion scheme",
-    "status": "partial"
-  },
-  "ModalBottomSheet": {
-    "issues": [
-      11
-    ],
-    "needs": "springs (#5)",
-    "notes": "slint component: ModalBottomSheet",
-    "status": "partial"
-  },
-  "ModalDrawerSheet": {
-    "issues": [
-      12
-    ],
-    "needs": "adaptive (#12)",
-    "notes": "slint component: ModalDrawer",
-    "status": "partial"
-  },
-  "ModalNavigationDrawer": {
-    "issues": [
-      12
-    ],
-    "needs": "adaptive (#12)",
-    "notes": "slint component: ModalNavigationDrawer",
-    "status": "partial"
-  },
-  "ModalWideNavigationRail": {
-    "issues": [
-      12
-    ],
-    "needs": "springs (#5), adaptive (#12)",
-    "notes": "",
-    "status": "missing"
-  },
-  "Modifier": {
-    "issues": [
-      11
-    ],
-    "needs": "springs (#5), shapes (#6)",
-    "notes": "",
-    "status": "missing"
-  },
-  "MultiChoiceSegmentedButtonRow": {
-    "issues": [
-      10
-    ],
-    "needs": "springs (#5), shapes (#6)",
-    "notes": "Expressive mapping -> ConnectedButtonGroup; slint SegmentedButton deprecated",
-    "status": "partial"
-  },
-  "MultiChoiceSegmentedButtonRowScope": {
-    "issues": [
-      10
-    ],
-    "needs": "springs (#5), shapes (#6)",
-    "notes": "Expressive mapping -> ConnectedButtonGroup; slint SegmentedButton deprecated",
-    "status": "partial"
-  },
-  "NavigationBar": {
-    "issues": [
-      12
-    ],
-    "needs": "springs (#5), shapes (#6), adaptive (#12)",
-    "notes": "slint component: NavigationBar",
-    "status": "partial"
-  },
-  "NavigationDrawerItem": {
-    "issues": [
-      12
-    ],
-    "needs": "adaptive (#12)",
-    "notes": "slint component: NavigationItemTemplate",
-    "status": "partial"
-  },
-  "NavigationRail": {
-    "issues": [
-      12
-    ],
-    "needs": "springs (#5), adaptive (#12)",
-    "notes": "slint component: NavigationRail",
-    "status": "partial"
-  },
-  "NavigationRailItem": {
-    "issues": [
-      12
-    ],
-    "needs": "springs (#5), adaptive (#12)",
-    "notes": "slint component: NavigationItemTemplate",
-    "status": "partial"
-  },
-  "OutlinedButton": {
-    "issues": [
-      9
-    ],
-    "needs": "springs (#5), shapes (#6)",
-    "notes": "slint component: OutlineButton",
-    "status": "partial"
-  },
-  "OutlinedCard": {
-    "issues": [
-      11
-    ],
-    "needs": "none",
-    "notes": "slint component: OutlinedCard",
-    "status": "partial"
-  },
-  "OutlinedIconButton": {
-    "issues": [
-      9
-    ],
-    "needs": "springs (#5), shapes (#6)",
-    "notes": "slint component: OutlineIconButton",
-    "status": "partial"
-  },
-  "OutlinedIconToggleButton": {
-    "issues": [
-      9
-    ],
-    "needs": "springs (#5), shapes (#6)",
-    "notes": "",
-    "status": "missing"
-  },
-  "OutlinedSecureTextField": {
-    "issues": [
-      11
-    ],
-    "needs": "shapes (#6), variable fonts (#7)",
-    "notes": "",
-    "status": "missing"
-  },
-  "OutlinedTextField": {
-    "issues": [
-      11
-    ],
-    "needs": "shapes (#6), variable fonts (#7)",
-    "notes": "slint component: TextField",
-    "status": "partial"
-  },
-  "OutlinedToggleButton": {
-    "issues": [
-      9
-    ],
-    "needs": "springs (#5), shapes (#6)",
-    "notes": "",
-    "status": "missing"
-  },
-  "PermanentDrawerSheet": {
-    "issues": [
-      11,
-      12
-    ],
-    "needs": "adaptive (#12)",
-    "notes": "",
-    "status": "missing"
-  },
-  "PermanentNavigationDrawer": {
-    "issues": [
-      12
-    ],
-    "needs": "adaptive (#12)",
-    "notes": "slint component: Drawer",
-    "status": "partial"
-  },
-  "PrimaryScrollableTabRow": {
-    "issues": [
-      11
-    ],
-    "needs": "none",
-    "notes": "",
-    "status": "missing"
-  },
-  "PrimaryTabRow": {
-    "issues": [
-      11
-    ],
-    "needs": "none",
-    "notes": "slint component: TabBar",
-    "status": "partial"
-  },
-  "ProvideTextStyle": {
-    "issues": [
-      7
-    ],
-    "needs": "variable fonts (#7), adaptive (#12)",
-    "notes": "",
-    "status": "missing"
-  },
-  "PullToRefreshBox": {
-    "issues": [
-      5
-    ],
-    "needs": "springs (#5)",
-    "notes": "",
-    "status": "missing"
-  },
-  "RadioButton": {
-    "issues": [
-      11
-    ],
-    "needs": "shapes (#6)",
-    "notes": "slint component: RadioButton",
-    "status": "partial"
-  },
-  "RangeSlider": {
-    "issues": [
-      11
-    ],
-    "needs": "shapes (#6)",
-    "notes": "",
-    "status": "missing"
-  },
-  "RowScope": {
-    "issues": [
-      11,
-      12
-    ],
-    "needs": "springs (#5), shapes (#6), adaptive (#12)",
-    "notes": "",
-    "status": "missing"
-  },
-  "Scaffold": {
-    "issues": [
-      12
-    ],
-    "needs": "adaptive (#12)",
-    "notes": "",
-    "status": "missing"
-  },
-  "SearchBar": {
-    "issues": [
-      11
-    ],
-    "needs": "springs (#5)",
-    "notes": "slint component: SearchBar (SearchBarState API: expanded/text); tokens: generated component tokens; springs via active motion scheme",
-    "status": "partial"
-  },
-  "SecondaryScrollableTabRow": {
-    "issues": [
-      11
-    ],
-    "needs": "none",
-    "notes": "",
-    "status": "missing"
-  },
-  "SecondaryTabRow": {
-    "issues": [
-      11
-    ],
-    "needs": "none",
-    "notes": "slint component: SecondaryTabBar",
-    "status": "partial"
-  },
-  "SecureTextField": {
-    "issues": [
-      11
-    ],
-    "needs": "shapes (#6), variable fonts (#7)",
-    "notes": "",
-    "status": "missing"
-  },
-  "SegmentedListItem": {
-    "issues": [
-      11
-    ],
-    "needs": "shapes (#6)",
-    "notes": "",
-    "status": "missing"
-  },
-  "SelectableDropdownMenuItem": {
-    "issues": [
-      11
-    ],
-    "needs": "springs (#5), shapes (#6)",
-    "notes": "",
-    "status": "missing"
-  },
-  "ShortNavigationBar": {
-    "issues": [
-      12
-    ],
-    "needs": "springs (#5), shapes (#6), adaptive (#12)",
-    "notes": "",
-    "status": "missing"
-  },
-  "ShortNavigationBarItem": {
-    "issues": [
-      12
-    ],
-    "needs": "springs (#5), shapes (#6), adaptive (#12)",
-    "notes": "",
-    "status": "missing"
-  },
-  "SingleChoiceSegmentedButtonRow": {
-    "issues": [
-      10
-    ],
-    "needs": "springs (#5), shapes (#6)",
-    "notes": "Expressive mapping -> ConnectedButtonGroup; slint SegmentedButton deprecated",
-    "status": "partial"
-  },
-  "SingleChoiceSegmentedButtonRowScope": {
-    "issues": [
-      10
-    ],
-    "needs": "springs (#5), shapes (#6)",
-    "notes": "Expressive mapping -> ConnectedButtonGroup; slint SegmentedButton deprecated",
-    "status": "partial"
-  },
-  "Slider": {
-    "issues": [
-      11
-    ],
-    "needs": "shapes (#6)",
-    "notes": "slint component: Slider",
-    "status": "partial"
-  },
-  "SmallExtendedFloatingActionButton": {
-    "issues": [
-      11
-    ],
-    "needs": "springs (#5), shapes (#6)",
-    "notes": "slint component: ExtendedFloatingActionButton; tokens: generated component tokens; springs via active motion scheme",
-    "status": "done"
-  },
-  "SmallFloatingActionButton": {
-    "issues": [
-      11
-    ],
-    "needs": "springs (#5), shapes (#6)",
-    "notes": "slint component: FloatingActionButton; tokens: generated component tokens; springs via active motion scheme",
-    "status": "done"
-  },
-  "Snackbar": {
-    "issues": [
-      11
-    ],
-    "needs": "none",
-    "notes": "slint component: SnackBar",
-    "status": "partial"
-  },
-  "SnackbarHost": {
-    "issues": [
-      11
-    ],
-    "needs": "none",
-    "notes": "",
-    "status": "missing"
-  },
-  "SplitButtonLayout": {
-    "issues": [
-      10
-    ],
-    "needs": "none",
-    "notes": "slint components: FilledSplitButton, TonalSplitButton, ElevatedSplitButton, OutlineSplitButton",
-    "status": "partial"
-  },
-  "SuggestionChip": {
-    "issues": [
-      11
-    ],
-    "needs": "shapes (#6)",
-    "notes": "slint component: Chip",
-    "status": "partial"
-  },
-  "Surface": {
-    "issues": [
-      11
-    ],
-    "needs": "dynamic color (#8)",
-    "notes": "",
-    "status": "missing"
-  },
-  "SwipeToDismissBox": {
-    "issues": [
-      11
-    ],
-    "needs": "springs (#5)",
-    "notes": "",
-    "status": "missing"
-  },
-  "Switch": {
-    "issues": [
-      11
-    ],
-    "needs": "springs (#5), shapes (#6)",
-    "notes": "slint component: Switch; tokens: generated component tokens; SwitchImpl + ThumbNode — 52x32dp track, thumb pressed 28/snap + resting 24/16 on FastSpatial, offsets incl. pressed TrackOutlineWidth inset, thumbContent slot (androidx/androidx@23327507f7fc, material3 1.5.0-alpha18); parity scenes: switch-states/switch-hover/switch-on-morph/switch-off-morph (xfail on femtovg, #53-class edge-AA band vs coverage-integral drivers)",
-    "status": "done"
-  },
-  "Tab": {
-    "issues": [
-      11
-    ],
-    "needs": "none",
-    "notes": "slint component: TabBar",
-    "status": "partial"
-  },
-  "Text": {
-    "issues": [
-      11
-    ],
-    "needs": "variable fonts (#7), adaptive (#12)",
-    "notes": "slint component: MaterialText",
-    "status": "partial"
-  },
-  "TextButton": {
-    "issues": [
-      9
-    ],
-    "needs": "springs (#5), shapes (#6)",
-    "notes": "slint component: TextButton",
-    "status": "partial"
-  },
-  "TextField": {
-    "issues": [
-      11
-    ],
-    "needs": "shapes (#6), variable fonts (#7)",
-    "notes": "slint component: TextField",
-    "status": "partial"
-  },
-  "TimeInput": {
-    "issues": [
-      11
-    ],
-    "needs": "none",
-    "notes": "",
-    "status": "missing"
-  },
-  "TimePicker": {
-    "issues": [
-      11
-    ],
-    "needs": "none",
-    "notes": "slint component: TimePickerPopup",
-    "status": "partial"
-  },
-  "TimePickerDialog": {
-    "issues": [
-      11
-    ],
-    "needs": "none",
-    "notes": "",
-    "status": "missing"
-  },
-  "TimeScroll": {
-    "issues": [
-      11
-    ],
-    "needs": "none",
-    "notes": "",
-    "status": "missing"
-  },
-  "ToggleButton": {
-    "issues": [
-      9
-    ],
-    "needs": "springs (#5), shapes (#6)",
-    "notes": "",
-    "status": "missing"
-  },
-  "ToggleFloatingActionButton": {
-    "issues": [
-      10
-    ],
-    "needs": "springs (#5), shapes (#6)",
-    "notes": "",
-    "status": "missing"
-  },
-  "TooltipBox": {
-    "issues": [
-      11
-    ],
-    "needs": "none",
-    "notes": "slint component: ToolTip",
-    "status": "partial"
-  },
-  "TooltipScope": {
-    "issues": [
-      11
-    ],
-    "needs": "none",
-    "notes": "",
-    "status": "missing"
-  },
-  "TopAppBar": {
-    "issues": [
-      11
-    ],
-    "needs": "springs (#5), shapes (#6)",
-    "notes": "slint component: TopAppBar; tokens: generated component tokens; springs via active motion scheme",
-    "status": "partial"
-  },
-  "TopSearchBar": {
-    "issues": [
-      11
-    ],
-    "needs": "springs (#5)",
-    "notes": "deprecated at pin; covered by AppBarWithSearch; tokens: generated component tokens; springs via active motion scheme",
-    "status": "partial"
-  },
-  "TriStateCheckbox": {
-    "issues": [
-      11
-    ],
-    "needs": "shapes (#6)",
-    "notes": "",
-    "status": "missing"
-  },
-  "TwoRowsTopAppBar": {
-    "issues": [
-      11
-    ],
-    "needs": "springs (#5), shapes (#6)",
-    "notes": "slint component: TwoRowsTopAppBar; tokens: generated component tokens; springs via active motion scheme",
-    "status": "partial"
-  },
-  "VerticalDivider": {
-    "issues": [
-      11
-    ],
-    "needs": "none",
-    "notes": "slint component: VerticalDivider; tokens: generated component tokens",
-    "status": "done"
-  },
-  "VerticalDragHandle": {
-    "issues": [
-      11
-    ],
-    "needs": "springs (#5)",
-    "notes": "",
-    "status": "missing"
-  },
-  "VerticalFloatingToolbar": {
-    "issues": [
-      10
-    ],
-    "needs": "springs (#5), adaptive (#12)",
-    "notes": "",
-    "status": "missing"
-  },
-  "VerticalSlider": {
-    "issues": [
-      11
-    ],
-    "needs": "shapes (#6)",
-    "notes": "",
-    "status": "missing"
-  },
-  "VibrantTimePickerDialog": {
-    "issues": [
-      11
-    ],
-    "needs": "none",
-    "notes": "",
-    "status": "missing"
-  },
-  "WideNavigationRail": {
-    "issues": [
-      12
-    ],
-    "needs": "springs (#5), adaptive (#12)",
-    "notes": "",
-    "status": "missing"
-  },
-  "WideNavigationRailItem": {
-    "issues": [
-      12
-    ],
-    "needs": "springs (#5), adaptive (#12)",
-    "notes": "",
-    "status": "missing"
-  }
+    "AlertDialog": {
+        "issues": [
+            11
+        ],
+        "needs": "none",
+        "notes": "slint component: Dialog",
+        "status": "partial"
+    },
+    "AppBarColumn": {
+        "issues": [
+            11
+        ],
+        "needs": "springs (#5), shapes (#6)",
+        "notes": "slint component: AppBarColumn; tokens: generated component tokens; springs via active motion scheme",
+        "status": "partial"
+    },
+    "AppBarOverflowIndicator": {
+        "issues": [
+            11
+        ],
+        "needs": "springs (#5), shapes (#6)",
+        "notes": "slint component: AppBarOverflowIndicator (via AppBarRow/AppBarColumn overflow); tokens: generated component tokens; springs via active motion scheme",
+        "status": "partial"
+    },
+    "AppBarRow": {
+        "issues": [
+            11
+        ],
+        "needs": "springs (#5), shapes (#6)",
+        "notes": "slint component: AppBarRow; tokens: generated component tokens; springs via active motion scheme",
+        "status": "partial"
+    },
+    "AppBarWithSearch": {
+        "issues": [
+            11
+        ],
+        "needs": "springs (#5)",
+        "notes": "slint component: AppBarWithSearch; tokens: generated component tokens; springs via active motion scheme",
+        "status": "partial"
+    },
+    "AssistChip": {
+        "issues": [
+            11
+        ],
+        "needs": "shapes (#6)",
+        "notes": "slint component: Chip",
+        "status": "partial"
+    },
+    "Badge": {
+        "issues": [
+            11
+        ],
+        "needs": "none",
+        "notes": "slint component: Badge",
+        "status": "done"
+    },
+    "BadgedBox": {
+        "issues": [
+            11
+        ],
+        "needs": "none",
+        "notes": "slint component: BadgedBox",
+        "status": "done"
+    },
+    "BasicAlertDialog": {
+        "issues": [
+            11
+        ],
+        "needs": "none",
+        "notes": "",
+        "status": "missing"
+    },
+    "BottomAppBar": {
+        "issues": [
+            11
+        ],
+        "needs": "springs (#5), shapes (#6)",
+        "notes": "slint component: BottomAppBar; tokens: generated component tokens; springs via active motion scheme",
+        "status": "partial"
+    },
+    "BottomSheet": {
+        "issues": [
+            11
+        ],
+        "needs": "springs (#5)",
+        "notes": "",
+        "status": "missing"
+    },
+    "BottomSheetScaffold": {
+        "issues": [
+            11
+        ],
+        "needs": "springs (#5)",
+        "notes": "",
+        "status": "missing"
+    },
+    "Button": {
+        "issues": [
+            9
+        ],
+        "needs": "springs (#5), shapes (#6)",
+        "notes": "slint component: FilledButton",
+        "status": "partial"
+    },
+    "ButtonGroup": {
+        "issues": [
+            5,
+            9,
+            10
+        ],
+        "needs": "springs (#5), shapes (#6)",
+        "notes": "connected variants: slint components ConnectedButtonGroup, ConnectedButton, VerticalConnectedButtonGroup; parity cases: connected-button-groups, connected-button-morph, connected-button-press-morph, negative-connected-button-group; standard variant pending (#10)",
+        "status": "partial"
+    },
+    "Card": {
+        "issues": [
+            11
+        ],
+        "needs": "none",
+        "notes": "slint component: ElevatedCard/FilledCard/OutlinedCard",
+        "status": "partial"
+    },
+    "CenterAlignedTopAppBar": {
+        "issues": [
+            11
+        ],
+        "needs": "springs (#5), shapes (#6)",
+        "notes": "slint component: CenterAlignedTopAppBar; tokens: generated component tokens; springs via active motion scheme",
+        "status": "partial"
+    },
+    "CheckableDropdownMenuItem": {
+        "issues": [
+            11
+        ],
+        "needs": "springs (#5), shapes (#6)",
+        "notes": "",
+        "status": "missing"
+    },
+    "Checkbox": {
+        "issues": [
+            11
+        ],
+        "needs": "shapes (#6)",
+        "notes": "slint component: CheckBox",
+        "status": "partial"
+    },
+    "CircularProgressIndicator": {
+        "issues": [
+            11
+        ],
+        "needs": "springs (#5), shapes (#6)",
+        "notes": "slint component: CircularProgressIndicator",
+        "status": "partial"
+    },
+    "CircularWavyProgressIndicator": {
+        "issues": [
+            6,
+            11
+        ],
+        "needs": "springs (#5), shapes (#6)",
+        "notes": "",
+        "status": "missing"
+    },
+    "ContainedLoadingIndicator": {
+        "issues": [
+            5,
+            6,
+            10
+        ],
+        "needs": "springs (#5), shapes (#6)",
+        "notes": "slint component: ContainedLoadingIndicator; parity scenes: loading-indicator-states (xfail on femtovg, #53 concave-fill AA fringe), loading-indicator-motion (xfail, #27-class launch jitter)",
+        "status": "partial"
+    },
+    "DatePicker": {
+        "issues": [
+            11
+        ],
+        "needs": "none",
+        "notes": "slint component: DatePickerPopup",
+        "status": "partial"
+    },
+    "DatePickerDialog": {
+        "issues": [
+            11
+        ],
+        "needs": "none",
+        "notes": "slint component: DatePickerPopup",
+        "status": "partial"
+    },
+    "DateRangePicker": {
+        "issues": [
+            11
+        ],
+        "needs": "none",
+        "notes": "",
+        "status": "missing"
+    },
+    "DismissibleDrawerSheet": {
+        "issues": [
+            11,
+            12
+        ],
+        "needs": "adaptive (#12)",
+        "notes": "",
+        "status": "missing"
+    },
+    "DismissibleNavigationDrawer": {
+        "issues": [
+            12
+        ],
+        "needs": "adaptive (#12)",
+        "notes": "slint component: ModalDrawer",
+        "status": "partial"
+    },
+    "Divider": {
+        "issues": [
+            11
+        ],
+        "needs": "none",
+        "notes": "slint component: Divider (deprecated alias for HorizontalDivider)",
+        "status": "done"
+    },
+    "DockedSearchBar": {
+        "issues": [
+            11
+        ],
+        "needs": "springs (#5)",
+        "notes": "deprecated at pin; covered by SearchBar expanded-state API; tokens: generated component tokens; springs via active motion scheme",
+        "status": "partial"
+    },
+    "DropdownMenu": {
+        "issues": [
+            11
+        ],
+        "needs": "springs (#5), shapes (#6)",
+        "notes": "slint component: DropDownMenu/PopupMenu",
+        "status": "partial"
+    },
+    "DropdownMenuGroup": {
+        "issues": [
+            11
+        ],
+        "needs": "springs (#5), shapes (#6)",
+        "notes": "",
+        "status": "missing"
+    },
+    "DropdownMenuItem": {
+        "issues": [
+            11
+        ],
+        "needs": "springs (#5), shapes (#6)",
+        "notes": "slint component: MenuItem in DropDownMenu",
+        "status": "partial"
+    },
+    "DropdownMenuItemLegacy": {
+        "issues": [
+            11
+        ],
+        "needs": "springs (#5), shapes (#6)",
+        "notes": "",
+        "status": "missing"
+    },
+    "DropdownMenuPopup": {
+        "issues": [
+            11
+        ],
+        "needs": "springs (#5), shapes (#6)",
+        "notes": "",
+        "status": "missing"
+    },
+    "ElevatedAssistChip": {
+        "issues": [
+            9
+        ],
+        "needs": "shapes (#6)",
+        "notes": "",
+        "status": "missing"
+    },
+    "ElevatedButton": {
+        "issues": [
+            9
+        ],
+        "needs": "springs (#5), shapes (#6)",
+        "notes": "slint component: ElevatedButton",
+        "status": "partial"
+    },
+    "ElevatedCard": {
+        "issues": [
+            11
+        ],
+        "needs": "none",
+        "notes": "slint component: ElevatedCard",
+        "status": "partial"
+    },
+    "ElevatedFilterChip": {
+        "issues": [
+            9
+        ],
+        "needs": "shapes (#6)",
+        "notes": "",
+        "status": "missing"
+    },
+    "ElevatedSuggestionChip": {
+        "issues": [
+            9
+        ],
+        "needs": "shapes (#6)",
+        "notes": "",
+        "status": "missing"
+    },
+    "ElevatedToggleButton": {
+        "issues": [
+            9
+        ],
+        "needs": "springs (#5), shapes (#6)",
+        "notes": "",
+        "status": "missing"
+    },
+    "ExpandedDockedSearchBar": {
+        "issues": [
+            11
+        ],
+        "needs": "springs (#5)",
+        "notes": "slint component: ExpandedDockedSearchBar; tokens: generated component tokens; springs via active motion scheme",
+        "status": "partial"
+    },
+    "ExpandedDockedSearchBarWithGap": {
+        "issues": [
+            11
+        ],
+        "needs": "springs (#5)",
+        "notes": "slint component: ExpandedDockedSearchBarWithGap; tokens: generated component tokens; springs via active motion scheme",
+        "status": "partial"
+    },
+    "ExpandedFullScreenContainedSearchBar": {
+        "issues": [
+            11
+        ],
+        "needs": "springs (#5)",
+        "notes": "slint component: ExpandedFullScreenContainedSearchBar; tokens: generated component tokens; springs via active motion scheme",
+        "status": "partial"
+    },
+    "ExpandedFullScreenSearchBar": {
+        "issues": [
+            11
+        ],
+        "needs": "springs (#5)",
+        "notes": "slint component: ExpandedFullScreenSearchBar; tokens: generated component tokens; springs via active motion scheme",
+        "status": "partial"
+    },
+    "ExposedDropdownMenuBox": {
+        "issues": [
+            11
+        ],
+        "needs": "springs (#5), shapes (#6)",
+        "notes": "",
+        "status": "missing"
+    },
+    "ExposedDropdownMenuBoxScope": {
+        "issues": [
+            11
+        ],
+        "needs": "springs (#5), shapes (#6)",
+        "notes": "",
+        "status": "missing"
+    },
+    "ExtendedFloatingActionButton": {
+        "issues": [
+            11
+        ],
+        "needs": "springs (#5), shapes (#6)",
+        "notes": "slint component: ExtendedFloatingActionButton; tokens: generated component tokens; springs via active motion scheme",
+        "status": "done"
+    },
+    "FilledIconButton": {
+        "issues": [
+            9
+        ],
+        "needs": "springs (#5), shapes (#6)",
+        "notes": "slint component: FilledIconButton",
+        "status": "partial"
+    },
+    "FilledIconToggleButton": {
+        "issues": [
+            9
+        ],
+        "needs": "springs (#5), shapes (#6)",
+        "notes": "",
+        "status": "missing"
+    },
+    "FilledTonalButton": {
+        "issues": [
+            9
+        ],
+        "needs": "springs (#5), shapes (#6)",
+        "notes": "slint component: TonalButton",
+        "status": "partial"
+    },
+    "FilledTonalIconButton": {
+        "issues": [
+            9
+        ],
+        "needs": "springs (#5), shapes (#6)",
+        "notes": "slint component: TonalIconButton",
+        "status": "partial"
+    },
+    "FilledTonalIconToggleButton": {
+        "issues": [
+            9
+        ],
+        "needs": "springs (#5), shapes (#6)",
+        "notes": "",
+        "status": "missing"
+    },
+    "FilledTonalToggleButton": {
+        "issues": [
+            9
+        ],
+        "needs": "springs (#5), shapes (#6)",
+        "notes": "",
+        "status": "missing"
+    },
+    "FilterChip": {
+        "issues": [
+            11
+        ],
+        "needs": "shapes (#6)",
+        "notes": "slint component: Chip",
+        "status": "partial"
+    },
+    "FlexibleBottomAppBar": {
+        "issues": [
+            11
+        ],
+        "needs": "springs (#5), shapes (#6)",
+        "notes": "slint component: FlexibleBottomAppBar; tokens: generated component tokens; springs via active motion scheme",
+        "status": "partial"
+    },
+    "FloatingActionButton": {
+        "issues": [
+            11
+        ],
+        "needs": "springs (#5), shapes (#6)",
+        "notes": "slint component: FloatingActionButton; tokens: generated component tokens; springs via active motion scheme",
+        "status": "done"
+    },
+    "FloatingActionButtonMenu": {
+        "issues": [
+            5,
+            10
+        ],
+        "needs": "springs (#5), shapes (#6)",
+        "notes": "",
+        "status": "missing"
+    },
+    "FloatingActionButtonMenuScope": {
+        "issues": [
+            10
+        ],
+        "needs": "springs (#5), shapes (#6)",
+        "notes": "",
+        "status": "missing"
+    },
+    "HorizontalCenteredHeroCarousel": {
+        "issues": [
+            11
+        ],
+        "needs": "springs (#5), shapes (#6)",
+        "notes": "",
+        "status": "missing"
+    },
+    "HorizontalDivider": {
+        "issues": [
+            11
+        ],
+        "needs": "none",
+        "notes": "slint component: HorizontalDivider; tokens: generated component tokens",
+        "status": "done"
+    },
+    "HorizontalFloatingToolbar": {
+        "issues": [
+            10
+        ],
+        "needs": "springs (#5), adaptive (#12)",
+        "notes": "",
+        "status": "missing"
+    },
+    "HorizontalMultiBrowseCarousel": {
+        "issues": [
+            11
+        ],
+        "needs": "springs (#5), shapes (#6)",
+        "notes": "",
+        "status": "missing"
+    },
+    "HorizontalUncontainedCarousel": {
+        "issues": [
+            11
+        ],
+        "needs": "springs (#5), shapes (#6)",
+        "notes": "",
+        "status": "missing"
+    },
+    "Icon": {
+        "issues": [
+            11
+        ],
+        "needs": "none",
+        "notes": "slint component: Icon",
+        "status": "done"
+    },
+    "IconButton": {
+        "issues": [
+            9
+        ],
+        "needs": "springs (#5), shapes (#6)",
+        "notes": "slint component: IconButton",
+        "status": "partial"
+    },
+    "IconToggleButton": {
+        "issues": [
+            9
+        ],
+        "needs": "springs (#5), shapes (#6)",
+        "notes": "",
+        "status": "missing"
+    },
+    "InputChip": {
+        "issues": [
+            11
+        ],
+        "needs": "shapes (#6)",
+        "notes": "slint component: Chip",
+        "status": "partial"
+    },
+    "LargeExtendedFloatingActionButton": {
+        "issues": [
+            11
+        ],
+        "needs": "springs (#5), shapes (#6)",
+        "notes": "slint component: ExtendedFloatingActionButton; tokens: generated component tokens; springs via active motion scheme",
+        "status": "done"
+    },
+    "LargeFlexibleTopAppBar": {
+        "issues": [
+            11
+        ],
+        "needs": "springs (#5), shapes (#6)",
+        "notes": "slint component: LargeFlexibleTopAppBar; tokens: generated component tokens; springs via active motion scheme",
+        "status": "partial"
+    },
+    "LargeFloatingActionButton": {
+        "issues": [
+            11
+        ],
+        "needs": "springs (#5), shapes (#6)",
+        "notes": "slint component: FloatingActionButton; tokens: generated component tokens; springs via active motion scheme",
+        "status": "done"
+    },
+    "LargeTopAppBar": {
+        "issues": [
+            11
+        ],
+        "needs": "springs (#5), shapes (#6)",
+        "notes": "slint component: LargeTopAppBar; tokens: generated component tokens; springs via active motion scheme",
+        "status": "partial"
+    },
+    "LeadingIconTab": {
+        "issues": [
+            11
+        ],
+        "needs": "none",
+        "notes": "",
+        "status": "missing"
+    },
+    "LinearProgressIndicator": {
+        "issues": [
+            11
+        ],
+        "needs": "springs (#5), shapes (#6)",
+        "notes": "slint component: LinearProgressIndicator",
+        "status": "partial"
+    },
+    "LinearWavyProgressIndicator": {
+        "issues": [
+            6,
+            11
+        ],
+        "needs": "springs (#5), shapes (#6)",
+        "notes": "",
+        "status": "missing"
+    },
+    "ListItem": {
+        "issues": [
+            11
+        ],
+        "needs": "shapes (#6)",
+        "notes": "slint component: ListTile",
+        "status": "partial"
+    },
+    "LoadingIndicator": {
+        "issues": [
+            5,
+            6,
+            10
+        ],
+        "needs": "springs (#5), shapes (#6)",
+        "notes": "slint component: LoadingIndicator; parity scenes: loading-indicator-states (xfail on femtovg, #53 concave-fill AA fringe), loading-indicator-motion (xfail, #27-class launch jitter)",
+        "status": "partial"
+    },
+    "MediumExtendedFloatingActionButton": {
+        "issues": [
+            11
+        ],
+        "needs": "springs (#5), shapes (#6)",
+        "notes": "slint component: ExtendedFloatingActionButton; tokens: generated component tokens; springs via active motion scheme",
+        "status": "done"
+    },
+    "MediumFlexibleTopAppBar": {
+        "issues": [
+            11
+        ],
+        "needs": "springs (#5), shapes (#6)",
+        "notes": "slint component: MediumFlexibleTopAppBar; tokens: generated component tokens; springs via active motion scheme",
+        "status": "partial"
+    },
+    "MediumFloatingActionButton": {
+        "issues": [
+            11
+        ],
+        "needs": "springs (#5), shapes (#6)",
+        "notes": "slint component: FloatingActionButton; tokens: generated component tokens; springs via active motion scheme",
+        "status": "done"
+    },
+    "MediumTopAppBar": {
+        "issues": [
+            11
+        ],
+        "needs": "springs (#5), shapes (#6)",
+        "notes": "slint component: MediumTopAppBar; tokens: generated component tokens; springs via active motion scheme",
+        "status": "partial"
+    },
+    "ModalBottomSheet": {
+        "issues": [
+            11
+        ],
+        "needs": "springs (#5)",
+        "notes": "slint component: ModalBottomSheet",
+        "status": "partial"
+    },
+    "ModalDrawerSheet": {
+        "issues": [
+            12
+        ],
+        "needs": "adaptive (#12)",
+        "notes": "slint component: ModalDrawer",
+        "status": "partial"
+    },
+    "ModalNavigationDrawer": {
+        "issues": [
+            12
+        ],
+        "needs": "adaptive (#12)",
+        "notes": "slint component: ModalNavigationDrawer",
+        "status": "partial"
+    },
+    "ModalWideNavigationRail": {
+        "issues": [
+            12
+        ],
+        "needs": "springs (#5), adaptive (#12)",
+        "notes": "",
+        "status": "missing"
+    },
+    "Modifier": {
+        "issues": [
+            11
+        ],
+        "needs": "springs (#5), shapes (#6)",
+        "notes": "",
+        "status": "missing"
+    },
+    "MultiChoiceSegmentedButtonRow": {
+        "issues": [
+            10
+        ],
+        "needs": "springs (#5), shapes (#6)",
+        "notes": "Expressive mapping -> ConnectedButtonGroup; slint SegmentedButton deprecated",
+        "status": "partial"
+    },
+    "MultiChoiceSegmentedButtonRowScope": {
+        "issues": [
+            10
+        ],
+        "needs": "springs (#5), shapes (#6)",
+        "notes": "Expressive mapping -> ConnectedButtonGroup; slint SegmentedButton deprecated",
+        "status": "partial"
+    },
+    "NavigationBar": {
+        "issues": [
+            12
+        ],
+        "needs": "springs (#5), shapes (#6), adaptive (#12)",
+        "notes": "slint component: NavigationBar",
+        "status": "partial"
+    },
+    "NavigationDrawerItem": {
+        "issues": [
+            12
+        ],
+        "needs": "adaptive (#12)",
+        "notes": "slint component: NavigationItemTemplate",
+        "status": "partial"
+    },
+    "NavigationRail": {
+        "issues": [
+            12
+        ],
+        "needs": "springs (#5), adaptive (#12)",
+        "notes": "slint component: NavigationRail",
+        "status": "partial"
+    },
+    "NavigationRailItem": {
+        "issues": [
+            12
+        ],
+        "needs": "springs (#5), adaptive (#12)",
+        "notes": "slint component: NavigationItemTemplate",
+        "status": "partial"
+    },
+    "OutlinedButton": {
+        "issues": [
+            9
+        ],
+        "needs": "springs (#5), shapes (#6)",
+        "notes": "slint component: OutlineButton",
+        "status": "partial"
+    },
+    "OutlinedCard": {
+        "issues": [
+            11
+        ],
+        "needs": "none",
+        "notes": "slint component: OutlinedCard",
+        "status": "partial"
+    },
+    "OutlinedIconButton": {
+        "issues": [
+            9
+        ],
+        "needs": "springs (#5), shapes (#6)",
+        "notes": "slint component: OutlineIconButton",
+        "status": "partial"
+    },
+    "OutlinedIconToggleButton": {
+        "issues": [
+            9
+        ],
+        "needs": "springs (#5), shapes (#6)",
+        "notes": "",
+        "status": "missing"
+    },
+    "OutlinedSecureTextField": {
+        "issues": [
+            11
+        ],
+        "needs": "shapes (#6), variable fonts (#7)",
+        "notes": "",
+        "status": "missing"
+    },
+    "OutlinedTextField": {
+        "issues": [
+            11
+        ],
+        "needs": "shapes (#6), variable fonts (#7)",
+        "notes": "slint component: TextField",
+        "status": "partial"
+    },
+    "OutlinedToggleButton": {
+        "issues": [
+            9
+        ],
+        "needs": "springs (#5), shapes (#6)",
+        "notes": "",
+        "status": "missing"
+    },
+    "PermanentDrawerSheet": {
+        "issues": [
+            11,
+            12
+        ],
+        "needs": "adaptive (#12)",
+        "notes": "",
+        "status": "missing"
+    },
+    "PermanentNavigationDrawer": {
+        "issues": [
+            12
+        ],
+        "needs": "adaptive (#12)",
+        "notes": "slint component: Drawer",
+        "status": "partial"
+    },
+    "PrimaryScrollableTabRow": {
+        "issues": [
+            11
+        ],
+        "needs": "none",
+        "notes": "",
+        "status": "missing"
+    },
+    "PrimaryTabRow": {
+        "issues": [
+            11
+        ],
+        "needs": "none",
+        "notes": "slint component: TabBar",
+        "status": "partial"
+    },
+    "ProvideTextStyle": {
+        "issues": [
+            7
+        ],
+        "needs": "variable fonts (#7), adaptive (#12)",
+        "notes": "",
+        "status": "missing"
+    },
+    "PullToRefreshBox": {
+        "issues": [
+            5
+        ],
+        "needs": "springs (#5)",
+        "notes": "",
+        "status": "missing"
+    },
+    "RadioButton": {
+        "issues": [
+            11
+        ],
+        "needs": "shapes (#6)",
+        "notes": "slint component: RadioButton",
+        "status": "partial"
+    },
+    "RangeSlider": {
+        "issues": [
+            11
+        ],
+        "needs": "shapes (#6)",
+        "notes": "",
+        "status": "missing"
+    },
+    "RowScope": {
+        "issues": [
+            11,
+            12
+        ],
+        "needs": "springs (#5), shapes (#6), adaptive (#12)",
+        "notes": "",
+        "status": "missing"
+    },
+    "Scaffold": {
+        "issues": [
+            12
+        ],
+        "needs": "adaptive (#12)",
+        "notes": "",
+        "status": "missing"
+    },
+    "SearchBar": {
+        "issues": [
+            11
+        ],
+        "needs": "springs (#5)",
+        "notes": "slint component: SearchBar (SearchBarState API: expanded/text); tokens: generated component tokens; springs via active motion scheme",
+        "status": "partial"
+    },
+    "SecondaryScrollableTabRow": {
+        "issues": [
+            11
+        ],
+        "needs": "none",
+        "notes": "",
+        "status": "missing"
+    },
+    "SecondaryTabRow": {
+        "issues": [
+            11
+        ],
+        "needs": "none",
+        "notes": "slint component: SecondaryTabBar",
+        "status": "partial"
+    },
+    "SecureTextField": {
+        "issues": [
+            11
+        ],
+        "needs": "shapes (#6), variable fonts (#7)",
+        "notes": "",
+        "status": "missing"
+    },
+    "SegmentedListItem": {
+        "issues": [
+            11
+        ],
+        "needs": "shapes (#6)",
+        "notes": "",
+        "status": "missing"
+    },
+    "SelectableDropdownMenuItem": {
+        "issues": [
+            11
+        ],
+        "needs": "springs (#5), shapes (#6)",
+        "notes": "",
+        "status": "missing"
+    },
+    "ShortNavigationBar": {
+        "issues": [
+            12
+        ],
+        "needs": "springs (#5), shapes (#6), adaptive (#12)",
+        "notes": "",
+        "status": "missing"
+    },
+    "ShortNavigationBarItem": {
+        "issues": [
+            12
+        ],
+        "needs": "springs (#5), shapes (#6), adaptive (#12)",
+        "notes": "",
+        "status": "missing"
+    },
+    "SingleChoiceSegmentedButtonRow": {
+        "issues": [
+            10
+        ],
+        "needs": "springs (#5), shapes (#6)",
+        "notes": "Expressive mapping -> ConnectedButtonGroup; slint SegmentedButton deprecated",
+        "status": "partial"
+    },
+    "SingleChoiceSegmentedButtonRowScope": {
+        "issues": [
+            10
+        ],
+        "needs": "springs (#5), shapes (#6)",
+        "notes": "Expressive mapping -> ConnectedButtonGroup; slint SegmentedButton deprecated",
+        "status": "partial"
+    },
+    "Slider": {
+        "issues": [
+            11
+        ],
+        "needs": "shapes (#6)",
+        "notes": "slint component: Slider",
+        "status": "partial"
+    },
+    "SmallExtendedFloatingActionButton": {
+        "issues": [
+            11
+        ],
+        "needs": "springs (#5), shapes (#6)",
+        "notes": "slint component: ExtendedFloatingActionButton; tokens: generated component tokens; springs via active motion scheme",
+        "status": "done"
+    },
+    "SmallFloatingActionButton": {
+        "issues": [
+            11
+        ],
+        "needs": "springs (#5), shapes (#6)",
+        "notes": "slint component: FloatingActionButton; tokens: generated component tokens; springs via active motion scheme",
+        "status": "done"
+    },
+    "Snackbar": {
+        "issues": [
+            11
+        ],
+        "needs": "none",
+        "notes": "slint component: SnackBar",
+        "status": "partial"
+    },
+    "SnackbarHost": {
+        "issues": [
+            11
+        ],
+        "needs": "none",
+        "notes": "",
+        "status": "missing"
+    },
+    "SplitButtonLayout": {
+        "issues": [
+            10
+        ],
+        "needs": "none",
+        "notes": "slint components: FilledSplitButton, TonalSplitButton, ElevatedSplitButton, OutlineSplitButton",
+        "status": "partial"
+    },
+    "SuggestionChip": {
+        "issues": [
+            11
+        ],
+        "needs": "shapes (#6)",
+        "notes": "slint component: Chip",
+        "status": "partial"
+    },
+    "Surface": {
+        "issues": [
+            11
+        ],
+        "needs": "dynamic color (#8)",
+        "notes": "",
+        "status": "missing"
+    },
+    "SwipeToDismissBox": {
+        "issues": [
+            11
+        ],
+        "needs": "springs (#5)",
+        "notes": "",
+        "status": "missing"
+    },
+    "Switch": {
+        "issues": [
+            11
+        ],
+        "needs": "springs (#5), shapes (#6)",
+        "notes": "slint component: Switch; tokens: generated component tokens; SwitchImpl + ThumbNode — 52x32dp track, thumb pressed 28/snap + resting 24/16 on FastSpatial, offsets incl. pressed TrackOutlineWidth inset, thumbContent slot (androidx/androidx@23327507f7fc, material3 1.5.0-alpha18); parity scenes: switch-states/switch-hover/switch-on-morph/switch-off-morph (xfail on femtovg, #53-class edge-AA band vs coverage-integral drivers)",
+        "status": "done"
+    },
+    "Tab": {
+        "issues": [
+            11
+        ],
+        "needs": "none",
+        "notes": "slint component: TabBar",
+        "status": "partial"
+    },
+    "Text": {
+        "issues": [
+            11
+        ],
+        "needs": "variable fonts (#7), adaptive (#12)",
+        "notes": "slint component: MaterialText; tokens: generated type tokens — all 15 base + 15 emphasized roles (androidx/androidx@23327507f7fc, material3 1.5.0-alpha18); upstream defaults restored — bodyLarge LocalTextStyle, TextOverflow.Clip; new engine props min-lines, font-underline, font-strikeout (all renderers via sharedparley); parity scenes: material-text-styles/material-text-behaviors (xfail: Compose lays text out at natural font metrics regardless of lineHeight while slint's line-height hard-sets the line box and parley splits the leading half above/below — ink ~1-3px off vertically, element h differs; parley appends letter-spacing to the trailing cluster; width-constrained text reports the pin as element w); gaps: onTextLayout/TextLayoutResult callback, auto-size text (TextAutoSize), LinkAnnotation/inline content, SelectableText",
+        "status": "done"
+    },
+    "TextButton": {
+        "issues": [
+            9
+        ],
+        "needs": "springs (#5), shapes (#6)",
+        "notes": "slint component: TextButton",
+        "status": "partial"
+    },
+    "TextField": {
+        "issues": [
+            11
+        ],
+        "needs": "shapes (#6), variable fonts (#7)",
+        "notes": "slint component: TextField",
+        "status": "partial"
+    },
+    "TimeInput": {
+        "issues": [
+            11
+        ],
+        "needs": "none",
+        "notes": "",
+        "status": "missing"
+    },
+    "TimePicker": {
+        "issues": [
+            11
+        ],
+        "needs": "none",
+        "notes": "slint component: TimePickerPopup",
+        "status": "partial"
+    },
+    "TimePickerDialog": {
+        "issues": [
+            11
+        ],
+        "needs": "none",
+        "notes": "",
+        "status": "missing"
+    },
+    "TimeScroll": {
+        "issues": [
+            11
+        ],
+        "needs": "none",
+        "notes": "",
+        "status": "missing"
+    },
+    "ToggleButton": {
+        "issues": [
+            9
+        ],
+        "needs": "springs (#5), shapes (#6)",
+        "notes": "",
+        "status": "missing"
+    },
+    "ToggleFloatingActionButton": {
+        "issues": [
+            10
+        ],
+        "needs": "springs (#5), shapes (#6)",
+        "notes": "",
+        "status": "missing"
+    },
+    "TooltipBox": {
+        "issues": [
+            11
+        ],
+        "needs": "none",
+        "notes": "slint component: ToolTip",
+        "status": "partial"
+    },
+    "TooltipScope": {
+        "issues": [
+            11
+        ],
+        "needs": "none",
+        "notes": "",
+        "status": "missing"
+    },
+    "TopAppBar": {
+        "issues": [
+            11
+        ],
+        "needs": "springs (#5), shapes (#6)",
+        "notes": "slint component: TopAppBar; tokens: generated component tokens; springs via active motion scheme",
+        "status": "partial"
+    },
+    "TopSearchBar": {
+        "issues": [
+            11
+        ],
+        "needs": "springs (#5)",
+        "notes": "deprecated at pin; covered by AppBarWithSearch; tokens: generated component tokens; springs via active motion scheme",
+        "status": "partial"
+    },
+    "TriStateCheckbox": {
+        "issues": [
+            11
+        ],
+        "needs": "shapes (#6)",
+        "notes": "",
+        "status": "missing"
+    },
+    "TwoRowsTopAppBar": {
+        "issues": [
+            11
+        ],
+        "needs": "springs (#5), shapes (#6)",
+        "notes": "slint component: TwoRowsTopAppBar; tokens: generated component tokens; springs via active motion scheme",
+        "status": "partial"
+    },
+    "VerticalDivider": {
+        "issues": [
+            11
+        ],
+        "needs": "none",
+        "notes": "slint component: VerticalDivider; tokens: generated component tokens",
+        "status": "done"
+    },
+    "VerticalDragHandle": {
+        "issues": [
+            11
+        ],
+        "needs": "springs (#5)",
+        "notes": "",
+        "status": "missing"
+    },
+    "VerticalFloatingToolbar": {
+        "issues": [
+            10
+        ],
+        "needs": "springs (#5), adaptive (#12)",
+        "notes": "",
+        "status": "missing"
+    },
+    "VerticalSlider": {
+        "issues": [
+            11
+        ],
+        "needs": "shapes (#6)",
+        "notes": "",
+        "status": "missing"
+    },
+    "VibrantTimePickerDialog": {
+        "issues": [
+            11
+        ],
+        "needs": "none",
+        "notes": "",
+        "status": "missing"
+    },
+    "WideNavigationRail": {
+        "issues": [
+            12
+        ],
+        "needs": "springs (#5), adaptive (#12)",
+        "notes": "",
+        "status": "missing"
+    },
+    "WideNavigationRailItem": {
+        "issues": [
+            12
+        ],
+        "needs": "springs (#5), adaptive (#12)",
+        "notes": "",
+        "status": "missing"
+    }
 }
