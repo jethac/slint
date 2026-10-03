@@ -68,6 +68,39 @@ export global MaterialPalette {
     out property <float> disable_opacity: 38%;
     out property <color> background_modal: root.scrim.with_alpha(ScrimTokens.container_opacity);
 
+    /// `ColorScheme.contentColorFor` (ColorScheme.kt at the pin): the
+    /// on-role paired with a scheme background color. Returns `transparent`
+    /// when no role matches — upstream returns `Color.Unspecified` there
+    /// and the caller falls back to `LocalContentColor.current`.
+    public pure function content-color-for(background: color) -> color {
+        background == root.primary ? root.on_primary :
+        background == root.secondary ? root.on_secondary :
+        background == root.tertiary ? root.on_tertiary :
+        background == root.background ? root.on_background :
+        background == root.error ? root.on_error :
+        background == root.primary_container ? root.on_primary_container :
+        background == root.secondary_container ? root.on_secondary_container :
+        background == root.tertiary_container ? root.on_tertiary_container :
+        background == root.error_container ? root.on_error_container :
+        background == root.inverse_surface ? root.inverse_on_surface :
+        background == root.surface ? root.on_surface :
+        background == root.surface_variant ? root.on_surface_variant :
+        background == root.surface_bright ? root.on_surface :
+        background == root.surface_container ? root.on_surface :
+        background == root.surface_container_high ? root.on_surface :
+        background == root.surface_container_highest ? root.on_surface :
+        background == root.surface_container_low ? root.on_surface :
+        background == root.surface_container_lowest ? root.on_surface :
+        background == root.surface_dim ? root.on_surface :
+        background == root.primary_fixed ? root.on_primary_fixed :
+        background == root.primary_fixed_dim ? root.on_primary_fixed :
+        background == root.secondary_fixed ? root.on_secondary_fixed :
+        background == root.secondary_fixed_dim ? root.on_secondary_fixed :
+        background == root.tertiary_fixed ? root.on_tertiary_fixed :
+        background == root.tertiary_fixed_dim ? root.on_tertiary_fixed :
+        transparent
+    }
+
     // The schemes the palette resolves to. Light defaults to
     // `expressiveLightColorScheme()` (ColorScheme.kt) — what
     // `MaterialExpressiveTheme` uses upstream; dark to `darkColorScheme()`
