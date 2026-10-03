@@ -172,6 +172,21 @@ class Widget(json: JSONObject) {
     /** `elevated-rect` only: the elevation in dp of the Android ambient+spot
      * shadow `Modifier.shadow` draws behind the caster. */
     val elevation: Float = json.optDouble("elevation", 0.0).toFloat()
+    /** `material-surface`: upstream `tonalElevation` in dp. */
+    val tonalElevation: Float = json.optDouble("tonal_elevation", 0.0).toFloat()
+    /** `material-surface`: the ambient `LocalAbsoluteTonalElevation` a parent
+     * Surface would provide (dp). */
+    val parentElevation: Float = json.optDouble("parent_elevation", 0.0).toFloat()
+    /** `material-surface`: `BorderStroke` width (dp) + palette-role color
+     * (`outline` default). */
+    val borderWidth: Float = json.optDouble("border_width", 0.0).toFloat()
+    val borderColor: String? = (json.opt("border_color") as? String)?.takeIf { it.isNotEmpty() }
+    /** `material-surface` overloads: `clickable`/`selectable`/`toggleable`,
+     * and `selected` on the selectable one. */
+    val clickable: Boolean = json.optBoolean("clickable", false)
+    val selectable: Boolean = json.optBoolean("selectable", false)
+    val toggleable: Boolean = json.optBoolean("toggleable", false)
+    val selected: Boolean = json.optBoolean("selected", false)
 }
 
 /** One item of a `connected-button-group`: the label, an optional leading
