@@ -43,6 +43,8 @@ import {
     Slider,
     TextField,
     RadioButton,
+    OutlinedTextField,
+    SecureTextField,
     RadioButtonTile,
     PopupMenu,
     DropDownMenu,
@@ -787,7 +789,7 @@ export component NavigationView {
                             leading_icon: FilledIcons.search;
                             trailing_icon: FilledIcons.close;
                             label: "Filled";
-                            placeholder_text: "hint text";
+                            placeholder: "hint text";
                             supporting_text: "supporting text";
 
                             leading_icon_clicked => {
@@ -801,12 +803,12 @@ export component NavigationView {
                     }
 
                     Horizontal {
-                        TextField {
+                        OutlinedTextField {
                             text <=> top_tf.text;
                             leading_icon: FilledIcons.search;
                             trailing_icon: FilledIcons.close;
-                            label: "Filled";
-                            placeholder_text: "hint text";
+                            label: "Outlined";
+                            placeholder: "hint text";
                             supporting_text: "error text";
                             has_error: true;
 
@@ -824,9 +826,17 @@ export component NavigationView {
                             leading_icon: FilledIcons.search;
                             trailing_icon: FilledIcons.close;
                             label: "Filled";
-                            placeholder_text: "hint text";
+                            placeholder: "hint text";
                             supporting_text: "supporting text";
                             enabled: false;
+                        }
+                    }
+
+                    Horizontal {
+                        SecureTextField {
+                            text <=> top_tf.text;
+                            label: "Password";
+                            supporting_text: "masked input";
                         }
                     }
                 }
