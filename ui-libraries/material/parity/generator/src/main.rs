@@ -1439,7 +1439,6 @@ fn slint_canvas(s: &mut String, scene: &Scene) {
                 .unwrap();
                 continue;
             }
->>>>>>> origin/master
             "rect" => {
                 let radius = w
                     .slint_overrides
