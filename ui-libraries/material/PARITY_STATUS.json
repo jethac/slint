@@ -1115,16 +1115,16 @@
       11
     ],
     "needs": "none",
-    "notes": "slint component: ToolTip",
-    "status": "partial"
+    "notes": "TooltipBox (hover/focus/long-press triggers, position provider, caret) + PlainTooltip/RichTooltip surfaces; ToolTip kept as deprecated alias",
+    "status": "done"
   },
   "TooltipScope": {
     "issues": [
       11
     ],
     "needs": "none",
-    "notes": "",
-    "status": "missing"
+    "notes": "Scope slots map to props: caret/caret_edge/caret_x on PlainTooltip+RichTooltip, content via tooltip/rich_* props on TooltipBox",
+    "status": "done"
   },
   "TopAppBar": {
     "issues": [

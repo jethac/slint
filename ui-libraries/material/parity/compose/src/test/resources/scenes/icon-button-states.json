@@ -98,6 +98,7 @@
   "type": "canvas",
   "widgets": [
     {
+      "action": null,
       "alignment": null,
       "always_show_label": null,
       "avatar": null,
@@ -186,6 +187,7 @@
       "year_min": null
     },
     {
+      "action": null,
       "alignment": null,
       "always_show_label": null,
       "avatar": null,
@@ -274,6 +276,7 @@
       "year_min": null
     },
     {
+      "action": null,
       "alignment": null,
       "always_show_label": null,
       "avatar": null,
@@ -362,6 +365,7 @@
       "year_min": null
     },
     {
+      "action": null,
       "alignment": null,
       "always_show_label": null,
       "avatar": null,
@@ -450,6 +454,7 @@
       "year_min": null
     },
     {
+      "action": null,
       "alignment": null,
       "always_show_label": null,
       "avatar": null,
@@ -538,6 +543,7 @@
       "year_min": null
     },
     {
+      "action": null,
       "alignment": null,
       "always_show_label": null,
       "avatar": null,
@@ -626,6 +632,7 @@
       "year_min": null
     },
     {
+      "action": null,
       "alignment": null,
       "always_show_label": null,
       "avatar": null,
@@ -714,6 +721,7 @@
       "year_min": null
     },
     {
+      "action": null,
       "alignment": null,
       "always_show_label": null,
       "avatar": null,
@@ -802,6 +810,7 @@
       "year_min": null
     },
     {
+      "action": null,
       "alignment": null,
       "always_show_label": null,
       "avatar": null,
@@ -890,6 +899,7 @@
       "year_min": null
     },
     {
+      "action": null,
       "alignment": null,
       "always_show_label": null,
       "avatar": null,
@@ -978,6 +988,7 @@
       "year_min": null
     },
     {
+      "action": null,
       "alignment": null,
       "always_show_label": null,
       "avatar": null,
@@ -1066,6 +1077,7 @@
       "year_min": null
     },
     {
+      "action": null,
       "alignment": null,
       "always_show_label": null,
       "avatar": null,
@@ -1154,6 +1166,7 @@
       "year_min": null
     },
     {
+      "action": null,
       "alignment": null,
       "always_show_label": null,
       "avatar": null,
@@ -1242,6 +1255,7 @@
       "year_min": null
     },
     {
+      "action": null,
       "alignment": null,
       "always_show_label": null,
       "avatar": null,
@@ -1330,6 +1344,7 @@
       "year_min": null
     },
     {
+      "action": null,
       "alignment": null,
       "always_show_label": null,
       "avatar": null,
@@ -1418,6 +1433,7 @@
       "year_min": null
     },
     {
+      "action": null,
       "alignment": null,
       "always_show_label": null,
       "avatar": null,

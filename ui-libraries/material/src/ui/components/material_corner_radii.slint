@@ -1,0 +1,13 @@
+// Copyright © SixtyFPS GmbH <info@slint.dev>
+// SPDX-License-Identifier: MIT
+
+/// Resolved per-corner radii of one element, in top-left → bottom-left
+/// order like `RoundedCornerShape(topStart, topEnd, bottomEnd, bottomStart)`.
+/// `ShapedComponents.shaped_corners` switches the decorations below from the
+/// uniform `border_radius` to these four values.
+export struct MaterialCornerRadii {
+    top_left: length,
+    top_right: length,
+    bottom_right: length,
+    bottom_left: length,
+}

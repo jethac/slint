@@ -6,6 +6,12 @@ import { MaterialTheme } from "../styling/material_theme.slint";
 
 export global MaterialWindowAdapter {
     in property <bool> disable_hover;
+    /// Logical size of the `MaterialWindow`, forwarded so overlay position
+    /// providers (e.g. `TooltipBox`) can clamp to the window edge like the
+    /// upstream `windowSize`-aware providers. `0` while unset — providers
+    /// skip the clamp.
+    in property <length> viewport_width;
+    in property <length> viewport_height;
 }
 
 export component MaterialWindow inherits Window {
@@ -20,5 +26,18 @@ export component MaterialWindow inherits Window {
 
     changed disable_hover => {
         MaterialWindowAdapter.disable_hover = root.disable_hover;
+    }
+
+    init => {
+        MaterialWindowAdapter.viewport_width = root.width;
+        MaterialWindowAdapter.viewport_height = root.height;
+    }
+
+    changed width => {
+        MaterialWindowAdapter.viewport_width = root.width;
+    }
+
+    changed height => {
+        MaterialWindowAdapter.viewport_height = root.height;
     }
 }

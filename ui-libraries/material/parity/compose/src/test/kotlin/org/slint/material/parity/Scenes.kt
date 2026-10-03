@@ -35,6 +35,10 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.paddingFromBaseline
+import androidx.compose.foundation.layout.requiredHeightIn
+import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
@@ -548,6 +552,7 @@ private fun CanvasScene(
         var badges = 0
         var badgedBoxes = 0
         var nav_bars = 0
+        var tooltips = 0
         // `text:{n}` spans every text node in scene order — group items
         // interleave with the standalone widgets' labels. Bases are
         // precomputed per widget so recompositions can't renumber them.
@@ -878,6 +883,109 @@ private fun CanvasScene(
                                 border = border,
                                 content = content,
                             )
+                        }
+                    }
+                }
+                widget.kind == "tooltip-plain" -> {
+                    // Upstream `TooltipScope.PlainTooltip` only draws inside
+                    // `TooltipBox`'s Popup — invisible to Paparazzi — so the
+                    // mirror redraws the same structure inline (Tooltip.kt
+                    // @23327507): InverseSurface on CornerExtraSmall,
+                    // InverseOnSurface BodySmall in 8h/4v padding, the box
+                    // clamped to sizeIn(40dp minW / 200dp maxW / 24dp minH).
+                    // No caret: upstream's caretShape needs the box's scope.
+                    val tag = "tooltip${tooltips++}"
+                    val container = widget.color?.let { schemeColor(it) }
+                        ?: scheme.inverseSurface
+                    androidx.compose.material3.Surface(
+                        modifier = Modifier.offset(widget.x.dp, widget.y.dp)
+                            .track(tracer, tag),
+                        shape = androidx.compose.material3.MaterialTheme.shapes.extraSmall,
+                        color = container,
+                    ) {
+                        Box(
+                            Modifier.sizeIn(
+                                minWidth = 40.dp,
+                                maxWidth = 200.dp,
+                                minHeight = 24.dp,
+                            ).padding(horizontal = 8.dp, vertical = 4.dp),
+                        ) {
+                            CompositionLocalProvider(
+                                androidx.compose.material3.LocalContentColor provides
+                                    scheme.inverseOnSurface,
+                                androidx.compose.material3.LocalTextStyle provides
+                                    androidx.compose.material3.MaterialTheme.typography.bodySmall,
+                            ) { Text(widget.text ?: "") }
+                        }
+                    }
+                }
+                widget.kind == "tooltip-rich" -> {
+                    // `TooltipScope.RichTooltip` mirrored inline (same
+                    // Paparazzi constraint): SurfaceContainer on
+                    // CornerMedium at ContainerElevation Level2, 16dp
+                    // horizontal padding, title at
+                    // paddingFromBaseline(28) TitleSmall/OnSurfaceVariant,
+                    // text BodyMedium/OnSurfaceVariant with
+                    // `textVerticalPadding` (none → 4v; title|action →
+                    // baseline-24 top + 16 bottom), action
+                    // requiredHeightIn(36) + 8 bottom LabelLarge/Primary.
+                    val tag = "tooltip${tooltips++}"
+                    val container = widget.color?.let { schemeColor(it) }
+                        ?: scheme.surfaceContainer
+                    androidx.compose.material3.Surface(
+                        modifier = Modifier.offset(widget.x.dp, widget.y.dp)
+                            .sizeIn(
+                                minWidth = 40.dp,
+                                maxWidth = 320.dp,
+                                minHeight = 24.dp,
+                            )
+                            .track(tracer, tag),
+                        shape = androidx.compose.material3.MaterialTheme.shapes.medium,
+                        color = container,
+                        tonalElevation = 0.dp,
+                        shadowElevation = 2.dp,
+                    ) {
+                        val typography = androidx.compose.material3.MaterialTheme.typography
+                        Column(
+                            Modifier.padding(horizontal = 16.dp),
+                        ) {
+                            widget.title?.let {
+                                Box(Modifier.paddingFromBaseline(top = 28.dp)) {
+                                    CompositionLocalProvider(
+                                        androidx.compose.material3.LocalContentColor provides
+                                            scheme.onSurfaceVariant,
+                                        androidx.compose.material3.LocalTextStyle provides
+                                            typography.titleSmall,
+                                    ) { Text(it) }
+                                }
+                            }
+                            val textPad = if (widget.title == null && widget.action == null) {
+                                Modifier.padding(vertical = 4.dp)
+                            } else {
+                                Modifier.paddingFromBaseline(top = 24.dp)
+                                    .padding(bottom = 16.dp)
+                            }
+                            Box(textPad) {
+                                CompositionLocalProvider(
+                                    androidx.compose.material3.LocalContentColor provides
+                                        scheme.onSurfaceVariant,
+                                    androidx.compose.material3.LocalTextStyle provides
+                                        typography.bodyMedium,
+                                ) { Text(widget.text ?: "") }
+                            }
+                            widget.action?.let {
+                                Box(
+                                    Modifier.requiredHeightIn(min = 36.dp)
+                                        .padding(bottom = 8.dp),
+                                ) {
+                                    CompositionLocalProvider(
+                                        androidx.compose.material3.LocalContentColor provides
+                                            scheme.primary,
+                                        androidx.compose.material3.LocalTextStyle provides
+                                            typography.labelLarge,
+                                    ) { Text(it) }
+                                }
+                            }
                         }
                     }
                 }

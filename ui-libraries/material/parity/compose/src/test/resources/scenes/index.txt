@@ -92,6 +92,8 @@ negative-surface-radius
 negative-surface-tonal
 negative-thumb-offset
 negative-toggle-select
+negative-tooltip-color
+negative-tooltip-offset
 negative-wrong-shadow
 radio-check-morph
 radio-hover
@@ -123,4 +125,5 @@ switch-on-morph
 switch-states
 toggle-buttons
 toggle-select-morph
+tooltips
 top-app-bars

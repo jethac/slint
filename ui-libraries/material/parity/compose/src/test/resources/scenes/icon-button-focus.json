@@ -96,6 +96,7 @@
   "type": "canvas",
   "widgets": [
     {
+      "action": null,
       "alignment": null,
       "always_show_label": null,
       "avatar": null,
