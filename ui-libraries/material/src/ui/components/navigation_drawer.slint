@@ -6,6 +6,7 @@ import { NavigationItem, NavigationGroup } from "../items/navigation_item.slint"
 import { HorizontalDivider } from "./divider.slint";
 import { StateLayerArea } from "./state_layer.slint";
 import { MaterialPalette } from "../styling/material_palette.slint";
+import { NavigationDrawerTokens } from "../styling/generated/material_component_tokens.slint";
 import { Icon } from "./icon.slint";
 import { MaterialText } from "./material_text.slint";
 import { MaterialTypography } from "../styling/material_typography.slint";
@@ -50,6 +51,8 @@ component NavigationItemTemplate inherits BaseNavigationItemTemplate {
                     }
 
                     if root.has_icon || root.has_selected_icon : Icon {
+                        width: NavigationDrawerTokens.icon_size;
+                        height: self.width;
                         source: root.icon;
                         colorize: root.color;
 

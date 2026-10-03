@@ -1,3 +1,4 @@
+badges
 bottom-app-bars
 button-focus
 button-hover
@@ -28,11 +29,14 @@ icon-button-focus
 icon-button-press-morph
 icon-button-states
 icon-buttons
+icons
 loading-indicator-motion
 loading-indicator-states
 modal-navigation-rail
 navigation-rail-labels
 navigation-rails
+negative-badge-offset
+negative-badge-text
 negative-button-focus-ring
 negative-button-press-morph
 negative-button-ripple-clip
@@ -49,6 +53,7 @@ negative-fab-size
 negative-focus-layer
 negative-hover-layer
 negative-icon-button-morph
+negative-icon-offset
 negative-navigation-rail
 negative-press-overlay
 negative-radius
@@ -72,6 +77,10 @@ split-button-sizes
 split-button-states
 split-button-styles
 spring-motion
+switch-hover
+switch-off-morph
+switch-on-morph
+switch-states
 toggle-buttons
 toggle-select-morph
 top-app-bars

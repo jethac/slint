@@ -4,6 +4,7 @@
 import { MaterialStyleMetrics } from "../styling/material_style_metrics.slint";
 import { MaterialPalette } from "../styling/material_palette.slint";
 import { MaterialAnimations } from "../styling/material_animations.slint";
+import { CheckboxTokens } from "../styling/generated/material_component_tokens.slint";
 import { Icons } from "../icons/icons.slint";
 import { ListTile } from "./list.slint";
 import { StateLayerArea } from "./state_layer.slint";
@@ -56,6 +57,8 @@ export component CheckBox {
             border_color: root.has_error ? MaterialPalette.error : MaterialPalette.on_surface_variant;
 
             if root.checked : Icon {
+                width: CheckboxTokens.icon_size;
+                height: self.width;
                 colorize: MaterialPalette.on_primary;
                 source: Icons.check;
 
