@@ -73,6 +73,8 @@ import androidx.compose.material3.SplitButtonDefaults
 import androidx.compose.material3.SplitButtonLayout
 import androidx.compose.material3.MaterialExpressiveTheme
 import androidx.compose.material3.MotionScheme
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedIconButton
 import androidx.compose.material3.OutlinedIconToggleButton
@@ -83,6 +85,9 @@ import androidx.compose.material3.ToggleButton
 import androidx.compose.material3.ToggleButtonDefaults
 import androidx.compose.material3.Typography
 import androidx.compose.material3.VerticalDivider
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
+import androidx.compose.material3.BadgeDefaults
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.material3.toShape
 import androidx.compose.material3.TopAppBar
@@ -478,8 +483,11 @@ private fun CanvasScene(
         var surfaces = 0
         var appbars = 0
         var sliders = 0
-                var groups = 0
+        var groups = 0
+        var icons = 0
         var dividers = 0
+        var badges = 0
+        var badgedBoxes = 0
         // `text:{n}` spans every text node in scene order — group items
         // interleave with the standalone widgets' labels. Bases are
         // precomputed per widget so recompositions can't renumber them.
@@ -539,6 +547,14 @@ private fun CanvasScene(
                     scene,
                     tracer,
                     "text:${buttons}",
+                    "button${buttons++}",
+                    density,
+                    emitPress,
+                )
+                widget.kind == "switch" -> StateSwitch(
+                    widget,
+                    scene,
+                    tracer,
                     "button${buttons++}",
                     density,
                     emitPress,
@@ -605,6 +621,44 @@ private fun CanvasScene(
                             .track(tracer, tag),
                     )
                 }
+                widget.kind == "icon" -> {
+                    // The bare `Icon` takes its painter's intrinsic size
+                    // (or `DefaultIconSizeModifier`'s 24dp when the
+                    // painter has none); `width`/`height` apply upstream's
+                    // `modifier` size and `color` applies `tint`. The
+                    // default tint is `LocalContentColor` — provided here
+                    // as `onSurface`, the content color a `Surface` gives
+                    // (the same value as the Slint default `on_background`
+                    // at the pin).
+                    val tag = "icon${icons++}"
+                    CompositionLocalProvider(
+                        androidx.compose.material3.LocalContentColor provides
+                            scheme.onSurface,
+                    ) {
+                        Icon(
+                            sceneIcon(widget.icon ?: "check"),
+                            contentDescription = null,
+                            modifier = Modifier.offset(widget.x.dp, widget.y.dp)
+                                .then(
+                                    if (widget.width > 0) {
+                                        Modifier.width(widget.width.dp)
+                                    } else {
+                                        Modifier
+                                    },
+                                )
+                                .then(
+                                    if (widget.height > 0) {
+                                        Modifier.height(widget.height.dp)
+                                    } else {
+                                        Modifier
+                                    },
+                                )
+                                .track(tracer, tag),
+                            tint = widget.color?.let { schemeColor(it) }
+                                ?: androidx.compose.material3.LocalContentColor.current,
+                        )
+                    }
+                }
                 widget.kind == "divider" || widget.kind == "horizontal-divider" ||
                     widget.kind == "vertical-divider" -> {
                     // `Divider`/`HorizontalDivider` is `fillMaxWidth().
@@ -646,7 +700,63 @@ private fun CanvasScene(
                         }
                     }
                 }
-                widget.kind == "loading-indicator" ||
+                widget.kind == "badge" -> {
+                    // Upstream `Badge`: an empty `text` is the null-content
+                    // branch (the `BadgeTokens.Size` dot), any text the
+                    // large badge — a null-and-empty content lambda is not
+                    // the same thing upstream, so the two calls differ in
+                    // kind, not just arguments.
+                    val tag = "badge${badges++}"
+                    val container = widget.color?.let { schemeColor(it) }
+                        ?: BadgeDefaults.containerColor
+                    val mods = Modifier.offset(widget.x.dp, widget.y.dp)
+                        .track(tracer, tag)
+                    if (widget.text != null) {
+                        Badge(modifier = mods, containerColor = container) {
+                            Text(widget.text)
+                        }
+                    } else {
+                        Badge(modifier = mods, containerColor = container)
+                    }
+                }
+                widget.kind == "badged-box" -> {
+                    // The upstream `BadgedBox`: the badge hangs at the
+                    // anchor's top end corner — a dot `BadgeOffset`, a
+                    // content badge `BadgeWithContentHorizontalOffset` /
+                    // `BadgeWithContentVerticalOffset`.
+                    val tag = "badged-box${badgedBoxes++}"
+                    val container = widget.color?.let { schemeColor(it) }
+                        ?: BadgeDefaults.containerColor
+                    BadgedBox(
+                        badge = {
+                            // Same null-content rule as the `badge` widgets:
+                            // a non-null lambda that draws nothing still
+                            // counts as content upstream (`LargeSize`).
+                            if (widget.text != null) {
+                                Badge(containerColor = container) {
+                                    Text(widget.text)
+                                }
+                            } else {
+                                Badge(containerColor = container)
+                            }
+                        },
+                        modifier = Modifier.offset(widget.x.dp, widget.y.dp)
+                            .track(tracer, tag),
+                    ) {
+                        // The same `LocalContentColor` provision the `icon`
+                        // widgets get — `onSurface` (the `on_background`
+                        // stand-in on the Slint side, equal at the pin).
+                        CompositionLocalProvider(
+                            androidx.compose.material3.LocalContentColor provides
+                                scheme.onSurface,
+                        ) {
+                            Icon(
+                                sceneIcon(widget.icon ?: "check"),
+                                contentDescription = null,
+                            )
+                        }
+                    }
+                }                widget.kind == "loading-indicator" ||
                     widget.kind == "contained-loading-indicator" -> {
                     // The 48dp indicator draws at the scene's declared
                     // coordinates on both sides.
@@ -933,9 +1043,16 @@ private fun sceneIcon(name: String): androidx.compose.ui.graphics.vector.ImageVe
     if (vb[0] != 0f || vb[1] != 0f) {
         builder.addGroup(translationX = -vb[0], translationY = -vb[1])
     }
-    Regex("""<path[^>]*d="([^"]+)"""").findAll(svg).forEach { m ->
+    // Google Material Icon exports carry a viewport-sized `fill="none"`
+    // bounds path that resvg skips — honoring the attribute keeps the
+    // ImageVector identical to what the Slint side rasterizes.
+    Regex("""<path[^>]*>""").findAll(svg).forEach { m ->
+        val tag = m.value
+        if (tag.contains("""fill="none"""")) return@forEach
+        val d = Regex("""d="([^"]+)"""").find(tag)?.groupValues?.get(1)
+            ?: return@forEach
         builder.addPath(
-            androidx.compose.ui.graphics.vector.addPathNodes(m.groupValues[1]),
+            androidx.compose.ui.graphics.vector.addPathNodes(d),
             fill = androidx.compose.ui.graphics.SolidColor(Color.Black),
         )
     }
@@ -1251,16 +1368,40 @@ private fun schemeColor(role: String): Color =
     androidx.compose.material3.MaterialTheme.colorScheme.let { scheme ->
         when (role.kebabToCamel()) {
             "primary" -> scheme.primary
+            "onPrimary" -> scheme.onPrimary
             "primaryContainer" -> scheme.primaryContainer
+            "onPrimaryContainer" -> scheme.onPrimaryContainer
             "secondary" -> scheme.secondary
+            "onSecondary" -> scheme.onSecondary
             "secondaryContainer" -> scheme.secondaryContainer
+            "onSecondaryContainer" -> scheme.onSecondaryContainer
             "tertiary" -> scheme.tertiary
+            "onTertiary" -> scheme.onTertiary
             "tertiaryContainer" -> scheme.tertiaryContainer
+            "onTertiaryContainer" -> scheme.onTertiaryContainer
             "surface" -> scheme.surface
+            "onSurface" -> scheme.onSurface
+            "surfaceVariant" -> scheme.surfaceVariant
+            "onSurfaceVariant" -> scheme.onSurfaceVariant
             "inverseSurface" -> scheme.inverseSurface
+            "inverseOnSurface" -> scheme.inverseOnSurface
+            "inversePrimary" -> scheme.inversePrimary
             "background" -> scheme.background
+            "onBackground" -> scheme.onBackground
             "error" -> scheme.error
+            "onError" -> scheme.onError
             "errorContainer" -> scheme.errorContainer
+            "onErrorContainer" -> scheme.onErrorContainer
+            "outline" -> scheme.outline
+            "outlineVariant" -> scheme.outlineVariant
+            "surfaceContainerLowest" -> scheme.surfaceContainerLowest
+            "surfaceContainerLow" -> scheme.surfaceContainerLow
+            "surfaceContainer" -> scheme.surfaceContainer
+            "surfaceContainerHigh" -> scheme.surfaceContainerHigh
+            "surfaceContainerHighest" -> scheme.surfaceContainerHighest
+            "surfaceDim" -> scheme.surfaceDim
+            "surfaceBright" -> scheme.surfaceBright
+            "scrim" -> scheme.scrim
             else -> error("scene catalog has no ColorScheme role for $role")
         }
     }
@@ -1586,6 +1727,83 @@ private fun StateIconButton(
             iconInkColor(widget, checked),
         )
     }
+}
+
+/** `switch` — a hoisted `checked` like every upstream selection control
+ * (`Switch(checked, onCheckedChange, …)`), with a scene-side mirror of
+ * the pin's private `ThumbNode` so `//TRACE_PROPS=thumb_size,thumb_offset`
+ * reads the same value the Slint out properties animate. The targets
+ * (`Switch.kt` L283-306: pressed → `PressedHandleWidth`, `hasContent ||
+ * checked` → `ThumbDiameter`, else `UncheckedThumbDiameter`; pressed pulls
+ * the thumb one `TrackOutlineWidth` off the far edge, `checked` sits at
+ * `(SwitchWidth - ThumbDiameter) - ThumbPadding`) animate on
+ * `SnapSpec` while pressed and `MotionSchemeKeyTokens.FastSpatial`
+ * otherwise. `hasContent` measures the current state's slot — a
+ * `thumbContent` that draws nothing while unchecked reports 0. */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun StateSwitch(
+    widget: Widget,
+    scene: Scene,
+    tracer: Tracer,
+    elementId: String,
+    density: Float,
+    emitPress: java.util.concurrent.CopyOnWriteArrayList<Pair<Long, Runnable>>,
+) {
+    val interactionSource = remember { ReplayableInteractionSource() }
+    var selected by remember { mutableStateOf(widget.checked) }
+    val pressed by interactionSource.collectIsPressedAsState()
+    val hasContent = widget.icon != null
+
+    fun targetSize(): Float =
+        if (pressed) 28f else if (hasContent || selected) 24f else 16f
+    fun targetOffset(size: Float): Float =
+        if (pressed && selected) 22f
+        else if (pressed) 2f
+        else if (selected) 24f
+        else (32f - size) / 2f
+
+    val thumbSize = remember { Animatable(
+        if (hasContent || selected) 24f else 16f) }
+    val thumbOffset = remember { Animatable(
+        if (selected) 24f else (32f - (if (hasContent) 24f else 16f)) / 2f) }
+    val spatialSpec = androidx.compose.material3.MaterialTheme.motionScheme.fastSpatialSpec<Float>()
+    LaunchedEffect(selected, pressed) {
+        val size = targetSize()
+        val offset = targetOffset(size)
+        val spec = if (pressed) androidx.compose.animation.core.snap<Float>() else spatialSpec
+        launch { thumbSize.animateTo(size, spec) }
+        launch { thumbOffset.animateTo(offset, spec) }
+    }
+    tracer.propGetters["thumb_size"] = { thumbSize.value.toDouble() }
+    tracer.propGetters["thumb_offset"] = { thumbOffset.value.toDouble() }
+
+    emitStateInteractions(
+        widget.state,
+        scene,
+        tracer,
+        elementId,
+        interactionSource,
+        emitPress,
+        Offset(16f * density, 16f * density),
+        density,
+        Runnable { selected = !selected },
+    )
+
+    val iconVector = widget.icon?.let { sceneIcon(it) }
+    Switch(
+        checked = selected,
+        onCheckedChange = { selected = it },
+        modifier = Modifier.offset(widget.x.dp, widget.y.dp)
+            .track(tracer, elementId),
+        enabled = widget.enabled,
+        interactionSource = interactionSource,
+        thumbContent = if (iconVector != null) {
+            { Icon(iconVector, contentDescription = null, modifier = Modifier.size(SwitchDefaults.IconSize)) }
+        } else {
+            null
+        },
+    )
 }
 
 /** `bottom_end` → `Alignment.BottomEnd` — `animateFloatingActionButton`'s
