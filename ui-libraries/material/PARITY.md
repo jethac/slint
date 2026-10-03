@@ -510,7 +510,7 @@ States: selected, unselected
 
 | Component | Source | Status | Issues | Needs | Notes |
 |---|---|---|---|---|---|
-| HorizontalFloatingToolbar | FloatingToolbar.kt | partial | #10 | adaptive (#12) | slint component: HorizontalFloatingToolbar; tokens: FloatingToolbarTokens; plain + with-FAB variants, standard/vibrant color styles, fast-spatial expand/collapse spring + exit-always scroll behavior with drag area; with-FAB content stays unscrollable (upstream `.horizontalScroll` — no equivalent needed at parity sizes); no RTL — `start`/`end` are LTR-true |
+| HorizontalFloatingToolbar | FloatingToolbar.kt | partial | #10 | adaptive (#12) | slint component: HorizontalFloatingToolbar; tokens: FloatingToolbarTokens; plain + with-FAB variants, standard/vibrant, fast-spatial expand/collapse spring + exit-always scroll behavior with drag area; with-FAB content does not scroll (upstream .horizontalScroll); no RTL — start/end are LTR-true |
 | VerticalFloatingToolbar | FloatingToolbar.kt | partial | #10 | adaptive (#12) | slint component: VerticalFloatingToolbar; same notes as HorizontalFloatingToolbar |
 
 ### Tooltips
