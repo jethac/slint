@@ -241,8 +241,8 @@ States: collapsed, expanded, focused, disabled, dragged, hovered, pressed, selec
 
 | Component | Source | Status | Issues | Needs | Notes |
 |---|---|---|---|---|---|
-| ListItem | ListItem.kt | partial | #11 | shapes (#6) | slint component: ListTile |
-| SegmentedListItem | ListItem.kt | missing | #11 | shapes (#6) | - |
+| ListItem | ListItem.kt | done | #11 | shapes (#6) | slint component: ListTile — interactive/selectable/checkable, interactive shape morph |
+| SegmentedListItem | ListItem.kt | done | #11 | shapes (#6) | slint component: SegmentedListItem — index/count segmentedShapes positions |
 
 ### Loading indicator
 
