@@ -119,6 +119,7 @@
       "placeholder": null,
       "radius": null,
       "shape": null,
+      "side": null,
       "size": null,
       "slint_overrides": {
         "width": 248
@@ -126,6 +127,7 @@
       "state": null,
       "subtitle": null,
       "text": null,
+      "trailing_icon": null,
       "variant": null,
       "width": 288.0,
       "width_option": null,
