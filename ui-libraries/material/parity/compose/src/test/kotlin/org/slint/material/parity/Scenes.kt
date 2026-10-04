@@ -3711,7 +3711,7 @@ private fun SheetWidget(
                     Box(
                         Modifier.fillMaxWidth()
                             .height(widget.sheetHeight.dp)
-                            .background(schemeColor(widget.contentColor)),
+                            .background(schemeColor(widget.contentColor ?: "tertiary-container")),
                     )
                 }
             }
@@ -3757,7 +3757,7 @@ private fun SheetWidget(
                         Box(
                             Modifier.fillMaxWidth()
                                 .height(widget.sheetHeight.dp)
-                                .background(schemeColor(widget.contentColor)),
+                                .background(schemeColor(widget.contentColor ?: "tertiary-container")),
                         )
                     },
                     modifier = Modifier.trackSheet(tracer, tag, uiDensity),
@@ -3819,7 +3819,7 @@ private fun SheetWidget(
                         Box(
                             Modifier.fillMaxWidth()
                                 .height(widget.sheetHeight.dp)
-                                .background(schemeColor(widget.contentColor)),
+                                .background(schemeColor(widget.contentColor ?: "tertiary-container")),
                         )
                     }
                 }
@@ -4100,7 +4100,7 @@ private fun ParitySheet(
             Box(
                 Modifier.fillMaxWidth()
                     .height(widget.sheetHeight.dp)
-                    .background(schemeColor(widget.contentColor)),
+                    .background(schemeColor(widget.contentColor ?: "tertiary-container")),
             )
         }
     }

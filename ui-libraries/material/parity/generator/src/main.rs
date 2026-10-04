@@ -496,9 +496,6 @@ struct Widget {
     /// `material-snackbar` `dismissActionContentColor` role name.
     #[serde(default)]
     dismiss_color: Option<String>,
-    /// `material-snackbar` `contentColor` role name (the message text).
-    #[serde(default)]
-    content_color: Option<String>,
     /// `connected-button-group`/`vertical-connected-button-group` items.
     #[serde(default)]
     items: Vec<GroupItem>,

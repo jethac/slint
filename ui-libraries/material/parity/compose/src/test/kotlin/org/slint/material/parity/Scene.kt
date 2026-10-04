@@ -229,8 +229,6 @@ class Widget(json: JSONObject) {
     val actionColor: String? = (json.opt("action_color") as? String)?.takeIf { it.isNotEmpty() }
     /** `material-snackbar` `dismissActionContentColor` role name. */
     val dismissColor: String? = (json.opt("dismiss_color") as? String)?.takeIf { it.isNotEmpty() }
-    /** `material-snackbar` `contentColor` role name. */
-    val contentColor: String? = (json.opt("content_color") as? String)?.takeIf { it.isNotEmpty() }
 
 
     val isFab: Boolean get() = kind == "fab" || kind == "extended-fab"
@@ -265,8 +263,10 @@ class Widget(json: JSONObject) {
     val skipHidden: Boolean = json.optBoolean("skip_hidden", true)
     /** Sheet kinds: `gesturesEnabled`/`sheetSwipeEnabled` (default true). */
     val gestures: Boolean = json.optBoolean("gestures", true)
-    /** Sheet kinds: scheme role for the sheet content rect. */
-    val contentColor: String = (json.opt("content_color") as? String) ?: "tertiary-container"
+    /** `content_color` role name — sheets default it to `tertiary-container`
+     * at the use site; `material-snackbar` `contentColor` stays unset (the
+     * `SnackbarDefaults` default) when absent. */
+    val contentColor: String? = (json.opt("content_color") as? String)?.takeIf { it.isNotEmpty() }
     /** `bottom-sheet-scaffold` only: scheme role for the scaffold body. */
     val bodyColor: String = (json.opt("body_color") as? String) ?: "surface"
     /** Sheet kinds: the M3 elevation level for `sheet-elevation-level`/
