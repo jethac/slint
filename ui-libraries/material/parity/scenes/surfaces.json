@@ -1,0 +1,119 @@
+{
+    "name": "surfaces",
+    "type": "canvas",
+    "parity": "static",
+    "size": [
+        360,
+        300
+    ],
+    "densities": [
+        1,
+        2
+    ],
+    "theme": {
+        "seed": "6750A4",
+        "variant": "tonal-spot",
+        "spec": "spec2025",
+        "platform": "phone",
+        "dark": false,
+        "contrast": 0.0
+    },
+    "fonts": {
+        "plain": "Roboto",
+        "brand": "Roboto"
+    },
+    "widgets": [
+        {
+            "kind": "material-surface",
+            "x": 24,
+            "y": 24,
+            "width": 72,
+            "height": 56
+        },
+        {
+            "kind": "material-surface",
+            "x": 124,
+            "y": 24,
+            "width": 72,
+            "height": 56,
+            "tonal_elevation": 1
+        },
+        {
+            "kind": "material-surface",
+            "x": 224,
+            "y": 24,
+            "width": 72,
+            "height": 56,
+            "tonal_elevation": 3
+        },
+        {
+            "kind": "material-surface",
+            "x": 24,
+            "y": 104,
+            "width": 72,
+            "height": 56,
+            "tonal_elevation": 5
+        },
+        {
+            "kind": "material-surface",
+            "x": 124,
+            "y": 104,
+            "width": 72,
+            "height": 56,
+            "tonal_elevation": 1,
+            "parent_elevation": 2
+        },
+        {
+            "kind": "material-surface",
+            "x": 224,
+            "y": 104,
+            "width": 72,
+            "height": 56,
+            "color": "primary",
+            "tonal_elevation": 3
+        },
+        {
+            "kind": "material-surface",
+            "x": 24,
+            "y": 184,
+            "width": 72,
+            "height": 56,
+            "radius": 16,
+            "border_width": 1
+        },
+        {
+            "kind": "material-surface",
+            "x": 124,
+            "y": 184,
+            "width": 72,
+            "height": 56,
+            "radius": 16,
+            "tonal_elevation": 2,
+            "selectable": true,
+            "selected": true
+        },
+        {
+            "kind": "material-surface",
+            "x": 224,
+            "y": 184,
+            "width": 72,
+            "height": 56,
+            "radius": 16,
+            "tonal_elevation": 2,
+            "toggleable": true,
+            "checked": true
+        }
+    ],
+    "trace_elements": [
+        "msurface0",
+        "msurface1",
+        "msurface2",
+        "msurface3",
+        "msurface4",
+        "msurface5",
+        "msurface6",
+        "msurface7",
+        "msurface8"
+    ],
+    "trace_props": []
+}
