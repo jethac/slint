@@ -432,7 +432,7 @@ pub fn extract_parity(source: &str) -> ParityMarkers {
 
     let mut mask_inner = Vec::new();
     static MASK_INNER_RX: LazyLock<Regex> =
-        LazyLock::new(|| Regex::new(r"//MASK_INNER=\s*([A-Za-z0-9_]+)\s*@\s*([0-9,\s]+)").unwrap());
+        LazyLock::new(|| Regex::new(r"//MASK_INNER=\s*([A-Za-z0-9_-]+)\s*@\s*([0-9,\s]+)").unwrap());
     for m in MASK_INNER_RX.captures_iter(source) {
         for t in m[2].split(',').map(str::trim).filter(|s| !s.is_empty()) {
             mask_inner.push((
@@ -444,7 +444,7 @@ pub fn extract_parity(source: &str) -> ParityMarkers {
 
     let mut mask_decor = Vec::new();
     static MASK_DECOR_RX: LazyLock<Regex> = LazyLock::new(|| {
-        Regex::new(r"//MASK_DECOR=\s*([A-Za-z0-9_]+)(?:\s*\+\s*([0-9.]+))?\s*@\s*([0-9,\s]+)")
+        Regex::new(r"//MASK_DECOR=\s*([A-Za-z0-9_-]+)(?:\s*\+\s*([0-9.]+))?\s*@\s*([0-9,\s]+)")
             .unwrap()
     });
     for m in MASK_DECOR_RX.captures_iter(source) {

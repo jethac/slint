@@ -2,124 +2,1292 @@
 // SPDX-License-Identifier: MIT
 
 import { Elevation } from "./elevation.slint";
+import { FocusTouchArea, MaterialCornerRadii } from "./state_layer.slint";
+import { ToolTip } from "./tooltip.slint";
 import { MaterialPalette } from "../styling/material_palette.slint";
-import { MaterialStyleMetrics } from "../styling/material_style_metrics.slint";
-import { Horizontal } from "./horizontal.slint";
 import { MaterialAnimations } from "../styling/material_animations.slint";
-import { Modal } from "./modal.slint";
+import { MaterialCornerShape, ShapeTokens } from "../styling/generated/material_shape_tokens.slint";
+import { DragHandleTokens, SheetBottomTokens } from "../styling/generated/material_component_tokens.slint";
 
-component BottomSheet {
-    callback drag_moved(offset_y: length);
-    callback pressed();
-    callback released();
+/// Compose's `SheetValue`: the anchor a bottom sheet settles on. `hidden`
+/// parks the sheet fully below the container's bottom edge,
+/// `partially-expanded` parks it at the partial anchor and `expanded` shows
+/// the whole sheet.
+export enum SheetValue { hidden, partially-expanded, expanded }
 
-    elevation := Elevation {
-        width: 100%;
-        height: 100%;
-        level: 3;
-        border_radius: MaterialStyleMetrics.border_radius_16;
+// The three anchor positions and the settle rules below follow
+// `BottomSheet.kt`, `ModalBottomSheet.kt`, `BottomSheetScaffold.kt`,
+// `SheetDefaults.kt` and `AnchoredDraggable.kt` of androidx.compose.material3
+// 1.5.0-alpha18 (pin `androidx/androidx@23327507f7fc7d5b19d65fec4b090f60c970079b`).
+
+/// `BottomSheetDefaults.DragHandle` plus the `DragHandleWithTooltip` wrapper:
+/// the `docked_drag_handle` pill centered in the sheet's drag strip, a hover
+/// tooltip above it and click/semantics that let the sheet expand, collapse
+/// and dismiss.
+export component BottomSheetDragHandle {
+    /// Whether the sheet allows gestures — gates click and semantics.
+    in property <bool> enabled;
+    /// Whether the sheet is `SheetValue.expanded`; maps to
+    /// `accessible-expanded`.
+    in property <bool> expanded;
+    /// `BottomSheetExpandDescription`/`DismissDescription`/`PartialExpandDescription`
+    /// are exposed through the action callbacks.
+    in property <string> accessible-name: @tr("Drag handle");
+    /// The enclosing swipe's `pressed` — the handle's own `TouchArea` never
+    /// sees the press when the enclosing `SwipeGestureHandler` intercepts the
+    /// gesture, so the tooltip state mirrors the swipe's held pointer.
+    in property <bool> pointer-held;
+    /// The enclosing swipe's recognized drag — a long-press is only armed
+    /// while the pointer stays put.
+    in property <bool> pointer-dragged;
+    /// The click's toggle: Expanded dismisses, PartiallyExpanded expands and
+    /// every other state shows the sheet (BottomSheetImpl).
+    callback clicked();
+    /// Accessibility `expand`/`increment` action.
+    callback expand();
+    /// Accessibility `collapse`/`decrement`/`dismiss` action.
+    callback collapse();
+
+    // `SheetDefaults.kt`'s private `DragHandleVerticalPadding` is 22 dp: the
+    // 4 dp handle sits in a 48 dp strip.
+    height: 48px;
+
+    // `TooltipBox`/`BasicTooltip` gesture paths: a touch press shows the
+    // tooltip through `waitForLongPress` (a stationary ~500 ms hold — any move
+    // cancels it), a mouse pointer on `PointerEventType.Enter`. A touch
+    // release inside the bounds is not an Enter, so the hover path must only
+    // arm when the hover began without a press.
+    property <bool> pressed-since-hover;
+    property <bool> press-moved;
+    property <bool> long-pressed;
+    // The press lands either on the handle's own area or on the enclosing
+    // swipe (`pointer-held`); a recognized swipe (`pointer-dragged`) and any
+    // move while held cancel the long-press wait.
+    long-press-timer := Timer {
+        interval: 500ms;
+        running: (touch.pressed || root.pointer-held) &&
+            !root.press-moved && !root.pointer-dragged;
+        triggered => {
+            root.long-pressed = true;
+            self.running = false;
+        }
     }
 
-    TouchArea {
-        Rectangle {
-            background: MaterialPalette.surface_container_low;
-            border_top_left_radius: MaterialStyleMetrics.border_radius_16;
-            border_top_right_radius: self.border_top_left_radius;
+    changed pointer-held => {
+        // A swipe-area press suppresses the next hover `Enter` — the
+        // TouchArea only delivers its hover after the release, and a touch
+        // release inside the bounds is not an Enter.
+        if root.pointer-held {
+            root.pressed-since-hover = true;
+        }
+    }
 
-            VerticalLayout {
-                alignment: start;
+    touch := FocusTouchArea {
+        // `Modifier.clickable` sits on the handle Surface — pill plus its
+        // vertical padding, so the interactive box is 32x48 dp centered in the
+        // strip.
+        x: (parent.width - self.width) / 2;
+        width: SheetBottomTokens.docked_drag_handle_width;
+        height: 100%;
+        enabled: root.enabled;
+        accessible-role: button;
+        accessible-label: root.accessible-name;
+        accessible-expandable: true;
+        accessible-expanded: root.expanded;
+        // `TooltipAnchorPosition.Above` — the strip's top edge is the sheet's
+        // top edge, so the tooltip leaves the strip bounds upward.
+        tooltip: (self.has-hover && !self.pressed && !root.pressed-since-hover) ?
+            @tr("Drag handle") : "";
+        tooltip-offset: -30px;
 
-                drag_handle := TouchArea {
-                    height: MaterialStyleMetrics.size_36;
-
-                    Rectangle {
-                        width: MaterialStyleMetrics.size_32;
-                        height: MaterialStyleMetrics.size_4;
-                        background: MaterialPalette.outline;
-                        border_radius: self.height / 2;
-                    }
-
-                    moved => {
-                        root.drag_moved(self.pressed_y - self.mouse_y);
-                    }
-
-                    changed pressed => {
-                        if self.pressed {
-                            root.pressed();
-                            return;
-                        }
-
-                        root.released();
-                    }
-                }
-
-                Horizontal {
-                    @children
-                }
+        moved => {
+            if self.pressed || root.pointer-held {
+                root.press-moved = true;
             }
+        }
+
+        changed pressed => {
+            if self.pressed {
+                root.pressed-since-hover = true;
+                root.press-moved = false;
+                root.long-pressed = false;
+            }
+        }
+
+        changed has-hover => {
+            if self.has-hover {
+                // The press preceded the hover — the swipe grabbed the
+                // pointer before the first Enter — so this hover did not
+                // begin a `PointerEventType.Enter` hover either.
+                if self.pressed || root.pointer-held {
+                    root.pressed-since-hover = true;
+                }
+            } else {
+                root.pressed-since-hover = false;
+                root.press-moved = false;
+                root.long-pressed = false;
+            }
+        }
+
+        // The long-press path shows while the pointer is still down, which
+        // `FocusTouchArea`'s hover gate can't cover.
+        if root.long-pressed : ToolTip {
+            y: -34px;
+            text: @tr("Drag handle");
+        }
+
+        accessible-action-default => {
+            root.clicked();
+        }
+
+        accessible-action-expand => {
+            root.expand();
+        }
+
+        accessible-action-increment => {
+            root.expand();
+        }
+
+        accessible-action-decrement => {
+            root.collapse();
+        }
+
+        clicked => {
+            root.clicked();
+        }
+
+        Rectangle {
+            x: 0;
+            y: (parent.height - self.height) / 2;
+            width: SheetBottomTokens.docked_drag_handle_width;
+            height: SheetBottomTokens.docked_drag_handle_height;
+            // `MaterialTheme.shapes.extraLarge`; not part of SheetBottomTokens.
+            border-radius: ShapeTokens.corner_value_extra_large;
+            background: SheetBottomTokens.docked_drag_handle_color;
         }
     }
 }
 
-export component ModalBottomSheet inherits PopupWindow {
-    close_policy: no_auto_close;
+// The anchored sheet surface: state machine, anchor table, swipe gesture and
+// the `AnchoredDraggable` settle rules. Used by `BottomSheet`,
+// `BottomSheetScaffold` and `ModalBottomSheet`; which anchor set applies is
+// selected by `peek-anchored` (scaffold) versus the deterministic modal path.
+component SheetSurface {
+    // ---- Compose parameters ------------------------------------------------
+    /// The layout the anchors are measured in — `constraints.maxHeight`/`maxWidth`
+    /// of `draggableAnchors`.
+    in property <length> container-height;
+    in property <length> container-width;
+    /// `BottomSheetDefaults.SheetMaxWidth` (SheetDefaults.kt).
+    in property <length> sheet-max-width: 640px;
+    /// `BottomSheetScaffold`'s `sheetPeekHeight` (`SheetPeekHeight` = 56.dp).
+    in property <length> peek-height;
+    /// Scaffold anchor rules: the partial anchor is `layoutHeight - peekHeight`
+    /// and the hidden anchor is only kept when `!skip-hidden-state`. With this
+    /// off, the deterministic `BottomSheet`/`ModalBottomSheet` anchors apply.
+    in property <bool> peek-anchored;
+    /// `BottomSheetImpl` wraps the release fling in the 125 dp
+    /// `BoundaryDampeningZone`; the scaffold's `StandardBottomSheet` doesn't.
+    in property <bool> boundary-dampening;
+    /// `gesturesEnabled` (`ModalBottomSheet`/`BottomSheet`) resp.
+    /// `sheetSwipeEnabled` (`BottomSheetScaffold`).
+    in property <bool> gestures-enabled: true;
+    in property <bool> has-drag-handle: true;
+    in property <bool> skip-partially-expanded;
+    in property <bool> skip-hidden-state;
+    in property <SheetValue> initial-value: SheetValue.hidden;
+    /// `BottomSheetDefaults.ExpandedShape`.
+    in property <MaterialCornerShape> sheet-shape: SheetBottomTokens.docked_container_shape;
+    in property <brush> container-color: SheetBottomTokens.docked_container_color;
+    /// `shadowElevation`; `tonalElevation` isn't ported — the container color
+    /// tokens already resolve to the tonal `surface_container_low`.
+    in property <int> elevation-level: 0;
+    /// `paneTitle` semantics on the sheet surface.
+    in property <string> pane-title: @tr("Bottom sheet");
+    /// `confirmValueChange(SheetValue)`: return `true` to deny the transition.
+    /// A callback left unimplemented allows every change.
+    callback deny-value-change(value: SheetValue) -> bool;
+    /// `onDismissRequest`: the sheet settled at the hidden anchor.
+    callback dismiss-requested();
 
-    property <length> drag_margin: MaterialStyleMetrics.padding_56;
+    // ---- `SheetState` surface ------------------------------------------------
+    out property <SheetValue> current-value: initial-value;
+    out property <SheetValue> target-value: initial-value;
+    // `AnchoredDraggableState.currentValue`: the closest anchor the offset
+    // has passed through — `updateIfNeeded` moves it on every `dragTo`,
+    // including animation frames. `current-value` stays the settled latch
+    // (`SheetState.currentValue` maps to `settledValue`).
+    out property <SheetValue> anchor-current: initial-value;
+    out property <bool> is-visible: anchor-current != SheetValue.hidden;
+    // The offset `updateIfNeeded` last compared against — `dragTo`'s
+    // `previousOffset` for the next write.
+    property <length> tracked-offset;
+    /// Pointer held on the sheet's gesture area — the pin's drag-active window
+    /// runs from the press, not from swipe recognition.
+    out property <bool> dragging: swipe.pressed;
+    /// Surface placement inside the component's anchor space (`x`/`width` are
+    /// centered, `y` is `sheet-offset`, `height` includes the overshoot stretch).
+    out property <length> surface-x: root.x;
+    out property <length> surface-y: root.y;
+    out property <length> surface-width: root.width;
+    out property <length> surface-height: root.height;
+    out property <bool> has-expanded-state: root.expanded-anchor-available;
+    out property <bool> has-partially-expanded-state: root.partial-anchor-available;
+    /// `anchoredDraggableState.offset`: the sheet's top edge in container
+    /// coordinates; `container-height` is hidden, `0` is flush with the top.
+    in-out property <length> sheet-offset;
+    /// The offset the state reports and the surface sits at. `animateTo`'s
+    /// per-frame `dragTo` writes are unclamped per the pinned comment —
+    /// "an animation may overshoot ... we allow the overshoot" — so a
+    /// programmatic spring rings through the anchor before settling. The
+    /// gesture paths go through `newOffsetForDelta`, whose
+    /// `coerceIn(minAnchor, maxAnchor)` clamps each delta — a drag and the
+    /// per-frame `scrollBy` of a release fling alike — so their observable
+    /// offset parks on the bound while the internal spring keeps ringing.
+    out property <length> clamped-offset:
+        root.dragging || root.flinging ?
+            Math.min(root.max-anchor, Math.max(root.min-anchor, root.sheet-offset)) :
+            root.sheet-offset;
+    /// The sheet's natural height — `requiredHeightIn(min = peekHeight)` plus
+    /// the drag strip. The surface itself can stretch below that while a
+    /// spring overshoots above the topmost anchor (`verticalScaleUp`).
+    out property <length> sheet-height:
+        Math.max(root.peek-anchored ? root.peek-height : 0px, column.preferred-height);
+    /// True once the anchors have been built from a real layout.
+    out property <bool> initialized;
 
-    modal := Modal {
-        width: 100%;
-        height: 100%;
+    // ---- anchor table (`draggableAnchors` + `updateAnchors`) ----------------
+    property <length> hidden-anchor: root.container-height;
+    property <length> partial-anchor:
+        root.peek-anchored ?
+            Math.max(0px, root.container-height - root.peek-height) :
+            // `calculatePartiallyExpandedOffset`, deterministic flag path.
+            root.container-height - Math.min(root.container-height / 2, root.sheet-height);
+    property <length> expanded-anchor: Math.max(0px, root.container-height - root.sheet-height);
 
-        sheet := BottomSheet {
-            property <duration> y_duration: MaterialAnimations.standard_accelerate_duration;
-            property <length> y_drag_start;
-            property <length> height_drag_start;
+    property <bool> hidden-anchor-available:
+        !root.peek-anchored ||
+        root.sheet-height == 0px || root.peek-height == 0px || !root.skip-hidden-state;
+    property <bool> partial-anchor-available:
+        !root.skip-partially-expanded &&
+        (!root.peek-anchored ||
+            // `peekHeightPx > 0 || isAmbiguousPartialAllowed`
+            root.peek-height > 0px ||
+            !root.initialized ||
+            (root.current-value == SheetValue.partially-expanded &&
+                root.current-value == root.target-value)) &&
+        // `peekHeightPx != sheetHeight`
+        (!root.peek-anchored || root.peek-height != root.sheet-height);
+    property <bool> expanded-anchor-available: root.sheet-height > 0px;
 
-            x: (parent.width - self.width) / 2;
-            y: parent.height;
-            width: min(MaterialStyleMetrics.size_640, parent.width - 2 * MaterialStyleMetrics.padding_56);
+    property <length> min-anchor:
+        Math.min(
+            root.hidden-anchor-available ? root.hidden-anchor : 100000000px,
+            Math.min(
+                root.partial-anchor-available ? root.partial-anchor : 100000000px,
+                root.expanded-anchor-available ? root.expanded-anchor : 100000000px));
+    property <length> max-anchor:
+        Math.max(
+            root.hidden-anchor-available ? root.hidden-anchor : -100000000px,
+            Math.max(
+                root.partial-anchor-available ? root.partial-anchor : -100000000px,
+                root.expanded-anchor-available ? root.expanded-anchor : -100000000px));
 
-            @children
+    // ---- motion -------------------------------------------------------------
+    // `settle-spec`/`settle-velocity` seed the next `sheet-offset` write; a
+    // gesture release installs the default spatial spring and the measured
+    // release velocity, matching `snapFlingBehavior`+`NoOpDecay`.
+    property <easing> settle-spec: MaterialAnimations.default-spatial-spring;
+    property <float> settle-velocity;
+    property <bool> snapping;
+    /// Whether the running settle came from a gesture release (`performFling`
+    /// — observable offset clamps) rather than `animateTo` (unclamped).
+    property <bool> flinging;
 
-            drag_moved(offset_y) => {
-                self.y_duration = 0;
-                self.y = max(self.y - offset_y, self.y_drag_start);
-                self.height += offset_y;
-            }
+    animate sheet-offset {
+        enabled: !root.dragging && !root.snapping && !MaterialPalette.reduced-motion;
+        easing: root.settle-spec;
+        initial-velocity: root.settle-velocity;
+    }
 
-            pressed => {
-                self.y_drag_start = self.y;
-                self.height_drag_start = self.height;
-            }
-
-            released => {
-                if self.y >= root.height - root.drag_margin {
-                    root.close();
-                    return;
-                }
-
-                self.y_duration = MaterialAnimations.standard_accelerate_duration;
-                self.height = self.height_drag_start;
-                self.y = self.y_drag_start;
-            }
-
-            animate y, height { enabled: !MaterialPalette.reduced-motion;
-                duration: self.y_duration;
-                easing: MaterialAnimations.standard_easing;
-            }
-        }
-
-        clicked => {
-            root.close();
+    // ---- public state functions (SheetState) --------------------------------
+    /// `show()` — the show motion spec is the default spatial spring.
+    public function show() {
+        let target = root.partial-anchor-available ?
+            SheetValue.partially-expanded : SheetValue.expanded;
+        if !root.deny-value-change(target) {
+            root.animate-to-target(target, MaterialAnimations.default-spatial-spring);
         }
     }
 
+    public function expand() {
+        if root.expanded-anchor-available && !root.deny-value-change(SheetValue.expanded) {
+            root.animate-to-target(SheetValue.expanded, MaterialAnimations.default-spatial-spring);
+        }
+    }
+
+    /// `partialExpand()` — the hide motion spec (fast effects) applies.
+    public function partial-expand() {
+        if root.partial-anchor-available && !root.deny-value-change(SheetValue.partially-expanded) {
+            root.animate-to-target(SheetValue.partially-expanded, MaterialAnimations.fast-effects-spring);
+        }
+    }
+
+    /// `hide()` — the hide motion spec (fast effects) applies.
+    public function hide() {
+        if root.hidden-anchor-available && !root.deny-value-change(SheetValue.hidden) {
+            root.animate-to-target(SheetValue.hidden, MaterialAnimations.fast-effects-spring);
+        }
+    }
+
+    /// `snapTo(v)` — moves the offset without animation.
+    public function snap-to(value: SheetValue) {
+        if !root.deny-value-change(value) {
+            root.snap-to-anchor(value);
+        }
+    }
+
+    /// `animateToDismiss` — scrim click and the Expanded drag-handle click.
+    public function animate-to-dismiss() {
+        if !root.deny-value-change(SheetValue.hidden) {
+            root.pending-dismiss = true;
+            root.hide();
+        }
+    }
+
+    /// `settleToDismiss` — the back/Escape path.
+    public function settle-to-dismiss() {
+        if root.current-value == SheetValue.expanded && root.partial-anchor-available {
+            root.partial-expand();
+        } else {
+            root.pending-dismiss = true;
+            root.hide();
+        }
+    }
+
+    // ---- helpers ------------------------------------------------------------
+    pure function anchor-position(value: SheetValue) -> length {
+        value == SheetValue.hidden ? root.hidden-anchor :
+        value == SheetValue.partially-expanded ? root.partial-anchor :
+        root.expanded-anchor
+    }
+
+    // `DraggableAnchors.closestAnchor` keeps the later-declared anchor on
+    // ties; the declared order is (Hidden, PartiallyExpanded, Expanded) for
+    // sheets and (PartiallyExpanded, Hidden, Expanded) for the scaffold.
+    pure function closest-anchor(offset: length) -> SheetValue {
+        let dh = root.hidden-anchor-available ?
+            Math.abs(offset - root.hidden-anchor) : 100000000px;
+        let dp = root.partial-anchor-available ?
+            Math.abs(offset - root.partial-anchor) : 100000000px;
+        let de = root.expanded-anchor-available ?
+            Math.abs(offset - root.expanded-anchor) : 100000000px;
+        if !root.peek-anchored {
+            if de <= Math.min(dh, dp) { return SheetValue.expanded; }
+            if dp <= dh { return SheetValue.partially-expanded; }
+            return SheetValue.hidden;
+        }
+        if de <= Math.min(dp, dh) { return SheetValue.expanded; }
+        if dh <= dp { return SheetValue.hidden; }
+        SheetValue.partially-expanded
+    }
+
+    // `DraggableAnchors.closestAnchor(offset, searchUpwards)`: the nearest
+    // anchor at or beyond `offset` in the scroll direction (larger offsets sit
+    // lower on screen). `offset` is clamped to the anchor range, so a
+    // candidate always exists.
+    pure function closest-anchor-in-direction(offset: length, toward-larger: bool) -> SheetValue {
+        let dh = root.hidden-anchor-available &&
+            (toward-larger ? root.hidden-anchor >= offset : root.hidden-anchor <= offset) ?
+            Math.abs(offset - root.hidden-anchor) : 100000000px;
+        let dp = root.partial-anchor-available &&
+            (toward-larger ? root.partial-anchor >= offset : root.partial-anchor <= offset) ?
+            Math.abs(offset - root.partial-anchor) : 100000000px;
+        let de = root.expanded-anchor-available &&
+            (toward-larger ? root.expanded-anchor >= offset : root.expanded-anchor <= offset) ?
+            Math.abs(offset - root.expanded-anchor) : 100000000px;
+        if !root.peek-anchored {
+            if de <= Math.min(dh, dp) { return SheetValue.expanded; }
+            if dp <= dh { return SheetValue.partially-expanded; }
+            return SheetValue.hidden;
+        }
+        if de <= Math.min(dp, dh) { return SheetValue.expanded; }
+        if dh <= dp { return SheetValue.hidden; }
+        SheetValue.partially-expanded
+    }
+
+    pure function anchor-available(value: SheetValue) -> bool {
+        value == SheetValue.hidden ? root.hidden-anchor-available :
+        value == SheetValue.partially-expanded ? root.partial-anchor-available :
+        root.expanded-anchor-available
+    }
+
+    // `closestAnchor(position, searchUpwards)` returns null when no anchor
+    // lies at or beyond `offset`; the `AnchoredDragScope` call sites fall
+    // back to `currentValue`.
+    pure function bound-anchor(offset: length, toward-larger: bool, fallback: SheetValue) -> SheetValue {
+        let any = (root.hidden-anchor-available &&
+                   (toward-larger ? root.hidden-anchor >= offset : root.hidden-anchor <= offset)) ||
+                  (root.partial-anchor-available &&
+                   (toward-larger ? root.partial-anchor >= offset : root.partial-anchor <= offset)) ||
+                  (root.expanded-anchor-available &&
+                   (toward-larger ? root.expanded-anchor >= offset : root.expanded-anchor <= offset));
+        any ? root.closest-anchor-in-direction(offset, toward-larger) : fallback
+    }
+
+    // `AnchoredDraggable.kt` `computeTarget`: `PositionalThreshold` = 56.dp,
+    // `VelocityThreshold` = 125.dp per second.
+    pure function compute-target(offset: length, velocity: float) -> SheetValue {
+        if velocity == 0 {
+            return root.closest-anchor(offset);
+        }
+        if Math.abs(velocity) >= 125 {
+            return root.closest-anchor-in-direction(offset, velocity > 0);
+        }
+        let left = root.closest-anchor-in-direction(offset, false);
+        let right = root.closest-anchor-in-direction(offset, true);
+        let start-position = root.anchor-position(velocity > 0 ? left : right);
+        let far = Math.abs(start-position - offset) >= 56px;
+        far == (velocity > 0) ? right : left
+    }
+
+    // `BottomSheetImpl`'s `BoundaryDampeningZone` = 125.dp dampening of flings
+    // heading for the floor.
+    pure function dampen-boundary-velocity(velocity: float, offset: length) -> float {
+        // No `maximumFlingVelocity` clamp — Slint has no system velocity cap.
+        if !root.boundary-dampening || velocity <= 0 || !root.hidden-anchor-available {
+            return velocity;
+        }
+        let distance = Math.max(0px, root.hidden-anchor - offset);
+        if distance >= 125px {
+            return velocity;
+        }
+        let factor = distance / 125px;
+        let scaled = velocity * factor * factor;
+        velocity >= 125 ? Math.max(scaled, 125) : scaled
+    }
+
+    function animate-to-target(value: SheetValue, spec: easing) {
+        // `anchoredDrag` on an unanchored target updates the value only —
+        // the offset stays where it is.
+        root.target-value = value;
+        if !root.anchor-available(value) {
+            root.current-value = value;
+            root.anchor-current = value;
+            return;
+        }
+        root.settle-spec = spec;
+        root.settle-velocity = 0;
+        root.flinging = false;
+        root.sheet-offset = root.anchor-position(value);
+    }
+
+    function snap-to-anchor(value: SheetValue) {
+        root.snapping = true;
+        root.flinging = false;
+        root.target-value = value;
+        root.current-value = value;
+        root.anchor-current = value;
+        if root.anchor-available(value) {
+            // `trySnapTo` skips `dragTo` on a NaN position but still moves
+            // the values.
+            root.sheet-offset = root.anchor-position(value);
+            root.tracked-offset = root.sheet-offset;
+        }
+        root.snapping = false;
+    }
+
+    // `updateAnchors` recomputes the target and snaps the offset to it; a
+    // running spring or drag keeps its own bookkeeping.
+    function anchors-changed() {
+        if !root.initialized {
+            if root.container-height <= 0px {
+                return;
+            }
+            root.initialized = true;
+            root.snap-to-anchor(root.initial-value);
+            return;
+        }
+        if root.dragging {
+            return;
+        }
+        // `shouldPromoteToExpanded`: `converged` still holds the previous
+        // anchor evaluation, so it is the `wasConverged` snapshot.
+        let was-converged = root.converged;
+        let old-target = root.target-value;
+        let new-target = root.resolve-target(old-target, was-converged);
+        if new-target != old-target || root.anchor-position(new-target) != root.sheet-offset {
+            root.snap-to-anchor(new-target);
+        }
+        root.converged = root.partial-anchor-available && root.expanded-anchor-available &&
+            root.partial-anchor == root.expanded-anchor;
+    }
+
+    pure function resolve-target(old-target: SheetValue, was-converged: bool) -> SheetValue {
+        if !root.peek-anchored {
+            // BottomSheet.kt / ModalBottomSheet.kt `newTarget`.
+            if old-target == SheetValue.hidden {
+                return SheetValue.hidden;
+            }
+            if old-target == SheetValue.partially-expanded {
+                if was-converged && root.expanded-anchor-available {
+                    return SheetValue.expanded;
+                }
+                if root.partial-anchor-available { return SheetValue.partially-expanded; }
+                if root.expanded-anchor-available { return SheetValue.expanded; }
+                return SheetValue.hidden;
+            }
+            return root.expanded-anchor-available ? SheetValue.expanded : SheetValue.hidden;
+        }
+        // BottomSheetScaffold.kt `newTarget`.
+        if old-target == SheetValue.hidden {
+            return root.hidden-anchor-available ? SheetValue.hidden : old-target;
+        }
+        if old-target == SheetValue.partially-expanded {
+            if root.partial-anchor-available { return SheetValue.partially-expanded; }
+            if root.expanded-anchor-available { return SheetValue.expanded; }
+            if root.hidden-anchor-available { return SheetValue.hidden; }
+            return old-target;
+        }
+        root.expanded-anchor-available ? SheetValue.expanded : SheetValue.hidden
+    }
+
+    // ---- drag bookkeeping ----------------------------------------------------
+    // `true` once the swipe was recognized and the press/offset baseline was
+    // captured — unlike `dragging` this only covers the recognized gesture.
+    property <bool> drag-active;
+    // Whether the last anchor evaluation had the partial and expanded anchors
+    // converged on one position — the `wasConverged` input of the next
+    // `shouldPromoteToExpanded` check.
+    property <bool> converged;
+    // Set by the dismiss paths so `settled-at` can tell a hidden settle that
+    // should notify `onDismissRequest` from a bare `hide()`.
+    property <bool> pending-dismiss;
+
+    function drag-moved() {
+        if !swipe.swiping {
+            return;
+        }
+        root.drag-active = true;
+        root.flinging = false;
+        // `current-position` is measured inside the (moving) swipe item, so
+        // `current - pressed` is the pointer's cumulative window delta minus
+        // the offset the drag already applied — adding it to `sheet-offset`
+        // replays `dispatchRawDelta`'s cumulative delta from pointer-down.
+        // `dispatchRawDelta` clamps to the anchor bounds — no overscroll.
+        root.sheet-offset =
+            Math.min(root.max-anchor,
+                Math.max(root.min-anchor,
+                    root.sheet-offset + swipe.current-position.y - swipe.pressed-position.y));
+        root.track-anchor-current();
+        // `targetValue` during a drag: sticky at `anchor-current`'s anchor,
+        // else the closest anchor (`isAnchoredDraggableTargetValueCalculationFixEnabled`).
+        root.target-value = !root.anchor-available(root.anchor-current) ||
+            root.sheet-offset == root.anchor-position(root.anchor-current) ?
+            root.anchor-current : root.closest-anchor(root.sheet-offset);
+    }
+
+    // `AnchoredDragScope.dragTo`'s `updateIfNeeded`: once the offset crosses
+    // halfway to the bound on either side of `anchor-current`,
+    // `anchor-current` hops to that bound. Every `dragTo` runs it — pointer
+    // deltas and the per-frame writes of `animateTo`/decay alike — so it
+    // also lives in `changed sheet-offset`, guarded by `tracked-offset`
+    // against replaying a write `drag-moved` already tracked.
+    function track-anchor-current() {
+        if root.sheet-offset == root.tracked-offset {
+            return;
+        }
+        let forward = root.sheet-offset > root.tracked-offset;
+        root.tracked-offset = root.sheet-offset;
+        // `updateBounds` searches past `anchor-current` in the drag
+        // direction when the offset sits on its anchor; otherwise the bounds
+        // are the closest anchors on each side.
+        let excluding = root.bound-anchor(
+            root.sheet-offset + (forward ? 1px : -1px), forward, root.anchor-current);
+        let bounds =
+            root.anchor-available(root.anchor-current) &&
+            root.sheet-offset == root.anchor-position(root.anchor-current) ?
+            {
+                left: forward ? root.anchor-current : excluding,
+                right: forward ? excluding : root.anchor-current,
+            } :
+            {
+                left: root.bound-anchor(root.sheet-offset, false, root.anchor-current),
+                right: root.bound-anchor(root.sheet-offset, true, root.anchor-current),
+            };
+        let left-bound = bounds.left;
+        let right-bound = bounds.right;
+        if root.anchor-available(root.anchor-current) && root.anchor-available(left-bound) &&
+            root.anchor-available(right-bound) &&
+            Math.abs(root.sheet-offset - root.anchor-position(root.anchor-current)) >=
+                Math.abs(root.anchor-position(left-bound) - root.anchor-position(right-bound)) / 2 {
+            root.anchor-current = forward ? right-bound : left-bound;
+        }
+    }
+
+    function drag-released() {
+        root.drag-active = false;
+        // `performFling`'s per-frame `scrollBy` consumes deltas through the
+        // anchor-bounded `newOffsetForDelta` — the fling's observable offset
+        // parks on the bound instead of overshooting like `animateTo`.
+        root.flinging = true;
+        let velocity = root.dampen-boundary-velocity(swipe.release-velocity.y / 1px, root.sheet-offset);
+        let target = root.compute-target(root.sheet-offset, velocity);
+        root.target-value = target;
+        if target == SheetValue.hidden {
+            // The modal fling wraps `performFling` in
+            // `finally { if (!isVisible) onDismissRequest() }`.
+            root.pending-dismiss = true;
+        }
+        root.settle-spec = MaterialAnimations.default-spatial-spring;
+        root.settle-velocity = velocity;
+        root.sheet-offset = root.anchor-position(target);
+        if target == SheetValue.hidden && Math.abs(root.sheet-offset - root.anchor-position(target)) <= 0.5px {
+            // The release is already parked on the hidden anchor — nothing
+            // animates, so `changed` never sees the settle.
+            root.settled-at(target);
+        }
+    }
+
+    function drag-cancelled() {
+        if !root.drag-active {
+            return;
+        }
+        root.drag-active = false;
+        root.flinging = false;
+        // A cancelled drag never reaches `onDragStopped`'s fling: the offset
+        // freezes mid-anchors and `targetValue` just re-derives the closest.
+        root.target-value = !root.anchor-available(root.anchor-current) ||
+            root.sheet-offset == root.anchor-position(root.anchor-current) ?
+            root.anchor-current : root.closest-anchor(root.sheet-offset);
+    }
+
+    function settled-at(value: SheetValue) {
+        root.anchor-current = value;
+        root.flinging = false;
+        if root.current-value == value {
+            return;
+        }
+        root.current-value = value;
+        if value == SheetValue.hidden && !root.peek-anchored && root.pending-dismiss {
+            // `finally { if (!isVisible) onDismissRequest() }` plus
+            // `animateToDismiss`/`settleToDismiss` completions all reach here;
+            // a bare `hide()` doesn't notify.
+            root.pending-dismiss = false;
+            root.dismiss-requested();
+        } else if value != SheetValue.hidden {
+            root.pending-dismiss = false;
+        }
+    }
+
+    // `dragTo` runs `updateIfNeeded` on every write — pointer deltas and
+    // animation frames alike — so `anchor-current` tracking happens here.
+    // `current-value`/`isAnimationRunning`: the spring parks on the anchor
+    // once its estimated settle elapses, and the displacement-threshold
+    // latch reports `currentValue`/`settledValue` the same way.
+    changed sheet-offset => {
+        if root.snapping {
+            return;
+        }
+        root.track-anchor-current();
+        if root.dragging {
+            return;
+        }
+        let anchor = root.anchor-position(root.target-value);
+        if Math.abs(root.sheet-offset - anchor) <= 0.5px {
+            root.settled-at(root.target-value);
+        }
+    }
+
+    changed container-height => {
+        root.anchors-changed();
+    }
+
+    changed sheet-height => {
+        root.anchors-changed();
+    }
+
+    changed peek-height => {
+        root.anchors-changed();
+    }
+
+    init => {
+        root.anchors-changed();
+    }
+
+    // ---- geometry -------------------------------------------------------------
+    x: Math.max(0px, (root.container-width - root.width) / 2);
+    y: root.clamped-offset;
+    width: Math.min(root.sheet-max-width, root.container-width);
+    // `verticalScaleUp`: stretches the surface down to the topmost anchor
+    // while a spring overshoots above it, closing the gap at the container
+    // floor. The content column keeps its natural height.
+    height: root.sheet-height + Math.max(0px, root.min-anchor - root.clamped-offset);
+    accessible-role: groupbox;
+    // `paneTitle`
+    accessible-label: root.pane-title;
+
+    elevation := Elevation {
+        width: 100%;
+        height: 100%;
+        level: root.elevation-level;
+        background: root.container-color;
+        shaped_corners: true;
+        corners: {
+            top_left: root.sheet-shape.top_left,
+            top_right: root.sheet-shape.top_right,
+            bottom_right: root.sheet-shape.bottom_right,
+            bottom_left: root.sheet-shape.bottom_left,
+        };
+    }
+
+    swipe := SwipeGestureHandler {
+        x: 0;
+        y: 0;
+        width: 100%;
+        height: 100%;
+        // The modal/sheet path gates drags on `currentValue != Hidden`; the
+        // scaffold passes `sheetSwipeEnabled` alone.
+        // `gesturesEnabled && state.currentValue != Hidden` — but a press in
+        // flight survives the mid-drag hop to Hidden: the gesture ends and the
+        // offset freezes while the pointer is still held, so keep the item
+        // enabled for the duration of the press (`drag-moved` freezes the
+        // offset instead) and let the release commit the settle.
+        enabled: root.gestures-enabled &&
+            (root.peek-anchored || root.current-value != SheetValue.hidden || swipe.pressed);
+        handle-swipe-up: true;
+        handle-swipe-down: true;
+
+        moved => {
+            root.drag-moved();
+        }
+
+        swiped => {
+            root.drag-released();
+        }
+
+        cancelled => {
+            root.drag-cancelled();
+        }
+
+        column := VerticalLayout {
+            x: 0;
+            y: 0;
+            width: 100%;
+            height: root.sheet-height;
+            alignment: start;
+
+            if root.has-drag-handle : BottomSheetDragHandle {
+                width: 100%;
+                enabled: root.gestures-enabled;
+                expanded: root.current-value == SheetValue.expanded;
+                pointer-held: swipe.pressed;
+                pointer-dragged: root.drag-active;
+
+                clicked => {
+                    if root.current-value == SheetValue.expanded {
+                        root.animate-to-dismiss();
+                    } else if root.current-value == SheetValue.partially-expanded {
+                        root.expand();
+                    } else {
+                        root.show();
+                    }
+                }
+
+                expand => {
+                    if root.current-value == SheetValue.partially-expanded {
+                        root.expand();
+                    } else {
+                        root.show();
+                    }
+                }
+
+                collapse => {
+                    if root.current-value != SheetValue.partially-expanded && root.partial-anchor-available {
+                        root.partial-expand();
+                    } else {
+                        root.animate-to-dismiss();
+                    }
+                }
+            }
+
+            @children
+        }
+    }
+}
+
+/// `BottomSheet` — the standalone docked sheet (BottomSheet.kt). The
+/// component bounds are the anchor space: the sheet docks to its bottom edge,
+/// centered and at most `sheet-max-width` wide, and exposes the `SheetState`
+/// surface as read-only properties plus the state functions.
+export component BottomSheet {
+    /// `gesturesEnabled` gates pointer drags; the sheet's own functions and
+    /// the handle stay enabled.
+    in property <bool> gestures-enabled: true;
+    /// `dragHandle` — set `has-drag-handle: false` to render content alone.
+    in property <bool> has-drag-handle: true;
+    in property <bool> skip-partially-expanded;
+    /// `rememberBottomSheetState(initialValue = Hidden)`.
+    in property <SheetValue> initial-value: SheetValue.hidden;
+    /// `BottomSheetDefaults.ExpandedShape`.
+    in property <MaterialCornerShape> sheet-shape: SheetBottomTokens.docked_container_shape;
+    in property <brush> container-color: SheetBottomTokens.docked_container_color;
+    /// `shadowElevation` (the pin's `BottomSheet` default is 0).
+    in property <int> elevation-level: 0;
+    in property <length> sheet-max-width: 640px;
+    in property <string> pane-title: @tr("Bottom sheet");
+    /// `confirmValueChange(SheetValue)`: return `true` to deny a transition.
+    callback deny-value-change(value: SheetValue) -> bool;
+    /// `onDismissRequest` — the sheet settled at the hidden anchor.
+    callback on-dismiss-request();
+
+    out property <SheetValue> current-value <=> sheet.current-value;
+    out property <SheetValue> anchor-current <=> sheet.anchor-current;
+    out property <SheetValue> target-value <=> sheet.target-value;
+    out property <bool> is-visible <=> sheet.is-visible;
+    out property <bool> dragging <=> sheet.dragging;
+    out property <bool> has-expanded-state <=> sheet.has-expanded-state;
+    out property <bool> has-partially-expanded-state <=> sheet.has-partially-expanded-state;
+    in-out property <length> sheet-offset <=> sheet.sheet-offset;
+    out property <length> clamped-offset <=> sheet.clamped-offset;
+    out property <length> sheet-height <=> sheet.sheet-height;
+    out property <length> surface-x <=> sheet.surface-x;
+    out property <length> surface-y <=> sheet.surface-y;
+    out property <length> surface-width <=> sheet.surface-width;
+    out property <length> surface-height <=> sheet.surface-height;
+
+    public function show() {
+        sheet.show();
+    }
+
+    public function expand() {
+        sheet.expand();
+    }
+
+    public function partial-expand() {
+        sheet.partial-expand();
+    }
+
+    public function hide() {
+        sheet.hide();
+    }
+
+    public function snap-to(value: SheetValue) {
+        sheet.snap-to(value);
+    }
+
+    public function animate-to-dismiss() {
+        sheet.animate-to-dismiss();
+    }
+
+    public function settle-to-dismiss() {
+        sheet.settle-to-dismiss();
+    }
+
+    sheet := SheetSurface {
+        gestures-enabled: root.gestures-enabled;
+        has-drag-handle: root.has-drag-handle;
+        skip-partially-expanded: root.skip-partially-expanded;
+        initial-value: root.initial-value;
+        sheet-shape: root.sheet-shape;
+        container-color: root.container-color;
+        elevation-level: root.elevation-level;
+        sheet-max-width: root.sheet-max-width;
+        pane-title: root.pane-title;
+        boundary-dampening: true;
+        container-height: parent.height;
+        container-width: parent.width;
+
+        deny-value-change(value) => {
+            root.deny-value-change(value)
+        }
+
+        dismiss-requested => {
+            root.on-dismiss-request();
+        }
+
+        @children
+    }
+}
+
+/// `BottomSheetScaffold` — the docked sheet over sibling content
+/// (BottomSheetScaffold.kt). The declared content is the `sheetContent`: the
+/// scaffold's own `content` (body, `topBar`, `snackbarHost`) stays as sibling
+/// elements behind this component — see the snippet in the docs page. The
+/// scaffold fills its parent's bounds, which are the anchor space.
+export component BottomSheetScaffold {
+    /// `sheetPeekHeight` (`BottomSheetDefaults.SheetPeekHeight` = 56.dp).
+    in property <length> sheet-peek-height: 56px;
+    in property <length> sheet-max-width: 640px;
+    /// `sheetSwipeEnabled`.
+    in property <bool> sheet-swipe-enabled: true;
+    /// `skipHiddenState` — rememberStandardBottomSheetState defaults to true.
+    in property <bool> skip-hidden-state: true;
+    in property <bool> has-drag-handle: true;
+    in property <MaterialCornerShape> sheet-shape: SheetBottomTokens.docked_container_shape;
+    in property <brush> sheet-container-color: SheetBottomTokens.docked_container_color;
+    /// `sheetShadowElevation` — `BottomSheetDefaults.Elevation` is Level 1.
+    in property <int> sheet-elevation-level: 1;
+    in property <string> pane-title: @tr("Bottom sheet");
+    /// `rememberStandardBottomSheetState(initialValue = PartiallyExpanded)`.
+    in property <SheetValue> initial-value: SheetValue.partially-expanded;
+    /// `confirmValueChange(SheetValue)`: return `true` to deny a transition.
+    callback deny-value-change(value: SheetValue) -> bool;
+
+    out property <SheetValue> current-value <=> sheet.current-value;
+    out property <SheetValue> anchor-current <=> sheet.anchor-current;
+    out property <SheetValue> target-value <=> sheet.target-value;
+    out property <bool> is-visible <=> sheet.is-visible;
+    out property <bool> dragging <=> sheet.dragging;
+    out property <bool> has-expanded-state <=> sheet.has-expanded-state;
+    out property <bool> has-partially-expanded-state <=> sheet.has-partially-expanded-state;
+    /// The sheet's top edge in scaffold coordinates — position a snackbar at
+    /// `snackbar-top(snackbar-height)` for the pinned `snackbarOffsetY` rule.
+    in-out property <length> sheet-offset <=> sheet.sheet-offset;
+    out property <length> clamped-offset <=> sheet.clamped-offset;
+    out property <length> sheet-height <=> sheet.sheet-height;
+    out property <length> surface-x <=> sheet.surface-x;
+    out property <length> surface-y <=> sheet.surface-y;
+    out property <length> surface-width <=> sheet.surface-width;
+    out property <length> surface-height <=> sheet.surface-height;
+    /// The `PaddingValues(bottom = sheetPeekHeight)` the scaffold's body gets.
+    out property <length> content-bottom-inset: root.sheet-peek-height;
+
+    /// `snackbarOffsetY` (BottomSheetScaffold.kt): while the sheet sits at
+    /// `partially-expanded` the snackbar rests on the sheet's top edge, at any
+    /// other value on the scaffold's bottom edge.
+    public pure function snackbar-top(snackbar-height: length) -> length {
+        root.current-value == SheetValue.partially-expanded ?
+            root.sheet-offset - snackbar-height :
+            root.height - snackbar-height
+    }
+
+    public function show() {
+        sheet.show();
+    }
+
+    public function expand() {
+        sheet.expand();
+    }
+
+    public function partial-expand() {
+        sheet.partial-expand();
+    }
+
+    public function hide() {
+        sheet.hide();
+    }
+
+    public function snap-to(value: SheetValue) {
+        sheet.snap-to(value);
+    }
+
+    sheet := SheetSurface {
+        gestures-enabled: root.sheet-swipe-enabled;
+        has-drag-handle: root.has-drag-handle;
+        skip-hidden-state: root.skip-hidden-state;
+        initial-value: root.initial-value;
+        sheet-shape: root.sheet-shape;
+        container-color: root.sheet-container-color;
+        elevation-level: root.sheet-elevation-level;
+        sheet-max-width: root.sheet-max-width;
+        pane-title: root.pane-title;
+        peek-anchored: true;
+        peek-height: root.sheet-peek-height;
+        boundary-dampening: false;
+        container-height: parent.height;
+        container-width: parent.width;
+
+        deny-value-change(value) => {
+            root.deny-value-change(value)
+        }
+
+        @children
+    }
+}
+
+/// `ModalBottomSheet` — the sheet in a scrimmed popup (ModalBottomSheet.kt).
+/// Set the popup's `width`/`height` (and `x`/`y`, which default to the window
+/// origin) so the popup covers the window — the same convention the previous
+/// implementation used. The sheet enters hidden and plays `show()` once the
+/// first layout produced anchors; the scrim fades with `target-value` on the
+/// default effects spring.
+export component ModalBottomSheet inherits PopupWindow {
+    /// `gesturesEnabled` — pointer drags on the sheet surface.
+    in property <bool> gestures-enabled: true;
+    /// `properties.shouldDismissOnClickOutside` — the scrim's
+    /// `animateToDismiss`.
+    in property <bool> should-dismiss-on-click-outside: true;
+    /// `properties.shouldDismissOnBackPress` — Escape runs
+    /// `settleToDismiss`.
+    in property <bool> should-dismiss-on-back-press: true;
+    in property <bool> has-drag-handle: true;
+    in property <bool> skip-partially-expanded;
+    in property <length> sheet-max-width: 640px;
+    in property <MaterialCornerShape> sheet-shape: SheetBottomTokens.docked_container_shape;
+    in property <brush> container-color: SheetBottomTokens.docked_container_color;
+    /// `SheetDefaults.ScrimColor` — `ScrimTokens.container_color` at
+    /// `container_opacity`.
+    in property <brush> scrim-color: MaterialPalette.background_modal;
+    in property <string> pane-title: @tr("Bottom sheet");
+    /// `confirmValueChange(SheetValue)`: return `true` to deny a transition.
+    callback deny-value-change(value: SheetValue) -> bool;
+    /// `onDismissRequest` — the sheet settled at the hidden anchor; the popup
+    /// then closes itself.
+    callback on-dismiss-request();
+
+    out property <SheetValue> current-value <=> sheet.current-value;
+    out property <SheetValue> anchor-current <=> sheet.anchor-current;
+    out property <SheetValue> target-value <=> sheet.target-value;
+    out property <bool> is-visible <=> sheet.is-visible;
+    out property <bool> dragging <=> sheet.dragging;
+    out property <bool> has-expanded-state <=> sheet.has-expanded-state;
+    out property <bool> has-partially-expanded-state <=> sheet.has-partially-expanded-state;
+    in-out property <length> sheet-offset <=> sheet.sheet-offset;
+    out property <length> clamped-offset <=> sheet.clamped-offset;
+    out property <length> sheet-height <=> sheet.sheet-height;
+    out property <length> surface-x <=> sheet.surface-x;
+    out property <length> surface-y <=> sheet.surface-y;
+    out property <length> surface-width <=> sheet.surface-width;
+    out property <length> surface-height <=> sheet.surface-height;
+
+    public function expand() {
+        sheet.expand();
+    }
+
+    public function partial-expand() {
+        sheet.partial-expand();
+    }
+
+    public function hide() {
+        sheet.hide();
+    }
+
+    public function snap-to(value: SheetValue) {
+        sheet.snap-to(value);
+    }
+
+    public function animate-to-dismiss() {
+        sheet.animate-to-dismiss();
+    }
+
+    public function settle-to-dismiss() {
+        sheet.settle-to-dismiss();
+    }
+
+    close-policy: no_auto_close;
+    forward-focus: focus-scope;
+    x: 0;
+    y: 0;
+
+    focus_scope := FocusScope {
+        x: 0;
+        width: 0;
+
+        key-pressed(event) => {
+            if event.text == Key.Escape && root.should-dismiss-on-back-press {
+                root.settle-to-dismiss();
+                return accept;
+            }
+            reject
+        }
+    }
+
+    scrim := Rectangle {
+        width: 100%;
+        height: 100%;
+        background: root.scrim-color;
+        // `DefaultEffects` spec on `targetValue != Hidden`.
+        opacity: sheet.target-value == SheetValue.hidden ? 0 : 1;
+
+        animate opacity {
+            enabled: !MaterialPalette.reduced-motion;
+            easing: MaterialAnimations.default-effects-spring;
+        }
+
+        TouchArea {
+            width: 100%;
+            height: 100%;
+
+            clicked => {
+                if root.should-dismiss-on-click-outside {
+                    root.animate-to-dismiss();
+                }
+            }
+        }
+    }
+
+    sheet := SheetSurface {
+        gestures-enabled: root.gestures-enabled;
+        has-drag-handle: root.has-drag-handle;
+        skip-partially-expanded: root.skip-partially-expanded;
+        initial-value: SheetValue.hidden;
+        sheet-shape: root.sheet-shape;
+        container-color: root.container-color;
+        sheet-max-width: root.sheet-max-width;
+        pane-title: root.pane-title;
+        boundary-dampening: true;
+        // `parent.height` doesn't resolve inside a popup — the lowered
+        // component root is a `Window`. The scrim already fills the popup
+        // area, so its geometry is the container.
+        container-height: scrim.height;
+        container-width: scrim.width;
+
+        deny-value-change(value) => {
+            root.deny-value-change(value)
+        }
+
+        dismiss-requested => {
+            root.on-dismiss-request();
+            root.close();
+        }
+
+        @children
+    }
+
+    // `LaunchedEffect { if (hasExpandedState) { show() } }` — the sheet opens
+    // once its first layout produced anchors.
+    property <bool> opened;
+    function maybe-open() {
+        if !root.opened && sheet.initialized && sheet.has-expanded-state &&
+            sheet.target-value == SheetValue.hidden {
+            root.opened = true;
+            sheet.show();
+        }
+    }
+
+    init => {
+        root.maybe-open();
+    }
+
+    changed sheet-height => {
+        root.maybe-open();
+    }
+
+    // Poll until the first layout produced anchors — the equivalent of the
+    // `LaunchedEffect` firing after the first composition.
     Timer {
-        interval: 50ms;
+        interval: 16ms;
+        running: !root.opened;
 
         triggered => {
-            sheet.y = modal.height - sheet.height;
-            self.running = false;
+            root.maybe-open();
+        }
+    }
+}
+
+/// `VerticalDragHandle` (DragHandle.kt) — the pane-expansion handle, not the
+/// sheet's drag handle: the `corner_full` pill swells to `dragged_*` while
+/// pressed or dragged and reports `moved` deltas for the host to resize the
+/// split.
+export component VerticalDragHandle {
+    /// `DragHandleTokens.color`.
+    in property <color> color: DragHandleTokens.color;
+    /// `DragHandleTokens.dragged_color`.
+    in property <color> dragged-color: DragHandleTokens.dragged_color;
+    /// `DragHandleTokens.pressed_color`.
+    in property <color> pressed-color: DragHandleTokens.pressed_color;
+    /// The pointer moved horizontally by `delta` while dragged — the host
+    /// forwards it to the pane it resizes.
+    callback moved(delta: length);
+    /// `isPressed`-style press notifications.
+    callback pressed-changed(pressed: bool);
+    out property <bool> pressed: touch.pressed || root.simulate-press;
+    /// True while the pointer has moved past the 8 px gesture threshold.
+    out property <bool> dragged: root.drag-state || root.simulate-drag;
+    /// The ink `LocalContentColor` feeds the `ripple()` indication upstream
+    /// (`Color.Black` when the handle isn't inside a themed surface).
+    in property <color> state-layer-color: #000;
+    /// Test hook like `StateLayerArea.simulate_press`: upstream hoists the
+    /// `interactionSource`, so scripted states drive the handle without
+    /// pointer input — one pointer can't hold several handles at once.
+    in property <bool> simulate-press;
+    in property <bool> simulate-drag;
+    out property <bool> has-hover <=> touch.has-hover;
+    out property <bool> has-focus <=> touch.has-focus;
+    /// The pointer path's own drag flag; `dragged` adds `simulate-drag`.
+    property <bool> drag-state;
+    /// The drag state driving the visuals — pressed or dragged at the pin.
+    out property <bool> active: root.pressed || root.dragged;
+    /// The size the pill animates to — `DragHandleTokens`' per-state sizes:
+    /// dragged wins over pressed.
+    out property <length> handle-width:
+        root.dragged ? DragHandleTokens.dragged_width :
+        root.pressed ? DragHandleTokens.pressed_width : DragHandleTokens.width;
+    out property <length> handle-height:
+        root.dragged ? DragHandleTokens.dragged_height :
+        root.pressed ? DragHandleTokens.pressed_height : DragHandleTokens.height;
+
+    /// The pressed key was not handled by the handle itself.
+    callback key-pressed(event: KeyEvent) -> EventResult;
+
+    // `minimumInteractiveComponentSize` — the pill stays at its token size,
+    // centered in the 48 dp touch target; a larger pressed/dragged pill grows
+    // the element past the minimum.
+    width: Math.max(48px, root.handle-width);
+    height: Math.max(48px, root.handle-height);
+
+    touch := FocusTouchArea {
+        width: 100%;
+        height: 100%;
+
+        property <length> last-x;
+        // Matches `SwipeGestureHandler`'s `DISTANCE_THRESHOLD`.
+        property <length> threshold: 8px;
+
+        moved => {
+            if self.pressed && Math.abs(self.mouse-x - self.pressed-x) >= self.threshold {
+                if !root.drag-state {
+                    root.drag-state = true;
+                } else {
+                    root.moved(self.mouse-x - self.last-x);
+                }
+            }
+            self.last-x = self.mouse-x;
+        }
+
+        changed pressed => {
+            if self.pressed {
+                self.last-x = self.mouse-x;
+            } else {
+                root.drag-state = false;
+            }
+            root.pressed-changed(self.pressed);
+        }
+
+        key-pressed(event) => {
+            root.key-pressed(event)
+        }
+
+        Rectangle {
+            x: (parent.width - self.width) / 2;
+            y: (parent.height - self.height) / 2;
+            width: root.handle-width;
+            height: root.handle-height;
+            // `corner_full` → `corner_medium` while pressed/dragged.
+            border-radius: root.active ?
+                ShapeTokens.corner_value_medium :
+                Math.min(self.width, self.height) / 2;
+            background: root.active ?
+                (root.dragged ? root.dragged-color : root.pressed-color) :
+                root.color;
+
+            // The `ripple()` indication is clipped by the same `graphicsLayer`
+            // shape upstream, so the state-layer ink only shows over the pill.
+            Rectangle {
+                width: 100%;
+                height: 100%;
+                border-radius: parent.border-radius;
+                background: root.state-layer-color;
+                opacity: root.dragged ? MaterialPalette.state_layer_opacity_drag :
+                    root.active ? MaterialPalette.state_layer_opacity_press : 0;
+
+                animate opacity {
+                    enabled: !MaterialPalette.reduced-motion;
+                    duration: MaterialAnimations.opacity_duration;
+                    easing: MaterialAnimations.opacity_easing;
+                }
+            }
         }
     }
 }

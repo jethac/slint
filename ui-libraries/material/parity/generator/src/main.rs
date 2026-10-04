@@ -134,6 +134,12 @@ struct Action {
     /// until a mid-sequence release).
     #[serde(default)]
     at: f64,
+    /// Release velocity in logical px/s for sheet fling replays: the Slint
+    /// `SwipeGestureHandler.release-velocity` the scripted gesture produces
+    /// (documented in the scene), which the Compose mirror feeds into the
+    /// replicated fling behavior at the release's `at`. Unused by `//ACTION=`.
+    #[serde(default)]
+    velocity: f64,
 }
 
 /// A `mask_decor` entry: a bare timestamp list, or `times` plus a `margin`
@@ -379,6 +385,40 @@ struct Widget {
     /// `menu` only: hide the leading `first-index` items (overflow menus).
     #[serde(default)]
     first_index: Option<i64>,
+    /// Sheet kinds: the sheet content's measured height in dp (the strip the
+    /// `sheetContent` composable fills, excluding the drag handle).
+    #[serde(default)]
+    sheet_height: Option<f64>,
+    /// `bottom-sheet-scaffold` only: `sheetPeekHeight` (default 56 dp).
+    #[serde(default)]
+    peek_height: Option<f64>,
+    /// Sheet kinds: the state's `initialValue` — `hidden`,
+    /// `partially-expanded`, or `expanded`.
+    #[serde(default)]
+    initial: Option<String>,
+    /// Sheet kinds: `skipPartiallyExpanded` (`enabledValues` without
+    /// `PartiallyExpanded`).
+    #[serde(default)]
+    skip_partial: Option<bool>,
+    /// `bottom-sheet-scaffold` only: `skipHiddenState` (default true).
+    #[serde(default)]
+    skip_hidden: Option<bool>,
+    /// Sheet kinds: `gesturesEnabled`/`sheetSwipeEnabled` (default true).
+    #[serde(default)]
+    gestures: Option<bool>,
+    /// Sheet kinds: scheme role for the sheet content rect
+    /// (`tertiary-container` default).
+    #[serde(default)]
+    content_color: Option<String>,
+    /// `bottom-sheet-scaffold` only: scheme role for the scaffold body.
+    #[serde(default)]
+    body_color: Option<String>,
+    /// `bottom-sheet-scaffold` only: `sheet-elevation-level` /
+    /// `sheetShadowElevation` as an M3 level (absent = the pinned default,
+    /// level 1). Scenes pass 0 — platform shadows deadlock layoutlib and
+    /// shadow parity lives in the elevation scenes.
+    #[serde(default)]
+    sheet_elevation: Option<i64>,
     /// What this widget deliberately gets wrong on the Slint side
     /// (`negative` scenes only). Keys shadow the widget's own fields.
     #[serde(default)]
@@ -758,11 +798,20 @@ fn slint_case(scene: &Scene) -> String {
         writeln!(s, "//TRACE_ITEMS={trace_items}").unwrap();
     }
     for a in scene.actions.iter().chain(widget_actions(scene).iter()) {
+        if SHEET_OPS.contains(&a.kind.as_str()) {
+            // Programmatic sheet ops aren't input events — the Compose side
+            // maps them to SheetState calls; the Slint side gets a Timer.
+            continue;
+        }
         if let Some(key) = a.kind.strip_prefix("key:") {
             writeln!(s, "//ACTION=key:{key}").unwrap();
         } else if a.at > 0.0 {
-            writeln!(s, "//ACTION={}@{}:{},{}", a.kind, a.at as i64, a.x as i64, a.y as i64)
-                .unwrap();
+            // A `release` lands 1 ms later on the Slint timeline: the Compose
+            // side fires the post-draw runnable at `at` and the spring's first
+            // write shows one frame of state→draw latency later (≈`at`+2),
+            // while Slint's pointer release anchors its write at `at`+1.
+            let at = a.at as i64 + if a.kind == "release" { 1 } else { 0 };
+            writeln!(s, "//ACTION={}@{}:{},{}", a.kind, at, a.x as i64, a.y as i64).unwrap();
         } else {
             writeln!(s, "//ACTION={}:{},{}", a.kind, a.x as i64, a.y as i64).unwrap();
         }
@@ -876,18 +925,31 @@ fn slint_case(scene: &Scene) -> String {
             }
             "menu-divider" => "MenuDivider",
             "menu-group-label" => "MenuGroupLabel",
+            "drag-handle" => "BottomSheetDragHandle",
+            "vertical-drag-handle" => "VerticalDragHandle",
+            "bottom-sheet" => "BottomSheet",
+            "bottom-sheet-scaffold" => "BottomSheetScaffold",
+            "modal-bottom-sheet" => "ModalBottomSheet",
             "connected-button" => "ConnectedButton",
             "connected-button-group" => "ConnectedButtonGroup",
             "vertical-connected-button-group" => "VerticalConnectedButtonGroup",
+
             other => panic!("unknown widget kind {other:?}"),
         };
         imports.push(component);
+        if matches!(
+            w.kind.as_str(),
+            "bottom-sheet" | "bottom-sheet-scaffold" | "modal-bottom-sheet"
+        ) {
+            imports.push("SheetValue");
+        }
         if w.kind == "badged-box" {
             imports.push("Icon");
         }
         if w.kind.starts_with("connected-button") || w.kind == "vertical-connected-button-group" {
             imports.push("ConnectedButtonPosition");
         }
+
         if w.icon.is_some()
             || w.trailing_icon.is_some()
             || w.leading_image.is_some()
@@ -927,6 +989,13 @@ fn slint_case(scene: &Scene) -> String {
         {
             imports.push("MaterialShapes");
         }
+    }
+    if scene
+        .widgets
+        .iter()
+        .any(|w| w.slint_overrides.contains_key("sheet_shape"))
+    {
+        imports.push("ShapeTokens");
     }
     imports.sort();
     imports.dedup();
@@ -1021,7 +1090,13 @@ fn widget_actions(scene: &Scene) -> Vec<Action> {
                 ordinal
             };
             for _ in tabs_emitted..=target {
-                actions.push(Action { kind: "key:Tab".into(), x: 0.0, y: 0.0, at: 0.0 });
+                actions.push(Action {
+                    kind: "key:Tab".into(),
+                    x: 0.0,
+                    y: 0.0,
+                    at: 0.0,
+                    velocity: 0.0,
+                });
             }
             tabs_emitted = target + 1;
         }
@@ -1039,7 +1114,13 @@ fn widget_actions(scene: &Scene) -> Vec<Action> {
             if item.state.as_deref() == Some("focused") {
                 // `ordinal` counts the items before this one already.
                 for _ in tabs_emitted..=ordinal {
-                    actions.push(Action { kind: "key:Tab".into(), x: 0.0, y: 0.0, at: 0.0 });
+                    actions.push(Action {
+                        kind: "key:Tab".into(),
+                        x: 0.0,
+                        y: 0.0,
+                        at: 0.0,
+                        velocity: 0.0,
+                    });
                 }
                 tabs_emitted = ordinal + 1;
             }
@@ -1053,6 +1134,12 @@ fn widget_actions(scene: &Scene) -> Vec<Action> {
     // bucket's drawn container (XS is 40x32 with a 48dp touch area).
     if !scene.times.is_empty() {
         for w in &scene.widgets {
+            // Drag-handle states ride `simulate_*` props (emitted with the
+            // component), not pointer gestures — one pointer can't hold
+            // several handles at once.
+            if w.kind == "vertical-drag-handle" {
+                continue;
+            }
             let kind = match w.state.as_deref() {
                 Some("pressed") => "press",
                 Some("hovered") => "move",
@@ -1075,7 +1162,7 @@ fn widget_actions(scene: &Scene) -> Vec<Action> {
             } else {
                 w.x + 20.0
             };
-            actions.push(Action { kind: kind.into(), x, y: w.y + 16.0, at: 0.0 });
+            actions.push(Action { kind: kind.into(), x, y: w.y + 16.0, at: 0.0, velocity: 0.0 });
         }
     }
     for w in &scene.widgets {
@@ -1084,7 +1171,7 @@ fn widget_actions(scene: &Scene) -> Vec<Action> {
             .as_deref()
             .unwrap_or(if w.enabled == Some(false) { "disabled" } else { "enabled" })
         {
-            "hovered" | "pressed" | "enabled" | "disabled" | "focused" => {}
+            "hovered" | "pressed" | "enabled" | "disabled" | "focused" | "dragged" => {}
             other => panic!("unknown widget state {other:?}"),
         }
     }
@@ -1697,10 +1784,16 @@ fn slint_canvas(s: &mut String, scene: &Scene) {
     // Buttons are named `button{n}` by count of button-family widgets, not
     // widget index — a backdrop `rect` ahead of a button leaves `button0`
     // intact; list items follow the same rule as `item{n}`.
+    // `sheet{n}`/`handle{n}` count sheet-family and handle widgets.
     let mut buttons = 0;
     let mut surfaces = 0;
     let mut items = 0;
     let mut appbars = 0;
+    let mut sheets = 0;
+    // `handle{n}` counts `drag-handle`s, `vhandle{n}` counts
+    // `vertical-drag-handle`s — the Compose mirror numbers each kind alone.
+    let mut vhandles = 0usize;
+    let mut drags = 0usize;
     let mut groups = 0;
     let mut icons = 0;
     let mut dividers = 0;
@@ -1861,6 +1954,25 @@ fn slint_canvas(s: &mut String, scene: &Scene) {
                 let i = menus;
                 menus += 1;
                 menu_widget(s, w, i, scene);
+                continue;
+            }
+            "drag-handle" | "vertical-drag-handle" => {
+                // `handle{n}`/`vhandle{n}` are numbered per kind to match the
+                // Compose mirror's tag counters.
+                let i = if w.kind == "vertical-drag-handle" {
+                    vhandles += 1;
+                    vhandles - 1
+                } else {
+                    drags += 1;
+                    drags - 1
+                };
+                handle_widget(s, w, i);
+                continue;
+            }
+            "bottom-sheet" | "bottom-sheet-scaffold" | "modal-bottom-sheet" => {
+                let i = sheets;
+                sheets += 1;
+                sheet_widget(s, w, i, scene);
                 continue;
             }
             "connected-button" => {
@@ -2078,6 +2190,8 @@ fn slint_canvas(s: &mut String, scene: &Scene) {
         }
         emit_button_cover(s, w, i);
     }
+    sheet_trace_forwards(s, scene);
+    sheet_op_timers(s, scene);
 }
 
 /// The Slint property type of a `//TRACE_PROPS=` name: `container_radius`,
@@ -2325,6 +2439,7 @@ fn connected_group_widget(s: &mut String, w: &Widget, i: usize, scene: &Scene) {
         )
         .unwrap();
     }
+
 }
 
 fn slint_spring_motion(s: &mut String, scene: &Scene) {
@@ -2654,5 +2769,401 @@ fn menu_widget(s: &mut String, w: &Widget, i: usize, scene: &Scene) {
             cover["opacity"].as_f64().unwrap_or(1.0),
         )
         .unwrap();
+    }
+}
+
+/// The content rect every sheet carries: a fixed-height fill so the sheet's
+/// measured size is identical on both sides.
+fn sheet_content_rect(w: &Widget) -> String {
+    let h = w.sheet_height.unwrap_or(120.0);
+    let color = w
+        .content_color
+        .as_deref()
+        .unwrap_or("tertiary-container")
+        .replace('-', "_");
+    format!(
+        "            Rectangle {{\n                height: {h}px;\n                background: MaterialPalette.{color};\n            }}\n",
+        h = h as i64,
+    )
+}
+
+/// `hidden`/`partially-expanded`/`expanded` → the `SheetValue` variant.
+fn sheet_initial(w: &Widget) -> &'static str {
+    match w.initial.as_deref() {
+        None => "hidden",
+        Some("hidden") => "hidden",
+        Some("partially-expanded") => "partially-expanded",
+        Some("expanded") => "expanded",
+        Some(other) => panic!("unknown sheet initial value {other:?}"),
+    }
+}
+
+/// The expressions `TRACE_PROPS` reads from a sheet component. Modal sheets
+/// can't be read from outside their window, so those sync `changed`-mirrors
+/// into `in-out` root properties instead (see `sheet_widget`).
+fn sheet_trace_prop(prop: &str) -> (&'static str, &'static str) {
+    match prop {
+        "sheet-offset" => ("float", "sheet-offset"),
+        "sheet-height" => ("float", "sheet-height"),
+        "current-value" => ("float", "current-value"),
+        "target-value" => ("float", "target-value"),
+        "dragging" => ("bool", "dragging"),
+        "is-visible" => ("bool", "is-visible"),
+        "has-expanded-state" => ("bool", "has-expanded-state"),
+        "has-partially-expanded-state" => ("bool", "has-partially-expanded-state"),
+        other => panic!("no sheet trace expression known for {other:?}"),
+    }
+}
+
+/// `SheetValue` → a plain number so both engines serialize the same scalar:
+/// hidden = 0, partially-expanded = 1, expanded = 2.
+fn sheet_value_num(expr: &str) -> String {
+    format!("{expr} == SheetValue.hidden ? 0 : {expr} == SheetValue.partially-expanded ? 1 : 2")
+}
+
+/// One handle widget (`drag-handle` → `BottomSheetDragHandle`,
+/// `vertical-drag-handle` → `VerticalDragHandle`), named `handle{n}`/
+/// `vhandle{n}`.
+fn handle_widget(s: &mut String, w: &Widget, i: usize) {
+    match w.kind.as_str() {
+        "drag-handle" => {
+            writeln!(
+                s,
+                "    handle{i} := BottomSheetDragHandle {{\n        x: {}px;\n        y: {}px;\n        width: {}px;\n        enabled: true;\n    }}\n",
+                w.x as i64,
+                w.y as i64,
+                w.width.unwrap_or(360.0) as i64,
+            )
+            .unwrap();
+        }
+        "vertical-drag-handle" => {
+            // Drag-handle states ride the `simulate_*` hooks, like
+            // `StateLayerArea.simulate_press`: the Compose mirror drives the
+            // states through the hoisted `interactionSource`, and one pointer
+            // can't hold several handles at once.
+            let simulate = match w.state.as_deref() {
+                Some("pressed") => "\n        simulate-press: true;",
+                Some("dragged") => "\n        simulate-drag: true;",
+                _ => "",
+            };
+            writeln!(
+                s,
+                "    vhandle{i} := VerticalDragHandle {{\n        x: {}px;\n        y: {}px;{}\n    }}\n",
+                w.x as i64,
+                w.y as i64,
+                simulate,
+            )
+            .unwrap();
+        }
+        other => panic!("unknown handle kind {other:?}"),
+    }
+}
+
+/// Mirror of `Scenes.kt`'s `sheetNeedsGestureReplay`: a scene with a pointer
+/// action inside the widget bounds drives the Compose `ParitySheet`
+/// (synthetic gesture replay, tracked surface) instead of `SheetWidget`
+/// (the pinned composable, `Modifier.track` on the composable node). The
+/// tracked bounds differ: `ParitySheet`'s surface moves with the drag while
+/// `SheetWidget` reports the composable's own static node — the docked
+/// `BottomSheet` measures `surface-width` x `sheet-height` at its box's top
+/// edge and `BottomSheetScaffold`'s root `Box` fills the widget — so the
+/// Slint `sheet{i}` element follows whichever one the scene picks.
+fn sheet_needs_gesture_replay(w: &Widget, scene: &Scene) -> bool {
+    let (ww, wh) = (w.width.unwrap_or(0.0), w.height.unwrap_or(0.0));
+    scene.actions.iter().any(|a| {
+        matches!(a.kind.as_str(), "press" | "move" | "release")
+            && a.x >= w.x
+            && a.x <= w.x + ww
+            && a.y >= w.y
+            && a.y <= w.y + wh
+    })
+}
+
+/// One sheet widget, named `sheet{n}` (`modal{n}` for the popup). The widget
+/// bounds are the anchor space: the emit wraps the sheet in a sized
+/// `Rectangle` so `container-height`/`container-width` resolve against the
+/// authored box. `modal-bottom-sheet` spans the whole scene (the popup is
+/// the test window) and gets an `init` call to `PopupWindow.show()`.
+fn sheet_widget(s: &mut String, w: &Widget, i: usize, scene: &Scene) {
+    let over = &w.slint_overrides;
+    let content = sheet_content_rect(w);
+    match w.kind.as_str() {
+        "bottom-sheet" => {
+            let shape_override = over
+                .get("sheet_shape")
+                .map(|v| format!("\n            sheet-shape: {};", corner_shape_expr(v)));
+            let color_override = over
+                .get("container_color")
+                .and_then(|v| v.as_str())
+                .map(|c| format!("\n            container-color: MaterialPalette.{};", c.replace('-', "_")));
+            let skip_partial = over
+                .get("skip_partial")
+                .and_then(|v| v.as_bool())
+                .unwrap_or_else(|| w.skip_partial.unwrap_or(false));
+            writeln!(
+                s,
+                "    sheet{i}_box := Rectangle {{\n        x: {}px;\n        y: {}px;\n        width: {}px;\n        height: {}px;\n\n        sheet{i}_comp := BottomSheet {{\n            x: 0px;\n            y: 0px;\n            width: 100%;\n            height: 100%;\n            initial-value: SheetValue.{};\n            skip-partially-expanded: {};\n            gestures-enabled: {};{}{}\n{}        }}\n\n        sheet{i} := Rectangle {{{}}}\n\n        // The drag-handle pill: 32x4 dp centered in the sheet's 48 dp\n        // handle strip — `SheetDefaults.kt`'s DragHandleVerticalPadding\n        // is 22 dp, so the pill sits 22 dp below the surface's top.\n        sheet-pill{i} := Rectangle {{\n            x: sheet{i}_comp.surface-x + (sheet{i}_comp.surface-width - 32px) / 2;\n            y: sheet{i}_comp.surface-y + 22px;\n            width: 32px;\n            height: 4px;\n        }}\n\n        // The moving surface — `sheet{i}` stays on the static widget\n        // container, so `mask_decor` against a mid-flight edge needs the\n        // surface's own bounds.\n        sheet-surface{i} := Rectangle {{\n            x: sheet{i}_comp.surface-x;\n            y: sheet{i}_comp.surface-y;\n            width: sheet{i}_comp.surface-width;\n            height: sheet{i}_comp.sheet-height;\n        }}\n\n        // The content region below the 48 dp handle strip — the\n        // handle/content boundary is painted inside the surface, so it\n        // needs its own element for `mask_decor` to reach it.\n        sheet-content{i} := Rectangle {{\n            x: sheet{i}_comp.surface-x;\n            y: sheet{i}_comp.surface-y + 48px;\n            width: sheet{i}_comp.surface-width;\n            height: sheet{i}_comp.sheet-height - 48px;\n        }}\n    }}\n",
+                w.x as i64,
+                w.y as i64,
+                w.width.unwrap() as i64,
+                w.height.unwrap() as i64,
+                sheet_initial(w),
+                skip_partial,
+                w.gestures.unwrap_or(true),
+                shape_override.unwrap_or_default(),
+                color_override.unwrap_or_default(),
+                content,
+                if sheet_needs_gesture_replay(w, scene) {
+                    format!("\n            x: sheet{i}_comp.surface-x;\n            y: sheet{i}_comp.surface-y;\n            width: sheet{i}_comp.surface-width;\n            height: sheet{i}_comp.surface-height;\n        ")
+                } else {
+                    format!("\n            x: sheet{i}_comp.surface-x;\n            y: 0px;\n            width: sheet{i}_comp.surface-width;\n            height: sheet{i}_comp.sheet-height;\n        ")
+                },
+            )
+            .unwrap();
+        }
+        "bottom-sheet-scaffold" => {
+            let body_color = w
+                .body_color
+                .as_deref()
+                .unwrap_or("surface")
+                .replace('-', "_");
+            let shape_override = over
+                .get("sheet_shape")
+                .map(|v| format!("\n            sheet-shape: {};", corner_shape_expr(v)));
+            let elevation = w
+                .sheet_elevation
+                .map(|l| format!("\n            sheet-elevation-level: {l};"))
+                .unwrap_or_default();
+            writeln!(
+                s,
+                "    sheet{i}_box := Rectangle {{\n        x: {}px;\n        y: {}px;\n        width: {}px;\n        height: {}px;\n\n        Rectangle {{\n            x: 0px;\n            y: 0px;\n            width: 100%;\n            height: 100%;\n            background: MaterialPalette.{body_color};\n        }}\n\n        sheet{i}_comp := BottomSheetScaffold {{\n            x: 0px;\n            y: 0px;\n            width: 100%;\n            height: 100%;\n            initial-value: SheetValue.{};\n            sheet-peek-height: {}px;\n            skip-hidden-state: {};\n            sheet-swipe-enabled: {};{}{}\n{}        }}\n\n        sheet{i} := Rectangle {{{}}}\n\n        // The drag-handle pill: 32x4 dp centered in the sheet's 48 dp\n        // handle strip — `SheetDefaults.kt`'s DragHandleVerticalPadding\n        // is 22 dp, so the pill sits 22 dp below the surface's top.\n        sheet-pill{i} := Rectangle {{\n            x: sheet{i}_comp.surface-x + (sheet{i}_comp.surface-width - 32px) / 2;\n            y: sheet{i}_comp.surface-y + 22px;\n            width: 32px;\n            height: 4px;\n        }}\n\n        // The moving surface — `sheet{i}` stays on the static widget\n        // container, so `mask_decor` against a mid-flight edge needs the\n        // surface's own bounds.\n        sheet-surface{i} := Rectangle {{\n            x: sheet{i}_comp.surface-x;\n            y: sheet{i}_comp.surface-y;\n            width: sheet{i}_comp.surface-width;\n            height: sheet{i}_comp.sheet-height;\n        }}\n\n        // The content region below the 48 dp handle strip — the\n        // handle/content boundary is painted inside the surface, so it\n        // needs its own element for `mask_decor` to reach it.\n        sheet-content{i} := Rectangle {{\n            x: sheet{i}_comp.surface-x;\n            y: sheet{i}_comp.surface-y + 48px;\n            width: sheet{i}_comp.surface-width;\n            height: sheet{i}_comp.sheet-height - 48px;\n        }}\n    }}\n",
+                w.x as i64,
+                w.y as i64,
+                w.width.unwrap() as i64,
+                w.height.unwrap() as i64,
+                if w.initial.is_some() { sheet_initial(w) } else { "partially-expanded" },
+                w.peek_height.unwrap_or(56.0) as i64,
+                w.skip_hidden.unwrap_or(true),
+                w.gestures.unwrap_or(true),
+                shape_override.unwrap_or_default(),
+                elevation,
+                content,
+                if sheet_needs_gesture_replay(w, scene) {
+                    format!("\n            x: sheet{i}_comp.surface-x;\n            y: sheet{i}_comp.surface-y;\n            width: sheet{i}_comp.surface-width;\n            height: sheet{i}_comp.surface-height;\n        ")
+                } else {
+                    "\n            x: 0px;\n            y: 0px;\n            width: 100%;\n            height: 100%;\n        ".to_string()
+                },
+            )
+            .unwrap();
+        }
+        "modal-bottom-sheet" => {
+            // The popup covers the test window: x/y pin to the origin and the
+            // size to the scene, the convention `ModalBottomSheet` documents.
+            let (sw, sh) = (scene.size[0], scene.size[1]);
+            for prop in &scene.trace_props {
+                let (ty, name) = sheet_trace_prop(prop);
+                writeln!(s, "    in-out property <{ty}> {name};").unwrap();
+            }
+            let mut handlers = String::new();
+            for prop in &scene.trace_props {
+                match prop.as_str() {
+                    "sheet-offset" | "sheet-height" => {
+                        writeln!(
+                            handlers,
+                            "        changed {} => {{\n            root.{name} = self.{name} / 1px;\n        }}\n",
+                            prop.replace('-', "_"),
+                            name = prop,
+                        )
+                        .unwrap();
+                    }
+                    "current-value" | "target-value" => {
+                        // `ParitySheet` tracks `AnchoredDraggableState`'s
+                        // bound-crossing `currentValue`; `SheetWidget`
+                        // reports `SheetState.currentValue` = `settledValue`.
+                        let src = if prop == "current-value"
+                            && sheet_needs_gesture_replay(w, scene)
+                        {
+                            "anchor_current".to_string()
+                        } else {
+                            prop.replace('-', "_")
+                        };
+                        writeln!(
+                            handlers,
+                            "        changed {src} => {{\n            root.{name} = {value};\n        }}\n",
+                            name = prop,
+                            value = sheet_value_num(&format!("self.{src}")),
+                        )
+                        .unwrap();
+                    }
+                    "dragging" | "is-visible" | "has-expanded-state"
+                    | "has-partially-expanded-state" => {
+                        writeln!(
+                            handlers,
+                            "        changed {} => {{\n            root.{name} = self.{name};\n        }}\n",
+                            prop.replace('-', "_"),
+                            name = prop,
+                        )
+                        .unwrap();
+                    }
+                    other => panic!("no modal trace mirror known for {other:?}"),
+                }
+            }
+            // Popup properties are unreachable from outside the window, so
+            // the surface geometry is mirrored into `in-out` root properties
+            // like the trace props; `modal{i}` is the tracked surface frame
+            // (a PopupWindow has no element in this component's item tree).
+            writeln!(s, "    in-out property <length> surface-x;").unwrap();
+            writeln!(s, "    in-out property <length> surface-y;").unwrap();
+            writeln!(s, "    in-out property <length> surface-width;").unwrap();
+            writeln!(s, "    in-out property <length> surface-height;").unwrap();
+            write!(
+                handlers,
+                "        changed surface_x => {{\n            root.surface-x = self.surface-x;\n        }}\n        changed surface_y => {{\n            root.surface-y = self.surface-y;\n        }}\n        changed surface_width => {{\n            root.surface-width = self.surface-width;\n        }}\n        changed surface_height => {{\n            root.surface-height = self.surface-height;\n        }}\n"
+            )
+            .unwrap();
+            writeln!(
+                s,
+                "    modal{i}_win := ModalBottomSheet {{\n        x: 0px;\n        y: 0px;\n        width: {sw}px;\n        height: {sh}px;\n        skip-partially-expanded: {};\n        gestures-enabled: {};\n{handlers}{}    }}\n\n    // `boundsInRoot` inside the popup is empty on the Compose side too.\n    modal{i} := Rectangle {{\n        x: 0px;\n        y: 0px;\n        width: 0px;\n        height: 0px;\n    }}\n",
+                w.skip_partial.unwrap_or(false),
+                w.gestures.unwrap_or(true),
+                content,
+            )
+            .unwrap();
+        }
+        other => panic!("unknown sheet kind {other:?}"),
+    }
+}
+
+/// `MaterialCornerShape` struct literal for `slint_overrides.sheet_shape` —
+/// `{ "top_left": 12, "top_right": 12, "bottom_right": 0, "bottom_left": 0 }`
+/// or a `ShapeTokens.corner_*` name string.
+fn corner_shape_expr(v: &serde_json::Value) -> String {
+    if let Some(name) = v.as_str() {
+        return format!("ShapeTokens.{name}");
+    }
+    format!(
+        "{{ top_left: {}px, top_right: {}px, bottom_right: {}px, bottom_left: {}px }}",
+        widget_num(&v["top_left"]),
+        widget_num(&v["top_right"]),
+        widget_num(&v["bottom_right"]),
+        widget_num(&v["bottom_left"]),
+    )
+}
+
+/// Action kinds that mean "call the sheet's state method" rather than
+/// deliver an input event — emitted as `Timer`s so the op lands at `at` ms
+/// like the Compose runnable.
+const SHEET_OPS: [&str; 4] = ["show", "hide", "expand", "partial-expand"];
+
+/// One `Timer` per sheet-op action, firing `sheet0`/`modal0`'s public
+/// functions at the action's `at` time (1 ms minimum — `at: 0` lands right
+/// after the baseline frame like `//ACTION=` at 0 and the Compose runnable
+/// at 0 do). A timer whose deadline falls in a gap fires inside the next
+/// `mock_elapsed_time` advance — the op's animation anchors at that
+/// advance's tick, so `at` should sit just before the listed frame where
+/// the motion is meant to begin (the Compose runnable launches the same
+/// `animateTo` there, ~2 ms of coroutine dispatch later).
+fn sheet_op_timers(s: &mut String, scene: &Scene) {
+    let ops: Vec<&Action> = scene
+        .actions
+        .iter()
+        .filter(|a| SHEET_OPS.contains(&a.kind.as_str()))
+        .collect();
+    if ops.is_empty() {
+        return;
+    }
+    // The target is the scene's first sheet widget; the trace guard already
+    // keeps op scenes to a single sheet.
+    let first = scene
+        .widgets
+        .iter()
+        .find(|w| {
+            matches!(
+                w.kind.as_str(),
+                "bottom-sheet" | "bottom-sheet-scaffold" | "modal-bottom-sheet"
+            )
+        })
+        .expect("sheet op actions need a sheet widget");
+    let name = if first.kind == "modal-bottom-sheet" { "modal0_win" } else { "sheet0_comp" };
+    for a in ops {
+        let fn_name = a.kind.replace('-', "_");
+        writeln!(
+            s,
+            "    Timer {{\n        interval: {}ms;\n        triggered => {{\n            {name}.{fn_name}();\n            self.running = false;\n        }}\n    }}\n",
+            (a.at as i64).max(1),
+        )
+        .unwrap();
+    }
+}
+
+/// The trace-prop forwards for sheet and handle widgets: `out` bindings for
+/// readable component properties (the modal case already emitted its `in-out`
+/// mirrors in `sheet_widget`).
+fn sheet_trace_forwards(s: &mut String, scene: &Scene) {
+    let mut sheet_idx = 0usize;
+    let mut vhandles = 0usize;
+    for w in &scene.widgets {
+        match w.kind.as_str() {
+            "bottom-sheet" | "bottom-sheet-scaffold" => {
+                let i = sheet_idx;
+                sheet_idx += 1;
+                assert!(
+                    scene.trace_props.is_empty() || sheet_idx == 1,
+                    "trace_props on a multi-sheet scene would emit duplicate root properties — split the scene"
+                );
+                for prop in &scene.trace_props {
+                    let (ty, name) = sheet_trace_prop(prop);
+                    // `ParitySheet` registers `AnchoredDraggableState` — its
+                    // `currentValue` is the bound-crossing tracker — while
+                    // `SheetWidget`'s `SheetState.currentValue` maps to
+                    // `settledValue` (`SheetDefaults.kt`).
+                    let replay = sheet_needs_gesture_replay(w, scene);
+                    let expr = match prop.as_str() {
+                        "current-value" if replay => {
+                            sheet_value_num(&format!("sheet{i}_comp.anchor-current"))
+                        }
+                        "current-value" | "target-value" => {
+                            sheet_value_num(&format!("sheet{i}_comp.{name}"))
+                        }
+                        // `sheet-offset` reports the `scrollBy`-clamped offset
+                        // (`clamped-offset`), not the raw spring value.
+                        "sheet-offset" => format!("sheet{i}_comp.clamped-offset / 1px"),
+                        "sheet-height" => {
+                            format!("sheet{i}_comp.{name} / 1px")
+                        }
+                        _ => format!("sheet{i}_comp.{name}"),
+                    };
+                    writeln!(s, "    out property <{ty}> {name}: {expr};").unwrap();
+                }
+            }
+            "modal-bottom-sheet" => {
+                // Mirrors were emitted with the widget.
+                sheet_idx += 1;
+                assert!(
+                    scene.trace_props.is_empty() || sheet_idx == 1,
+                    "trace_props on a multi-sheet scene would emit duplicate root properties — split the scene"
+                );
+            }
+            "vertical-drag-handle" => {
+                let i = vhandles;
+                vhandles += 1;
+                assert!(
+                    scene.trace_props.is_empty() || vhandles == 1,
+                    "trace_props on a multi-handle scene would emit duplicate root properties — split the scene"
+                );
+                for prop in &scene.trace_props {
+                    let (ty, expr) = match prop.as_str() {
+                        "handle-width" => ("float", format!("vhandle{i}.handle-width / 1px")),
+                        "handle-height" => ("float", format!("vhandle{i}.handle-height / 1px")),
+                        "active" | "pressed" | "dragged" => {
+                            ("bool", format!("vhandle{i}.{p}", p = prop.replace('-', "_")))
+                        }
+                        other => panic!("no handle trace expression known for {other:?}"),
+                    };
+                    writeln!(s, "    out property <{ty}> {prop}: {expr};").unwrap();
+                }
+            }
+            _ => {}
+        }
     }
 }
