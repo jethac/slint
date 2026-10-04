@@ -163,6 +163,23 @@ class Widget(json: JSONObject) {
     /** `*-divider` line thickness in dp — `DividerDefaults.Thickness` when
      * unset; `0` is the upstream `Dp.Hairline` (one physical pixel). */
     val thickness: Float = json.optDouble("thickness", 1.0).toFloat()
+    /** `time-picker*` widgets: `rememberTimePickerState` initial values. */
+    val hour: Int = json.optInt("hour", 0)
+    val minute: Int = json.optInt("minute", 0)
+    /** `is24hour` — hides the AM/PM toggle and gives the hour dial the
+     * inner ring upstream. */
+    val is24h: Boolean = json.optBoolean("is24h", false)
+    /** `TimePickerSelectionMode` — `"hour"` (default) or `"minute"`. */
+    val selection: String = (json.opt("selection") as? String) ?: "hour"
+    /** `TimePickerLayoutType` — `"vertical"` (default) or `"horizontal"`. */
+    val layout: String = (json.opt("layout") as? String) ?: "vertical"
+    /** Vibrant styling — upstream `vibrantColors()` + `TimePickerShapes`. */
+    val vibrant: Boolean = json.optBoolean("vibrant", false)
+    /** `TimePickerDisplayMode` for `time-picker*` kinds: `"picker"`
+     * (default), `"input"`, `"scroll"`. */
+    val displayMode: String = (json.opt("display_mode") as? String) ?: "picker"
+    val showModeToggle: Boolean = json.optBoolean("show_mode_toggle", true)
+    val confirmEnabled: Boolean = json.optBoolean("confirm_enabled", true)
 
     val isFab: Boolean get() = kind == "fab" || kind == "extended-fab"
     val isSplitButton: Boolean get() = kind.endsWith("split-button")

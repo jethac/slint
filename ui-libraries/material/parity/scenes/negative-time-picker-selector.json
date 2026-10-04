@@ -1,0 +1,40 @@
+{
+  "densities": [
+    1,
+    2
+  ],
+  "fonts": {
+    "brand": "Roboto",
+    "plain": "Roboto"
+  },
+  "name": "negative-time-picker-selector",
+  "negative_note": "the selector handle draws at 80dp instead of the ClockDialSelectorHandleContainerSize 48dp, covering neighbouring dial labels",
+  "parity": "negative",
+  "size": [
+    400,
+    560
+  ],
+  "theme": {
+    "contrast": 0.0,
+    "dark": false,
+    "platform": "phone",
+    "seed": "6750A4",
+    "spec": "spec2025",
+    "variant": "tonal-spot"
+  },
+  "trace_elements": [],
+  "trace_items": {},
+  "trace_props": [],
+  "type": "canvas",
+  "widgets": [
+    {
+      "hour": 10,
+      "kind": "time-picker",
+      "minute": 30,
+      "slint_overrides": {
+        "selector_size": 80
+      }
+    }
+  ],
+  "xfail_text": "issue #28: Slint ceils text layout widths where Compose keeps fractional advances"
+}

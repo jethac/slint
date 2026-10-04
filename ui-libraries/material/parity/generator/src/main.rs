@@ -305,6 +305,36 @@ struct Widget {
     /// upstream `Dp.Hairline` (one physical pixel).
     #[serde(default)]
     thickness: Option<f64>,
+    /// `time-picker*` widgets: `rememberTimePickerState` initial values.
+    #[serde(default)]
+    hour: Option<i64>,
+    #[serde(default)]
+    minute: Option<i64>,
+    /// `is24hour` — hides the AM/PM toggle and adds the dial's inner ring.
+    #[serde(default)]
+    is24h: Option<bool>,
+    /// `TimePickerSelectionMode` — `"hour"` (default) or `"minute"`.
+    #[serde(default)]
+    selection: Option<String>,
+    /// `TimePickerLayoutType` — `"vertical"` (default) or `"horizontal"`.
+    #[serde(default)]
+    layout: Option<String>,
+    /// Vibrant styling — upstream `vibrantColors()` + `TimePickerShapes`.
+    #[serde(default)]
+    vibrant: Option<bool>,
+    /// `*-picker*` initial `DisplayMode` — `"picker"` (default), `"input"`,
+    /// `"scroll"`.
+    #[serde(default)]
+    display_mode: Option<String>,
+    /// `showModeToggle` on the dialogs — upstream default true.
+    #[serde(default)]
+    show_mode_toggle: Option<bool>,
+    /// The dialog confirm `TextButton`'s enabled state.
+    #[serde(default)]
+    confirm_enabled: Option<bool>,
+    /// `*-dialog` title text.
+    #[serde(default)]
+    title: Option<String>,
     /// `connected-button-group`/`vertical-connected-button-group` items.
     #[serde(default)]
     items: Vec<GroupItem>,
@@ -747,11 +777,38 @@ fn slint_case(scene: &Scene) -> String {
             "connected-button" => "ConnectedButton",
             "connected-button-group" => "ConnectedButtonGroup",
             "vertical-connected-button-group" => "VerticalConnectedButtonGroup",
+            // The dialog emitters draw scrim + `*DialogContent` inline and
+            // place the picker for `display_mode` inside.
+            "time-picker" | "time-picker-dialog" | "vibrant-time-picker-dialog" => {
+                match w.display_mode.as_deref() {
+                    Some("input") => "TimeInput",
+                    Some("scroll") => "TimeScroll",
+                    _ => "TimePicker",
+                }
+            }
             other => panic!("unknown widget kind {other:?}"),
         };
         imports.push(component);
         if w.kind.starts_with("connected-button") || w.kind == "vertical-connected-button-group" {
             imports.push("ConnectedButtonPosition");
+        }
+        if w.kind == "time-picker-dialog" || w.kind == "vibrant-time-picker-dialog" {
+            imports.push(if w.kind == "vibrant-time-picker-dialog" {
+                "VibrantTimePickerDialogContent"
+            } else {
+                "TimePickerDialogContent"
+            });
+            if w.display_mode.is_some() {
+                imports.push("TimePickerDisplayMode");
+            }
+        }
+        if w.kind.starts_with("time-picker") || w.kind == "vibrant-time-picker-dialog" {
+            imports.extend(["TimePickerSelection", "TimePickerLayoutType"]);
+        }
+        // The `scroll` dialog emits the mode-toggle `IconButton`.
+        if w.display_mode.as_deref() == Some("scroll") && w.show_mode_toggle.unwrap_or(false) {
+            imports.push("IconButton");
+            needs_icons = true;
         }
         if w.icon.is_some()
             || w.checked_icon.is_some()
@@ -1230,6 +1287,7 @@ fn slint_canvas(s: &mut String, scene: &Scene) {
     let mut surfaces = 0;
     let mut appbars = 0;
     let mut groups = 0;
+    let mut pickers = 0;
     let mut icons = 0;
     let mut dividers = 0;
     for w in scene.widgets.iter() {
@@ -1350,6 +1408,18 @@ fn slint_canvas(s: &mut String, scene: &Scene) {
                 let i = appbars;
                 appbars += 1;
                 appbar_widget(s, w, i);
+                continue;
+            }
+            "time-picker" => {
+                let i = pickers;
+                pickers += 1;
+                time_picker_widget(s, w, i);
+                continue;
+            }
+            "time-picker-dialog" | "vibrant-time-picker-dialog" => {
+                let i = pickers;
+                pickers += 1;
+                time_picker_dialog_widget(s, w, i);
                 continue;
             }
             "connected-button" => {
@@ -1876,3 +1946,167 @@ fn appbar_widget(s: &mut String, w: &Widget, i: usize) {
     )
     .unwrap();
 }
+
+/// Escapes a string for embedding in a generated `.slint` string literal.
+fn slint_str(text: &str) -> String {
+    text.replace('\\', "\\\\").replace('"', "\\\"").replace('\n', "\\n")
+}
+
+/// A bare `time-picker` — `TimeInput`/`TimeScroll` for `display_mode`
+/// `input`/`scroll`, `TimePicker` otherwise. `TimeScroll` is always
+/// vibrant upstream (there is no classic variant) and carries no `vibrant`
+/// prop on the Slint side either.
+fn time_picker_widget(s: &mut String, w: &Widget, i: usize) {
+    let component = match w.display_mode.as_deref() {
+        Some("input") => "TimeInput",
+        Some("scroll") => "TimeScroll",
+        _ => "TimePicker",
+    };
+    let mut p = String::new();
+    if let Some(h) = w.hour {
+        writeln!(p, "        hour: {h};").unwrap();
+    }
+    if let Some(m) = w.minute {
+        writeln!(p, "        minute: {m};").unwrap();
+    }
+    if let Some(v) = w.is24h {
+        writeln!(p, "        use_24_hour_format: {v};").unwrap();
+    }
+    if let Some(sel) = w.selection.as_deref() {
+        writeln!(p, "        selection: TimePickerSelection.{sel};").unwrap();
+    }
+    if component != "TimeInput" && component != "TimeScroll" {
+        if let Some(l) = w.layout.as_deref() {
+            writeln!(p, "        layout_type: TimePickerLayoutType.{l};").unwrap();
+        }
+    }
+    // `TimeInput` has a vibrant variant too; `TimeScroll` is always vibrant
+    // upstream and carries no `vibrant` prop.
+    if component != "TimeScroll" {
+        if let Some(v) = w.vibrant {
+            writeln!(p, "        vibrant: {v};").unwrap();
+        }
+    }
+    let over = &w.slint_overrides;
+    // `slint_overrides` defects for `negative` scenes.
+    for (k, prop) in [("clock_dial", "clock_dial_color"), ("selector", "selector_color")] {
+        if let Some(fill) = over.get(k).and_then(|v| v.as_str()) {
+            writeln!(p, "        {prop}: MaterialPalette.{};", fill.replace('-', "_")).unwrap();
+        }
+    }
+    for k in ["dial_size", "selector_size"] {
+        if let Some(d) = over.get(k).and_then(|v| v.as_f64()) {
+            writeln!(p, "        {k}: {d}px;").unwrap();
+        }
+    }
+    writeln!(
+        s,
+        // Compose lays out in physical pixels: `Center` snaps an odd
+        // (size − content) delta to an integer *device* pixel. `phx`
+        // rounds the same quantity in the same space — logical `px`
+        // rounding would be a half-pixel off at density 1 and a full one
+        // at density 2.
+        "    picker{i} := {component} {{\n        x: Math.round((parent.width - self.width) / 1phx / 2) * 1phx;\n        y: Math.round((parent.height - self.height) / 1phx / 2) * 1phx;\n{p}    }}\n",
+    )
+    .unwrap();
+}
+
+/// A `time-picker-dialog`/`vibrant-time-picker-dialog` — the `Modal` scrim
+/// plus the centered `*DialogContent` with the `display_mode` picker
+/// inside, mirrored by `StateTimePickerDialog`. The pane casts no shadow:
+/// layoutlib deadlocks on platform shadows, so the Compose side sets
+/// `shadowElevation = 0` and the Slint emit uses the content component
+/// (no `Elevation` wrap).
+fn time_picker_dialog_widget(s: &mut String, w: &Widget, i: usize) {
+    writeln!(
+        s,
+        "    scrim{i} := Rectangle {{\n        x: 0px;\n        y: 0px;\n        width: 100%;\n        height: 100%;\n        background: MaterialPalette.background_modal;\n    }}\n",
+    )
+    .unwrap();
+
+    let content = if w.kind == "vibrant-time-picker-dialog" {
+        "VibrantTimePickerDialogContent"
+    } else {
+        "TimePickerDialogContent"
+    };
+    // Upstream puts the mode toggle in `TimeScroll`'s `SideControlColumn`
+    // for `scroll`, in the actions row otherwise.
+    let scroll = w.display_mode.as_deref() == Some("scroll");
+    let mut p = String::new();
+    if let Some(t) = &w.title {
+        writeln!(p, "        title: \"{}\";", slint_str(t)).unwrap();
+    }
+    if let Some(v) = w.show_mode_toggle {
+        writeln!(p, "        show_mode_toggle: {};", v && !scroll).unwrap();
+    }
+    if let Some(v) = w.confirm_enabled {
+        writeln!(p, "        confirm_enabled: {v};").unwrap();
+    }
+    if let Some(v) = w.display_mode.as_deref() {
+        writeln!(p, "        display_mode: TimePickerDisplayMode.{v};").unwrap();
+    }
+    let over = &w.slint_overrides;
+    if let Some(corner) = over.get("corner").and_then(|v| v.as_f64()) {
+        writeln!(
+            p,
+            "        container_shape: {{ top_left: {corner}px, top_right: {corner}px, bottom_right: {corner}px, bottom_left: {corner}px, full: false }};",
+        )
+        .unwrap();
+    }
+    if let Some(fill) = over.get("container").and_then(|v| v.as_str()) {
+        writeln!(p, "        container_color: MaterialPalette.{};", fill.replace('-', "_"))
+            .unwrap();
+    }
+    if let Some(v) = over.get("actions_spacing").and_then(|v| v.as_f64()) {
+        writeln!(p, "        actions_spacing: {v}px;").unwrap();
+    }
+
+    // The `display_mode` picker — `vibrant` follows the dialog kind like
+    // upstream's `vibrantColors()`/`TimePickerShapes` pass-down.
+    let mut inner = String::new();
+    let component = match w.display_mode.as_deref() {
+        Some("input") => "TimeInput",
+        Some("scroll") => "TimeScroll",
+        _ => "TimePicker",
+    };
+    if let Some(h) = w.hour {
+        writeln!(inner, "            hour: {h};").unwrap();
+    }
+    if let Some(m) = w.minute {
+        writeln!(inner, "            minute: {m};").unwrap();
+    }
+    if let Some(v) = w.is24h {
+        writeln!(inner, "            use_24_hour_format: {v};").unwrap();
+    }
+    if let Some(sel) = w.selection.as_deref() {
+        writeln!(inner, "            selection: TimePickerSelection.{sel};").unwrap();
+    }
+    if component != "TimeScroll" {
+        writeln!(inner, "            vibrant: {};", w.kind == "vibrant-time-picker-dialog").unwrap();
+    }
+    for (k, prop) in [("clock_dial", "clock_dial_color"), ("selector", "selector_color")] {
+        if let Some(fill) = over.get(k).and_then(|v| v.as_str()) {
+            writeln!(inner, "            {prop}: MaterialPalette.{};", fill.replace('-', "_"))
+                .unwrap();
+        }
+    }
+
+    // The `SideControlColumn` toggle slot — `ScrollDisplayModeToggle`
+    // shows the keyboard icon for `scroll`.
+    let mut toggle = String::new();
+    if scroll && w.show_mode_toggle.unwrap_or(false) {
+        writeln!(inner, "            has_toggle: true;").unwrap();
+        writeln!(
+            toggle,
+            "\n            IconButton {{\n                icon: Icons.keyboard;\n                inline: true;\n            }}\n"
+        )
+        .unwrap();
+    }
+
+    writeln!(
+        s,
+        "    picker{i} := {content} {{\n        x: Math.round((parent.width - self.width) / 1phx / 2) * 1phx;\n        y: Math.round((parent.height - self.height) / 1phx / 2) * 1phx;\n{p}\n        {component} {{\n{inner}{toggle}        }}\n    }}\n",
+    )
+    .unwrap();
+}
+

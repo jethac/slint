@@ -1730,6 +1730,28 @@ fn build_frame_mask<C: i_slint_core::api::ComponentHandle>(
             PixelClass::Text,
         );
     }
+    // Editable text is the same drift class as `Text` — its ink shifts with
+    // the advance quantization the `Text` layer exists for — but a
+    // `TextInput`'s bounds are its field's whole interior, not the ink.
+    // Mark the bounds shrunk by 4dp so a field's border and padding
+    // ring stay strict while the centered ink gets per-cell checks.
+    for handle in i_slint_backend_testing::ElementQuery::from_root(component)
+        .match_inherits("TextInput")
+        .find_all()
+    {
+        let p = handle.absolute_position();
+        let s = handle.size();
+        mask.fill_rect(
+            PxRect {
+                x0: p.x as f64 * d,
+                y0: p.y as f64 * d,
+                x1: (p.x + s.width) as f64 * d,
+                y1: (p.y + s.height) as f64 * d,
+            }
+            .dilated(-4.0 * d),
+            PixelClass::Text,
+        );
+    }
     let Some(cf) = compose_frame else { return mask };
     if let Some(texts) = cf["text"].as_object() {
         for (_, m) in texts {

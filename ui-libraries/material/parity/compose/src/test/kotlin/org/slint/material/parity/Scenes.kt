@@ -11,6 +11,7 @@ import androidx.compose.foundation.interaction.HoverInteraction
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
 import androidx.compose.animation.core.animateFloat
@@ -30,6 +31,11 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.ui.Alignment
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.material3.Button
@@ -467,6 +473,7 @@ private fun CanvasScene(
         var surfaces = 0
         var appbars = 0
         var groups = 0
+        var pickers = 0
         var icons = 0
         var dividers = 0
         // `text:{n}` spans every text node in scene order — group items
@@ -541,6 +548,22 @@ private fun CanvasScene(
                     density,
                     emitPress,
                 )
+                widget.kind == "time-picker" ->
+                    StateTimePicker(
+                        widget,
+                        tracer,
+                        "picker${pickers++}",
+                        emitPress,
+                    )
+                widget.kind == "time-picker-dialog" ||
+                    widget.kind == "vibrant-time-picker-dialog" ->
+                    StateTimePickerDialog(
+                        widget,
+                        scene,
+                        tracer,
+                        "picker${pickers++}",
+                        emitPress,
+                    )
                 widget.kind == "top-app-bar" ||
                     widget.kind == "bottom-app-bar" ||
                     widget.kind == "search-bar" ||
@@ -2952,5 +2975,697 @@ private fun StateConnectedGroup(
         ) {
             itemsContent()
         }
+    }
+}
+
+// =====================================================================
+// Pinned time-picker mirror — material3:1.5.0-alpha18 predates the
+// pin's (androidx/androidx@23327507, byte-identical to material3
+// alpha29's) time-picker rework: no `TimeScroll`, no vibrant
+// colors/shapes, no updated AM/PM toggle, and `ClockFace` is internal.
+// Like `ShortNavigationBar` above, the mirror reproduces the pinned
+// rendering with public primitives: real `ToggleButton`s for the
+// `ToggleItem` period toggle, plain `Surface`s for the fields, and a
+// Canvas-drawn `ClockDial` (the dial tokens and geometry are identical
+// across the rework).
+// =====================================================================
+
+/** `value.toLocalString(minDigits = 2)` for the Latin digits both sides render. */
+private fun tpPad2(v: Int): String = v.toString().padStart(2, '0')
+
+/** `hourForDisplay` — `hour % 12` with 0→12 for 12h, `hour` for 24h. */
+private fun tpDisplayHour(hour: Int, is24h: Boolean): Int =
+    if (is24h) hour else (hour % 12).let { if (it == 0) 12 else it }
+
+/** `TimeSelector` — the pin's display field: `Surface` with centered
+ * digits, `primaryContainer` fill when selected on the classic variant,
+ * `surfaceContainerLowest` + `BorderStroke(2.dp, primary)` for vibrant. */
+@Composable
+private fun TpDisplayField(
+    text: String,
+    selected: Boolean,
+    vibrant: Boolean,
+    width: androidx.compose.ui.unit.Dp,
+    height: androidx.compose.ui.unit.Dp,
+    style: androidx.compose.ui.text.TextStyle =
+        androidx.compose.material3.MaterialTheme.typography.displayLarge,
+) {
+    val s = androidx.compose.material3.MaterialTheme.colorScheme
+    androidx.compose.material3.Surface(
+        shape =
+            androidx.compose.foundation.shape.RoundedCornerShape(
+                if (vibrant) 16.dp else 8.dp),
+        color =
+            when {
+                vibrant -> s.surfaceContainerLowest
+                selected -> s.primaryContainer
+                else -> s.surfaceContainerHighest
+            },
+        border =
+            if (vibrant && selected) {
+                androidx.compose.foundation.BorderStroke(2.dp, s.primary)
+            } else {
+                null
+            },
+        modifier = Modifier.size(width, height),
+    ) {
+        Box(contentAlignment = Alignment.Center) {
+            Text(
+                text = text,
+                style = style,
+                color =
+                    when {
+                        vibrant && selected -> s.primary
+                        selected -> s.onPrimaryContainer
+                        else -> s.onSurface
+                    },
+            )
+        }
+    }
+}
+
+/** `DisplaySeparator` — centered ":" in `TimeSelectorSeparatorColor`
+ * (onSurface), `DisplaySeparatorWidth`/`VibrantSeparatorWidth` wide. */
+@Composable
+private fun TpSeparator(
+    vibrant: Boolean,
+    height: androidx.compose.ui.unit.Dp,
+    style: androidx.compose.ui.text.TextStyle,
+) {
+    Box(
+        Modifier.size(if (vibrant) 16.dp else 24.dp, height),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            ":",
+            style =
+                style.copy(
+                    textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                    lineHeightStyle =
+                        androidx.compose.ui.text.style.LineHeightStyle(
+                            androidx.compose.ui.text.style.LineHeightStyle.Alignment.Center,
+                            androidx.compose.ui.text.style.LineHeightStyle.Trim.Both,
+                        ),
+                ),
+            color = androidx.compose.material3.MaterialTheme.colorScheme.onSurface,
+        )
+    }
+}
+
+/** `ToggleItem` — a `ToggleButton` (circle → 12dp when checked) with the
+ * updated toggle's color table and the bold checked label. */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun TpToggleItem(checked: Boolean, label: String, modifier: Modifier = Modifier) {
+    val s = androidx.compose.material3.MaterialTheme.colorScheme
+    androidx.compose.material3.ToggleButton(
+        checked = checked,
+        onCheckedChange = {},
+        modifier = modifier,
+        shapes =
+            ToggleButtonShapes(
+                androidx.compose.foundation.shape.CircleShape,
+                RoundedCornerShape(12.dp),
+                RoundedCornerShape(12.dp),
+            ),
+        colors =
+            androidx.compose.material3.ToggleButtonDefaults.toggleButtonColors(
+                containerColor = s.surfaceContainerLowest,
+                contentColor = s.onSurfaceVariant,
+                checkedContainerColor = s.primaryContainer,
+                checkedContentColor = s.onPrimaryContainer,
+            ),
+        contentPadding = androidx.compose.foundation.layout.PaddingValues(0.dp),
+    ) {
+        Text(
+            label,
+            style =
+                androidx.compose.material3.MaterialTheme.typography.titleMedium.run {
+                    if (checked) {
+                        copy(fontWeight = androidx.compose.ui.text.font.FontWeight.Bold)
+                    } else {
+                        this
+                    }
+                },
+        )
+    }
+}
+
+/** `VerticalPeriodToggle` — the AM/PM column, `(h - gap) / 2` items. */
+@Composable
+private fun TpVerticalPeriodToggle(
+    isPm: Boolean,
+    vibrant: Boolean,
+    width: androidx.compose.ui.unit.Dp,
+    height: androidx.compose.ui.unit.Dp,
+) {
+    val gap = if (vibrant) 8.dp else 4.dp
+    val itemH = (height - gap) / 2
+    Column(Modifier.size(width, height)) {
+        TpToggleItem(!isPm, "AM", Modifier.size(width, itemH))
+        Spacer(Modifier.size(width, gap))
+        TpToggleItem(isPm, "PM", Modifier.size(width, itemH))
+    }
+}
+
+/** `HorizontalPeriodToggle` — the AM/PM row under the numbers on the
+ * horizontal layout. */
+@Composable
+private fun TpHorizontalPeriodToggle(isPm: Boolean, vibrant: Boolean) {
+    val w = 216.dp
+    val h = if (vibrant) 40.dp else 38.dp
+    val gap = if (vibrant) 16.dp else 4.dp
+    val itemW = (w - gap) / 2
+    Row(Modifier.size(w, h)) {
+        TpToggleItem(!isPm, "AM", Modifier.size(itemW, h))
+        Spacer(Modifier.size(gap, h))
+        TpToggleItem(isPm, "PM", Modifier.size(itemW, h))
+    }
+}
+
+/** `ClockDialNumbers` — the hour/minute field row (+ period toggle for
+ * `vertical`). Picker fields are 96×80 (classic) / 100×120 (vibrant,
+ * 132 wide on a 24h portrait) with `corner_small`/`corner_large`
+ * corners. */
+@Composable
+private fun TpClockDisplayNumbers(widget: Widget, vibrant: Boolean) {
+    val fieldW =
+        if (vibrant) {
+            if (widget.is24h) 132.dp else 100.dp
+        } else {
+            96.dp
+        }
+    val fieldH = if (vibrant) 120.dp else 80.dp
+    val selHour = widget.selection != "minute"
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        TpDisplayField(
+            tpPad2(tpDisplayHour(widget.hour, widget.is24h)),
+            selHour,
+            vibrant,
+            fieldW,
+            fieldH,
+        )
+        TpSeparator(vibrant, fieldH, androidx.compose.material3.MaterialTheme.typography.displayLarge)
+        TpDisplayField(tpPad2(widget.minute), !selHour, vibrant, fieldW, fieldH)
+    }
+}
+
+/** `ClockDial` — the pinned dial: `clockDial` circle, the 2dp `primary`
+ * track to the 48dp handle, the 8dp center dot, and 48dp label cells on
+ * the `OuterCircleToSizeRatio` (101/256) / `InnerCircleToSizeRatio`
+ * (69/256) rings. Selected label text is `onPrimary` (drawn under the
+ * handle). */
+@Composable
+private fun TpDial(widget: Widget, vibrant: Boolean, dialSize: androidx.compose.ui.unit.Dp) {
+    val s = androidx.compose.material3.MaterialTheme.colorScheme
+    val dialColor = if (vibrant) s.surfaceContainerLowest else s.surfaceContainerHighest
+    val isMinute = widget.selection == "minute"
+    val onInner = !isMinute && widget.is24h && widget.hour >= 12
+    val index =
+        when {
+            isMinute -> (widget.minute / 5f).let { Math.round(it) % 12 }
+            onInner -> widget.hour - 12
+            else -> widget.hour % 12
+        }
+    val radiusFrac = if (onInner) 69f / 256f else 101f / 256f
+    val angle = -Math.PI / 2 + 2 * Math.PI * index / 12
+    val radius = dialSize.value * radiusFrac
+    val handleX = dialSize.value / 2f + (Math.cos(angle) * radius).toFloat()
+    val handleY = dialSize.value / 2f + (Math.sin(angle) * radius).toFloat()
+
+    Box(
+        Modifier.size(dialSize)
+            .clip(androidx.compose.foundation.shape.CircleShape)
+            .background(dialColor)
+    ) {
+        androidx.compose.foundation.Canvas(Modifier.matchParentSize()) {
+            val c = center
+            val r = size.minDimension * radiusFrac
+            val hx = c.x + (Math.cos(angle) * r).toFloat()
+            val hy2 = c.y + (Math.sin(angle) * r).toFloat()
+            val h = androidx.compose.ui.geometry.Offset(hx, hy2)
+            drawLine(
+                s.primary,
+                c,
+                h,
+                strokeWidth = 2.dp.toPx(),
+            )
+            drawCircle(s.primary, 4.dp.toPx(), c)
+            drawCircle(s.primary, 24.dp.toPx(), h)
+        }
+        val hours = intArrayOf(12, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11)
+        for (i in 0..11) {
+            val theta = -Math.PI / 2 + 2 * Math.PI * i / 12
+            val r = dialSize.value * 101f / 256f
+            val cx = dialSize.value / 2f + (Math.cos(theta) * r).toFloat()
+            val cy = dialSize.value / 2f + (Math.sin(theta) * r).toFloat()
+            val text =
+                if (isMinute) {
+                    (i * 5).toString()
+                } else if (widget.is24h) {
+                    i.toString()
+                } else {
+                    hours[i].toString()
+                }
+            val dist =
+                Math.hypot(
+                        (cx - handleX).toDouble(),
+                        (cy - handleY).toDouble(),
+                    )
+                    .toFloat()
+            TpDialLabel(text, dist <= 24f, cx - 24f, cy - 24f)
+        }
+        if (widget.is24h && !isMinute) {
+            for (i in 0..11) {
+                val theta = -Math.PI / 2 + 2 * Math.PI * i / 12
+                val r = dialSize.value * 69f / 256f
+                val cx = dialSize.value / 2f + (Math.cos(theta) * r).toFloat()
+                val cy = dialSize.value / 2f + (Math.sin(theta) * r).toFloat()
+                val dist =
+                    Math.hypot(
+                            (cx - handleX).toDouble(),
+                            (cy - handleY).toDouble(),
+                        )
+                        .toFloat()
+                TpDialLabel((i + 12).toString(), dist <= 24f, cx - 24f, cy - 24f)
+            }
+        }
+    }
+}
+
+/** A 48dp `ClockDialNumberText` cell at (x, y). */
+@Composable
+private fun TpDialLabel(text: String, selected: Boolean, x: Float, y: Float) {
+    val s = androidx.compose.material3.MaterialTheme.colorScheme
+    Box(
+        Modifier.offset(x.dp, y.dp).size(48.dp),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            text,
+            style = androidx.compose.material3.MaterialTheme.typography.bodyLarge,
+            color = if (selected) s.onPrimary else s.onSurface,
+        )
+    }
+}
+
+/** `VerticalTimePicker`/`HorizontalTimePicker` bodies. */
+@Composable
+private fun TpPickerBody(widget: Widget, vibrant: Boolean) {
+    val isPm = widget.hour >= 12
+    if (widget.layout == "horizontal") {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Column(verticalArrangement = Arrangement.Center) {
+                TpClockDisplayNumbers(widget, vibrant)
+                if (!widget.is24h) {
+                    // `VibrantPeriodToggleLargePadding` — unconditional 16dp.
+                    Box(Modifier.padding(top = 16.dp)) {
+                        TpHorizontalPeriodToggle(isPm, vibrant)
+                    }
+                }
+            }
+            // `ClockDisplayBottomMargin` / `VibrantHorizontalTimePickerGap`.
+            Spacer(Modifier.width(if (vibrant) 52.dp else 36.dp))
+            // `ClockFaceSizeModifier` picks 256 whenever ≥384dp of height is
+            // available — always true in these scenes; vibrant pins 256.
+            TpDial(widget, vibrant, 256.dp)
+        }
+    } else {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                TpClockDisplayNumbers(widget, vibrant)
+                if (!widget.is24h) {
+                    // padding(start = orVibrant(PeriodTogglePaddingSmall,
+                    // VibrantPeriodToggleLargePadding)) → 4 / 16.
+                    Box(Modifier.padding(start = if (vibrant) 16.dp else 4.dp)) {
+                        TpVerticalPeriodToggle(
+                            isPm,
+                            vibrant,
+                            if (vibrant) 56.dp else 52.dp,
+                            if (vibrant) 120.dp else 80.dp,
+                        )
+                    }
+                }
+            }
+            // `ClockDisplayBottomMargin` / `VibrantVerticalTimePickerGap`.
+            Spacer(Modifier.height(if (vibrant) 12.dp else 36.dp))
+            TpDial(widget, vibrant, 256.dp)
+            // `ClockFaceBottomMargin` — classic only.
+            if (!vibrant) {
+                Spacer(Modifier.height(24.dp))
+            }
+        }
+    }
+}
+
+/** `TimeInputImpl` — fields (96×72 classic, 100×120 vibrant) + the
+ * period toggle; `SupportingText` (7dp top pad, `BodySmall`,
+ * `onSurfaceVariant`, `minLines = 2`) under classic fields. The
+ * unselected field is a borderless `TimeSelector`; the selected one is
+ * the `OutlinedTextField` container — `primaryContainer` + 2dp `outline`
+ * classic, `surfaceContainerLowest` + 2dp `primary` vibrant. */
+@Composable
+private fun TpTimeInput(widget: Widget, vibrant: Boolean) {
+    val s = androidx.compose.material3.MaterialTheme.colorScheme
+    val typ = androidx.compose.material3.MaterialTheme.typography
+    val isPm = widget.hour >= 12
+    val fieldW = if (vibrant) 100.dp else 96.dp
+    val fieldH = if (vibrant) 120.dp else 72.dp
+    val textStyle = if (vibrant) typ.displayLarge else typ.displayMedium
+    Row(verticalAlignment = Alignment.Top) {
+        TpInputField(
+            tpPad2(tpDisplayHour(widget.hour, widget.is24h)),
+            widget.selection != "minute",
+            vibrant,
+            fieldW,
+            fieldH,
+            textStyle,
+            "Hour",
+        )
+        TpSeparator(vibrant, fieldH, textStyle)
+        TpInputField(
+            tpPad2(widget.minute),
+            widget.selection == "minute",
+            vibrant,
+            fieldW,
+            fieldH,
+            textStyle,
+            "Minute",
+        )
+        if (!widget.is24h) {
+            // padding(start = orVibrant(4, VibrantPeriodTogglePadding=8)).
+            Box(Modifier.padding(start = if (vibrant) 8.dp else 4.dp)) {
+                TpVerticalPeriodToggle(
+                    isPm,
+                    vibrant,
+                    if (vibrant) 56.dp else 52.dp,
+                    if (vibrant) 120.dp else 72.dp,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun TpInputField(
+    text: String,
+    selected: Boolean,
+    vibrant: Boolean,
+    width: androidx.compose.ui.unit.Dp,
+    height: androidx.compose.ui.unit.Dp,
+    textStyle: androidx.compose.ui.text.TextStyle,
+    supporting: String,
+) {
+    val s = androidx.compose.material3.MaterialTheme.colorScheme
+    Column {
+        androidx.compose.material3.Surface(
+            shape =
+                androidx.compose.foundation.shape.RoundedCornerShape(
+                    if (vibrant) 16.dp else 8.dp),
+            color =
+                when {
+                    vibrant -> s.surfaceContainerLowest
+                    selected -> s.primaryContainer
+                    else -> s.surfaceContainerHighest
+                },
+            border =
+                when {
+                    vibrant && selected ->
+                        androidx.compose.foundation.BorderStroke(2.dp, s.primary)
+                    selected -> androidx.compose.foundation.BorderStroke(2.dp, s.outline)
+                    else -> null
+                },
+            modifier = Modifier.size(width, height),
+        ) {
+            Box(contentAlignment = Alignment.Center) {
+                Text(
+                    text = text,
+                    style = textStyle,
+                    color =
+                        when {
+                            vibrant && selected -> s.primary
+                            selected -> s.onPrimaryContainer
+                            else -> s.onSurface
+                        },
+                )
+            }
+        }
+        if (!vibrant) {
+            // `SupportingText`: 7dp top pad, `BodySmall`, `onSurfaceVariant`.
+            Text(
+                supporting,
+                modifier = Modifier.padding(top = 7.dp),
+                minLines = 2,
+                style = androidx.compose.material3.MaterialTheme.typography.bodySmall,
+                color = s.onSurfaceVariant,
+            )
+        }
+    }
+}
+
+/** `ScrollField` — the wheel: `ShapeDefaults.Large`
+ * `surfaceContainerLowest` cell, page size `ScrollFieldHeight/3`,
+ * centered item `onSurface` in `displayLargeEmphasized`, the rest
+ * `outline` in `displayMedium`, all `minDigits = 2`. */
+@Composable
+private fun TpScrollField(
+    itemCount: Int,
+    oneBased: Boolean,
+    selected: Int,
+    height: androidx.compose.ui.unit.Dp,
+) {
+    val s = androidx.compose.material3.MaterialTheme.colorScheme
+    val typ = androidx.compose.material3.MaterialTheme.typography
+    val itemH = 200.dp / 3
+    // Five slots cover the 120–136dp window; slot 2 is centered.
+    Box(
+        Modifier.size(100.dp, height)
+            .clip(androidx.compose.foundation.shape.RoundedCornerShape(16.dp))
+            .background(s.surfaceContainerLowest)
+    ) {
+        for (slot in -2..2) {
+            val index = ((selected + slot) % itemCount + itemCount) % itemCount
+            val text = tpPad2(if (oneBased) index + 1 else index)
+            Box(
+                Modifier.offset(y = (height - itemH) / 2 + itemH * slot).size(100.dp, itemH),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    text,
+                    style =
+                        if (slot == 0) typ.displayLargeEmphasized else typ.displayMedium,
+                    color = if (slot == 0) s.onSurface else s.outline,
+                )
+            }
+        }
+    }
+}
+
+/** `TimeScrollImpl` — two `ScrollField`s around the separator, then the
+ * vibrant period toggle or the uncontained `SideControlColumn` when a
+ * mode toggle is present. */
+@Composable
+private fun TpTimeScroll(widget: Widget, hasToggle: Boolean) {
+    val isPm = widget.hour >= 12
+    val fieldH = if (hasToggle) 136.dp else 120.dp
+    val hourIndex =
+        if (widget.is24h) {
+            widget.hour % 24
+        } else {
+            (widget.hour % 12).let { if (it == 0) 11 else it - 1 }
+        }
+    Row(verticalAlignment = Alignment.Top) {
+        TpScrollField(if (widget.is24h) 24 else 12, !widget.is24h, hourIndex, fieldH)
+        TpSeparator(
+            true,
+            fieldH,
+            androidx.compose.material3.MaterialTheme.typography.displayLarge,
+        )
+        TpScrollField(60, false, widget.minute, fieldH)
+        if (hasToggle) {
+            // `SideControlColumn` — 48dp tap-target items in a 48dp-wide,
+            // 140dp column. The items are 48×48 boxes at amY=-4 / pmY=44 /
+            // toggleY=92 (84 alone for 24h); the 40dp AM/PM visuals are
+            // centered inside, so they land at x=4 and y=0 / y=48 —
+            // upstream's "AM visual top aligns with top of number fields".
+            Box(Modifier.padding(start = 4.dp).size(48.dp, 140.dp)) {
+                if (!widget.is24h) {
+                    TpToggleItem(!isPm, "AM", Modifier.offset(x = 4.dp).size(40.dp, 40.dp))
+                    TpToggleItem(isPm, "PM", Modifier.offset(x = 4.dp, y = 48.dp).size(40.dp, 40.dp))
+                }
+                IconButton(
+                    onClick = {},
+                    modifier =
+                        Modifier.offset(y = if (widget.is24h) 84.dp else 92.dp).size(48.dp),
+                ) {
+                    // `ScrollDisplayModeToggle` shows the keyboard icon for
+                    // scroll mode.
+                    Icon(
+                        sceneIcon("keyboard"),
+                        contentDescription = null,
+                        modifier = Modifier.size(24.dp),
+                    )
+                }
+            }
+        } else if (!widget.is24h) {
+            // padding(start = orVibrant(4, VibrantPeriodTogglePadding=8)).
+            Box(Modifier.padding(start = 8.dp)) {
+                TpVerticalPeriodToggle(isPm, true, 56.dp, 120.dp)
+            }
+        }
+    }
+}
+
+/** The bare `time-picker` scene — `display_mode` picks
+ * `TimePicker`/`TimeInput`/`TimeScroll` like upstream's
+ * `TimePickerDisplayMode`; `vibrant` swaps the pin's
+ * `colors()`/`shapes()` tables (reproduced inline — alpha18 has no
+ * vibrant variants). */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun StateTimePicker(
+    widget: Widget,
+    tracer: Tracer,
+    tag: String,
+    emitPress: java.util.concurrent.CopyOnWriteArrayList<Pair<Long, Runnable>>,
+) {
+    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        Box(Modifier.track(tracer, tag)) {
+            when (widget.displayMode) {
+                "input" -> TpTimeInput(widget, widget.vibrant)
+                "scroll" -> TpTimeScroll(widget, false)
+                else -> TpPickerBody(widget, widget.vibrant)
+            }
+        }
+    }
+}
+
+/** `TimePickerDialog`/`VibrantTimePickerDialog` mirrored on a scrim —
+ * `TimePickerCustomLayout`/`VibrantTimePickerCustomLayout` portrait
+ * placement reproduced over the inner mirror (the `Dialog` composable
+ * opens a real window Paparazzi can't render; `shadowElevation` stays 0
+ * like the other dialog scenes — layoutlib deadlocks on platform
+ * shadows). */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun StateTimePickerDialog(
+    widget: Widget,
+    scene: Scene,
+    tracer: Tracer,
+    tag: String,
+    emitPress: java.util.concurrent.CopyOnWriteArrayList<Pair<Long, Runnable>>,
+) {
+    val s = androidx.compose.material3.MaterialTheme.colorScheme
+    val vibrant = widget.kind == "vibrant-time-picker-dialog"
+    val scroll = widget.displayMode == "scroll"
+    Box(
+        Modifier.fillMaxSize()
+            .background(s.scrim.copy(alpha = 0.32f))
+            .track(tracer, "scrim${tag.filter(Char::isDigit)}"),
+    )
+    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        androidx.compose.material3.Surface(
+            modifier = Modifier.track(tracer, tag),
+            // `TimePickerDialogDefaults.shape`/`vibrantShape`.
+            shape = androidx.compose.material3.MaterialTheme.shapes.extraLarge,
+            color = if (vibrant) s.surfaceContainer else s.surfaceContainerHigh,
+            tonalElevation = 0.dp,
+            shadowElevation = 0.dp,
+        ) {
+            if (vibrant) {
+                // `VibrantTimePickerCustomLayout` portrait:
+                // `dialogWidth = content.width + 12*2`, content centered
+                // at y=12, actions (measured at maxWidth=content) 12dp
+                // under it, 12dp bottom pad. `IntrinsicSize.Max` gives the
+                // Column the content's width without a fillMaxWidth row
+                // inflating it to the window.
+                Column(
+                    Modifier.width(IntrinsicSize.Max).padding(12.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    Box(
+                        Modifier.fillMaxWidth(),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        StateTimePickerContent(widget, scroll)
+                    }
+                    Spacer(Modifier.height(12.dp))
+                    TpDialogActions(widget, scroll, s)
+                }
+            } else {
+                // `TimePickerCustomLayout` portrait:
+                // `dialogWidth = content.width + 24*2`; title at (24,24)
+                // carrying its own `padding(bottom = 20.dp)`; content
+                // centered below it; actions measured at
+                // maxWidth=content right under; 24dp bottom pad.
+                Column(
+                    Modifier.width(IntrinsicSize.Max).padding(horizontal = 24.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    Spacer(Modifier.height(24.dp))
+                    // `TimePickerDialogDefaults.Title` — labelMedium +
+                    // 20dp bottom pad, no color override (onSurface).
+                    Text(
+                        if (widget.displayMode == "input") "Enter Time"
+                        else "Select Time",
+                        modifier = Modifier.align(Alignment.Start).padding(bottom = 20.dp),
+                        style =
+                            androidx.compose.material3.MaterialTheme.typography.labelMedium,
+                    )
+                    Box(
+                        Modifier.fillMaxWidth(),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        StateTimePickerContent(widget, scroll)
+                    }
+                    TpDialogActions(widget, scroll, s)
+                    Spacer(Modifier.height(24.dp))
+                }
+            }
+        }
+    }
+}
+
+/** The inner picker for a dialog — `TimeScroll` gets `hasToggle` so the
+ * `SideControlColumn` appears (upstream puts the mode toggle there, not
+ * in the actions row). */
+@Composable
+private fun StateTimePickerContent(widget: Widget, scroll: Boolean) {
+    val vibrant = widget.kind == "vibrant-time-picker-dialog"
+    when (widget.displayMode) {
+        "input" -> TpTimeInput(widget, vibrant)
+        "scroll" -> TpTimeScroll(widget, widget.showModeToggle)
+        else -> TpPickerBody(widget, vibrant)
+    }
+}
+
+/** The actions row — `[mode toggle] spacer [dismiss] [confirm]`,
+ * `spacedBy(8.dp)`. `scroll` carries no row toggle (it sits in the
+ * `SideControlColumn`). */
+@Composable
+private fun TpDialogActions(
+    widget: Widget,
+    scroll: Boolean,
+    s: androidx.compose.material3.ColorScheme,
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        if (widget.showModeToggle && !scroll) {
+            IconButton(onClick = {}, modifier = Modifier.size(40.dp)) {
+                Icon(
+                    // `DisplayModeToggle`: Picker→Keyboard, Input→Schedule;
+                    // `ScrollDisplayModeToggle`: Scroll→Keyboard.
+                    sceneIcon(if (widget.displayMode == "input") "schedule" else "keyboard"),
+                    contentDescription = null,
+                    modifier = Modifier.size(24.dp),
+                )
+            }
+        }
+        Spacer(Modifier.weight(1f))
+        TextButton(onClick = {}) { Text("Cancel") }
+        TextButton(onClick = {}, enabled = widget.confirmEnabled) { Text("OK") }
     }
 }

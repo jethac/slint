@@ -1,0 +1,38 @@
+// Copyright © SixtyFPS GmbH <info@slint.dev>
+// SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0
+
+// Scene: time-picker-dark — generated from `ui-libraries/material/parity/scenes/time-picker-dark.json`
+// (edit the scene, regenerate with `cargo run -p material-parity-generator`).
+//PARITY=static
+//SIZE=400x560
+//TRACE_ELEMENTS=picker0
+//MASK_DECOR=picker0+4@2000
+//XFAIL_TEXT=issue #28: Slint ceils text layout widths where Compose keeps fractional advances
+//DENSITIES=1,2
+import "../../fonts/Roboto-VariableFont.ttf";
+import { MaterialPalette, MaterialTheme, MaterialWindow, TimePicker, TimePickerLayoutType, TimePickerSelection } from "@material";
+
+export component TestCase inherits MaterialWindow {
+    init => {
+        // The scene pins seed #6750A4, tonal-spot, spec2025, dark, contrast 0
+        // (all the library defaults; restated here so a default change can't
+        // silently move the parity baseline).
+        MaterialTheme.seed-color = #6750A4;
+        MaterialTheme.dark = true;
+        MaterialTheme.contrast-level = 0;
+        MaterialTheme.use-platform-color = false;
+        MaterialTheme.plain-family = "Roboto";
+        MaterialTheme.brand-family = "Roboto";
+        // Compose builds its scene scheme from the same seed — use the
+        // runtime-generated scheme, not the static expressive table.
+        MaterialPalette.dynamic = true;
+    }
+
+    picker0 := TimePicker {
+        x: Math.round((parent.width - self.width) / 1phx / 2) * 1phx;
+        y: Math.round((parent.height - self.height) / 1phx / 2) * 1phx;
+        hour: 10;
+        minute: 30;
+    }
+
+}
