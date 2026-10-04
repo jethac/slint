@@ -187,8 +187,8 @@ class Widget(json: JSONObject) {
      * upstream `text` composable; 0/unset sizes it to the text. */
     val labelWidth: Float = json.optDouble("label_width", 0.0).toFloat()
 
-    /** `date-picker`/`date-range-picker` initial `DisplayMode` —
-     * `picker` (default) or `input`. */
+    /** `*-picker*` initial `DisplayMode` — `picker` (default), `input`,
+     * or `scroll` (time-pickers only). */
     val displayMode: String = (json.opt("display_mode") as? String) ?: "picker"
     /** `date-picker` selected day — `DatePickerState.selectedDateMillis`
      * as an ISO `YYYY-MM-DD`. Shares the `selected` JSON key with the list
@@ -230,13 +230,6 @@ class Widget(json: JSONObject) {
     val layout: String = (json.opt("layout") as? String) ?: "vertical"
     /** Vibrant styling — upstream `vibrantColors()` + `TimePickerShapes`. */
     val vibrant: Boolean = json.optBoolean("vibrant", false)
-    /** `TimePickerDisplayMode` for `time-picker*` kinds: `"picker"`
-     * (default), `"input"`, `"scroll"`. */
-    val displayMode: String = (json.opt("display_mode") as? String) ?: "picker"
-    val showModeToggle: Boolean = json.optBoolean("show_mode_toggle", true)
-    val confirmEnabled: Boolean = json.optBoolean("confirm_enabled", true)
-
-
     val isFab: Boolean get() = kind == "fab" || kind == "extended-fab"
     val isSplitButton: Boolean get() = kind.endsWith("split-button")
     // --- navigation-rail / navigation-bar kinds ---
