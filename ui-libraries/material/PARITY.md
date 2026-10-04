@@ -345,7 +345,7 @@ States: selected, disabled, unselected, focused, hovered, pressed
 
 | Component | Source | Status | Issues | Needs | Notes |
 |---|---|---|---|---|---|
-| RadioButton | RadioButton.kt | partial | #11 | shapes (#6) | slint component: RadioButton |
+| RadioButton | RadioButton.kt | done | #11 | shapes (#6) | slint component: RadioButton; tokens: generated component tokens; RadioButtonImpl geometry — 20dp IconSize canvas, 2dp RadioButtonPadding, 2dp RadioStrokeWidth, dot radius to RadioButtonDotSize/2 on FastSpatial (androidx/androidx@23327507f7fc, material3 1.5.0-alpha18) |
 
 ### Scaffold
 
