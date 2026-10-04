@@ -218,10 +218,6 @@ class Widget(json: JSONObject) {
     /** `*-divider` line thickness in dp — `DividerDefaults.Thickness` when
      * unset; `0` is the upstream `Dp.Hairline` (one physical pixel). */
     val thickness: Float = json.optDouble("thickness", 1.0).toFloat()
-    /** `*-card` kinds only: `true` picks the upstream `onClick` overload —
-     * the card is clickable, ripples, and takes focus; `false` is the
-     * plain `Surface` overload with no `interactionSource`. */
-    val clickable: Boolean = json.optBoolean("clickable", false)
     /** `*-card` kinds only: the hoisted `DragInteraction` — `true` emits a
      * live `DragInteraction.Start` on the card's `interactionSource`. */
     val dragged: Boolean = json.optBoolean("dragged", false)
@@ -279,8 +275,10 @@ class Widget(json: JSONObject) {
      * (`outline` default). */
     val borderWidth: Float = json.optDouble("border_width", 0.0).toFloat()
     val borderColor: String? = (json.opt("border_color") as? String)?.takeIf { it.isNotEmpty() }
-    /** `material-surface` overloads: `clickable`/`toggleable` — `selectable`
-     * and `selected` are declared above with the list-item overloads. */
+    /** `material-surface` / `*-card` overloads: `clickable` picks the
+     * upstream `onClick` overload (the widget ripples and takes focus);
+     * `toggleable` pairs with `checked`. `selectable`/`selected` are
+     * declared above with the list-item overloads. */
     val clickable: Boolean = json.optBoolean("clickable", false)
     val toggleable: Boolean = json.optBoolean("toggleable", false)
 }

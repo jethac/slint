@@ -451,9 +451,10 @@ struct Widget {
     border_width: Option<f64>,
     #[serde(default)]
     border_color: Option<String>,
-    /// `material-surface` overloads: `clickable` (`onClick`) and
-    /// `toggleable` (`checked`, reuses the `checked` field) — `selectable`
-    /// and `selected` are declared above with the list-item overloads.
+    /// `material-surface` / `*-card` overloads: `clickable` picks the
+    /// upstream `onClick` overload (the widget ripples and takes focus)
+    /// and `toggleable` pairs with `checked` — `selectable` and
+    /// `selected` are declared above with the list-item overloads.
     #[serde(default)]
     clickable: Option<bool>,
     #[serde(default)]
@@ -494,11 +495,6 @@ struct Widget {
     /// side).
     #[serde(default)]
     selected_index: Option<i64>,
-    /// `*-card` kinds only: the upstream `onClick` overload — the card is
-    /// clickable, ripples, and takes focus; `false` (or unset) is the
-    /// plain `Surface` overload with no `interactionSource`.
-    #[serde(default)]
-    clickable: Option<bool>,
 }
 
 /// One item of a `connected-button-group`: the label, an optional leading
