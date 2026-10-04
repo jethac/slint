@@ -19,7 +19,8 @@
           "x": 60,
           "y": 40,
           "w": 120,
-          "h": 80
+          "h": 80,
+          "opacity": 1
         }
       },
       "text": {}
@@ -267,7 +268,7 @@
     {
       "t_ms": 16,
       "props": {
-        "shadow_elevation": 1
+        "shadow_elevation": 1.0010294914245605
       },
       "elements": {
         "card0": {
@@ -283,7 +284,7 @@
     {
       "t_ms": 17,
       "props": {
-        "shadow_elevation": 1.0010294914245605
+        "shadow_elevation": 1.004186749458313
       },
       "elements": {
         "card0": {
@@ -299,7 +300,7 @@
     {
       "t_ms": 18,
       "props": {
-        "shadow_elevation": 1.004186749458313
+        "shadow_elevation": 1.0095808506011963
       },
       "elements": {
         "card0": {
@@ -315,7 +316,7 @@
     {
       "t_ms": 19,
       "props": {
-        "shadow_elevation": 1.0095808506011963
+        "shadow_elevation": 1.017328143119812
       },
       "elements": {
         "card0": {
@@ -331,7 +332,7 @@
     {
       "t_ms": 20,
       "props": {
-        "shadow_elevation": 1.017328143119812
+        "shadow_elevation": 1.0275537967681885
       },
       "elements": {
         "card0": {
@@ -347,7 +348,7 @@
     {
       "t_ms": 21,
       "props": {
-        "shadow_elevation": 1.0275537967681885
+        "shadow_elevation": 1.040390968322754
       },
       "elements": {
         "card0": {
@@ -363,7 +364,7 @@
     {
       "t_ms": 22,
       "props": {
-        "shadow_elevation": 1.040390968322754
+        "shadow_elevation": 1.055983304977417
       },
       "elements": {
         "card0": {
@@ -379,7 +380,7 @@
     {
       "t_ms": 23,
       "props": {
-        "shadow_elevation": 1.055983304977417
+        "shadow_elevation": 1.07448410987854
       },
       "elements": {
         "card0": {
@@ -395,7 +396,7 @@
     {
       "t_ms": 24,
       "props": {
-        "shadow_elevation": 1.07448410987854
+        "shadow_elevation": 1.0960580110549927
       },
       "elements": {
         "card0": {
@@ -411,7 +412,7 @@
     {
       "t_ms": 25,
       "props": {
-        "shadow_elevation": 1.0960580110549927
+        "shadow_elevation": 1.1208815574645996
       },
       "elements": {
         "card0": {
@@ -427,7 +428,7 @@
     {
       "t_ms": 26,
       "props": {
-        "shadow_elevation": 1.1208815574645996
+        "shadow_elevation": 1.1491421461105347
       },
       "elements": {
         "card0": {
@@ -443,7 +444,7 @@
     {
       "t_ms": 27,
       "props": {
-        "shadow_elevation": 1.1491421461105347
+        "shadow_elevation": 1.1810410022735596
       },
       "elements": {
         "card0": {
@@ -459,7 +460,7 @@
     {
       "t_ms": 28,
       "props": {
-        "shadow_elevation": 1.1810410022735596
+        "shadow_elevation": 1.2167924642562866
       },
       "elements": {
         "card0": {
@@ -475,7 +476,7 @@
     {
       "t_ms": 29,
       "props": {
-        "shadow_elevation": 1.2167924642562866
+        "shadow_elevation": 1.2566251754760742
       },
       "elements": {
         "card0": {
@@ -491,7 +492,7 @@
     {
       "t_ms": 30,
       "props": {
-        "shadow_elevation": 1.2566251754760742
+        "shadow_elevation": 1.300781011581421
       },
       "elements": {
         "card0": {
@@ -507,7 +508,7 @@
     {
       "t_ms": 31,
       "props": {
-        "shadow_elevation": 1.300781011581421
+        "shadow_elevation": 1.349515676498413
       },
       "elements": {
         "card0": {
@@ -523,7 +524,7 @@
     {
       "t_ms": 32,
       "props": {
-        "shadow_elevation": 1.349515676498413
+        "shadow_elevation": 1.403096318244934
       },
       "elements": {
         "card0": {
@@ -539,7 +540,7 @@
     {
       "t_ms": 33,
       "props": {
-        "shadow_elevation": 1.403096318244934
+        "shadow_elevation": 1.4618018865585327
       },
       "elements": {
         "card0": {
@@ -555,7 +556,7 @@
     {
       "t_ms": 34,
       "props": {
-        "shadow_elevation": 1.4618018865585327
+        "shadow_elevation": 1.525918960571289
       },
       "elements": {
         "card0": {
@@ -571,7 +572,7 @@
     {
       "t_ms": 35,
       "props": {
-        "shadow_elevation": 1.525918960571289
+        "shadow_elevation": 1.595738410949707
       },
       "elements": {
         "card0": {
@@ -587,7 +588,7 @@
     {
       "t_ms": 36,
       "props": {
-        "shadow_elevation": 1.595738410949707
+        "shadow_elevation": 1.6715497970581055
       },
       "elements": {
         "card0": {
@@ -603,7 +604,7 @@
     {
       "t_ms": 37,
       "props": {
-        "shadow_elevation": 1.6715497970581055
+        "shadow_elevation": 1.7536343336105347
       },
       "elements": {
         "card0": {
@@ -619,7 +620,7 @@
     {
       "t_ms": 38,
       "props": {
-        "shadow_elevation": 1.7536343336105347
+        "shadow_elevation": 1.8422510623931885
       },
       "elements": {
         "card0": {
@@ -635,7 +636,7 @@
     {
       "t_ms": 39,
       "props": {
-        "shadow_elevation": 1.8422510623931885
+        "shadow_elevation": 1.9376285076141357
       },
       "elements": {
         "card0": {
@@ -651,7 +652,7 @@
     {
       "t_ms": 40,
       "props": {
-        "shadow_elevation": 1.9376285076141357
+        "shadow_elevation": 2.039947748184204
       },
       "elements": {
         "card0": {
@@ -667,7 +668,7 @@
     {
       "t_ms": 41,
       "props": {
-        "shadow_elevation": 2.039947748184204
+        "shadow_elevation": 2.149322509765625
       },
       "elements": {
         "card0": {
@@ -683,7 +684,7 @@
     {
       "t_ms": 42,
       "props": {
-        "shadow_elevation": 2.149322509765625
+        "shadow_elevation": 2.265780448913574
       },
       "elements": {
         "card0": {
@@ -699,7 +700,7 @@
     {
       "t_ms": 43,
       "props": {
-        "shadow_elevation": 2.265780448913574
+        "shadow_elevation": 2.3892338275909424
       },
       "elements": {
         "card0": {
@@ -715,7 +716,7 @@
     {
       "t_ms": 44,
       "props": {
-        "shadow_elevation": 2.3892338275909424
+        "shadow_elevation": 2.519465923309326
       },
       "elements": {
         "card0": {
@@ -731,7 +732,7 @@
     {
       "t_ms": 45,
       "props": {
-        "shadow_elevation": 2.519465923309326
+        "shadow_elevation": 2.656111717224121
       },
       "elements": {
         "card0": {
@@ -747,7 +748,7 @@
     {
       "t_ms": 46,
       "props": {
-        "shadow_elevation": 2.656111717224121
+        "shadow_elevation": 2.7986435890197754
       },
       "elements": {
         "card0": {
@@ -763,7 +764,7 @@
     {
       "t_ms": 47,
       "props": {
-        "shadow_elevation": 2.7986435890197754
+        "shadow_elevation": 2.9463768005371094
       },
       "elements": {
         "card0": {
@@ -779,7 +780,7 @@
     {
       "t_ms": 48,
       "props": {
-        "shadow_elevation": 2.9463768005371094
+        "shadow_elevation": 3.0984742641448975
       },
       "elements": {
         "card0": {
@@ -795,7 +796,7 @@
     {
       "t_ms": 49,
       "props": {
-        "shadow_elevation": 3.0984742641448975
+        "shadow_elevation": 3.25398588180542
       },
       "elements": {
         "card0": {
@@ -811,7 +812,7 @@
     {
       "t_ms": 50,
       "props": {
-        "shadow_elevation": 3.25398588180542
+        "shadow_elevation": 3.4118738174438477
       },
       "elements": {
         "card0": {
@@ -827,7 +828,7 @@
     {
       "t_ms": 51,
       "props": {
-        "shadow_elevation": 3.4118738174438477
+        "shadow_elevation": 3.571068286895752
       },
       "elements": {
         "card0": {
@@ -843,7 +844,7 @@
     {
       "t_ms": 52,
       "props": {
-        "shadow_elevation": 3.571068286895752
+        "shadow_elevation": 3.7305092811584473
       },
       "elements": {
         "card0": {
@@ -859,7 +860,7 @@
     {
       "t_ms": 53,
       "props": {
-        "shadow_elevation": 3.7305092811584473
+        "shadow_elevation": 3.889191150665283
       },
       "elements": {
         "card0": {
@@ -875,7 +876,7 @@
     {
       "t_ms": 54,
       "props": {
-        "shadow_elevation": 3.889191150665283
+        "shadow_elevation": 4.046205520629883
       },
       "elements": {
         "card0": {
@@ -891,7 +892,7 @@
     {
       "t_ms": 55,
       "props": {
-        "shadow_elevation": 4.046205520629883
+        "shadow_elevation": 4.20076322555542
       },
       "elements": {
         "card0": {
@@ -907,7 +908,7 @@
     {
       "t_ms": 56,
       "props": {
-        "shadow_elevation": 4.20076322555542
+        "shadow_elevation": 4.352204322814941
       },
       "elements": {
         "card0": {
@@ -923,7 +924,7 @@
     {
       "t_ms": 57,
       "props": {
-        "shadow_elevation": 4.352204322814941
+        "shadow_elevation": 4.500001907348633
       },
       "elements": {
         "card0": {
@@ -939,7 +940,7 @@
     {
       "t_ms": 58,
       "props": {
-        "shadow_elevation": 4.500001907348633
+        "shadow_elevation": 4.643755912780762
       },
       "elements": {
         "card0": {
@@ -955,7 +956,7 @@
     {
       "t_ms": 59,
       "props": {
-        "shadow_elevation": 4.643755912780762
+        "shadow_elevation": 4.783185958862305
       },
       "elements": {
         "card0": {
@@ -971,7 +972,7 @@
     {
       "t_ms": 60,
       "props": {
-        "shadow_elevation": 4.783185958862305
+        "shadow_elevation": 4.918107986450195
       },
       "elements": {
         "card0": {
@@ -987,7 +988,7 @@
     {
       "t_ms": 61,
       "props": {
-        "shadow_elevation": 4.918107986450195
+        "shadow_elevation": 5.048425674438477
       },
       "elements": {
         "card0": {
@@ -1003,7 +1004,7 @@
     {
       "t_ms": 62,
       "props": {
-        "shadow_elevation": 5.048425674438477
+        "shadow_elevation": 5.174102783203125
       },
       "elements": {
         "card0": {
@@ -1019,7 +1020,7 @@
     {
       "t_ms": 63,
       "props": {
-        "shadow_elevation": 5.174102783203125
+        "shadow_elevation": 5.295163154602051
       },
       "elements": {
         "card0": {
@@ -1035,7 +1036,7 @@
     {
       "t_ms": 64,
       "props": {
-        "shadow_elevation": 5.295163154602051
+        "shadow_elevation": 5.411671161651611
       },
       "elements": {
         "card0": {
@@ -1051,7 +1052,7 @@
     {
       "t_ms": 65,
       "props": {
-        "shadow_elevation": 5.411671161651611
+        "shadow_elevation": 5.5237226486206055
       },
       "elements": {
         "card0": {
@@ -1067,7 +1068,7 @@
     {
       "t_ms": 66,
       "props": {
-        "shadow_elevation": 5.5237226486206055
+        "shadow_elevation": 5.631434917449951
       },
       "elements": {
         "card0": {
@@ -1083,7 +1084,7 @@
     {
       "t_ms": 67,
       "props": {
-        "shadow_elevation": 5.631434917449951
+        "shadow_elevation": 5.734939098358154
       },
       "elements": {
         "card0": {
@@ -1099,7 +1100,7 @@
     {
       "t_ms": 68,
       "props": {
-        "shadow_elevation": 5.734939098358154
+        "shadow_elevation": 5.834377288818359
       },
       "elements": {
         "card0": {
@@ -1115,7 +1116,7 @@
     {
       "t_ms": 69,
       "props": {
-        "shadow_elevation": 5.834377288818359
+        "shadow_elevation": 5.929895877838135
       },
       "elements": {
         "card0": {
@@ -1131,7 +1132,7 @@
     {
       "t_ms": 70,
       "props": {
-        "shadow_elevation": 5.929895877838135
+        "shadow_elevation": 6.0216450691223145
       },
       "elements": {
         "card0": {
@@ -1147,7 +1148,7 @@
     {
       "t_ms": 71,
       "props": {
-        "shadow_elevation": 6.0216450691223145
+        "shadow_elevation": 6.109771728515625
       },
       "elements": {
         "card0": {
@@ -1163,7 +1164,7 @@
     {
       "t_ms": 72,
       "props": {
-        "shadow_elevation": 6.109771728515625
+        "shadow_elevation": 6.194426536560059
       },
       "elements": {
         "card0": {
@@ -1179,7 +1180,7 @@
     {
       "t_ms": 73,
       "props": {
-        "shadow_elevation": 6.194426536560059
+        "shadow_elevation": 6.2757463455200195
       },
       "elements": {
         "card0": {
@@ -1195,7 +1196,7 @@
     {
       "t_ms": 74,
       "props": {
-        "shadow_elevation": 6.2757463455200195
+        "shadow_elevation": 6.353872299194336
       },
       "elements": {
         "card0": {
@@ -1211,7 +1212,7 @@
     {
       "t_ms": 75,
       "props": {
-        "shadow_elevation": 6.353872299194336
+        "shadow_elevation": 6.4289326667785645
       },
       "elements": {
         "card0": {
@@ -1227,7 +1228,7 @@
     {
       "t_ms": 76,
       "props": {
-        "shadow_elevation": 6.4289326667785645
+        "shadow_elevation": 6.501060962677002
       },
       "elements": {
         "card0": {
@@ -1243,7 +1244,7 @@
     {
       "t_ms": 77,
       "props": {
-        "shadow_elevation": 6.501060962677002
+        "shadow_elevation": 6.570374011993408
       },
       "elements": {
         "card0": {
@@ -1259,7 +1260,7 @@
     {
       "t_ms": 78,
       "props": {
-        "shadow_elevation": 6.570374011993408
+        "shadow_elevation": 6.636991500854492
       },
       "elements": {
         "card0": {
@@ -1275,7 +1276,7 @@
     {
       "t_ms": 79,
       "props": {
-        "shadow_elevation": 6.636991500854492
+        "shadow_elevation": 6.701024055480957
       },
       "elements": {
         "card0": {
@@ -1291,7 +1292,7 @@
     {
       "t_ms": 80,
       "props": {
-        "shadow_elevation": 6.701024055480957
+        "shadow_elevation": 6.762576580047607
       },
       "elements": {
         "card0": {
@@ -1307,7 +1308,7 @@
     {
       "t_ms": 81,
       "props": {
-        "shadow_elevation": 6.762576580047607
+        "shadow_elevation": 6.821748733520508
       },
       "elements": {
         "card0": {
@@ -1323,7 +1324,7 @@
     {
       "t_ms": 82,
       "props": {
-        "shadow_elevation": 6.821748733520508
+        "shadow_elevation": 6.878634929656982
       },
       "elements": {
         "card0": {
@@ -1339,7 +1340,7 @@
     {
       "t_ms": 83,
       "props": {
-        "shadow_elevation": 6.878634929656982
+        "shadow_elevation": 6.933326244354248
       },
       "elements": {
         "card0": {
@@ -1355,7 +1356,7 @@
     {
       "t_ms": 84,
       "props": {
-        "shadow_elevation": 6.933326244354248
+        "shadow_elevation": 6.985907554626465
       },
       "elements": {
         "card0": {
@@ -1371,7 +1372,7 @@
     {
       "t_ms": 85,
       "props": {
-        "shadow_elevation": 6.985907554626465
+        "shadow_elevation": 7.036458969116211
       },
       "elements": {
         "card0": {
@@ -1387,7 +1388,7 @@
     {
       "t_ms": 86,
       "props": {
-        "shadow_elevation": 7.036458969116211
+        "shadow_elevation": 7.085057258605957
       },
       "elements": {
         "card0": {
@@ -1403,7 +1404,7 @@
     {
       "t_ms": 87,
       "props": {
-        "shadow_elevation": 7.085057258605957
+        "shadow_elevation": 7.131775379180908
       },
       "elements": {
         "card0": {
@@ -1419,7 +1420,7 @@
     {
       "t_ms": 88,
       "props": {
-        "shadow_elevation": 7.131775379180908
+        "shadow_elevation": 7.1766839027404785
       },
       "elements": {
         "card0": {
@@ -1435,7 +1436,7 @@
     {
       "t_ms": 89,
       "props": {
-        "shadow_elevation": 7.1766839027404785
+        "shadow_elevation": 7.219845294952393
       },
       "elements": {
         "card0": {
@@ -1451,7 +1452,7 @@
     {
       "t_ms": 90,
       "props": {
-        "shadow_elevation": 7.219845294952393
+        "shadow_elevation": 7.26132345199585
       },
       "elements": {
         "card0": {
@@ -1467,7 +1468,7 @@
     {
       "t_ms": 91,
       "props": {
-        "shadow_elevation": 7.26132345199585
+        "shadow_elevation": 7.301177024841309
       },
       "elements": {
         "card0": {
@@ -1483,7 +1484,7 @@
     {
       "t_ms": 92,
       "props": {
-        "shadow_elevation": 7.301177024841309
+        "shadow_elevation": 7.339463710784912
       },
       "elements": {
         "card0": {
@@ -1499,7 +1500,7 @@
     {
       "t_ms": 93,
       "props": {
-        "shadow_elevation": 7.339463710784912
+        "shadow_elevation": 7.376235008239746
       },
       "elements": {
         "card0": {
@@ -1515,7 +1516,7 @@
     {
       "t_ms": 94,
       "props": {
-        "shadow_elevation": 7.376235008239746
+        "shadow_elevation": 7.411542892456055
       },
       "elements": {
         "card0": {
@@ -1531,7 +1532,7 @@
     {
       "t_ms": 95,
       "props": {
-        "shadow_elevation": 7.411542892456055
+        "shadow_elevation": 7.445433616638184
       },
       "elements": {
         "card0": {
@@ -1547,7 +1548,7 @@
     {
       "t_ms": 96,
       "props": {
-        "shadow_elevation": 7.445433616638184
+        "shadow_elevation": 7.477954864501953
       },
       "elements": {
         "card0": {
@@ -1563,7 +1564,7 @@
     {
       "t_ms": 97,
       "props": {
-        "shadow_elevation": 7.477954864501953
+        "shadow_elevation": 7.509147644042969
       },
       "elements": {
         "card0": {
@@ -1579,7 +1580,7 @@
     {
       "t_ms": 98,
       "props": {
-        "shadow_elevation": 7.509147644042969
+        "shadow_elevation": 7.539056777954102
       },
       "elements": {
         "card0": {
@@ -1595,7 +1596,7 @@
     {
       "t_ms": 99,
       "props": {
-        "shadow_elevation": 7.539056777954102
+        "shadow_elevation": 7.567720890045166
       },
       "elements": {
         "card0": {
@@ -1611,7 +1612,7 @@
     {
       "t_ms": 100,
       "props": {
-        "shadow_elevation": 7.567720890045166
+        "shadow_elevation": 7.59517765045166
       },
       "elements": {
         "card0": {
@@ -1627,7 +1628,7 @@
     {
       "t_ms": 101,
       "props": {
-        "shadow_elevation": 7.59517765045166
+        "shadow_elevation": 7.621464729309082
       },
       "elements": {
         "card0": {
@@ -1643,7 +1644,7 @@
     {
       "t_ms": 102,
       "props": {
-        "shadow_elevation": 7.621464729309082
+        "shadow_elevation": 7.646615028381348
       },
       "elements": {
         "card0": {
@@ -1659,7 +1660,7 @@
     {
       "t_ms": 103,
       "props": {
-        "shadow_elevation": 7.646615028381348
+        "shadow_elevation": 7.670662879943848
       },
       "elements": {
         "card0": {
@@ -1675,7 +1676,7 @@
     {
       "t_ms": 104,
       "props": {
-        "shadow_elevation": 7.670662879943848
+        "shadow_elevation": 7.693639755249023
       },
       "elements": {
         "card0": {
@@ -1691,7 +1692,7 @@
     {
       "t_ms": 105,
       "props": {
-        "shadow_elevation": 7.693639755249023
+        "shadow_elevation": 7.715575218200684
       },
       "elements": {
         "card0": {
@@ -1707,7 +1708,7 @@
     {
       "t_ms": 106,
       "props": {
-        "shadow_elevation": 7.715575218200684
+        "shadow_elevation": 7.736498832702637
       },
       "elements": {
         "card0": {
@@ -1723,7 +1724,7 @@
     {
       "t_ms": 107,
       "props": {
-        "shadow_elevation": 7.736498832702637
+        "shadow_elevation": 7.756438732147217
       },
       "elements": {
         "card0": {
@@ -1739,7 +1740,7 @@
     {
       "t_ms": 108,
       "props": {
-        "shadow_elevation": 7.756438732147217
+        "shadow_elevation": 7.775420665740967
       },
       "elements": {
         "card0": {
@@ -1755,7 +1756,7 @@
     {
       "t_ms": 109,
       "props": {
-        "shadow_elevation": 7.775420665740967
+        "shadow_elevation": 7.793471336364746
       },
       "elements": {
         "card0": {
@@ -1771,7 +1772,7 @@
     {
       "t_ms": 110,
       "props": {
-        "shadow_elevation": 7.793471336364746
+        "shadow_elevation": 7.810614109039307
       },
       "elements": {
         "card0": {
@@ -1787,7 +1788,7 @@
     {
       "t_ms": 111,
       "props": {
-        "shadow_elevation": 7.810614109039307
+        "shadow_elevation": 7.826873779296875
       },
       "elements": {
         "card0": {
@@ -1803,7 +1804,7 @@
     {
       "t_ms": 112,
       "props": {
-        "shadow_elevation": 7.826873779296875
+        "shadow_elevation": 7.842270374298096
       },
       "elements": {
         "card0": {
@@ -1819,7 +1820,7 @@
     {
       "t_ms": 113,
       "props": {
-        "shadow_elevation": 7.842270374298096
+        "shadow_elevation": 7.8568291664123535
       },
       "elements": {
         "card0": {
@@ -1835,7 +1836,7 @@
     {
       "t_ms": 114,
       "props": {
-        "shadow_elevation": 7.8568291664123535
+        "shadow_elevation": 7.870569229125977
       },
       "elements": {
         "card0": {
@@ -1851,7 +1852,7 @@
     {
       "t_ms": 115,
       "props": {
-        "shadow_elevation": 7.870569229125977
+        "shadow_elevation": 7.883511543273926
       },
       "elements": {
         "card0": {
@@ -1867,7 +1868,7 @@
     {
       "t_ms": 116,
       "props": {
-        "shadow_elevation": 7.883511543273926
+        "shadow_elevation": 7.895674228668213
       },
       "elements": {
         "card0": {
@@ -1883,7 +1884,7 @@
     {
       "t_ms": 117,
       "props": {
-        "shadow_elevation": 7.895674228668213
+        "shadow_elevation": 7.907075881958008
       },
       "elements": {
         "card0": {
@@ -1899,7 +1900,7 @@
     {
       "t_ms": 118,
       "props": {
-        "shadow_elevation": 7.907075881958008
+        "shadow_elevation": 7.917734622955322
       },
       "elements": {
         "card0": {
@@ -1915,7 +1916,7 @@
     {
       "t_ms": 119,
       "props": {
-        "shadow_elevation": 7.917734622955322
+        "shadow_elevation": 7.927669525146484
       },
       "elements": {
         "card0": {
@@ -1931,7 +1932,7 @@
     {
       "t_ms": 120,
       "props": {
-        "shadow_elevation": 7.927669525146484
+        "shadow_elevation": 7.93689489364624
       },
       "elements": {
         "card0": {
@@ -1947,7 +1948,7 @@
     {
       "t_ms": 121,
       "props": {
-        "shadow_elevation": 7.93689489364624
+        "shadow_elevation": 7.945427894592285
       },
       "elements": {
         "card0": {
@@ -1963,7 +1964,7 @@
     {
       "t_ms": 122,
       "props": {
-        "shadow_elevation": 7.945427894592285
+        "shadow_elevation": 7.953284740447998
       },
       "elements": {
         "card0": {
@@ -1979,7 +1980,7 @@
     {
       "t_ms": 123,
       "props": {
-        "shadow_elevation": 7.953284740447998
+        "shadow_elevation": 7.960477828979492
       },
       "elements": {
         "card0": {
@@ -1995,7 +1996,7 @@
     {
       "t_ms": 124,
       "props": {
-        "shadow_elevation": 7.960477828979492
+        "shadow_elevation": 7.967024803161621
       },
       "elements": {
         "card0": {
@@ -2011,7 +2012,7 @@
     {
       "t_ms": 125,
       "props": {
-        "shadow_elevation": 7.967024803161621
+        "shadow_elevation": 7.972938537597656
       },
       "elements": {
         "card0": {
@@ -2027,7 +2028,7 @@
     {
       "t_ms": 126,
       "props": {
-        "shadow_elevation": 7.972938537597656
+        "shadow_elevation": 7.978231906890869
       },
       "elements": {
         "card0": {
@@ -2043,7 +2044,7 @@
     {
       "t_ms": 127,
       "props": {
-        "shadow_elevation": 7.978231906890869
+        "shadow_elevation": 7.9829182624816895
       },
       "elements": {
         "card0": {
@@ -2059,7 +2060,7 @@
     {
       "t_ms": 128,
       "props": {
-        "shadow_elevation": 7.9829182624816895
+        "shadow_elevation": 7.987010955810547
       },
       "elements": {
         "card0": {
@@ -2075,7 +2076,7 @@
     {
       "t_ms": 129,
       "props": {
-        "shadow_elevation": 7.987010955810547
+        "shadow_elevation": 7.990521430969238
       },
       "elements": {
         "card0": {
@@ -2091,7 +2092,7 @@
     {
       "t_ms": 130,
       "props": {
-        "shadow_elevation": 7.990521430969238
+        "shadow_elevation": 7.993461608886719
       },
       "elements": {
         "card0": {
@@ -2107,7 +2108,7 @@
     {
       "t_ms": 131,
       "props": {
-        "shadow_elevation": 7.993461608886719
+        "shadow_elevation": 7.995843887329102
       },
       "elements": {
         "card0": {
@@ -2123,7 +2124,7 @@
     {
       "t_ms": 132,
       "props": {
-        "shadow_elevation": 7.995843887329102
+        "shadow_elevation": 7.997677326202393
       },
       "elements": {
         "card0": {
@@ -2139,7 +2140,7 @@
     {
       "t_ms": 133,
       "props": {
-        "shadow_elevation": 7.997677326202393
+        "shadow_elevation": 7.998974800109863
       },
       "elements": {
         "card0": {
@@ -2155,7 +2156,7 @@
     {
       "t_ms": 134,
       "props": {
-        "shadow_elevation": 7.998974800109863
+        "shadow_elevation": 7.999745845794678
       },
       "elements": {
         "card0": {
@@ -2171,7 +2172,7 @@
     {
       "t_ms": 135,
       "props": {
-        "shadow_elevation": 7.999745845794678
+        "shadow_elevation": 8
       },
       "elements": {
         "card0": {
@@ -6425,5 +6426,5 @@
       "text": {}
     }
   ],
-  "settle_ms": 122
+  "settle_ms": 121
 }
