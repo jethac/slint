@@ -15,7 +15,9 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.foundation.layout.widthIn
@@ -544,6 +546,7 @@ private fun CanvasScene(
         var buttons = 0
         var surfaces = 0
         var items = 0
+        var materialSurfaces = 0
         var appbars = 0
         var sheets = 0
         var vhandles = 0
@@ -825,6 +828,77 @@ private fun CanvasScene(
                             tint = widget.color?.let { schemeColor(it) }
                                 ?: androidx.compose.material3.LocalContentColor.current,
                         )
+                    }
+                }
+                widget.kind == "material-surface" -> {
+                    // androidx.compose.material3.Surface, all four overloads.
+                    // `shadowElevation` stays unset — `Modifier.shadow`
+                    // deadlocks layoutlib's hardware renderer (the `surface`
+                    // arm above) — so scenes exercise the tonal side only.
+                    val tag = "msurface${materialSurfaces++}"
+                    val shape = RoundedCornerShapeOrRect(widget.radius.dp)
+                    val color = schemeColor(widget.color ?: "surface")
+                    val border = if (widget.borderWidth > 0f) {
+                        BorderStroke(widget.borderWidth.dp, schemeColor(widget.borderColor ?: "outline"))
+                    } else {
+                        null
+                    }
+                    val modifier = Modifier.offset(widget.x.dp, widget.y.dp)
+                        .size(widget.width.dp, widget.height.dp)
+                        .track(tracer, tag)
+                    val content: @Composable () -> Unit = {
+                        if (widget.text != null) {
+                            Box(Modifier.padding(start = 8.dp, top = 8.dp)) {
+                                Text(widget.text)
+                            }
+                        }
+                    }
+                    CompositionLocalProvider(
+                        androidx.compose.material3.LocalAbsoluteTonalElevation provides
+                            widget.parentElevation.dp,
+                    ) {
+                        when {
+                            widget.toggleable -> androidx.compose.material3.Surface(
+                                checked = widget.checked,
+                                onCheckedChange = {},
+                                modifier = modifier,
+                                enabled = widget.enabled,
+                                shape = shape,
+                                color = color,
+                                tonalElevation = widget.tonalElevation.dp,
+                                border = border,
+                                content = content,
+                            )
+                            widget.selectable -> androidx.compose.material3.Surface(
+                                selected = widget.selected,
+                                onClick = {},
+                                modifier = modifier,
+                                enabled = widget.enabled,
+                                shape = shape,
+                                color = color,
+                                tonalElevation = widget.tonalElevation.dp,
+                                border = border,
+                                content = content,
+                            )
+                            widget.clickable -> androidx.compose.material3.Surface(
+                                onClick = {},
+                                modifier = modifier,
+                                enabled = widget.enabled,
+                                shape = shape,
+                                color = color,
+                                tonalElevation = widget.tonalElevation.dp,
+                                border = border,
+                                content = content,
+                            )
+                            else -> androidx.compose.material3.Surface(
+                                modifier = modifier,
+                                shape = shape,
+                                color = color,
+                                tonalElevation = widget.tonalElevation.dp,
+                                border = border,
+                                content = content,
+                            )
+                        }
                     }
                 }
                 widget.kind == "divider" || widget.kind == "horizontal-divider" ||
@@ -1614,6 +1688,7 @@ private fun schemeColor(role: String): Color =
             "onTertiaryContainer" -> scheme.onTertiaryContainer
             "surface" -> scheme.surface
             "onSurface" -> scheme.onSurface
+            "surfaceTint" -> scheme.surfaceTint
             "surfaceVariant" -> scheme.surfaceVariant
             "onSurfaceVariant" -> scheme.onSurfaceVariant
             "inverseSurface" -> scheme.inverseSurface
