@@ -4,7 +4,7 @@
 import { IconButton } from "./icon_button.slint";
 import { IconButtonItem } from "./bottom_app_bar.slint";
 import { IconButtonWidth, MaterialButtonMetrics, MaterialButtonSize } from "./button_metrics.slint";
-import { MaterialText } from "./material_text.slint";
+import { MaterialText, TextMetrics } from "./material_text.slint";
 import { MaterialPalette } from "../styling/material_palette.slint";
 import { MaterialAnimations } from "../styling/material_animations.slint";
 import { MaterialStyleMetrics } from "../styling/material_style_metrics.slint";
@@ -93,13 +93,6 @@ global AppBarMetrics {
         cubic-bezier-easing(0.4, 0, 1, 1, fraction)
     }
 
-    // The space below the last baseline of a type style: the font descent
-    // plus the (centered) leading of the last line. `0.2441` and `1.1719`
-    // are the Roboto hhea metrics in em — descender 500/2048, ascender plus
-    // descender 2400/2048 — the font the Material theme loads for parity.
-    pure public function baseline-to-bottom(style: MaterialTypeStyle) -> length {
-        (style.line-height - style.font-size * 1.1719) / 2 + style.font-size * 0.2441
-    }
 }
 
 /// One `TopAppBarLayout` row — the pinned `TopAppBarMeasurePolicy`: the
@@ -168,8 +161,8 @@ component AppBarRowLayout inherits Rectangle {
     // block's last baseline and shrinks it when the padded block would not
     // fit the layout height.
     property <length> last-baseline-from-bottom: root.subtitle != "" ?
-        AppBarMetrics.baseline-to-bottom(root.subtitle-style) :
-        AppBarMetrics.baseline-to-bottom(root.title-style);
+        TextMetrics.baseline-to-bottom(root.subtitle-style) :
+        TextMetrics.baseline-to-bottom(root.title-style);
     property <length> padding-from-bottom:
         root.title-bottom-padding - root.last-baseline-from-bottom;
     property <length> adjusted-bottom-padding:

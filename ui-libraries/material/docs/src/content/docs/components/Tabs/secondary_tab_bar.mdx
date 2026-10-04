@@ -1,19 +1,19 @@
 ---
-title: TabBar
-description: TabBar API.
+title: SecondaryTabBar
+description: SecondaryTabBar API.
 ---
 
 import CodeSnippetMD from '@slint/common-files/src/components/CodeSnippetMD.astro';
 import SlintProperty from '@slint/common-files/src/components/SlintProperty.astro';
 
-<CodeSnippetMD imagePath="/src/assets/generated/tabbar.png" scale="3" imageWidth="300" imageHeight="200" imageAlt="">
+<CodeSnippetMD imagePath="/src/assets/generated/secondarytabbar.png" scale="3" imageWidth="300" imageHeight="200" imageAlt="">
 ```slint
-import { TabBar } from "@material";
+import { SecondaryTabBar } from "@material";
 export component Example inherits Window {
     width: 400px;
     height: 100px;
     background: transparent;
-    TabBar {
+    SecondaryTabBar {
         width: parent.width;
         items: [
             { icon: @image-url("../icons/share.svg"), text: "Home" },
@@ -25,7 +25,7 @@ export component Example inherits Window {
 ```
 </CodeSnippetMD>
 
-A `TabBar` displays a row of tabs for navigation between different views or content sections.
+A `SecondaryTabBar` is a secondary tab row: a fixed row of equal-width tabs with a flat, full-width `SecondaryIndicator` under the selected tab. Each item shows a stacked icon and label; set `leading-icon` on an item to lay it out as a `LeadingIconTab` with the icon inline before the label.
 
 ## Properties
 

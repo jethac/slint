@@ -6,7 +6,14 @@ export struct NavigationItem {
     selected_icon: image,
     text: string,
     show_badge: bool,
-    badge: string
+    badge: string,
+    /// `Tab.enabled` — the item takes no focus, clicks or state layers.
+    /// Only the tab bars honor it so far.
+    disabled: bool,
+    /// Lay the item out like upstream's `LeadingIconTab`: icon and label
+    /// side by side instead of the stacked `Tab` arrangement. Only the tab
+    /// bars honor it.
+    leading_icon: bool
 }
 
 export struct NavigationGroup {

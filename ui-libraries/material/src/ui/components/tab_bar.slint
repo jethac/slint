@@ -2,19 +2,149 @@
 // SPDX-License-Identifier: MIT
 
 import { MaterialPalette } from "../styling/material_palette.slint";
-import { MaterialStyleMetrics } from "../styling/material_style_metrics.slint";
+import { NavigationItem } from "../items/navigation_item.slint";
 import { BaseNavigationItemTemplate, BaseNavigation } from "./base_navigation.slint";
-import { StateLayerArea } from "./state_layer.slint";
-import { MaterialText } from "./material_text.slint";
-import { MaterialTypography } from "../styling/material_typography.slint";
+import { StateLayerArea, FocusRing } from "./state_layer.slint";
+import { MaterialText, TextMetrics } from "./material_text.slint";
+import { MaterialTypeStyle } from "../styling/material_typography.slint";
 import { MaterialAnimations } from "../styling/material_animations.slint";
+import { MaterialTextScale } from "../styling/generated/material_typography_tokens.slint";
 import { PrimaryNavigationTabTokens, SecondaryNavigationTabTokens } from "../styling/generated/material_component_tokens.slint";
+import { MaterialCornerShape } from "../styling/generated/material_shape_tokens.slint";
 import { Icon } from "./icon.slint";
+import { Badge } from "./badge.slint";
+import { HorizontalDivider } from "./divider.slint";
 
-component BaseTabItemTemplate inherits BaseNavigationItemTemplate {
-    in property <length> indicator_width: self.width;
+/// The private layout constants of the pinned `Tab.kt`/`TabRow.kt`
+/// (`androidx.compose.material3`, androidx/androidx
+/// 23327507f7fc7d5b19d65fec4b090f60c970079b).
+global TabMetrics {
+    /// `SmallTabHeight` = `PrimaryNavigationTabTokens.ContainerHeight`.
+    out property <length> small_height: PrimaryNavigationTabTokens.container_height;
+    /// `LargeTabHeight` — hardcoded at 72dp upstream; the
+    /// `IconAndLabelTextContainerHeight` token (64dp) is not consulted.
+    out property <length> large_height: 72px;
+    /// `HorizontalTextPadding`.
+    out property <length> text_padding: 16px;
+    /// `SingleLineTextBaselineWithIcon`.
+    out property <length> single_line_baseline: 14px;
+    /// `DoubleLineTextBaselineWithIcon`.
+    out property <length> double_line_baseline: 6px;
+    /// `IconDistanceFromBaseline` — an `sp` value upstream, so it follows
+    /// the platform text scale like the label.
+    out property <length> icon_baseline_distance: 20px * MaterialTextScale.factor;
+    /// `TextDistanceFromLeadingIcon`.
+    out property <length> leading_spacing: 8px;
+    /// `ScrollableTabRowMinimumTabWidth`.
+    out property <length> scrollable_min_width: 90px;
+    /// `TabRowDefaults.ScrollableTabRowEdgeStartPadding`, applied to both
+    /// ends of the scrollable strip.
+    out property <length> scrollable_edge_padding: 52px;
+    /// The `TabPosition.contentWidth` floor.
+    out property <length> min_indicator_width: 24px;
+}
+
+/// One tab of a tab bar: upstream's `Tab` and `LeadingIconTab`
+/// composables unified — `leading_icon` switches between the stacked
+/// `TabBaselineLayout` arrangement and the leading-icon row.
+component TabItemTemplate inherits BaseNavigationItemTemplate {
+    /// `Tab.enabled`. A disabled item keeps its content colors (upstream
+    /// leaves dimming to the caller) but takes no focus, clicks or
+    /// state layers.
+    in property <bool> enabled: true;
+    /// Lay out like `LeadingIconTab`: icon and label side by side inside
+    /// `HorizontalTextPadding`, instead of the stacked `Tab` arrangement.
+    in property <bool> leading_icon;
+    /// `selectedContentColor`/`unselectedContentColor`, fed from the row's
+    /// token set. The ripple follows the selected color upstream, so the
+    /// state layer keeps `active_color` regardless of selection.
+    in property <color> active_color;
+    in property <color> inactive_color;
+    /// The row's `LabelTextFont` token.
+    in property <MaterialTypeStyle> label_style: PrimaryNavigationTabTokens.label_text_font;
+    /// Primary rows size the indicator to `TabPosition.contentWidth`;
+    /// secondary rows span the whole tab.
+    in property <bool> indicator_matches_content;
+    /// Floor for the tab width — the scrollable rows pass
+    /// `ScrollableTabRowMinimumTabWidth`, fixed rows keep `0`.
+    in property <length> min_tab_width;
+    /// Exact tab width — the fixed rows pass `tabRowWidth / tabCount` in
+    /// integer physical pixels, mirroring the `Layout` block upstream;
+    /// scrollable rows keep `-1` for intrinsic sizing.
+    in property <length> forced_width: -1px;
+    /// Test hooks driving the state layer without pointer input — the
+    /// parity scenes pin one item's hover/press this way.
+    in property <bool> simulate_hover;
+    in property <bool> simulate_press;
+
+    out property <bool> has_icon: root.icon.width > 0 && root.icon.height > 0;
+    out property <bool> has_text: root.text != "";
+    /// The stacked `Tab` arrangement — icon over label, baselines apart.
+    out property <bool> stacked: root.has_icon && root.has_text && !root.leading_icon;
+
+    out property <length> icon_size: PrimaryNavigationTabTokens.icon_size;
+
+    /// `TabBaselineLayout`/`LeadingIconTab` intrinsic width.
+    out property <length> intrinsic_width: root.leading_icon ?
+        2 * TabMetrics.text_padding +
+            (root.has_icon ? root.icon_size + (root.has_text ? TabMetrics.leading_spacing : 0px) : 0px) +
+            area.text_w :
+        max(area.text_w + 2 * TabMetrics.text_padding, root.has_icon ? root.icon_size : 0px);
+
+    /// `TabPosition.contentWidth` for primary rows — the tab's content
+    /// width minus `HorizontalTextPadding` either side, floored at 24 —
+    /// or the full tab width for secondary rows.
+    out property <length> indicator_width: root.indicator_matches_content ?
+        max(TabMetrics.min_indicator_width, min(root.intrinsic_width, root.width) - 2 * TabMetrics.text_padding) :
+        root.width;
+
+    /// The tab's contribution to the row height: `icon && text` tabs are
+    /// `max(LargeTabHeight, icon + text + IconDistanceFromBaseline)`, every
+    /// other arrangement is `SmallTabHeight`.
+    out property <length> spec_height: root.stacked ?
+        max(TabMetrics.large_height, root.icon_size + area.text_height + TabMetrics.icon_baseline_distance) :
+        TabMetrics.small_height;
+
+    // `TabBaselineLayout` geometry. `baselineOffset` is 14 for a single
+    // line of text, 6 otherwise; `textOffset` adds the 3px indicator
+    // clearance the upstream layout bakes in.
+    property <length> b2b: TextMetrics.baseline-to-bottom(root.label_style);
+    property <length> first_baseline: TextMetrics.first-baseline(root.label_style);
+    // `preferred-width` is the unwrapped text width even under
+    // `word-wrap`; `min-height` is the wrapped height at the width the
+    // label is bound to. Both live on `area`: only that scope can see the
+    // label element.
+    property <bool> multi_line: area.text_height > root.label_style.line_height + 1px;
+    property <length> text_bottom_offset:
+        (root.multi_line ? TabMetrics.double_line_baseline : TabMetrics.single_line_baseline) + 3px;
+    property <length> text_y: root.height - root.text_bottom_offset - (area.text_height - root.b2b);
+    // The icon's bottom edge sits `IconDistanceFromBaseline` above the
+    // label's *first* baseline — upstream `placeRelativeTo` aligns the
+    // icon against that baseline, not the last.
+    property <length> icon_y: root.text_y + root.first_baseline - TabMetrics.icon_baseline_distance - root.icon_size;
+
+    // `LeadingIconTab` row geometry: icon + `TextDistanceFromLeadingIcon`
+    // + label, centered inside `HorizontalTextPadding`.
+    property <length> leading_icon_w: root.has_icon ? root.icon_size + (root.has_text ? TabMetrics.leading_spacing : 0px) : 0px;
+    property <length> leading_text_w: min(area.text_w,
+        max(0px, root.width - 2 * TabMetrics.text_padding - root.leading_icon_w));
+    property <length> leading_content_w: root.leading_icon_w + root.leading_text_w;
+
+    property <bool> has_selected_icon: root.selected_icon.width > 0 || root.selected_icon.height > 0;
+
+    // `TabTransition` fades the content color between selected and
+    // unselected — `DefaultEffects` on selection, `FastEffects` back.
+    property <color> content_color: root.selected ? root.active_color : root.inactive_color;
 
     callback indicator_changed(item_x: length, indicator_width: length);
+
+    min_width: root.forced_width >= 0px ? root.forced_width :
+        (root.min_tab_width > 0px ? max(root.min_tab_width, root.intrinsic_width) : root.intrinsic_width);
+    max_width: root.forced_width >= 0px ? root.forced_width : root.min_width;
+    min_height: root.spec_height;
+    // Fixed rows land exactly at `forced_width`; scrollable tabs take
+    // their intrinsic width. Neither distributes leftover row space.
+    horizontal-stretch: 0;
 
     changed selected => { root.update_indicator(); }
     changed x => { root.update_indicator(); }
@@ -31,197 +161,410 @@ component BaseTabItemTemplate inherits BaseNavigationItemTemplate {
         }
     }
 
+    animate content_color {
+        enabled: !MaterialPalette.reduced-motion;
+        easing: root.selected ? MaterialAnimations.default-effects-spring : MaterialAnimations.fast-effects-spring;
+    }
+
+    area := StateLayerArea {
+        width: 100%;
+        height: 100%;
+        enabled: root.enabled;
+        color: root.active_color;
+        display_background: false;
+        focus_ring: true;
+        simulate_hover: root.simulate_hover;
+        simulate_press: root.simulate_press;
+
+        property <length> text_w: label.preferred-width;
+        property <length> text_height: label.min-height;
+
+        // One icon and one label serve both arrangements: `LeadingIconTab`
+        // is a centered row of icon + `TextDistanceFromLeadingIcon` + label;
+        // the stacked `TabBaselineLayout` puts the label's last baseline
+        // `baselineOffset + 3` above the tab's bottom edge and hangs the
+        // icon's bottom edge `IconDistanceFromBaseline` above the label's
+        // first baseline. Single-part tabs center their content.
+        icon_el := Icon {
+            width: root.icon_size;
+            height: self.width;
+            x: root.leading_icon ?
+                (root.width - root.leading_content_w) / 2 :
+                (root.width - self.width) / 2;
+            y: root.leading_icon ?
+                (root.height - self.height) / 2 :
+                (root.has_text ? root.icon_y : (root.height - self.height) / 2);
+            source: root.selected && root.has_selected_icon ? root.selected_icon : root.icon;
+            colorize: root.content_color;
+            visible: root.has_icon;
+        }
+
+        label := MaterialText {
+            x: root.leading_icon ?
+                (root.width - root.leading_content_w) / 2 + root.leading_icon_w :
+                (root.width - self.width) / 2;
+            // The tab's `HorizontalTextPadding` reserves 16dp either side;
+            // the label wraps inside what is left.
+            width: root.leading_icon ? root.leading_text_w :
+                min(self.preferred-width, max(0px, root.width - 2 * TabMetrics.text_padding));
+            y: root.leading_icon ?
+                (root.height - self.min-height) / 2 :
+                (root.has_icon ? root.text_y : (root.height - self.min-height) / 2);
+            height: self.min-height;
+            text: root.text;
+            style: root.label_style;
+            color: root.content_color;
+            wrap: word-wrap;
+            horizontal_alignment: center;
+            visible: root.has_text;
+        }
+
+        // `modifier.badgeBounds()` — the badge hugs the icon's top-end
+        // corner like upstream's `BadgedBox`.
+        if root.show_badge && root.has_icon : Badge {
+            property <length> badge_icon_x: root.leading_icon ?
+                (root.width - root.leading_content_w) / 2 :
+                (root.width - root.icon_size) / 2;
+            property <length> badge_icon_y: root.leading_icon ?
+                (root.height - root.icon_size) / 2 :
+                (root.has_text ? root.icon_y : (root.height - root.icon_size) / 2);
+            x: badge_icon_x + root.icon_size - self.width / 2;
+            y: badge_icon_y - self.height / 2;
+            text: root.badge;
+        }
+
+        clicked => {
+            root.clicked();
+        }
+    }
+
+    // The `InsetRing` ripple theme draws the focus indicator inside the
+    // container edges — tabs are `CornerNone`, so the ring is square.
+    if area.has_focus && root.enabled : FocusRing {
+        width: 100%;
+        height: 100%;
+        border_radius: 0px;
+    }
+
     @children
 }
 
-component TabItemTemplate inherits BaseTabItemTemplate {
-    indicator_width: label.width;
+/// The active-tab indicator: the rounded `PrimaryIndicator` —
+/// `ActiveIndicatorHeight` tall with `ActiveIndicatorShape`
+/// (`RoundedCornerShape(3dp)` on every corner) — or the flat
+/// `SecondaryIndicator` when `primary` is false. Its position and width
+/// animate with the `DefaultSpatial` spring.
+component TabIndicator inherits Rectangle {
+    in property <bool> primary: true;
 
-    property <bool> has_selected_icon: root.selected_icon.width > 0 || root.selected_icon.height > 0;
+    height: PrimaryNavigationTabTokens.active_indicator_height;
+    background: PrimaryNavigationTabTokens.active_indicator_color;
+    property <MaterialCornerShape> indicator_shape: PrimaryNavigationTabTokens.active_indicator_shape;
+    border-top-left-radius: root.primary ? indicator_shape.top_left : 0px;
+    border-top-right-radius: root.primary ? indicator_shape.top_right : 0px;
+    border-bottom-right-radius: root.primary ? indicator_shape.bottom_right : 0px;
+    border-bottom-left-radius: root.primary ? indicator_shape.bottom_left : 0px;
 
-    StateLayerArea {
-        color: MaterialPalette.primary;
-
-        VerticalLayout {
-            padding_top: MaterialStyleMetrics.padding_10;
-            padding_bottom: MaterialStyleMetrics.padding_8;
-            spacing: MaterialStyleMetrics.spacing_2;
-
-            if root.icon.width > 0 && root.icon.height > 0 : HorizontalLayout {
-                alignment: center;
-
-                Icon {
-                    width: PrimaryNavigationTabTokens.icon_size;
-                    height: self.width;
-                    source: root.icon;
-                    colorize: label.color;
-
-                    states [
-                        selected when root.selected && root.has_selected_icon : {
-                            source: root.selected_icon;
-                        }
-                    ]
-                }
-            }
-
-            HorizontalLayout {
-                alignment: center;
-
-                label := MaterialText {
-                    text: root.text;
-                    style: MaterialTypography.title_small;
-                    color: MaterialPalette.on_surface_variant;
-                }
-            }
-        }
-
-        clicked => {
-            root.clicked();
-        }
+    animate x, width {
+        enabled: !MaterialPalette.reduced-motion;
+        easing: MaterialAnimations.default-spatial-spring;
     }
-
-    states [
-        selected when root.selected : {
-            label.color: MaterialPalette.primary;
-        }
-    ]
-}
-
-component SecondaryTabItemTemplate inherits BaseTabItemTemplate {
-    property <bool> has_selected_icon: root.selected_icon.width > 0 || root.selected_icon.height > 0;
-
-    StateLayerArea {
-        color: label.color;
-
-        HorizontalLayout {
-            alignment: center;
-            spacing: MaterialStyleMetrics.spacing_8;
-
-            if root.icon.width > 0 && root.icon.height > 0 : VerticalLayout {
-                alignment: center;
-
-                Icon {
-                    width: SecondaryNavigationTabTokens.icon_size;
-                    height: self.width;
-                    source: root.icon;
-                    colorize: label.color;
-
-                    states [
-                        selected when root.selected && root.has_selected_icon : {
-                            source: root.selected_icon;
-                        }
-                    ]
-                }
-            }
-
-
-            label := MaterialText {
-                text: root.text;
-                style: MaterialTypography.title_small;
-                color: MaterialPalette.on_surface_variant;
-                vertical_alignment: center;
-            }
-        }
-
-        clicked => {
-            root.clicked();
-        }
-    }
-
-    states [
-        selected when root.selected : {
-            label.color: MaterialPalette.on_surface;
-        }
-    ]
 }
 
 component BaseTabBar inherits BaseNavigation {
-    in property <length> indicator_height;
-    in property <length> indicator_radius;
+    /// Secondary rows draw the flat full-width `SecondaryIndicator` and
+    /// recolor the selected content `OnSurface`; primary rows draw the
+    /// rounded `PrimaryIndicator` and use `Primary`.
+    in property <bool> primary: true;
+    /// Test hooks driving `TabItemTemplate.simulate_*` on one item.
+    in property <int> simulate_press_index: -1;
+    in property <int> simulate_hover_index: -1;
+    /// Where the strip's x origin lands in row coordinates — the
+    /// scrollable rows shift it by `edge padding - scroll offset`.
+    in property <length> strip_x: 0px;
+
     private property <length> indicator_x;
     private property <length> indicator_width;
+    /// The selected tab's center in strip coordinates — the scrollable
+    /// rows scroll it to the middle of the viewport.
+    out property <length> scroll_center: -1px;
 
-    min_height: max(MaterialStyleMetrics.size_49, layout.min_height);
+    /// Upstream `tabWidth = tabRowWidth / tabCount` — integer division
+    /// on the physical-pixel width (TabRow.kt's `Layout` block). Assigned
+    /// from callbacks rather than bound: a binding would loop through the
+    /// strip layout that reads each item's `forced_width`. `init` covers
+    /// the constructor-applied width (which predates `changed width`),
+    /// `changed width` covers later resizes, `changed items` a swapped
+    /// model. `-1px` keeps the items on their intrinsic widths until the
+    /// row's own width is known (only the fixed rows consume it —
+    /// scrollable tabs keep the minimum width).
+    out property <length> equal_tab_width: -1px;
 
-    Rectangle {
-        background: MaterialPalette.surface;
+    function update_equal_tab_width() {
+        root.equal_tab_width = root.width > 0px && root.items.length > 0 ?
+            Math.floor(root.width / 1phx / root.items.length) * 1phx : -1px;
+    }
 
-        layout := HorizontalLayout {
-            @children
+    init => {
+        root.update_equal_tab_width();
+    }
+
+    changed width => {
+        root.update_equal_tab_width();
+    }
+
+    changed items => {
+        root.update_equal_tab_width();
+    }
+
+    min_height: vl.min-height;
+
+    /// The selected item reports where its indicator lands; `item_x` is
+    /// in strip coordinates.
+    protected function item_geometry(index: int, item_x: length, indicator_width: length) {
+        if index != root.current_index {
+            return;
         }
-
-        Rectangle {
-            x: root.indicator_x;
-            y: parent.height - self.height;
-            width: root.indicator_width;
-            height: root.indicator_height;
-            border_top_left_radius: root.indicator_radius;
-            border_top_right_radius: root.indicator_radius;
-            background: MaterialPalette.primary;
-            visible: root.current_index >= 0 && root.current_index < root.items.length;
-
-            animate x, width { enabled: !MaterialPalette.reduced-motion;
-                duration: MaterialAnimations.standard_accelerate_duration;
-                easing: MaterialAnimations.standard_easing;
-            }
-        }
+        root.indicator_x = item_x;
+        root.indicator_width = indicator_width;
+        root.scroll_center = item_x + indicator_width / 2;
     }
 
     protected function select_tab(index: int) {
         root.select(index);
     }
 
-    protected function set_indicator(index: int, item_x: length, indicator_width: length) {
-        if index != root.current_index {
-            return;
-        }
+    Rectangle {
+        background: root.primary ?
+            PrimaryNavigationTabTokens.container_color :
+            SecondaryNavigationTabTokens.container_color;
 
-        root.indicator_x = item_x;
-        root.indicator_width = indicator_width;
+        vl := VerticalLayout {
+            spacing: 0;
+            @children
+        }
+    }
+
+    // Upstream places both `divider()` and `indicator` at
+    // `tabRowHeight - height` — they overlap the tab strip's bottom edge
+    // rather than adding to the row height (TabRow.kt's `Layout` block).
+    divider := HorizontalDivider {
+        y: root.height - self.height;
+        width: 100%;
+        height: self.min-height;
+    }
+
+    // The indicator scrolls with the strip: `strip_x` tracks the scroll
+    // offset for the scrollable rows, so this can live in row space. Like
+    // the divider it sits at `tabRowHeight - height` — over the divider's
+    // pixels when the two overlap (upstream `Layout` block).
+    TabIndicator {
+        x: root.strip_x + root.indicator_x;
+        y: root.height - self.height;
+        width: root.indicator_width;
+        primary: root.primary;
+        visible: root.current_index >= 0 && root.current_index < root.items.length;
     }
 }
 
+/// `PrimaryTabRow` — a fixed row of equal-width tabs with the
+/// content-sized `PrimaryIndicator`.
 export component TabBar inherits BaseTabBar {
-    indicator_height: MaterialStyleMetrics.size_3;
-    indicator_radius: root.indicator_height / 2;
+    strip := HorizontalLayout {
+        spacing: 0;
+        for data[index] in root.items : item := TabItemTemplate {
+            icon: data.icon;
+            selected_icon: data.selected_icon;
+            text: data.text;
+            index: index;
+            selected: index == root.current_index;
+            enabled: !data.disabled;
+            leading_icon: data.leading_icon;
+            show_badge: data.show_badge;
+            badge: data.badge;
+            active_color: PrimaryNavigationTabTokens.active_label_text_color;
+            inactive_color: PrimaryNavigationTabTokens.inactive_label_text_color;
+            label_style: PrimaryNavigationTabTokens.label_text_font;
+            indicator_matches_content: true;
+            forced_width: root.equal_tab_width;
+            simulate_press: index == root.simulate_press_index;
+            simulate_hover: index == root.simulate_hover_index;
 
-    for item[index] in root.items : TabItemTemplate {
-        icon: item.icon;
-        selected_icon: item.selected_icon;
-        text: item.text;
-        index: index;
-        selected: index == root.current_index;
-        show_badge: item.show_badge;
-        badge: item.badge;
+            clicked => {
+                root.select_tab(index);
+            }
 
-        clicked => {
-            root.select_tab(index);
-        }
-
-        indicator_changed(item_x, indicator_width) => {
-            root.set_indicator(index, item_x, indicator_width);
+            indicator_changed(item_x, indicator_width) => {
+                root.item_geometry(index, item_x, indicator_width);
+            }
         }
     }
 }
 
+/// `SecondaryTabRow` — a fixed row of equal-width tabs with the
+/// full-width flat `SecondaryIndicator`.
 export component SecondaryTabBar inherits BaseTabBar {
-    indicator_height: MaterialStyleMetrics.size_2;
+    primary: false;
 
-    for item[index] in root.items : SecondaryTabItemTemplate {
-        icon: item.icon;
-        selected_icon: item.selected_icon;
-        text: item.text;
-        index: index;
-        selected: index == root.current_index;
-        show_badge: item.show_badge;
-        badge: item.badge;
+    strip := HorizontalLayout {
+        spacing: 0;
+        for data[index] in root.items : item := TabItemTemplate {
+            icon: data.icon;
+            selected_icon: data.selected_icon;
+            text: data.text;
+            index: index;
+            selected: index == root.current_index;
+            enabled: !data.disabled;
+            leading_icon: data.leading_icon;
+            show_badge: data.show_badge;
+            badge: data.badge;
+            active_color: SecondaryNavigationTabTokens.active_label_text_color;
+            inactive_color: SecondaryNavigationTabTokens.inactive_label_text_color;
+            label_style: SecondaryNavigationTabTokens.label_text_font;
+            indicator_matches_content: false;
+            forced_width: root.equal_tab_width;
+            simulate_press: index == root.simulate_press_index;
+            simulate_hover: index == root.simulate_hover_index;
 
-        clicked => {
-            root.select_tab(index);
+            clicked => {
+                root.select_tab(index);
+            }
+
+            indicator_changed(item_x, indicator_width) => {
+                root.item_geometry(index, item_x, indicator_width);
+            }
         }
+    }
+}
 
-        indicator_changed(item_x, indicator_width) => {
-            root.set_indicator(index, item_x, indicator_width);
+/// The shared scrollable strip — `ScrollableTabRowMinimumTabWidth` tabs
+/// inside `ScrollableTabRowEdgeStartPadding`, scrolled so the selected
+/// tab is centered like upstream's `ScrollableTabData`.
+component ScrollableStrip inherits Flickable {
+    in property <[NavigationItem]> items;
+    in property <int> current_index;
+    in property <int> simulate_press_index;
+    in property <int> simulate_hover_index;
+    in property <color> active_color;
+    in property <color> inactive_color;
+    in property <MaterialTypeStyle> label_style;
+    in property <bool> indicator_matches_content: true;
+    /// The selected tab's center in content coordinates.
+    in property <length> scroll_center;
+    callback item_clicked(index: int);
+    callback item_geometry(index: int, item_x: length, indicator_width: length);
+
+    min_width: 0px;
+    min_height: layout.min-height;
+    // The strip isn't a layout child, so the content size is declared
+    // explicitly — including both `ScrollableTabRowEdgeStartPadding`s.
+    content-width: strip.width;
+    content-height: strip.height;
+
+    // Upstream scrolls `tabCenter - viewportWidth / 2`, clamped to the
+    // scrollable range, with a `DefaultSpatial` animation. `content-x` is
+    // the content offset — negative as the strip scrolls to the end.
+    content-x: -max(0px, min(root.scroll_center - self.width / 2, self.content-width - self.width));
+    animate content-x {
+        enabled: !MaterialPalette.reduced-motion;
+        easing: MaterialAnimations.default-spatial-spring;
+    }
+
+    strip := Rectangle {
+        x: 0;
+        width: 2 * TabMetrics.scrollable_edge_padding + layout.min-width;
+        height: layout.min-height;
+
+        layout := HorizontalLayout {
+            x: TabMetrics.scrollable_edge_padding;
+            width: self.min-width;
+            height: 100%;
+            spacing: 0;
+            for data[index] in root.items : item := TabItemTemplate {
+                icon: data.icon;
+                selected_icon: data.selected_icon;
+                text: data.text;
+                index: index;
+                selected: index == root.current_index;
+                enabled: !data.disabled;
+                leading_icon: data.leading_icon;
+                show_badge: data.show_badge;
+                badge: data.badge;
+                active_color: root.active_color;
+                inactive_color: root.inactive_color;
+                label_style: root.label_style;
+                indicator_matches_content: root.indicator_matches_content;
+                min_tab_width: TabMetrics.scrollable_min_width;
+                horizontal-stretch: 0;
+                simulate_press: index == root.simulate_press_index;
+                simulate_hover: index == root.simulate_hover_index;
+
+                clicked => {
+                    root.item_clicked(index);
+                }
+
+                indicator_changed(item_x, indicator_width) => {
+                    root.item_geometry(index, item_x + TabMetrics.scrollable_edge_padding, indicator_width);
+                }
+            }
         }
+    }
+}
+
+/// `PrimaryScrollableTabRow` — a horizontally scrollable row of tabs
+/// with the rounded `PrimaryIndicator`; the selected tab scrolls into
+/// the center.
+export component ScrollableTabBar inherits BaseTabBar {
+    // `item_geometry` reports strip coordinates, which already include
+    // the edge padding — content coordinates. `strip_x` maps them back
+    // into row space for the indicator (`content-x` is the negative
+    // content offset).
+    strip_x: flickable.content-x;
+
+    flickable := ScrollableStrip {
+            items: root.items;
+            current_index: root.current_index;
+            scroll_center: root.scroll_center;
+            simulate_press_index: root.simulate_press_index;
+            simulate_hover_index: root.simulate_hover_index;
+            active_color: PrimaryNavigationTabTokens.active_label_text_color;
+            inactive_color: PrimaryNavigationTabTokens.inactive_label_text_color;
+            label_style: PrimaryNavigationTabTokens.label_text_font;
+            indicator_matches_content: true;
+
+            item_clicked(index) => {
+                root.select_tab(index);
+            }
+
+            item_geometry(index, item_x, indicator_width) => {
+                root.item_geometry(index, item_x, indicator_width);
+            }
+    }
+}
+
+/// `SecondaryScrollableTabRow` — a horizontally scrollable row of tabs
+/// with the flat full-width `SecondaryIndicator`.
+export component ScrollableSecondaryTabBar inherits BaseTabBar {
+    primary: false;
+    strip_x: flickable.content-x;
+
+    flickable := ScrollableStrip {
+            items: root.items;
+            current_index: root.current_index;
+            scroll_center: root.scroll_center;
+            simulate_press_index: root.simulate_press_index;
+            simulate_hover_index: root.simulate_hover_index;
+            active_color: SecondaryNavigationTabTokens.active_label_text_color;
+            inactive_color: SecondaryNavigationTabTokens.inactive_label_text_color;
+            label_style: SecondaryNavigationTabTokens.label_text_font;
+            indicator_matches_content: false;
+
+            item_clicked(index) => {
+                root.select_tab(index);
+            }
+
+            item_geometry(index, item_x, indicator_width) => {
+                root.item_geometry(index, item_x, indicator_width);
+            }
     }
 }

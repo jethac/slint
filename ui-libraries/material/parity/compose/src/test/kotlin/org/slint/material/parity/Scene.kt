@@ -184,6 +184,9 @@ class GroupItem(json: JSONObject) {
     val checkedIcon: String? = (json.opt("checked_icon") as? String)?.takeIf { it.isNotEmpty() }
     val disabled: Boolean = json.optBoolean("disabled", false)
     val checked: Boolean = json.optBoolean("checked", false)
+    /** `tab-row` items: `LeadingIconTab` (icon and label side by side)
+     * instead of the stacked `Tab`. */
+    val leading: Boolean = json.optBoolean("leading", false)
     /** `enabled` (default), `pressed`, `hovered`, or `focused`. */
     val state: String = (json.opt("state") as? String) ?: "enabled"
 }

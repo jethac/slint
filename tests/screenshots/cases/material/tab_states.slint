@@ -1,0 +1,61 @@
+// Copyright © SixtyFPS GmbH <info@slint.dev>
+// SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0
+
+// Scene: tab-states — generated from `ui-libraries/material/parity/scenes/tab-states.json`
+// (edit the scene, regenerate with `cargo run -p material-parity-generator`).
+//PARITY=static
+//SIZE=640x210
+//TRACE_ELEMENTS=tabrow0,tabrow1,tabrow2
+//TRACE_ITEMS=tabrow0:item,tabrow1:item,tabrow2:item
+//ACTION=key:Tab
+//ACTION=key:Tab
+//ACTION=key:Tab
+//XFAIL_TEXT=issue #28: Slint ceils text layout widths where Compose keeps fractional advances
+//DENSITIES=1,2
+import "../../fonts/Roboto-VariableFont.ttf";
+import { Icons, MaterialPalette, MaterialTheme, MaterialWindow, SecondaryTabBar, TabBar } from "@material";
+
+export component TestCase inherits MaterialWindow {
+    init => {
+        // The scene pins seed #6750A4, tonal-spot, spec2025, light, contrast 0
+        // (all the library defaults; restated here so a default change can't
+        // silently move the parity baseline).
+        MaterialTheme.seed-color = #6750A4;
+        MaterialTheme.dark = false;
+        MaterialTheme.contrast-level = 0;
+        MaterialTheme.use-platform-color = false;
+        MaterialTheme.plain-family = "Roboto";
+        MaterialTheme.brand-family = "Roboto";
+        // Compose builds its scene scheme from the same seed — use the
+        // runtime-generated scheme, not the static expressive table.
+        MaterialPalette.dynamic = true;
+    }
+
+    tabrow0 := TabBar {
+        x: 16px;
+        y: 16px;
+        items: [{ icon: @image-url(""), selected_icon: @image-url(""), text: "Overview", disabled: false, leading_icon: false }, { icon: @image-url(""), selected_icon: @image-url(""), text: "Specs", disabled: false, leading_icon: false }, { icon: @image-url(""), selected_icon: @image-url(""), text: "Reviews", disabled: false, leading_icon: false }, { icon: @image-url(""), selected_icon: @image-url(""), text: "Faq", disabled: true, leading_icon: false }];
+        current_index: 0;
+        width: 608px;
+        simulate_hover_index: 1;
+    }
+
+    tabrow1 := SecondaryTabBar {
+        x: 16px;
+        y: 80px;
+        items: [{ icon: @image-url(""), selected_icon: @image-url(""), text: "Day", disabled: false, leading_icon: false }, { icon: @image-url(""), selected_icon: @image-url(""), text: "Week", disabled: false, leading_icon: false }, { icon: @image-url(""), selected_icon: @image-url(""), text: "Month", disabled: false, leading_icon: false }, { icon: @image-url(""), selected_icon: @image-url(""), text: "Year", disabled: true, leading_icon: false }];
+        current_index: 2;
+        width: 608px;
+        simulate_press_index: 1;
+    }
+
+    tabrow2 := TabBar {
+        x: 16px;
+        y: 144px;
+        items: [{ icon: Icons.edit, selected_icon: @image-url(""), text: "Edit", disabled: false, leading_icon: true }, { icon: Icons.calendar_today, selected_icon: @image-url(""), text: "Calendar", disabled: true, leading_icon: true }, { icon: Icons.schedule, selected_icon: @image-url(""), text: "Clock", disabled: false, leading_icon: true }];
+        current_index: 0;
+        width: 608px;
+        simulate_hover_index: 0;
+    }
+
+}

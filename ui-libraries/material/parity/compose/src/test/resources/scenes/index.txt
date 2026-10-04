@@ -57,9 +57,11 @@ negative-split-button-checked-overlay
 negative-split-button-inner-corner
 negative-split-button-outer-corner
 negative-split-button-spacing
+negative-tab-row
 negative-thumb-offset
 negative-toggle-select
 negative-wrong-shadow
+scrollable-tab-rows
 search-bars
 split-button-check-morph
 split-button-check-rotate
@@ -69,6 +71,9 @@ split-button-sizes
 split-button-states
 split-button-styles
 spring-motion
+tab-indicator-motion
+tab-rows
+tab-states
 toggle-buttons
 toggle-select-morph
 top-app-bars

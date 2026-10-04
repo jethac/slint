@@ -338,6 +338,10 @@ struct GroupItem {
     /// `simulate_*_index` on the Slint side.
     #[serde(default)]
     state: Option<String>,
+    /// `tab-row` items: the `LeadingIconTab` arrangement (icon and label
+    /// side by side) instead of the stacked `Tab`.
+    #[serde(default)]
+    leading: Option<bool>,
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -747,6 +751,20 @@ fn slint_case(scene: &Scene) -> String {
             "connected-button" => "ConnectedButton",
             "connected-button-group" => "ConnectedButtonGroup",
             "vertical-connected-button-group" => "VerticalConnectedButtonGroup",
+            "tab-row" => {
+                if w.variant.as_deref() == Some("secondary") {
+                    "SecondaryTabBar"
+                } else {
+                    "TabBar"
+                }
+            }
+            "scrollable-tab-row" => {
+                if w.variant.as_deref() == Some("secondary") {
+                    "ScrollableSecondaryTabBar"
+                } else {
+                    "ScrollableTabBar"
+                }
+            }
             other => panic!("unknown widget kind {other:?}"),
         };
         imports.push(component);
@@ -865,10 +883,11 @@ fn widget_actions(scene: &Scene) -> Vec<Action> {
             }
             tabs_emitted = target + 1;
         }
-        // A `*-button-group`'s layout isn't focusable — only its items
-        // land in the Tab chain (handled below). Anything else is
-        // `focusables` focusables (2 for a split button's halves, else 1).
-        if !w.kind.ends_with("button-group") {
+        // A `*-button-group`'s or `*-tab-row`'s layout isn't focusable —
+        // only its items land in the Tab chain (handled below). Anything
+        // else is `focusables` focusables (2 for a split button's halves,
+        // else 1).
+        if !w.kind.ends_with("button-group") && !w.kind.ends_with("tab-row") {
             ordinal += focusables;
         }
         for item in &w.items {
@@ -1232,6 +1251,7 @@ fn slint_canvas(s: &mut String, scene: &Scene) {
     let mut groups = 0;
     let mut icons = 0;
     let mut dividers = 0;
+    let mut tabrows = 0;
     for w in scene.widgets.iter() {
         let component = match w.kind.as_str() {
             "filled-button" => "FilledButton",
@@ -1362,6 +1382,12 @@ fn slint_canvas(s: &mut String, scene: &Scene) {
                 let i = groups;
                 groups += 1;
                 connected_group_widget(s, w, i, scene);
+                continue;
+            }
+            "tab-row" | "scrollable-tab-row" => {
+                let i = tabrows;
+                tabrows += 1;
+                tab_row_widget(s, w, i, scene);
                 continue;
             }
             "icon" => {
@@ -1746,6 +1772,94 @@ fn connected_group_widget(s: &mut String, w: &Widget, i: usize, scene: &Scene) {
         )
         .unwrap();
     }
+}
+
+/// One tab row (`tab-row`/`scrollable-tab-row`): `variant` selects the
+/// primary or secondary row upstream (`PrimaryTabRow`/`SecondaryTabRow`,
+/// `PrimaryScrollableTabRow`/`SecondaryScrollableTabRow`), `items` the
+/// tabs, `selected_index` the `selectedTabIndex`. Elements are named
+/// `tabrow{n}` and their items `item` for the item trace.
+fn tab_row_widget(s: &mut String, w: &Widget, i: usize, scene: &Scene) {
+    let secondary = w.variant.as_deref() == Some("secondary");
+    let component = match (w.kind.as_str(), secondary) {
+        ("tab-row", false) => "TabBar",
+        ("tab-row", true) => "SecondaryTabBar",
+        ("scrollable-tab-row", false) => "ScrollableTabBar",
+        ("scrollable-tab-row", true) => "ScrollableSecondaryTabBar",
+        other => panic!("unknown tab row kind {other:?}"),
+    };
+    if w.items.is_empty() {
+        panic!("{} needs at least one item", w.kind);
+    }
+    for item in &w.items {
+        if item.leading.unwrap_or(false) && (item.icon.is_none() || item.text.is_none()) {
+            panic!("{} leading items need icon and text", w.kind);
+        }
+    }
+    let over = &w.slint_overrides;
+    let mut p = String::new();
+    // `NavigationItem` — `icon`/`selected_icon` are `image`, so unset ones
+    // take an empty image-url like the group's icons do.
+    let empty_img = "@image-url(\"\")";
+    let items = w
+        .items
+        .iter()
+        .map(|item| {
+            format!(
+                "{{ icon: {}, selected_icon: {}, text: {:?}, disabled: {}, leading_icon: {} }}",
+                item.icon.as_deref().map(|i| format!("Icons.{i}")).unwrap_or_else(|| empty_img.into()),
+                item.checked_icon
+                    .as_deref()
+                    .map(|i| format!("Icons.{i}"))
+                    .unwrap_or_else(|| empty_img.into()),
+                item.text.as_deref().unwrap_or_default(),
+                item.disabled.unwrap_or(false),
+                item.leading.unwrap_or(false),
+            )
+        })
+        .collect::<Vec<_>>()
+        .join(", ");
+    writeln!(p, "        items: [{items}];").unwrap();
+    let selected = over
+        .get("current_index")
+        .map(|v| widget_num(v) as i64)
+        .or(w.selected_index)
+        .unwrap_or(-1);
+    writeln!(p, "        current_index: {selected};").unwrap();
+    if let Some(width) = w.width {
+        writeln!(p, "        width: {width}px;").unwrap();
+    }
+    let press = w
+        .items
+        .iter()
+        .position(|item| item.state.as_deref() == Some("pressed"))
+        .map(|i| i as i64)
+        .unwrap_or(-1);
+    // A `pressed` item also simulates in motion scenes: the Compose side
+    // replaces its held-press ripple with the settled-ink overlay, so the
+    // Slint state layer must be pinned the same way (the press's selection
+    // flip still comes from the scene's real release action).
+    if press >= 0 {
+        writeln!(p, "        simulate_press_index: {press};").unwrap();
+    }
+    if scene.times.is_empty() {
+        let hover = w
+            .items
+            .iter()
+            .position(|item| item.state.as_deref() == Some("hovered"))
+            .map(|i| i as i64)
+            .unwrap_or(-1);
+        if hover >= 0 {
+            writeln!(p, "        simulate_hover_index: {hover};").unwrap();
+        }
+    }
+    writeln!(
+        s,
+        "    tabrow{i} := {component} {{\n        x: {}px;\n        y: {}px;\n{p}    }}\n",
+        w.x as i64,
+        w.y as i64,
+    )
+    .unwrap();
 }
 
 fn slint_spring_motion(s: &mut String, scene: &Scene) {

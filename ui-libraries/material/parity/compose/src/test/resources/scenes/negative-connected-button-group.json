@@ -106,6 +106,7 @@
           "checked_icon": null,
           "disabled": null,
           "icon": null,
+          "leading": null,
           "state": null,
           "text": "Day"
         },
@@ -114,6 +115,7 @@
           "checked_icon": null,
           "disabled": null,
           "icon": null,
+          "leading": null,
           "state": null,
           "text": "Week"
         },
@@ -122,6 +124,7 @@
           "checked_icon": null,
           "disabled": null,
           "icon": null,
+          "leading": null,
           "state": null,
           "text": "Month"
         }

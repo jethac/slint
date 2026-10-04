@@ -1,0 +1,154 @@
+{
+  "name": "tab-rows",
+  "type": "canvas",
+  "parity": "static",
+  "densities": [
+    1,
+    2
+  ],
+  "theme": {
+    "seed": "6750A4",
+    "variant": "tonal-spot",
+    "spec": "spec2025",
+    "platform": "phone",
+    "dark": false,
+    "contrast": 0.0
+  },
+  "xfail_text": "issue #28: Slint ceils text layout widths where Compose keeps fractional advances",
+  "fonts": {
+    "plain": "Roboto",
+    "brand": "Roboto"
+  },
+  "size": [
+    640,
+    400
+  ],
+  "widgets": [
+    {
+      "kind": "tab-row",
+      "x": 16,
+      "y": 16,
+      "width": 608,
+      "items": [
+        {
+          "text": "Movies"
+        },
+        {
+          "text": "TV"
+        },
+        {
+          "text": "Music"
+        }
+      ],
+      "selected_index": 1
+    },
+    {
+      "kind": "tab-row",
+      "x": 16,
+      "y": 80,
+      "width": 608,
+      "items": [
+        {
+          "text": "Edit",
+          "icon": "edit"
+        },
+        {
+          "text": "Calendar",
+          "icon": "calendar_today"
+        },
+        {
+          "text": "Clock",
+          "icon": "schedule"
+        }
+      ],
+      "selected_index": 0
+    },
+    {
+      "kind": "tab-row",
+      "x": 16,
+      "y": 168,
+      "width": 608,
+      "items": [
+        {
+          "text": "Edit",
+          "icon": "edit",
+          "leading": true
+        },
+        {
+          "text": "Calendar",
+          "icon": "calendar_today",
+          "leading": true
+        },
+        {
+          "text": "Clock",
+          "icon": "schedule",
+          "leading": true
+        }
+      ],
+      "selected_index": 2
+    },
+    {
+      "kind": "tab-row",
+      "x": 16,
+      "y": 232,
+      "width": 608,
+      "items": [
+        {
+          "text": "Overview"
+        },
+        {
+          "text": "Details"
+        },
+        {
+          "text": "Reviews"
+        }
+      ],
+      "selected_index": 0,
+      "variant": "secondary"
+    },
+    {
+      "kind": "tab-row",
+      "x": 16,
+      "y": 296,
+      "width": 608,
+      "items": [
+        {
+          "text": "Done",
+          "icon": "check"
+        },
+        {
+          "text": "Menu",
+          "icon": "menu"
+        },
+        {
+          "text": "Keys",
+          "icon": "keyboard"
+        }
+      ],
+      "selected_index": 1,
+      "variant": "secondary"
+    }
+  ],
+  "trace_elements": [
+    "tabrow0",
+    "tabrow1",
+    "tabrow2",
+    "tabrow3",
+    "tabrow4",
+    "tabrow0item0",
+    "tabrow0item1",
+    "tabrow0item2",
+    "tabrow1item0",
+    "tabrow1item1",
+    "tabrow1item2",
+    "tabrow2item0",
+    "tabrow2item1",
+    "tabrow2item2",
+    "tabrow3item0",
+    "tabrow3item1",
+    "tabrow3item2",
+    "tabrow4item0",
+    "tabrow4item1",
+    "tabrow4item2"
+  ]
+}

@@ -16,6 +16,8 @@ import {
     NavigationItem,
     TabBar,
     SecondaryTabBar,
+    ScrollableTabBar,
+    ScrollableSecondaryTabBar,
     SearchBar,
     AppBarWithSearch,
     FlexibleBottomAppBar,
@@ -276,7 +278,7 @@ export component NavigationView {
             ComponentCard {
                 title: "Tabs";
 
-                Horizontal {
+                Vertical {
                     TabBar {
                         items: [
                          {
@@ -290,6 +292,90 @@ export component NavigationView {
                             {
                                 text: "Audio",
                                 icon: OutlinedIcons.music_note,
+                            },
+                        ];
+                    }
+
+                    SecondaryTabBar {
+                        items: [
+                            {
+                                text: "Video",
+                                icon: OutlinedIcons.video_chat,
+                                leading_icon: true,
+                            },
+                            {
+                                text: "Photos",
+                                icon: OutlinedIcons.image,
+                                leading_icon: true,
+                            },
+                            {
+                                text: "Audio",
+                                icon: OutlinedIcons.music_note,
+                                leading_icon: true,
+                            },
+                        ];
+                    }
+
+                    ScrollableTabBar {
+                        items: [
+                            {
+                                text: "Video",
+                                icon: OutlinedIcons.video_chat,
+                            },
+                            {
+                                text: "Photos",
+                                icon: OutlinedIcons.image,
+                            },
+                            {
+                                text: "Audio",
+                                icon: OutlinedIcons.music_note,
+                            },
+                            {
+                                text: "Saved",
+                                icon: OutlinedIcons.favorite,
+                            },
+                            {
+                                text: "Calendar",
+                                icon: OutlinedIcons.calendar_month,
+                            },
+                            {
+                                text: "Inbox",
+                                icon: OutlinedIcons.inbox,
+                            },
+                        ];
+                    }
+
+                    ScrollableSecondaryTabBar {
+                        items: [
+                            {
+                                text: "Video",
+                                icon: OutlinedIcons.video_chat,
+                                leading_icon: true,
+                            },
+                            {
+                                text: "Photos",
+                                icon: OutlinedIcons.image,
+                                leading_icon: true,
+                            },
+                            {
+                                text: "Audio",
+                                icon: OutlinedIcons.music_note,
+                                leading_icon: true,
+                            },
+                            {
+                                text: "Saved",
+                                icon: OutlinedIcons.favorite,
+                                leading_icon: true,
+                            },
+                            {
+                                text: "Calendar",
+                                icon: OutlinedIcons.calendar_month,
+                                leading_icon: true,
+                            },
+                            {
+                                text: "Inbox",
+                                icon: OutlinedIcons.inbox,
+                                leading_icon: true,
                             },
                         ];
                     }
