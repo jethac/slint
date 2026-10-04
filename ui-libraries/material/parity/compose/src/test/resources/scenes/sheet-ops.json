@@ -150,6 +150,7 @@
       "checkable": null,
       "checked": null,
       "checked_icon": null,
+      "clickable": null,
       "color": null,
       "content_color": "tertiary-container",
       "content_offset": null,
