@@ -23,6 +23,14 @@ chip-suggestion-states
 connected-button-groups
 connected-button-morph
 connected-button-press-morph
+date-picker-dark
+date-picker-disabled
+date-picker-empty
+date-picker-input
+date-picker-range-input
+date-picker-range-partial
+date-picker-range
+date-picker
 dividers
 drag-handles
 elevation-shadow
@@ -62,6 +70,10 @@ negative-chip-shape
 negative-connected-button-group
 negative-corner-leak-dark
 negative-corner-leak
+negative-date-picker-container
+negative-date-picker-corner
+negative-date-picker-range-band
+negative-date-picker-selected-day
 negative-divider-color
 negative-divider-thickness
 negative-extended-fab-expanded
