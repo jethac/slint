@@ -150,13 +150,26 @@ jobs:
             # xvfb gives the EGL default display an X server to land on when
             # Mesa's surfaceless platform can't initialize headless (no
             # /dev/dri on the runner); the driver falls back to it.
-            # Run each renderer's cases as its own filtered invocation so a
-            # stalled renderer is visible in the log by step boundary; skia
-            # runs serialized to rule out inter-test contention.
+            # The suite's per-test state isn't fully released inside one
+            # test process (~60 MB/test, ~20 GB over the suite — enough to
+            # OOM the runner), so the cases run in shards: each shard is a
+            # separate `cargo test` invocation whose heap is freed when the
+            # process exits. Shard boundaries also split the log the way the
+            # old per-renderer invocations did.
             run: |
-                xvfb-run -a env SLINT_TEST_FILTER=material cargo test --release --manifest-path tests/Cargo.toml -p test-driver-screenshots --features femtovg -- software_material
-                xvfb-run -a env SLINT_TEST_FILTER=material cargo test --release --manifest-path tests/Cargo.toml -p test-driver-screenshots --features femtovg -- skia_material --test-threads=1
-                xvfb-run -a env SLINT_TEST_FILTER=material cargo test --release --manifest-path tests/Cargo.toml -p test-driver-screenshots --features femtovg -- femtovg_material
+              set -euo pipefail
+              args=(env SLINT_TEST_FILTER=material cargo test --release --manifest-path tests/Cargo.toml -p test-driver-screenshots --features femtovg)
+              mapfile -t names < <(xvfb-run -a "${args[@]}" -- --list 2>/dev/null | sed -n 's/: test$//p')
+              ((${#names[@]})) || { echo "::error::parity test list is empty"; exit 1; }
+              echo "${#names[@]} parity cases"
+              shard=40
+              for ((i=0; i<${#names[@]}; i+=shard)); do
+                last=$((i + shard < ${#names[@]} ? i + shard : ${#names[@]}))
+                echo "::group::cases $((i + 1))-$last of ${#names[@]}"
+                xvfb-run -a "${args[@]}" -- --exact "${names[@]:i:shard}"
+                echo "::endgroup::"
+              done
+            shell: bash
           - name: Build the Compose parity harness
             run: ./gradlew compileDebugUnitTestKotlin --no-daemon
             working-directory: ui-libraries/material/parity/compose
