@@ -4,38 +4,7 @@
   ],
   "frames": [
     {
-      "t_ms": 1,
-      "props": {},
-      "elements": {
-        "scrim0": {
-          "x": 0,
-          "y": 0,
-          "w": 500,
-          "h": 360
-        },
-        "dialog0": {
-          "x": 0,
-          "y": 60,
-          "w": 500,
-          "h": 240
-        },
-        "dialog0action0": {
-          "x": 411,
-          "y": 236,
-          "w": 65,
-          "h": 40
-        },
-        "dialog0action1": {
-          "x": 328.5,
-          "y": 236,
-          "w": 74.5,
-          "h": 40
-        }
-      },
-      "text": {}
-    },
-    {
-      "t_ms": 51,
+      "t_ms": 0,
       "props": {},
       "elements": {
         "scrim0": {
@@ -115,7 +84,7 @@
       }
     },
     {
-      "t_ms": 101,
+      "t_ms": 50,
       "props": {},
       "elements": {
         "scrim0": {
@@ -195,7 +164,7 @@
       }
     },
     {
-      "t_ms": 151,
+      "t_ms": 100,
       "props": {},
       "elements": {
         "scrim0": {
@@ -275,7 +244,7 @@
       }
     },
     {
-      "t_ms": 201,
+      "t_ms": 150,
       "props": {},
       "elements": {
         "scrim0": {
@@ -355,7 +324,7 @@
       }
     },
     {
-      "t_ms": 251,
+      "t_ms": 200,
       "props": {},
       "elements": {
         "scrim0": {
@@ -435,7 +404,7 @@
       }
     },
     {
-      "t_ms": 301,
+      "t_ms": 250,
       "props": {},
       "elements": {
         "scrim0": {
@@ -515,7 +484,7 @@
       }
     },
     {
-      "t_ms": 351,
+      "t_ms": 300,
       "props": {},
       "elements": {
         "scrim0": {
@@ -595,7 +564,7 @@
       }
     },
     {
-      "t_ms": 401,
+      "t_ms": 350,
       "props": {},
       "elements": {
         "scrim0": {
@@ -675,7 +644,7 @@
       }
     },
     {
-      "t_ms": 451,
+      "t_ms": 400,
       "props": {},
       "elements": {
         "scrim0": {
@@ -755,7 +724,7 @@
       }
     },
     {
-      "t_ms": 501,
+      "t_ms": 450,
       "props": {},
       "elements": {
         "scrim0": {
@@ -835,7 +804,7 @@
       }
     },
     {
-      "t_ms": 551,
+      "t_ms": 500,
       "props": {},
       "elements": {
         "scrim0": {
@@ -915,7 +884,7 @@
       }
     },
     {
-      "t_ms": 601,
+      "t_ms": 550,
       "props": {},
       "elements": {
         "scrim0": {
@@ -995,7 +964,7 @@
       }
     },
     {
-      "t_ms": 651,
+      "t_ms": 600,
       "props": {},
       "elements": {
         "scrim0": {
@@ -1075,7 +1044,7 @@
       }
     },
     {
-      "t_ms": 701,
+      "t_ms": 650,
       "props": {},
       "elements": {
         "scrim0": {
@@ -1155,7 +1124,7 @@
       }
     },
     {
-      "t_ms": 751,
+      "t_ms": 700,
       "props": {},
       "elements": {
         "scrim0": {
@@ -1235,7 +1204,7 @@
       }
     },
     {
-      "t_ms": 801,
+      "t_ms": 750,
       "props": {},
       "elements": {
         "scrim0": {
@@ -1315,7 +1284,7 @@
       }
     },
     {
-      "t_ms": 851,
+      "t_ms": 800,
       "props": {},
       "elements": {
         "scrim0": {
@@ -1395,7 +1364,7 @@
       }
     },
     {
-      "t_ms": 901,
+      "t_ms": 850,
       "props": {},
       "elements": {
         "scrim0": {
@@ -1475,7 +1444,7 @@
       }
     },
     {
-      "t_ms": 951,
+      "t_ms": 900,
       "props": {},
       "elements": {
         "scrim0": {
@@ -1555,7 +1524,7 @@
       }
     },
     {
-      "t_ms": 1001,
+      "t_ms": 950,
       "props": {},
       "elements": {
         "scrim0": {
@@ -1635,7 +1604,7 @@
       }
     },
     {
-      "t_ms": 1051,
+      "t_ms": 1000,
       "props": {},
       "elements": {
         "scrim0": {
@@ -1715,7 +1684,7 @@
       }
     },
     {
-      "t_ms": 1101,
+      "t_ms": 1050,
       "props": {},
       "elements": {
         "scrim0": {
@@ -1795,7 +1764,7 @@
       }
     },
     {
-      "t_ms": 1151,
+      "t_ms": 1100,
       "props": {},
       "elements": {
         "scrim0": {
@@ -1875,7 +1844,7 @@
       }
     },
     {
-      "t_ms": 1201,
+      "t_ms": 1150,
       "props": {},
       "elements": {
         "scrim0": {
@@ -1955,7 +1924,7 @@
       }
     },
     {
-      "t_ms": 1251,
+      "t_ms": 1200,
       "props": {},
       "elements": {
         "scrim0": {
@@ -2035,7 +2004,7 @@
       }
     },
     {
-      "t_ms": 1301,
+      "t_ms": 1250,
       "props": {},
       "elements": {
         "scrim0": {
@@ -2115,7 +2084,7 @@
       }
     },
     {
-      "t_ms": 1351,
+      "t_ms": 1300,
       "props": {},
       "elements": {
         "scrim0": {
@@ -2195,7 +2164,7 @@
       }
     },
     {
-      "t_ms": 1401,
+      "t_ms": 1350,
       "props": {},
       "elements": {
         "scrim0": {
@@ -2275,7 +2244,7 @@
       }
     },
     {
-      "t_ms": 1451,
+      "t_ms": 1400,
       "props": {},
       "elements": {
         "scrim0": {
@@ -2355,7 +2324,7 @@
       }
     },
     {
-      "t_ms": 1501,
+      "t_ms": 1450,
       "props": {},
       "elements": {
         "scrim0": {
@@ -2435,7 +2404,7 @@
       }
     },
     {
-      "t_ms": 1551,
+      "t_ms": 1500,
       "props": {},
       "elements": {
         "scrim0": {
@@ -2515,7 +2484,7 @@
       }
     },
     {
-      "t_ms": 1601,
+      "t_ms": 1550,
       "props": {},
       "elements": {
         "scrim0": {
@@ -2595,7 +2564,7 @@
       }
     },
     {
-      "t_ms": 1651,
+      "t_ms": 1600,
       "props": {},
       "elements": {
         "scrim0": {
@@ -2675,7 +2644,7 @@
       }
     },
     {
-      "t_ms": 1701,
+      "t_ms": 1650,
       "props": {},
       "elements": {
         "scrim0": {
@@ -2755,7 +2724,7 @@
       }
     },
     {
-      "t_ms": 1751,
+      "t_ms": 1700,
       "props": {},
       "elements": {
         "scrim0": {
@@ -2835,7 +2804,7 @@
       }
     },
     {
-      "t_ms": 1801,
+      "t_ms": 1750,
       "props": {},
       "elements": {
         "scrim0": {
@@ -2915,7 +2884,7 @@
       }
     },
     {
-      "t_ms": 1851,
+      "t_ms": 1800,
       "props": {},
       "elements": {
         "scrim0": {
@@ -2995,7 +2964,7 @@
       }
     },
     {
-      "t_ms": 1901,
+      "t_ms": 1850,
       "props": {},
       "elements": {
         "scrim0": {
@@ -3075,7 +3044,7 @@
       }
     },
     {
-      "t_ms": 1951,
+      "t_ms": 1900,
       "props": {},
       "elements": {
         "scrim0": {
@@ -3155,7 +3124,87 @@
       }
     },
     {
-      "t_ms": 2001,
+      "t_ms": 1950,
+      "props": {},
+      "elements": {
+        "scrim0": {
+          "x": 0,
+          "y": 0,
+          "w": 500,
+          "h": 360,
+          "opacity": 1
+        },
+        "dialog0": {
+          "x": 0,
+          "y": 60,
+          "w": 500,
+          "h": 240,
+          "opacity": 1
+        },
+        "dialog0action0": {
+          "x": 411,
+          "y": 236,
+          "w": 65,
+          "h": 40,
+          "opacity": 1
+        },
+        "dialog0action1": {
+          "x": 328.5,
+          "y": 236,
+          "w": 74.5,
+          "h": 40,
+          "opacity": 1
+        }
+      },
+      "text": {
+        "text:0": {
+          "x": 175.5,
+          "y": 124,
+          "w": 149.5,
+          "h": 32,
+          "baseline": 24,
+          "lines": 1,
+          "frac_w": 149.30859375,
+          "unhint_w": 148.8125,
+          "chars": 14
+        },
+        "text:1": {
+          "x": 24,
+          "y": 172,
+          "w": 452,
+          "h": 40,
+          "baseline": 14.5,
+          "lines": 2,
+          "frac_w": 401.2633056640625,
+          "unhint_w": 784.6875,
+          "chars": 126
+        },
+        "text:2": {
+          "x": 423,
+          "y": 246,
+          "w": 41,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 40.000003814697266,
+          "unhint_w": 40.375,
+          "chars": 6
+        },
+        "text:3": {
+          "x": 340.5,
+          "y": 246,
+          "w": 50.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 49.599998474121094,
+          "unhint_w": 50.6875,
+          "chars": 7
+        }
+      }
+    },
+    {
+      "t_ms": 2000,
       "props": {},
       "elements": {
         "scrim0": {
@@ -3235,5 +3284,5 @@
       }
     }
   ],
-  "settle_ms": 1
+  "settle_ms": null
 }
