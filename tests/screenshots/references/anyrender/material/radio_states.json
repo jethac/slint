@@ -1,0 +1,128 @@
+[
+  {
+    "Stroke": {
+      "brush": {
+        "Solid": {
+          "components": [
+            0.3804,
+            0.3647,
+            0.4078,
+            1.0
+          ]
+        }
+      },
+      "brush_transform": null,
+      "shape": "M1,10 C1,5.0294 5.0294,1 10,1 L10,1 C14.9706,1 19,5.0294 19,10 L19,10 C19,14.9706 14.9706,19 10,19 L10,19 C5.0294,19 1,14.9706 1,10 Z",
+      "style": {
+        "dash_offset": 0.0,
+        "dash_pattern": [],
+        "end_cap": "Round",
+        "join": "Miter",
+        "miter_limit": 4.0,
+        "start_cap": "Round",
+        "width": 2.0
+      },
+      "transform": [
+        1.0,
+        0.0,
+        0.0,
+        1.0,
+        18.0,
+        38.0
+      ]
+    }
+  },
+  {
+    "Stroke": {
+      "brush": {
+        "Solid": {
+          "components": [
+            0.3961,
+            0.3412,
+            0.5373,
+            1.0
+          ]
+        }
+      },
+      "brush_transform": null,
+      "shape": "M1,10 C1,5.0294 5.0294,1 10,1 L10,1 C14.9706,1 19,5.0294 19,10 L19,10 C19,14.9706 14.9706,19 10,19 L10,19 C5.0294,19 1,14.9706 1,10 Z",
+      "style": {
+        "dash_offset": 0.0,
+        "dash_pattern": [],
+        "end_cap": "Round",
+        "join": "Miter",
+        "miter_limit": 4.0,
+        "start_cap": "Round",
+        "width": 2.0
+      },
+      "transform": [
+        1.0,
+        0.0,
+        0.0,
+        1.0,
+        58.0,
+        38.0
+      ]
+    }
+  },
+  {
+    "Fill": {
+      "brush": {
+        "Solid": {
+          "components": [
+            0.3961,
+            0.3412,
+            0.5373,
+            1.0
+          ]
+        }
+      },
+      "brush_transform": null,
+      "fill": "NonZero",
+      "shape": "M0,5 C0,2.2386 2.2386,0 5,0 L5,0 C7.7614,0 10,2.2386 10,5 L10,5 C10,7.7614 7.7614,10 5,10 L5,10 C2.2386,10 0,7.7614 0,5 Z",
+      "transform": [
+        1.0,
+        0.0,
+        0.0,
+        1.0,
+        63.0,
+        43.0
+      ]
+    }
+  },
+  {
+    "PushLayer": {
+      "alpha": 0.08,
+      "backdrop_filter": null,
+      "blend": {
+        "compose": "SrcOver",
+        "mix": "Normal"
+      },
+      "clip": "M0,0 L1000000000,0 L1000000000,1000000000 L0,1000000000 Z",
+      "filter": null,
+      "transform": [
+        1.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0
+      ]
+    }
+  },
+  "PopLayer",
+  {
+    "PushClipLayer": {
+      "clip": "M0,20 C0,8.9543 8.9543,0 20,0 L20,0 C31.0457,0 40,8.9543 40,20 L40,20 C40,31.0457 31.0457,40 20,40 L20,40 C8.9543,40 0,31.0457 0,20 Z",
+      "transform": [
+        1.0,
+        0.0,
+        0.0,
+        1.0,
+        128.0,
+        28.0
+      ]
+    }
+  },
+  "PopLayer"
+]

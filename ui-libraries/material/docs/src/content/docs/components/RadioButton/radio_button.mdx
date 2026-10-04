@@ -20,7 +20,36 @@ export component Example inherits Window {
 ```
 </CodeSnippetMD>
 
-`RadioButton`s let people select one option from a set of options.
+`RadioButton`s let people select one option from a set of options. The control is a 20px
+stroked circle centered in its padding; the dot's radius springs to 6px on selection and a
+focused button shows the circular inset ring while hover or press draws the 40px
+state-layer circle. Selecting is the parent's job — `checked` is an input the surrounding
+group rebinds when another option is picked.
+
+<CodeSnippetMD imagePath="/src/assets/generated/radiobutton-states.png" scale="3" imageWidth="300" imageHeight="100" imageAlt="" needsBackground="true">
+```slint
+import { RadioButton } from "@material";
+export component Example inherits Window {
+    width: 300px;
+    height: 100px;
+    background: transparent;
+    HorizontalLayout {
+        spacing: 8px;
+        RadioButton {}
+        RadioButton {
+            checked: true;
+        }
+        RadioButton {
+            enabled: false;
+        }
+        RadioButton {
+            enabled: false;
+            checked: true;
+        }
+    }
+}
+```
+</CodeSnippetMD>
 
 ## Properties
 
@@ -32,6 +61,11 @@ Whether the radiobutton is checked.
 ### enabled
 <SlintProperty propName="enabled" typeName="bool" defaultValue="true">
 Whether the radiobutton is enabled and can be interacted with.
+</SlintProperty>
+
+### enforce-touch-target
+<SlintProperty propName="enforce-touch-target" typeName="bool" defaultValue="true">
+Whether the radiobutton extends its touch target to at least 48px when its visual container is smaller.
 </SlintProperty>
 
 ## Callbacks
