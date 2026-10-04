@@ -150,6 +150,7 @@
   "widgets": [
     {
       "alignment": null,
+      "always_show_label": null,
       "avatar": null,
       "body_color": "surface",
       "checkable": null,
@@ -170,6 +171,7 @@
       "height": 240.0,
       "height_offset": null,
       "icon": null,
+      "icon_position": null,
       "icons": [],
       "indeterminate": null,
       "index": null,
@@ -184,6 +186,7 @@
       "level": null,
       "menu_items": null,
       "multi_select": null,
+      "nav_arrangement": null,
       "nav_icon": null,
       "overline": null,
       "peek_height": 56.0,
