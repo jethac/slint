@@ -303,7 +303,9 @@ pub struct ParityMarkers {
     /// the calibrated default (a row item's position inherits every
     /// earlier label's width drift).
     pub xfail_text_renderers: Vec<String>,
-    /// `> 1.0` when `//XFAIL_TEXT=` carried a `*N` bound multiplier.
+    /// `> 1.0` when `//XFAIL_TEXT=` carried a `*N` bound multiplier. The
+    /// scale also widens the text ink mask's dilation (2px × N) — the drift
+    /// it names moves ink past the default apron.
     pub xfail_text_scale: f64,
     /// `//XFAIL_SILHOUETTE=<reason>` marks the software driver's
     /// `//MASK_INNER=` silhouette findings an expected divergence rather

@@ -1693,6 +1693,7 @@ fn build_frame_mask<C: i_slint_core::api::ComponentHandle>(
     density: f64,
     width: u32,
     height: u32,
+    text_dilate: f64,
 ) -> PixelMask {
     let mut mask = png_mask
         .filter(|m| m.width() == width && m.height() == height)
@@ -1704,8 +1705,11 @@ fn build_frame_mask<C: i_slint_core::api::ComponentHandle>(
     // pinned-width container the label block itself lands ~1px off between
     // engines (half the width slack), and its cells still check the ink.
     // Glyph ink overhangs the layout box by ~1px at the edges — `frac_w`/
-    // `unhint_w` understate the rasterized span — so text bounds dilate
-    // wider than other element margins.
+    // `unhint_w` understate the rasterized span. `text_dilate` rides the
+    // scene's `//XFAIL_TEXT=*N` scale so a row of drift-accumulated labels
+    // can widen its ink zone without relaxing text masks everywhere else —
+    // a wider mask would swallow a changed outline next to the label (the
+    // `negative-badge-text` sentinel checks exactly that).
     for handle in i_slint_backend_testing::ElementQuery::from_root(component)
         .match_inherits("Text")
         .find_all()
@@ -1719,7 +1723,7 @@ fn build_frame_mask<C: i_slint_core::api::ComponentHandle>(
                 x1: (p.x + s.width) as f64 * d,
                 y1: (p.y + s.height) as f64 * d,
             }
-            .dilated(4.0),
+            .dilated(text_dilate),
             PixelClass::Text,
         );
     }
@@ -1739,7 +1743,7 @@ fn build_frame_mask<C: i_slint_core::api::ComponentHandle>(
                 x1: (p.x + s.width) as f64 * d,
                 y1: (p.y + s.height) as f64 * d,
             }
-            .dilated(2.0),
+            .dilated(text_dilate),
             PixelClass::Text,
         );
     }
@@ -1752,7 +1756,8 @@ fn build_frame_mask<C: i_slint_core::api::ComponentHandle>(
                 continue;
             };
             mask.fill_rect(
-                PxRect { x0: x * d, y0: y * d, x1: (x + w) * d, y1: (y + h) * d }.dilated(4.0),
+                PxRect { x0: x * d, y0: y * d, x1: (x + w) * d, y1: (y + h) * d }
+                    .dilated(text_dilate),
                 PixelClass::Text,
             );
         }
@@ -2228,6 +2233,10 @@ pub fn run_parity_case<C: i_slint_core::api::ComponentHandle>(
                 *density as f64,
                 actual.width(),
                 actual.height(),
+                // `//XFAIL_TEXT=*N` widens the ink mask with the same scale
+                // it grants the per-cell mean — the accumulated drift it
+                // names moves ink past the default 2px apron.
+                if xfail_text.is_some() { 2.0 * spec.xfail_text_scale } else { 2.0 },
             );
             // `xfail_text` scenes carry the documented issue-#28 advance drift
             // (Slint ceils text layout widths where Compose keeps fractional
