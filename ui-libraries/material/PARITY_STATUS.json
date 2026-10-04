@@ -699,10 +699,11 @@
   },
   "NavigationBar": {
     "issues": [
+      11,
       12
     ],
-    "needs": "springs (#5), shapes (#6), adaptive (#12)",
-    "notes": "slint component: NavigationBar",
+    "needs": "adaptive (#12)",
+    "notes": "slint component: NavigationBar; tokens: generated component tokens; springs via active motion scheme",
     "status": "partial"
   },
   "NavigationDrawerItem": {
@@ -855,9 +856,9 @@
       11,
       12
     ],
-    "needs": "springs (#5), shapes (#6), adaptive (#12)",
-    "notes": "",
-    "status": "missing"
+    "needs": "adaptive (#12)",
+    "notes": "slint component: NavigationItemTemplate (internal); the RowScope receiver has no slint equivalent",
+    "status": "partial"
   },
   "Scaffold": {
     "issues": [
@@ -917,19 +918,21 @@
   },
   "ShortNavigationBar": {
     "issues": [
+      11,
       12
     ],
-    "needs": "springs (#5), shapes (#6), adaptive (#12)",
-    "notes": "",
-    "status": "missing"
+    "needs": "adaptive (#12)",
+    "notes": "slint component: ShortNavigationBar; tokens: generated component tokens; springs via active motion scheme",
+    "status": "partial"
   },
   "ShortNavigationBarItem": {
     "issues": [
+      11,
       12
     ],
-    "needs": "springs (#5), shapes (#6), adaptive (#12)",
-    "notes": "",
-    "status": "missing"
+    "needs": "adaptive (#12)",
+    "notes": "slint component: ShortNavigationBarItemTemplate (internal)",
+    "status": "partial"
   },
   "SingleChoiceSegmentedButtonRow": {
     "issues": [
