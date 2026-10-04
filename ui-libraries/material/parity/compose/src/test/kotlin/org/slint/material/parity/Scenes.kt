@@ -115,8 +115,6 @@ import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.AppBarWithSearch
 import androidx.compose.material3.rememberSearchBarState
 import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.requiredHeight
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.gestures.AnchoredDraggableDefaults
@@ -135,7 +133,6 @@ import androidx.compose.material3.rememberBottomSheetScaffoldState
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.rememberStandardBottomSheetState
 import androidx.compose.foundation.gestures.animateTo
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.platform.LocalViewConfiguration
 import androidx.compose.runtime.SideEffect
