@@ -151,7 +151,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.State
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import kotlinx.coroutines.delay
 import androidx.compose.ui.Modifier
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.draw.clip
@@ -1021,18 +1020,21 @@ private fun emitStateInteractions(
         // frame 0 also keeps the press off uptime 0, where a ripple's frame
         // callback would abort layoutlib.
         "pressed" -> {
-            // `emit()` suspends until every subscriber has the emission —
-            // deterministic where a frame-sink `tryEmit` is not. The wait is
-            // a fixed ~15ms, the same post-composition moment the card drag
-            // emit lands: `withFrameNanos` never fires at the second density
-            // pump for these composed-modifier nodes, so the press there was
-            // emitted at settle time and the ink never painted. 15ms still
-            // keeps the press off uptime 0 (a ripple's frame callback there
-            // aborts layoutlib) and out of frame 0, matching the Slint
-            // driver's `//ACTION=` dispatch.
-            LaunchedEffect(Unit) {
-                delay(15)
-                interactionSource.emit(PressInteraction.Press(pressOffset))
+            // Queued into the frame sink, which runs due entries right
+            // after `recordFrame` — `at` 0 lands the press just past the
+            // baseline frame, the same post-frame-0 moment the Slint
+            // driver dispatches `//ACTION=`. Unlike a coroutine wait the
+            // sink fires at a fixed frame index on every density pump,
+            // so the ripple's progress at each captured frame is
+            // clock-time independent. `tryEmit` is enough: the source
+            // replays its latest emission to late subscribers.
+            val press = Runnable {
+                interactionSource.tryEmit(PressInteraction.Press(pressOffset))
+            }
+            DisposableEffect(press) {
+                val entry = 0L to press
+                emitPress.add(entry)
+                onDispose { emitPress.remove(entry) }
             }
         }
     }
@@ -2722,13 +2724,18 @@ private fun StateCard(
             // The Slint side defers a construction-bound `dragged` one
             // tick so `animate` tweens instead of snapping at init; its
             // animation driver then ticks on 60Hz frames, which lands the
-            // first eased step ~15ms in. The compose emit waits the same
-            // ~15ms so both animations start on matching clock times —
-            // layoutlib steps a 1ms test clock, so `withFrameNanos` alone
-            // would only buy a single step.
-            LaunchedEffect(Unit) {
-                delay(15)
-                interactionSource.emit(DragInteraction.Start())
+            // first eased step ~15ms in. The frame sink emits the drag at
+            // `at` 15 — 15 sim-ms on motion scenes — so both animations
+            // start on matching clock times. Unlike a coroutine `delay`
+            // the sink fires at a fixed frame index on every density
+            // pump, keeping captured frames clock-time independent.
+            val drag = Runnable {
+                interactionSource.tryEmit(DragInteraction.Start())
+            }
+            DisposableEffect(drag) {
+                val entry = 15L to drag
+                emitPress.add(entry)
+                onDispose { emitPress.remove(entry) }
             }
         }
     }
