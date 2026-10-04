@@ -135,6 +135,7 @@ import androidx.compose.material3.ShortNavigationBarArrangement
 import androidx.compose.ui.Alignment
 import androidx.compose.material3.ShortNavigationBarItem
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.requiredHeight
 import androidx.compose.foundation.gestures.AnchoredDraggableDefaults
@@ -5117,8 +5118,5 @@ private fun NavItemIcon(item: GroupItem, i: Int, selectedIndex: Int) {
         }
     } else {
         Icon(sceneIcon(stem), contentDescription = null)
-    }
-}
-
     }
 }
