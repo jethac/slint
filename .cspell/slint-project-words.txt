@@ -464,6 +464,7 @@ linebreaker
 LINRGB
 linuxkms
 lipo
+listtile
 Literata
 Llff
 Lmaterial
@@ -652,6 +653,7 @@ recompiles
 recompositions
 rects
 redoable
+reemit
 REFR
 relpath
 remoteviewer
@@ -698,6 +700,7 @@ sdkmanager
 seatd
 segmentedbutton
 segmenteditem
+segmentedlistitem
 Segoe
 serde
 setattr

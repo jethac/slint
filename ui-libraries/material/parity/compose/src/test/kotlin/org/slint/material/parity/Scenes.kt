@@ -56,6 +56,9 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.IconButtonDefaults.IconButtonWidthOption
 import androidx.compose.material3.IconToggleButton
+import androidx.compose.material3.ListItem
+import androidx.compose.material3.ListItemDefaults
+import androidx.compose.material3.SegmentedListItem
 import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.ContainedLoadingIndicator
 import androidx.compose.material3.LocalMinimumInteractiveComponentSize
@@ -477,6 +480,7 @@ private fun CanvasScene(
         var surfaces = 0
         var menus = 0
         var menuTexts = 0
+        var items = 0
         var appbars = 0
         var groups = 0
         var icons = 0
@@ -584,6 +588,29 @@ private fun CanvasScene(
                     // `text:<n>` enumerates text-bearing widgets in
                     // document order across the whole scene.
                     menuTexts += widget.fabItems.size
+                }
+                widget.isListItem -> {
+                    // `text:<n>` ids pair with the Slint side's Text
+                    // elements in document order — each item emits its
+                    // avatar label, overline, headline, supporting, and
+                    // trailing text in that order.
+                    val nTexts = 1 +
+                        listOfNotNull(
+                            widget.avatar,
+                            widget.overline,
+                            widget.supporting,
+                            widget.trailingText,
+                        ).size
+                    StateListItem(
+                        widget,
+                        scene,
+                        tracer,
+                        texts,
+                        "item${items++}",
+                        density,
+                        emitPress,
+                    )
+                    texts += nTexts
                 }
                 widget.kind == "top-app-bar" ||
                     widget.kind == "bottom-app-bar" ||
@@ -924,11 +951,12 @@ private fun emitStateInteractions(
         // the driver's synthetic pointer press carries no hover either, and
         // the interior pixels stay within tolerance of Slint's state layer.
         // The flow replays its latest emission, so the button's collectors
-        // receive the press whenever they subscribe during the pump. The
-        // registration goes to the frame sink, which runs it right after
-        // the first presented frame: the Slint driver dispatches //ACTION=
-        // just after its own pre-press baseline frame, and an earlier emit
-        // would put pressed ink (and the morph's start) into frame 0 — the
+        // receive the press whenever they subscribe during the pump.
+        //
+        // Timed scenes still go through the
+        // frame sink — the Slint driver dispatches //ACTION= just after its
+        // own pre-press baseline frame, and an earlier emit would put
+        // pressed ink (and the morph's start) into frame 0 — the
         // composition runs ahead of the pump during setup. Landing after
         // frame 0 also keeps the press off uptime 0, where a ripple's frame
         // callback would abort layoutlib.
@@ -2629,52 +2657,6 @@ private fun PressInkOverlay(
     )
 }
 
-/** Upstream `containerSize{,Medium,Large}` / `containerCornerRadius{,Medium,Large}`
- * for the widget's `fab_size` — the (Float) -> Dp lambdas the public
- * `ToggleFloatingActionButton` overload takes. */
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
-private fun fabMenuDefaults(
-    widget: Widget,
-): Triple<(Float) -> Dp, (Float) -> Dp, (Float) -> Dp> {
-    val d = ToggleFloatingActionButtonDefaults
-    return when (widget.fabSize) {
-        "medium" -> Triple(d.containerSizeMedium(), d.containerCornerRadiusMedium(), d.iconSizeMedium())
-        "large" -> Triple(d.containerSizeLarge(), d.containerCornerRadiusLarge(), d.iconSizeLarge())
-        else -> Triple(d.containerSize(), d.containerCornerRadius(), d.iconSize())
-    }
-}
-
-/** The resting container size/radius `containerSize(0f)` evaluates to —
- * upstream's `Fab{,Medium,Large}Initial{Size,CornerRadius}` (56/80/96 dp
- * and 16/20/28 dp). Used only by the trace probe; the composable itself
- * gets the `(Float) -> Dp` defaults above. */
-private fun fabInitial(widget: Widget): Pair<Dp, Dp> = when (widget.fabSize) {
-    "medium" -> 80.dp to 20.dp
-    "large" -> 96.dp to 28.dp
-    else -> 56.dp to 16.dp
-}
-
-/** The morph probe: the component's own `checkedProgress` is internal, so
- * the trace re-derives it with the spec `ToggleFloatingActionButton`
- * hands `animateFloatAsState` — `MotionSchemeKeyTokens.FastSpatial` —
- * and the `(Float) -> Dp` defaults map it to size/radius, the same math
- * the real lambdas apply. */
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
-@Composable
-private fun fabMorphProbe(widget: Widget, checked: Boolean, tracer: Tracer) {
-    val motionScheme = androidx.compose.material3.MaterialTheme.motionScheme
-    val p by animateFloatAsState(
-        targetValue = if (checked) 1f else 0f,
-        animationSpec = motionScheme.fastSpatialSpec<Float>(),
-        label = "checked_progress",
-    )
-    val (_, _) = fabInitial(widget)
-    val (sizeFn, radiusFn, _) = fabMenuDefaults(widget)
-    tracer.propGetters["checked_progress"] = { p.toDouble() }
-    tracer.propGetters["container_size"] = { sizeFn(p).value.toDouble() }
-    tracer.propGetters["container_radius"] = { radiusFn(p).value.toDouble() }
-}
-
 /** `ToggleFloatingActionButton` — the morphing FAB that can host a menu.
  * A `press`+`release` action pair is the upstream click: `checked` flips
  * at the release's `at` time, matching the Slint driver's real pointer
@@ -2758,91 +2740,290 @@ private fun ToggleFab(
     }
 }
 
-/** `FloatingActionButtonMenu` — the items column above a toggle FAB.
- * `expanded` is the upstream `expanded` parameter; a `press`+`release`
- * action pair on the button is its click, so `expanded` flips at the
- * release's `at` time. */
+/** A `ListItem`/`SegmentedListItem` parity widget. The overload dispatch
+ * mirrors the scene fields: `checkable` → `onCheckedChange`, `selectable`
+ * → `selected`+`onClick`, `interactive` → plain `onClick`, else the
+ * non-interactive base overload. On `selectable`/`checkable` the host owns
+ * the state — a press+release action pair is the click, flipping
+ * `selected`/`checked` at the release's `at` time like the Slint case's
+ * `clicked` handler. `container_radius` probes the shape morph at
+ * `MotionScheme.fastSpatialSpec` — `ListItemShapes`' `shapeAnimationSpec`
+ * — following pressed → selected → resting; focus, hover, and `dragged`
+ * never reach a scene (no scene action emits focus, and platform shadows
+ * deadlock layoutlib, so no scene asserts a dragged item's Level4
+ * elevation). */
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-private fun FabMenu(
+private fun StateListItem(
     widget: Widget,
     scene: Scene,
     tracer: Tracer,
+    textBase: Int,
     elementId: String,
     density: Float,
     emitPress: java.util.concurrent.CopyOnWriteArrayList<Pair<Long, Runnable>>,
-    textBase: Int,
 ) {
-    var expanded by remember { mutableStateOf(widget.expanded) }
+    val interactionSource = remember { ReplayableInteractionSource() }
+    val interactive = widget.interactive || widget.selectable || widget.checkable
+    if (interactive) {
+        emitStateInteractions(
+            widget, scene, tracer, elementId, interactionSource, emitPress,
+            Offset(40f * density, 20f * density), density,
+        )
+    }
+
+    var checked by remember { mutableStateOf(widget.checked) }
+    var selected by remember { mutableStateOf(widget.selected) }
+    val clickToggles = (widget.checkable || widget.selectable) && sceneActionsClick(scene)
     DisposableEffect(Unit) {
-        val flip = Runnable { expanded = !expanded }
-        val at = scene.actions.firstOrNull { it.kind == "release" }?.at ?: 0L
-        val entry = at to flip
-        if (sceneActionsClick(scene)) {
-            emitPress.add(entry)
-        }
+        val flip = Runnable { if (widget.checkable) checked = !checked else selected = !selected }
+        val entry =
+            (scene.actions.firstOrNull { it.kind == "release" }?.at ?: 0L) to flip
+        if (clickToggles) emitPress.add(entry)
         onDispose { emitPress.remove(entry) }
     }
-    fabMorphProbe(widget, expanded, tracer)
-    val (sizeFn, radiusFn, iconSizeFn) = fabMenuDefaults(widget)
-    val iconColor = ToggleFloatingActionButtonDefaults.iconColor()
-    FloatingActionButtonMenu(
-        expanded = expanded,
-        modifier = Modifier.offset(widget.x.dp, widget.y.dp).track(tracer, elementId),
-        horizontalAlignment = when (widget.alignment) {
-            "start" -> Alignment.Start
-            "center" -> Alignment.CenterHorizontally
-            else -> Alignment.End
-        },
-        button = {
-            ToggleFloatingActionButton(
-                checked = expanded,
-                onCheckedChange = { expanded = it },
-                modifier = Modifier.track(tracer, "$elementId>toggle0"),
-                containerSize = sizeFn,
-                containerCornerRadius = radiusFn,
-            ) {
-                val iconName = if (checkedProgress > 0.5f) {
-                    widget.checkedIcon ?: widget.icon
-                } else {
-                    widget.icon
-                }
-                if (iconName != null) {
-                    Icon(
-                        sceneIcon(iconName),
-                        contentDescription = null,
-                        modifier = Modifier.size(iconSizeFn(checkedProgress)),
-                        tint = iconColor(checkedProgress),
-                    )
+    val selectedEffective =
+        if (widget.selectable) selected else if (widget.checkable) checked else false
+
+    val segmented = widget.kind == "segmented-list-item"
+    val shapes = if (segmented) {
+        ListItemDefaults.segmentedShapes(widget.index, widget.count)
+    } else {
+        ListItemDefaults.shapes()
+    }
+    val colors =
+        if (segmented) ListItemDefaults.segmentedColors() else ListItemDefaults.colors()
+
+    // `container_radius` — every list container corner is an absolute-dp
+    // token, so `radiusOf`'s height argument is inert (it only resolves
+    // percent corners, which list shapes never use).
+    val pressed by interactionSource.collectIsPressedAsState()
+    val radius by animateFloatAsState(
+        targetValue = radiusOf(
+            when {
+                pressed -> shapes.pressedShape
+                selectedEffective -> shapes.selectedShape
+                else -> shapes.shape
+            },
+            56.dp,
+            density,
+        ),
+        animationSpec =
+            androidx.compose.material3.MaterialTheme.motionScheme.fastSpatialSpec<Float>(),
+        label = "container_radius",
+    )
+    tracer.propGetters["container_radius"] = { radius.toDouble() }
+
+    var modifier = Modifier.offset(widget.x.dp, widget.y.dp)
+    if (widget.width > 0) {
+        modifier = modifier.width(widget.width.dp)
+    }
+    modifier = modifier.track(tracer, elementId)
+
+    val resolver = androidx.compose.ui.platform.LocalFontFamilyResolver.current
+    val localDensity = LocalDensity.current
+    // `text:<n>` ids follow the Slint side's Text element order: the avatar
+    // label sits in the leading slot before the column's overline/headline/
+    // supporting and the row's trailing text.
+    var tid = textBase
+    fun nextTextId() = "text:${tid++}"
+    fun slotText(id: String, t: String, color: Color): @Composable () -> Unit = {
+        Text(
+            text = t,
+            color = color,
+            modifier = Modifier.trackText(tracer, id, density),
+            onTextLayout =
+                recordTextLayout(tracer, id, localDensity, resolver, null),
+        )
+    }
+    // The leading slot mirrors the Slint `ListTile` slots: the 40px avatar
+    // circle (`ItemLeadingAvatarColor`/`ItemLeadingAvatarLabelColor`), a
+    // 56px `leading_image` clipped to `ItemLeadingImageExpressiveShape`
+    // (`corner_small` = 8dp), or the 24px `leading_icon`.
+    val leading: (@Composable () -> Unit)? = when {
+        widget.avatar != null -> {
+            val avatarSlot = slotText(
+                nextTextId(),
+                widget.avatar!!,
+                schemeColor("on-primary-container"),
+            )
+            val slot: @Composable () -> Unit = {
+                Box(
+                    Modifier.size(40.dp)
+                        .clip(androidx.compose.foundation.shape.CircleShape)
+                        .background(schemeColor("primary-container")),
+                    contentAlignment = androidx.compose.ui.Alignment.Center,
+                ) {
+                    avatarSlot()
                 }
             }
-        },
-    ) {
-        widget.fabItems.forEachIndexed { i, item ->
-            FloatingActionButtonMenuItem(
+            slot
+        }
+        widget.leadingImage != null -> {
+            {
+                androidx.compose.foundation.Image(
+                    imageVector = sceneIcon(widget.leadingImage!!),
+                    contentDescription = null,
+                    modifier = Modifier.size(56.dp)
+                        .clip(androidx.compose.foundation.shape.RoundedCornerShape(8.dp)),
+                    contentScale = androidx.compose.ui.layout.ContentScale.FillBounds,
+                )
+            }
+        }
+        widget.icon != null -> {
+            {
+                Icon(
+                    sceneIcon(widget.icon!!),
+                    contentDescription = null,
+                    modifier = Modifier.size(24.dp),
+                )
+            }
+        }
+        else -> null
+    }
+    val overline: (@Composable () -> Unit)? = widget.overline?.let { t ->
+        slotText(nextTextId(), t, Color.Unspecified)
+    }
+    val content: @Composable () -> Unit =
+        slotText(nextTextId(), widget.text ?: "", Color.Unspecified)
+    val supporting: (@Composable () -> Unit)? = widget.supporting?.let { t ->
+        slotText(nextTextId(), t, Color.Unspecified)
+    }
+    val trailing: (@Composable () -> Unit)? = when {
+        widget.trailingIcon != null -> {
+            {
+                Icon(
+                    sceneIcon(widget.trailingIcon!!),
+                    contentDescription = null,
+                    modifier = Modifier.size(24.dp),
+                )
+            }
+        }
+        widget.trailingText != null ->
+            slotText(nextTextId(), widget.trailingText!!, Color.Unspecified)
+        else -> null
+    }
+
+    if (segmented) {
+        when {
+            widget.checkable -> SegmentedListItem(
+                checked = checked,
+                onCheckedChange = { checked = it },
+                shapes = shapes,
+                modifier = modifier,
+                enabled = widget.enabled,
+                leadingContent = leading,
+                trailingContent = trailing,
+                overlineContent = overline,
+                supportingContent = supporting,
+                colors = colors,
+                interactionSource = interactionSource,
+                content = content,
+            )
+            widget.selectable -> SegmentedListItem(
+                selected = selected,
+                onClick = { selected = !selected },
+                shapes = shapes,
+                modifier = modifier,
+                enabled = widget.enabled,
+                leadingContent = leading,
+                trailingContent = trailing,
+                overlineContent = overline,
+                supportingContent = supporting,
+                colors = colors,
+                interactionSource = interactionSource,
+                content = content,
+            )
+            interactive -> SegmentedListItem(
                 onClick = {},
-                modifier = Modifier.track(tracer, "$elementId>container$i"),
-                text = {
-                    val textId = "text:${textBase + i}"
-                    Text(
-                        item.text ?: "",
-                        modifier = Modifier.trackText(tracer, textId, density),
-                        onTextLayout = recordTextLayout(
-                            tracer,
-                            textId,
-                            LocalDensity.current,
-                            androidx.compose.ui.platform.LocalFontFamilyResolver.current,
-                            androidx.compose.material3.MaterialTheme.typography.titleMedium.fontFamily,
-                        ),
-                    )
-                },
-                icon = {
-                    item.icon?.let { Icon(sceneIcon(it), contentDescription = null) }
-                },
+                shapes = shapes,
+                modifier = modifier,
+                enabled = widget.enabled,
+                leadingContent = leading,
+                trailingContent = trailing,
+                overlineContent = overline,
+                supportingContent = supporting,
+                colors = colors,
+                interactionSource = interactionSource,
+                content = content,
+            )
+            else -> SegmentedListItem(
+                // material3 1.5.0-alpha18 ships no non-interactive
+                // SegmentedListItem overload; a no-op onClick draws the
+                // identical resting visual (ripple only appears on touch,
+                // and no scene action touches a non-interactive item).
+                onClick = {},
+                shapes = shapes,
+                modifier = modifier,
+                enabled = widget.enabled,
+                leadingContent = leading,
+                trailingContent = trailing,
+                overlineContent = overline,
+                supportingContent = supporting,
+                colors = colors,
+                interactionSource = interactionSource,
+                content = content,
+            )
+        }
+    } else {
+        when {
+            widget.checkable -> ListItem(
+                checked = checked,
+                onCheckedChange = { checked = it },
+                modifier = modifier,
+                enabled = widget.enabled,
+                leadingContent = leading,
+                trailingContent = trailing,
+                overlineContent = overline,
+                supportingContent = supporting,
+                shapes = shapes,
+                colors = colors,
+                interactionSource = interactionSource,
+                content = content,
+            )
+            widget.selectable -> ListItem(
+                selected = selected,
+                onClick = { selected = !selected },
+                modifier = modifier,
+                enabled = widget.enabled,
+                leadingContent = leading,
+                trailingContent = trailing,
+                overlineContent = overline,
+                supportingContent = supporting,
+                shapes = shapes,
+                colors = colors,
+                interactionSource = interactionSource,
+                content = content,
+            )
+            interactive -> ListItem(
+                onClick = {},
+                modifier = modifier,
+                enabled = widget.enabled,
+                leadingContent = leading,
+                trailingContent = trailing,
+                overlineContent = overline,
+                supportingContent = supporting,
+                shapes = shapes,
+                colors = colors,
+                interactionSource = interactionSource,
+                content = content,
+            )
+            else -> ListItem(
+                // The legacy `headlineContent` overload is upstream's only
+                // non-interactive ListItem: flat `ListItemDefaults.shape`
+                // corners, no `enabled` — it cannot render a disabled item.
+                headlineContent = content,
+                modifier = modifier,
+                leadingContent = leading,
+                trailingContent = trailing,
+                overlineContent = overline,
+                supportingContent = supporting,
+                colors = colors,
             )
         }
     }
 }
+
 
 
 /** App-bar family widgets (`top-app-bar` variants, `bottom-app-bar`,

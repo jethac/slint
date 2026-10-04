@@ -76,7 +76,9 @@ class Widget(json: JSONObject) {
      * rasterizes. */
     val icon: String? = (json.opt("icon") as? String)?.takeIf { it.isNotEmpty() }
     /** `connected-button`/`GroupItem.checked_icon`: swaps `icon` while the
-     * item is checked (the upstream samples' filled/outlined swap). */
+     * item is checked (the upstream samples' filled/outlined swap); on a
+     * `fab-menu` toggle the icon drawn once `checkedProgress` passes 0.5 —
+     * the upstream sample's close icon. */
     val checkedIcon: String? = (json.opt("checked_icon") as? String)?.takeIf { it.isNotEmpty() }
     val enabled: Boolean = json.optBoolean("enabled", true)
     /** Interaction state the widget starts in: `enabled` (default),
@@ -107,19 +109,34 @@ class Widget(json: JSONObject) {
      * (default), `medium`, or `large` — the upstream
      * `containerSize{,Medium,Large}` overloads (no small exists). */
     val fabSize: String = (json.opt("fab_size") as? String) ?: "baseline"
-    /** The icon drawn once the toggle's `checkedProgress` passes 0.5 —
-     * the upstream sample's close icon. */
-    val checkedIcon: String? = (json.opt("checked_icon") as? String)?.takeIf { it.isNotEmpty() }
-    /** `expanded` on `FloatingActionButtonMenu` (drives the toggle's
-     * `checked` on both sides). */
-    val expanded: Boolean = json.optBoolean("expanded", false)
-    /** `horizontalAlignment` for `fab-menu`: `start`, `center`, or `end`
-     * (upstream default `Alignment.End`). */
-    val alignment: String = (json.opt("alignment") as? String) ?: "end"
     /** The `fab-menu` widget's `{icon, text, enabled}` entries. */
     val fabItems: List<FabMenuItemSpec> =
         json.optJSONArray("fab_items")?.let { a -> (0 until a.length()).map { FabMenuItemSpec(a.getJSONObject(it)) } }
             ?: emptyList()
+    /** `ListItem(onClick)` overload — `selectable`/`checkable` imply it. */
+    val interactive: Boolean = json.optBoolean("interactive", false)
+    /** `ListItem(selected, onClick)` overload. */
+    val selectable: Boolean = json.optBoolean("selectable", false)
+    val selected: Boolean = json.optBoolean("selected", false)
+    /** `segmentedShapes(index, count)` position for `segmented-list-item`. */
+    val index: Int = json.optInt("index", 0)
+    val count: Int = json.optInt("count", 1)
+    /** `overlineContent` text on a list item. */
+    val overline: String? = (json.opt("overline") as? String)?.takeIf { it.isNotEmpty() }
+    /** `supportingContent` text on a list item. */
+    val supporting: String? = (json.opt("supporting") as? String)?.takeIf { it.isNotEmpty() }
+    /** The `isSupportingMultiline` heuristic input to `ListItemType`. */
+    val supportingMultiline: Boolean = json.optBoolean("supporting_multiline", false)
+    /** 40px avatar circle with this label in the leading slot. */
+    val avatar: String? = (json.opt("avatar") as? String)?.takeIf { it.isNotEmpty() }
+    /** Icon stem (`Icons.*`) in the trailing slot — `icon` fills leading
+     * on a list item; on a `*-split-button` it's the trailing-half chevron
+     * (`keyboard_arrow_down` when unset). */
+    val trailingIcon: String? = (json.opt("trailing_icon") as? String)?.takeIf { it.isNotEmpty() }
+    val trailingText: String? = (json.opt("trailing_text") as? String)?.takeIf { it.isNotEmpty() }
+    /** Icon stem used as the 56x56 `leading_image` source — both sides
+     * rasterize the identical svg path clipped to the image shape. */
+    val leadingImage: String? = (json.opt("leading_image") as? String)?.takeIf { it.isNotEmpty() }
     /** Loading-indicator mode: indeterminate (the continuous morph loop,
      * default) or driven by [progress]. */
     val indeterminate: Boolean = json.optBoolean("indeterminate", true)
@@ -143,9 +160,6 @@ class Widget(json: JSONObject) {
     /** `*-split-button` kinds only: which half carries `state` and receives
      * the scripted pointer gesture — `leading` or `trailing`. */
     val side: String = (json.opt("side") as? String) ?: "trailing"
-    /** `*-split-button` trailing icon stem — `keyboard_arrow_down`, the
-     * chevron the upstream samples rotate, when unset. */
-    val trailingIcon: String? = (json.opt("trailing_icon") as? String)?.takeIf { it.isNotEmpty() }
     /** `connected-button` only: `start`/`middle`/`end` — the position's
      * `connected*ButtonShapes`. `start` is the leading item of a horizontal
      * group, the top item of a vertical one. */
@@ -162,14 +176,19 @@ class Widget(json: JSONObject) {
     val multiSelect: Boolean = json.optBoolean("multi_select", false)
     /** Single-select groups: the checked item (`-1` selects none). */
     val selectedIndex: Int = json.optInt("selected_index", -1)
-    /** `extended-fab` expansion state (`expanded` upstream). */
-    val expanded: Boolean = json.optBoolean("expanded", true)
+    /** `extended-fab` expansion state (`expanded` upstream, default
+     * expanded); on `fab-menu`, `FloatingActionButtonMenu.expanded` —
+     * collapsed by default and driving the toggle's `checked`. */
+    val expanded: Boolean = json.optBoolean("expanded", kind == "extended-fab")
     /** `fab`/`extended-fab` visibility — `visible` on
      * `Modifier.animateFloatingActionButton` upstream. */
     val shown: Boolean = json.optBoolean("shown", true)
     /** `animateFloatingActionButton` scale pivot — `Alignment` member name
-     * in snake case (`bottom_end` default). */
-    val alignment: String = (json.opt("alignment") as? String) ?: "bottom_end"
+     * in snake case (`bottom_end` default); on `fab-menu`, the
+     * `horizontalAlignment` (`start`/`center`/`end`, upstream default
+     * `Alignment.End`). */
+    val alignment: String = (json.opt("alignment") as? String)
+        ?: (if (kind == "fab-menu") "end" else "bottom_end")
     /** `animateFloatingActionButton` `targetScale` (0.2 upstream). */
     val targetScale: Float = json.optDouble("target_scale", 0.2).toFloat()
     /** The prop a press+release click toggles — `expanded` or `shown`. */
@@ -186,6 +205,7 @@ class Widget(json: JSONObject) {
     val isIconButton: Boolean get() = kind.endsWith("icon-button")
     val isButton: Boolean get() =
         (isIconButton || isSplitButton || kind.endsWith("-button")) && kind != "connected-button"
+    val isListItem: Boolean get() = kind == "list-item" || kind == "segmented-list-item"
     /** `elevated-rect` only: the elevation in dp of the Android ambient+spot
      * shadow `Modifier.shadow` draws behind the caster. */
     val elevation: Float = json.optDouble("elevation", 0.0).toFloat()
