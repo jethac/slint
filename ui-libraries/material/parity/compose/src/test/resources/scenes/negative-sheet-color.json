@@ -85,6 +85,7 @@
   "widgets": [
     {
       "alignment": null,
+      "always_show_label": null,
       "body_color": null,
       "checkable": null,
       "checked": null,
@@ -102,6 +103,7 @@
       "height": 240.0,
       "height_offset": null,
       "icon": null,
+      "icon_position": null,
       "icons": [],
       "indeterminate": null,
       "index": null,
@@ -113,6 +115,7 @@
       "leading_image": null,
       "level": null,
       "multi_select": null,
+      "nav_arrangement": null,
       "nav_icon": null,
       "overline": null,
       "peek_height": null,

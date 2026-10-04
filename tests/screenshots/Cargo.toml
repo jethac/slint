@@ -60,7 +60,7 @@ anyrender_vello_cpu = { version = "0.16", optional = true }
 kurbo = { version = "0.13", optional = true }
 peniko = { version = "0.6", optional = true }
 serde_json = { version = "1" }
-slint-interpreter = { workspace = true, features = ["display-diagnostics", "compat-1-2"], optional = true }
+slint-interpreter = { workspace = true, features = ["display-diagnostics", "compat-1-2", "internal"], optional = true }
 # Provides `configure_test_fonts()` to register the bundled test fonts at runtime so the default
 # software driver resolves fonts deterministically without importing a .ttf, plus the mocked
 # clock and `ElementQuery` the parity driver uses.

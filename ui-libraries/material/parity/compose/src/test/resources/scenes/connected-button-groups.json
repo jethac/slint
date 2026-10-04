@@ -242,6 +242,7 @@
   "widgets": [
     {
       "alignment": null,
+      "always_show_label": null,
       "body_color": null,
       "checkable": null,
       "checked": null,
@@ -259,6 +260,7 @@
       "height": null,
       "height_offset": null,
       "icon": null,
+      "icon_position": null,
       "icons": [],
       "indeterminate": null,
       "index": null,
@@ -266,26 +268,35 @@
       "interactive": null,
       "items": [
         {
+          "badge": null,
           "checked": null,
           "checked_icon": null,
           "disabled": null,
+          "enabled": null,
           "icon": null,
+          "selected_icon": null,
           "state": null,
           "text": "Day"
         },
         {
+          "badge": null,
           "checked": null,
           "checked_icon": null,
           "disabled": null,
+          "enabled": null,
           "icon": null,
+          "selected_icon": null,
           "state": "focused",
           "text": "Week"
         },
         {
+          "badge": null,
           "checked": null,
           "checked_icon": null,
           "disabled": null,
+          "enabled": null,
           "icon": null,
+          "selected_icon": null,
           "state": null,
           "text": "Month"
         }
@@ -295,6 +306,7 @@
       "leading_image": null,
       "level": null,
       "multi_select": null,
+      "nav_arrangement": null,
       "nav_icon": null,
       "overline": null,
       "peek_height": null,
@@ -333,6 +345,7 @@
     },
     {
       "alignment": null,
+      "always_show_label": null,
       "body_color": null,
       "checkable": null,
       "checked": null,
@@ -350,6 +363,7 @@
       "height": null,
       "height_offset": null,
       "icon": null,
+      "icon_position": null,
       "icons": [],
       "indeterminate": null,
       "index": null,
@@ -357,34 +371,46 @@
       "interactive": null,
       "items": [
         {
+          "badge": null,
           "checked": true,
           "checked_icon": null,
           "disabled": null,
+          "enabled": null,
           "icon": null,
+          "selected_icon": null,
           "state": null,
           "text": "Mon"
         },
         {
+          "badge": null,
           "checked": null,
           "checked_icon": null,
           "disabled": null,
+          "enabled": null,
           "icon": null,
+          "selected_icon": null,
           "state": null,
           "text": "Tue"
         },
         {
+          "badge": null,
           "checked": true,
           "checked_icon": null,
           "disabled": null,
+          "enabled": null,
           "icon": null,
+          "selected_icon": null,
           "state": null,
           "text": "Wed"
         },
         {
+          "badge": null,
           "checked": null,
           "checked_icon": null,
           "disabled": null,
+          "enabled": null,
           "icon": null,
+          "selected_icon": null,
           "state": null,
           "text": "Thu"
         }
@@ -394,6 +420,7 @@
       "leading_image": null,
       "level": null,
       "multi_select": true,
+      "nav_arrangement": null,
       "nav_icon": null,
       "overline": null,
       "peek_height": null,
@@ -432,6 +459,7 @@
     },
     {
       "alignment": null,
+      "always_show_label": null,
       "body_color": null,
       "checkable": null,
       "checked": null,
@@ -449,6 +477,7 @@
       "height": null,
       "height_offset": null,
       "icon": null,
+      "icon_position": null,
       "icons": [],
       "indeterminate": null,
       "index": null,
@@ -456,26 +485,35 @@
       "interactive": null,
       "items": [
         {
+          "badge": null,
           "checked": null,
           "checked_icon": "check",
           "disabled": null,
+          "enabled": null,
           "icon": "edit",
+          "selected_icon": null,
           "state": null,
           "text": "Edit"
         },
         {
+          "badge": null,
           "checked": null,
           "checked_icon": "check",
           "disabled": null,
+          "enabled": null,
           "icon": "menu",
+          "selected_icon": null,
           "state": null,
           "text": "Save"
         },
         {
+          "badge": null,
           "checked": null,
           "checked_icon": "check",
           "disabled": null,
+          "enabled": null,
           "icon": "arrow_right",
+          "selected_icon": null,
           "state": "hovered",
           "text": "Go"
         }
@@ -485,6 +523,7 @@
       "leading_image": null,
       "level": null,
       "multi_select": null,
+      "nav_arrangement": null,
       "nav_icon": null,
       "overline": null,
       "peek_height": null,
@@ -523,6 +562,7 @@
     },
     {
       "alignment": null,
+      "always_show_label": null,
       "body_color": null,
       "checkable": null,
       "checked": null,
@@ -540,6 +580,7 @@
       "height": null,
       "height_offset": null,
       "icon": null,
+      "icon_position": null,
       "icons": [],
       "indeterminate": null,
       "index": null,
@@ -547,26 +588,35 @@
       "interactive": null,
       "items": [
         {
+          "badge": null,
           "checked": null,
           "checked_icon": null,
           "disabled": null,
+          "enabled": null,
           "icon": null,
+          "selected_icon": null,
           "state": null,
           "text": "One"
         },
         {
+          "badge": null,
           "checked": null,
           "checked_icon": null,
           "disabled": null,
+          "enabled": null,
           "icon": null,
+          "selected_icon": null,
           "state": "pressed",
           "text": "Two"
         },
         {
+          "badge": null,
           "checked": null,
           "checked_icon": null,
           "disabled": null,
+          "enabled": null,
           "icon": null,
+          "selected_icon": null,
           "state": null,
           "text": "Three"
         }
@@ -576,6 +626,7 @@
       "leading_image": null,
       "level": null,
       "multi_select": null,
+      "nav_arrangement": null,
       "nav_icon": null,
       "overline": null,
       "peek_height": null,
@@ -614,6 +665,7 @@
     },
     {
       "alignment": null,
+      "always_show_label": null,
       "body_color": null,
       "checkable": null,
       "checked": null,
@@ -631,6 +683,7 @@
       "height": null,
       "height_offset": null,
       "icon": null,
+      "icon_position": null,
       "icons": [],
       "indeterminate": null,
       "index": null,
@@ -638,26 +691,35 @@
       "interactive": null,
       "items": [
         {
+          "badge": null,
           "checked": null,
           "checked_icon": null,
           "disabled": null,
+          "enabled": null,
           "icon": null,
+          "selected_icon": null,
           "state": null,
           "text": "Yes"
         },
         {
+          "badge": null,
           "checked": null,
           "checked_icon": null,
           "disabled": true,
+          "enabled": null,
           "icon": null,
+          "selected_icon": null,
           "state": null,
           "text": "No"
         },
         {
+          "badge": null,
           "checked": null,
           "checked_icon": null,
           "disabled": null,
+          "enabled": null,
           "icon": null,
+          "selected_icon": null,
           "state": null,
           "text": "Maybe"
         }
@@ -667,6 +729,7 @@
       "leading_image": null,
       "level": null,
       "multi_select": null,
+      "nav_arrangement": null,
       "nav_icon": null,
       "overline": null,
       "peek_height": null,
@@ -705,6 +768,7 @@
     },
     {
       "alignment": null,
+      "always_show_label": null,
       "body_color": null,
       "checkable": null,
       "checked": null,
@@ -722,6 +786,7 @@
       "height": null,
       "height_offset": null,
       "icon": null,
+      "icon_position": null,
       "icons": [],
       "indeterminate": null,
       "index": null,
@@ -729,26 +794,35 @@
       "interactive": null,
       "items": [
         {
+          "badge": null,
           "checked": null,
           "checked_icon": null,
           "disabled": null,
+          "enabled": null,
           "icon": null,
+          "selected_icon": null,
           "state": null,
           "text": "Top"
         },
         {
+          "badge": null,
           "checked": null,
           "checked_icon": null,
           "disabled": null,
+          "enabled": null,
           "icon": null,
+          "selected_icon": null,
           "state": null,
           "text": "Mid"
         },
         {
+          "badge": null,
           "checked": null,
           "checked_icon": null,
           "disabled": null,
+          "enabled": null,
           "icon": null,
+          "selected_icon": null,
           "state": null,
           "text": "Bot"
         }
@@ -758,6 +832,7 @@
       "leading_image": null,
       "level": null,
       "multi_select": null,
+      "nav_arrangement": null,
       "nav_icon": null,
       "overline": null,
       "peek_height": null,
@@ -796,6 +871,7 @@
     },
     {
       "alignment": null,
+      "always_show_label": null,
       "body_color": null,
       "checkable": null,
       "checked": null,
@@ -813,6 +889,7 @@
       "height": null,
       "height_offset": null,
       "icon": null,
+      "icon_position": null,
       "icons": [],
       "indeterminate": null,
       "index": null,
@@ -824,6 +901,7 @@
       "leading_image": null,
       "level": null,
       "multi_select": null,
+      "nav_arrangement": null,
       "nav_icon": null,
       "overline": null,
       "peek_height": null,
@@ -862,6 +940,7 @@
     },
     {
       "alignment": null,
+      "always_show_label": null,
       "body_color": null,
       "checkable": null,
       "checked": true,
@@ -879,6 +958,7 @@
       "height": null,
       "height_offset": null,
       "icon": "edit",
+      "icon_position": null,
       "icons": [],
       "indeterminate": null,
       "index": null,
@@ -890,6 +970,7 @@
       "leading_image": null,
       "level": null,
       "multi_select": null,
+      "nav_arrangement": null,
       "nav_icon": null,
       "overline": null,
       "peek_height": null,
@@ -928,6 +1009,7 @@
     },
     {
       "alignment": null,
+      "always_show_label": null,
       "body_color": null,
       "checkable": null,
       "checked": null,
@@ -945,6 +1027,7 @@
       "height": null,
       "height_offset": null,
       "icon": null,
+      "icon_position": null,
       "icons": [],
       "indeterminate": null,
       "index": null,
@@ -956,6 +1039,7 @@
       "leading_image": null,
       "level": null,
       "multi_select": null,
+      "nav_arrangement": null,
       "nav_icon": null,
       "overline": null,
       "peek_height": null,
