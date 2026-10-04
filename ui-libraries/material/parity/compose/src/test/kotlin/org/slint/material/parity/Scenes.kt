@@ -110,6 +110,21 @@ import androidx.compose.material3.lightColorScheme
 import androidx.compose.material3.toShape
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.NavigationRail
+import androidx.compose.material3.NavigationRailItem
+import androidx.compose.material3.WideNavigationRail
+import androidx.compose.material3.WideNavigationRailItem
+import androidx.compose.material3.WideNavigationRailValue
+import androidx.compose.material3.WideNavigationRailDefaults
+import androidx.compose.material3.rememberWideNavigationRailState
+import androidx.compose.material3.ModalWideNavigationRail
+import androidx.compose.material3.Surface
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
 import androidx.compose.material3.MediumTopAppBar
 import androidx.compose.material3.MediumFlexibleTopAppBar
 import androidx.compose.material3.LargeTopAppBar
@@ -153,10 +168,8 @@ import androidx.compose.foundation.gestures.animateTo
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.platform.LocalViewConfiguration
 import androidx.compose.runtime.SideEffect
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.withFrameNanos
 import kotlin.math.roundToInt
-import kotlinx.coroutines.launch
 import androidx.compose.ui.graphics.vector.path
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -541,6 +554,7 @@ private fun CanvasScene(
         var items = 0
         var materialSurfaces = 0
         var appbars = 0
+        var rails = 0
         var sheets = 0
         var vhandles = 0
         var groups = 0
@@ -717,6 +731,16 @@ private fun CanvasScene(
                     widget.kind == "search-bar" ||
                     widget.kind == "app-bar-with-search" ->
                     StateAppBar(widget, tracer, "appbar${appbars++}")
+                widget.kind == "navigation-rail" ||
+                    widget.kind == "wide-navigation-rail" ||
+                    widget.kind == "modal-navigation-rail" ->
+                    StateRail(
+                        widget,
+                        scene,
+                        tracer,
+                        "rail${rails++}",
+                        emitPress,
+                    )
                 widget.kind == "navigation-bar" ||
                     widget.kind == "short-navigation-bar" ->
                     StateNavBar(widget, scene, tracer, "navbar${nav_bars++}", emitPress)
@@ -4618,6 +4642,251 @@ private fun StateConnectedGroup(
             verticalArrangement = Arrangement.spacedBy(2.dp),
         ) {
             itemsContent()
+        }
+    }
+}
+
+/** One navigation-rail family widget (`navigation-rail`,
+ * `wide-navigation-rail`, `modal-navigation-rail`). Elements are named
+ * `rail{n}` in scene order.
+ *
+ * The collapsed form of `modal-navigation-rail` renders the real
+ * `ModalWideNavigationRail` — its persistent collapsed rail sits in the
+ * scene. The expanded form can't reach the sheet: upstream renders it
+ * through `ModalWideNavigationRailDialog`, a real `Dialog` Paparazzi
+ * never captures — so the settled modal content is recomposed from the
+ * same parts the dialog builds: the scrim at `scrim` @ 32%, the
+ * `expandedShape` (corner-large, 16dp) sheet at `surface_container`, and
+ * the public rail in expanded mode clipped to the sheet shape (the
+ * upstream inner rail paints `modalContainerColor`/`expandedShape` — the
+ * clip stands in for it). */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalMaterial3Api::class)
+@Composable
+private fun StateRail(
+    widget: Widget,
+    scene: Scene,
+    tracer: Tracer,
+    tag: String,
+    emitPress: java.util.concurrent.CopyOnWriteArrayList<Pair<Long, Runnable>>,
+) {
+    val scope = rememberCoroutineScope()
+    val scheme = androidx.compose.material3.MaterialTheme.colorScheme
+    val density = androidx.compose.ui.platform.LocalDensity.current.density
+    val arrangement = when (widget.arrangement) {
+        "center" -> Arrangement.Center
+        "bottom" -> Arrangement.Bottom
+        "space-evenly" -> Arrangement.SpaceEvenly
+        "space-between" -> Arrangement.SpaceBetween
+        "space-around" -> Arrangement.SpaceAround
+        else -> Arrangement.Top
+    }
+    val insets = WindowInsets(0, 0, 0, 0)
+    // The header stacks a menu IconButton over a FAB, like the upstream
+    // samples' ColumnScope header. `NavigationRail`'s header slot takes a
+    // `ColumnScope` lambda, the wide rails' a plain one.
+    val headerContent: @Composable () -> Unit = {
+        widget.navIcon?.let { icon ->
+            IconButton(onClick = {}) {
+                Icon(sceneIcon(icon), contentDescription = null)
+            }
+        }
+        widget.fabIcon?.let { icon ->
+            FloatingActionButton(
+                onClick = {},
+                // `fab` on the wide rails, `header-fab` on the narrow one —
+                // the ids the Slint elements carry, so each is traced under
+                // the same key a scene can mask. One fab per rail type.
+                modifier = Modifier.track(
+                    tracer,
+                    if (widget.kind == "navigation-rail") "headerfab" else "fab",
+                ),
+            ) {
+                Icon(sceneIcon(icon), contentDescription = null)
+            }
+        }
+    }
+    val hasHeader = widget.navIcon != null || widget.fabIcon != null
+    val narrowHeader: @Composable (androidx.compose.foundation.layout.ColumnScope.() -> Unit)? =
+        if (hasHeader) { { headerContent() } } else { null }
+    val header: @Composable (() -> Unit)? =
+        if (hasHeader) { { Column { headerContent() } } } else { null }
+
+    // `params.rail_events` ([["expand", ms], ["collapse", ms], ...]) drives
+    // the rail state at the same mock-clock beats the Slint case's timers
+    // fire on — Paparazzi can't dispatch the pointer click the Slint side
+    // doesn't need either.
+    val railState = rememberWideNavigationRailState(
+        initialValue =
+            if (widget.expanded) WideNavigationRailValue.Expanded
+            else WideNavigationRailValue.Collapsed,
+    )
+    scene.params.optJSONArray("rail_events")?.let { events ->
+        for (i in 0 until events.length()) {
+            val ev = events.getJSONArray(i)
+            val command = ev.getString(0)
+            val at = ev.getLong(1)
+            DisposableEffect(tag, i) {
+                val entry = at to Runnable {
+                    scope.launch {
+                        if (command == "expand") railState.expand() else railState.collapse()
+                    }
+                }
+                emitPress.add(entry)
+                onDispose { emitPress.remove(entry) }
+            }
+        }
+    }
+
+    val base = Modifier
+        .offset(widget.x.dp, widget.y.dp)
+        .height(widget.height.dp)
+    val railExpanded = railState.targetValue == WideNavigationRailValue.Expanded
+    // `rail_width` traces the laid-out rail width on both sides.
+    if (scene.traceProps.contains("rail_width")) {
+        tracer.propGetters["rail_width"] = {
+            (tracer.elementBounds[tag]?.width ?: 0f) / density
+        }
+    }
+
+    // The scene clears `LocalMinimumInteractiveComponentSize` to 0dp, but
+    // the wide rail animates `itemMinHeight` to that minimum with an
+    // underdamped spring — the undershoot passes a negative `minHeight` to
+    // `fitPrioritizingWidth` and crashes the upstream measure policy.
+    // Restore the real 48dp minimum for the rail subtree; nothing in the
+    // rail measures smaller anyway.
+    CompositionLocalProvider(
+        LocalMinimumInteractiveComponentSize provides 48.dp,
+    ) {
+        when (widget.kind) {
+            "navigation-rail" -> NavigationRail(
+                modifier = base.track(tracer, tag),
+                header = narrowHeader,
+                windowInsets = insets,
+            ) {
+            widget.railItems.forEachIndexed { i, item ->
+                NavigationRailItem(
+                    selected = i == widget.selectedIndex,
+                    onClick = {},
+                    icon = {
+                        Icon(
+                            sceneIcon(
+                                (if (i == widget.selectedIndex) item.selectedIcon else item.icon)
+                                    ?: item.icon ?: "check",
+                            ),
+                            contentDescription = null,
+                        )
+                    },
+                    enabled = item.enabled,
+                    label = item.text.takeIf { it.isNotEmpty() }?.let { { Text(it) } },
+                    alwaysShowLabel = widget.alwaysShowLabel,
+                )
+            }
+        }
+            "wide-navigation-rail" -> WideNavigationRail(
+                state = railState,
+                modifier = base.track(tracer, tag),
+                header = header,
+                windowInsets = insets,
+                arrangement = arrangement,
+                // alpha18's default `ContentPadding` pads bottom by
+                // `WNRVerticalPadding` too; the pinned source (issue #3 pin)
+                // changed it to `bottom = 0.dp` (`PaddingValues(start=0,
+                // top=WNRTopPadding, end=0, bottom=0)` in
+                // WideNavigationRailDefaults) — pin it here so the scene
+                // follows the source, not the alpha.
+                contentPadding = androidx.compose.foundation.layout.PaddingValues(
+                    start = 0.dp, top = 44.dp, end = 0.dp, bottom = 0.dp,
+                ),
+            ) {
+            RailItems(widget, railExpanded, tag)
+        }
+            "modal-navigation-rail" -> if (!widget.expanded) {
+            ModalWideNavigationRail(
+                state = railState,
+                hideOnCollapse = widget.hideOnCollapse,
+                modifier = base.track(tracer, tag),
+                header = header,
+                expandedHeaderTopPadding = 0.dp,
+                windowInsets = insets,
+                arrangement = arrangement,
+                contentPadding = androidx.compose.foundation.layout.PaddingValues(
+                    start = 0.dp, top = 44.dp, end = 0.dp, bottom = 0.dp,
+                ),
+            ) {
+                RailItems(widget, railExpanded, tag)
+            }
+        } else {
+            // The settled modal sheet (see the function doc): scrim +
+            // corner-large `surface_container` + expanded rail. The sheet
+            // starts at the screen edge like upstream's `x = 0` anchor.
+            Box(Modifier.fillMaxSize()) {
+                Box(
+                    Modifier.fillMaxSize().background(
+                        scheme.scrim.copy(alpha = 0.32f),
+                    ),
+                )
+                val colors = WideNavigationRailDefaults.colors(
+                    containerColor = scheme.surfaceContainer,
+                    contentColor = scheme.onSurface,
+                )
+                    WideNavigationRail(
+                        state = railState,
+                        modifier = Modifier
+                            .widthIn(max = 360.dp)
+                            .fillMaxHeight()
+                            .clip(RoundedCornerShape(16.dp))
+                            .track(tracer, tag),
+                    colors = colors,
+                    header = header,
+                    windowInsets = insets,
+                    arrangement = arrangement,
+                    contentPadding = androidx.compose.foundation.layout.PaddingValues(
+                        start = 0.dp, top = 44.dp, end = 0.dp, bottom = 0.dp,
+                    ),
+                ) {
+                    RailItems(widget, railExpanded, tag)
+                }
+            }
+        }
+            else -> error("unknown rail kind ${widget.kind}")
+        }
+    }
+}
+
+/** The rail's items — one `WideNavigationRailItem` per `items` entry,
+ * wrapping badges in `BadgedBox` like the upstream samples. */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun RailItems(
+    widget: Widget,
+    railExpanded: Boolean,
+    tag: String = "?",
+) {
+    widget.railItems.forEachIndexed { i, item ->
+        val itemContent: @Composable () -> Unit = {
+            WideNavigationRailItem(
+                selected = i == widget.selectedIndex,
+                onClick = {},
+                icon = {
+                    Icon(
+                        sceneIcon(
+                            (if (i == widget.selectedIndex) item.selectedIcon else item.icon)
+                                ?: item.icon ?: "check",
+                        ),
+                        contentDescription = null,
+                    )
+                },
+                label = item.text.takeIf { it.isNotEmpty() }?.let { { Text(it) } },
+                railExpanded = railExpanded,
+                enabled = item.enabled,
+            )
+        }
+        if (item.badge != null) {
+            BadgedBox(
+                badge = { Badge { Text(item.badge) } },
+            ) { itemContent() }
+        } else {
+            itemContent()
         }
     }
 }
