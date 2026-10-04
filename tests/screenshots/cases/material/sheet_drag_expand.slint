@@ -1,0 +1,99 @@
+// Copyright © SixtyFPS GmbH <info@slint.dev>
+// SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0
+
+// Scene: sheet-drag-expand — generated from `ui-libraries/material/parity/scenes/sheet-drag-expand.json`
+// (edit the scene, regenerate with `cargo run -p material-parity-generator`).
+//PARITY=motion
+//SIZE=360x240
+//TIMES=0,42,80,150,300,600
+//TRACE_PROPS=sheet-offset,current-value,target-value,dragging,is-visible
+//TRACE_ELEMENTS=sheet0,sheet-pill0
+//ACTION=press:180,130
+//ACTION=move@20:180,120
+//ACTION=move@40:180,110
+//ACTION=release@82:180,110
+//MASK_DECOR=sheet-pill0@150,300
+//DENSITIES=1,2
+import "../../fonts/Roboto-VariableFont.ttf";
+import { BottomSheet, MaterialPalette, MaterialTheme, MaterialWindow, SheetValue } from "@material";
+
+export component TestCase inherits MaterialWindow {
+    init => {
+        // The scene pins seed #6750A4, tonal-spot, spec2025, light, contrast 0
+        // (all the library defaults; restated here so a default change can't
+        // silently move the parity baseline).
+        MaterialTheme.seed-color = #6750A4;
+        MaterialTheme.dark = false;
+        MaterialTheme.contrast-level = 0;
+        MaterialTheme.use-platform-color = false;
+        MaterialTheme.plain-family = "Roboto";
+        MaterialTheme.brand-family = "Roboto";
+        // Compose builds its scene scheme from the same seed — use the
+        // runtime-generated scheme, not the static expressive table.
+        MaterialPalette.dynamic = true;
+    }
+
+    sheet0_box := Rectangle {
+        x: 0px;
+        y: 0px;
+        width: 360px;
+        height: 240px;
+
+        sheet0_comp := BottomSheet {
+            x: 0px;
+            y: 0px;
+            width: 100%;
+            height: 100%;
+            initial-value: SheetValue.partially-expanded;
+            skip-partially-expanded: false;
+            gestures-enabled: true;
+            Rectangle {
+                height: 120px;
+                background: MaterialPalette.tertiary_container;
+            }
+        }
+
+        sheet0 := Rectangle {
+            x: sheet0_comp.surface-x;
+            y: sheet0_comp.surface-y;
+            width: sheet0_comp.surface-width;
+            height: sheet0_comp.surface-height;
+        }
+
+        // The drag-handle pill: 32x4 dp centered in the sheet's 48 dp
+        // handle strip — `SheetDefaults.kt`'s DragHandleVerticalPadding
+        // is 22 dp, so the pill sits 22 dp below the surface's top.
+        sheet-pill0 := Rectangle {
+            x: sheet0_comp.surface-x + (sheet0_comp.surface-width - 32px) / 2;
+            y: sheet0_comp.surface-y + 22px;
+            width: 32px;
+            height: 4px;
+        }
+
+        // The moving surface — `sheet0` stays on the static widget
+        // container, so `mask_decor` against a mid-flight edge needs the
+        // surface's own bounds.
+        sheet-surface0 := Rectangle {
+            x: sheet0_comp.surface-x;
+            y: sheet0_comp.surface-y;
+            width: sheet0_comp.surface-width;
+            height: sheet0_comp.sheet-height;
+        }
+
+        // The content region below the 48 dp handle strip — the
+        // handle/content boundary is painted inside the surface, so it
+        // needs its own element for `mask_decor` to reach it.
+        sheet-content0 := Rectangle {
+            x: sheet0_comp.surface-x;
+            y: sheet0_comp.surface-y + 48px;
+            width: sheet0_comp.surface-width;
+            height: sheet0_comp.sheet-height - 48px;
+        }
+    }
+
+    out property <float> sheet-offset: sheet0_comp.clamped-offset / 1px;
+    out property <float> current-value: sheet0_comp.anchor-current == SheetValue.hidden ? 0 : sheet0_comp.anchor-current == SheetValue.partially-expanded ? 1 : 2;
+    out property <float> target-value: sheet0_comp.target-value == SheetValue.hidden ? 0 : sheet0_comp.target-value == SheetValue.partially-expanded ? 1 : 2;
+    out property <bool> dragging: sheet0_comp.dragging;
+    out property <bool> is-visible: sheet0_comp.is-visible;
+}

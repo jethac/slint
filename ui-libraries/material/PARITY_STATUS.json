@@ -83,17 +83,17 @@
     "issues": [
       11
     ],
-    "needs": "springs (#5)",
-    "notes": "",
-    "status": "missing"
+    "needs": "none",
+    "notes": "slint component: BottomSheet; tokens: SheetBottomTokens, DragHandleTokens; springs via active motion scheme; release velocity via SwipeGestureHandler",
+    "status": "partial"
   },
   "BottomSheetScaffold": {
     "issues": [
       11
     ],
-    "needs": "springs (#5)",
-    "notes": "",
-    "status": "missing"
+    "needs": "none",
+    "notes": "slint component: BottomSheetScaffold; tokens: SheetBottomTokens, DragHandleTokens; springs via active motion scheme",
+    "status": "partial"
   },
   "Button": {
     "issues": [
@@ -645,8 +645,8 @@
     "issues": [
       11
     ],
-    "needs": "springs (#5)",
-    "notes": "slint component: ModalBottomSheet",
+    "needs": "none",
+    "notes": "slint component: ModalBottomSheet (reworked: anchored states, springs, scrim spec); tokens: SheetBottomTokens, DragHandleTokens",
     "status": "partial"
   },
   "ModalDrawerSheet": {
@@ -1167,9 +1167,9 @@
     "issues": [
       11
     ],
-    "needs": "springs (#5)",
-    "notes": "",
-    "status": "missing"
+    "needs": "none",
+    "notes": "slint component: VerticalDragHandle; tokens: DragHandleTokens; state-layer ink",
+    "status": "partial"
   },
   "VerticalFloatingToolbar": {
     "issues": [

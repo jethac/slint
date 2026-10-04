@@ -7,8 +7,6 @@
      call getString() on these (tooltip labels, selection controls) fail
      to resolve without the declarations here. -->
 <resources xmlns:android="http://schemas.android.com/apk/res/android" xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" xmlns:tools="http://schemas.android.com/tools">
-    <string name="tooltip_description">tooltip</string>
-    <string name="tooltip_label">show tooltip</string>
     <!-- Item on context menu. This action is used to request autofill. -->
     <string name="androidx_compose_foundation_autofill">Autofill</string>
 </resources>

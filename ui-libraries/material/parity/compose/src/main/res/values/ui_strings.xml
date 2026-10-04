@@ -34,7 +34,6 @@
     -->
     <string name="close_drawer">"Close navigation menu"</string>
     <!-- Spoken content description of an element which will close the sheet when clicked. -->
-    <string name="close_sheet">"Close sheet"</string>
     <!-- Default accessibility error text for an editable text field. -->
     <string name="default_error_message">"Invalid input"</string>
     <!-- Spoken description of an empty editable text field -->

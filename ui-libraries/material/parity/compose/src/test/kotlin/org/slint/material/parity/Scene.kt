@@ -61,6 +61,9 @@ class Action(json: JSONObject) {
     /** Dispatch time within the frame sequence (ms); `0` fires right after
      * the pre-gesture baseline frame, as before. */
     val at: Long = json.optLong("at", 0)
+    /** Sheet fling scenes: the release velocity in dp/s the Slint gesture
+     * measures — the value the mirror feeds to the fling behavior. */
+    val velocity: Float = json.optDouble("velocity", 0.0).toFloat()
 }
 
 class Widget(json: JSONObject) {
@@ -188,8 +191,9 @@ class Widget(json: JSONObject) {
      * `picker` (default) or `input`. */
     val displayMode: String = (json.opt("display_mode") as? String) ?: "picker"
     /** `date-picker` selected day — `DatePickerState.selectedDateMillis`
-     * as an ISO `YYYY-MM-DD`. */
-    val selected: String? = (json.opt("selected") as? String)?.takeIf { it.isNotEmpty() }
+     * as an ISO `YYYY-MM-DD`. Shares the `selected` JSON key with the list
+     * `Boolean` (per-kind value type), so it needs its own accessor name. */
+    val selectedDate: String? = (json.opt("selected") as? String)?.takeIf { it.isNotEmpty() }
     /** `date-range-picker` selection bounds — `selectedStartDateMillis`
      * and `selectedEndDateMillis` as ISO dates. */
     val selectedStart: String? =
@@ -225,6 +229,28 @@ class Widget(json: JSONObject) {
     /** `elevated-rect` only: the elevation in dp of the Android ambient+spot
      * shadow `Modifier.shadow` draws behind the caster. */
     val elevation: Float = json.optDouble("elevation", 0.0).toFloat()
+    /** Sheet kinds: the `sheetContent` rect's measured height in dp. */
+    val sheetHeight: Float = json.optDouble("sheet_height", 120.0).toFloat()
+    /** `bottom-sheet-scaffold` only: `sheetPeekHeight` (56 dp default). */
+    val peekHeight: Float = json.optDouble("peek_height", 56.0).toFloat()
+    /** Sheet kinds: `initialValue` — `hidden`, `partially-expanded`,
+     * `expanded`. */
+    val initial: String = (json.opt("initial") as? String) ?: "hidden"
+    /** Sheet kinds: `skipPartiallyExpanded`. */
+    val skipPartial: Boolean = json.optBoolean("skip_partial", false)
+    /** `bottom-sheet-scaffold` only: `skipHiddenState` (default true). */
+    val skipHidden: Boolean = json.optBoolean("skip_hidden", true)
+    /** Sheet kinds: `gesturesEnabled`/`sheetSwipeEnabled` (default true). */
+    val gestures: Boolean = json.optBoolean("gestures", true)
+    /** Sheet kinds: scheme role for the sheet content rect. */
+    val contentColor: String = (json.opt("content_color") as? String) ?: "tertiary-container"
+    /** `bottom-sheet-scaffold` only: scheme role for the scaffold body. */
+    val bodyColor: String = (json.opt("body_color") as? String) ?: "surface"
+    /** Sheet kinds: the M3 elevation level for `sheet-elevation-level`/
+     * `sheetShadowElevation` (-1 = the pinned default; scenes pass 0 —
+     * platform shadows deadlock layoutlib and shadow parity lives in the
+     * elevation scenes). */
+    val sheetElevation: Int = json.optInt("sheet_elevation", -1)
 }
 
 /** One item of a `connected-button-group`: the label, an optional leading

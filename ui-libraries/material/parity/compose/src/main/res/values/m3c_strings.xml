@@ -21,7 +21,6 @@
     <!-- Spoken description of a snackbar dismiss action -->
     <string name="m3c_snackbar_dismiss">Dismiss</string>
     <!-- Accessibility pane title for a snackbar -->
-    <string name="m3c_snackbar_pane_title">Alert</string>
     <!-- Spoken description of date picker and date input items -->
     <string name="m3c_date_picker_title">"Select date"</string>
     <string name="m3c_date_picker_headline">"Selected date"</string>
@@ -65,15 +64,10 @@
     -->
     <string name="m3c_date_range_input_invalid_range_input">Invalid date range input</string>
     <!-- Spoken description of a bottom sheet -->
-    <string name="m3c_bottom_sheet_pane_title">Bottom Sheet</string>
     <!-- Names the drag handle visual for bottom sheet. -->
-    <string name="m3c_bottom_sheet_drag_handle_description">Drag handle</string>
     <!-- Describes the collapse action for bottom sheet. -->
-    <string name="m3c_bottom_sheet_collapse_description">Collapse bottom sheet</string>
     <!-- Describes the dismiss action for bottom sheet. -->
-    <string name="m3c_bottom_sheet_dismiss_description">Dismiss bottom sheet</string>
     <!-- Describes the expand action visual for bottom sheet. -->
-    <string name="m3c_bottom_sheet_expand_description">Expand bottom sheet</string>
     <!-- Spoken for the collapse action for a floating toolbar action. -->
     <string name="m3c_floating_toolbar_collapse">Collapse toolbar</string>
     <!-- Spoken for the expand action for a floating toolbar action. -->
