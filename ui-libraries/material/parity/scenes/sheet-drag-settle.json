@@ -1,0 +1,100 @@
+{
+  "name": "sheet-drag-settle",
+  "type": "canvas",
+  "parity": "motion",
+  "size": [
+    360,
+    240
+  ],
+  "densities": [
+    1,
+    2
+  ],
+  "theme": {
+    "seed": "6750A4",
+    "variant": "tonal-spot",
+    "spec": "spec2025",
+    "platform": "phone",
+    "dark": false,
+    "contrast": 0.0
+  },
+  "fonts": {
+    "plain": "Roboto",
+    "brand": "Roboto"
+  },
+  "times": [
+    0,
+    33,
+    66,
+    200,
+    260,
+    450,
+    900
+  ],
+  "trace_elements": [
+    "sheet0",
+    "sheet-pill0"
+  ],
+  "trace_props": [
+    "sheet-offset",
+    "current-value",
+    "target-value",
+    "dragging",
+    "is-visible"
+  ],
+  "actions": [
+    {
+      "kind": "press",
+      "x": 180,
+      "y": 100,
+      "at": 0
+    },
+    {
+      "kind": "move",
+      "x": 180,
+      "y": 116,
+      "at": 16
+    },
+    {
+      "kind": "move",
+      "x": 180,
+      "y": 132,
+      "at": 34
+    },
+    {
+      "kind": "move",
+      "x": 180,
+      "y": 140,
+      "at": 50
+    },
+    {
+      "kind": "release",
+      "x": 180,
+      "y": 140,
+      "at": 200,
+      "velocity": 0
+    }
+  ],
+  "widgets": [
+    {
+      "kind": "bottom-sheet",
+      "x": 0,
+      "y": 0,
+      "width": 360,
+      "height": 240,
+      "sheet_height": 120,
+      "initial": "expanded",
+      "content_color": "tertiary-container"
+    }
+  ],
+  "params": {
+    "note": "release at 200ms leaves the last move sample stale (>100ms) so the fling velocity is 0 \u2014 the settle picks the closest anchor (partially-expanded at 120) under the default spatial spring"
+  },
+  "mask_decor": {
+    "sheet-pill0": [
+      200,
+      260,
+      450
+    ]
+  }
+}
