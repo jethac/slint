@@ -48,8 +48,8 @@ Token objects: BadgeTokens
 
 | Component | Source | Status | Issues | Needs | Notes |
 |---|---|---|---|---|---|
-| Badge | Badge.kt | partial | #11 | none | slint component: Badge |
-| BadgedBox | Badge.kt | partial | #11 | none | slint component: Badge |
+| Badge | Badge.kt | done | #11 | none | slint component: Badge |
+| BadgedBox | Badge.kt | done | #11 | none | slint component: BadgedBox |
 
 ### Bottom app bar
 
@@ -241,8 +241,8 @@ States: collapsed, expanded, focused, disabled, dragged, hovered, pressed, selec
 
 | Component | Source | Status | Issues | Needs | Notes |
 |---|---|---|---|---|---|
-| ListItem | ListItem.kt | partial | #11 | shapes (#6) | slint component: ListTile |
-| SegmentedListItem | ListItem.kt | missing | #11 | shapes (#6) | - |
+| ListItem | ListItem.kt | done | #11 | shapes (#6) | slint component: ListTile — interactive/selectable/checkable, interactive shape morph |
+| SegmentedListItem | ListItem.kt | done | #11 | shapes (#6) | slint component: SegmentedListItem — index/count segmentedShapes positions |
 
 ### Loading indicator
 
@@ -442,7 +442,7 @@ States: selected, disabled, unselected, focused, pressed, hovered
 
 | Component | Source | Status | Issues | Needs | Notes |
 |---|---|---|---|---|---|
-| Switch | Switch.kt | partial | #11 | springs (#5), shapes (#6) | slint component: Switch |
+| Switch | Switch.kt | done | #11 | springs (#5), shapes (#6) | slint component: Switch; tokens: generated component tokens; SwitchImpl + ThumbNode — 52x32dp track, thumb pressed 28/snap + resting 24/16 on FastSpatial, offsets incl. pressed TrackOutlineWidth inset, thumbContent slot (androidx/androidx@23327507f7fc, material3 1.5.0-alpha18); parity scenes: switch-states/switch-hover/switch-on-morph/switch-off-morph (xfail on femtovg, #53-class edge-AA band vs coverage-integral drivers) |
 
 ### Tabs
 

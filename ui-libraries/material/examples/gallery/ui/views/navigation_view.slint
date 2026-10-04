@@ -5,6 +5,7 @@ import {
     MaterialStyleMetrics,
     MaterialPalette,
     ListTile,
+    SegmentedListItem,
     ListView,
     NavigationBar,
     BottomAppBar,
@@ -708,6 +709,8 @@ export component NavigationView {
                         avatar_icon: FilledIcons.inbox;
                         avatar_background: MaterialPalette.primary_container;
                         avatar_foreground: MaterialPalette.on_primary_container;
+                        interactive: true;
+                        clicked => { self.selected = !self.selected; }
                     }
 
                     ListTile {
@@ -716,6 +719,8 @@ export component NavigationView {
                         avatar_icon: FilledIcons.bookmark;
                         avatar_background: MaterialPalette.secondary_container;
                         avatar_foreground: MaterialPalette.on_secondary_container;
+                        selectable: true;
+                        trailing_icon: FilledIcons.bookmark;
                     }
 
                     ListTile {
@@ -728,6 +733,36 @@ export component NavigationView {
                         supporting_text: "Disabled";
                         avatar_icon: OutlinedIcons.delete;
                         enabled: false;
+                    }
+                }
+            }
+
+            ComponentCard {
+                title: "Segmented lists";
+
+                Vertical {
+
+                    SegmentedListItem {
+                        text: "Today";
+                        supporting_text: "Selected";
+                        index: 0;
+                        count: 3;
+                        selectable: true;
+                        selected: true;
+                    }
+
+                    SegmentedListItem {
+                        text: "This week";
+                        index: 1;
+                        count: 3;
+                        selectable: true;
+                    }
+
+                    SegmentedListItem {
+                        text: "This month";
+                        index: 2;
+                        count: 3;
+                        interactive: true;
                     }
                 }
             }

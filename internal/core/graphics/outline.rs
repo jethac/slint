@@ -266,6 +266,19 @@ impl ElementOutline {
                 };
                 let mut first = true;
                 for cubic in shape.cubics().as_chunks::<8>().0 {
+                    // Collapsed cubics carry no geometry — every control
+                    // point coincides — but still reach tessellators, where
+                    // a zero-length segment has no direction and corrupts
+                    // the joins computed for the vertices around it.
+                    if cubic[0] == cubic[2]
+                        && cubic[1] == cubic[3]
+                        && cubic[0] == cubic[4]
+                        && cubic[1] == cubic[5]
+                        && cubic[0] == cubic[6]
+                        && cubic[1] == cubic[7]
+                    {
+                        continue;
+                    }
                     if first {
                         f(OutlinePathEl::MoveTo(map(cubic[0], cubic[1])));
                         first = false;

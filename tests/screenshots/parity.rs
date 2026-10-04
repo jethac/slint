@@ -1528,8 +1528,11 @@ fn compare_text_metrics<C: i_slint_core::api::ComponentHandle>(
             // `//XFAIL_TEXT=` accepts the whole ceil window `(−0.15, 1.15]`
             // as the tracked divergence, reports the measured drift — and
             // re-arms when #28 lands: if no entry drifts past 0.5px the
-            // marker is stale and the case fails so it gets unmarked. A
-            // drift past a whole pixel fails either way.
+            // marker is stale and the case fails so it gets unmarked.
+            // Slint also folds letter-spacing into the last glyph's advance
+            // (`internal/core/textlayout/shaping.rs`), which the unhinted
+            // measure does not count, so the tracked window admits one more
+            // tracking step (0.5px covers every type-scale tracking value).
             // `unhint_w` is measured at 8x and scaled down, which leaves
             // ~0.125dp of residual quantization on both sides. Compose's
             // hinted `w`/`frac_w` stay a few px wider by design and are not
@@ -1537,7 +1540,7 @@ fn compare_text_metrics<C: i_slint_core::api::ComponentHandle>(
             match m["unhint_w"].as_f64() {
                 Some(unhint_w) if unhint_w.is_finite() => {
                     let slack = sw - unhint_w;
-                    let bound = if xfail_text.is_some() { 1.15 } else { 0.5 };
+                    let bound = if xfail_text.is_some() { 1.65 } else { 0.5 };
                     if !(-0.15..=bound).contains(&slack) {
                         errors.push(format!(
                             "t={}ms text:{n}.w: slint {sw} vs unhinted compose {unhint_w} (bound {bound:.2})",
@@ -1619,7 +1622,7 @@ fn compare_text_metrics<C: i_slint_core::api::ComponentHandle>(
                     // window here: Compose's reported text width need not
                     // equal the box it centers in, so placement inherits
                     // the tracked #28 divergence too.
-                    let off_eps = (GEOM_EPS + if xfail_text.is_some() { 1.15 } else { 0.0 })
+                    let off_eps = (GEOM_EPS + if xfail_text.is_some() { 1.65 } else { 0.0 })
                         + (cw - sw).abs() / 2.0;
                     if (s_off - c_off).abs() > off_eps {
                         errors.push(format!(

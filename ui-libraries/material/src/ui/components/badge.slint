@@ -1,36 +1,99 @@
 // Copyright © SixtyFPS GmbH <info@slint.dev>
 // SPDX-License-Identifier: MIT
 
-import { MaterialStyleMetrics } from "../styling/material_style_metrics.slint";
 import { MaterialPalette } from "../styling/material_palette.slint";
-import { MaterialTypography } from "../styling/material_typography.slint";
+import { BadgeTokens } from "../styling/generated/material_component_tokens.slint";
 import { MaterialText } from "material_text.slint";
 
+// The badge layout constants of Badge.kt — `@VisibleForTesting` vals, not
+// tokens: `BadgeWithContentHorizontalPadding`, `BadgeWithContentHorizontal-
+// Offset`, `BadgeWithContentVerticalOffset`, and `BadgeOffset`.
+global BadgeLayout {
+    out property <length> with_content_horizontal_padding: 4px;
+    out property <length> with_content_horizontal_offset: 12px;
+    out property <length> with_content_vertical_offset: 14px;
+    out property <length> offset: 6px;
+}
+
+/// A Material Design badge — the upstream `Badge` composable.
+///
+/// Empty `text` draws the small dot (`BadgeTokens.size`), any text draws the
+/// large badge (`BadgeTokens.large_size`, `large_label_text_font`,
+/// `large_label_text_color`), exactly the upstream `content == null` branch.
+/// `container_color`/`content_color` are the upstream `containerColor`/
+/// `contentColor` params; like upstream, no semantics are added — a badge
+/// counts toward the description of its anchor, so prefer `BadgedBox`.
 export component Badge {
     in property <string> text;
+    in property <color> container_color: BadgeTokens.color;
+    // `contentColorFor(containerColor)` upstream, `takeOrElse` falling back
+    // to `LocalContentColor.current` — `on_background` stands in for it.
+    in property <color> content_color: MaterialPalette.content-color-for(root.container_color) != transparent ? MaterialPalette.content-color-for(root.container_color) : MaterialPalette.on_background;
 
-    width: max(MaterialStyleMetrics.size_16, label.width + 2 * MaterialStyleMetrics.padding_4);
-    height: max(MaterialStyleMetrics.size_16, label.height);
+    // Upstream `BadgedBox` treats a badge as content-bearing when its
+    // measured width exceeds `BadgeTokens.Size` — the dot. With text as
+    // the only content the two are equivalent.
+    out property <bool> has_content: root.text != "";
+
+    width: root.has_content ? max(BadgeTokens.large_size, label.width + 2 * BadgeLayout.with_content_horizontal_padding) : BadgeTokens.size;
+    height: root.has_content ? max(BadgeTokens.large_size, label.height) : self.width;
 
     background_layer := Rectangle {
         width: parent.width;
         height: parent.height;
+        // `BadgeTokens.LargeShape`/`Shape` are `corner_full` — a stadium.
         border_radius: self.height / 2;
-        background: MaterialPalette.error;
+        background: root.container_color;
     }
 
     label := MaterialText {
         text: root.text;
-        color: MaterialPalette.on_error;
+        color: root.content_color;
         vertical_alignment: center;
         horizontal_alignment: center;
-        style: MaterialTypography.label_small;
+        style: BadgeTokens.large_label_text_font;
+    }
+}
+
+/// A Material Design badge box — the upstream `BadgedBox`: lays out its
+/// content normally and overlaps a badge at its top end corner.
+///
+/// `@children` is the anchor content (usually an `Icon`, 24px). The badge
+/// hangs over the anchor's top end edge: a dot sits `BadgeOffset` (6px)
+/// from the end/top, a content badge `BadgeWithContentHorizontalOffset`
+/// (12px) from the end and `BadgeWithContentVerticalOffset` (14px) of
+/// overlap — the offset table in Badge.kt. Upstream places the badge with
+/// `placeRelative`, mirroring under RTL; Slint has no RTL, so the badge
+/// always anchors to the top right.
+export component BadgedBox {
+    in property <string> badge_text;
+    in property <bool> badge_visible: true;
+    in property <color> badge_container_color: BadgeTokens.color;
+    in property <color> badge_content_color: MaterialPalette.content-color-for(root.badge_container_color) != transparent ? MaterialPalette.content-color-for(root.badge_container_color) : MaterialPalette.on_background;
+
+    // The upstream layout takes the anchor's size — the badge never
+    // contributes. The hugging layout gives the same answer.
+    width: anchor_zone.min_width;
+    height: anchor_zone.min_height;
+
+    anchor_zone := HorizontalLayout {
+        @children
     }
 
-    states [
-        small when root.text == "" : {
-            background_layer.width: MaterialStyleMetrics.size_6;
-            background_layer.height: MaterialStyleMetrics.size_6;
-        }
-    ]
+    // The upstream placement (Badge.kt): `badgeX = min(anchorW - offset,
+    // BadgeEndRuler - badgeW)` and `badgeY = max(-badgeH + offset,
+    // BadgeTopRuler)`. The rulers come from `badgeBounds()` — an opt-in
+    // modifier only the navigation items and `Tab` apply upstream to clamp
+    // the badge to their inner icon; everywhere else they are ±infinity and
+    // the formula collapses to what's below. Since `BadgedBox` here wraps
+    // the icon directly, the clamped geometry is the same. Placed
+    // `placeRelative` upstream, so it mirrors under RTL; Slint always
+    // anchors to the top right.
+    if root.badge_visible : Badge {
+        text: root.badge_text;
+        container_color: root.badge_container_color;
+        content_color: root.badge_content_color;
+        x: anchor_zone.width - (self.has_content ? BadgeLayout.with_content_horizontal_offset : BadgeLayout.offset);
+        y: -self.height + (self.has_content ? BadgeLayout.with_content_vertical_offset : BadgeLayout.offset);
+    }
 }
