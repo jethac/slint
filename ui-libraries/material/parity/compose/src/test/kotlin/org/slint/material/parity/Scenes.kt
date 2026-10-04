@@ -3068,8 +3068,12 @@ private fun StateTabRow(
             val pressInk = pressInkMarker(item.state, emitPress)
             // The Box keeps the ink overlay out of the row's tab count —
             // a scene-level `PressInkOverlay` sibling would be measured as
-            // a tab itself.
-            Box(Modifier.track(tracer, itemTag)) {
+            // a tab itself. `propagateMinConstraints` forwards the row's
+            // `minWidth`/`minHeight` tab constraints — without it the Tab
+            // below measures at content width and the Box's TopStart
+            // alignment left-packs the content instead of centering it in
+            // the min-width slot like upstream.
+            Box(Modifier.track(tracer, itemTag), propagateMinConstraints = true) {
                 if (item.leading) {
                     // Upstream `LeadingIconTab` takes non-null `text`/`icon`
                     // slots — the icon-first arrangement needs both.
