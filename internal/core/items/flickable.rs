@@ -38,7 +38,7 @@ use euclid::num::Zero;
 use i_slint_core_macros::*;
 #[allow(unused)]
 use num_traits::Float;
-mod data_ringbuffer;
+pub(crate) mod data_ringbuffer;
 use data_ringbuffer::VelocityRingBuffer;
 
 /// Deceleration during the animation. It slows down the initial velocity of the simulation
@@ -52,7 +52,7 @@ const WHEEL_SCROLL_DURATION: Duration = Duration::from_millis(180);
 /// The maximum duration between a move and a release event to start an animation
 /// If the duration is larger than this value, no animation will be executed because
 /// it is not desired
-const MAX_DURATION: Duration = Duration::from_millis(100);
+pub(super) const MAX_DURATION: Duration = Duration::from_millis(100);
 
 /// The implementation of the `Flickable` element
 #[repr(C)]

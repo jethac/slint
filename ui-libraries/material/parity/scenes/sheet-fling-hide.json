@@ -1,0 +1,100 @@
+{
+  "name": "sheet-fling-hide",
+  "type": "canvas",
+  "parity": "motion",
+  "size": [
+    360,
+    240
+  ],
+  "densities": [
+    1,
+    2
+  ],
+  "theme": {
+    "seed": "6750A4",
+    "variant": "tonal-spot",
+    "spec": "spec2025",
+    "platform": "phone",
+    "dark": false,
+    "contrast": 0.0
+  },
+  "fonts": {
+    "plain": "Roboto",
+    "brand": "Roboto"
+  },
+  "times": [
+    0,
+    33,
+    80,
+    130,
+    200,
+    350,
+    700
+  ],
+  "trace_elements": [
+    "sheet0",
+    "sheet-pill0"
+  ],
+  "trace_props": [
+    "sheet-offset",
+    "current-value",
+    "target-value",
+    "dragging",
+    "is-visible"
+  ],
+  "actions": [
+    {
+      "kind": "press",
+      "x": 180,
+      "y": 90,
+      "at": 0
+    },
+    {
+      "kind": "move",
+      "x": 180,
+      "y": 110,
+      "at": 20
+    },
+    {
+      "kind": "move",
+      "x": 180,
+      "y": 130,
+      "at": 40
+    },
+    {
+      "kind": "move",
+      "x": 180,
+      "y": 150,
+      "at": 60
+    },
+    {
+      "kind": "release",
+      "x": 180,
+      "y": 150,
+      "at": 82,
+      "velocity": 1000
+    }
+  ],
+  "widgets": [
+    {
+      "kind": "bottom-sheet",
+      "x": 0,
+      "y": 0,
+      "width": 360,
+      "height": 240,
+      "sheet_height": 120,
+      "initial": "expanded",
+      "content_color": "tertiary-container"
+    }
+  ],
+  "params": {
+    "note": "release at offset 132 \u2014 108px above the hidden anchor, inside the 125dp BoundaryDampeningZone: velocity damps 1000 \u2192 ~746px/s (factor\u00b2), still \u2265125 so the fling commits to hidden"
+  },
+  "mask_decor": {
+    "sheet-pill0": [
+      130,
+      200,
+      350
+    ]
+  }
+}
