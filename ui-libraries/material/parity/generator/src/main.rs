@@ -347,9 +347,6 @@ struct Widget {
     /// `search-bar`/`app-bar-with-search` placeholder text.
     #[serde(default)]
     placeholder: Option<String>,
-    /// `extended-fab` expansion state (`expanded` upstream).
-    #[serde(default)]
-    expanded: Option<bool>,
     /// `fab`/`extended-fab` visibility — `visible` on
     /// `Modifier.animateFloatingActionButton` upstream.
     #[serde(default)]
@@ -388,6 +385,35 @@ struct Widget {
     /// Compose side `Modifier.shadow`'s dp.
     #[serde(default)]
     elevation: Option<f64>,
+    /// Rail items (`navigation-rail`, `wide-navigation-rail`,
+    /// `modal-navigation-rail`): `[{ "text": "Inbox", "icon": "inbox",
+    /// "selected_icon": "inbox", "badge": "3", "enabled": false }]`.
+    /// Named `rail_items` in the scene JSON: `items` belongs to
+    /// `button-group`'s `GroupItem` rows.
+    #[serde(default)]
+    rail_items: Vec<RailItem>,
+    /// `WideNavigationRailValue` — expanded when true; the `extended-fab`
+    /// expansion state (`expanded` upstream).
+    #[serde(default)]
+    expanded: Option<bool>,
+    /// `ModalWideNavigationRail`'s `hideOnCollapse`.
+    #[serde(default)]
+    hide_on_collapse: Option<bool>,
+    /// `Arrangement.Vertical` of the rail's item stack.
+    #[serde(default)]
+    arrangement: Option<String>,
+    /// FAB icon stem in the rail header.
+    #[serde(default)]
+    fab_icon: Option<String>,
+    /// `NavigationRailItem.alwaysShowLabel` — narrow rail only;
+    /// `NavigationBarItem.alwaysShowLabel` on the tall navigation bar.
+    #[serde(default)]
+    always_show_label: Option<bool>,
+    /// The selected item index (`current-index` on the Slint side;
+    /// single-select groups: the checked item, `-1` selects none; rails and
+    /// navigation bars: the selected item).
+    #[serde(default)]
+    selected_index: Option<i64>,
     /// Sheet kinds: the sheet content's measured height in dp (the strip the
     /// `sheetContent` composable fills, excluding the drag handle).
     #[serde(default)]
@@ -422,9 +448,6 @@ struct Widget {
     /// shadow parity lives in the elevation scenes.
     #[serde(default)]
     sheet_elevation: Option<i64>,
-    /// `NavigationBarItem.alwaysShowLabel` — the tall navigation bar only.
-    #[serde(default)]
-    always_show_label: Option<bool>,
     /// `ShortNavigationBarArrangement` — `equal-weight` (default) or
     /// `centered`.
     #[serde(default)]
@@ -485,11 +508,6 @@ struct Widget {
     /// `selected_index`.
     #[serde(default)]
     multi_select: Option<bool>,
-    /// Groups: the checked item (`-1` selects none); rails and
-    /// navigation bars: the selected item (`current-index` on the Slint
-    /// side).
-    #[serde(default)]
-    selected_index: Option<i64>,
 }
 
 /// One item of a `connected-button-group`: the label, an optional leading
@@ -525,7 +543,20 @@ struct GroupItem {
     enabled: Option<bool>,
 }
 
-
+/// One rail item (`NavigationItem` on the Slint side).
+#[derive(serde::Deserialize, serde::Serialize)]
+struct RailItem {
+    #[serde(default)]
+    text: String,
+    #[serde(default)]
+    icon: Option<String>,
+    #[serde(default)]
+    selected_icon: Option<String>,
+    #[serde(default)]
+    badge: Option<String>,
+    #[serde(default)]
+    enabled: Option<bool>,
+}
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let check = std::env::args().any(|a| a == "--check");
@@ -560,7 +591,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 .iter()
                 .chain(w.checked_icon.iter())
                 .chain(w.nav_icon.iter())
+                .chain(w.fab_icon.iter())
                 .chain(w.icons.iter())
+                .chain(w.rail_items.iter().flat_map(|i| [i.icon.iter(), i.selected_icon.iter()].into_iter().flatten()))
                 .chain(w.trailing_icon.iter())
                 .chain(w.leading_image.iter())
                 .chain(w.items.iter().flat_map(|item| {
@@ -967,6 +1000,9 @@ fn slint_case(scene: &Scene) -> String {
             "bottom-app-bar" => "BottomAppBar",
             "search-bar" => "SearchBar",
             "app-bar-with-search" => "AppBarWithSearch",
+            "navigation-rail" => "NavigationRail",
+            "wide-navigation-rail" => "WideNavigationRail",
+            "modal-navigation-rail" => "ModalWideNavigationRail",
             "drag-handle" => "BottomSheetDragHandle",
             "vertical-drag-handle" => "VerticalDragHandle",
             "bottom-sheet" => "BottomSheet",
@@ -987,6 +1023,9 @@ fn slint_case(scene: &Scene) -> String {
             other => panic!("unknown widget kind {other:?}"),
         };
         imports.push(component);
+        if w.arrangement.is_some() {
+            imports.push("NavigationRailArrangement");
+        }
         if w.kind == "basic-alert-dialog" {
             imports.extend(["MaterialStyleMetrics", "MaterialTypography", "TextButton"]);
         }
@@ -1018,7 +1057,9 @@ fn slint_case(scene: &Scene) -> String {
             || w.leading_image.is_some()
             || w.checked_icon.is_some()
             || w.nav_icon.is_some()
+            || w.fab_icon.is_some()
             || !w.icons.is_empty()
+            || w.rail_items.iter().any(|i| i.icon.is_some() || i.selected_icon.is_some())
             || w.kind.ends_with("split-button")
             || w.items.iter().any(|item| {
                 item.icon.is_some() || item.checked_icon.is_some() || item.selected_icon.is_some()
@@ -1721,6 +1762,7 @@ fn slint_canvas(s: &mut String, scene: &Scene) {
     let mut items = 0;
     let mut material_surfaces = 0;
     let mut appbars = 0;
+    let mut rails = 0;
     let mut sheets = 0;
     // `handle{n}` counts `drag-handle`s, `vhandle{n}` counts
     // `vertical-drag-handle`s — the Compose mirror numbers each kind alone.
@@ -1970,6 +2012,12 @@ fn slint_canvas(s: &mut String, scene: &Scene) {
                 let i = appbars;
                 appbars += 1;
                 appbar_widget(s, w, i);
+                continue;
+            }
+            "navigation-rail" | "wide-navigation-rail" | "modal-navigation-rail" => {
+                let i = rails;
+                rails += 1;
+                rail_widget(s, scene, w, i);
                 continue;
             }
             "drag-handle" | "vertical-drag-handle" => {
@@ -2637,7 +2685,6 @@ fn appbar_widget(s: &mut String, w: &Widget, i: usize) {
     .unwrap();
 }
 
-
 /// Escapes a string for embedding in a generated `.slint` string literal.
 fn slint_str(text: &str) -> String {
     text.replace('\\', "\\\\").replace('"', "\\\"").replace('\n', "\\n")
@@ -2908,6 +2955,140 @@ writeln!(
         "    picker{i} := DatePickerDialogContent {{\n        x: Math.round((parent.width - self.width) / 1phx / 2) * 1phx;\n        y: Math.round((parent.height - self.height) / 1phx / 2) * 1phx;\n{p}\n        {component} {{\n{inner}        }}\n    }}\n",
     )
     .unwrap();
+}
+
+/// One navigation-rail family widget (`navigation-rail`,
+/// `wide-navigation-rail`, `modal-navigation-rail`): geometry plus the
+/// props the Compose mirror sets. Elements are named `rail{n}` in scene
+/// order.
+///
+/// `params.rail_events` (`[["expand", ms], ["collapse", ms], ...]`)
+/// emits one-shot `Timer`s that `expand()`/`collapse()` the rail at the
+/// same mock-clock beats the Compose runnables fire — Paparazzi can't
+/// dispatch a pointer click on the rail's menu button, and the Slint
+/// driver's `press` would ripple the button on the pre-motion frames, so
+/// both sides are clock-driven instead.
+fn rail_widget(s: &mut String, scene: &Scene, w: &Widget, i: usize) {
+    let component = match w.kind.as_str() {
+        "navigation-rail" => "NavigationRail",
+        "wide-navigation-rail" => "WideNavigationRail",
+        "modal-navigation-rail" => "ModalWideNavigationRail",
+        other => panic!("unknown rail kind {other:?}"),
+    };
+    let mut p = String::new();
+    writeln!(p, "        x: {}px;\n        y: {}px;", w.x as i64, w.y as i64).unwrap();
+    if let Some(h) = w.height {
+        writeln!(p, "        height: {}px;", h as i64).unwrap();
+    }
+    // The rail keeps the real 48dp `LocalMinimumInteractiveComponentSize`
+    // (the Compose side restores it: upstream animates `itemMinHeight` to
+    // the minimum with an underdamped spring and crashes on the 0dp
+    // scene default) — the Slint default already matches.
+    let expanded = w
+        .slint_overrides
+        .get("expanded")
+        .and_then(|v| v.as_bool())
+        .or(w.expanded);
+    if let Some(v) = expanded {
+        writeln!(p, "        expanded: {v};").unwrap();
+    }
+    if let Some(v) = w.hide_on_collapse {
+        writeln!(p, "        hide-on-collapse: {v};").unwrap();
+    }
+    if let Some(a) = &w.arrangement {
+        writeln!(
+            p,
+            "        arrangement: NavigationRailArrangement.{};",
+            a.replace('-', "_")
+        )
+        .unwrap();
+    }
+    if let Some(v) = w.always_show_label {
+        writeln!(p, "        always-show-label: {v};").unwrap();
+    }
+    if let Some(v) = w.selected_index {
+        writeln!(p, "        current-index: {v};").unwrap();
+    }
+    if w.nav_icon.is_some() {
+        writeln!(p, "        has-menu: true;").unwrap();
+    }
+    if let Some(f) = &w.fab_icon {
+        writeln!(p, "        fab-icon: Icons.{f};").unwrap();
+    }
+    if !w.rail_items.is_empty() {
+        writeln!(p, "        items: [").unwrap();
+        for item in &w.rail_items {
+            let mut entry = String::new();
+            if let Some(icon) = &item.icon {
+                entry.push_str(&format!("icon: Icons.{icon}, "));
+            }
+            if let Some(icon) = &item.selected_icon {
+                entry.push_str(&format!("selected-icon: Icons.{icon}, "));
+            }
+            entry.push_str(&format!("text: {:?}", item.text));
+            if let Some(b) = &item.badge {
+                entry.push_str(&format!(", badge: {b:?}, show-badge: true"));
+            }
+            // `NavigationItem.enabled` is a plain bool — unset means `false`
+            // in Slint (the Compose `RailItem` defaults it to `true`), so it
+            // must be emitted unconditionally.
+            entry.push_str(&format!(", enabled: {}", item.enabled.unwrap_or(true)));
+            writeln!(p, "            {{ {entry} }},").unwrap();
+        }
+        writeln!(p, "        ];").unwrap();
+    }
+    writeln!(
+        s,
+        "    rail{i} := {component} {{\n{p}    }}\n",
+    )
+    .unwrap();
+    if let Some(cover) = w.slint_overrides.get("cover").and_then(|v| v.as_object()) {
+        let fill = cover
+            .get("fill")
+            .and_then(|v| v.as_str())
+            .unwrap_or("on-primary")
+            .replace('-', "_");
+        let opacity = cover.get("opacity").and_then(|v| v.as_f64()).unwrap_or(0.1);
+        writeln!(
+            s,
+            "    Rectangle {{\n        x: rail{i}.x;\n        y: rail{i}.y;\n        width: rail{i}.width;\n        height: rail{i}.height;\n        background: MaterialPalette.{fill};\n        opacity: {opacity};\n    }}\n"
+        )
+        .unwrap();
+    }
+    // `rail_width` is the only rail property the trace compares: forward
+    // the layout's animated `rail-width` so `prop_value` can read it.
+    if scene.trace_props.contains(&"rail_width".to_string()) {
+        writeln!(s, "    out property <length> rail_width: rail{i}.rail-width;\n").unwrap();
+    }
+    if let Some(events) = scene.params.get("rail_events").and_then(|v| v.as_array()) {
+        // A `Timer` can only fire when the mocked clock lands on or past its
+        // deadline — the driver jumps the clock straight to each trace
+        // sample, so a 30ms timer actually triggers at the next sample, one
+        // frame late against Compose's `advanceTimeBy` events. `//ACTION=`
+        // markers are dispatched at their exact `at_ms` instead: timed key
+        // presses reach this FocusScope (the case's `forward-focus` target)
+        // and call `expand()`/`collapse()` at the event's own tick, like
+        // upstream's `emitPress` runnables.
+        //
+        // Bound properties evaluate lazily, so an `animate` installs its
+        // spring when the binding next evaluates — at the next rendered
+        // frame under the mocked clock, one sample after the event.
+        // Reading the animated progress values in the handler installs
+        // them on the event's tick like `animateDpAsState`.
+        writeln!(s, "    in-out property <float> rail-event-sync;\n").unwrap();
+        writeln!(s, "    forward-focus: rail-event-scope;").unwrap();
+        for ev in events.iter() {
+            let command = ev[0].as_str().unwrap_or("expand");
+            let at = ev[1].as_i64().unwrap_or(0);
+            let key = if command == "expand" { "e" } else { "c" };
+            writeln!(s, "    //ACTION=key@{at}:{key}").unwrap();
+        }
+        writeln!(
+            s,
+            "    rail-event-scope := FocusScope {{\n        key-pressed(event) => {{\n            if event.text == \"e\" {{\n                rail{i}.expand();\n                rail-event-sync = rail{i}.expansion + rail{i}.width-expansion;\n            }}\n            if event.text == \"c\" {{\n                rail{i}.collapse();\n                rail-event-sync = rail{i}.expansion + rail{i}.width-expansion;\n            }}\n            accept\n        }}\n    }}\n"
+        )
+        .unwrap();
+    }
 }
 
 /// The content rect every sheet carries: a fixed-height fill so the sheet's
