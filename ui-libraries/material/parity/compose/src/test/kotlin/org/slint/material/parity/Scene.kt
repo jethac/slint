@@ -199,6 +199,16 @@ class Widget(json: JSONObject) {
     val isCard: Boolean get() =
         kind == "elevated-card" || kind == "filled-card" || kind == "outlined-card"
     val isSplitButton: Boolean get() = kind.endsWith("split-button")
+    // --- navigation-rail / navigation-bar kinds ---
+    /** `NavigationRailItem.alwaysShowLabel` / `NavigationBarItem.alwaysShowLabel`
+     * — narrow rail and tall navigation bar only. */
+    val alwaysShowLabel: Boolean = json.optBoolean("always_show_label", true)
+    /** `ShortNavigationBarArrangement` — `equal-weight` (default) or
+     * `centered`. */
+    val navArrangement: String = (json.opt("nav_arrangement") as? String) ?: "equal-weight"
+    /** `NavigationItemIconPosition` — `top` (default) or `start`. */
+    val iconPosition: String = (json.opt("icon_position") as? String) ?: "top"
+
     val isIconButton: Boolean get() = kind.endsWith("icon-button")
     val isButton: Boolean get() =
         (isIconButton || isSplitButton || kind.endsWith("-button")) && kind != "connected-button"
@@ -235,13 +245,18 @@ class Widget(json: JSONObject) {
  * (multi-select), and an interaction `state` emitted on the item's own
  * `InteractionSource`. */
 class GroupItem(json: JSONObject) {
-    val text: String? = (json.opt("text") as? String)?.takeIf { it.isNotEmpty() }
+    val text: String = json.optString("text", "")
     val icon: String? = (json.opt("icon") as? String)?.takeIf { it.isNotEmpty() }
     val checkedIcon: String? = (json.opt("checked_icon") as? String)?.takeIf { it.isNotEmpty() }
     val disabled: Boolean = json.optBoolean("disabled", false)
     val checked: Boolean = json.optBoolean("checked", false)
     /** `enabled` (default), `pressed`, `hovered`, or `focused`. */
     val state: String = (json.opt("state") as? String) ?: "enabled"
+    // --- rail / navigation-bar item fields ---
+    val selectedIcon: String? =
+        (json.opt("selected_icon") as? String)?.takeIf { it.isNotEmpty() }
+    val badge: String? = (json.opt("badge") as? String)?.takeIf { it.isNotEmpty() }
+    val enabled: Boolean = json.optBoolean("enabled", true)
 }
 
 /** "primary-container" → "primaryContainer" for `scheme` map lookups. */
