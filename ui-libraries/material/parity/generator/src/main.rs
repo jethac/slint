@@ -527,8 +527,6 @@ struct GroupItem {
     enabled: Option<bool>,
 }
 
-
-
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let check = std::env::args().any(|a| a == "--check");
     let parity_dir: PathBuf = [env!("CARGO_MANIFEST_DIR"), ".."].iter().collect();
@@ -800,12 +798,8 @@ fn slint_case(scene: &Scene) -> String {
         kind => writeln!(s, "//PARITY={kind}").unwrap(),
     }
     if let Some(eps) = scene.parity_eps {
-        writeln!(
-            s,
-            "// {}",
-            scene.parity_eps_reason.as_deref().unwrap_or("(undocumented)")
-        )
-        .unwrap();
+        writeln!(s, "// {}", scene.parity_eps_reason.as_deref().unwrap_or("(undocumented)"))
+            .unwrap();
         writeln!(s, "//PARITY_EPS={eps}").unwrap();
     }
     writeln!(s, "//SIZE={}x{}", scene.size[0], scene.size[1]).unwrap();
@@ -1051,11 +1045,7 @@ fn slint_case(scene: &Scene) -> String {
             imports.push("MaterialShapes");
         }
     }
-    if scene
-        .widgets
-        .iter()
-        .any(|w| w.slint_overrides.contains_key("sheet_shape"))
-    {
+    if scene.widgets.iter().any(|w| w.slint_overrides.contains_key("sheet_shape")) {
         imports.push("ShapeTokens");
     }
     if scene.widgets.iter().any(|w| w.kind == "material-surface" && w.text.is_some()) {
@@ -1230,20 +1220,17 @@ fn widget_actions(scene: &Scene) -> Vec<Action> {
             };
             // A `radio-button`'s drawn control is a 24dp slot — aim at its
             // center, not the button-bucket point.
-            let (x, y) = if w.kind == "radio-button" {
-                (w.x + 12.0, w.y + 12.0)
-            } else {
-                (x, w.y + 16.0)
-            };
+            let (x, y) =
+                if w.kind == "radio-button" { (w.x + 12.0, w.y + 12.0) } else { (x, w.y + 16.0) };
             actions.push(Action { kind: kind.into(), x, y, at: 0.0, velocity: 0.0 });
         }
     }
     for w in &scene.widgets {
-        match w
-            .state
-            .as_deref()
-            .unwrap_or(if w.enabled == Some(false) { "disabled" } else { "enabled" })
-        {
+        match w.state.as_deref().unwrap_or(if w.enabled == Some(false) {
+            "disabled"
+        } else {
+            "enabled"
+        }) {
             "hovered" | "pressed" | "enabled" | "disabled" | "focused" | "dragged" => {}
             other => panic!("unknown widget state {other:?}"),
         }
@@ -1459,8 +1446,13 @@ fn on_color_role(role: &str) -> &str {
         "error" => "on_error",
         "error-container" => "on_error_container",
         "inverse-surface" => "inverse_on_surface",
-        "surface" | "surface-bright" | "surface-dim" | "surface-container"
-        | "surface-container-high" | "surface-container-highest" | "surface-container-low"
+        "surface"
+        | "surface-bright"
+        | "surface-dim"
+        | "surface-container"
+        | "surface-container-high"
+        | "surface-container-highest"
+        | "surface-container-low"
         | "surface-container-lowest" => "on_surface",
         "surface-variant" => "on_surface_variant",
         other => panic!("no content-color role known for {other:?}"),
@@ -1494,32 +1486,21 @@ fn fab_props(w: &Widget, timed: bool) -> String {
             writeln!(p, "        tooltip: \"{text}\";").unwrap();
         }
     }
-    let size = over
-        .get("size")
-        .and_then(|v| v.as_str())
-        .map(str::to_string)
-        .or_else(|| w.size.clone());
+    let size =
+        over.get("size").and_then(|v| v.as_str()).map(str::to_string).or_else(|| w.size.clone());
     if let Some(size) = size {
         let en = if extended { "ExtendedFabSize" } else { "FabSize" };
         writeln!(p, "        size: {en}.{size};").unwrap();
     }
-    let icon = over
-        .get("icon")
-        .and_then(|v| v.as_str())
-        .map(str::to_string)
-        .or_else(|| w.icon.clone());
+    let icon =
+        over.get("icon").and_then(|v| v.as_str()).map(str::to_string).or_else(|| w.icon.clone());
     if let Some(icon) = icon {
         writeln!(p, "        icon: Icons.{icon};").unwrap();
     }
     if let Some(color) = &w.color {
         let role = color.replace('-', "_");
         writeln!(p, "        container_color: MaterialPalette.{role};").unwrap();
-        writeln!(
-            p,
-            "        content_color: MaterialPalette.{};",
-            on_color_role(color)
-        )
-        .unwrap();
+        writeln!(p, "        content_color: MaterialPalette.{};", on_color_role(color)).unwrap();
     }
     let variant = over
         .get("variant")
@@ -1618,10 +1599,7 @@ fn list_props(w: &Widget, timed: bool, segmented: bool) -> String {
         over.get(k).and_then(|v| v.as_bool()).unwrap_or(authored.unwrap_or(false))
     };
     let str_over = |k: &str, authored: &Option<String>| -> Option<String> {
-        over.get(k)
-            .and_then(|v| v.as_str())
-            .map(str::to_string)
-            .or_else(|| authored.clone())
+        over.get(k).and_then(|v| v.as_str()).map(str::to_string).or_else(|| authored.clone())
     };
     if let Some(text) = str_over("text", &w.text) {
         writeln!(p, "        text: \"{text}\";").unwrap();
@@ -1695,7 +1673,9 @@ fn list_props(w: &Widget, timed: bool, segmented: bool) -> String {
     // the generated case flips it so a press+release action animates the
     // morph, like `checkable`'s self-toggle.
     if bool_over("selectable", w.selectable) {
-        p.push_str("        clicked => {\n            self.selected = !self.selected;\n        }\n");
+        p.push_str(
+            "        clicked => {\n            self.selected = !self.selected;\n        }\n",
+        );
     }
     p
 }
@@ -1757,7 +1737,7 @@ fn slint_canvas(s: &mut String, scene: &Scene) {
                 .unwrap();
                 continue;
             }
-           "filled-split-button" => "FilledSplitButton",
+            "filled-split-button" => "FilledSplitButton",
             "tonal-split-button" => "TonalSplitButton",
             "elevated-split-button" => "ElevatedSplitButton",
             "outlined-split-button" => "OutlineSplitButton",
@@ -1826,7 +1806,8 @@ fn slint_canvas(s: &mut String, scene: &Scene) {
             "list-item" | "segmented-list-item" => {
                 let i = items;
                 items += 1;
-                let component = if w.kind == "list-item" { "ListTile" } else { "SegmentedListItem" };
+                let component =
+                    if w.kind == "list-item" { "ListTile" } else { "SegmentedListItem" };
                 writeln!(
                     s,
                     "    item{i} := {component} {{\n        x: {}px;\n        y: {}px;\n{}    }}\n",
@@ -1863,7 +1844,8 @@ fn slint_canvas(s: &mut String, scene: &Scene) {
                     .map(str::to_string)
                     .or_else(|| w.color.clone());
                 if let Some(c) = &color {
-                    writeln!(body, "        color: MaterialPalette.{};", c.replace('-', "_")).unwrap();
+                    writeln!(body, "        color: MaterialPalette.{};", c.replace('-', "_"))
+                        .unwrap();
                 }
                 let tonal = w
                     .slint_overrides
@@ -1891,11 +1873,7 @@ fn slint_canvas(s: &mut String, scene: &Scene) {
                     )
                     .unwrap();
                 }
-                let radius = w
-                    .slint_overrides
-                    .get("radius")
-                    .map(|v| widget_num(v))
-                    .or(w.radius);
+                let radius = w.slint_overrides.get("radius").map(|v| widget_num(v)).or(w.radius);
                 if let Some(r) = radius {
                     writeln!(body, "        border_radius: {r}px;").unwrap();
                 }
@@ -1904,7 +1882,7 @@ fn slint_canvas(s: &mut String, scene: &Scene) {
                 }
                 if w.selectable.unwrap_or(false) {
                     writeln!(body, "        selectable: true;").unwrap();
-                    if w.selected.unwrap_or(false) {
+                    if w.selected.as_ref().and_then(|v| v.as_bool()).unwrap_or(false) {
                         writeln!(body, "        selected: true;").unwrap();
                     }
                 }
@@ -2017,24 +1995,17 @@ fn slint_canvas(s: &mut String, scene: &Scene) {
                     .map(str::to_string)
                     .or_else(|| w.color.clone());
                 let colorize_prop = color
-                    .map(|c| format!("\n        colorize: MaterialPalette.{};", c.replace('-', "_")))
+                    .map(|c| {
+                        format!("\n        colorize: MaterialPalette.{};", c.replace('-', "_"))
+                    })
                     .unwrap_or_default();
                 // No `width`/`height` authored → the icon takes the
                 // source's natural size (`defaultSizeFor` upstream).
                 let size_prop = |v: Option<f64>, name: &str| {
-                    v.map(|v| format!("\n        {name}: {v}px;"))
-                        .unwrap_or_default()
+                    v.map(|v| format!("\n        {name}: {v}px;")).unwrap_or_default()
                 };
-                let width = w
-                    .slint_overrides
-                    .get("width")
-                    .map(widget_num)
-                    .or(w.width);
-                let height = w
-                    .slint_overrides
-                    .get("height")
-                    .map(widget_num)
-                    .or(w.height);
+                let width = w.slint_overrides.get("width").map(widget_num).or(w.width);
+                let height = w.slint_overrides.get("height").map(widget_num).or(w.height);
                 let x = w.slint_overrides.get("x").map(widget_num).unwrap_or(w.x);
                 let y = w.slint_overrides.get("y").map(widget_num).unwrap_or(w.y);
                 writeln!(
@@ -2062,14 +2033,9 @@ fn slint_canvas(s: &mut String, scene: &Scene) {
                 // is the divider's own `thickness` (`DividerDefaults.
                 // Thickness` upstream when unset). `slint_overrides` shadow
                 // the authored values for the negative scenes.
-                let thickness = w
-                    .slint_overrides
-                    .get("thickness")
-                    .map(widget_num)
-                    .or(w.thickness);
-                let thickness_prop = thickness
-                    .map(|t| format!("\n        thickness: {t}px;"))
-                    .unwrap_or_default();
+                let thickness = w.slint_overrides.get("thickness").map(widget_num).or(w.thickness);
+                let thickness_prop =
+                    thickness.map(|t| format!("\n        thickness: {t}px;")).unwrap_or_default();
                 let color = w
                     .slint_overrides
                     .get("color")
@@ -2107,7 +2073,12 @@ fn slint_canvas(s: &mut String, scene: &Scene) {
                     .map(str::to_string)
                     .or_else(|| w.color.clone());
                 let container_prop = container
-                    .map(|c| format!("\n        container_color: MaterialPalette.{};", c.replace('-', "_")))
+                    .map(|c| {
+                        format!(
+                            "\n        container_color: MaterialPalette.{};",
+                            c.replace('-', "_")
+                        )
+                    })
                     .unwrap_or_default();
                 let text_prop = w
                     .text
@@ -2135,7 +2106,12 @@ fn slint_canvas(s: &mut String, scene: &Scene) {
                     .map(str::to_string)
                     .or_else(|| w.color.clone());
                 let container_prop = container
-                    .map(|c| format!("\n        badge_container_color: MaterialPalette.{};", c.replace('-', "_")))
+                    .map(|c| {
+                        format!(
+                            "\n        badge_container_color: MaterialPalette.{};",
+                            c.replace('-', "_")
+                        )
+                    })
                     .unwrap_or_default();
                 let badge_text = w
                     .slint_overrides
@@ -2471,7 +2447,6 @@ fn connected_group_widget(s: &mut String, w: &Widget, i: usize, scene: &Scene) {
         )
         .unwrap();
     }
-
 }
 
 fn slint_spring_motion(s: &mut String, scene: &Scene) {
@@ -2596,7 +2571,6 @@ fn appbar_widget(s: &mut String, w: &Widget, i: usize) {
     .unwrap();
 }
 
-
 /// Escapes a string for embedding in a generated `.slint` string literal.
 fn slint_str(text: &str) -> String {
     text.replace('\\', "\\\\").replace('"', "\\\"").replace('\n', "\\n")
@@ -2636,20 +2610,12 @@ fn dialog_widget(s: &mut String, w: &Widget, i: usize, scene: &Scene) {
             let labels = w
                 .items
                 .iter()
-                .map(|item| {
-                    format!("\"{}\"", slint_str(item.text.as_deref().unwrap_or_default()))
-                })
+                .map(|item| format!("\"{}\"", slint_str(item.text.as_deref().unwrap_or_default())))
                 .collect::<Vec<_>>()
                 .join(", ");
             // The repeated `action` id is what `//TRACE_ITEMS=` enumerates.
-            let hover = w
-                .items
-                .iter()
-                .position(|it| it.state.as_deref() == Some("hovered"));
-            let press = w
-                .items
-                .iter()
-                .position(|it| it.state.as_deref() == Some("pressed"));
+            let hover = w.items.iter().position(|it| it.state.as_deref() == Some("hovered"));
+            let press = w.items.iter().position(|it| it.state.as_deref() == Some("pressed"));
             content.push_str("            // align(End) on the actions box\n            HorizontalLayout {\n                alignment: end;\n                spacing: 8px;\n");
             writeln!(
                 content,
@@ -2750,7 +2716,6 @@ fn dialog_widget(s: &mut String, w: &Widget, i: usize, scene: &Scene) {
     .unwrap();
 }
 
-
 /// ISO `YYYY-MM-DD`/`YYYY-MM` → a `Date` struct literal for the emitted
 /// `.slint` — `{ day: D, month: M, year: Y }`.
 fn slint_date_literal(iso: &str) -> String {
@@ -2822,8 +2787,7 @@ fn date_picker_widget(s: &mut String, w: &Widget, i: usize) {
         }
     } else {
         if let Some(d) = &w.selected_start {
-            writeln!(inner, "            selected_start_date: {};", slint_date_literal(d))
-                .unwrap();
+            writeln!(inner, "            selected_start_date: {};", slint_date_literal(d)).unwrap();
         }
         if let Some(d) = &w.selected_end {
             writeln!(inner, "            selected_end_date: {};", slint_date_literal(d)).unwrap();
@@ -2857,12 +2821,12 @@ fn date_picker_widget(s: &mut String, w: &Widget, i: usize) {
         }
     }
 
-            // Compose lays out in physical pixels: `Center` snaps an odd
-        // (size - content) delta to an integer *device* pixel. `phx`
-        // rounds the same quantity in the same space - logical `px`
-        // rounding would be a half-pixel off at density 1 and a full one
-        // at density 2.
-writeln!(
+    // Compose lays out in physical pixels: `Center` snaps an odd
+    // (size - content) delta to an integer *device* pixel. `phx`
+    // rounds the same quantity in the same space - logical `px`
+    // rounding would be a half-pixel off at density 1 and a full one
+    // at density 2.
+    writeln!(
         s,
         "    picker{i} := DatePickerDialogContent {{\n        x: Math.round((parent.width - self.width) / 1phx / 2) * 1phx;\n        y: Math.round((parent.height - self.height) / 1phx / 2) * 1phx;\n{p}\n        {component} {{\n{inner}        }}\n    }}\n",
     )
@@ -2873,11 +2837,7 @@ writeln!(
 /// measured size is identical on both sides.
 fn sheet_content_rect(w: &Widget) -> String {
     let h = w.sheet_height.unwrap_or(120.0);
-    let color = w
-        .content_color
-        .as_deref()
-        .unwrap_or("tertiary-container")
-        .replace('-', "_");
+    let color = w.content_color.as_deref().unwrap_or("tertiary-container").replace('-', "_");
     format!(
         "            Rectangle {{\n                height: {h}px;\n                background: MaterialPalette.{color};\n            }}\n",
         h = h as i64,
@@ -2989,10 +2949,9 @@ fn sheet_widget(s: &mut String, w: &Widget, i: usize, scene: &Scene) {
             let shape_override = over
                 .get("sheet_shape")
                 .map(|v| format!("\n            sheet-shape: {};", corner_shape_expr(v)));
-            let color_override = over
-                .get("container_color")
-                .and_then(|v| v.as_str())
-                .map(|c| format!("\n            container-color: MaterialPalette.{};", c.replace('-', "_")));
+            let color_override = over.get("container_color").and_then(|v| v.as_str()).map(|c| {
+                format!("\n            container-color: MaterialPalette.{};", c.replace('-', "_"))
+            });
             let skip_partial = over
                 .get("skip_partial")
                 .and_then(|v| v.as_bool())
@@ -3019,11 +2978,7 @@ fn sheet_widget(s: &mut String, w: &Widget, i: usize, scene: &Scene) {
             .unwrap();
         }
         "bottom-sheet-scaffold" => {
-            let body_color = w
-                .body_color
-                .as_deref()
-                .unwrap_or("surface")
-                .replace('-', "_");
+            let body_color = w.body_color.as_deref().unwrap_or("surface").replace('-', "_");
             let shape_override = over
                 .get("sheet_shape")
                 .map(|v| format!("\n            sheet-shape: {};", corner_shape_expr(v)));
@@ -3077,8 +3032,7 @@ fn sheet_widget(s: &mut String, w: &Widget, i: usize, scene: &Scene) {
                         // `ParitySheet` tracks `AnchoredDraggableState`'s
                         // bound-crossing `currentValue`; `SheetWidget`
                         // reports `SheetState.currentValue` = `settledValue`.
-                        let src = if prop == "current-value"
-                            && sheet_needs_gesture_replay(w, scene)
+                        let src = if prop == "current-value" && sheet_needs_gesture_replay(w, scene)
                         {
                             "anchor_current".to_string()
                         } else {
@@ -3092,7 +3046,9 @@ fn sheet_widget(s: &mut String, w: &Widget, i: usize, scene: &Scene) {
                         )
                         .unwrap();
                     }
-                    "dragging" | "is-visible" | "has-expanded-state"
+                    "dragging"
+                    | "is-visible"
+                    | "has-expanded-state"
                     | "has-partially-expanded-state" => {
                         writeln!(
                             handlers,
@@ -3161,11 +3117,8 @@ const SHEET_OPS: [&str; 4] = ["show", "hide", "expand", "partial-expand"];
 /// the motion is meant to begin (the Compose runnable launches the same
 /// `animateTo` there, ~2 ms of coroutine dispatch later).
 fn sheet_op_timers(s: &mut String, scene: &Scene) {
-    let ops: Vec<&Action> = scene
-        .actions
-        .iter()
-        .filter(|a| SHEET_OPS.contains(&a.kind.as_str()))
-        .collect();
+    let ops: Vec<&Action> =
+        scene.actions.iter().filter(|a| SHEET_OPS.contains(&a.kind.as_str())).collect();
     if ops.is_empty() {
         return;
     }
@@ -3322,11 +3275,8 @@ fn navbar_widget(s: &mut String, w: &Widget, i: usize) {
             writeln!(p, "        always-show-label: {v};").unwrap();
         }
     }
-    let selected = w
-        .slint_overrides
-        .get("selected_index")
-        .and_then(|v| v.as_i64())
-        .or(w.selected_index);
+    let selected =
+        w.slint_overrides.get("selected_index").and_then(|v| v.as_i64()).or(w.selected_index);
     if let Some(v) = selected {
         writeln!(p, "        current-index: {v};").unwrap();
     }
@@ -3352,11 +3302,7 @@ fn navbar_widget(s: &mut String, w: &Widget, i: usize) {
         }
         writeln!(p, "        ];").unwrap();
     }
-    writeln!(
-        s,
-        "    navbar{i} := {component} {{\n{p}    }}\n",
-    )
-    .unwrap();
+    writeln!(s, "    navbar{i} := {component} {{\n{p}    }}\n",).unwrap();
 }
 
 /// The scripted input a `pull-refresh`/`swipe-to-dismiss` settle fires: one
