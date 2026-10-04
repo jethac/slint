@@ -108,6 +108,7 @@
       "height_offset": null,
       "hide_on_collapse": null,
       "icon": null,
+      "icon_position": null,
       "icons": [],
       "indeterminate": null,
       "index": null,
@@ -115,26 +116,35 @@
       "interactive": null,
       "items": [
         {
+          "badge": null,
           "checked": null,
           "checked_icon": null,
           "disabled": null,
+          "enabled": null,
           "icon": null,
+          "selected_icon": null,
           "state": null,
           "text": "Day"
         },
         {
+          "badge": null,
           "checked": null,
           "checked_icon": null,
           "disabled": null,
+          "enabled": null,
           "icon": null,
+          "selected_icon": null,
           "state": null,
           "text": "Week"
         },
         {
+          "badge": null,
           "checked": null,
           "checked_icon": null,
           "disabled": null,
+          "enabled": null,
           "icon": null,
+          "selected_icon": null,
           "state": null,
           "text": "Month"
         }
@@ -144,6 +154,7 @@
       "leading_image": null,
       "level": null,
       "multi_select": null,
+      "nav_arrangement": null,
       "nav_icon": null,
       "overline": null,
       "peek_height": null,
@@ -207,6 +218,7 @@
       "height_offset": null,
       "hide_on_collapse": null,
       "icon": null,
+      "icon_position": null,
       "icons": [],
       "indeterminate": null,
       "index": null,
@@ -218,6 +230,7 @@
       "leading_image": null,
       "level": null,
       "multi_select": null,
+      "nav_arrangement": null,
       "nav_icon": null,
       "overline": null,
       "peek_height": null,
