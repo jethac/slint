@@ -253,6 +253,8 @@ class RailItem(json: JSONObject) {
         (json.opt("selected_icon") as? String)?.takeIf { it.isNotEmpty() }
     val badge: String? = (json.opt("badge") as? String)?.takeIf { it.isNotEmpty() }
     val enabled: Boolean = json.optBoolean("enabled", true)
+}
+
 /** One item of a `connected-button-group`: the label, an optional leading
  * icon, a `checked_icon` swap while checked, `disabled`, `checked`
  * (multi-select), and an interaction `state` emitted on the item's own
