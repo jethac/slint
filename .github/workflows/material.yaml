@@ -187,21 +187,23 @@ jobs:
               ./gradlew testDebugUnitTest -Pparity.record=1 --no-daemon
               ./gradlew :harness:compileJava --no-daemon -q
               drifted=0
+              # git prints repository-root-relative paths even from this
+              # subdirectory, so recorded files resolve via GITHUB_WORKSPACE.
               while IFS= read -r f; do
                 [ -n "$f" ] || continue
                 case "$f" in
-                  references/*.png)
+                  */references/*.png)
                     if ! git show "HEAD:$f" > /tmp/committed_ref.png 2>/dev/null; then
                       echo "::error::$f has no committed reference — commit it"
                       drifted=1
                       continue
                     fi
-                    if ! java -cp harness/build/classes/java/main org.slint.material.parity.VerifyRefs /tmp/committed_ref.png "$f"; then
+                    if ! java -cp harness/build/classes/java/main org.slint.material.parity.VerifyRefs /tmp/committed_ref.png "$GITHUB_WORKSPACE/$f"; then
                       echo "::error::$f drifted beyond the raster noise floor"
                       drifted=1
                     fi
                     ;;
-                  references/*)
+                  *)
                     echo "::error::$f drifted — non-image references must reproduce byte-for-byte"
                     drifted=1
                     ;;
