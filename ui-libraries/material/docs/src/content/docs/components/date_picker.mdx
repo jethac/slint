@@ -1,15 +1,155 @@
 ---
-title: DatePickerPopup
-description: DatePickerPopup api.
+title: DatePicker
+description: DatePicker, DateRangePicker, and DatePickerDialog API.
 ---
 
 import CodeSnippetMD from '@slint/common-files/src/components/CodeSnippetMD.astro';
 import SlintProperty from '@slint/common-files/src/components/SlintProperty.astro';
 
-Use a date picker to let the user select a date.
+<CodeSnippetMD imagePath="/src/assets/generated/date_picker.png" scale="2" imageWidth="360" imageHeight="500" imageAlt="">
+```slint
+import { DatePicker } from "@material";
+export component Example inherits Window {
+    width: 360px;
+    height: 512px;
+    background: transparent;
 
-```slint playground
-import { DatePickerPopup, FilledButton } from "@material";
+    DatePicker {
+        width: parent.width;
+        height: parent.height;
+        displayed_date: { day: 1, month: 10, year: 2025 };
+        selected_date: { day: 14, month: 10, year: 2025 };
+    }
+}
+```
+</CodeSnippetMD>
+
+Use a `DatePicker` to let the user select a date. It renders the Material 3 docked picker content — title, headline, month navigation, and the day grid — inside its own bounds. Pair it with `DatePickerDialog` for the modal dialog form.
+
+## DatePicker
+
+### Properties
+
+### title
+<SlintProperty propName="title" typeName="string" defaultValue='"Select date"'>
+The title text above the headline.
+</SlintProperty>
+
+### show-title
+<SlintProperty propName="show_title" typeName="bool" defaultValue="true">
+Whether the title row is visible.
+</SlintProperty>
+
+### selected-date
+<SlintProperty propName="selected_date" typeName="struct" structName="Date">
+The currently selected date. Leave it unset to show the empty "Selected date" headline.
+</SlintProperty>
+
+### displayed-date
+<SlintProperty propName="displayed_date" typeName="struct" structName="Date">
+The month shown in the day grid (its `day` field is ignored).
+</SlintProperty>
+
+### today
+<SlintProperty propName="today" typeName="struct" structName="Date">
+The date highlighted as today. When unset, the system date is used.
+</SlintProperty>
+
+### display-mode
+<SlintProperty propName="display_mode" typeName="enum" enumName="DatePickerDisplayMode" defaultValue="picker">
+`picker` shows the day grid; `input` shows the date text field.
+</SlintProperty>
+
+### show-mode-toggle
+<SlintProperty propName="show_mode_toggle" typeName="bool" defaultValue="true">
+Whether the headline edit icon that toggles between picker and input modes is visible.
+</SlintProperty>
+
+### enforce-touch-target
+<SlintProperty propName="enforce_touch_target" typeName="bool" defaultValue="true">
+When true, day cells enforce the 48dp minimum touch target; when false they use the 40dp dense size.
+</SlintProperty>
+
+### selectable-from / selectable-to
+<SlintProperty propName="selectable_from" typeName="struct" structName="Date">
+<SlintProperty propName="selectable_to" typeName="struct" structName="Date">
+The contiguous range of selectable dates. Defaults to 1900-01-01 .. 2100-12-31.
+</SlintProperty>
+</SlintProperty>
+
+### year-min / year-max
+<SlintProperty propName="year_min" typeName="int" defaultValue="1900">
+<SlintProperty propName="year_max" typeName="int" defaultValue="2100">
+The range covered by the year picker and the month navigation buttons.
+</SlintProperty>
+</SlintProperty>
+
+### selected-day-container-color
+<SlintProperty propName="selected_day_container_color" typeName="brush">
+The fill color of the selected day cell (`DatePickerColors.selectedDayContainerColor`).
+</SlintProperty>
+
+### Callbacks
+
+### date-selected(Date)
+Invoked when the user selects a day.
+
+## DateRangePicker
+
+<CodeSnippetMD imagePath="/src/assets/generated/date_range_picker.png" scale="2" imageWidth="360" imageHeight="520" imageAlt="">
+```slint
+import { DateRangePicker } from "@material";
+export component Example inherits Window {
+    width: 360px;
+    height: 560px;
+    background: transparent;
+
+    DateRangePicker {
+        width: parent.width;
+        height: parent.height;
+        displayed_date: { day: 1, month: 10, year: 2025 };
+        selected_start_date: { day: 14, month: 10, year: 2025 };
+        selected_end_date: { day: 20, month: 10, year: 2025 };
+    }
+}
+```
+</CodeSnippetMD>
+
+Use a `DateRangePicker` to let the user select a start and end date. It shares the `DatePicker` geometry and adds the "start – end" headline and a scrollable list of months with a `secondary-container` band behind the selected range.
+
+### Properties
+
+`DateRangePicker` shares `title`, `show-title`, `displayed-date`, `today`, `display-mode`, `show-mode-toggle`, `enforce-touch-target`, `selectable-from`, and `selectable-to` with `DatePicker`, plus:
+
+### selected-start-date / selected-end-date
+<SlintProperty propName="selected_start_date" typeName="struct" structName="Date">
+<SlintProperty propName="selected_end_date" typeName="struct" structName="Date">
+The bounds of the current selection. The user completes a range by picking two days; the next click starts a new range.
+</SlintProperty>
+</SlintProperty>
+
+### months-to-show
+<SlintProperty propName="months_to_show" typeName="int" defaultValue="3">
+How many month blocks the months list composes; the dialog's bounded height shows a clipped trailing month.
+</SlintProperty>
+
+### selected-day-container-color / day-in-range-container-color
+<SlintProperty propName="selected_day_container_color" typeName="brush">
+<SlintProperty propName="day_in_range_container_color" typeName="brush">
+The fill colors of the selection-endpoint days and of the band behind in-range days.
+</SlintProperty>
+</SlintProperty>
+
+### Callbacks
+
+### range-selected(Date, Date)
+Invoked when the user completes a range by picking the second day.
+
+## DatePickerDialog
+
+<CodeSnippetMD imagePath="" noScreenShot scale="2" imageWidth="300" imageHeight="200" imageAlt="">
+```slint
+import { DatePicker, DatePickerDialog } from "@material";
 export component Example inherits Window {
     width: 400px;
     height: 600px;
@@ -22,58 +162,82 @@ export component Example inherits Window {
         }
     }
 
-    date_picker := DatePickerPopup {
-        x: (root.width - self.width) / 2;
-        y: (root.height - self.height ) / 2;
-        close_policy: PopupClosePolicy.no_auto_close;
+    date_picker := DatePickerDialog {
+        x: -root.absolute-position.x;
+        y: -root.absolute-position.y;
+        width: root.width;
+        height: root.height;
 
-        accepted(date) => {
+        DatePicker {
+            selected_date: { day: 14, month: 10, year: 2025 };
+        }
+
+        confirm_clicked => {
             date_picker.close();
         }
-        canceled => {
-            date_picker.close();
-        }
+        dismissed => { }
     }
 }
 ```
+</CodeSnippetMD>
 
-## Properties
+The `DatePickerDialog` shows a `DatePicker` or `DateRangePicker` on the Material 3 dialog surface — the 360dp `extra-large`-cornered container with the scrim and OK/Cancel action row — exactly like `BasicAlertDialog` with `usePlatformDefaultWidth = false` upstream.
+
+### Properties
+
+### confirm-text / dismiss-text
+<SlintProperty propName="confirm_text" typeName="string" defaultValue='"OK"'>
+<SlintProperty propName="dismiss_text" typeName="string" defaultValue='"Cancel"'>
+The action button labels. Leave `dismiss-text` empty to hide the cancel button.
+</SlintProperty>
+</SlintProperty>
+
+### confirm-enabled
+<SlintProperty propName="confirm_enabled" typeName="bool" defaultValue="true">
+Whether the confirm button is enabled — typically bound to the picker's selection state.
+</SlintProperty>
+
+### enforce-touch-target
+<SlintProperty propName="enforce_touch_target" typeName="bool" defaultValue="true">
+Whether the action buttons enforce the 48dp minimum touch target.
+</SlintProperty>
+
+### Callbacks
+
+### confirm-clicked()
+Invoked when the confirm button is clicked or Enter is pressed.
+
+### dismiss-clicked()
+Invoked when the dismiss button is clicked — the dialog closes first.
+
+### dismissed()
+Invoked whenever the dialog is dismissed: cancel button, scrim click, or Escape.
+
+## DatePickerPopup
+
+`DatePickerPopup` is the pre-M3E single-date popup kept for backward compatibility. Prefer `DatePickerDialog` with a `DatePicker` child in new code.
+
+### Properties
 
 ### title
 <SlintProperty propName="title" typeName="string">
-The text that is displayed at the top of the picker.
+The title text displayed at the top of the picker.
 </SlintProperty>
 
 ### date
 <SlintProperty propName="date" typeName="struct" structName="Date">
-Set the initial displayed date.
-```slint "date: { year: 2024, month: 11 };"
-DatePickerPopup {
-    date: { year: 2024, month: 11 };
-}
-```
+The initial displayed and selected date.
 </SlintProperty>
 
 ### close-policy
-<SlintProperty propName="close_policy" typeName="enum" enumName="PopupClosePolicy" defaultValue="close_on_click">
-By default, a DatePickerPopup closes when the user clicks. Set this to false to prevent that behavior and close it manually using the `close()` function.
+<SlintProperty propName="close_policy" typeName="enum" enumName="PopupClosePolicy" defaultValue="no_auto_close">
+By default a `DatePickerPopup` does not close on outside clicks; close it manually with `close()`.
 </SlintProperty>
 
-## Callbacks
-
-### canceled()
-Invoked when the cancel button is clicked.
-
-```slint
-date_picker := DatePickerPopup {
-    canceled() => {
-        date_picker.close();
-    }
-}
-```
+### Callbacks
 
 ### accepted(Date)
-Invoked when the ok button is clicked.
+Invoked when the OK button is clicked.
 
 ```slint
 date_picker := DatePickerPopup {
@@ -84,24 +248,21 @@ date_picker := DatePickerPopup {
 }
 ```
 
-## Properties
+### canceled()
+Invoked when the cancel button is clicked or Escape is pressed.
 
-### has-focus
-<SlintProperty propName="has-focus" typeName="bool">
-Whether the component has focus.
-</SlintProperty>
+```slint
+date_picker := DatePickerPopup {
+    canceled() => {
+        date_picker.close();
+    }
+}
+```
 
-## Functions
-
-### clear-focus()
-Clears the focus from the component.
-
-### close()
-Closes the popup. Use this if you set the `close_policy` property to `no_auto_close`.
-
-### focus()
-Focuses the component.
+### Functions
 
 ### show()
-Show the popup on the screen.
+Shows the popup.
 
+### close()
+Closes the popup.
