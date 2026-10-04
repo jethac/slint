@@ -98,8 +98,19 @@ class RenderTest(private val sceneName: String, private val density: Int) {
         val lastMs = if (motion) scene.times.max() else STATIC_SETTLE_MS + 1
         val startMs = if (motion) 0L else 1L
         val fps = if (motion) 1000 else 20
+        val frameMs = 1000L / fps
 
         frames.setSink(java.util.function.BiConsumer { index, image ->
+            // The trace for frame `index` samples post-draw state — the prop
+            // getters and element bounds then describe the pixels just
+            // captured — and runs before this frame's queued presses so a
+            // press at `index` still belongs to the next frame.
+            tracer.recordFrame(
+                index.toLong() * frameMs,
+                scene.traceProps,
+                scene.traceElements,
+                density.toFloat(),
+            )
             val due = emitPress.filter { index.toLong() >= it.first }
             due.forEach { it.second.run() }
             emitPress.removeAll(due.toSet())

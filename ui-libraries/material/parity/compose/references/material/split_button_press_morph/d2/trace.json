@@ -19,19 +19,8 @@
           "x": 16,
           "y": 28,
           "w": 148,
-          "h": 40
-        },
-        "button0_leading": {
-          "x": 16,
-          "y": 28,
-          "w": 56,
-          "h": 40
-        },
-        "button0_trailing": {
-          "x": 74,
-          "y": 28,
-          "w": 48,
-          "h": 40
+          "h": 40,
+          "opacity": 1
         }
       },
       "text": {}
@@ -8437,5 +8426,5 @@
       "text": {}
     }
   ],
-  "settle_ms": 0
+  "settle_ms": null
 }

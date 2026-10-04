@@ -1,5 +1,6 @@
 badges
 bottom-app-bars
+bottom-sheets
 button-focus
 button-hover
 button-icons
@@ -14,6 +15,7 @@ connected-button-groups
 connected-button-morph
 connected-button-press-morph
 dividers
+drag-handles
 elevation-shadow
 elevation-surfaces
 extended-fab-morph
@@ -36,6 +38,7 @@ list-select-morph
 list-states
 loading-indicator-motion
 loading-indicator-states
+modal-scrim-dismiss
 negative-badge-offset
 negative-badge-text
 negative-button-focus-ring
@@ -62,6 +65,8 @@ negative-radius
 negative-recolor
 negative-shape-fit
 negative-shape-leak
+negative-sheet-color
+negative-sheet-partial
 negative-split-button-checked-overlay
 negative-split-button-inner-corner
 negative-split-button-outer-corner
@@ -69,8 +74,17 @@ negative-split-button-spacing
 negative-thumb-offset
 negative-toggle-select
 negative-wrong-shadow
+scaffold-drag
+scaffold-ops
 search-bars
 segmented-list
+sheet-commit-hide
+sheet-drag-expand
+sheet-drag-settle
+sheet-fling-hide
+sheet-modal-show
+sheet-ops
+sheet-scaffold
 split-button-check-morph
 split-button-check-rotate
 split-button-elevated
