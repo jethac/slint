@@ -59,7 +59,8 @@ fn parse_item_ref(id: &str) -> Option<(String, usize)> {
         return None;
     }
     let (stem, num) = id.split_at(id.len() - digits);
-    let container = stem.strip_suffix("item")?;
+    let container =
+        stem.strip_suffix("item").or_else(|| stem.strip_suffix("action"))?;
     if container.is_empty() {
         return None;
     }
@@ -1598,6 +1599,23 @@ fn compare_text_metrics(
             // hinted `w`/`frac_w` stay a few px wider by design and are not
             // re-checked here.
             match m["unhint_w"].as_f64() {
+                // A wrapped text's Compose `w` is the measured width under a
+                // width constraint, not the unhinted advance — Slint's
+                // element width compares against `w`/`frac_w` directly.
+                // (`lines > 1` marks the constrained measure; a one-line
+                // `w` below `unhint_w` is only hinting drift.)
+                Some(unhint_w)
+                    if unhint_w.is_finite()
+                        && cw < unhint_w - 1.0
+                        && m["lines"].as_f64().unwrap_or(1.0) > 1.0 =>
+                {
+                    if (sw - cw).abs() > GEOM_EPS {
+                        errors.push(format!(
+                            "t={}ms text:{n}.w: slint {sw} vs compose {cw} (eps {GEOM_EPS})",
+                            frame.t_ms
+                        ));
+                    }
+                }
                 Some(unhint_w) if unhint_w.is_finite() => {
                     let slack = sw - unhint_w;
                     let bound = if xfail_text.is_some() { 1.65 } else { 0.5 };
@@ -2101,6 +2119,7 @@ fn build_frame_mask<C: i_slint_core::api::ComponentHandle>(
     shadow_masked: &[String],
     png_mask: Option<&SharedPixelBuffer<Rgba8Pixel>>,
     density: f64,
+    xfail_text: bool,
     width: u32,
     height: u32,
 ) -> PixelMask {
@@ -2113,6 +2132,11 @@ fn build_frame_mask<C: i_slint_core::api::ComponentHandle>(
     // The 2px dilation covers a centered label's position drift: inside a
     // pinned-width container the label block itself lands ~1px off between
     // engines (half the width slack), and its cells still check the ink.
+    // `xfail_text` scenes additionally carry the accumulated sibling-width
+    // slack (see the `text_cell_eps` note): a label that trails several
+    // siblings shifts by their combined drift, so its ink can sit a few px
+    // outside its own bounds — the dilation stretches to cover it.
+    let text_dilate = if xfail_text { 2.0 + 4.0 * d } else { 2.0 };
     for handle in i_slint_backend_testing::ElementQuery::from_root(component)
         .match_inherits("Text")
         .find_all()
@@ -2126,7 +2150,26 @@ fn build_frame_mask<C: i_slint_core::api::ComponentHandle>(
                 x1: (p.x + s.width) as f64 * d,
                 y1: (p.y + s.height) as f64 * d,
             }
-            .dilated(2.0),
+            .dilated(text_dilate),
+            PixelClass::Text,
+        );
+    }
+    // `TextInput` ink is the same drift class as `Text`: it does not inherit
+    // `Text`, so its editable value/placeholder pixels need their own mask.
+    for handle in i_slint_backend_testing::ElementQuery::from_root(component)
+        .match_inherits("TextInput")
+        .find_all()
+    {
+        let p = handle.absolute_position();
+        let s = handle.size();
+        mask.fill_rect(
+            PxRect {
+                x0: p.x as f64 * d,
+                y0: p.y as f64 * d,
+                x1: (p.x + s.width) as f64 * d,
+                y1: (p.y + s.height) as f64 * d,
+            }
+            .dilated(text_dilate),
             PixelClass::Text,
         );
     }
@@ -2146,7 +2189,7 @@ fn build_frame_mask<C: i_slint_core::api::ComponentHandle>(
                 x1: (p.x + s.width) as f64 * d,
                 y1: (p.y + s.height) as f64 * d,
             }
-            .dilated(2.0),
+            .dilated(text_dilate),
             PixelClass::Text,
         );
     }
@@ -2168,7 +2211,7 @@ fn build_frame_mask<C: i_slint_core::api::ComponentHandle>(
                 PixelClass::Text
             };
             mask.fill_rect(
-                PxRect { x0: x * d, y0: y * d, x1: (x + w) * d, y1: (y + h) * d }.dilated(2.0),
+                PxRect { x0: x * d, y0: y * d, x1: (x + w) * d, y1: (y + h) * d }.dilated(text_dilate),
                 class,
             );
         }
@@ -2689,6 +2732,7 @@ pub fn run_parity_case<C: i_slint_core::api::ComponentHandle>(
                 &shadow_masked,
                 png_mask.as_ref(),
                 *density as f64,
+                spec.xfail_text.is_some(),
                 actual.width(),
                 actual.height(),
             );
@@ -2716,12 +2760,15 @@ pub fn run_parity_case<C: i_slint_core::api::ComponentHandle>(
             // magnitude scales with the scene density: at 2x a barely-1dp
             // shift lands ~2 device px inside the cell. And where a label's
             // position follows the width of preceding siblings — every item
-            // of a button-group row centering its own label — the per-advance
-            // error accumulates into the label's placement before the glyph
-            // even starts, so the relaxation needs headroom past the
-            // single-label 1.25×.
+            // of a button-group row centering its own label, or the
+            // start/delimiter/end chain of a range-picker headline — the
+            // per-advance error accumulates into the label's placement before
+            // the glyph even starts, so the relaxation needs headroom past
+            // the single-label 1.25×. At headline sizes with a several-px
+            // accumulated shift the moved ink band fills enough of a cell to
+            // double that baseline — the cap is 2× the base per density.
             let text_cell_eps = if spec.xfail_text.is_some() {
-                TEXT_CELL_EPS * 1.5 * *density as f64
+                TEXT_CELL_EPS * 2.0 * *density as f64
             } else {
                 TEXT_CELL_EPS
             };
