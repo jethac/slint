@@ -1,0 +1,1139 @@
+// Copyright © SixtyFPS GmbH <info@slint.dev>
+// SPDX-License-Identifier: MIT
+
+import { NavigationItem } from "../items/navigation_item.slint";
+import { FloatingActionButton } from "./floating_action_button.slint";
+import { MaterialStyleMetrics } from "../styling/material_style_metrics.slint";
+import { MaterialPalette } from "../styling/material_palette.slint";
+import { MaterialAnimations } from "../styling/material_animations.slint";
+import { MaterialTypography } from "../styling/material_typography.slint";
+import { IconButton } from "icon_button.slint";
+import { Icon } from "./icon.slint";
+import { Icons } from "../icons/icons.slint";
+import { Badge } from "./badge.slint";
+import { MaterialText } from "./material_text.slint";
+import { StateLayer, Ripple, FocusRing, FocusTouchArea } from "./state_layer.slint";
+import { NavigationRail } from "./navigation_rail.slint";
+import { MaterialWindowAdapter } from "./material_window.slint";
+import { ScrimTokens } from "../styling/generated/material_leaf_tokens.slint";
+import { MaterialCornerShape } from "../styling/generated/material_shape_tokens.slint";
+import {
+    NavigationRailBaselineItemTokens,
+    NavigationRailCollapsedTokens,
+    NavigationRailColorTokens,
+    NavigationRailExpandedTokens,
+    NavigationRailHorizontalItemTokens,
+    NavigationRailVerticalItemTokens,
+} from "../styling/generated/material_component_tokens.slint";
+import { BaseNavigationItemTemplate, BaseNavigation } from "./base_navigation.slint";
+
+/// `WideNavigationRailArrangement` (pinned WideNavigationRail.kt): how the
+/// item column distributes inside the rail below the header.
+export enum NavigationRailArrangement {
+    /// Items stack from the top (below the header).
+    top,
+    /// Items are centered vertically in the rail.
+    center,
+    /// Items stack from the bottom.
+    bottom,
+    /// Equal space before each item and after the last.
+    space-evenly,
+    /// No space at the ends; equal space between items.
+    space-between,
+    /// Half of `space-between`'s gap at each end.
+    space-around,
+}
+
+/// Private constants of WideNavigationRail.kt (pinned
+/// androidx/androidx@23327507f7fc7d5b19d65fec4b090f60c970079b).
+export global WideNavigationRailMetrics {
+    /// `HeaderPadding` = 40dp — vertical space between the header content
+    /// and the first item.
+    pure public function header-padding() -> length {
+        NavigationRailBaselineItemTokens.header-space-minimum
+    }
+
+    /// `CollapsedRailTopPadding` = 44dp — content padding above the header.
+    pure public function top-space() -> length {
+        NavigationRailCollapsedTokens.top-space
+    }
+
+    /// Item outer horizontal margin: `ItemHorizontalPadding` = 20dp.
+    pure public function item-horizontal-padding() -> length {
+        20px
+    }
+
+    /// `TopIconItemMinWidth` — collapsed items span the collapsed rail
+    /// width (96dp).
+    pure public function top-icon-item-min-width() -> length {
+        NavigationRailCollapsedTokens.container-width
+    }
+
+    /// `TopIconItemMinHeight` = 64dp (`BaselineItemTokens.ContainerHeight`).
+    pure public function top-icon-item-min-height() -> length {
+        NavigationRailBaselineItemTokens.container-height
+    }
+
+    /// `TopIconItemIndicatorHorizontalPadding` = 16dp — leading/trailing
+    /// padding inside the indicator of a top-icon item.
+    pure public function item-top-icon-indicator-horizontal-padding() -> length {
+        NavigationRailBaselineItemTokens.active-indicator-leading-space
+    }
+
+    /// `TopIconItemIndicatorVerticalPadding` = 4dp.
+    pure public function item-top-icon-indicator-vertical-padding() -> length {
+        4px
+    }
+
+    /// `StartIconItemIndicatorHorizontalPadding` = 16dp — the expanded
+    /// indicator's leading (and trailing) inner padding.
+    pure public function item-start-icon-indicator-horizontal-padding() -> length {
+        NavigationRailHorizontalItemTokens.active-indicator-height == 0px ?
+            16px : 16px
+    }
+
+    /// `StartIconItemIconToIndicatorTopPadding` = 16dp — vertical padding
+    /// inside the expanded indicator.
+    pure public function item-start-icon-indicator-vertical-padding() -> length {
+        16px
+    }
+
+    /// `StartIconItemIconToLabelHorizontalPadding` = 8dp.
+    pure public function item-start-icon-to-label-horizontal-padding() -> length {
+        NavigationRailHorizontalItemTokens.icon-label-space
+    }
+
+    /// `TopIconItemIndicatorToLabelVerticalPadding` = 4dp — icon to label
+    /// gap in a collapsed item.
+    pure public function item-top-icon-indicator-to-label-vertical-padding() -> length {
+        NavigationRailVerticalItemTokens.icon-label-space == 0px ? 4px : 4px
+    }
+
+    /// `StartIconItemLabelToIndicatorBottomPadding` = 16dp.
+    pure public function item-start-icon-label-to-indicator-bottom-padding() -> length {
+        16px
+    }
+
+    /// Expanded rails sit above content at level 1; the modal expanded rail
+    /// is a surface at `modal-container-elevation` (level 2).
+    pure public function modal-container-elevation() -> length {
+        NavigationRailExpandedTokens.modal-container-elevation
+    }
+
+    /// Minimum interactive target (a11y) = 48dp.
+    pure public function a11y-min-size() -> length {
+        48px
+    }
+
+    /// `CollapsedElevation` = 0dp, `ExpandedElevation` = 1dp.
+    pure public function container-elevation(is-modal: bool) -> length {
+        is-modal ? NavigationRailExpandedTokens.modal-container-elevation : 0px
+    }
+
+    /// `CollapsedContainerColor` / expanded container color.
+    pure public function container-color() -> color {
+        NavigationRailCollapsedTokens.container-color
+    }
+
+    /// `ModalContainerShape` for the modal expanded rail.
+    pure public function modal-container-shape() -> length {
+        NavigationRailExpandedTokens.modal-container-shape.top-left
+    }
+
+    /// `ModalContainerColor`.
+    pure public function modal-container-color() -> color {
+        NavigationRailExpandedTokens.modal-container-color
+    }
+
+    /// `CollapsedContainerWidth` = 96dp, `ExpandedContainerWidthMin` = 220dp,
+    /// `ExpandedContainerWidthMax` = 360dp.
+    pure public function collapsed-width() -> length {
+        NavigationRailCollapsedTokens.container-width
+    }
+    pure public function expanded-width-min() -> length {
+        NavigationRailExpandedTokens.container-width-minimum
+    }
+    pure public function expanded-width-max() -> length {
+        NavigationRailExpandedTokens.container-width-maximum
+    }
+
+    /// `ItemsVerticalSpace` = 4dp between collapsed items; expanded items
+    /// stack flush.
+    pure public function item-vertical-space() -> length {
+        NavigationRailCollapsedTokens.item-vertical-space
+    }
+
+    /// Linear interpolation helper for the animated measure policy.
+    pure public function lerp(a: length, b: length, p: float) -> length {
+        a + (b - a) * p
+    }
+
+    /// `Arrangement` y-offset of item `index` — matches Compose's
+    /// `Arrangement`'s `arrange()` for a uniform column: `consumed` is the
+    /// space the items take, `free` what is left to distribute, `step` the
+    /// item stride.
+    pure public function arrange-item-y(arrangement: NavigationRailArrangement,
+        index: int, count: int, layout-size: length, item-h: length,
+        spaced-by: length) -> length {
+        count <= 0 ? 0px :
+        arrangement == NavigationRailArrangement.top ?
+            index * (item-h + spaced-by) :
+        arrangement == NavigationRailArrangement.center ?
+            (layout-size - (count * item-h + (count - 1) * spaced-by)) / 2 +
+                index * (item-h + spaced-by) :
+        arrangement == NavigationRailArrangement.bottom ?
+            (layout-size - (count * item-h + (count - 1) * spaced-by)) +
+                index * (item-h + spaced-by) :
+        arrangement == NavigationRailArrangement.space-evenly ?
+            (layout-size - (count * item-h + (count - 1) * spaced-by)) / (count + 1) +
+                index * (item-h + spaced-by +
+                    (layout-size - (count * item-h + (count - 1) * spaced-by)) / (count + 1)) :
+        arrangement == NavigationRailArrangement.space-between ?
+            index * (item-h + spaced-by +
+                (count > 1 ?
+                    (layout-size - (count * item-h + (count - 1) * spaced-by)) / (count - 1) :
+                    0px)) :
+        // space-around
+        (layout-size - (count * item-h + (count - 1) * spaced-by)) / count / 2 +
+            index * (item-h + spaced-by +
+                (layout-size - (count * item-h + (count - 1) * spaced-by)) / count)
+    }
+}
+
+/// One item of a `WideNavigationRail`/`ModalWideNavigationRail` — the
+/// `NavigationRailItem` measure policy (`placeAnimatedLabelAndIcon`,
+/// pinned NavigationItem.kt) expressed as live geometry: every position
+/// interpolates between the top-icon (collapsed) and start-icon (expanded)
+/// layouts by `icon-position-progress`.
+component WideRailItemTemplate inherits BaseNavigationItemTemplate {
+    /// Minimum touch target (0 when a11y enforcement is off).
+    in property <length> a11y-size;
+
+    /// Item policy bounds supplied by the rail layout.
+    in property <length> policy-min-height;
+    in property <length> policy-max-width;
+    in property <length> policy-max-height;
+
+    /// `iconPositionProgress`: 0 = top icon (collapsed), 1 = start icon
+    /// (expanded). Bound to the rail's `expansion`.
+    in property <float> icon-position-progress;
+
+    /// Whether the item is laid out in the top-icon (collapsed) form —
+    /// used for boolean-only decisions that must not interpolate.
+    in property <bool> icon-position-top;
+
+    /// Parity hooks: force hover/press visuals and swallow clicks.
+    in property <bool> simulate-hover;
+    in property <bool> simulate-press;
+    in property <bool> suppress-click;
+
+    property <bool> has-label: root.text != "";
+    property <bool> has-icon: root.icon.width > 0 && root.icon.height > 0;
+
+    /// Clamped measure-policy progress.
+    property <float> p: Math.clamp(root.icon-position-progress, 0, 1);
+
+    /// `sizeAnimationProgress` — spatial selection indicator animation.
+    property <float> selection-progress: root.selected ? 1 : 0;
+    animate selection-progress {
+        easing: MaterialAnimations.default-spatial-spring;
+        enabled: !MaterialPalette.reduced-motion;
+    }
+
+    property <length> label-w: root.has-label ? label.min-width : 0px;
+    property <length> label-h: root.has-label ? label.min-height : 0px;
+
+    // Indicator metrics — `indicator-vpad` animates the top-icon (4dp)
+    // into the start-icon (16dp) inner padding.
+    property <length> indicator-vpad: WideNavigationRailMetrics.lerp(
+        WideNavigationRailMetrics.item-top-icon-indicator-vertical-padding(),
+        WideNavigationRailMetrics.item-start-icon-indicator-vertical-padding(),
+        root.p);
+    property <length> indicator-hpad:
+        WideNavigationRailMetrics.item-top-icon-indicator-horizontal-padding();
+    property <length> indicator-h: root.has-label ?
+        WideNavigationRailMetrics.lerp(NavigationRailBaselineItemTokens.icon-size,
+            max(NavigationRailBaselineItemTokens.icon-size, root.label-h), root.p) +
+            2 * root.indicator-vpad :
+        NavigationRailHorizontalItemTokens.active-indicator-height;
+    property <length> indicator-w-full: root.has-label ?
+        min(WideNavigationRailMetrics.lerp(NavigationRailBaselineItemTokens.icon-size,
+                NavigationRailBaselineItemTokens.icon-size + root.label-w +
+                    WideNavigationRailMetrics.item-start-icon-to-label-horizontal-padding(),
+                root.p) + 2 * root.indicator-hpad,
+            root.policy-max-width) :
+        min(NavigationRailHorizontalItemTokens.active-indicator-height,
+            root.policy-max-width);
+    property <length> animated-indicator-width: root.indicator-w-full * root.selection-progress;
+
+    // Measure-policy item size — `width`/`height` of
+    // `placeAnimatedLabelAndIcon` (`inner-width`/`inner-height` lerp).
+    property <length> inner-width-top:
+        min(max(root.label-w, WideNavigationRailMetrics.top-icon-item-min-width()),
+            root.policy-max-width);
+    property <length> inner-width-start:
+        min(root.indicator-w-full + WideNavigationRailMetrics.item-horizontal-padding(),
+            root.policy-max-width);
+    property <length> inner-height-top:
+        min(root.indicator-h + WideNavigationRailMetrics.item-top-icon-indicator-to-label-vertical-padding() +
+            root.label-h, root.policy-max-height);
+    property <length> inner-height-start: min(root.indicator-h, root.policy-max-height);
+    property <length> inner-content-width: root.has-label ?
+        WideNavigationRailMetrics.lerp(root.inner-width-top, root.inner-width-start, root.p) :
+        root.inner-width-start;
+    property <length> inner-content-height: root.has-label ?
+        WideNavigationRailMetrics.lerp(root.inner-height-top, root.inner-height-start, root.p) :
+        root.inner-height-start;
+
+    // Constraint-respecting policy size (the item's own `width`/`height`).
+    property <length> policy-width-top:
+        max(root.a11y-size,
+            min(max(root.label-w, WideNavigationRailMetrics.top-icon-item-min-width()),
+                root.policy-max-width));
+    property <length> policy-width-start:
+        max(root.a11y-size,
+            min(root.indicator-w-full + WideNavigationRailMetrics.item-horizontal-padding(),
+                root.policy-max-width));
+    property <length> policy-height-top:
+        max(max(root.policy-min-height, root.a11y-size),
+            min(root.indicator-h + WideNavigationRailMetrics.item-top-icon-indicator-to-label-vertical-padding() +
+                root.label-h, root.policy-max-height));
+    property <length> policy-height-start:
+        max(max(root.policy-min-height, root.a11y-size),
+            min(root.indicator-h, root.policy-max-height));
+    property <length> policy-width: root.has-label ?
+        WideNavigationRailMetrics.lerp(root.policy-width-top, root.policy-width-start, root.p) :
+        root.policy-width-start;
+    property <length> policy-height: root.has-label ?
+        WideNavigationRailMetrics.lerp(root.policy-height-top, root.policy-height-start, root.p) :
+        root.policy-height-start;
+
+    // Positions — `iconX`/`iconY`, `rippleX`, `labelX`/`labelY`,
+    // `indicatorX` from the pinned policy.
+    property <length> icon-x: root.has-label ?
+        WideNavigationRailMetrics.item-horizontal-padding() +
+            WideNavigationRailMetrics.item-top-icon-indicator-horizontal-padding() :
+        (root.inner-content-width - NavigationRailBaselineItemTokens.icon-size) / 2;
+    property <length> icon-y-start: (root.inner-content-height -
+        NavigationRailBaselineItemTokens.icon-size) / 2 - root.indicator-vpad;
+    property <length> icon-y: root.has-label ?
+        WideNavigationRailMetrics.lerp(0, root.icon-y-start, root.p) + root.indicator-vpad :
+        (root.inner-content-height - NavigationRailBaselineItemTokens.icon-size) / 2;
+    property <length> ripple-x: root.has-label ?
+        WideNavigationRailMetrics.lerp(WideNavigationRailMetrics.item-horizontal-padding(),
+            (WideNavigationRailMetrics.item-horizontal-padding() + root.inner-content-width -
+                root.indicator-w-full) / 2, root.p) :
+        (root.inner-content-width - root.indicator-w-full) / 2;
+    property <length> indicator-pos-x: root.has-label ?
+        WideNavigationRailMetrics.item-horizontal-padding() :
+        (root.inner-content-width - root.animated-indicator-width) / 2;
+    property <length> inner-shift: (root.policy-height - root.inner-content-height) / 2;
+
+    // `labelXStartIconOffset`: only items laid out in the top-icon
+    // configuration keep the 20dp retract; start-icon items keep 0.
+    property <length> label-x-offset: (root.icon-position-top && root.p > 0) ?
+        0px : WideNavigationRailMetrics.item-horizontal-padding() * (1 - root.p);
+    property <length> label-x-start: root.icon-x +
+        NavigationRailBaselineItemTokens.icon-size +
+        WideNavigationRailMetrics.item-start-icon-to-label-horizontal-padding() -
+        root.label-x-offset;
+    property <length> label-x: root.p < 0.5 ?
+        (WideNavigationRailMetrics.top-icon-item-min-width() - root.label-w) / 2 :
+        root.label-x-start * root.p;
+    property <length> label-y-top: root.icon-y +
+        NavigationRailBaselineItemTokens.icon-size + root.indicator-vpad +
+        WideNavigationRailMetrics.item-top-icon-indicator-to-label-vertical-padding();
+    property <length> label-y-start: (root.inner-content-height - root.label-h) / 2;
+    property <length> label-y: root.p < 0.5 ? root.label-y-top : root.label-y-start;
+
+    x: 0;
+    width: root.policy-width;
+    height: root.policy-height;
+
+    property <color> icon-color-target: !root.enabled ?
+        NavigationRailColorTokens.item-inactive-icon.with_alpha(0.38) :
+        root.selected ? NavigationRailColorTokens.item-active-icon :
+        NavigationRailColorTokens.item-inactive-icon;
+    property <color> icon-color: root.icon-color-target;
+    animate icon-color {
+        easing: MaterialAnimations.default-effects-spring;
+        enabled: !MaterialPalette.reduced-motion;
+    }
+    property <color> label-color-target: !root.enabled ?
+        NavigationRailColorTokens.item-inactive-label-text.with_alpha(0.38) :
+        root.selected ? NavigationRailColorTokens.item-active-label-text :
+        NavigationRailColorTokens.item-inactive-label-text;
+    property <color> label-color: root.label-color-target;
+    animate label-color {
+        easing: MaterialAnimations.default-effects-spring;
+        enabled: !MaterialPalette.reduced-motion;
+    }
+    property <color> state-layer-color: touch.pressed || touch.enter-pressed || root.simulate-press ?
+        NavigationRailColorTokens.item-inactive-pressed-state-layer :
+        root.selected ? NavigationRailColorTokens.item-active-hovered-state-layer :
+        NavigationRailColorTokens.item-inactive-hovered-state-layer;
+
+    touch := FocusTouchArea {
+        x: 0;
+        y: 0;
+        width: root.width;
+        height: root.height;
+        enabled: root.enabled;
+
+        clicked => {
+            if !root.suppress-click {
+                root.clicked();
+            }
+        }
+        pointer-event(e) => { root.pointer-event(e, { x: self.mouse-x, y: self.mouse-y }); }
+    }
+
+    // `IndicatorRipple` — clipped to the indicator shape.
+    indicator-ripple := Rectangle {
+        x: root.ripple-x;
+        y: root.inner-shift;
+        width: root.indicator-w-full;
+        height: root.indicator-h;
+        border-radius: self.height / 2;
+        clip: true;
+
+        if touch.has-focus || touch.has-hover || touch.pressed || touch.enter-pressed ||
+            root.simulate-hover || root.simulate-press :
+            StateLayer {
+            width: 100%;
+            height: 100%;
+            background: root.state-layer-color;
+            border-radius: parent.border-radius;
+            enabled: root.enabled;
+            pressed: touch.pressed || touch.enter-pressed || root.simulate-press;
+            has-focus: touch.has-focus;
+            has-hover: touch.has-hover || root.simulate-hover;
+        }
+
+        if root.enabled && (touch.pressed || touch.enter-pressed || root.simulate-press) : Ripple {
+            pressed-x: touch.pressed-x - indicator-ripple.x;
+            pressed-y: touch.pressed-y - indicator-ripple.y;
+            width: 100%;
+            height: 100%;
+            border-radius: parent.border-radius;
+            color: root.state-layer-color;
+        }
+    }
+
+    indicator := Rectangle {
+        x: root.indicator-pos-x;
+        y: root.inner-shift;
+        width: root.animated-indicator-width;
+        height: root.indicator-h;
+        border-radius: self.height / 2;
+        background: NavigationRailColorTokens.item-active-indicator;
+    }
+
+    icon-img := Icon {
+        x: root.icon-x;
+        y: root.inner-shift + root.icon-y;
+        width: NavigationRailBaselineItemTokens.icon-size;
+        height: self.width;
+        source: root.selected && root.selected-icon.width > 0 ? root.selected-icon : root.icon;
+        colorize: root.icon-color;
+    }
+
+    label-visibility := Rectangle {
+        clip: !root.has-label;
+        x: root.label-x;
+        y: root.inner-shift + root.label-y;
+        width: label.min-width;
+        height: label.min-height;
+
+        label := MaterialText {
+            x: 0;
+            y: 0;
+            text: root.text;
+            // The font interpolates label-medium (collapsed) into
+            // label-large (expanded) through the layout's uniform height;
+            // the text itself is always label-large sized.
+            style: root.icon-position-top && root.p < 0.5 ?
+                NavigationRailVerticalItemTokens.label-text-font :
+                NavigationRailHorizontalItemTokens.label-text-font;
+            color: root.label-color;
+            // `labelAlpha = 4 * (p - 0.5)^2` during the second half of the
+            // expansion, pinned `animateLabelAlpha`.
+            opacity: root.has-label ?
+                (root.icon-position-top || root.p >= 0.5 ? 1 :
+                    4 * (root.p - 0.5) * (root.p - 0.5)) : 0;
+            overflow: clip;
+        }
+    }
+
+    item-badge-visibility := Rectangle {
+        clip: true;
+        visible: root.show-badge || root.badge != "";
+        x: root.width - (root.badge != "" ? 12px : 6px);
+        y: root.badge != "" ? 14px - item-badge.height : 0px;
+        width: item-badge.width;
+        height: item-badge.height;
+
+        item-badge := Badge {
+            text: root.badge;
+        }
+    }
+
+    if touch.has-focus && root.enabled : FocusRing {
+        x: indicator-ripple.x;
+        y: indicator-ripple.y;
+        width: indicator-ripple.width;
+        height: indicator-ripple.height;
+        border-radius: self.height / 2;
+    }
+}
+
+/// The rail header: menu button, FAB and any caller children, stacked
+/// vertically. Exposes its natural size so the rail can measure it.
+component RailHeader inherits Rectangle {
+    in property <bool> has-menu;
+    in property <image> fab-icon;
+    in property <length> top-padding;
+    callback menu-clicked;
+    callback fab-clicked;
+
+    out property <length> natural-width: header-layout.min-width;
+    out property <length> natural-height: header-layout.min-height;
+
+    width: 100%;
+    height: self.natural-height;
+
+    header-layout := VerticalLayout {
+        padding-top: root.top-padding;
+        spacing: 0px;
+        alignment: start;
+
+        if root.has-menu : HorizontalLayout {
+            alignment: start;
+            menu := IconButton {
+                icon: Icons.menu;
+                clicked => { root.menu-clicked(); }
+            }
+        }
+
+        if root.fab-icon.width > 0 : HorizontalLayout {
+            alignment: start;
+            fab := FloatingActionButton {
+                icon: root.fab-icon;
+                clicked => { root.fab-clicked(); }
+            }
+        }
+
+        @children
+    }
+}
+
+/// The shared column layout behind `WideNavigationRail` and the sheet of
+/// `ModalWideNavigationRail` — the pinned `WideNavigationRailLayout`
+/// measure policy: the rail animates between the collapsed width (96dp)
+/// and the settled expanded width (max(label sizer + 104dp, header) clamped
+/// to [220dp, 360dp]).
+component WideNavigationRailLayout inherits BaseNavigation {
+    /// `expanded` — the rail's target state.
+    in property <bool> expanded;
+
+    /// `expansion` — the animated 0→1 progress behind `expanded`.
+    out property <float> expansion: root.expanded ? 1 : 0;
+    animate expansion {
+        easing: MaterialAnimations.default-spatial-spring;
+        enabled: !MaterialPalette.reduced-motion;
+    }
+
+    /// The width animation runs at `fast-spatial` for the modal sheet and
+    /// `default-spatial` for the inline rail.
+    in property <bool> is-modal;
+    out property <float> width-expansion: root.expanded ? 1 : 0;
+    animate width-expansion {
+        easing: root.is-modal ? MaterialAnimations.fast-spatial-spring :
+            MaterialAnimations.default-spatial-spring;
+        enabled: !MaterialPalette.reduced-motion;
+    }
+
+    /// `ItemArrangement` — how the item column is distributed.
+    in property <NavigationRailArrangement> arrangement: NavigationRailArrangement.top;
+
+    /// Header configuration.
+    in property <bool> has-menu;
+    in property <image> fab-icon;
+    in property <length> header-top-padding;
+    callback menu-clicked;
+    callback fab-clicked;
+
+    /// `TopSpace`/`BottomSpace` content padding (44dp top, 0 bottom).
+    in property <length> top-space: NavigationRailCollapsedTokens.top-space;
+    in property <length> bottom-space: 0px;
+
+    /// Minimum expanded width — the `expanded` rail keeps at least this;
+    /// `width-at-flip` widens mid-animation so content never wraps.
+    in property <length> min-rail-width;
+    in property <length> max-rail-width: WideNavigationRailMetrics.expanded-width-max();
+
+    /// a11y minimum item height (48dp when enforced).
+    in property <bool> enforce-touch-target;
+    out property <length> a11y-size: root.enforce-touch-target ?
+        WideNavigationRailMetrics.a11y-min-size() : 0px;
+
+    /// Whether the item column is drawn (the modal sheet hides items while
+    /// the collapsed rail inside it takes over).
+    in property <bool> items-visible: true;
+
+    /// Surface.
+    in property <color> container-color: WideNavigationRailMetrics.container-color();
+    in property <MaterialCornerShape> container-shape: { top_left: 0px, top_right: 0px,
+        bottom_right: 0px, bottom_left: 0px, full: false };
+
+    /// Parity hooks forwarded to every item.
+    in property <bool> simulate-item-hover;
+    in property <bool> simulate-item-press;
+    in property <bool> suppress-item-clicks;
+
+    /// Item events bubble for drag-to-dismiss on the modal sheet.
+    callback item-pointer-event(event: PointerEvent, position: Point);
+
+    /// `ItemsVerticalSpace` collapses to 0 while expanding.
+    out property <length> item-spacing: WideNavigationRailMetrics.lerp(
+        WideNavigationRailMetrics.item-vertical-space(), 0px, root.expansion);
+    out property <length> item-min-height: WideNavigationRailMetrics.lerp(
+        WideNavigationRailMetrics.top-icon-item-min-height(), root.a11y-size,
+        root.expansion);
+
+    // --- Width policy -----------------------------------------------------
+
+    /// `min-width-anim` — collapsed↔minimum-expanded interpolation;
+    /// `full-range-anim` — collapsed↔maximum-expanded interpolation. The
+    /// rail width below composes both like upstream's `animateDpAsState`.
+    property <length> min-width-anim: WideNavigationRailMetrics.lerp(
+        WideNavigationRailMetrics.collapsed-width(), root.min-rail-width,
+        root.width-expansion);
+    property <length> full-range-anim: WideNavigationRailMetrics.lerp(
+        WideNavigationRailMetrics.collapsed-width(), root.max-rail-width,
+        root.width-expansion);
+
+    /// `settledExpandedWidth` — the width the rail wants when expanded.
+    out property <length> widest-content: max(
+        label-sizer.min-width + 104px, header.natural-width);
+    out property <length> settled-expanded-width:
+        min(max(root.min-rail-width, root.widest-content), root.max-rail-width);
+
+    /// The upstream `widestElementWidth > actualMinWidth &&
+    /// widestElementWidth > actualExpandedMinWidth` gate: the rail only
+    /// takes the wide branch when its content actually outgrows the
+    /// minimum expanded width.
+    out property <bool> wide-branch: root.widest-content > root.min-width-anim &&
+        root.widest-content > root.min-rail-width;
+
+    /// `actualMaxExpandedWidth`/`currentWidth` — the measure-scope
+    /// remembers that decide whether collapse rides `widthFullRange` down
+    /// from the reached width or just follows `min-width-anim`.
+    property <length> actual-max-expanded-width;
+    property <length> current-width;
+    changed rail-width => {
+        if root.expanded && root.wide-branch {
+            root.actual-max-expanded-width = root.rail-width;
+        }
+        root.current-width = root.rail-width;
+    }
+
+    /// `railWidth` — the measure policy's width: expanding rides
+    /// `widthFullRange` capped at the settled width (only when the content
+    /// demands it; otherwise `minWidth` alone), collapsing clamps
+    /// `widthFullRange` into `[actualMinWidth, max(currentWidth,
+    /// actualMinWidth)]` when an expanded max was reached.
+    out property <length> rail-width: root.expanded ?
+        (root.wide-branch ?
+            min(root.full-range-anim, root.settled-expanded-width) :
+            root.min-width-anim) :
+        (root.actual-max-expanded-width > 0px ?
+            min(max(root.full-range-anim, root.min-width-anim),
+                max(root.current-width, root.min-width-anim)) :
+            root.min-width-anim);
+    width: root.rail-width;
+    preferred-width: root.rail-width;
+
+    // --- Vertical policy ----------------------------------------------------
+
+    /// `contentHeight` — rail height minus top/bottom content padding.
+    out property <length> content-h: root.height - root.top-space - root.bottom-space;
+
+    /// Header offset = natural header height + `HeaderPadding` when a
+    /// header is present.
+    out property <length> header-offset: header.natural-height > 0 ?
+        header.natural-height + WideNavigationRailMetrics.header-padding() : 0px;
+
+    /// `itemsLayoutSize` — the space the arrangement distributes items in;
+    /// `itemsBaseY` — where the column starts.
+    out property <length> items-layout-size:
+        root.arrangement == NavigationRailArrangement.center ?
+            root.content-h : root.content-h - root.header-offset;
+    out property <length> items-base-y:
+        root.arrangement == NavigationRailArrangement.center ?
+            root.top-space : root.top-space + root.header-offset;
+
+    /// Uniform metrics — every item shares the layout's label/indicator
+    /// heights so the column stays aligned while animating.
+    out property <length> uniform-label-h: !root.expanded && root.expansion < 0.5 ?
+        sizer-medium.min-height : sizer-large.min-height;
+    out property <length> uniform-ind-h: WideNavigationRailMetrics.lerp(
+        NavigationRailBaselineItemTokens.icon-size,
+        max(NavigationRailBaselineItemTokens.icon-size, root.uniform-label-h),
+        root.expansion) +
+        WideNavigationRailMetrics.lerp(8px, 32px, root.expansion);
+    out property <length> uniform-item-h: max(
+        WideNavigationRailMetrics.lerp(
+            root.uniform-ind-h +
+                WideNavigationRailMetrics.item-top-icon-indicator-to-label-vertical-padding() +
+                root.uniform-label-h,
+            root.uniform-ind-h, root.expansion),
+        max(root.item-min-height, root.a11y-size));
+
+    /// Item constraints handed to the policy.
+    out property <length> item-max-width: root.expanded ?
+        root.max-rail-width - WideNavigationRailMetrics.item-horizontal-padding() :
+        root.min-width-anim;
+    out property <length> item-max-height: max(root.content-h, root.item-min-height);
+
+    background := Rectangle {
+        x: 0;
+        y: 0;
+        width: 100%;
+        height: 100%;
+        border-radius: root.container-shape.top-left;
+        clip: true;
+        background-clip := Rectangle {
+            x: 0; y: 0; width: 100%; height: 100%;
+            border-radius: root.container-shape.top-left;
+            background: root.container-color;
+        }
+    }
+
+    header := RailHeader {
+        x: 0;
+        y: root.top-space;
+        width: root.rail-width;
+        top-padding: root.header-top-padding;
+        has-menu: root.has-menu;
+        fab-icon: root.fab-icon;
+        menu-clicked => { root.menu-clicked(); }
+        fab-clicked => { root.fab-clicked(); }
+    }
+
+    // `labelSizer` — the widest label measures the settled expanded width.
+    label-sizer := VerticalLayout {
+        visible: false;
+        for it in root.items : sizer-text := MaterialText {
+            text: it.text;
+            style: NavigationRailHorizontalItemTokens.label-text-font;
+        }
+    }
+
+    // Uniform label heights — label-large when expanded/expanding past
+    // halfway, label-medium while still collapsed.
+    sizer-large := MaterialText {
+        visible: false;
+        text: "Ag";
+        style: NavigationRailHorizontalItemTokens.label-text-font;
+    }
+    sizer-medium := MaterialText {
+        visible: false;
+        text: "Ag";
+        style: NavigationRailVerticalItemTokens.label-text-font;
+    }
+
+    items-area := Rectangle {
+        visible: root.items-visible;
+        for it[index] in root.items : item := WideRailItemTemplate {
+            property <int> model-index: index;
+            icon: it.icon;
+            selected-icon: it.selected-icon;
+            text: it.text;
+            badge: it.badge;
+            show-badge: it.show-badge;
+            enabled: it.enabled;
+            index: index;
+            selected: index == root.current-index;
+            icon-position-top: !root.expanded;
+            icon-position-progress: root.expansion;
+            a11y-size: root.a11y-size;
+            policy-min-height: root.item-min-height;
+            policy-max-width: root.item-max-width;
+            policy-max-height: root.item-max-height;
+            simulate-hover: root.simulate-item-hover;
+            simulate-press: root.simulate-item-press;
+            suppress-click: root.suppress-item-clicks;
+            // `placeRelative` takes ints — the arrangement's distributed
+            // positions land on whole pixels like upstream.
+            y: Math.round((root.items-base-y + WideNavigationRailMetrics.arrange-item-y(
+                root.arrangement, index, root.items.length,
+                root.items-layout-size, root.uniform-item-h, root.item-spacing)) / 1px) * 1px;
+
+            clicked => { root.select(index); }
+            pointer-event(e, p) => { root.item-pointer-event(e, p); }
+        }
+    }
+
+}
+
+/// Material Design 3 Expressive wide navigation rail
+/// (`WideNavigationRail` upstream, pinned
+/// androidx/androidx@23327507f7fc7d5b19d65fec4b090f60c970079b): a 96dp-wide
+/// rail that expands in place to a measured 220–360dp column, animating
+/// items from the top-icon form to the start-icon form. The expanded state
+/// replaces the navigation drawer.
+///
+/// `expanded` is the target state; `expansion` reports the live 0→1
+/// progress. `expand()`, `collapse()` and `toggle()` drive it; the
+/// `header` shows a menu IconButton (`has-menu`) and a FAB (`fab-icon`).
+/// The item column arranges per `arrangement` like Compose's
+/// `Arrangement`.
+export component WideNavigationRail inherits BaseNavigation {
+    /// `state.isExpanded` — the rail's target expansion state.
+    in_out property <bool> expanded;
+
+    /// `state.targetValue`/`currentValue` — the live 0→1 expansion
+    /// progress (drives `isAnimating` and item interpolation).
+    out property <float> expansion <=> layout.expansion;
+
+    /// The animated width progress (differs from `expansion` only on the
+    /// modal sheet, which runs the fast spatial spring).
+    out property <float> width-expansion <=> layout.width-expansion;
+
+    /// `railWidth` — the live animated rail width.
+    out property <length> rail-width <=> layout.rail-width;
+
+    /// Whether the expansion animation is running.
+    out property <bool> is-animating: layout.expansion != (root.expanded ? 1 : 0);
+
+    /// `arrangement` — item column distribution (`Arrangement.Top` etc.).
+    in property <NavigationRailArrangement> arrangement: NavigationRailArrangement.top;
+
+    /// Header: hamburger menu button and FAB.
+    in property <bool> has-menu;
+    in property <image> fab-icon;
+    /// Extra padding above the header when expanded.
+    in property <length> expanded-header-top-padding;
+
+    /// Expanded width bounds (`ExpandedContainerWidthMin`/`Max`).
+    in property <length> min-rail-width: WideNavigationRailMetrics.expanded-width-min();
+    in property <length> max-rail-width: WideNavigationRailMetrics.expanded-width-max();
+
+    /// Content padding tokens.
+    in property <length> top-space: NavigationRailCollapsedTokens.top-space;
+    in property <length> bottom-space: 0px;
+
+    /// Enforce the 48dp minimum touch target on items.
+    in property <bool> enforce-touch-target;
+
+    /// Parity hooks.
+    in property <bool> simulate-item-hover;
+    in property <bool> simulate-item-press;
+    in property <bool> suppress-item-clicks;
+
+    /// Header callbacks.
+    callback menu-clicked;
+    callback fab-clicked;
+    /// Item pointer events (used by modal drag-to-dismiss internally).
+    callback item-pointer-event(event: PointerEvent, position: Point);
+
+    /// `expand()` / `collapse()` / `toggle()`.
+    public function expand() {
+        root.expanded = true;
+    }
+    public function collapse() {
+        root.expanded = false;
+    }
+    public function toggle() {
+        root.expanded = !root.expanded;
+    }
+
+    width: layout.rail-width;
+
+    layout := WideNavigationRailLayout {
+        x: 0;
+        y: 0;
+        height: 100%;
+        items: root.items;
+        current-index <=> root.current-index;
+        index-changed(index) => { root.index-changed(index); }
+        expanded: root.expanded;
+        arrangement: root.arrangement;
+        has-menu: root.has-menu;
+        fab-icon: root.fab-icon;
+        header-top-padding: root.expanded-header-top-padding;
+        top-space: root.top-space;
+        bottom-space: root.bottom-space;
+        min-rail-width: root.min-rail-width;
+        max-rail-width: root.max-rail-width;
+        enforce-touch-target: root.enforce-touch-target;
+        simulate-item-hover: root.simulate-item-hover;
+        simulate-item-press: root.simulate-item-press;
+        suppress-item-clicks: root.suppress-item-clicks;
+        menu-clicked => { root.menu-clicked(); }
+        fab-clicked => { root.fab-clicked(); }
+        item-pointer-event(e, p) => { root.item-pointer-event(e, p); }
+    }
+}
+
+/// Material Design 3 Expressive modal wide navigation rail
+/// (`ModalWideNavigationRail` upstream, pinned): the collapsed rail sits
+/// inline; `expanded` opens a popup — scrim plus the expanded rail as a
+/// dismissible sheet (scrim tap, back, or horizontal drag).
+///
+/// With `hide-on-collapse` there is no collapsed rail: `expanded` toggles
+/// the sheet directly (the `hideOnCollapse` overload upstream).
+///
+/// `dismiss-via-slide()` performs the drag-dismiss end state.
+export component ModalWideNavigationRail {
+    /// `items`/`current-index`/`index-changed` — same contract as
+    /// `WideNavigationRail`.
+    in property <[NavigationItem]> items;
+    in_out property <int> current-index;
+    callback index-changed(index: int);
+
+    /// The rail's target expansion state — `true` shows the modal sheet.
+    in_out property <bool> expanded;
+
+    /// `hideOnCollapse` — no inline collapsed rail; the sheet is the whole
+    /// component.
+    in property <bool> hide-on-collapse;
+
+    /// Header and item column configuration (forwarded like
+    /// `WideNavigationRail`).
+    in property <bool> has-menu;
+    in property <image> fab-icon;
+    in property <NavigationRailArrangement> arrangement: NavigationRailArrangement.top;
+    in property <length> expanded-header-top-padding;
+    in property <length> min-rail-width: WideNavigationRailMetrics.expanded-width-min();
+    in property <length> max-rail-width: WideNavigationRailMetrics.expanded-width-max();
+    in property <length> top-space: NavigationRailCollapsedTokens.top-space;
+    in property <length> bottom-space: 0px;
+    in property <bool> enforce-touch-target;
+    in property <bool> simulate-item-hover;
+    in property <bool> simulate-item-press;
+
+    /// Header callbacks.
+    callback menu-clicked;
+    callback fab-clicked;
+
+    /// `positionProgress` — the modal position state: 0 while a collapsed
+    /// rail is shown inline, 1 once the sheet is out (or directly when
+    /// `hide-on-collapse`).
+    out property <float> position-progress: !root.expanded ? 0 :
+        root.sheet-progress;
+
+    /// `isCollapsed` — only meaningful with a collapsed rail.
+    out property <bool> is-collapsed: !root.hide-on-collapse && !root.expanded;
+
+    /// The sheet's own expansion — for `hide-on-collapse` the sheet
+    /// renders fully expanded regardless of `expanded`.
+    out property <bool> modal-expanded: root.expanded;
+
+    /// `sheetProgress` — animates 0→1 once the popup is live and
+    /// expanded, back to 0 while dismissed/dismissing.
+    out property <float> sheet-progress: root.ready && root.expanded &&
+        !root.dismissing ? 1 : 0;
+    animate sheet-progress {
+        easing: MaterialAnimations.fast-spatial-spring;
+        enabled: !MaterialPalette.reduced-motion;
+    }
+
+    /// Internal popup lifecycle: `ready` once the window item exists
+    /// (its `init` ran), `dismissing` during the drag-out animation,
+    /// `popup-active` while the sheet should be in the native popup at
+    /// all — expanded or animating its exit.
+    property <bool> ready;
+    property <bool> dismissing;
+    property <bool> popup-active: root.expanded || root.dismissing;
+
+    /// Scrim — `ScrimTokens.container-opacity` (0.32) faded by the sheet
+    /// position.
+    out property <bool> scrim-visible: root.popup-active;
+    out property <float> scrim-alpha: ScrimTokens.container-opacity *
+        Math.clamp(root.sheet-progress, 0, 1);
+
+    /// `isAnimating` — position animation running.
+    out property <bool> is-animating: root.popup-active &&
+        root.sheet-progress > 0 && root.sheet-progress < 1;
+
+    init => {
+        if root.popup-active {
+            rail-popup.show();
+        }
+    }
+
+    changed sheet-progress => {
+        // The dismiss slide-out settled: drop `expanded` and let the
+        // popup close (upstream `onDismissed`).
+        if root.dismissing && root.sheet-progress <= 0 {
+            root.expanded = false;
+            root.dismissing = false;
+        }
+    }
+    changed popup-active => {
+        if root.popup-active {
+            rail-popup.show();
+        } else {
+            rail-popup.close();
+        }
+    }
+    changed expanded => {
+        if root.expanded {
+            root.dismissing = false;
+        }
+    }
+
+    /// `expand()`/`collapse()`/`toggle()` — drive `expanded`.
+    public function expand() {
+        root.expanded = true;
+    }
+    public function collapse() {
+        root.expanded = false;
+    }
+    public function toggle() {
+        root.expanded = !root.expanded;
+    }
+
+    /// `dismissViaSlide()` — the drag-dismiss end state: the sheet leaves
+    /// and `expanded` flips false once the animation settles.
+    public function dismiss-via-slide() {
+        root.dismissing = true;
+    }
+
+    width: root.is-collapsed || !root.hide-on-collapse ? collapsed-rail.width : 0px;
+    height: 100%;
+
+
+
+    collapsed-rail := WideNavigationRailLayout {
+        visible: !root.hide-on-collapse;
+        height: 100%;
+        items: root.items;
+        current-index <=> root.current-index;
+        index-changed(index) => { root.index-changed(index); }
+        expanded: false;
+        arrangement: root.arrangement;
+        has-menu: root.has-menu;
+        fab-icon: root.fab-icon;
+        header-top-padding: root.expanded-header-top-padding;
+        top-space: root.top-space;
+        bottom-space: root.bottom-space;
+        min-rail-width: root.min-rail-width;
+        max-rail-width: root.max-rail-width;
+        enforce-touch-target: root.enforce-touch-target;
+        simulate-item-hover: root.simulate-item-hover;
+        simulate-item-press: root.simulate-item-press;
+        menu-clicked => { root.expand(); }
+        fab-clicked => { root.fab-clicked(); }
+    }
+
+    rail-popup := PopupWindow {
+        close-policy: no-auto-close;
+        x: -root.absolute-position.x;
+        y: -root.absolute-position.y;
+        width: MaterialWindowAdapter.window-width;
+        height: MaterialWindowAdapter.window-height;
+
+        init => { root.ready = true; }
+
+        scrim := Rectangle {
+            x: 0;
+            y: 0;
+            width: 100%;
+            height: 100%;
+            visible: root.scrim-visible;
+            background: black.with-alpha(root.scrim-alpha);
+
+            scrim-touch := TouchArea {
+                width: 100%;
+                height: 100%;
+                clicked => { root.dismiss-via-slide(); }
+            }
+        }
+
+        // The sheet: anchored to the window's leading edge, slides in by
+        // `sheet-progress` and tracks horizontal drags via
+        // `sheet-touch`.
+        sheet-area := Rectangle {
+            x: -sheet-layout.rail-width + self.slide-offset + self.drag-offset;
+            y: 0;
+            width: sheet-layout.rail-width;
+            height: 100%;
+
+            /// `slide-offset` — the animated rest position of the sheet.
+            property <length> slide-offset:
+                WideNavigationRailMetrics.lerp(0px, sheet-layout.rail-width,
+                    root.sheet-progress);
+            /// `drag-offset` — live finger offset while dismissing.
+            property <length> drag-offset;
+            property <length> drag-start-x;
+            property <bool> drag-active;
+            /// `suppress-click` — set while a drag is in flight so the
+            /// item under the finger does not activate.
+            out property <bool> suppress-click: self.drag-active;
+            property <duration> press-time;
+
+            animate drag-offset {
+                easing: MaterialAnimations.default-spatial-spring;
+                enabled: !MaterialPalette.reduced-motion;
+            }
+
+            /// `sheet-drag` — the `anchoredDraggable` state machine:
+            /// positional threshold 0.5, fling threshold -0.1px/ms.
+            function sheet-drag(kind: PointerEvent, pos: Point) {
+                if kind.kind == PointerEventKind.down {
+                    self.drag-active = true;
+                    self.drag-start-x = pos.x;
+                } else if kind.kind == PointerEventKind.move && self.drag-active {
+                    self.drag-offset = min(0px, pos.x - self.drag-start-x);
+                } else if (kind.kind == PointerEventKind.up ||
+                    kind.kind == PointerEventKind.cancel) && self.drag-active {
+                    self.drag-active = false;
+                    if -self.drag-offset > sheet-layout.rail-width * 0.5 {
+                        root.dismiss-via-slide();
+                    } else {
+                        self.drag-offset = 0px;
+                    }
+                }
+            }
+
+            sheet-touch := TouchArea {
+                x: 0;
+                y: 0;
+                width: 100%;
+                height: 100%;
+            }
+
+            sheet-layout := WideNavigationRailLayout {
+                x: 0;
+                y: 0;
+                height: 100%;
+                is-modal: true;
+                expanded: root.hide-on-collapse || root.modal-expanded;
+                items: root.items;
+                current-index <=> root.current-index;
+                index-changed(index) => { root.index-changed(index); }
+                arrangement: root.arrangement;
+                has-menu: root.has-menu;
+                fab-icon: root.fab-icon;
+                header-top-padding: root.expanded-header-top-padding;
+                top-space: root.top-space;
+                bottom-space: root.bottom-space;
+                min-rail-width: root.min-rail-width;
+                max-rail-width: root.max-rail-width;
+                enforce-touch-target: root.enforce-touch-target;
+                simulate-item-hover: root.simulate-item-hover;
+                simulate-item-press: root.simulate-item-press;
+                suppress-item-clicks: sheet-area.suppress-click;
+                items-visible: true;
+                container-color: NavigationRailExpandedTokens.modal-container-color;
+                container-shape: NavigationRailExpandedTokens.modal-container-shape;
+                menu-clicked => { root.collapse(); }
+                fab-clicked => { root.fab-clicked(); }
+                item-pointer-event(e, p) => { sheet-area.sheet-drag(e, p); }
+            }
+        }
+    }
+}

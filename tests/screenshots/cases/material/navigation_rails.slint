@@ -1,0 +1,94 @@
+// Copyright © SixtyFPS GmbH <info@slint.dev>
+// SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0
+
+// Scene: navigation-rails — generated from `ui-libraries/material/parity/scenes/navigation-rails.json`
+// (edit the scene, regenerate with `cargo run -p material-parity-generator`).
+//PARITY=xfail:femtovg: one strict pixel on the expanded rail's selected-item indicator edge (d1): the expanded item width comes out of the float measure policy, so the indicator edge lands between pixel centers — Skia and the software rasterizer resolve the coverage the same way the Compose reference does, FemtoVG one texel darker.
+//SIZE=560x420
+//TRACE_ELEMENTS=rail0,rail1,rail2,rail3,headerfab,fab
+//MASK_DECOR=fab+12@2000
+//MASK_DECOR=headerfab+12@2000
+//DENSITIES=1,2
+import "../../fonts/Roboto-VariableFont.ttf";
+import { Icons, MaterialPalette, MaterialTheme, MaterialWindow, ModalWideNavigationRail, NavigationRail, NavigationRailArrangement, WideNavigationRail } from "@material";
+
+export component TestCase inherits MaterialWindow {
+    init => {
+        // The scene pins seed #6750A4, tonal-spot, spec2025, light, contrast 0
+        // (all the library defaults; restated here so a default change can't
+        // silently move the parity baseline).
+        MaterialTheme.seed-color = #6750A4;
+        MaterialTheme.dark = false;
+        MaterialTheme.contrast-level = 0;
+        MaterialTheme.use-platform-color = false;
+        MaterialTheme.plain-family = "Roboto";
+        MaterialTheme.brand-family = "Roboto";
+        // Compose builds its scene scheme from the same seed — use the
+        // runtime-generated scheme, not the static expressive table.
+        MaterialPalette.dynamic = true;
+    }
+
+    rail0 := NavigationRail {
+        x: 0px;
+        y: 0px;
+        height: 420px;
+        always-show-label: true;
+        current-index: 0;
+        has-menu: true;
+        fab-icon: Icons.edit;
+        items: [
+            { icon: Icons.check, selected-icon: Icons.arrow_right, text: "Inbox", enabled: true },
+            { icon: Icons.schedule, text: "Sent", enabled: true },
+            { icon: Icons.keyboard, text: "Files", enabled: false },
+            { icon: Icons.close, text: "Trash", enabled: true },
+        ];
+    }
+
+    rail1 := WideNavigationRail {
+        x: 92px;
+        y: 0px;
+        height: 420px;
+        expanded: false;
+        arrangement: NavigationRailArrangement.top;
+        current-index: 0;
+        has-menu: true;
+        items: [
+            { icon: Icons.check, selected-icon: Icons.arrow_right, text: "Inbox", badge: "3", show-badge: true, enabled: true },
+            { icon: Icons.schedule, text: "Sent", enabled: true },
+            { icon: Icons.keyboard, text: "Files", enabled: false },
+            { icon: Icons.close, text: "Trash", enabled: true },
+        ];
+    }
+
+    rail2 := WideNavigationRail {
+        x: 200px;
+        y: 0px;
+        height: 420px;
+        expanded: true;
+        arrangement: NavigationRailArrangement.top;
+        current-index: 0;
+        has-menu: true;
+        fab-icon: Icons.edit;
+        items: [
+            { icon: Icons.check, selected-icon: Icons.arrow_right, text: "WAV", enabled: true },
+            { icon: Icons.schedule, text: "Sent", enabled: true },
+            { icon: Icons.keyboard, text: "Files", enabled: false },
+            { icon: Icons.close, text: "Trash", enabled: true },
+        ];
+    }
+
+    rail3 := ModalWideNavigationRail {
+        x: 452px;
+        y: 0px;
+        height: 420px;
+        expanded: false;
+        current-index: 1;
+        items: [
+            { icon: Icons.check, text: "Inbox", enabled: true },
+            { icon: Icons.schedule, text: "Sent", enabled: true },
+            { icon: Icons.keyboard, text: "Files", enabled: true },
+            { icon: Icons.close, text: "Trash", enabled: true },
+        ];
+    }
+
+}

@@ -1,0 +1,98 @@
+---
+title: WideNavigationRail
+description: WideNavigationRail API.
+---
+
+import CodeSnippetMD from '@slint/common-files/src/components/CodeSnippetMD.astro';
+import SlintProperty from '@slint/common-files/src/components/SlintProperty.astro';
+
+<CodeSnippetMD imagePath="/src/assets/generated/widenavigationrail.png" scale="3" imageWidth="300" imageHeight="200" imageAlt="">
+```slint
+import { WideNavigationRail } from "@material";
+export component Example inherits Window {
+    width: 400px;
+    height: 300px;
+    background: transparent;
+    WideNavigationRail {
+        height: parent.height;
+        has-menu: true;
+        expanded: true;
+        items: [
+            { icon: @image-url("../icons/share.svg"), text: "Home" },
+            { icon: @image-url("../icons/search.svg"), text: "Search" }
+        ];
+    }
+}
+```
+</CodeSnippetMD>
+
+A `WideNavigationRail` is the Material 3 Expressive navigation rail: a collapsed rail (top-icon items) that expands in place into a 220–360dp column of start-icon items, animating between the two. The expanded state replaces the navigation drawer.
+
+## Properties
+
+### arrangement
+<SlintProperty propName="arrangement" typeName="enum" enumName="NavigationRailArrangement">
+How the item column is distributed inside the rail (`top`, `center`, `bottom`, `space-evenly`, `space-between`, `space-around`). Defaults to `top`.
+</SlintProperty>
+
+### current-index
+<SlintProperty propName="current-index" typeName="int" propertyVisibility="in-out">
+The index of the currently selected navigation item.
+</SlintProperty>
+
+### expanded
+<SlintProperty propName="expanded" typeName="bool" propertyVisibility="in-out">
+The rail's target expansion state — `true` expands the rail in place, `false` collapses it. The expansion animates with the default spatial spring.
+</SlintProperty>
+
+### expansion
+<SlintProperty propName="expansion" typeName="float" propertyVisibility="out">
+The live 0→1 expansion progress, interpolating the item layout between the top-icon and start-icon forms.
+</SlintProperty>
+
+### fab-icon
+<SlintProperty propName="fab-icon" typeName="image">
+The icon for the floating action button in the header.
+</SlintProperty>
+
+### has-menu
+<SlintProperty propName="has-menu" typeName="bool">
+Whether to show a menu button at the top of the rail — wired to `menu-clicked`, which drives the expand/collapse toggle.
+</SlintProperty>
+
+### is-animating
+<SlintProperty propName="is-animating" typeName="bool" propertyVisibility="out">
+Whether the expansion animation is currently running.
+</SlintProperty>
+
+### items
+<SlintProperty propName="items" typeName="[struct]" structName="NavigationItem">
+An array of navigation items to display in the rail.
+</SlintProperty>
+
+### rail-width
+<SlintProperty propName="rail-width" typeName="length" propertyVisibility="out">
+The live animated rail width.
+</SlintProperty>
+
+## Callbacks
+
+### index-changed(index: int)
+Invoked when the `current-index` changes.
+
+### menu-clicked()
+Invoked when the menu button is clicked.
+
+### fab-clicked()
+Invoked when the floating action button is clicked.
+
+## Functions
+
+### expand()
+Expands the rail.
+
+### collapse()
+Collapses the rail.
+
+### toggle()
+Toggles between the expanded and collapsed states.

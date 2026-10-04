@@ -343,6 +343,7 @@ Hamburgefonstiv
 Hani
 hcts
 hdmipi
+headerfab
 heapless
 hidpi
 highcontraston
@@ -357,6 +358,7 @@ hmenu
 horizontalbox
 horizontallayout
 hotplug
+hpad
 hspace
 HSPI
 HSYNC
@@ -517,6 +519,7 @@ MIPI
 mipidsi
 miscompile
 modalnavigationdrawer
+modalwidenavigationrail
 modelprop
 monomorphizes
 MOSI
@@ -829,6 +832,7 @@ testdata
 texel
 Tessellator
 tessellators
+texel
 texels
 texteditor
 textinput
@@ -921,6 +925,7 @@ viewports
 virt
 Vlachou
 vlayout
+vpad
 vref
 vscodeversion
 vtables
@@ -941,6 +946,7 @@ Wextra
 wght
 wgsl
 whitebg
+widenavigationrail
 windowadapter
 windowattributes
 windowglobal

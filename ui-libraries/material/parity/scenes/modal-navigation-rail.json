@@ -1,0 +1,61 @@
+{
+  "densities": [
+    1,
+    2
+  ],
+  "fonts": {
+    "brand": "Roboto",
+    "plain": "Roboto"
+  },
+  "name": "modal-navigation-rail",
+  "parity": "static",
+  "size": [
+    480,
+    420
+  ],
+  "theme": {
+    "contrast": 0.0,
+    "dark": false,
+    "platform": "phone",
+    "seed": "6750A4",
+    "spec": "spec2025",
+    "variant": "tonal-spot"
+  },
+  "trace_elements": [
+    "rail0"
+  ],
+  "trace_props": [],
+  "type": "canvas",
+  "widgets": [
+    {
+      "arrangement": "top",
+      "expanded": true,
+      "height": 420,
+      "rail_items": [
+        {
+          "icon": "check",
+          "selected_icon": "arrow_right",
+          "text": "WAV"
+        },
+        {
+          "icon": "schedule",
+          "text": "Sent"
+        },
+        {
+          "enabled": false,
+          "icon": "keyboard",
+          "text": "Files"
+        },
+        {
+          "icon": "close",
+          "text": "Trash"
+        }
+      ],
+      "kind": "modal-navigation-rail",
+      "nav_icon": "menu",
+      "selected_index": 0,
+      "x": 0,
+      "y": 0
+    }
+  ]
+}

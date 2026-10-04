@@ -1,0 +1,51 @@
+// Copyright © SixtyFPS GmbH <info@slint.dev>
+// SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0
+
+// Scene: negative-rail-indicator — generated from `ui-libraries/material/parity/scenes/negative-rail-indicator.json`
+// (edit the scene, regenerate with `cargo run -p material-parity-generator`).
+//PARITY=negative: the covering rectangle repaints the rail in a doubled secondary-container wash — an over-painted active indicator must fail
+//SIZE=160x320
+//TRACE_ELEMENTS=rail0
+//DENSITIES=1
+import "../../fonts/Roboto-VariableFont.ttf";
+import { Icons, MaterialPalette, MaterialTheme, MaterialWindow, NavigationRail } from "@material";
+
+export component TestCase inherits MaterialWindow {
+    init => {
+        // The scene pins seed #6750A4, tonal-spot, spec2025, light, contrast 0
+        // (all the library defaults; restated here so a default change can't
+        // silently move the parity baseline).
+        MaterialTheme.seed-color = #6750A4;
+        MaterialTheme.dark = false;
+        MaterialTheme.contrast-level = 0;
+        MaterialTheme.use-platform-color = false;
+        MaterialTheme.plain-family = "Roboto";
+        MaterialTheme.brand-family = "Roboto";
+        // Compose builds its scene scheme from the same seed — use the
+        // runtime-generated scheme, not the static expressive table.
+        MaterialPalette.dynamic = true;
+    }
+
+    rail0 := NavigationRail {
+        x: 0px;
+        y: 0px;
+        height: 320px;
+        always-show-label: true;
+        current-index: 0;
+        items: [
+            { icon: Icons.check, text: "Inbox", enabled: true },
+            { icon: Icons.schedule, text: "Sent", enabled: true },
+            { icon: Icons.keyboard, text: "Files", enabled: true },
+        ];
+    }
+
+    Rectangle {
+        x: rail0.x;
+        y: rail0.y;
+        width: rail0.width;
+        height: rail0.height;
+        background: MaterialPalette.secondary_container;
+        opacity: 0.5;
+    }
+
+}
