@@ -16,7 +16,8 @@
           "x": 36,
           "y": 36,
           "w": 24,
-          "h": 24
+          "h": 24,
+          "opacity": 1
         }
       },
       "text": {}
@@ -3781,8 +3782,8 @@
     {
       "t_ms": 222,
       "props": {
-        "check_fraction": 1,
-        "gravitation": 1
+        "check_fraction": 0,
+        "gravitation": 0
       },
       "elements": {
         "button0": {
@@ -19572,5 +19573,5 @@
       "text": {}
     }
   ],
-  "settle_ms": 222
+  "settle_ms": 221
 }

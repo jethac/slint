@@ -16,7 +16,8 @@
           "x": 36,
           "y": 36,
           "w": 24,
-          "h": 24
+          "h": 24,
+          "opacity": 1
         }
       },
       "text": {}
@@ -2099,7 +2100,7 @@
       "t_ms": 123,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0
+        "gravitation": 1.8803401326294988E-4
       },
       "elements": {
         "button0": {
@@ -2116,7 +2117,7 @@
       "t_ms": 124,
       "props": {
         "check_fraction": 1,
-        "gravitation": 1.8803401326294988E-4
+        "gravitation": 7.443467038683593E-4
       },
       "elements": {
         "button0": {
@@ -2133,7 +2134,7 @@
       "t_ms": 125,
       "props": {
         "check_fraction": 1,
-        "gravitation": 7.443467038683593E-4
+        "gravitation": 0.0016574206529185176
       },
       "elements": {
         "button0": {
@@ -2150,7 +2151,7 @@
       "t_ms": 126,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.0016574206529185176
+        "gravitation": 0.0029159588739275932
       },
       "elements": {
         "button0": {
@@ -2167,7 +2168,7 @@
       "t_ms": 127,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.0029159588739275932
+        "gravitation": 0.004508881829679012
       },
       "elements": {
         "button0": {
@@ -2184,7 +2185,7 @@
       "t_ms": 128,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.004508881829679012
+        "gravitation": 0.0064253248274326324
       },
       "elements": {
         "button0": {
@@ -2201,7 +2202,7 @@
       "t_ms": 129,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.0064253248274326324
+        "gravitation": 0.008654636330902576
       },
       "elements": {
         "button0": {
@@ -2218,7 +2219,7 @@
       "t_ms": 130,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.008654636330902576
+        "gravitation": 0.01118637528270483
       },
       "elements": {
         "button0": {
@@ -2235,7 +2236,7 @@
       "t_ms": 131,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.01118637528270483
+        "gravitation": 0.01401030644774437
       },
       "elements": {
         "button0": {
@@ -2252,7 +2253,7 @@
       "t_ms": 132,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.01401030644774437
+        "gravitation": 0.017116401344537735
       },
       "elements": {
         "button0": {
@@ -2269,7 +2270,7 @@
       "t_ms": 133,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.017116401344537735
+        "gravitation": 0.02049483172595501
       },
       "elements": {
         "button0": {
@@ -2286,7 +2287,7 @@
       "t_ms": 134,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.02049483172595501
+        "gravitation": 0.024135971441864967
       },
       "elements": {
         "button0": {
@@ -2303,7 +2304,7 @@
       "t_ms": 135,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.024135971441864967
+        "gravitation": 0.0280303917825222
       },
       "elements": {
         "button0": {
@@ -2320,7 +2321,7 @@
       "t_ms": 136,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.0280303917825222
+        "gravitation": 0.032168857753276825
       },
       "elements": {
         "button0": {
@@ -2337,7 +2338,7 @@
       "t_ms": 137,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.032168857753276825
+        "gravitation": 0.03654232621192932
       },
       "elements": {
         "button0": {
@@ -2354,7 +2355,7 @@
       "t_ms": 138,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.03654232621192932
+        "gravitation": 0.041141945868730545
       },
       "elements": {
         "button0": {
@@ -2371,7 +2372,7 @@
       "t_ms": 139,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.041141945868730545
+        "gravitation": 0.045959047973155975
       },
       "elements": {
         "button0": {
@@ -2388,7 +2389,7 @@
       "t_ms": 140,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.045959047973155975
+        "gravitation": 0.05098515376448631
       },
       "elements": {
         "button0": {
@@ -2405,7 +2406,7 @@
       "t_ms": 141,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.05098515376448631
+        "gravitation": 0.056211963295936584
       },
       "elements": {
         "button0": {
@@ -2422,7 +2423,7 @@
       "t_ms": 142,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.056211963295936584
+        "gravitation": 0.06163136288523674
       },
       "elements": {
         "button0": {
@@ -2439,7 +2440,7 @@
       "t_ms": 143,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.06163136288523674
+        "gravitation": 0.06723540276288986
       },
       "elements": {
         "button0": {
@@ -2456,7 +2457,7 @@
       "t_ms": 144,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.06723540276288986
+        "gravitation": 0.07301632314920425
       },
       "elements": {
         "button0": {
@@ -2473,7 +2474,7 @@
       "t_ms": 145,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.07301632314920425
+        "gravitation": 0.07896652817726135
       },
       "elements": {
         "button0": {
@@ -2490,7 +2491,7 @@
       "t_ms": 146,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.07896652817726135
+        "gravitation": 0.08507858961820602
       },
       "elements": {
         "button0": {
@@ -2507,7 +2508,7 @@
       "t_ms": 147,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.08507858961820602
+        "gravitation": 0.09134525805711746
       },
       "elements": {
         "button0": {
@@ -2524,7 +2525,7 @@
       "t_ms": 148,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.09134525805711746
+        "gravitation": 0.0977594256401062
       },
       "elements": {
         "button0": {
@@ -2541,7 +2542,7 @@
       "t_ms": 149,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.0977594256401062
+        "gravitation": 0.10431418567895889
       },
       "elements": {
         "button0": {
@@ -2558,7 +2559,7 @@
       "t_ms": 150,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.10431418567895889
+        "gravitation": 0.11100275069475174
       },
       "elements": {
         "button0": {
@@ -2575,7 +2576,7 @@
       "t_ms": 151,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.11100275069475174
+        "gravitation": 0.11781851202249527
       },
       "elements": {
         "button0": {
@@ -2592,7 +2593,7 @@
       "t_ms": 152,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.11781851202249527
+        "gravitation": 0.12475502490997314
       },
       "elements": {
         "button0": {
@@ -2609,7 +2610,7 @@
       "t_ms": 153,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.12475502490997314
+        "gravitation": 0.13180597126483917
       },
       "elements": {
         "button0": {
@@ -2626,7 +2627,7 @@
       "t_ms": 154,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.13180597126483917
+        "gravitation": 0.13896521925926208
       },
       "elements": {
         "button0": {
@@ -2643,7 +2644,7 @@
       "t_ms": 155,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.13896521925926208
+        "gravitation": 0.14622673392295837
       },
       "elements": {
         "button0": {
@@ -2660,7 +2661,7 @@
       "t_ms": 156,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.14622673392295837
+        "gravitation": 0.15358468890190125
       },
       "elements": {
         "button0": {
@@ -2677,7 +2678,7 @@
       "t_ms": 157,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.15358468890190125
+        "gravitation": 0.16103334724903107
       },
       "elements": {
         "button0": {
@@ -2694,7 +2695,7 @@
       "t_ms": 158,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.16103334724903107
+        "gravitation": 0.16856715083122253
       },
       "elements": {
         "button0": {
@@ -2711,7 +2712,7 @@
       "t_ms": 159,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.16856715083122253
+        "gravitation": 0.1761806607246399
       },
       "elements": {
         "button0": {
@@ -2728,7 +2729,7 @@
       "t_ms": 160,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.1761806607246399
+        "gravitation": 0.18386858701705933
       },
       "elements": {
         "button0": {
@@ -2745,7 +2746,7 @@
       "t_ms": 161,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.18386858701705933
+        "gravitation": 0.19162575900554657
       },
       "elements": {
         "button0": {
@@ -2762,7 +2763,7 @@
       "t_ms": 162,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.19162575900554657
+        "gravitation": 0.1994471549987793
       },
       "elements": {
         "button0": {
@@ -2779,7 +2780,7 @@
       "t_ms": 163,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.1994471549987793
+        "gravitation": 0.20732787251472473
       },
       "elements": {
         "button0": {
@@ -2796,7 +2797,7 @@
       "t_ms": 164,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.20732787251472473
+        "gravitation": 0.21526314318180084
       },
       "elements": {
         "button0": {
@@ -2813,7 +2814,7 @@
       "t_ms": 165,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.21526314318180084
+        "gravitation": 0.22324831783771515
       },
       "elements": {
         "button0": {
@@ -2830,7 +2831,7 @@
       "t_ms": 166,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.22324831783771515
+        "gravitation": 0.2312788963317871
       },
       "elements": {
         "button0": {
@@ -2847,7 +2848,7 @@
       "t_ms": 167,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.2312788963317871
+        "gravitation": 0.23935045301914215
       },
       "elements": {
         "button0": {
@@ -2864,7 +2865,7 @@
       "t_ms": 168,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.23935045301914215
+        "gravitation": 0.24745872616767883
       },
       "elements": {
         "button0": {
@@ -2881,7 +2882,7 @@
       "t_ms": 169,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.24745872616767883
+        "gravitation": 0.2555995583534241
       },
       "elements": {
         "button0": {
@@ -2898,7 +2899,7 @@
       "t_ms": 170,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.2555995583534241
+        "gravitation": 0.26376888155937195
       },
       "elements": {
         "button0": {
@@ -2915,7 +2916,7 @@
       "t_ms": 171,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.26376888155937195
+        "gravitation": 0.2719627916812897
       },
       "elements": {
         "button0": {
@@ -2932,7 +2933,7 @@
       "t_ms": 172,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.2719627916812897
+        "gravitation": 0.28017744421958923
       },
       "elements": {
         "button0": {
@@ -2949,7 +2950,7 @@
       "t_ms": 173,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.28017744421958923
+        "gravitation": 0.28840914368629456
       },
       "elements": {
         "button0": {
@@ -2966,7 +2967,7 @@
       "t_ms": 174,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.28840914368629456
+        "gravitation": 0.29665428400039673
       },
       "elements": {
         "button0": {
@@ -2983,7 +2984,7 @@
       "t_ms": 175,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.29665428400039673
+        "gravitation": 0.3049093782901764
       },
       "elements": {
         "button0": {
@@ -3000,7 +3001,7 @@
       "t_ms": 176,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.3049093782901764
+        "gravitation": 0.31317099928855896
       },
       "elements": {
         "button0": {
@@ -3017,7 +3018,7 @@
       "t_ms": 177,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.31317099928855896
+        "gravitation": 0.3214358985424042
       },
       "elements": {
         "button0": {
@@ -3034,7 +3035,7 @@
       "t_ms": 178,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.3214358985424042
+        "gravitation": 0.32970085740089417
       },
       "elements": {
         "button0": {
@@ -3051,7 +3052,7 @@
       "t_ms": 179,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.32970085740089417
+        "gravitation": 0.3379627764225006
       },
       "elements": {
         "button0": {
@@ -3068,7 +3069,7 @@
       "t_ms": 180,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.3379627764225006
+        "gravitation": 0.34621867537498474
       },
       "elements": {
         "button0": {
@@ -3085,7 +3086,7 @@
       "t_ms": 181,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.34621867537498474
+        "gravitation": 0.35446566343307495
       },
       "elements": {
         "button0": {
@@ -3102,7 +3103,7 @@
       "t_ms": 182,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.35446566343307495
+        "gravitation": 0.362700879573822
       },
       "elements": {
         "button0": {
@@ -3119,7 +3120,7 @@
       "t_ms": 183,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.362700879573822
+        "gravitation": 0.37092167139053345
       },
       "elements": {
         "button0": {
@@ -3136,7 +3137,7 @@
       "t_ms": 184,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.37092167139053345
+        "gravitation": 0.37912532687187195
       },
       "elements": {
         "button0": {
@@ -3153,7 +3154,7 @@
       "t_ms": 185,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.37912532687187195
+        "gravitation": 0.38730937242507935
       },
       "elements": {
         "button0": {
@@ -3170,7 +3171,7 @@
       "t_ms": 186,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.38730937242507935
+        "gravitation": 0.3954713046550751
       },
       "elements": {
         "button0": {
@@ -3187,7 +3188,7 @@
       "t_ms": 187,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.3954713046550751
+        "gravitation": 0.4036087691783905
       },
       "elements": {
         "button0": {
@@ -3204,7 +3205,7 @@
       "t_ms": 188,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.4036087691783905
+        "gravitation": 0.4117194712162018
       },
       "elements": {
         "button0": {
@@ -3221,7 +3222,7 @@
       "t_ms": 189,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.4117194712162018
+        "gravitation": 0.4198012053966522
       },
       "elements": {
         "button0": {
@@ -3238,7 +3239,7 @@
       "t_ms": 190,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.4198012053966522
+        "gravitation": 0.4278518259525299
       },
       "elements": {
         "button0": {
@@ -3255,7 +3256,7 @@
       "t_ms": 191,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.4278518259525299
+        "gravitation": 0.4358692765235901
       },
       "elements": {
         "button0": {
@@ -3272,7 +3273,7 @@
       "t_ms": 192,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.4358692765235901
+        "gravitation": 0.4438515901565552
       },
       "elements": {
         "button0": {
@@ -3289,7 +3290,7 @@
       "t_ms": 193,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.4438515901565552
+        "gravitation": 0.45179682970046997
       },
       "elements": {
         "button0": {
@@ -3306,7 +3307,7 @@
       "t_ms": 194,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.45179682970046997
+        "gravitation": 0.4597031772136688
       },
       "elements": {
         "button0": {
@@ -3323,7 +3324,7 @@
       "t_ms": 195,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.4597031772136688
+        "gravitation": 0.46756887435913086
       },
       "elements": {
         "button0": {
@@ -3340,7 +3341,7 @@
       "t_ms": 196,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.46756887435913086
+        "gravitation": 0.47539222240448
       },
       "elements": {
         "button0": {
@@ -3357,7 +3358,7 @@
       "t_ms": 197,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.47539222240448
+        "gravitation": 0.48317161202430725
       },
       "elements": {
         "button0": {
@@ -3374,7 +3375,7 @@
       "t_ms": 198,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.48317161202430725
+        "gravitation": 0.4909054636955261
       },
       "elements": {
         "button0": {
@@ -3391,7 +3392,7 @@
       "t_ms": 199,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.4909054636955261
+        "gravitation": 0.4985922873020172
       },
       "elements": {
         "button0": {
@@ -3408,7 +3409,7 @@
       "t_ms": 200,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.4985922873020172
+        "gravitation": 0.5062306523323059
       },
       "elements": {
         "button0": {
@@ -3425,7 +3426,7 @@
       "t_ms": 201,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.5062306523323059
+        "gravitation": 0.51381915807724
       },
       "elements": {
         "button0": {
@@ -3442,7 +3443,7 @@
       "t_ms": 202,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.51381915807724
+        "gravitation": 0.5213565230369568
       },
       "elements": {
         "button0": {
@@ -3459,7 +3460,7 @@
       "t_ms": 203,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.5213565230369568
+        "gravitation": 0.5288415551185608
       },
       "elements": {
         "button0": {
@@ -3476,7 +3477,7 @@
       "t_ms": 204,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.5288415551185608
+        "gravitation": 0.5362729430198669
       },
       "elements": {
         "button0": {
@@ -3493,7 +3494,7 @@
       "t_ms": 205,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.5362729430198669
+        "gravitation": 0.5436496734619141
       },
       "elements": {
         "button0": {
@@ -3510,7 +3511,7 @@
       "t_ms": 206,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.5436496734619141
+        "gravitation": 0.5509705543518066
       },
       "elements": {
         "button0": {
@@ -3527,7 +3528,7 @@
       "t_ms": 207,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.5509705543518066
+        "gravitation": 0.5582346320152283
       },
       "elements": {
         "button0": {
@@ -3544,7 +3545,7 @@
       "t_ms": 208,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.5582346320152283
+        "gravitation": 0.5654409527778625
       },
       "elements": {
         "button0": {
@@ -3561,7 +3562,7 @@
       "t_ms": 209,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.5654409527778625
+        "gravitation": 0.5725885033607483
       },
       "elements": {
         "button0": {
@@ -3578,7 +3579,7 @@
       "t_ms": 210,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.5725885033607483
+        "gravitation": 0.5796765089035034
       },
       "elements": {
         "button0": {
@@ -3595,7 +3596,7 @@
       "t_ms": 211,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.5796765089035034
+        "gravitation": 0.5867040753364563
       },
       "elements": {
         "button0": {
@@ -3612,7 +3613,7 @@
       "t_ms": 212,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.5867040753364563
+        "gravitation": 0.5936704874038696
       },
       "elements": {
         "button0": {
@@ -3629,7 +3630,7 @@
       "t_ms": 213,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.5936704874038696
+        "gravitation": 0.6005749702453613
       },
       "elements": {
         "button0": {
@@ -3646,7 +3647,7 @@
       "t_ms": 214,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.6005749702453613
+        "gravitation": 0.6074168682098389
       },
       "elements": {
         "button0": {
@@ -3663,7 +3664,7 @@
       "t_ms": 215,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.6074168682098389
+        "gravitation": 0.6141955256462097
       },
       "elements": {
         "button0": {
@@ -3680,7 +3681,7 @@
       "t_ms": 216,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.6141955256462097
+        "gravitation": 0.6209104061126709
       },
       "elements": {
         "button0": {
@@ -3697,7 +3698,7 @@
       "t_ms": 217,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.6209104061126709
+        "gravitation": 0.6275608539581299
       },
       "elements": {
         "button0": {
@@ -3714,7 +3715,7 @@
       "t_ms": 218,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.6275608539581299
+        "gravitation": 0.6341464519500732
       },
       "elements": {
         "button0": {
@@ -3731,7 +3732,7 @@
       "t_ms": 219,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.6341464519500732
+        "gravitation": 0.640666663646698
       },
       "elements": {
         "button0": {
@@ -3748,7 +3749,7 @@
       "t_ms": 220,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.640666663646698
+        "gravitation": 0.6471210718154907
       },
       "elements": {
         "button0": {
@@ -3765,7 +3766,7 @@
       "t_ms": 221,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.6471210718154907
+        "gravitation": 0.6535093188285828
       },
       "elements": {
         "button0": {
@@ -3782,7 +3783,7 @@
       "t_ms": 222,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.6535093188285828
+        "gravitation": 0.6598310470581055
       },
       "elements": {
         "button0": {
@@ -3799,7 +3800,7 @@
       "t_ms": 223,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.6598310470581055
+        "gravitation": 0.6660858988761902
       },
       "elements": {
         "button0": {
@@ -3816,7 +3817,7 @@
       "t_ms": 224,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.6660858988761902
+        "gravitation": 0.672273576259613
       },
       "elements": {
         "button0": {
@@ -3833,7 +3834,7 @@
       "t_ms": 225,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.672273576259613
+        "gravitation": 0.6783939003944397
       },
       "elements": {
         "button0": {
@@ -3850,7 +3851,7 @@
       "t_ms": 226,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.6783939003944397
+        "gravitation": 0.6844465136528015
       },
       "elements": {
         "button0": {
@@ -3867,7 +3868,7 @@
       "t_ms": 227,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.6844465136528015
+        "gravitation": 0.6904314160346985
       },
       "elements": {
         "button0": {
@@ -3884,7 +3885,7 @@
       "t_ms": 228,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.6904314160346985
+        "gravitation": 0.6963483095169067
       },
       "elements": {
         "button0": {
@@ -3901,7 +3902,7 @@
       "t_ms": 229,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.6963483095169067
+        "gravitation": 0.7021970748901367
       },
       "elements": {
         "button0": {
@@ -3918,7 +3919,7 @@
       "t_ms": 230,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.7021970748901367
+        "gravitation": 0.7079776525497437
       },
       "elements": {
         "button0": {
@@ -3935,7 +3936,7 @@
       "t_ms": 231,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.7079776525497437
+        "gravitation": 0.7136899828910828
       },
       "elements": {
         "button0": {
@@ -3952,7 +3953,7 @@
       "t_ms": 232,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.7136899828910828
+        "gravitation": 0.719334065914154
       },
       "elements": {
         "button0": {
@@ -3969,7 +3970,7 @@
       "t_ms": 233,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.719334065914154
+        "gravitation": 0.724909782409668
       },
       "elements": {
         "button0": {
@@ -3986,7 +3987,7 @@
       "t_ms": 234,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.724909782409668
+        "gravitation": 0.7304171919822693
       },
       "elements": {
         "button0": {
@@ -4003,7 +4004,7 @@
       "t_ms": 235,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.7304171919822693
+        "gravitation": 0.7358563542366028
       },
       "elements": {
         "button0": {
@@ -4020,7 +4021,7 @@
       "t_ms": 236,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.7358563542366028
+        "gravitation": 0.7412272691726685
       },
       "elements": {
         "button0": {
@@ -4037,7 +4038,7 @@
       "t_ms": 237,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.7412272691726685
+        "gravitation": 0.7465301156044006
       },
       "elements": {
         "button0": {
@@ -4054,7 +4055,7 @@
       "t_ms": 238,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.7465301156044006
+        "gravitation": 0.7517649531364441
       },
       "elements": {
         "button0": {
@@ -4071,7 +4072,7 @@
       "t_ms": 239,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.7517649531364441
+        "gravitation": 0.7569318413734436
       },
       "elements": {
         "button0": {
@@ -4088,7 +4089,7 @@
       "t_ms": 240,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.7569318413734436
+        "gravitation": 0.762031078338623
       },
       "elements": {
         "button0": {
@@ -4105,7 +4106,7 @@
       "t_ms": 241,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.762031078338623
+        "gravitation": 0.7670627236366272
       },
       "elements": {
         "button0": {
@@ -4122,7 +4123,7 @@
       "t_ms": 242,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.7670627236366272
+        "gravitation": 0.7720269560813904
       },
       "elements": {
         "button0": {
@@ -4139,7 +4140,7 @@
       "t_ms": 243,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.7720269560813904
+        "gravitation": 0.7769240736961365
       },
       "elements": {
         "button0": {
@@ -4156,7 +4157,7 @@
       "t_ms": 244,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.7769240736961365
+        "gravitation": 0.7817543148994446
       },
       "elements": {
         "button0": {
@@ -4173,7 +4174,7 @@
       "t_ms": 245,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.7817543148994446
+        "gravitation": 0.7865177989006042
       },
       "elements": {
         "button0": {
@@ -4190,7 +4191,7 @@
       "t_ms": 246,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.7865177989006042
+        "gravitation": 0.7912149429321289
       },
       "elements": {
         "button0": {
@@ -4207,7 +4208,7 @@
       "t_ms": 247,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.7912149429321289
+        "gravitation": 0.7958459258079529
       },
       "elements": {
         "button0": {
@@ -4224,7 +4225,7 @@
       "t_ms": 248,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.7958459258079529
+        "gravitation": 0.8004110455513
       },
       "elements": {
         "button0": {
@@ -4241,7 +4242,7 @@
       "t_ms": 249,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.8004110455513
+        "gravitation": 0.8049107193946838
       },
       "elements": {
         "button0": {
@@ -4258,7 +4259,7 @@
       "t_ms": 250,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.8049107193946838
+        "gravitation": 0.8093451261520386
       },
       "elements": {
         "button0": {
@@ -4275,7 +4276,7 @@
       "t_ms": 251,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.8093451261520386
+        "gravitation": 0.8137147426605225
       },
       "elements": {
         "button0": {
@@ -4292,7 +4293,7 @@
       "t_ms": 252,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.8137147426605225
+        "gravitation": 0.8180198669433594
       },
       "elements": {
         "button0": {
@@ -4309,7 +4310,7 @@
       "t_ms": 253,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.8180198669433594
+        "gravitation": 0.822260856628418
       },
       "elements": {
         "button0": {
@@ -4326,7 +4327,7 @@
       "t_ms": 254,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.822260856628418
+        "gravitation": 0.8264380693435669
       },
       "elements": {
         "button0": {
@@ -4343,7 +4344,7 @@
       "t_ms": 255,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.8264380693435669
+        "gravitation": 0.8305519819259644
       },
       "elements": {
         "button0": {
@@ -4360,7 +4361,7 @@
       "t_ms": 256,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.8305519819259644
+        "gravitation": 0.834602952003479
       },
       "elements": {
         "button0": {
@@ -4377,7 +4378,7 @@
       "t_ms": 257,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.834602952003479
+        "gravitation": 0.8385913968086243
       },
       "elements": {
         "button0": {
@@ -4394,7 +4395,7 @@
       "t_ms": 258,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.8385913968086243
+        "gravitation": 0.8425177931785583
       },
       "elements": {
         "button0": {
@@ -4411,7 +4412,7 @@
       "t_ms": 259,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.8425177931785583
+        "gravitation": 0.8463824391365051
       },
       "elements": {
         "button0": {
@@ -4428,7 +4429,7 @@
       "t_ms": 260,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.8463824391365051
+        "gravitation": 0.8501859903335571
       },
       "elements": {
         "button0": {
@@ -4445,7 +4446,7 @@
       "t_ms": 261,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.8501859903335571
+        "gravitation": 0.8539286851882935
       },
       "elements": {
         "button0": {
@@ -4462,7 +4463,7 @@
       "t_ms": 262,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.8539286851882935
+        "gravitation": 0.8576111793518066
       },
       "elements": {
         "button0": {
@@ -4479,7 +4480,7 @@
       "t_ms": 263,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.8576111793518066
+        "gravitation": 0.8612338304519653
       },
       "elements": {
         "button0": {
@@ -4496,7 +4497,7 @@
       "t_ms": 264,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.8612338304519653
+        "gravitation": 0.8647971749305725
       },
       "elements": {
         "button0": {
@@ -4513,7 +4514,7 @@
       "t_ms": 265,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.8647971749305725
+        "gravitation": 0.8683016300201416
       },
       "elements": {
         "button0": {
@@ -4530,7 +4531,7 @@
       "t_ms": 266,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.8683016300201416
+        "gravitation": 0.8717477321624756
       },
       "elements": {
         "button0": {
@@ -4547,7 +4548,7 @@
       "t_ms": 267,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.8717477321624756
+        "gravitation": 0.8751360774040222
       },
       "elements": {
         "button0": {
@@ -4564,7 +4565,7 @@
       "t_ms": 268,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.8751360774040222
+        "gravitation": 0.8784670233726501
       },
       "elements": {
         "button0": {
@@ -4581,7 +4582,7 @@
       "t_ms": 269,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.8784670233726501
+        "gravitation": 0.8817411661148071
       },
       "elements": {
         "button0": {
@@ -4598,7 +4599,7 @@
       "t_ms": 270,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.8817411661148071
+        "gravitation": 0.8849589824676514
       },
       "elements": {
         "button0": {
@@ -4615,7 +4616,7 @@
       "t_ms": 271,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.8849589824676514
+        "gravitation": 0.8881210684776306
       },
       "elements": {
         "button0": {
@@ -4632,7 +4633,7 @@
       "t_ms": 272,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.8881210684776306
+        "gravitation": 0.8912278413772583
       },
       "elements": {
         "button0": {
@@ -4649,7 +4650,7 @@
       "t_ms": 273,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.8912278413772583
+        "gravitation": 0.894279956817627
       },
       "elements": {
         "button0": {
@@ -4666,7 +4667,7 @@
       "t_ms": 274,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.894279956817627
+        "gravitation": 0.8972778916358948
       },
       "elements": {
         "button0": {
@@ -4683,7 +4684,7 @@
       "t_ms": 275,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.8972778916358948
+        "gravitation": 0.9002221822738647
       },
       "elements": {
         "button0": {
@@ -4700,7 +4701,7 @@
       "t_ms": 276,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.9002221822738647
+        "gravitation": 0.9031134247779846
       },
       "elements": {
         "button0": {
@@ -4717,7 +4718,7 @@
       "t_ms": 277,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.9031134247779846
+        "gravitation": 0.9059520959854126
       },
       "elements": {
         "button0": {
@@ -4734,7 +4735,7 @@
       "t_ms": 278,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.9059520959854126
+        "gravitation": 0.9087387919425964
       },
       "elements": {
         "button0": {
@@ -4751,7 +4752,7 @@
       "t_ms": 279,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.9087387919425964
+        "gravitation": 0.9114740490913391
       },
       "elements": {
         "button0": {
@@ -4768,7 +4769,7 @@
       "t_ms": 280,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.9114740490913391
+        "gravitation": 0.9141584634780884
       },
       "elements": {
         "button0": {
@@ -4785,7 +4786,7 @@
       "t_ms": 281,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.9141584634780884
+        "gravitation": 0.9167925119400024
       },
       "elements": {
         "button0": {
@@ -4802,7 +4803,7 @@
       "t_ms": 282,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.9167925119400024
+        "gravitation": 0.919376790523529
       },
       "elements": {
         "button0": {
@@ -4819,7 +4820,7 @@
       "t_ms": 283,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.919376790523529
+        "gravitation": 0.9219119548797607
       },
       "elements": {
         "button0": {
@@ -4836,7 +4837,7 @@
       "t_ms": 284,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.9219119548797607
+        "gravitation": 0.9243984222412109
       },
       "elements": {
         "button0": {
@@ -4853,7 +4854,7 @@
       "t_ms": 285,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.9243984222412109
+        "gravitation": 0.9268367886543274
       },
       "elements": {
         "button0": {
@@ -4870,7 +4871,7 @@
       "t_ms": 286,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.9268367886543274
+        "gravitation": 0.9292277097702026
       },
       "elements": {
         "button0": {
@@ -4887,7 +4888,7 @@
       "t_ms": 287,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.9292277097702026
+        "gravitation": 0.9315716624259949
       },
       "elements": {
         "button0": {
@@ -4904,7 +4905,7 @@
       "t_ms": 288,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.9315716624259949
+        "gravitation": 0.9338692426681519
       },
       "elements": {
         "button0": {
@@ -4921,7 +4922,7 @@
       "t_ms": 289,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.9338692426681519
+        "gravitation": 0.9361210465431213
       },
       "elements": {
         "button0": {
@@ -4938,7 +4939,7 @@
       "t_ms": 290,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.9361210465431213
+        "gravitation": 0.9383275508880615
       },
       "elements": {
         "button0": {
@@ -4955,7 +4956,7 @@
       "t_ms": 291,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.9383275508880615
+        "gravitation": 0.9404893517494202
       },
       "elements": {
         "button0": {
@@ -4972,7 +4973,7 @@
       "t_ms": 292,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.9404893517494202
+        "gravitation": 0.942607045173645
       },
       "elements": {
         "button0": {
@@ -4989,7 +4990,7 @@
       "t_ms": 293,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.942607045173645
+        "gravitation": 0.9446812272071838
       },
       "elements": {
         "button0": {
@@ -5006,7 +5007,7 @@
       "t_ms": 294,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.9446812272071838
+        "gravitation": 0.9467123746871948
       },
       "elements": {
         "button0": {
@@ -5023,7 +5024,7 @@
       "t_ms": 295,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.9467123746871948
+        "gravitation": 0.9487010836601257
       },
       "elements": {
         "button0": {
@@ -5040,7 +5041,7 @@
       "t_ms": 296,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.9487010836601257
+        "gravitation": 0.9506478905677795
       },
       "elements": {
         "button0": {
@@ -5057,7 +5058,7 @@
       "t_ms": 297,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.9506478905677795
+        "gravitation": 0.9525534510612488
       },
       "elements": {
         "button0": {
@@ -5074,7 +5075,7 @@
       "t_ms": 298,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.9525534510612488
+        "gravitation": 0.9544181823730469
       },
       "elements": {
         "button0": {
@@ -5091,7 +5092,7 @@
       "t_ms": 299,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.9544181823730469
+        "gravitation": 0.9562427401542664
       },
       "elements": {
         "button0": {
@@ -5108,7 +5109,7 @@
       "t_ms": 300,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.9562427401542664
+        "gravitation": 0.9580276012420654
       },
       "elements": {
         "button0": {
@@ -5125,7 +5126,7 @@
       "t_ms": 301,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.9580276012420654
+        "gravitation": 0.9597733616828918
       },
       "elements": {
         "button0": {
@@ -5142,7 +5143,7 @@
       "t_ms": 302,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.9597733616828918
+        "gravitation": 0.9614806175231934
       },
       "elements": {
         "button0": {
@@ -5159,7 +5160,7 @@
       "t_ms": 303,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.9614806175231934
+        "gravitation": 0.9631497859954834
       },
       "elements": {
         "button0": {
@@ -5176,7 +5177,7 @@
       "t_ms": 304,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.9631497859954834
+        "gravitation": 0.9647815227508545
       },
       "elements": {
         "button0": {
@@ -5193,7 +5194,7 @@
       "t_ms": 305,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.9647815227508545
+        "gravitation": 0.9663763046264648
       },
       "elements": {
         "button0": {
@@ -5210,7 +5211,7 @@
       "t_ms": 306,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.9663763046264648
+        "gravitation": 0.9679347276687622
       },
       "elements": {
         "button0": {
@@ -5227,7 +5228,7 @@
       "t_ms": 307,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.9679347276687622
+        "gravitation": 0.9694572687149048
       },
       "elements": {
         "button0": {
@@ -5244,7 +5245,7 @@
       "t_ms": 308,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.9694572687149048
+        "gravitation": 0.9709444642066956
       },
       "elements": {
         "button0": {
@@ -5261,7 +5262,7 @@
       "t_ms": 309,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.9709444642066956
+        "gravitation": 0.9723969101905823
       },
       "elements": {
         "button0": {
@@ -5278,7 +5279,7 @@
       "t_ms": 310,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.9723969101905823
+        "gravitation": 0.9738150238990784
       },
       "elements": {
         "button0": {
@@ -5295,7 +5296,7 @@
       "t_ms": 311,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.9738150238990784
+        "gravitation": 0.9751994013786316
       },
       "elements": {
         "button0": {
@@ -5312,7 +5313,7 @@
       "t_ms": 312,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.9751994013786316
+        "gravitation": 0.9765505790710449
       },
       "elements": {
         "button0": {
@@ -5329,7 +5330,7 @@
       "t_ms": 313,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.9765505790710449
+        "gravitation": 0.9778690338134766
       },
       "elements": {
         "button0": {
@@ -5346,7 +5347,7 @@
       "t_ms": 314,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.9778690338134766
+        "gravitation": 0.9791552424430847
       },
       "elements": {
         "button0": {
@@ -5363,7 +5364,7 @@
       "t_ms": 315,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.9791552424430847
+        "gravitation": 0.9804098010063171
       },
       "elements": {
         "button0": {
@@ -5380,7 +5381,7 @@
       "t_ms": 316,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.9804098010063171
+        "gravitation": 0.9816331267356873
       },
       "elements": {
         "button0": {
@@ -5397,7 +5398,7 @@
       "t_ms": 317,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.9816331267356873
+        "gravitation": 0.982825756072998
       },
       "elements": {
         "button0": {
@@ -5414,7 +5415,7 @@
       "t_ms": 318,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.982825756072998
+        "gravitation": 0.9839881658554077
       },
       "elements": {
         "button0": {
@@ -5431,7 +5432,7 @@
       "t_ms": 319,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.9839881658554077
+        "gravitation": 0.9851208925247192
       },
       "elements": {
         "button0": {
@@ -5448,7 +5449,7 @@
       "t_ms": 320,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.9851208925247192
+        "gravitation": 0.9862244129180908
       },
       "elements": {
         "button0": {
@@ -5465,7 +5466,7 @@
       "t_ms": 321,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.9862244129180908
+        "gravitation": 0.9872992038726807
       },
       "elements": {
         "button0": {
@@ -5482,7 +5483,7 @@
       "t_ms": 322,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.9872992038726807
+        "gravitation": 0.988345742225647
       },
       "elements": {
         "button0": {
@@ -5499,7 +5500,7 @@
       "t_ms": 323,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.988345742225647
+        "gravitation": 0.989364504814148
       },
       "elements": {
         "button0": {
@@ -5516,7 +5517,7 @@
       "t_ms": 324,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.989364504814148
+        "gravitation": 0.9903559684753418
       },
       "elements": {
         "button0": {
@@ -5533,7 +5534,7 @@
       "t_ms": 325,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.9903559684753418
+        "gravitation": 0.9913205504417419
       },
       "elements": {
         "button0": {
@@ -5550,7 +5551,7 @@
       "t_ms": 326,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.9913205504417419
+        "gravitation": 0.9922587871551514
       },
       "elements": {
         "button0": {
@@ -5567,7 +5568,7 @@
       "t_ms": 327,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.9922587871551514
+        "gravitation": 0.9931710958480835
       },
       "elements": {
         "button0": {
@@ -5584,7 +5585,7 @@
       "t_ms": 328,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.9931710958480835
+        "gravitation": 0.9940579533576965
       },
       "elements": {
         "button0": {
@@ -5601,7 +5602,7 @@
       "t_ms": 329,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.9940579533576965
+        "gravitation": 0.9949198365211487
       },
       "elements": {
         "button0": {
@@ -5618,7 +5619,7 @@
       "t_ms": 330,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.9949198365211487
+        "gravitation": 0.9957571029663086
       },
       "elements": {
         "button0": {
@@ -5635,7 +5636,7 @@
       "t_ms": 331,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.9957571029663086
+        "gravitation": 0.9965702295303345
       },
       "elements": {
         "button0": {
@@ -5652,7 +5653,7 @@
       "t_ms": 332,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.9965702295303345
+        "gravitation": 0.9973597526550293
       },
       "elements": {
         "button0": {
@@ -5669,7 +5670,7 @@
       "t_ms": 333,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.9973597526550293
+        "gravitation": 0.9981259107589722
       },
       "elements": {
         "button0": {
@@ -5686,7 +5687,7 @@
       "t_ms": 334,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.9981259107589722
+        "gravitation": 0.9988692998886108
       },
       "elements": {
         "button0": {
@@ -5703,7 +5704,7 @@
       "t_ms": 335,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.9988692998886108
+        "gravitation": 0.9995903372764587
       },
       "elements": {
         "button0": {
@@ -5720,7 +5721,7 @@
       "t_ms": 336,
       "props": {
         "check_fraction": 1,
-        "gravitation": 0.9995903372764587
+        "gravitation": 1.0002893209457397
       },
       "elements": {
         "button0": {
@@ -5737,7 +5738,7 @@
       "t_ms": 337,
       "props": {
         "check_fraction": 1,
-        "gravitation": 1.0002893209457397
+        "gravitation": 1.0009666681289673
       },
       "elements": {
         "button0": {
@@ -5754,7 +5755,7 @@
       "t_ms": 338,
       "props": {
         "check_fraction": 1,
-        "gravitation": 1.0009666681289673
+        "gravitation": 1.0016230344772339
       },
       "elements": {
         "button0": {
@@ -5771,7 +5772,7 @@
       "t_ms": 339,
       "props": {
         "check_fraction": 1,
-        "gravitation": 1.0016230344772339
+        "gravitation": 1.002258539199829
       },
       "elements": {
         "button0": {
@@ -5788,7 +5789,7 @@
       "t_ms": 340,
       "props": {
         "check_fraction": 1,
-        "gravitation": 1.002258539199829
+        "gravitation": 1.0028736591339111
       },
       "elements": {
         "button0": {
@@ -5805,7 +5806,7 @@
       "t_ms": 341,
       "props": {
         "check_fraction": 1,
-        "gravitation": 1.0028736591339111
+        "gravitation": 1.0034687519073486
       },
       "elements": {
         "button0": {
@@ -5822,7 +5823,7 @@
       "t_ms": 342,
       "props": {
         "check_fraction": 1,
-        "gravitation": 1.0034687519073486
+        "gravitation": 1.0040444135665894
       },
       "elements": {
         "button0": {
@@ -5839,7 +5840,7 @@
       "t_ms": 343,
       "props": {
         "check_fraction": 1,
-        "gravitation": 1.0040444135665894
+        "gravitation": 1.0046007633209229
       },
       "elements": {
         "button0": {
@@ -5856,7 +5857,7 @@
       "t_ms": 344,
       "props": {
         "check_fraction": 1,
-        "gravitation": 1.0046007633209229
+        "gravitation": 1.0051383972167969
       },
       "elements": {
         "button0": {
@@ -5873,7 +5874,7 @@
       "t_ms": 345,
       "props": {
         "check_fraction": 1,
-        "gravitation": 1.0051383972167969
+        "gravitation": 1.0056575536727905
       },
       "elements": {
         "button0": {
@@ -5890,7 +5891,7 @@
       "t_ms": 346,
       "props": {
         "check_fraction": 1,
-        "gravitation": 1.0056575536727905
+        "gravitation": 1.006158709526062
       },
       "elements": {
         "button0": {
@@ -5907,7 +5908,7 @@
       "t_ms": 347,
       "props": {
         "check_fraction": 1,
-        "gravitation": 1.006158709526062
+        "gravitation": 1.0066421031951904
       },
       "elements": {
         "button0": {
@@ -5924,7 +5925,7 @@
       "t_ms": 348,
       "props": {
         "check_fraction": 1,
-        "gravitation": 1.0066421031951904
+        "gravitation": 1.007108211517334
       },
       "elements": {
         "button0": {
@@ -5941,7 +5942,7 @@
       "t_ms": 349,
       "props": {
         "check_fraction": 1,
-        "gravitation": 1.007108211517334
+        "gravitation": 1.0075572729110718
       },
       "elements": {
         "button0": {
@@ -5958,7 +5959,7 @@
       "t_ms": 350,
       "props": {
         "check_fraction": 1,
-        "gravitation": 1.0075572729110718
+        "gravitation": 1.007989764213562
       },
       "elements": {
         "button0": {
@@ -5975,7 +5976,7 @@
       "t_ms": 351,
       "props": {
         "check_fraction": 1,
-        "gravitation": 1.007989764213562
+        "gravitation": 1.0084060430526733
       },
       "elements": {
         "button0": {
@@ -5992,7 +5993,7 @@
       "t_ms": 352,
       "props": {
         "check_fraction": 1,
-        "gravitation": 1.0084060430526733
+        "gravitation": 1.0088063478469849
       },
       "elements": {
         "button0": {
@@ -6009,7 +6010,7 @@
       "t_ms": 353,
       "props": {
         "check_fraction": 1,
-        "gravitation": 1.0088063478469849
+        "gravitation": 1.0091910362243652
       },
       "elements": {
         "button0": {
@@ -6026,7 +6027,7 @@
       "t_ms": 354,
       "props": {
         "check_fraction": 1,
-        "gravitation": 1.0091910362243652
+        "gravitation": 1.009560465812683
       },
       "elements": {
         "button0": {
@@ -6043,7 +6044,7 @@
       "t_ms": 355,
       "props": {
         "check_fraction": 1,
-        "gravitation": 1.009560465812683
+        "gravitation": 1.0099149942398071
       },
       "elements": {
         "button0": {
@@ -6060,7 +6061,7 @@
       "t_ms": 356,
       "props": {
         "check_fraction": 1,
-        "gravitation": 1.0099149942398071
+        "gravitation": 1.010254979133606
       },
       "elements": {
         "button0": {
@@ -6077,7 +6078,7 @@
       "t_ms": 357,
       "props": {
         "check_fraction": 1,
-        "gravitation": 1.010254979133606
+        "gravitation": 1.0105806589126587
       },
       "elements": {
         "button0": {
@@ -6094,7 +6095,7 @@
       "t_ms": 358,
       "props": {
         "check_fraction": 1,
-        "gravitation": 1.0105806589126587
+        "gravitation": 1.010892391204834
       },
       "elements": {
         "button0": {
@@ -6111,7 +6112,7 @@
       "t_ms": 359,
       "props": {
         "check_fraction": 1,
-        "gravitation": 1.010892391204834
+        "gravitation": 1.011190414428711
       },
       "elements": {
         "button0": {
@@ -6128,7 +6129,7 @@
       "t_ms": 360,
       "props": {
         "check_fraction": 1,
-        "gravitation": 1.011190414428711
+        "gravitation": 1.0114750862121582
       },
       "elements": {
         "button0": {
@@ -6145,7 +6146,7 @@
       "t_ms": 361,
       "props": {
         "check_fraction": 1,
-        "gravitation": 1.0114750862121582
+        "gravitation": 1.0117467641830444
       },
       "elements": {
         "button0": {
@@ -6162,7 +6163,7 @@
       "t_ms": 362,
       "props": {
         "check_fraction": 1,
-        "gravitation": 1.0117467641830444
+        "gravitation": 1.0120058059692383
       },
       "elements": {
         "button0": {
@@ -6179,7 +6180,7 @@
       "t_ms": 363,
       "props": {
         "check_fraction": 1,
-        "gravitation": 1.0120058059692383
+        "gravitation": 1.0122522115707397
       },
       "elements": {
         "button0": {
@@ -6196,7 +6197,7 @@
       "t_ms": 364,
       "props": {
         "check_fraction": 1,
-        "gravitation": 1.0122522115707397
+        "gravitation": 1.0124865770339966
       },
       "elements": {
         "button0": {
@@ -6213,7 +6214,7 @@
       "t_ms": 365,
       "props": {
         "check_fraction": 1,
-        "gravitation": 1.0124865770339966
+        "gravitation": 1.012709140777588
       },
       "elements": {
         "button0": {
@@ -6230,7 +6231,7 @@
       "t_ms": 366,
       "props": {
         "check_fraction": 1,
-        "gravitation": 1.012709140777588
+        "gravitation": 1.0129200220108032
       },
       "elements": {
         "button0": {
@@ -6247,7 +6248,7 @@
       "t_ms": 367,
       "props": {
         "check_fraction": 1,
-        "gravitation": 1.0129200220108032
+        "gravitation": 1.0131195783615112
       },
       "elements": {
         "button0": {
@@ -6264,7 +6265,7 @@
       "t_ms": 368,
       "props": {
         "check_fraction": 1,
-        "gravitation": 1.0131195783615112
+        "gravitation": 1.0133081674575806
       },
       "elements": {
         "button0": {
@@ -6281,7 +6282,7 @@
       "t_ms": 369,
       "props": {
         "check_fraction": 1,
-        "gravitation": 1.0133081674575806
+        "gravitation": 1.0134859085083008
       },
       "elements": {
         "button0": {
@@ -6298,7 +6299,7 @@
       "t_ms": 370,
       "props": {
         "check_fraction": 1,
-        "gravitation": 1.0134859085083008
+        "gravitation": 1.0136531591415405
       },
       "elements": {
         "button0": {
@@ -6315,7 +6316,7 @@
       "t_ms": 371,
       "props": {
         "check_fraction": 1,
-        "gravitation": 1.0136531591415405
+        "gravitation": 1.013810157775879
       },
       "elements": {
         "button0": {
@@ -6332,7 +6333,7 @@
       "t_ms": 372,
       "props": {
         "check_fraction": 1,
-        "gravitation": 1.013810157775879
+        "gravitation": 1.0139572620391846
       },
       "elements": {
         "button0": {
@@ -6349,7 +6350,7 @@
       "t_ms": 373,
       "props": {
         "check_fraction": 1,
-        "gravitation": 1.0139572620391846
+        "gravitation": 1.014094591140747
       },
       "elements": {
         "button0": {
@@ -6366,7 +6367,7 @@
       "t_ms": 374,
       "props": {
         "check_fraction": 1,
-        "gravitation": 1.014094591140747
+        "gravitation": 1.0142223834991455
       },
       "elements": {
         "button0": {
@@ -6383,7 +6384,7 @@
       "t_ms": 375,
       "props": {
         "check_fraction": 1,
-        "gravitation": 1.0142223834991455
+        "gravitation": 1.014340877532959
       },
       "elements": {
         "button0": {
@@ -6400,7 +6401,7 @@
       "t_ms": 376,
       "props": {
         "check_fraction": 1,
-        "gravitation": 1.014340877532959
+        "gravitation": 1.0144504308700562
       },
       "elements": {
         "button0": {
@@ -6417,7 +6418,7 @@
       "t_ms": 377,
       "props": {
         "check_fraction": 1,
-        "gravitation": 1.0144504308700562
+        "gravitation": 1.0145512819290161
       },
       "elements": {
         "button0": {
@@ -6434,7 +6435,7 @@
       "t_ms": 378,
       "props": {
         "check_fraction": 1,
-        "gravitation": 1.0145512819290161
+        "gravitation": 1.0146435499191284
       },
       "elements": {
         "button0": {
@@ -6451,7 +6452,7 @@
       "t_ms": 379,
       "props": {
         "check_fraction": 1,
-        "gravitation": 1.0146435499191284
+        "gravitation": 1.0147274732589722
       },
       "elements": {
         "button0": {
@@ -6468,7 +6469,7 @@
       "t_ms": 380,
       "props": {
         "check_fraction": 1,
-        "gravitation": 1.0147274732589722
+        "gravitation": 1.0148032903671265
       },
       "elements": {
         "button0": {
@@ -6485,7 +6486,7 @@
       "t_ms": 381,
       "props": {
         "check_fraction": 1,
-        "gravitation": 1.0148032903671265
+        "gravitation": 1.01487135887146
       },
       "elements": {
         "button0": {
@@ -6502,7 +6503,7 @@
       "t_ms": 382,
       "props": {
         "check_fraction": 1,
-        "gravitation": 1.01487135887146
+        "gravitation": 1.0149316787719727
       },
       "elements": {
         "button0": {
@@ -6519,7 +6520,7 @@
       "t_ms": 383,
       "props": {
         "check_fraction": 1,
-        "gravitation": 1.0149316787719727
+        "gravitation": 1.0149844884872437
       },
       "elements": {
         "button0": {
@@ -6536,7 +6537,7 @@
       "t_ms": 384,
       "props": {
         "check_fraction": 1,
-        "gravitation": 1.0149844884872437
+        "gravitation": 1.0150301456451416
       },
       "elements": {
         "button0": {
@@ -6553,7 +6554,7 @@
       "t_ms": 385,
       "props": {
         "check_fraction": 1,
-        "gravitation": 1.0150301456451416
+        "gravitation": 1.0150688886642456
       },
       "elements": {
         "button0": {
@@ -6570,7 +6571,7 @@
       "t_ms": 386,
       "props": {
         "check_fraction": 1,
-        "gravitation": 1.0150688886642456
+        "gravitation": 1.0151005983352661
       },
       "elements": {
         "button0": {
@@ -6587,7 +6588,7 @@
       "t_ms": 387,
       "props": {
         "check_fraction": 1,
-        "gravitation": 1.0151005983352661
+        "gravitation": 1.0151258707046509
       },
       "elements": {
         "button0": {
@@ -6604,7 +6605,7 @@
       "t_ms": 388,
       "props": {
         "check_fraction": 1,
-        "gravitation": 1.0151258707046509
+        "gravitation": 1.0151445865631104
       },
       "elements": {
         "button0": {
@@ -6621,7 +6622,7 @@
       "t_ms": 389,
       "props": {
         "check_fraction": 1,
-        "gravitation": 1.0151445865631104
+        "gravitation": 1.0151571035385132
       },
       "elements": {
         "button0": {
@@ -6638,7 +6639,7 @@
       "t_ms": 390,
       "props": {
         "check_fraction": 1,
-        "gravitation": 1.0151571035385132
+        "gravitation": 1.015163540840149
       },
       "elements": {
         "button0": {
@@ -6655,7 +6656,7 @@
       "t_ms": 391,
       "props": {
         "check_fraction": 1,
-        "gravitation": 1.015163540840149
+        "gravitation": 1.0151641368865967
       },
       "elements": {
         "button0": {
@@ -6672,7 +6673,7 @@
       "t_ms": 392,
       "props": {
         "check_fraction": 1,
-        "gravitation": 1.0151641368865967
+        "gravitation": 1.015159010887146
       },
       "elements": {
         "button0": {
@@ -6689,7 +6690,7 @@
       "t_ms": 393,
       "props": {
         "check_fraction": 1,
-        "gravitation": 1.015159010887146
+        "gravitation": 1.015148401260376
       },
       "elements": {
         "button0": {
@@ -6706,7 +6707,7 @@
       "t_ms": 394,
       "props": {
         "check_fraction": 1,
-        "gravitation": 1.015148401260376
+        "gravitation": 1.0151324272155762
       },
       "elements": {
         "button0": {
@@ -6723,7 +6724,7 @@
       "t_ms": 395,
       "props": {
         "check_fraction": 1,
-        "gravitation": 1.0151324272155762
+        "gravitation": 1.0151113271713257
       },
       "elements": {
         "button0": {
@@ -6740,7 +6741,7 @@
       "t_ms": 396,
       "props": {
         "check_fraction": 1,
-        "gravitation": 1.0151113271713257
+        "gravitation": 1.015085220336914
       },
       "elements": {
         "button0": {
@@ -6757,7 +6758,7 @@
       "t_ms": 397,
       "props": {
         "check_fraction": 1,
-        "gravitation": 1.015085220336914
+        "gravitation": 1.0150542259216309
       },
       "elements": {
         "button0": {
@@ -6774,7 +6775,7 @@
       "t_ms": 398,
       "props": {
         "check_fraction": 1,
-        "gravitation": 1.0150542259216309
+        "gravitation": 1.0150185823440552
       },
       "elements": {
         "button0": {
@@ -6791,7 +6792,7 @@
       "t_ms": 399,
       "props": {
         "check_fraction": 1,
-        "gravitation": 1.0150185823440552
+        "gravitation": 1.0149784088134766
       },
       "elements": {
         "button0": {
@@ -6808,7 +6809,7 @@
       "t_ms": 400,
       "props": {
         "check_fraction": 1,
-        "gravitation": 1.0149784088134766
+        "gravitation": 1.0149338245391846
       },
       "elements": {
         "button0": {
@@ -6825,7 +6826,7 @@
       "t_ms": 401,
       "props": {
         "check_fraction": 1,
-        "gravitation": 1.0149338245391846
+        "gravitation": 1.0148850679397583
       },
       "elements": {
         "button0": {
@@ -6842,7 +6843,7 @@
       "t_ms": 402,
       "props": {
         "check_fraction": 1,
-        "gravitation": 1.0148850679397583
+        "gravitation": 1.0148322582244873
       },
       "elements": {
         "button0": {
@@ -6859,7 +6860,7 @@
       "t_ms": 403,
       "props": {
         "check_fraction": 1,
-        "gravitation": 1.0148322582244873
+        "gravitation": 1.0147755146026611
       },
       "elements": {
         "button0": {
@@ -6876,7 +6877,7 @@
       "t_ms": 404,
       "props": {
         "check_fraction": 1,
-        "gravitation": 1.0147755146026611
+        "gravitation": 1.0147149562835693
       },
       "elements": {
         "button0": {
@@ -6893,7 +6894,7 @@
       "t_ms": 405,
       "props": {
         "check_fraction": 1,
-        "gravitation": 1.0147149562835693
+        "gravitation": 1.0146507024765015
       },
       "elements": {
         "button0": {
@@ -6910,7 +6911,7 @@
       "t_ms": 406,
       "props": {
         "check_fraction": 1,
-        "gravitation": 1.0146507024765015
+        "gravitation": 1.0145829916000366
       },
       "elements": {
         "button0": {
@@ -6927,7 +6928,7 @@
       "t_ms": 407,
       "props": {
         "check_fraction": 1,
-        "gravitation": 1.0145829916000366
+        "gravitation": 1.0145119428634644
       },
       "elements": {
         "button0": {
@@ -6944,7 +6945,7 @@
       "t_ms": 408,
       "props": {
         "check_fraction": 1,
-        "gravitation": 1.0145119428634644
+        "gravitation": 1.0144375562667847
       },
       "elements": {
         "button0": {
@@ -6961,7 +6962,7 @@
       "t_ms": 409,
       "props": {
         "check_fraction": 1,
-        "gravitation": 1.0144375562667847
+        "gravitation": 1.0143601894378662
       },
       "elements": {
         "button0": {
@@ -6978,7 +6979,7 @@
       "t_ms": 410,
       "props": {
         "check_fraction": 1,
-        "gravitation": 1.0143601894378662
+        "gravitation": 1.0142797231674194
       },
       "elements": {
         "button0": {
@@ -6995,7 +6996,7 @@
       "t_ms": 411,
       "props": {
         "check_fraction": 1,
-        "gravitation": 1.0142797231674194
+        "gravitation": 1.0141963958740234
       },
       "elements": {
         "button0": {
@@ -7012,7 +7013,7 @@
       "t_ms": 412,
       "props": {
         "check_fraction": 1,
-        "gravitation": 1.0141963958740234
+        "gravitation": 1.0141103267669678
       },
       "elements": {
         "button0": {
@@ -7029,7 +7030,7 @@
       "t_ms": 413,
       "props": {
         "check_fraction": 1,
-        "gravitation": 1.0141103267669678
+        "gravitation": 1.014021635055542
       },
       "elements": {
         "button0": {
@@ -7046,7 +7047,7 @@
       "t_ms": 414,
       "props": {
         "check_fraction": 1,
-        "gravitation": 1.014021635055542
+        "gravitation": 1.0139304399490356
       },
       "elements": {
         "button0": {
@@ -7063,7 +7064,7 @@
       "t_ms": 415,
       "props": {
         "check_fraction": 1,
-        "gravitation": 1.0139304399490356
+        "gravitation": 1.0138367414474487
       },
       "elements": {
         "button0": {
@@ -7080,7 +7081,7 @@
       "t_ms": 416,
       "props": {
         "check_fraction": 1,
-        "gravitation": 1.0138367414474487
+        "gravitation": 1.0137407779693604
       },
       "elements": {
         "button0": {
@@ -7097,7 +7098,7 @@
       "t_ms": 417,
       "props": {
         "check_fraction": 1,
-        "gravitation": 1.0137407779693604
+        "gravitation": 1.01364266872406
       },
       "elements": {
         "button0": {
@@ -7114,7 +7115,7 @@
       "t_ms": 418,
       "props": {
         "check_fraction": 1,
-        "gravitation": 1.01364266872406
+        "gravitation": 1.0135424137115479
       },
       "elements": {
         "button0": {
@@ -7131,7 +7132,7 @@
       "t_ms": 419,
       "props": {
         "check_fraction": 1,
-        "gravitation": 1.0135424137115479
+        "gravitation": 1.0134402513504028
       },
       "elements": {
         "button0": {
@@ -7148,7 +7149,7 @@
       "t_ms": 420,
       "props": {
         "check_fraction": 1,
-        "gravitation": 1.0134402513504028
+        "gravitation": 1.013336181640625
       },
       "elements": {
         "button0": {
@@ -7165,7 +7166,7 @@
       "t_ms": 421,
       "props": {
         "check_fraction": 1,
-        "gravitation": 1.013336181640625
+        "gravitation": 1.0132302045822144
       },
       "elements": {
         "button0": {
@@ -7182,7 +7183,7 @@
       "t_ms": 422,
       "props": {
         "check_fraction": 1,
-        "gravitation": 1.0132302045822144
+        "gravitation": 1.0131226778030396
       },
       "elements": {
         "button0": {
@@ -7199,7 +7200,7 @@
       "t_ms": 423,
       "props": {
         "check_fraction": 1,
-        "gravitation": 1.0131226778030396
+        "gravitation": 1.013013482093811
       },
       "elements": {
         "button0": {
@@ -7216,7 +7217,7 @@
       "t_ms": 424,
       "props": {
         "check_fraction": 1,
-        "gravitation": 1.013013482093811
+        "gravitation": 1.0129027366638184
       },
       "elements": {
         "button0": {
@@ -7233,7 +7234,7 @@
       "t_ms": 425,
       "props": {
         "check_fraction": 1,
-        "gravitation": 1.0129027366638184
+        "gravitation": 1.012790560722351
       },
       "elements": {
         "button0": {
@@ -7250,7 +7251,7 @@
       "t_ms": 426,
       "props": {
         "check_fraction": 1,
-        "gravitation": 1.012790560722351
+        "gravitation": 1.0126770734786987
       },
       "elements": {
         "button0": {
@@ -7267,7 +7268,7 @@
       "t_ms": 427,
       "props": {
         "check_fraction": 1,
-        "gravitation": 1.0126770734786987
+        "gravitation": 1.0125623941421509
       },
       "elements": {
         "button0": {
@@ -7284,7 +7285,7 @@
       "t_ms": 428,
       "props": {
         "check_fraction": 1,
-        "gravitation": 1.0125623941421509
+        "gravitation": 1.012446403503418
       },
       "elements": {
         "button0": {
@@ -7301,7 +7302,7 @@
       "t_ms": 429,
       "props": {
         "check_fraction": 1,
-        "gravitation": 1.012446403503418
+        "gravitation": 1.0123294591903687
       },
       "elements": {
         "button0": {
@@ -7318,7 +7319,7 @@
       "t_ms": 430,
       "props": {
         "check_fraction": 1,
-        "gravitation": 1.0123294591903687
+        "gravitation": 1.0122114419937134
       },
       "elements": {
         "button0": {
@@ -7335,7 +7336,7 @@
       "t_ms": 431,
       "props": {
         "check_fraction": 1,
-        "gravitation": 1.0122114419937134
+        "gravitation": 1.0120924711227417
       },
       "elements": {
         "button0": {
@@ -7352,7 +7353,7 @@
       "t_ms": 432,
       "props": {
         "check_fraction": 1,
-        "gravitation": 1.0120924711227417
+        "gravitation": 1.0119725465774536
       },
       "elements": {
         "button0": {
@@ -7369,7 +7370,7 @@
       "t_ms": 433,
       "props": {
         "check_fraction": 1,
-        "gravitation": 1.0119725465774536
+        "gravitation": 1.0118519067764282
       },
       "elements": {
         "button0": {
@@ -7386,7 +7387,7 @@
       "t_ms": 434,
       "props": {
         "check_fraction": 1,
-        "gravitation": 1.0118519067764282
+        "gravitation": 1.0117305517196655
       },
       "elements": {
         "button0": {
@@ -7403,7 +7404,7 @@
       "t_ms": 435,
       "props": {
         "check_fraction": 1,
-        "gravitation": 1.0117305517196655
+        "gravitation": 1.0116084814071655
       },
       "elements": {
         "button0": {
@@ -7420,7 +7421,7 @@
       "t_ms": 436,
       "props": {
         "check_fraction": 1,
-        "gravitation": 1.0116084814071655
+        "gravitation": 1.0114859342575073
       },
       "elements": {
         "button0": {
@@ -7437,7 +7438,7 @@
       "t_ms": 437,
       "props": {
         "check_fraction": 1,
-        "gravitation": 1.0114859342575073
+        "gravitation": 1.0113627910614014
       },
       "elements": {
         "button0": {
@@ -7454,7 +7455,7 @@
       "t_ms": 438,
       "props": {
         "check_fraction": 1,
-        "gravitation": 1.0113627910614014
+        "gravitation": 1.0112390518188477
       },
       "elements": {
         "button0": {
@@ -7471,7 +7472,7 @@
       "t_ms": 439,
       "props": {
         "check_fraction": 1,
-        "gravitation": 1.0112390518188477
+        "gravitation": 1.0111150741577148
       },
       "elements": {
         "button0": {
@@ -7488,7 +7489,7 @@
       "t_ms": 440,
       "props": {
         "check_fraction": 1,
-        "gravitation": 1.0111150741577148
+        "gravitation": 1.0109906196594238
       },
       "elements": {
         "button0": {
@@ -7505,7 +7506,7 @@
       "t_ms": 441,
       "props": {
         "check_fraction": 1,
-        "gravitation": 1.0109906196594238
+        "gravitation": 1.0108660459518433
       },
       "elements": {
         "button0": {
@@ -7522,7 +7523,7 @@
       "t_ms": 442,
       "props": {
         "check_fraction": 1,
-        "gravitation": 1.0108660459518433
+        "gravitation": 1.010741114616394
       },
       "elements": {
         "button0": {
@@ -7539,7 +7540,7 @@
       "t_ms": 443,
       "props": {
         "check_fraction": 1,
-        "gravitation": 1.010741114616394
+        "gravitation": 1.0106159448623657
       },
       "elements": {
         "button0": {
@@ -7556,7 +7557,7 @@
       "t_ms": 444,
       "props": {
         "check_fraction": 1,
-        "gravitation": 1.0106159448623657
+        "gravitation": 1.0104907751083374
       },
       "elements": {
         "button0": {
@@ -7573,7 +7574,7 @@
       "t_ms": 445,
       "props": {
         "check_fraction": 1,
-        "gravitation": 1.0104907751083374
+        "gravitation": 1.0103654861450195
       },
       "elements": {
         "button0": {
@@ -7590,7 +7591,7 @@
       "t_ms": 446,
       "props": {
         "check_fraction": 1,
-        "gravitation": 1.0103654861450195
+        "gravitation": 1.010240077972412
       },
       "elements": {
         "button0": {
@@ -7607,7 +7608,7 @@
       "t_ms": 447,
       "props": {
         "check_fraction": 1,
-        "gravitation": 1.010240077972412
+        "gravitation": 1.0101147890090942
       },
       "elements": {
         "button0": {
@@ -7624,7 +7625,7 @@
       "t_ms": 448,
       "props": {
         "check_fraction": 1,
-        "gravitation": 1.0101147890090942
+        "gravitation": 1.0099895000457764
       },
       "elements": {
         "button0": {
@@ -7641,7 +7642,7 @@
       "t_ms": 449,
       "props": {
         "check_fraction": 1,
-        "gravitation": 1.0099895000457764
+        "gravitation": 1.009864330291748
       },
       "elements": {
         "button0": {
@@ -7658,7 +7659,7 @@
       "t_ms": 450,
       "props": {
         "check_fraction": 1,
-        "gravitation": 1.009864330291748
+        "gravitation": 1
       },
       "elements": {
         "button0": {
@@ -19572,5 +19573,5 @@
       "text": {}
     }
   ],
-  "settle_ms": 296
+  "settle_ms": 295
 }
