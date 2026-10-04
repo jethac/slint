@@ -281,10 +281,10 @@ States: active, inactive
 
 | Component | Source | Status | Issues | Needs | Notes |
 |---|---|---|---|---|---|
-| NavigationBar | NavigationBar.kt | partial | #12 | springs (#5), shapes (#6), adaptive (#12) | slint component: NavigationBar |
-| RowScope | NavigationBar.kt | missing | #11, #12 | springs (#5), shapes (#6), adaptive (#12) | - |
-| ShortNavigationBar | ShortNavigationBar.kt | missing | #12 | springs (#5), shapes (#6), adaptive (#12) | - |
-| ShortNavigationBarItem | ShortNavigationBar.kt | missing | #12 | springs (#5), shapes (#6), adaptive (#12) | - |
+| NavigationBar | NavigationBar.kt | partial | #11, #12 | adaptive (#12) | slint component: NavigationBar; tokens: generated component tokens; springs via active motion scheme |
+| RowScope | NavigationBar.kt | partial | #11, #12 | adaptive (#12) | slint component: NavigationItemTemplate (internal); the RowScope receiver has no slint equivalent |
+| ShortNavigationBar | ShortNavigationBar.kt | partial | #11, #12 | adaptive (#12) | slint component: ShortNavigationBar; tokens: generated component tokens; springs via active motion scheme |
+| ShortNavigationBarItem | ShortNavigationBar.kt | partial | #11, #12 | adaptive (#12) | slint component: ShortNavigationBarItemTemplate (internal) |
 
 ### Navigation drawer
 
@@ -345,7 +345,7 @@ States: selected, disabled, unselected, focused, hovered, pressed
 
 | Component | Source | Status | Issues | Needs | Notes |
 |---|---|---|---|---|---|
-| RadioButton | RadioButton.kt | partial | #11 | shapes (#6) | slint component: RadioButton |
+| RadioButton | RadioButton.kt | done | #11 | shapes (#6) | slint component: RadioButton; tokens: generated component tokens; RadioButtonImpl geometry — 20dp IconSize canvas, 2dp RadioButtonPadding, 2dp RadioStrokeWidth, dot radius to RadioButtonDotSize/2 on FastSpatial (androidx/androidx@23327507f7fc, material3 1.5.0-alpha18) |
 
 ### Scaffold
 

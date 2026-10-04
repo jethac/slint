@@ -93,6 +93,7 @@
   "type": "canvas",
   "widgets": [
     {
+      "always_show_label": null,
       "avatar": null,
       "body_color": null,
       "checkable": null,
@@ -110,6 +111,7 @@
       "height": null,
       "height_offset": null,
       "icon": null,
+      "icon_position": null,
       "icons": [],
       "indeterminate": null,
       "index": null,
@@ -121,6 +123,7 @@
       "leading_image": null,
       "level": null,
       "multi_select": null,
+      "nav_arrangement": null,
       "nav_icon": null,
       "overline": null,
       "peek_height": null,
@@ -158,6 +161,7 @@
       "y": 128.0
     },
     {
+      "always_show_label": null,
       "avatar": null,
       "body_color": null,
       "checkable": null,
@@ -175,6 +179,7 @@
       "height": null,
       "height_offset": null,
       "icon": null,
+      "icon_position": null,
       "icons": [],
       "indeterminate": null,
       "index": null,
@@ -186,6 +191,7 @@
       "leading_image": null,
       "level": null,
       "multi_select": null,
+      "nav_arrangement": null,
       "nav_icon": null,
       "overline": null,
       "peek_height": null,
@@ -223,6 +229,7 @@
       "y": 120.0
     },
     {
+      "always_show_label": null,
       "avatar": null,
       "body_color": null,
       "checkable": null,
@@ -240,6 +247,7 @@
       "height": null,
       "height_offset": null,
       "icon": null,
+      "icon_position": null,
       "icons": [],
       "indeterminate": null,
       "index": null,
@@ -251,6 +259,7 @@
       "leading_image": null,
       "level": null,
       "multi_select": null,
+      "nav_arrangement": null,
       "nav_icon": null,
       "overline": null,
       "peek_height": null,
@@ -288,6 +297,7 @@
       "y": 104.0
     },
     {
+      "always_show_label": null,
       "avatar": null,
       "body_color": null,
       "checkable": null,
@@ -305,6 +315,7 @@
       "height": null,
       "height_offset": null,
       "icon": null,
+      "icon_position": null,
       "icons": [],
       "indeterminate": null,
       "index": null,
@@ -316,6 +327,7 @@
       "leading_image": null,
       "level": null,
       "multi_select": null,
+      "nav_arrangement": null,
       "nav_icon": null,
       "overline": null,
       "peek_height": null,
@@ -353,6 +365,7 @@
       "y": 64.0
     },
     {
+      "always_show_label": null,
       "avatar": null,
       "body_color": null,
       "checkable": null,
@@ -370,6 +383,7 @@
       "height": null,
       "height_offset": null,
       "icon": null,
+      "icon_position": null,
       "icons": [],
       "indeterminate": null,
       "index": null,
@@ -381,6 +395,7 @@
       "leading_image": null,
       "level": null,
       "multi_select": null,
+      "nav_arrangement": null,
       "nav_icon": null,
       "overline": null,
       "peek_height": null,
@@ -418,6 +433,7 @@
       "y": 24.0
     },
     {
+      "always_show_label": null,
       "avatar": null,
       "body_color": null,
       "checkable": null,
@@ -435,6 +451,7 @@
       "height": null,
       "height_offset": null,
       "icon": null,
+      "icon_position": null,
       "icons": [],
       "indeterminate": null,
       "index": null,
@@ -446,6 +463,7 @@
       "leading_image": null,
       "level": null,
       "multi_select": null,
+      "nav_arrangement": null,
       "nav_icon": null,
       "overline": null,
       "peek_height": null,
@@ -483,6 +501,7 @@
       "y": 268.0
     },
     {
+      "always_show_label": null,
       "avatar": null,
       "body_color": null,
       "checkable": null,
@@ -500,6 +519,7 @@
       "height": null,
       "height_offset": null,
       "icon": null,
+      "icon_position": null,
       "icons": [],
       "indeterminate": null,
       "index": null,
@@ -511,6 +531,7 @@
       "leading_image": null,
       "level": null,
       "multi_select": null,
+      "nav_arrangement": null,
       "nav_icon": null,
       "overline": null,
       "peek_height": null,
@@ -548,6 +569,7 @@
       "y": 260.0
     },
     {
+      "always_show_label": null,
       "avatar": null,
       "body_color": null,
       "checkable": null,
@@ -565,6 +587,7 @@
       "height": null,
       "height_offset": null,
       "icon": null,
+      "icon_position": null,
       "icons": [],
       "indeterminate": null,
       "index": null,
@@ -576,6 +599,7 @@
       "leading_image": null,
       "level": null,
       "multi_select": null,
+      "nav_arrangement": null,
       "nav_icon": null,
       "overline": null,
       "peek_height": null,
@@ -613,6 +637,7 @@
       "y": 244.0
     },
     {
+      "always_show_label": null,
       "avatar": null,
       "body_color": null,
       "checkable": null,
@@ -630,6 +655,7 @@
       "height": null,
       "height_offset": null,
       "icon": null,
+      "icon_position": null,
       "icons": [],
       "indeterminate": null,
       "index": null,
@@ -641,6 +667,7 @@
       "leading_image": null,
       "level": null,
       "multi_select": null,
+      "nav_arrangement": null,
       "nav_icon": null,
       "overline": null,
       "peek_height": null,
@@ -678,6 +705,7 @@
       "y": 204.0
     },
     {
+      "always_show_label": null,
       "avatar": null,
       "body_color": null,
       "checkable": null,
@@ -695,6 +723,7 @@
       "height": null,
       "height_offset": null,
       "icon": null,
+      "icon_position": null,
       "icons": [],
       "indeterminate": null,
       "index": null,
@@ -706,6 +735,7 @@
       "leading_image": null,
       "level": null,
       "multi_select": null,
+      "nav_arrangement": null,
       "nav_icon": null,
       "overline": null,
       "peek_height": null,

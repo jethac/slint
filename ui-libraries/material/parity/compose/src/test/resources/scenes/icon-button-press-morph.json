@@ -117,6 +117,7 @@
   "type": "canvas",
   "widgets": [
     {
+      "always_show_label": null,
       "avatar": null,
       "body_color": null,
       "checkable": null,
@@ -134,6 +135,7 @@
       "height": null,
       "height_offset": null,
       "icon": "check",
+      "icon_position": null,
       "icons": [],
       "indeterminate": null,
       "index": null,
@@ -145,6 +147,7 @@
       "leading_image": null,
       "level": null,
       "multi_select": null,
+      "nav_arrangement": null,
       "nav_icon": null,
       "overline": null,
       "peek_height": null,

@@ -83,6 +83,7 @@
   "type": "canvas",
   "widgets": [
     {
+      "always_show_label": null,
       "avatar": null,
       "body_color": null,
       "checkable": null,
@@ -100,6 +101,7 @@
       "height": 64.0,
       "height_offset": null,
       "icon": null,
+      "icon_position": null,
       "icons": [],
       "indeterminate": null,
       "index": null,
@@ -111,6 +113,7 @@
       "leading_image": null,
       "level": null,
       "multi_select": null,
+      "nav_arrangement": null,
       "nav_icon": null,
       "overline": null,
       "peek_height": null,
@@ -148,6 +151,7 @@
       "y": 16.0
     },
     {
+      "always_show_label": null,
       "avatar": null,
       "body_color": null,
       "checkable": null,
@@ -165,6 +169,7 @@
       "height": 64.0,
       "height_offset": null,
       "icon": null,
+      "icon_position": null,
       "icons": [],
       "indeterminate": null,
       "index": null,
@@ -176,6 +181,7 @@
       "leading_image": null,
       "level": null,
       "multi_select": null,
+      "nav_arrangement": null,
       "nav_icon": null,
       "overline": null,
       "peek_height": null,
@@ -213,6 +219,7 @@
       "y": 16.0
     },
     {
+      "always_show_label": null,
       "avatar": null,
       "body_color": null,
       "checkable": null,
@@ -230,6 +237,7 @@
       "height": 64.0,
       "height_offset": null,
       "icon": null,
+      "icon_position": null,
       "icons": [],
       "indeterminate": null,
       "index": null,
@@ -241,6 +249,7 @@
       "leading_image": null,
       "level": null,
       "multi_select": null,
+      "nav_arrangement": null,
       "nav_icon": null,
       "overline": null,
       "peek_height": null,
@@ -278,6 +287,7 @@
       "y": 16.0
     },
     {
+      "always_show_label": null,
       "avatar": null,
       "body_color": null,
       "checkable": null,
@@ -295,6 +305,7 @@
       "height": 64.0,
       "height_offset": null,
       "icon": null,
+      "icon_position": null,
       "icons": [],
       "indeterminate": null,
       "index": null,
@@ -306,6 +317,7 @@
       "leading_image": null,
       "level": null,
       "multi_select": null,
+      "nav_arrangement": null,
       "nav_icon": null,
       "overline": null,
       "peek_height": null,
