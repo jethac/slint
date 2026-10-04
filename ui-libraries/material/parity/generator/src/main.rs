@@ -408,17 +408,13 @@ struct Widget {
     border_width: Option<f64>,
     #[serde(default)]
     border_color: Option<String>,
-    /// `material-surface` overloads: `clickable` (`onClick`), `selectable`
-    /// (`selected`), `toggleable` (`checked`, reuses the `checked` field).
+    /// `material-surface` overloads: `clickable` (`onClick`) and
+    /// `toggleable` (`checked`, reuses the `checked` field) — `selectable`
+    /// and `selected` are declared above with the list-item overloads.
     #[serde(default)]
     clickable: Option<bool>,
     #[serde(default)]
-    selectable: Option<bool>,
-    #[serde(default)]
     toggleable: Option<bool>,
-    /// `material-surface` `selected` on the selectable overload.
-    #[serde(default)]
-    selected: Option<bool>,
     /// What this widget deliberately gets wrong on the Slint side
     /// (`negative` scenes only). Keys shadow the widget's own fields.
     #[serde(default)]

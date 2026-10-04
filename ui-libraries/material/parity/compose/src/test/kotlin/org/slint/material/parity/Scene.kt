@@ -238,12 +238,10 @@ class Widget(json: JSONObject) {
      * (`outline` default). */
     val borderWidth: Float = json.optDouble("border_width", 0.0).toFloat()
     val borderColor: String? = (json.opt("border_color") as? String)?.takeIf { it.isNotEmpty() }
-    /** `material-surface` overloads: `clickable`/`selectable`/`toggleable`,
-     * and `selected` on the selectable one. */
+    /** `material-surface` overloads: `clickable`/`toggleable` — `selectable`
+     * and `selected` are declared above with the list-item overloads. */
     val clickable: Boolean = json.optBoolean("clickable", false)
-    val selectable: Boolean = json.optBoolean("selectable", false)
     val toggleable: Boolean = json.optBoolean("toggleable", false)
-    val selected: Boolean = json.optBoolean("selected", false)
 }
 
 /** One item of a `connected-button-group`: the label, an optional leading
