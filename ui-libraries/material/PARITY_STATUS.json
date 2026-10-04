@@ -174,24 +174,24 @@
       11
     ],
     "needs": "none",
-    "notes": "slint component: DatePickerPopup",
-    "status": "partial"
+    "notes": "slint component: DatePicker; parity cases: date_picker, date_picker_dark, date_picker_disabled, date_picker_empty, date_picker_input, negative-date-picker-{container,corner,selected-day}",
+    "status": "done"
   },
   "DatePickerDialog": {
     "issues": [
       11
     ],
     "needs": "none",
-    "notes": "slint component: DatePickerPopup",
-    "status": "partial"
+    "notes": "slint components: DatePickerDialog, DatePickerDialogContent; host of the date_picker* parity cases",
+    "status": "done"
   },
   "DateRangePicker": {
     "issues": [
       11
     ],
     "needs": "none",
-    "notes": "",
-    "status": "missing"
+    "notes": "slint component: DateRangePicker; parity cases: date_picker_range, date_picker_range_partial, date_picker_range_input, negative-date-picker-range-band",
+    "status": "done"
   },
   "DismissibleDrawerSheet": {
     "issues": [
