@@ -206,9 +206,6 @@ export global WideNavigationRailMetrics {
 /// interpolates between the top-icon (collapsed) and start-icon (expanded)
 /// layouts by `icon-position-progress`.
 component WideRailItemTemplate inherits BaseNavigationItemTemplate {
-    /// Whether the item can be interacted with.
-    in property <bool> enabled: true;
-
     /// Minimum touch target (0 when a11y enforcement is off).
     in property <length> a11y-size;
 

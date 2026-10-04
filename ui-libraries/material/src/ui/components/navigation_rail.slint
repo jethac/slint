@@ -71,7 +71,6 @@ global NavigationRailMetrics {
 /// fades in through `DefaultEffects` and grows through `FastSpatial`, which
 /// also drives the icon/label slide when `always-show-label` is off.
 component NavigationRailItemTemplate inherits BaseNavigationItemTemplate {
-    in property <bool> enabled: true;
     in property <bool> always-show-label: true;
 
     property <bool> has-label: root.text != "";
