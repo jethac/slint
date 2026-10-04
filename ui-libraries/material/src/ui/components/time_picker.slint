@@ -1459,6 +1459,7 @@ export component TimePickerDialogContent inherits Rectangle {
             text: root.dismiss_text;
             // Upstream's action `TextButton` measures at its 40dp container
             // — the 48dp touch target is not part of the dialog layout.
+            expressive: false;
             enforce_touch_target: false;
             horizontal_stretch: 0;
 
@@ -1468,6 +1469,7 @@ export component TimePickerDialogContent inherits Rectangle {
         if root.confirm_text != "" : confirm_button := TextButton {
             text: root.confirm_text;
             enabled: root.confirm_enabled;
+            expressive: false;
             enforce_touch_target: false;
             horizontal_stretch: 0;
 
@@ -1540,6 +1542,7 @@ export component VibrantTimePickerDialogContent inherits Rectangle {
 
         if root.dismiss_text != "" : TextButton {
             text: root.dismiss_text;
+            expressive: false;
             enforce_touch_target: false;
             horizontal_stretch: 0;
 
@@ -1549,6 +1552,7 @@ export component VibrantTimePickerDialogContent inherits Rectangle {
         if root.confirm_text != "" : TextButton {
             text: root.confirm_text;
             enabled: root.confirm_enabled;
+            expressive: false;
             enforce_touch_target: false;
             horizontal_stretch: 0;
 

@@ -119,6 +119,7 @@
       "corner": null,
       "count": null,
       "display_mode": null,
+      "displayed": null,
       "dragged": null,
       "elevation": null,
       "enabled": null,
@@ -176,6 +177,7 @@
       "leading_image": null,
       "level": null,
       "minute": null,
+      "months_to_show": null,
       "multi_select": null,
       "nav_arrangement": null,
       "nav_icon": null,
@@ -186,8 +188,12 @@
       "progress": null,
       "radius": null,
       "selectable": null,
+      "selectable_from": null,
+      "selectable_to": null,
       "selected": null,
+      "selected_end": null,
       "selected_index": 0,
+      "selected_start": null,
       "selection": null,
       "shape": null,
       "sheet_elevation": null,
@@ -216,7 +222,9 @@
       "width": 360.0,
       "width_option": null,
       "x": 0.0,
-      "y": 0.0
+      "y": 0.0,
+      "year_max": null,
+      "year_min": null
     },
     {
       "alignment": null,
@@ -233,6 +241,7 @@
       "corner": null,
       "count": null,
       "display_mode": null,
+      "displayed": null,
       "dragged": null,
       "elevation": null,
       "enabled": null,
@@ -290,6 +299,7 @@
       "leading_image": null,
       "level": null,
       "minute": null,
+      "months_to_show": null,
       "multi_select": null,
       "nav_arrangement": null,
       "nav_icon": null,
@@ -300,8 +310,12 @@
       "progress": null,
       "radius": null,
       "selectable": null,
+      "selectable_from": null,
+      "selectable_to": null,
       "selected": null,
+      "selected_end": null,
       "selected_index": 0,
+      "selected_start": null,
       "selection": null,
       "shape": null,
       "sheet_elevation": null,
@@ -330,7 +344,9 @@
       "width": 360.0,
       "width_option": null,
       "x": 0.0,
-      "y": 80.0
+      "y": 80.0,
+      "year_max": null,
+      "year_min": null
     }
   ]
 }

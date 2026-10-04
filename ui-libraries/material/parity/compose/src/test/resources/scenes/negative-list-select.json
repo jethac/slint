@@ -98,6 +98,7 @@
       "corner": null,
       "count": null,
       "display_mode": null,
+      "displayed": null,
       "dragged": null,
       "elevation": null,
       "enabled": null,
@@ -121,6 +122,7 @@
       "leading_image": null,
       "level": null,
       "minute": null,
+      "months_to_show": null,
       "multi_select": null,
       "nav_arrangement": null,
       "nav_icon": null,
@@ -131,8 +133,12 @@
       "progress": null,
       "radius": null,
       "selectable": true,
+      "selectable_from": null,
+      "selectable_to": null,
       "selected": true,
+      "selected_end": null,
       "selected_index": null,
+      "selected_start": null,
       "selection": null,
       "shape": null,
       "sheet_elevation": null,
@@ -164,7 +170,9 @@
       "width": 208.0,
       "width_option": null,
       "x": 16.0,
-      "y": 20.0
+      "y": 20.0,
+      "year_max": null,
+      "year_min": null
     }
   ]
 }

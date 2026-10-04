@@ -26,6 +26,12 @@ export component TextButton {
     /// the parity harness's per-widget state hook.
     in property <bool> simulate_hover;
     in property <bool> simulate_press;
+    /// `false` selects the stable `TextButton` overload (Button.kt):
+    /// fixed `TextButtonContentPadding` 12x8 and a constant
+    /// `ContainerShapeRound` — no pressed morph. Upstream dialogs, menus
+    /// and pickers all use the stable overload; `true` (default) is the
+    /// expressive `TextButton(shapes)` overload the button scenes exercise.
+    in property <bool> expressive: true;
 
     callback clicked <=> base.clicked;
 
@@ -56,7 +62,8 @@ export component TextButton {
 
         container_height: MaterialButtonMetrics.container-height(root.size);
         resting_radius: MaterialButtonMetrics.resting-radius(root.size, root.button_shape, self.container_height);
-        pressed_radius: MaterialButtonMetrics.pressed-radius(root.size, false);
+        pressed_radius: root.expressive ? MaterialButtonMetrics.pressed-radius(root.size, false)
+            : MaterialButtonMetrics.resting-radius(root.size, root.button_shape, self.container_height);
         checked_radius: MaterialButtonMetrics.checked-radius(root.size);
         min_button_width: 58px; // `ButtonDefaults.MinWidth`
 
@@ -74,15 +81,11 @@ export component TextButton {
 
         text: root.text;
         icon: root.icon;
-        // `ButtonDefaults.TextButtonContentPadding` is a Kotlin constant,
-        // not the size tokens: `TextButtonHorizontalPadding` 12dp
-        // horizontally and `ContentPadding`'s `ButtonVerticalPadding` 8dp
-        // vertically (Button.kt, androidx/androidx@23327507).
-        // With an icon upstream swaps in `TextButtonWithIconContentPadding`
-        // — same 12dp start, `TextButtonWithIconHorizontalEndPadding` 16dp end.
-        padding_horizontal: 12px;
-        padding_end: root.icon.width > 0 ? 4px : 0px;
-        padding_vertical: 8px;
+        // Expressive: `contentPaddingFor(h)` bucket padding. Stable:
+        // `TextButtonContentPadding` = 12 horizontal x `ButtonVerticalPadding`
+        // 8 vertical (Button.kt).
+        padding_horizontal: root.expressive ? MaterialButtonMetrics.horizontal-padding(root.size) : 12px;
+        padding_vertical: root.expressive ? MaterialButtonMetrics.vertical-padding(root.size) : 8px;
         icon_size: MaterialButtonMetrics.icon-size(root.size);
         icon_spacing: MaterialButtonMetrics.icon-spacing(root.size);
         label_style: MaterialButtonMetrics.label-style(root.size, false);
