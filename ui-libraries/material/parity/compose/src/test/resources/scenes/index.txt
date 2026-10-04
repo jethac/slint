@@ -46,10 +46,13 @@ list-select-morph
 list-states
 loading-indicator-motion
 loading-indicator-states
+modal-navigation-rail
 modal-scrim-dismiss
 navigation-bar-select-morph
 navigation-bars-start-icons
 navigation-bars
+navigation-rail-labels
+navigation-rails
 negative-badge-offset
 negative-badge-text
 negative-button-focus-ring
@@ -76,8 +79,10 @@ negative-icon-offset
 negative-list-segmented
 negative-list-select
 negative-navigation-bar
+negative-navigation-rail
 negative-press-overlay
 negative-radius
+negative-rail-indicator
 negative-recolor
 negative-shape-fit
 negative-shape-leak
@@ -128,3 +133,5 @@ switch-states
 toggle-buttons
 toggle-select-morph
 top-app-bars
+wide-navigation-rail-arrangements
+wide-navigation-rail-expand
