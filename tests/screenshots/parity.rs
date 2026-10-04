@@ -1728,8 +1728,8 @@ fn build_frame_mask<C: i_slint_core::api::ComponentHandle>(
     // measured text width — an outlined field's label-notch edge lands at
     // `label bounds + 4dp`, outside the built-in 2px when the engines'
     // glyph metrics disagree by a fraction of a px.
-    let text_ink_dilate =
-        (if xfail_text { 2.0 + 4.0 * d } else { 2.0 }) + text_dilate * d;
+    let base_dilate = if xfail_text { 2.0 + 4.0 * d } else { 2.0 };
+    let text_ink_dilate = base_dilate + text_dilate * d;
     for kind in ["Text", "TextInput"] {
         for handle in i_slint_backend_testing::ElementQuery::from_root(component)
             .match_inherits(kind)
@@ -1765,7 +1765,7 @@ fn build_frame_mask<C: i_slint_core::api::ComponentHandle>(
                 x1: (p.x + s.width) as f64 * d,
                 y1: (p.y + s.height) as f64 * d,
             }
-            .dilated(text_dilate),
+            .dilated(base_dilate),
             PixelClass::Text,
         );
     }
@@ -1778,7 +1778,7 @@ fn build_frame_mask<C: i_slint_core::api::ComponentHandle>(
                 continue;
             };
             mask.fill_rect(
-                PxRect { x0: x * d, y0: y * d, x1: (x + w) * d, y1: (y + h) * d }.dilated(text_dilate),
+                PxRect { x0: x * d, y0: y * d, x1: (x + w) * d, y1: (y + h) * d }.dilated(base_dilate),
                 PixelClass::Text,
             );
         }
