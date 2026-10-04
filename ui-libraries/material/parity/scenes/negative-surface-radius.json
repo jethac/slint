@@ -1,0 +1,41 @@
+{
+    "name": "negative-surface-radius",
+    "type": "canvas",
+    "parity": "negative",
+    "size": [
+        160,
+        96
+    ],
+    "densities": [
+        1
+    ],
+    "theme": {
+        "seed": "6750A4",
+        "variant": "tonal-spot",
+        "spec": "spec2025",
+        "platform": "phone",
+        "dark": false,
+        "contrast": 0.0
+    },
+    "fonts": {
+        "plain": "Roboto",
+        "brand": "Roboto"
+    },
+    "widgets": [
+        {
+            "kind": "material-surface",
+            "x": 24,
+            "y": 24,
+            "width": 112,
+            "height": 48,
+            "radius": 24,
+            "slint_overrides": {
+                "radius": 4
+            },
+            "tonal_elevation": 3
+        }
+    ],
+    "trace_elements": [],
+    "trace_props": [],
+    "negative_note": "The Slint side draws 4px corners where the scene asks for 24px \u2014 the comparator must flag the untinted corners against the tinted rect."
+}

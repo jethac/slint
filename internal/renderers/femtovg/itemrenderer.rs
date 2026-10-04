@@ -835,9 +835,20 @@ impl<'a, R: femtovg::Renderer + TextureImporter> ItemRenderer for GLItemRenderer
         }
         let outline = shadow_item.element_outline();
 
-        // The canvas transform already maps item space to device pixels.
+        // The canvas transform maps item space to device pixels but carries
+        // no scale: this renderer multiplies path geometry by scale_factor
+        // itself and keeps the transform translate-only (see
+        // `align_canvas_during`). Compose the scale into the ctm's linear
+        // part so the masks rasterize at device resolution.
         let [a, b, c, d, e, f] = self.canvas.borrow().transform().0;
-        let ctm = shadow::Affine::new(a, b, c, d, e, f);
+        let ctm = shadow::Affine::new(
+            a * scale_factor,
+            b * scale_factor,
+            c * scale_factor,
+            d * scale_factor,
+            e,
+            f,
+        );
 
         let adapter = i_slint_core::window::WindowInner::from_pub(self.window).window_adapter();
         let (light, light_radius) = shadow::elevation_light(
@@ -854,7 +865,6 @@ impl<'a, R: femtovg::Renderer + TextureImporter> ItemRenderer for GLItemRenderer
             light_radius,
             caster_alpha < 1.,
         );
-
         for (layer, color) in [(masks.ambient, ambient_color), (masks.spot, spot_color)].into_iter()
         {
             let Some(layer) = layer else { continue };
