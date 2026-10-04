@@ -1,0 +1,130 @@
+---
+title: Surface
+description: Surface API.
+---
+
+import CodeSnippetMD from '@slint/common-files/src/components/CodeSnippetMD.astro';
+import SlintProperty from '@slint/common-files/src/components/SlintProperty.astro';
+
+<CodeSnippetMD imagePath="/src/assets/generated/surface.png" scale="3" imageWidth="300" imageHeight="140" imageAlt="">
+```slint
+import { Surface, MaterialText, MaterialPalette } from "@material";
+export component Example inherits Window {
+    width: 240px;
+    height: 120px;
+
+    HorizontalLayout {
+        padding: 12px;
+        spacing: 12px;
+        alignment: space-evenly;
+
+        Surface {
+            width: 96px;
+            height: 96px;
+            tonal_elevation: 2px;
+            MaterialText { text: "Tonal"; }
+        }
+
+        Surface {
+            width: 96px;
+            height: 96px;
+            border_radius: 16px;
+            border_width: 1px;
+            border_color: MaterialPalette.outline;
+            MaterialText { text: "Outlined"; }
+        }
+    }
+}
+```
+</CodeSnippetMD>
+
+A surface is the container metaphor — a shape-clipped background that other
+components draw on. It mirrors `Surface` in `Surface.kt` upstream: a `color`
+that picks up `surface_tint` through `tonal_elevation`, an optional
+ambient+spot `shadow_elevation`, an optional `border` stroke, and three
+interactive overloads (`onClick`, `selected`, `checked`) expressed here as
+the `clickable`, `selectable` and `toggleable` properties.
+
+## Surface Properties
+
+### color
+<SlintProperty propName="color" typeName="color" defaultValue="MaterialPalette.surface">
+The background color — `ColorScheme.surface` by default. While `color` is
+`surface` and `tonal_elevation_enabled` is set, the painted fill shifts
+toward `surface_tint` by `(4.5 * ln(absolute_elevation + 1) + 2) / 100` —
+the upstream `ColorScheme.surfaceColorAtElevation` formula. Any other
+`color` renders verbatim.
+</SlintProperty>
+
+### content_color
+<SlintProperty propName="content_color" typeName="color" defaultValue="content-color-for(color) or on_surface">
+The default color for content drawn on this surface — upstream's
+`contentColorFor(color)` (or `LocalContentColor` where the scheme has no
+match; Slint has no composition locals, so the fallback is `on_surface`).
+Its `out` value is the resolved default — children bind
+`surface.content_color` to follow it. The state layer and ripple also draw
+in this color.
+</SlintProperty>
+
+### tonal_elevation
+<SlintProperty propName="tonal_elevation" typeName="length" defaultValue="0px">
+The tonal elevation in dp. The effective tint key is
+`absolute_tonal_elevation` (`parent_absolute_tonal_elevation +
+tonal_elevation`), matching upstream's `LocalAbsoluteTonalElevation` —
+a nested Surface adds its own elevation to the ambient value its parent
+provides.
+</SlintProperty>
+
+### parent_absolute_tonal_elevation
+<SlintProperty propName="parent_absolute_tonal_elevation" typeName="length" defaultValue="0px">
+Stands in for the ambient `LocalAbsoluteTonalElevation` — a Surface nested
+inside another binds `parent.absolute_tonal_elevation` here.
+</SlintProperty>
+
+### tonal_elevation_enabled
+<SlintProperty propName="tonal_elevation_enabled" typeName="bool" defaultValue="true">
+`LocalTonalElevationEnabled` upstream — `false` renders `color` verbatim at
+any elevation.
+</SlintProperty>
+
+### shadow_elevation
+<SlintProperty propName="shadow_elevation" typeName="length" defaultValue="0px">
+The ambient+spot shadow cast below the surface (`shadowElevation`
+upstream). `0` casts nothing.
+</SlintProperty>
+
+### border_width / border_color
+<SlintProperty propName="border_width" typeName="length" defaultValue="0px">
+The `BorderStroke` width and color — the border draws on top of the
+background, inside the shape.
+</SlintProperty>
+
+### border_radius / corners / shaped_corners
+<SlintProperty propName="border_radius" typeName="length" defaultValue="0px">
+The `shape` as a uniform corner radius (`RectangleShape` upstream at `0`).
+Per-corner radii come from `corners` (`MaterialCornerRadii`) while
+`shaped_corners` is set.
+</SlintProperty>
+
+### clickable / selectable / selected / toggleable / checked
+<SlintProperty propName="clickable" typeName="bool" defaultValue="false">
+The interactive overloads: `clickable` maps to `Surface(onClick = …)`,
+`selectable` to `Surface(selected, onClick = …)` (the caller owns
+`selected`), `toggleable` to `Surface(checked, onCheckedChange = …)` —
+`checked` flips on activation, then `clicked` fires. Interactive surfaces
+claim the 48dp `minimumInteractiveComponentSize`, draw the `content_color`
+state layer and ripple, show a focus ring while focused, and are reachable
+via keyboard and the default accessibility action.
+</SlintProperty>
+
+### enabled
+<SlintProperty propName="enabled" typeName="bool" defaultValue="true">
+`enabled` on the interactive overloads.
+</SlintProperty>
+
+## Usage
+
+Use `Surface` where upstream Compose would reach for `Surface`: as the
+foundation under cards, sheets, bars and dialogs, or directly for a tinted,
+bordered or clickable container. Non-interactive surfaces still claim the
+pointer over their bounds (`pointerInput(Unit) {}` upstream).

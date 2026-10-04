@@ -524,6 +524,7 @@ msgctx
 msgctxt
 msgfmt
 msgmerge
+msurface
 mstar
 mult
 multisample
@@ -886,6 +887,7 @@ unioning
 Unitless
 unittests
 unmaximize
+untinted
 UNORM
 unpark
 unparseable

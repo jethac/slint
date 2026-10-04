@@ -261,6 +261,19 @@ class Widget(json: JSONObject) {
      * platform shadows deadlock layoutlib and shadow parity lives in the
      * elevation scenes). */
     val sheetElevation: Int = json.optInt("sheet_elevation", -1)
+    /** `material-surface`: upstream `tonalElevation` in dp. */
+    val tonalElevation: Float = json.optDouble("tonal_elevation", 0.0).toFloat()
+    /** `material-surface`: the ambient `LocalAbsoluteTonalElevation` a parent
+     * Surface would provide (dp). */
+    val parentElevation: Float = json.optDouble("parent_elevation", 0.0).toFloat()
+    /** `material-surface`: `BorderStroke` width (dp) + palette-role color
+     * (`outline` default). */
+    val borderWidth: Float = json.optDouble("border_width", 0.0).toFloat()
+    val borderColor: String? = (json.opt("border_color") as? String)?.takeIf { it.isNotEmpty() }
+    /** `material-surface` overloads: `clickable`/`toggleable` — `selectable`
+     * and `selected` are declared above with the list-item overloads. */
+    val clickable: Boolean = json.optBoolean("clickable", false)
+    val toggleable: Boolean = json.optBoolean("toggleable", false)
 }
 
 /** One item of a `connected-button-group`: the label, an optional leading
