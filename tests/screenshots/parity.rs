@@ -59,8 +59,7 @@ fn parse_item_ref(id: &str) -> Option<(String, usize)> {
         return None;
     }
     let (stem, num) = id.split_at(id.len() - digits);
-    let container =
-        stem.strip_suffix("item").or_else(|| stem.strip_suffix("action"))?;
+    let container = stem.strip_suffix("item").or_else(|| stem.strip_suffix("action"))?;
     if container.is_empty() {
         return None;
     }
@@ -1798,7 +1797,8 @@ fn build_frame_mask<C: i_slint_core::api::ComponentHandle>(
                 continue;
             };
             mask.fill_rect(
-                PxRect { x0: x * d, y0: y * d, x1: (x + w) * d, y1: (y + h) * d }.dilated(text_dilate),
+                PxRect { x0: x * d, y0: y * d, x1: (x + w) * d, y1: (y + h) * d }
+                    .dilated(text_dilate),
                 PixelClass::Text,
             );
         }
@@ -2120,13 +2120,10 @@ pub fn run_parity_case<C: i_slint_core::api::ComponentHandle>(
     // `//XFAIL_TEXT=` may scope itself to the drivers whose rasterizer
     // differs from the expected frames' (layoutlib is skia) — elsewhere it
     // stays inert so the marker never reads stale there.
-    let xfail_text = spec
-        .xfail_text
-        .as_deref()
-        .filter(|_| {
-            spec.xfail_text_renderers.is_empty()
-                || spec.xfail_text_renderers.iter().any(|d| d.as_str() == driver)
-        });
+    let xfail_text = spec.xfail_text.as_deref().filter(|_| {
+        spec.xfail_text_renderers.is_empty()
+            || spec.xfail_text_renderers.iter().any(|d| d.as_str() == driver)
+    });
     for (di, density) in spec.densities.iter().enumerate() {
         let component = make_instance(*density);
 
