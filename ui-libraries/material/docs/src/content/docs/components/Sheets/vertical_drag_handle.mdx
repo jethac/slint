@@ -1,0 +1,74 @@
+---
+title: VerticalDragHandle
+description: VerticalDragHandle API.
+---
+
+import CodeSnippetMD from '@slint/common-files/src/components/CodeSnippetMD.astro';
+import SlintProperty from '@slint/common-files/src/components/SlintProperty.astro';
+
+<CodeSnippetMD imagePath="/src/assets/generated/verticaldraghandle.png" scale="3" imageWidth="200" imageHeight="120" imageAlt="">
+```slint
+import { VerticalDragHandle } from "@material";
+export component Example inherits Window {
+    width: 200px;
+    height: 120px;
+    background: transparent;
+    VerticalDragHandle {
+        x: 76px;
+        y: 36px;
+    }
+}
+```
+</CodeSnippetMD>
+
+A `VerticalDragHandle` is the pane-expansion handle from `DragHandle.kt` — not the sheet's drag
+strip. It's a 48 dp touch target containing a `corner_full` pill that swells to its pressed/dragged
+token size while held. Drag it horizontally past the touch slop and it reports `moved` deltas for
+the host to resize the split (for example in a list-detail layout).
+
+## Properties
+
+### color
+<SlintProperty propName="color" typeName="color" defaultValue="DragHandleTokens.color">
+The pill's resting fill color.
+</SlintProperty>
+
+### dragged-color
+<SlintProperty propName="dragged-color" typeName="color" defaultValue="DragHandleTokens.dragged_color">
+The pill's fill while dragged.
+</SlintProperty>
+
+### pressed-color
+<SlintProperty propName="pressed-color" typeName="color" defaultValue="DragHandleTokens.pressed_color">
+The pill's fill while pressed.
+</SlintProperty>
+
+### state-layer-color
+<SlintProperty propName="state-layer-color" typeName="color" defaultValue="#000">
+The ink color of the pressed/dragged state layer — the `LocalContentColor` feeding upstream's
+`ripple()` indication.
+</SlintProperty>
+
+## State
+
+### pressed / dragged / active
+<SlintProperty propName="pressed" typeName="bool" propertyVisibility="out">
+`pressed` tracks the pointer hold (or `simulate-press`), `dragged` is true once the pointer moved
+past the 8 px gesture threshold (or `simulate-drag`), and `active` is their union — the state
+driving the pill's size, shape and color.
+</SlintProperty>
+
+### handle-width / handle-height
+<SlintProperty propName="handle-width" typeName="length" propertyVisibility="out">
+The pill size for the current state — `DragHandleTokens` per-state sizes, dragged winning over
+pressed.
+</SlintProperty>
+
+## Callbacks
+
+### moved(delta: length)
+Invoked while dragged with each horizontal pointer delta — forward it to the pane being resized.
+
+### pressed-changed(pressed: bool)
+`isPressed`-style press notifications.
+</content>
