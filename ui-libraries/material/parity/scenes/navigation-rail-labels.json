@@ -1,0 +1,47 @@
+{
+    "name": "navigation-rail-labels",
+    "type": "canvas",
+    "parity": "static",
+    "size": [260, 420],
+    "densities": [1, 2],
+    "theme": {
+        "seed": "6750A4",
+        "variant": "tonal-spot",
+        "spec": "spec2025",
+        "platform": "phone",
+        "dark": false,
+        "contrast": 0.0
+    },
+    "fonts": {
+        "plain": "Roboto",
+        "brand": "Roboto"
+    },
+    "widgets": [
+        {
+            "kind": "navigation-rail",
+            "x": 0, "y": 0, "height": 420,
+            "always_show_label": false,
+            "selected_index": 1,
+            "rail_items": [
+                { "text": "Inbox", "icon": "check" },
+                { "text": "Sent", "icon": "schedule" },
+                { "text": "Files", "icon": "keyboard" },
+                { "text": "Trash", "icon": "close" }
+            ]
+        },
+        {
+            "kind": "navigation-rail",
+            "x": 120, "y": 0, "height": 420,
+            "always_show_label": true,
+            "selected_index": 0,
+            "rail_items": [
+                { "text": "", "icon": "check" },
+                { "text": "", "icon": "schedule" },
+                { "text": "", "icon": "keyboard", "enabled": false },
+                { "text": "", "icon": "close" }
+            ]
+        }
+    ],
+    "trace_elements": ["rail0", "rail1"],
+    "trace_props": []
+}

@@ -1,0 +1,62 @@
+{
+  "densities": [
+    1
+  ],
+  "fonts": {
+    "brand": "Roboto",
+    "plain": "Roboto"
+  },
+  "name": "negative-navigation-rail",
+  "negative_note": "the Slint rail keeps `expanded: false` while the reference expands \u2014 a rail that ignores its state must fail",
+  "parity": "negative",
+  "size": [
+    360,
+    420
+  ],
+  "theme": {
+    "contrast": 0.0,
+    "dark": false,
+    "platform": "phone",
+    "seed": "6750A4",
+    "spec": "spec2025",
+    "variant": "tonal-spot"
+  },
+  "trace_elements": [
+    "rail0"
+  ],
+  "trace_props": [],
+  "type": "canvas",
+  "widgets": [
+    {
+      "expanded": true,
+      "fab_icon": "edit",
+      "height": 420,
+      "rail_items": [
+        {
+          "icon": "check",
+          "text": "WAV"
+        },
+        {
+          "icon": "schedule",
+          "text": "Sent"
+        },
+        {
+          "icon": "keyboard",
+          "text": "Files"
+        },
+        {
+          "icon": "close",
+          "text": "Trash"
+        }
+      ],
+      "kind": "wide-navigation-rail",
+      "nav_icon": "menu",
+      "selected_index": 0,
+      "slint_overrides": {
+        "expanded": false
+      },
+      "x": 0,
+      "y": 0
+    }
+  ]
+}

@@ -1,0 +1,102 @@
+---
+title: ModalWideNavigationRail
+description: ModalWideNavigationRail API.
+---
+
+import CodeSnippetMD from '@slint/common-files/src/components/CodeSnippetMD.astro';
+import SlintProperty from '@slint/common-files/src/components/SlintProperty.astro';
+
+<CodeSnippetMD imagePath="/src/assets/generated/modalwidenavigationrail.png" scale="3" imageWidth="300" imageHeight="200" imageAlt="">
+```slint
+import { ModalWideNavigationRail } from "@material";
+export component Example inherits Window {
+    width: 400px;
+    height: 300px;
+    background: transparent;
+    ModalWideNavigationRail {
+        height: parent.height;
+        has-menu: true;
+        items: [
+            { icon: @image-url("../icons/share.svg"), text: "Home" },
+            { icon: @image-url("../icons/search.svg"), text: "Search" }
+        ];
+    }
+}
+```
+</CodeSnippetMD>
+
+A `ModalWideNavigationRail` shows a collapsed rail inline; when expanded, the expanded rail opens above the app's content as a dismissible sheet on a scrim — blocking interaction with the rest of the window until dismissed by a scrim tap, a horizontal drag, or `collapse()`.
+
+With `hide-on-collapse`, there is no inline collapsed rail: `expanded` toggles the sheet directly.
+
+## Properties
+
+### arrangement
+<SlintProperty propName="arrangement" typeName="enum" enumName="NavigationRailArrangement">
+How the item column is distributed inside the rail. Defaults to `top`.
+</SlintProperty>
+
+### current-index
+<SlintProperty propName="current-index" typeName="int" propertyVisibility="in-out">
+The index of the currently selected navigation item.
+</SlintProperty>
+
+### expanded
+<SlintProperty propName="expanded" typeName="bool" propertyVisibility="in-out">
+The rail's target expansion state — `true` opens the modal sheet, `false` closes it.
+</SlintProperty>
+
+### fab-icon
+<SlintProperty propName="fab-icon" typeName="image">
+The icon for the floating action button in the header.
+</SlintProperty>
+
+### has-menu
+<SlintProperty propName="has-menu" typeName="bool">
+Whether to show a menu button at the top of the rail.
+</SlintProperty>
+
+### hide-on-collapse
+<SlintProperty propName="hide-on-collapse" typeName="bool">
+Whether the rail slides offscreen when it collapses instead of staying visible as a collapsed rail — the dismissible variant upstream.
+</SlintProperty>
+
+### items
+<SlintProperty propName="items" typeName="[struct]" structName="NavigationItem">
+An array of navigation items to display in the rail.
+</SlintProperty>
+
+### position-progress
+<SlintProperty propName="position-progress" typeName="float" propertyVisibility="out">
+The modal position state: 0 while a collapsed rail is shown inline, 1 once the sheet is fully out.
+</SlintProperty>
+
+### sheet-progress
+<SlintProperty propName="sheet-progress" typeName="float" propertyVisibility="out">
+The sheet's live position: 1 once the popup is live and expanded, animating to 0 while dismissed.
+</SlintProperty>
+
+## Callbacks
+
+### index-changed(index: int)
+Invoked when the `current-index` changes.
+
+### menu-clicked()
+Invoked when the menu button is clicked.
+
+### fab-clicked()
+Invoked when the floating action button is clicked.
+
+## Functions
+
+### expand()
+Opens the modal sheet.
+
+### collapse()
+Closes the modal sheet.
+
+### toggle()
+Toggles between the expanded and collapsed states.
+
+### dismiss-via-slide()
+Dismisses the sheet with the slide-out animation — the drag-dismiss end state.

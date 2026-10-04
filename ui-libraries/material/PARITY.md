@@ -312,11 +312,11 @@ States: active, focused, hovered, pressed, inactive
 
 | Component | Source | Status | Issues | Needs | Notes |
 |---|---|---|---|---|---|
-| ModalWideNavigationRail | WideNavigationRail.kt | missing | #12 | springs (#5), adaptive (#12) | - |
-| NavigationRail | NavigationRail.kt | partial | #12 | springs (#5), adaptive (#12) | slint component: NavigationRail |
-| NavigationRailItem | NavigationRail.kt | partial | #12 | springs (#5), adaptive (#12) | slint component: NavigationItemTemplate |
-| WideNavigationRail | WideNavigationRail.kt | missing | #12 | springs (#5), adaptive (#12) | - |
-| WideNavigationRailItem | WideNavigationRail.kt | missing | #12 | springs (#5), adaptive (#12) | - |
+| ModalWideNavigationRail | WideNavigationRail.kt | partial | #11, #12 | adaptive (#12) | slint component: ModalWideNavigationRail; tokens: generated component tokens; springs via active motion scheme |
+| NavigationRail | NavigationRail.kt | partial | #11, #12 | adaptive (#12) | slint component: NavigationRail; tokens: generated component tokens |
+| NavigationRailItem | NavigationRail.kt | partial | #11, #12 | adaptive (#12) | slint component: NavigationItemTemplate |
+| WideNavigationRail | WideNavigationRail.kt | partial | #11, #12 | adaptive (#12) | slint component: WideNavigationRail; tokens: generated component tokens; springs via active motion scheme |
+| WideNavigationRailItem | WideNavigationRail.kt | partial | #11, #12 | adaptive (#12) | slint component: WideRailItemTemplate (internal) |
 
 ### Progress indicators
 

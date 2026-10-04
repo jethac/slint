@@ -66,8 +66,15 @@ export {
     ShortNavigationBarArrangement,
     NavigationItemIconPosition,
 } from "./ui/components/navigation_bar.slint";
+// Deprecated upstream: the wide navigation rail replaces the navigation
+// drawer. Kept for compatibility; new code should use the rail components.
 export { NavigationDrawer, ModalNavigationDrawer } from "./ui/components/navigation_drawer.slint";
 export { NavigationRail } from "./ui/components/navigation_rail.slint";
+export {
+    WideNavigationRail,
+    ModalWideNavigationRail,
+    NavigationRailArrangement,
+} from "./ui/components/wide_navigation_rail.slint";
 export { CircularProgressIndicator, LinearProgressIndicator } from "./ui/components/progress_indicator.slint";
 export { ContainedLoadingIndicator, LoadingIndicator } from "./ui/components/loading_indicator.slint";
 export { RadioButton, RadioButtonTile } from "./ui/components/radio_button.slint";

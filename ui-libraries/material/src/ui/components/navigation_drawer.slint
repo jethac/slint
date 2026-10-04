@@ -144,6 +144,11 @@ component NavigationGroupTemplate {
     }
 }
 
+/// Deprecated in the Material 3 Expressive navigation model: the expanded
+/// `WideNavigationRail` replaces the standard navigation drawer
+/// (`NavigationDrawer` in Compose is no longer part of the M3E guidance).
+/// Use `WideNavigationRail` with `expanded` for the standard drawer role and
+/// `ModalWideNavigationRail` for the modal one.
 export component NavigationDrawer inherits Drawer {
     callback selected(group-index: int, item-index: int);
     callback item_pointer_event(group_index: int, item_index: int, event: PointerEvent, position: Point);
@@ -181,6 +186,8 @@ export component NavigationDrawer inherits Drawer {
     }
 }
 
+/// Deprecated in the Material 3 Expressive navigation model: replaced by
+/// `ModalWideNavigationRail`, which shows the expanded rail on a scrim.
 export component ModalNavigationDrawer inherits ModalDrawer {
     callback selected(group-index: int, item-index: int);
     callback item_pointer_event(group_index: int, item_index: int, event: PointerEvent, position: Point);
