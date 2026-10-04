@@ -42,5 +42,7 @@
       "kind": "time-picker",
       "minute": 45
     }
-  ]
+  ],
+  "parity_eps": 12,
+  "parity_eps_reason": "llvmpipe coverage rasterization lands the dial circle's flattest bottom arc ~9-10 channels off the Compose reference on 2-6 edge pixels at 2x; skia/software/vello_cpu match within the default 8 - AA sampling noise on a near-horizontal curve, not geometry"
 }

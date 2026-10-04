@@ -4,6 +4,8 @@
 // Scene: time-picker-12h — generated from `ui-libraries/material/parity/scenes/time-picker-12h.json`
 // (edit the scene, regenerate with `cargo run -p material-parity-generator`).
 //PARITY=static
+// llvmpipe coverage rasterization lands the dial circle's flattest bottom arc ~9-10 channels off the Compose reference on 2-6 edge pixels at 2x; skia/software/vello_cpu match within the default 8 - AA sampling noise on a near-horizontal curve, not geometry
+//PARITY_EPS=12
 //SIZE=400x560
 //TRACE_ELEMENTS=picker0
 //MASK_DECOR=picker0+4@2000
