@@ -116,6 +116,7 @@
       "gestures": null,
       "height": null,
       "height_offset": null,
+      "hide_on_collapse": null,
       "icon": null,
       "icon_position": null,
       "icons": [
@@ -145,6 +146,7 @@
       "position": null,
       "progress": null,
       "radius": null,
+      "rail_items": [],
       "selectable": null,
       "selectable_from": null,
       "selectable_to": null,
@@ -220,6 +222,7 @@
       "gestures": null,
       "height": null,
       "height_offset": null,
+      "hide_on_collapse": null,
       "icon": null,
       "icon_position": null,
       "icons": [
@@ -248,6 +251,7 @@
       "position": null,
       "progress": null,
       "radius": null,
+      "rail_items": [],
       "selectable": null,
       "selectable_from": null,
       "selectable_to": null,
@@ -322,6 +326,7 @@
       "gestures": null,
       "height": null,
       "height_offset": null,
+      "hide_on_collapse": null,
       "icon": null,
       "icon_position": null,
       "icons": [
@@ -351,6 +356,7 @@
       "position": null,
       "progress": null,
       "radius": null,
+      "rail_items": [],
       "selectable": null,
       "selectable_from": null,
       "selectable_to": null,
@@ -425,6 +431,7 @@
       "gestures": null,
       "height": null,
       "height_offset": null,
+      "hide_on_collapse": null,
       "icon": null,
       "icon_position": null,
       "icons": [
@@ -454,6 +461,7 @@
       "position": null,
       "progress": null,
       "radius": null,
+      "rail_items": [],
       "selectable": null,
       "selectable_from": null,
       "selectable_to": null,

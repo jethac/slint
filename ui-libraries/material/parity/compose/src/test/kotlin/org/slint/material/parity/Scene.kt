@@ -159,20 +159,12 @@ class Widget(json: JSONObject) {
     val trailingIcons: List<String> =
         json.optJSONArray("trailing_icons")?.let { a -> (0 until a.length()).map(a::getString) }
             ?: emptyList()
-    /** `*FloatingToolbar` FAB icon stem (the `floatingActionButton` slot). */
-    val fabIcon: String? = (json.opt("fab_icon") as? String)?.takeIf { it.isNotEmpty() }
-    /** FAB slot position: `start`/`end` horizontal, `top`/`bottom` vertical. */
+    /** FAB slot position on a `*FloatingToolbar`: `start`/`end` horizontal,
+     * `top`/`bottom` vertical. */
     val fabPosition: String? =
         (json.opt("fab_position") as? String)?.takeIf { it.isNotEmpty() }
-    /** Expansion state — `*FloatingToolbar`'s `expanded` input and
-     * `extended-fab`'s `expanded` upstream. */
-    val expanded: Boolean = json.optBoolean("expanded", true)
     /** `FloatingToolbarColorStyle` — `standard` (default) or `vibrant`. */
     val colorStyle: String = (json.opt("color_style") as? String) ?: "standard"
-    /** `flexible-bottom-app-bar` arrangement: `space-between` (default) or
-     * `spaced` (the `FlexibleFixedHorizontalArrangement` token spacing). */
-    val arrangement: String =
-        (json.opt("arrangement") as? String) ?: "space-between"
     /** `flexible-bottom-app-bar` item gap for the `spaced` arrangement. */
     val spacing: Float = json.optDouble("spacing", 32.0).toFloat()
     /** `flexible-bottom-app-bar` `expandedHeight` — `0` uses the default. */
@@ -195,8 +187,13 @@ class Widget(json: JSONObject) {
     /** Groups: every item carries its own checked state instead of one
      * [selectedIndex]. */
     val multiSelect: Boolean = json.optBoolean("multi_select", false)
-    /** Single-select groups: the checked item (`-1` selects none). */
-    val selectedIndex: Int = json.optInt("selected_index", -1)
+    /** Single-select groups: the checked item (`-1` selects none); for
+     * rails, the selected item index (`current-index` on the Slint side). */
+    val selectedIndex: Int = json.optInt("selected_index", if (kind.contains("rail")) 0 else -1)
+    /** `extended-fab` expansion state (`expanded` upstream); for rails,
+     * `WideNavigationRailValue` — expanded when true, collapsed when false.
+     * Also `*FloatingToolbar`'s `expanded` input (`false` starts collapsed). */
+    val expanded: Boolean = json.optBoolean("expanded", if (kind.contains("rail")) false else true)
     /** `fab`/`extended-fab` visibility — `visible` on
      * `Modifier.animateFloatingActionButton` upstream. */
     val shown: Boolean = json.optBoolean("shown", true)
@@ -243,6 +240,28 @@ class Widget(json: JSONObject) {
      * unset; `0` is the upstream `Dp.Hairline` (one physical pixel). */
     val thickness: Float = json.optDouble("thickness", 1.0).toFloat()
 
+    // --- navigation-rail kinds (`navigation-rail`, `wide-navigation-rail`,
+    // `modal-navigation-rail`) ---
+    /** Rail items: `[{ "text": "Inbox", "icon": "inbox",
+     * "selected_icon": "inbox", "badge": "3", "enabled": false }]`.
+     * `rail_items` in the scene JSON — `items` is `button-group`'s
+     * `GroupItem` rows. */
+    val railItems: List<RailItem> =
+        json.optJSONArray("rail_items")?.let { a -> (0 until a.length()).map { RailItem(a.getJSONObject(it)) } }
+            ?: emptyList()
+    /** `ModalWideNavigationRail`'s `hideOnCollapse` — the standalone modal
+     * sheet that slides in instead of keeping a persistent rail. */
+    val hideOnCollapse: Boolean = json.optBoolean("hide_on_collapse", false)
+    /** `Arrangement.Vertical` of the rail's item stack: `top` (default),
+     * `center`, `bottom`, `space-evenly`, `space-between`, `space-around`.
+     * On `flexible-bottom-app-bar`: `space-between` (default) or `spaced`
+     * (the `FlexibleFixedHorizontalArrangement` token spacing). */
+    val arrangement: String =
+        (json.opt("arrangement") as? String)
+            ?: if (kind == "flexible-bottom-app-bar") "space-between" else "top"
+    /** FAB icon stem in the rail header; on `*FloatingToolbar` the
+     * `floatingActionButton` slot. */
+    val fabIcon: String? = (json.opt("fab_icon") as? String)?.takeIf { it.isNotEmpty() }
 
     val isFab: Boolean get() = kind == "fab" || kind == "extended-fab"
     val isSplitButton: Boolean get() = kind.endsWith("split-button")
@@ -298,6 +317,18 @@ class Widget(json: JSONObject) {
      * and `selected` are declared above with the list-item overloads. */
     val clickable: Boolean = json.optBoolean("clickable", false)
     val toggleable: Boolean = json.optBoolean("toggleable", false)
+}
+
+/** One rail item (`NavigationItem` on the Slint side): `{ "text": "Inbox",
+ * "icon": "inbox", "selected_icon": "inbox", "badge": "3",
+ * "enabled": false }`. */
+class RailItem(json: JSONObject) {
+    val text: String = json.optString("text", "")
+    val icon: String? = (json.opt("icon") as? String)?.takeIf { it.isNotEmpty() }
+    val selectedIcon: String? =
+        (json.opt("selected_icon") as? String)?.takeIf { it.isNotEmpty() }
+    val badge: String? = (json.opt("badge") as? String)?.takeIf { it.isNotEmpty() }
+    val enabled: Boolean = json.optBoolean("enabled", true)
 }
 
 /** One item of a `connected-button-group`: the label, an optional leading
