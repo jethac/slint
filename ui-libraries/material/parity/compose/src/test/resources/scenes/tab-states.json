@@ -119,6 +119,7 @@
   "widgets": [
     {
       "alignment": null,
+      "always_show_label": null,
       "avatar": null,
       "body_color": null,
       "checkable": null,
@@ -137,6 +138,7 @@
       "height": null,
       "height_offset": null,
       "icon": null,
+      "icon_position": null,
       "icons": [],
       "indeterminate": null,
       "index": null,
@@ -144,38 +146,50 @@
       "interactive": null,
       "items": [
         {
+          "badge": null,
           "checked": null,
           "checked_icon": null,
           "disabled": null,
+          "enabled": null,
           "icon": null,
           "leading": null,
+          "selected_icon": null,
           "state": null,
           "text": "Overview"
         },
         {
+          "badge": null,
           "checked": null,
           "checked_icon": null,
           "disabled": null,
+          "enabled": null,
           "icon": null,
           "leading": null,
+          "selected_icon": null,
           "state": "hovered",
           "text": "Specs"
         },
         {
+          "badge": null,
           "checked": null,
           "checked_icon": null,
           "disabled": null,
+          "enabled": null,
           "icon": null,
           "leading": null,
+          "selected_icon": null,
           "state": "focused",
           "text": "Reviews"
         },
         {
+          "badge": null,
           "checked": null,
           "checked_icon": null,
           "disabled": true,
+          "enabled": null,
           "icon": null,
           "leading": null,
+          "selected_icon": null,
           "state": null,
           "text": "Faq"
         }
@@ -185,6 +199,7 @@
       "leading_image": null,
       "level": null,
       "multi_select": null,
+      "nav_arrangement": null,
       "nav_icon": null,
       "overline": null,
       "peek_height": null,
@@ -223,6 +238,7 @@
     },
     {
       "alignment": null,
+      "always_show_label": null,
       "avatar": null,
       "body_color": null,
       "checkable": null,
@@ -241,6 +257,7 @@
       "height": null,
       "height_offset": null,
       "icon": null,
+      "icon_position": null,
       "icons": [],
       "indeterminate": null,
       "index": null,
@@ -248,38 +265,50 @@
       "interactive": null,
       "items": [
         {
+          "badge": null,
           "checked": null,
           "checked_icon": null,
           "disabled": null,
+          "enabled": null,
           "icon": null,
           "leading": null,
+          "selected_icon": null,
           "state": null,
           "text": "Day"
         },
         {
+          "badge": null,
           "checked": null,
           "checked_icon": null,
           "disabled": null,
+          "enabled": null,
           "icon": null,
           "leading": null,
+          "selected_icon": null,
           "state": "pressed",
           "text": "Week"
         },
         {
+          "badge": null,
           "checked": null,
           "checked_icon": null,
           "disabled": null,
+          "enabled": null,
           "icon": null,
           "leading": null,
+          "selected_icon": null,
           "state": null,
           "text": "Month"
         },
         {
+          "badge": null,
           "checked": null,
           "checked_icon": null,
           "disabled": true,
+          "enabled": null,
           "icon": null,
           "leading": null,
+          "selected_icon": null,
           "state": null,
           "text": "Year"
         }
@@ -289,6 +318,7 @@
       "leading_image": null,
       "level": null,
       "multi_select": null,
+      "nav_arrangement": null,
       "nav_icon": null,
       "overline": null,
       "peek_height": null,
@@ -327,6 +357,7 @@
     },
     {
       "alignment": null,
+      "always_show_label": null,
       "avatar": null,
       "body_color": null,
       "checkable": null,
@@ -345,6 +376,7 @@
       "height": null,
       "height_offset": null,
       "icon": null,
+      "icon_position": null,
       "icons": [],
       "indeterminate": null,
       "index": null,
@@ -352,29 +384,38 @@
       "interactive": null,
       "items": [
         {
+          "badge": null,
           "checked": null,
           "checked_icon": null,
           "disabled": null,
+          "enabled": null,
           "icon": "edit",
           "leading": true,
+          "selected_icon": null,
           "state": "hovered",
           "text": "Edit"
         },
         {
+          "badge": null,
           "checked": null,
           "checked_icon": null,
           "disabled": true,
+          "enabled": null,
           "icon": "calendar_today",
           "leading": true,
+          "selected_icon": null,
           "state": null,
           "text": "Calendar"
         },
         {
+          "badge": null,
           "checked": null,
           "checked_icon": null,
           "disabled": null,
+          "enabled": null,
           "icon": "schedule",
           "leading": true,
+          "selected_icon": null,
           "state": null,
           "text": "Clock"
         }
@@ -384,6 +425,7 @@
       "leading_image": null,
       "level": null,
       "multi_select": null,
+      "nav_arrangement": null,
       "nav_icon": null,
       "overline": null,
       "peek_height": null,

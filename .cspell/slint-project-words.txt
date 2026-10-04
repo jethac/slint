@@ -714,6 +714,7 @@ sharedvector
 shiki
 shikijs
 Shmelt
+shortnavigationbar
 showhide
 signalsafe
 signum

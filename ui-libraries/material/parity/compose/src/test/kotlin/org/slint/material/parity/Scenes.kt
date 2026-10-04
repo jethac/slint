@@ -10,10 +10,15 @@ import androidx.compose.foundation.interaction.FocusInteraction
 import androidx.compose.foundation.interaction.HoverInteraction
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.PressInteraction
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
 import androidx.compose.animation.core.animateFloat
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.CubicBezierEasing
@@ -25,10 +30,10 @@ import androidx.compose.foundation.interaction.DragInteraction
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.shape.CornerSize
@@ -81,6 +86,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedIconButton
 import androidx.compose.material3.OutlinedIconToggleButton
 import androidx.compose.material3.OutlinedToggleButton
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.ToggleButton
@@ -114,6 +120,15 @@ import androidx.compose.material3.PrimaryTabRow
 import androidx.compose.material3.SecondaryTabRow
 import androidx.compose.material3.PrimaryScrollableTabRow
 import androidx.compose.material3.SecondaryScrollableTabRow
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationItemIconPosition
+import androidx.compose.material3.ShortNavigationBar
+import androidx.compose.material3.ShortNavigationBarArrangement
+import androidx.compose.ui.Alignment
+import androidx.compose.material3.ShortNavigationBarItem
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -135,7 +150,6 @@ import androidx.compose.material3.rememberBottomSheetScaffoldState
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.rememberStandardBottomSheetState
 import androidx.compose.foundation.gestures.animateTo
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.platform.LocalViewConfiguration
 import androidx.compose.runtime.SideEffect
@@ -177,6 +191,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.foundation.interaction.Interaction
 import androidx.compose.ui.unit.dp
 import kotlin.math.PI
+import kotlin.math.roundToInt
 
 /** Every traced element reports its bounds here; ids prefixed `text:` also
  * record text metrics through `trackText`. `track` reads `boundsInRoot`, so
@@ -532,6 +547,7 @@ private fun CanvasScene(
         var tabrows = 0
         var badges = 0
         var badgedBoxes = 0
+        var nav_bars = 0
         // `text:{n}` spans every text node in scene order — group items
         // interleave with the standalone widgets' labels. Bases are
         // precomputed per widget so recompositions can't renumber them.
@@ -543,7 +559,10 @@ private fun CanvasScene(
                         w.kind == "vertical-connected-button-group" ||
                         w.kind == "tab-row" ||
                         w.kind == "scrollable-tab-row" -> w.items.size
-                    w.kind == "connected-button" || w.isButton -> 1
+                    // `radio-button` renders no Text — the single text
+                    // slot is only for button-family widgets.
+                    w.kind == "connected-button" ||
+                        (w.isButton && w.kind != "radio-button") -> 1
                     else -> 0
                 }
             }
@@ -607,6 +626,16 @@ private fun CanvasScene(
                     density,
                     emitPress,
                 )
+                // `radio-button` ends in "-button" (isButton): dispatch
+                // ahead of the button-family branches.
+                widget.kind == "radio-button" -> StateRadioButton(
+                    widget,
+                    scene,
+                    tracer,
+                    "button${buttons++}",
+                    density,
+                    emitPress,
+                )
                 widget.kind == "switch" -> StateSwitch(
                     widget,
                     scene,
@@ -652,6 +681,9 @@ private fun CanvasScene(
                     widget.kind == "search-bar" ||
                     widget.kind == "app-bar-with-search" ->
                     StateAppBar(widget, tracer, "appbar${appbars++}")
+                widget.kind == "navigation-bar" ||
+                    widget.kind == "short-navigation-bar" ->
+                    StateNavBar(widget, scene, tracer, "navbar${nav_bars++}", emitPress)
                 widget.kind == "rect" ->
                     Box(
                         Modifier.offset(widget.x.dp, widget.y.dp)
@@ -880,6 +912,57 @@ private fun CanvasScene(
             }
         }
     }
+}
+
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun StateRadioButton(
+    widget: Widget,
+    scene: Scene,
+    tracer: Tracer,
+    elementId: String,
+    density: Float,
+    emitPress: java.util.concurrent.CopyOnWriteArrayList<Pair<Long, Runnable>>,
+) {
+    val interactionSource = remember { ReplayableInteractionSource() }
+    // `selected` is the hoisted radio state — a scene click flips it at
+    // release the way a group's sibling selection would.
+    var selected by remember { mutableStateOf(widget.checked) }
+    // `animatedDotRadius` lives inside `RadioButtonImpl`'s private
+    // `animateDpAsState` — mirror the pin's FastSpatial spec with a
+    // scene-side animatable so `//TRACE_PROPS=` reads the same value the
+    // Slint `dot_radius` out property animates (dp units — the same
+    // logical number the Slint length reports).
+    val dotRadius = remember { Animatable(if (selected) 6f else 0f) }
+    var previousSelected by remember { mutableStateOf(selected) }
+    val spatialSpec = androidx.compose.material3.MaterialTheme.motionScheme.fastSpatialSpec<Float>()
+    LaunchedEffect(selected) {
+        val from = previousSelected
+        previousSelected = selected
+        if (from != selected) {
+            launch { dotRadius.animateTo(if (selected) 6f else 0f, spatialSpec) }
+        }
+    }
+    tracer.propGetters["dot_radius"] = { dotRadius.value.toDouble() }
+    emitStateInteractions(
+        widget.state,
+        scene,
+        tracer,
+        elementId,
+        interactionSource,
+        emitPress,
+        Offset(12f * density, 12f * density),
+        density,
+        Runnable { selected = !selected },
+    )
+
+    RadioButton(
+        selected = selected,
+        onClick = { selected = !selected },
+        modifier = Modifier.offset(widget.x.dp, widget.y.dp).track(tracer, elementId),
+        enabled = widget.enabled,
+        interactionSource = interactionSource,
+    )
 }
 
 /** Container height per size bucket (dp) — `ButtonDefaults` `*ContainerHeight`. */
@@ -1166,14 +1249,13 @@ private fun sceneIcon(name: String): androidx.compose.ui.graphics.vector.ImageVe
     if (vb[0] != 0f || vb[1] != 0f) {
         builder.addGroup(translationX = -vb[0], translationY = -vb[1])
     }
-    // Google Material Icon exports carry a viewport-sized `fill="none"`
-    // bounds path that resvg skips — honoring the attribute keeps the
-    // ImageVector identical to what the Slint side rasterizes.
     Regex("""<path[^>]*>""").findAll(svg).forEach { m ->
-        val tag = m.value
-        if (tag.contains("""fill="none"""")) return@forEach
-        val d = Regex("""d="([^"]+)"""").find(tag)?.groupValues?.get(1)
-            ?: return@forEach
+        val tag = m.groupValues[0]
+        val d = Regex("""d="([^"]+)"""").find(tag)?.groupValues?.get(1) ?: return@forEach
+        // `fill="none"` rect/background paths (e.g. schedule.svg's 24x24
+        // frame) must stay unfilled — filling them draws a solid block.
+        val fill = Regex("""fill="([^"]+)"""").find(tag)?.groupValues?.get(1)
+        if (fill == "none") return@forEach
         builder.addPath(
             androidx.compose.ui.graphics.vector.addPathNodes(d),
             fill = androidx.compose.ui.graphics.SolidColor(Color.Black),
@@ -4155,7 +4237,7 @@ private fun StateConnectedGroup(
                     }
                     val textId = "text:${textBase + index}"
                     Text(
-                        item.text ?: "",
+                        item.text,
                         style = labelStyle,
                         modifier = Modifier.trackText(tracer, textId, density),
                         onTextLayout = recordTextLayout(
@@ -4208,7 +4290,6 @@ private fun StateConnectedGroup(
         }
     }
 }
-
 /** A `tab-row`/`scrollable-tab-row` widget: `variant` `secondary` picks the
  * secondary row upstream (`SecondaryTabRow`/`SecondaryScrollableTabRow`),
  * `items` the tabs, `selected_index` the `selectedTabIndex`. Items with
@@ -4350,5 +4431,118 @@ private fun StateTabRow(
                 modifier = containerModifier,
             ) { itemsContent() }
         }
+    }
+}
+
+/** `navigation-bar` (the 80dp tall bar) / `short-navigation-bar` (the 64dp
+ * expressive bar) — `navbar{n}` elements. `nav_events`
+ * ([["select", bar, item, ms], ...]) flips the bar's `selectedIndex` at the
+ * same mock-clock beats the Slint case's letter-key dispatches fire on —
+ * Paparazzi can't dispatch the pointer click either side needs. */
+@Composable
+private fun StateNavBar(
+    widget: Widget,
+    scene: Scene,
+    tracer: Tracer,
+    tag: String,
+    emitPress: java.util.concurrent.CopyOnWriteArrayList<Pair<Long, Runnable>>,
+) {
+    val barOrdinal = tag.removePrefix("navbar").toInt()
+    var selectedIndex by remember { mutableStateOf(widget.selectedIndex) }
+    scene.params.optJSONArray("nav_events")?.let { events ->
+        for (i in 0 until events.length()) {
+            val ev = events.getJSONArray(i)
+            if (ev.getString(0) != "select" || ev.getInt(1) != barOrdinal) continue
+            val item = ev.getInt(2)
+            val at = ev.getLong(3)
+            DisposableEffect(tag, i) {
+                val entry = at to Runnable { selectedIndex = item }
+                emitPress.add(entry)
+                onDispose { emitPress.remove(entry) }
+            }
+        }
+    }
+    val insets = WindowInsets(0, 0, 0, 0)
+    val base = Modifier
+        .offset(widget.x.dp, widget.y.dp)
+        .then(if (widget.width > 0) Modifier.width(widget.width.dp) else Modifier)
+        .track(tracer, tag)
+
+    when (widget.kind) {
+        "short-navigation-bar" -> ShortNavigationBar(
+            modifier = base,
+            arrangement = if (widget.navArrangement == "centered")
+                ShortNavigationBarArrangement.Centered else ShortNavigationBarArrangement.EqualWeight,
+            windowInsets = insets,
+        ) {
+            // alpha18's bar Layout measures `content` as a single measurable
+            // under this harness (the whole lambda is one placeable), so the
+            // arrangement policies — which divide the item children — see
+            // one child spanning the bar. One Row child preserves the pinned
+            // math: EqualWeight → weight(1f) cells filling the bar
+            // (EqualWeightContentMeasurePolicy at the #3 pin); Centered →
+            // widthIn(min..max) cells in a centered Row
+            // (CenteredContentMeasurePolicy: padding =
+            // ((100-10*(count+3))/2)% of the bar per side, item min width
+            // (W-2*pad)/count, max W/count).
+            val n = maxOf(widget.items.size, 1)
+            val barW = widget.width
+            Row(
+                modifier = if (widget.navArrangement == "centered")
+                    Modifier.fillMaxHeight().requiredWidth(barW.dp)
+                else Modifier.fillMaxSize(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = if (widget.navArrangement == "centered")
+                    Arrangement.Center else Arrangement.Start,
+            ) {
+                val pad = ((100f - 10f * (n + 3)) / 2f / 100f * barW).roundToInt()
+                val itemMinW = ((barW - pad * 2) / n).toInt().dp
+                val itemMaxW = (barW / n).toInt().dp
+                widget.items.forEachIndexed { i, item ->
+                    ShortNavigationBarItem(
+                        selected = i == selectedIndex,
+                        onClick = {},
+                        icon = { NavItemIcon(item, i, selectedIndex) },
+                        modifier = if (widget.navArrangement == "centered")
+                            Modifier.widthIn(min = itemMinW, max = itemMaxW).fillMaxHeight()
+                        else Modifier.weight(1f).fillMaxHeight(),
+                        enabled = item.enabled,
+                        label = item.text.takeIf { it.isNotEmpty() }?.let { { Text(it) } },
+                        iconPosition = if (widget.iconPosition == "start")
+                            NavigationItemIconPosition.Start else NavigationItemIconPosition.Top,
+                    )
+                }
+            }
+        }
+        "navigation-bar" -> NavigationBar(
+            modifier = base,
+            windowInsets = insets,
+        ) {
+            widget.items.forEachIndexed { i, item ->
+                NavigationBarItem(
+                    selected = i == selectedIndex,
+                    onClick = {},
+                    icon = { NavItemIcon(item, i, selectedIndex) },
+                    enabled = item.enabled,
+                    label = item.text.takeIf { it.isNotEmpty() }?.let { { Text(it) } },
+                    alwaysShowLabel = widget.alwaysShowLabel,
+                )
+            }
+        }
+        else -> error("unknown navigation-bar kind ${widget.kind}")
+    }
+}
+
+/** The bar item's `icon` slot: the selected glyph when the item is
+ * selected, wrapped in `BadgedBox` like the upstream samples. */
+@Composable
+private fun NavItemIcon(item: GroupItem, i: Int, selectedIndex: Int) {
+    val stem = (if (i == selectedIndex) item.selectedIcon else item.icon) ?: item.icon ?: "check"
+    if (item.badge != null) {
+        BadgedBox(badge = { Badge { Text(item.badge) } }) {
+            Icon(sceneIcon(stem), contentDescription = null)
+        }
+    } else {
+        Icon(sceneIcon(stem), contentDescription = null)
     }
 }
