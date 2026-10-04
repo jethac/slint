@@ -8,6 +8,9 @@ import {
     SegmentedListItem,
     ListView,
     NavigationBar,
+    ShortNavigationBar,
+    ShortNavigationBarArrangement,
+    NavigationItemIconPosition,
     BottomAppBar,
     NavigationDrawer,
     TextButton,
@@ -39,6 +42,7 @@ import {
     Switch,
     Slider,
     TextField,
+    RadioButton,
     RadioButtonTile,
     PopupMenu,
     DropDownMenu,
@@ -166,6 +170,64 @@ export component NavigationView {
                              text: "Account",
                           },
                     ];
+                }
+            }
+
+            ComponentCard {
+                title: "Short navigation bar";
+
+                Vertical {
+                    spacing: MaterialStyleMetrics.spacing_16;
+
+                    ShortNavigationBar {
+                        items: [
+                            {
+                                icon: OutlinedIcons.explore,
+                                selected_icon: FilledIcons.explore,
+                                text: "Explore",
+                            },
+                            {
+                                icon: OutlinedIcons.pets,
+                                selected_icon: FilledIcons.pets,
+                                text: "Pets",
+                                enabled: false,
+                            },
+                            {
+                                icon: OutlinedIcons.account_box,
+                                selected_icon: FilledIcons.account_box,
+                                text: "Account",
+                                badge: "3",
+                                show-badge: true,
+                            },
+                        ];
+                    }
+
+                    ShortNavigationBar {
+                        arrangement: ShortNavigationBarArrangement.centered;
+                        icon-position: NavigationItemIconPosition.start;
+                        items: [
+                            {
+                                icon: OutlinedIcons.explore,
+                                selected_icon: FilledIcons.explore,
+                                text: "Explore",
+                            },
+                            {
+                                icon: OutlinedIcons.pets,
+                                selected_icon: FilledIcons.pets,
+                                text: "Pets",
+                            },
+                            {
+                                icon: OutlinedIcons.account_box,
+                                selected_icon: FilledIcons.account_box,
+                                text: "Account",
+                            },
+                            {
+                                icon: OutlinedIcons.inbox,
+                                selected_icon: FilledIcons.inbox,
+                                text: "Inbox",
+                            },
+                        ];
+                    }
                 }
             }
 
@@ -393,6 +455,17 @@ export component NavigationView {
                 title: "RadioButtons";
 
                 Vertical {
+                    Horizontal {
+                        spacing: 8px;
+                        alignment: center;
+
+                        RadioButton {}
+
+                        RadioButton {
+                            checked: true;
+                        }
+                    }
+
                     RadioButtonTile {
                         text: "Option 1";
                         checked: NavigationViewAdapter.radio_buttons[0];
