@@ -66,5 +66,10 @@
       "item",
       "indicator"
     ]
+  },
+  "mask_inner": {
+    "group0item5": [
+      2000
+    ]
   }
 }

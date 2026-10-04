@@ -402,6 +402,9 @@ export component ButtonGroup {
             tooltip: root.overflow-tooltip;
             enabled: root.enabled;
             enforce_touch_target: false;
+            // The overflow indicator is the (items.length)th child upstream —
+            // the parity harness enumerates item elements by this index.
+            accessible-item-index: root.items.length;
 
             clicked => {
                 menu.show();

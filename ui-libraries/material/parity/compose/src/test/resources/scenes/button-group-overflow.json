@@ -10,7 +10,11 @@
     "plain": "Roboto"
   },
   "mask_decor": {},
-  "mask_inner": {},
+  "mask_inner": {
+    "group0item5": [
+      2000
+    ]
+  },
   "name": "button-group-overflow",
   "params": {},
   "parity": "motion",

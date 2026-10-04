@@ -946,10 +946,15 @@ pub fn capture_trace<C: i_slint_core::api::ComponentHandle>(
             )
         }
         for (i, handle) in handles.iter().enumerate() {
+            // Compose names group children by model index; the query only
+            // returns visible elements, so the enumeration index would shift
+            // for children after hidden (overflowed) siblings. Elements that
+            // publish `accessible-item-index` name their slot directly.
+            let index = handle.accessible_item_index().unwrap_or(i);
             let pos = handle.absolute_position();
             let size = handle.size();
             frame.elements.insert(
-                format!("{container}{local}{i}"),
+                format!("{container}{local}{index}"),
                 [
                     pos.x as f64,
                     pos.y as f64,
@@ -1708,7 +1713,6 @@ fn build_frame_mask<C: i_slint_core::api::ComponentHandle>(
     decor_masked: &[(String, f64)],
     png_mask: Option<&SharedPixelBuffer<Rgba8Pixel>>,
     density: f64,
-    xfail_text: bool,
     width: u32,
     height: u32,
     text_dilate: f64,
@@ -2269,7 +2273,6 @@ pub fn run_parity_case<C: i_slint_core::api::ComponentHandle>(
                 &decor_masked,
                 png_mask.as_ref(),
                 *density as f64,
-                spec.xfail_text.is_some(),
                 actual.width(),
                 actual.height(),
                 // `//XFAIL_TEXT=*N` widens the ink mask with the same scale
