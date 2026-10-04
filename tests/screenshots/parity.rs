@@ -1452,9 +1452,14 @@ fn compare_text_metrics<C: i_slint_core::api::ComponentHandle>(
                 // (`lines > 1` marks the constrained measure; a one-line
                 // `w` below `unhint_w` is only hinting drift.)
                 (true, Some(unhint_w)) if unhint_w.is_finite() && cw < unhint_w - 1.0 => {
-                    if (sw - cw).abs() > GEOM_EPS {
+                    // Slint snaps laid-out element widths to whole phx
+                    // (ceil), so the constrained measure can carry the same
+                    // +1px quantization the unhinted arm's slack window
+                    // covers; only a shortfall or a >1px overshoot diverges.
+                    let slack = sw - cw;
+                    if !(-GEOM_EPS..=1.0).contains(&slack) {
                         errors.push(format!(
-                            "t={}ms text:{n}.w: slint {sw} vs compose {cw} (eps {GEOM_EPS})",
+                            "t={}ms text:{n}.w: slint {sw} vs compose {cw} (bound -{GEOM_EPS}..1)",
                             frame.t_ms
                         ));
                     }
