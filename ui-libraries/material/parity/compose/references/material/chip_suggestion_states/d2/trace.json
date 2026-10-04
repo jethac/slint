@@ -4,52 +4,7 @@
   ],
   "frames": [
     {
-      "t_ms": 1,
-      "props": {
-        "shadow_elevation": 0
-      },
-      "elements": {
-        "button0": {
-          "x": 16,
-          "y": 32,
-          "w": 85,
-          "h": 32
-        },
-        "button1": {
-          "x": 150,
-          "y": 32,
-          "w": 85,
-          "h": 32
-        },
-        "button2": {
-          "x": 284,
-          "y": 32,
-          "w": 85,
-          "h": 32
-        },
-        "button3": {
-          "x": 418,
-          "y": 32,
-          "w": 85,
-          "h": 32
-        },
-        "button4": {
-          "x": 552,
-          "y": 32,
-          "w": 85,
-          "h": 32
-        },
-        "button5": {
-          "x": 686,
-          "y": 32,
-          "w": 85,
-          "h": 32
-        }
-      },
-      "text": {}
-    },
-    {
-      "t_ms": 51,
+      "t_ms": 0,
       "props": {
         "shadow_elevation": 0
       },
@@ -167,7 +122,7 @@
       }
     },
     {
-      "t_ms": 101,
+      "t_ms": 50,
       "props": {
         "shadow_elevation": 0
       },
@@ -285,7 +240,7 @@
       }
     },
     {
-      "t_ms": 151,
+      "t_ms": 100,
       "props": {
         "shadow_elevation": 0
       },
@@ -403,7 +358,7 @@
       }
     },
     {
-      "t_ms": 201,
+      "t_ms": 150,
       "props": {
         "shadow_elevation": 0
       },
@@ -521,7 +476,7 @@
       }
     },
     {
-      "t_ms": 251,
+      "t_ms": 200,
       "props": {
         "shadow_elevation": 0
       },
@@ -639,7 +594,7 @@
       }
     },
     {
-      "t_ms": 301,
+      "t_ms": 250,
       "props": {
         "shadow_elevation": 0
       },
@@ -757,7 +712,7 @@
       }
     },
     {
-      "t_ms": 351,
+      "t_ms": 300,
       "props": {
         "shadow_elevation": 0
       },
@@ -875,7 +830,7 @@
       }
     },
     {
-      "t_ms": 401,
+      "t_ms": 350,
       "props": {
         "shadow_elevation": 0
       },
@@ -993,7 +948,7 @@
       }
     },
     {
-      "t_ms": 451,
+      "t_ms": 400,
       "props": {
         "shadow_elevation": 0
       },
@@ -1111,7 +1066,7 @@
       }
     },
     {
-      "t_ms": 501,
+      "t_ms": 450,
       "props": {
         "shadow_elevation": 0
       },
@@ -1229,7 +1184,7 @@
       }
     },
     {
-      "t_ms": 551,
+      "t_ms": 500,
       "props": {
         "shadow_elevation": 0
       },
@@ -1347,7 +1302,7 @@
       }
     },
     {
-      "t_ms": 601,
+      "t_ms": 550,
       "props": {
         "shadow_elevation": 0
       },
@@ -1465,7 +1420,7 @@
       }
     },
     {
-      "t_ms": 651,
+      "t_ms": 600,
       "props": {
         "shadow_elevation": 0
       },
@@ -1583,7 +1538,7 @@
       }
     },
     {
-      "t_ms": 701,
+      "t_ms": 650,
       "props": {
         "shadow_elevation": 0
       },
@@ -1701,7 +1656,7 @@
       }
     },
     {
-      "t_ms": 751,
+      "t_ms": 700,
       "props": {
         "shadow_elevation": 0
       },
@@ -1819,7 +1774,7 @@
       }
     },
     {
-      "t_ms": 801,
+      "t_ms": 750,
       "props": {
         "shadow_elevation": 0
       },
@@ -1937,7 +1892,7 @@
       }
     },
     {
-      "t_ms": 851,
+      "t_ms": 800,
       "props": {
         "shadow_elevation": 0
       },
@@ -2055,7 +2010,7 @@
       }
     },
     {
-      "t_ms": 901,
+      "t_ms": 850,
       "props": {
         "shadow_elevation": 0
       },
@@ -2173,7 +2128,7 @@
       }
     },
     {
-      "t_ms": 951,
+      "t_ms": 900,
       "props": {
         "shadow_elevation": 0
       },
@@ -2291,7 +2246,7 @@
       }
     },
     {
-      "t_ms": 1001,
+      "t_ms": 950,
       "props": {
         "shadow_elevation": 0
       },
@@ -2409,7 +2364,7 @@
       }
     },
     {
-      "t_ms": 1051,
+      "t_ms": 1000,
       "props": {
         "shadow_elevation": 0
       },
@@ -2527,7 +2482,7 @@
       }
     },
     {
-      "t_ms": 1101,
+      "t_ms": 1050,
       "props": {
         "shadow_elevation": 0
       },
@@ -2645,7 +2600,7 @@
       }
     },
     {
-      "t_ms": 1151,
+      "t_ms": 1100,
       "props": {
         "shadow_elevation": 0
       },
@@ -2763,7 +2718,7 @@
       }
     },
     {
-      "t_ms": 1201,
+      "t_ms": 1150,
       "props": {
         "shadow_elevation": 0
       },
@@ -2881,7 +2836,7 @@
       }
     },
     {
-      "t_ms": 1251,
+      "t_ms": 1200,
       "props": {
         "shadow_elevation": 0
       },
@@ -2999,7 +2954,7 @@
       }
     },
     {
-      "t_ms": 1301,
+      "t_ms": 1250,
       "props": {
         "shadow_elevation": 0
       },
@@ -3117,7 +3072,7 @@
       }
     },
     {
-      "t_ms": 1351,
+      "t_ms": 1300,
       "props": {
         "shadow_elevation": 0
       },
@@ -3235,7 +3190,7 @@
       }
     },
     {
-      "t_ms": 1401,
+      "t_ms": 1350,
       "props": {
         "shadow_elevation": 0
       },
@@ -3353,7 +3308,7 @@
       }
     },
     {
-      "t_ms": 1451,
+      "t_ms": 1400,
       "props": {
         "shadow_elevation": 0
       },
@@ -3471,7 +3426,7 @@
       }
     },
     {
-      "t_ms": 1501,
+      "t_ms": 1450,
       "props": {
         "shadow_elevation": 0
       },
@@ -3589,7 +3544,7 @@
       }
     },
     {
-      "t_ms": 1551,
+      "t_ms": 1500,
       "props": {
         "shadow_elevation": 0
       },
@@ -3707,7 +3662,7 @@
       }
     },
     {
-      "t_ms": 1601,
+      "t_ms": 1550,
       "props": {
         "shadow_elevation": 0
       },
@@ -3825,7 +3780,7 @@
       }
     },
     {
-      "t_ms": 1651,
+      "t_ms": 1600,
       "props": {
         "shadow_elevation": 0
       },
@@ -3943,7 +3898,7 @@
       }
     },
     {
-      "t_ms": 1701,
+      "t_ms": 1650,
       "props": {
         "shadow_elevation": 0
       },
@@ -4061,7 +4016,7 @@
       }
     },
     {
-      "t_ms": 1751,
+      "t_ms": 1700,
       "props": {
         "shadow_elevation": 0
       },
@@ -4179,7 +4134,7 @@
       }
     },
     {
-      "t_ms": 1801,
+      "t_ms": 1750,
       "props": {
         "shadow_elevation": 0
       },
@@ -4297,7 +4252,7 @@
       }
     },
     {
-      "t_ms": 1851,
+      "t_ms": 1800,
       "props": {
         "shadow_elevation": 0
       },
@@ -4415,7 +4370,7 @@
       }
     },
     {
-      "t_ms": 1901,
+      "t_ms": 1850,
       "props": {
         "shadow_elevation": 0
       },
@@ -4533,7 +4488,7 @@
       }
     },
     {
-      "t_ms": 1951,
+      "t_ms": 1900,
       "props": {
         "shadow_elevation": 0
       },
@@ -4651,7 +4606,125 @@
       }
     },
     {
-      "t_ms": 2001,
+      "t_ms": 1950,
+      "props": {
+        "shadow_elevation": 0
+      },
+      "elements": {
+        "button0": {
+          "x": 16,
+          "y": 32,
+          "w": 85,
+          "h": 32,
+          "opacity": 1
+        },
+        "button1": {
+          "x": 150,
+          "y": 32,
+          "w": 85,
+          "h": 32,
+          "opacity": 1
+        },
+        "button2": {
+          "x": 284,
+          "y": 32,
+          "w": 85,
+          "h": 32,
+          "opacity": 1
+        },
+        "button3": {
+          "x": 418,
+          "y": 32,
+          "w": 85,
+          "h": 32,
+          "opacity": 1
+        },
+        "button4": {
+          "x": 552,
+          "y": 32,
+          "w": 85,
+          "h": 32,
+          "opacity": 1
+        },
+        "button5": {
+          "x": 686,
+          "y": 32,
+          "w": 85,
+          "h": 32,
+          "opacity": 1
+        }
+      },
+      "text": {
+        "text:0": {
+          "x": 32,
+          "y": 38,
+          "w": 53,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 52.099998474121094,
+          "unhint_w": 52.125,
+          "chars": 7
+        },
+        "text:1": {
+          "x": 166,
+          "y": 38,
+          "w": 53,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 52.099998474121094,
+          "unhint_w": 52.125,
+          "chars": 7
+        },
+        "text:2": {
+          "x": 300,
+          "y": 38,
+          "w": 53,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 52.099998474121094,
+          "unhint_w": 52.125,
+          "chars": 7
+        },
+        "text:3": {
+          "x": 434,
+          "y": 38,
+          "w": 53,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 52.099998474121094,
+          "unhint_w": 52.125,
+          "chars": 7
+        },
+        "text:4": {
+          "x": 568,
+          "y": 38,
+          "w": 53,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 52.099998474121094,
+          "unhint_w": 52.125,
+          "chars": 7
+        },
+        "text:5": {
+          "x": 702,
+          "y": 38,
+          "w": 53,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 52.099998474121094,
+          "unhint_w": 52.125,
+          "chars": 7
+        }
+      }
+    },
+    {
+      "t_ms": 2000,
       "props": {
         "shadow_elevation": 0
       },
@@ -4769,5 +4842,5 @@
       }
     }
   ],
-  "settle_ms": 1
+  "settle_ms": null
 }
