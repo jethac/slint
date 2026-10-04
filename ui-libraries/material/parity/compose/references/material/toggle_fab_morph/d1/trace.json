@@ -23,13 +23,15 @@
           "x": 30,
           "y": 30,
           "w": 80,
-          "h": 80
+          "h": 80,
+          "opacity": 1
         },
         "button0>button-bg0": {
           "x": 30,
           "y": 30,
           "w": 80,
-          "h": 80
+          "h": 80,
+          "opacity": 1
         }
       },
       "text": {}
@@ -87,31 +89,6 @@
     {
       "t_ms": 3,
       "props": {
-        "container_radius": 20,
-        "container_size": 80,
-        "checked_progress": 0
-      },
-      "elements": {
-        "button0": {
-          "x": 30,
-          "y": 30,
-          "w": 80,
-          "h": 80,
-          "opacity": 1
-        },
-        "button0>button-bg0": {
-          "x": 30,
-          "y": 30,
-          "w": 80,
-          "h": 80,
-          "opacity": 1
-        }
-      },
-      "text": {}
-    },
-    {
-      "t_ms": 4,
-      "props": {
         "container_radius": 20.003164291381836,
         "container_size": 79.99050903320312,
         "checked_progress": 3.954863641411066E-4
@@ -135,7 +112,7 @@
       "text": {}
     },
     {
-      "t_ms": 5,
+      "t_ms": 4,
       "props": {
         "container_radius": 20.01251220703125,
         "container_size": 79.96247100830078,
@@ -160,7 +137,7 @@
       "text": {}
     },
     {
-      "t_ms": 6,
+      "t_ms": 5,
       "props": {
         "container_radius": 20.027830123901367,
         "container_size": 79.91650390625,
@@ -185,7 +162,7 @@
       "text": {}
     },
     {
-      "t_ms": 7,
+      "t_ms": 6,
       "props": {
         "container_radius": 20.048908233642578,
         "container_size": 79.85327911376953,
@@ -210,7 +187,7 @@
       "text": {}
     },
     {
-      "t_ms": 8,
+      "t_ms": 7,
       "props": {
         "container_radius": 20.07553482055664,
         "container_size": 79.77339172363281,
@@ -235,7 +212,7 @@
       "text": {}
     },
     {
-      "t_ms": 9,
+      "t_ms": 8,
       "props": {
         "container_radius": 20.107507705688477,
         "container_size": 79.67748260498047,
@@ -260,7 +237,7 @@
       "text": {}
     },
     {
-      "t_ms": 10,
+      "t_ms": 9,
       "props": {
         "container_radius": 20.14461898803711,
         "container_size": 79.5661392211914,
@@ -285,7 +262,7 @@
       "text": {}
     },
     {
-      "t_ms": 11,
+      "t_ms": 10,
       "props": {
         "container_radius": 20.18667221069336,
         "container_size": 79.43997955322266,
@@ -310,7 +287,7 @@
       "text": {}
     },
     {
-      "t_ms": 12,
+      "t_ms": 11,
       "props": {
         "container_radius": 20.23346710205078,
         "container_size": 79.29959106445312,
@@ -335,7 +312,7 @@
       "text": {}
     },
     {
-      "t_ms": 13,
+      "t_ms": 12,
       "props": {
         "container_radius": 20.284809112548828,
         "container_size": 79.14556884765625,
@@ -360,7 +337,7 @@
       "text": {}
     },
     {
-      "t_ms": 14,
+      "t_ms": 13,
       "props": {
         "container_radius": 20.340503692626953,
         "container_size": 78.97847747802734,
@@ -385,7 +362,7 @@
       "text": {}
     },
     {
-      "t_ms": 15,
+      "t_ms": 14,
       "props": {
         "container_radius": 20.400367736816406,
         "container_size": 78.79890441894531,
@@ -410,7 +387,7 @@
       "text": {}
     },
     {
-      "t_ms": 16,
+      "t_ms": 15,
       "props": {
         "container_radius": 20.464208602905273,
         "container_size": 78.60737609863281,
@@ -435,7 +412,7 @@
       "text": {}
     },
     {
-      "t_ms": 17,
+      "t_ms": 16,
       "props": {
         "container_radius": 20.53184700012207,
         "container_size": 78.40445709228516,
@@ -460,7 +437,7 @@
       "text": {}
     },
     {
-      "t_ms": 18,
+      "t_ms": 17,
       "props": {
         "container_radius": 20.603103637695312,
         "container_size": 78.1906967163086,
@@ -485,7 +462,7 @@
       "text": {}
     },
     {
-      "t_ms": 19,
+      "t_ms": 18,
       "props": {
         "container_radius": 20.677797317504883,
         "container_size": 77.96661376953125,
@@ -510,7 +487,7 @@
       "text": {}
     },
     {
-      "t_ms": 20,
+      "t_ms": 19,
       "props": {
         "container_radius": 20.75575828552246,
         "container_size": 77.73271942138672,
@@ -535,7 +512,7 @@
       "text": {}
     },
     {
-      "t_ms": 21,
+      "t_ms": 20,
       "props": {
         "container_radius": 20.836816787719727,
         "container_size": 77.48955535888672,
@@ -560,7 +537,7 @@
       "text": {}
     },
     {
-      "t_ms": 22,
+      "t_ms": 21,
       "props": {
         "container_radius": 20.920801162719727,
         "container_size": 77.23759460449219,
@@ -585,7 +562,7 @@
       "text": {}
     },
     {
-      "t_ms": 23,
+      "t_ms": 22,
       "props": {
         "container_radius": 21.007553100585938,
         "container_size": 76.97734069824219,
@@ -610,7 +587,7 @@
       "text": {}
     },
     {
-      "t_ms": 24,
+      "t_ms": 23,
       "props": {
         "container_radius": 21.096908569335938,
         "container_size": 76.70926666259766,
@@ -635,7 +612,7 @@
       "text": {}
     },
     {
-      "t_ms": 25,
+      "t_ms": 24,
       "props": {
         "container_radius": 21.18871307373047,
         "container_size": 76.43385314941406,
@@ -660,7 +637,7 @@
       "text": {}
     },
     {
-      "t_ms": 26,
+      "t_ms": 25,
       "props": {
         "container_radius": 21.28281021118164,
         "container_size": 76.15156555175781,
@@ -685,7 +662,7 @@
       "text": {}
     },
     {
-      "t_ms": 27,
+      "t_ms": 26,
       "props": {
         "container_radius": 21.379051208496094,
         "container_size": 75.86284637451172,
@@ -710,7 +687,7 @@
       "text": {}
     },
     {
-      "t_ms": 28,
+      "t_ms": 27,
       "props": {
         "container_radius": 21.47728729248047,
         "container_size": 75.5681381225586,
@@ -735,7 +712,7 @@
       "text": {}
     },
     {
-      "t_ms": 29,
+      "t_ms": 28,
       "props": {
         "container_radius": 21.577375411987305,
         "container_size": 75.26786804199219,
@@ -760,7 +737,7 @@
       "text": {}
     },
     {
-      "t_ms": 30,
+      "t_ms": 29,
       "props": {
         "container_radius": 21.679174423217773,
         "container_size": 74.96247100830078,
@@ -785,7 +762,7 @@
       "text": {}
     },
     {
-      "t_ms": 31,
+      "t_ms": 30,
       "props": {
         "container_radius": 21.782550811767578,
         "container_size": 74.65235900878906,
@@ -810,7 +787,7 @@
       "text": {}
     },
     {
-      "t_ms": 32,
+      "t_ms": 31,
       "props": {
         "container_radius": 21.88736343383789,
         "container_size": 74.33790588378906,
@@ -835,7 +812,7 @@
       "text": {}
     },
     {
-      "t_ms": 33,
+      "t_ms": 32,
       "props": {
         "container_radius": 21.993488311767578,
         "container_size": 74.01953887939453,
@@ -860,7 +837,7 @@
       "text": {}
     },
     {
-      "t_ms": 34,
+      "t_ms": 33,
       "props": {
         "container_radius": 22.100793838500977,
         "container_size": 73.6976089477539,
@@ -885,7 +862,7 @@
       "text": {}
     },
     {
-      "t_ms": 35,
+      "t_ms": 34,
       "props": {
         "container_radius": 22.20915985107422,
         "container_size": 73.37252044677734,
@@ -910,7 +887,7 @@
       "text": {}
     },
     {
-      "t_ms": 36,
+      "t_ms": 35,
       "props": {
         "container_radius": 22.318464279174805,
         "container_size": 73.04460906982422,
@@ -935,7 +912,7 @@
       "text": {}
     },
     {
-      "t_ms": 37,
+      "t_ms": 36,
       "props": {
         "container_radius": 22.4285888671875,
         "container_size": 72.7142333984375,
@@ -960,7 +937,7 @@
       "text": {}
     },
     {
-      "t_ms": 38,
+      "t_ms": 37,
       "props": {
         "container_radius": 22.53942108154297,
         "container_size": 72.3817367553711,
@@ -985,7 +962,7 @@
       "text": {}
     },
     {
-      "t_ms": 39,
+      "t_ms": 38,
       "props": {
         "container_radius": 22.650848388671875,
         "container_size": 72.04744720458984,
@@ -1010,7 +987,7 @@
       "text": {}
     },
     {
-      "t_ms": 40,
+      "t_ms": 39,
       "props": {
         "container_radius": 22.762765884399414,
         "container_size": 71.71170043945312,
@@ -1035,7 +1012,7 @@
       "text": {}
     },
     {
-      "t_ms": 41,
+      "t_ms": 40,
       "props": {
         "container_radius": 22.87506866455078,
         "container_size": 71.37479400634766,
@@ -1060,7 +1037,7 @@
       "text": {}
     },
     {
-      "t_ms": 42,
+      "t_ms": 41,
       "props": {
         "container_radius": 22.987653732299805,
         "container_size": 71.03704833984375,
@@ -1085,7 +1062,7 @@
       "text": {}
     },
     {
-      "t_ms": 43,
+      "t_ms": 42,
       "props": {
         "container_radius": 23.100421905517578,
         "container_size": 70.69873046875,
@@ -1110,7 +1087,7 @@
       "text": {}
     },
     {
-      "t_ms": 44,
+      "t_ms": 43,
       "props": {
         "container_radius": 23.21328353881836,
         "container_size": 70.36015319824219,
@@ -1135,7 +1112,7 @@
       "text": {}
     },
     {
-      "t_ms": 45,
+      "t_ms": 44,
       "props": {
         "container_radius": 23.326141357421875,
         "container_size": 70.02157592773438,
@@ -1160,7 +1137,7 @@
       "text": {}
     },
     {
-      "t_ms": 46,
+      "t_ms": 45,
       "props": {
         "container_radius": 23.43891143798828,
         "container_size": 69.68327331542969,
@@ -1185,7 +1162,7 @@
       "text": {}
     },
     {
-      "t_ms": 47,
+      "t_ms": 46,
       "props": {
         "container_radius": 23.551502227783203,
         "container_size": 69.34549713134766,
@@ -1210,7 +1187,7 @@
       "text": {}
     },
     {
-      "t_ms": 48,
+      "t_ms": 47,
       "props": {
         "container_radius": 23.663835525512695,
         "container_size": 69.00848388671875,
@@ -1235,7 +1212,7 @@
       "text": {}
     },
     {
-      "t_ms": 49,
+      "t_ms": 48,
       "props": {
         "container_radius": 23.775833129882812,
         "container_size": 68.67250061035156,
@@ -1260,7 +1237,7 @@
       "text": {}
     },
     {
-      "t_ms": 50,
+      "t_ms": 49,
       "props": {
         "container_radius": 23.887413024902344,
         "container_size": 68.33776092529297,
@@ -1285,7 +1262,7 @@
       "text": {}
     },
     {
-      "t_ms": 51,
+      "t_ms": 50,
       "props": {
         "container_radius": 23.998504638671875,
         "container_size": 68.00448608398438,
@@ -1310,7 +1287,7 @@
       "text": {}
     },
     {
-      "t_ms": 52,
+      "t_ms": 51,
       "props": {
         "container_radius": 24.109037399291992,
         "container_size": 67.67289733886719,
@@ -1335,7 +1312,7 @@
       "text": {}
     },
     {
-      "t_ms": 53,
+      "t_ms": 52,
       "props": {
         "container_radius": 24.21893882751465,
         "container_size": 67.34317779541016,
@@ -1360,7 +1337,7 @@
       "text": {}
     },
     {
-      "t_ms": 54,
+      "t_ms": 53,
       "props": {
         "container_radius": 24.328149795532227,
         "container_size": 67.01554870605469,
@@ -1385,7 +1362,7 @@
       "text": {}
     },
     {
-      "t_ms": 55,
+      "t_ms": 54,
       "props": {
         "container_radius": 24.436601638793945,
         "container_size": 66.690185546875,
@@ -1410,7 +1387,7 @@
       "text": {}
     },
     {
-      "t_ms": 56,
+      "t_ms": 55,
       "props": {
         "container_radius": 24.544239044189453,
         "container_size": 66.36727905273438,
@@ -1435,7 +1412,7 @@
       "text": {}
     },
     {
-      "t_ms": 57,
+      "t_ms": 56,
       "props": {
         "container_radius": 24.651002883911133,
         "container_size": 66.0469970703125,
@@ -1460,7 +1437,7 @@
       "text": {}
     },
     {
-      "t_ms": 58,
+      "t_ms": 57,
       "props": {
         "container_radius": 24.7568359375,
         "container_size": 65.7294921875,
@@ -1485,7 +1462,7 @@
       "text": {}
     },
     {
-      "t_ms": 59,
+      "t_ms": 58,
       "props": {
         "container_radius": 24.861690521240234,
         "container_size": 65.41493225097656,
@@ -1510,7 +1487,7 @@
       "text": {}
     },
     {
-      "t_ms": 60,
+      "t_ms": 59,
       "props": {
         "container_radius": 24.965511322021484,
         "container_size": 65.10346984863281,
@@ -1535,7 +1512,7 @@
       "text": {}
     },
     {
-      "t_ms": 61,
+      "t_ms": 60,
       "props": {
         "container_radius": 25.068254470825195,
         "container_size": 64.79523468017578,
@@ -1560,7 +1537,7 @@
       "text": {}
     },
     {
-      "t_ms": 62,
+      "t_ms": 61,
       "props": {
         "container_radius": 25.169876098632812,
         "container_size": 64.49037170410156,
@@ -1585,7 +1562,7 @@
       "text": {}
     },
     {
-      "t_ms": 63,
+      "t_ms": 62,
       "props": {
         "container_radius": 25.27033233642578,
         "container_size": 64.18900299072266,
@@ -1610,7 +1587,7 @@
       "text": {}
     },
     {
-      "t_ms": 64,
+      "t_ms": 63,
       "props": {
         "container_radius": 25.369583129882812,
         "container_size": 63.89125061035156,
@@ -1635,7 +1612,7 @@
       "text": {}
     },
     {
-      "t_ms": 65,
+      "t_ms": 64,
       "props": {
         "container_radius": 25.46759033203125,
         "container_size": 63.59722900390625,
@@ -1660,7 +1637,7 @@
       "text": {}
     },
     {
-      "t_ms": 66,
+      "t_ms": 65,
       "props": {
         "container_radius": 25.56431770324707,
         "container_size": 63.307044982910156,
@@ -1685,7 +1662,7 @@
       "text": {}
     },
     {
-      "t_ms": 67,
+      "t_ms": 66,
       "props": {
         "container_radius": 25.65973472595215,
         "container_size": 63.02079772949219,
@@ -1710,7 +1687,7 @@
       "text": {}
     },
     {
-      "t_ms": 68,
+      "t_ms": 67,
       "props": {
         "container_radius": 25.753807067871094,
         "container_size": 62.73857879638672,
@@ -1735,7 +1712,7 @@
       "text": {}
     },
     {
-      "t_ms": 69,
+      "t_ms": 68,
       "props": {
         "container_radius": 25.846506118774414,
         "container_size": 62.460479736328125,
@@ -1760,7 +1737,7 @@
       "text": {}
     },
     {
-      "t_ms": 70,
+      "t_ms": 69,
       "props": {
         "container_radius": 25.937808990478516,
         "container_size": 62.186580657958984,
@@ -1785,7 +1762,7 @@
       "text": {}
     },
     {
-      "t_ms": 71,
+      "t_ms": 70,
       "props": {
         "container_radius": 26.027681350708008,
         "container_size": 61.916954040527344,
@@ -1810,7 +1787,7 @@
       "text": {}
     },
     {
-      "t_ms": 72,
+      "t_ms": 71,
       "props": {
         "container_radius": 26.11610984802246,
         "container_size": 61.65167236328125,
@@ -1835,7 +1812,7 @@
       "text": {}
     },
     {
-      "t_ms": 73,
+      "t_ms": 72,
       "props": {
         "container_radius": 26.203067779541016,
         "container_size": 61.39079666137695,
@@ -1860,7 +1837,7 @@
       "text": {}
     },
     {
-      "t_ms": 74,
+      "t_ms": 73,
       "props": {
         "container_radius": 26.288537979125977,
         "container_size": 61.13439178466797,
@@ -1885,7 +1862,7 @@
       "text": {}
     },
     {
-      "t_ms": 75,
+      "t_ms": 74,
       "props": {
         "container_radius": 26.372499465942383,
         "container_size": 60.88249969482422,
@@ -1910,7 +1887,7 @@
       "text": {}
     },
     {
-      "t_ms": 76,
+      "t_ms": 75,
       "props": {
         "container_radius": 26.45494270324707,
         "container_size": 60.63517761230469,
@@ -1935,7 +1912,7 @@
       "text": {}
     },
     {
-      "t_ms": 77,
+      "t_ms": 76,
       "props": {
         "container_radius": 26.535846710205078,
         "container_size": 60.392459869384766,
@@ -1960,7 +1937,7 @@
       "text": {}
     },
     {
-      "t_ms": 78,
+      "t_ms": 77,
       "props": {
         "container_radius": 26.615203857421875,
         "container_size": 60.154388427734375,
@@ -1985,7 +1962,7 @@
       "text": {}
     },
     {
-      "t_ms": 79,
+      "t_ms": 78,
       "props": {
         "container_radius": 26.693002700805664,
         "container_size": 59.92099380493164,
@@ -2010,7 +1987,7 @@
       "text": {}
     },
     {
-      "t_ms": 80,
+      "t_ms": 79,
       "props": {
         "container_radius": 26.769229888916016,
         "container_size": 59.69230270385742,
@@ -2035,7 +2012,7 @@
       "text": {}
     },
     {
-      "t_ms": 81,
+      "t_ms": 80,
       "props": {
         "container_radius": 26.84388542175293,
         "container_size": 59.46834182739258,
@@ -2060,7 +2037,7 @@
       "text": {}
     },
     {
-      "t_ms": 82,
+      "t_ms": 81,
       "props": {
         "container_radius": 26.91695785522461,
         "container_size": 59.24912643432617,
@@ -2085,7 +2062,7 @@
       "text": {}
     },
     {
-      "t_ms": 83,
+      "t_ms": 82,
       "props": {
         "container_radius": 26.98844337463379,
         "container_size": 59.034671783447266,
@@ -2110,7 +2087,7 @@
       "text": {}
     },
     {
-      "t_ms": 84,
+      "t_ms": 83,
       "props": {
         "container_radius": 27.058338165283203,
         "container_size": 58.82498550415039,
@@ -2135,7 +2112,7 @@
       "text": {}
     },
     {
-      "t_ms": 85,
+      "t_ms": 84,
       "props": {
         "container_radius": 27.12664222717285,
         "container_size": 58.620079040527344,
@@ -2160,7 +2137,7 @@
       "text": {}
     },
     {
-      "t_ms": 86,
+      "t_ms": 85,
       "props": {
         "container_radius": 27.19335174560547,
         "container_size": 58.419944763183594,
@@ -2185,7 +2162,7 @@
       "text": {}
     },
     {
-      "t_ms": 87,
+      "t_ms": 86,
       "props": {
         "container_radius": 27.25847053527832,
         "container_size": 58.224586486816406,
@@ -2210,7 +2187,7 @@
       "text": {}
     },
     {
-      "t_ms": 88,
+      "t_ms": 87,
       "props": {
         "container_radius": 27.32200050354004,
         "container_size": 58.034000396728516,
@@ -2235,7 +2212,7 @@
       "text": {}
     },
     {
-      "t_ms": 89,
+      "t_ms": 88,
       "props": {
         "container_radius": 27.383943557739258,
         "container_size": 57.848175048828125,
@@ -2260,7 +2237,7 @@
       "text": {}
     },
     {
-      "t_ms": 90,
+      "t_ms": 89,
       "props": {
         "container_radius": 27.44430160522461,
         "container_size": 57.66709518432617,
@@ -2285,7 +2262,7 @@
       "text": {}
     },
     {
-      "t_ms": 91,
+      "t_ms": 90,
       "props": {
         "container_radius": 27.503084182739258,
         "container_size": 57.490745544433594,
@@ -2310,7 +2287,7 @@
       "text": {}
     },
     {
-      "t_ms": 92,
+      "t_ms": 91,
       "props": {
         "container_radius": 27.5602970123291,
         "container_size": 57.31911087036133,
@@ -2335,7 +2312,7 @@
       "text": {}
     },
     {
-      "t_ms": 93,
+      "t_ms": 92,
       "props": {
         "container_radius": 27.61594581604004,
         "container_size": 57.15216827392578,
@@ -2360,7 +2337,7 @@
       "text": {}
     },
     {
-      "t_ms": 94,
+      "t_ms": 93,
       "props": {
         "container_radius": 27.670040130615234,
         "container_size": 56.98988723754883,
@@ -2385,7 +2362,7 @@
       "text": {}
     },
     {
-      "t_ms": 95,
+      "t_ms": 94,
       "props": {
         "container_radius": 27.722583770751953,
         "container_size": 56.83224105834961,
@@ -2410,7 +2387,7 @@
       "text": {}
     },
     {
-      "t_ms": 96,
+      "t_ms": 95,
       "props": {
         "container_radius": 27.773597717285156,
         "container_size": 56.67920684814453,
@@ -2435,7 +2412,7 @@
       "text": {}
     },
     {
-      "t_ms": 97,
+      "t_ms": 96,
       "props": {
         "container_radius": 27.82308578491211,
         "container_size": 56.53074264526367,
@@ -2460,7 +2437,7 @@
       "text": {}
     },
     {
-      "t_ms": 98,
+      "t_ms": 97,
       "props": {
         "container_radius": 27.87105941772461,
         "container_size": 56.38681411743164,
@@ -2485,7 +2462,7 @@
       "text": {}
     },
     {
-      "t_ms": 99,
+      "t_ms": 98,
       "props": {
         "container_radius": 27.917537689208984,
         "container_size": 56.24738693237305,
@@ -2510,7 +2487,7 @@
       "text": {}
     },
     {
-      "t_ms": 100,
+      "t_ms": 99,
       "props": {
         "container_radius": 27.962526321411133,
         "container_size": 56.11241912841797,
@@ -2535,7 +2512,7 @@
       "text": {}
     },
     {
-      "t_ms": 101,
+      "t_ms": 100,
       "props": {
         "container_radius": 28.006044387817383,
         "container_size": 55.98186492919922,
@@ -2560,7 +2537,7 @@
       "text": {}
     },
     {
-      "t_ms": 102,
+      "t_ms": 101,
       "props": {
         "container_radius": 28.048105239868164,
         "container_size": 55.855682373046875,
@@ -2585,7 +2562,7 @@
       "text": {}
     },
     {
-      "t_ms": 103,
+      "t_ms": 102,
       "props": {
         "container_radius": 28.088726043701172,
         "container_size": 55.733821868896484,
@@ -2610,7 +2587,7 @@
       "text": {}
     },
     {
-      "t_ms": 104,
+      "t_ms": 103,
       "props": {
         "container_radius": 28.127918243408203,
         "container_size": 55.61623764038086,
@@ -2635,7 +2612,7 @@
       "text": {}
     },
     {
-      "t_ms": 105,
+      "t_ms": 104,
       "props": {
         "container_radius": 28.16570472717285,
         "container_size": 55.50288391113281,
@@ -2660,7 +2637,7 @@
       "text": {}
     },
     {
-      "t_ms": 106,
+      "t_ms": 105,
       "props": {
         "container_radius": 28.20210075378418,
         "container_size": 55.393699645996094,
@@ -2685,7 +2662,7 @@
       "text": {}
     },
     {
-      "t_ms": 107,
+      "t_ms": 106,
       "props": {
         "container_radius": 28.237119674682617,
         "container_size": 55.28863525390625,
@@ -2710,7 +2687,7 @@
       "text": {}
     },
     {
-      "t_ms": 108,
+      "t_ms": 107,
       "props": {
         "container_radius": 28.27078628540039,
         "container_size": 55.18764114379883,
@@ -2735,7 +2712,7 @@
       "text": {}
     },
     {
-      "t_ms": 109,
+      "t_ms": 108,
       "props": {
         "container_radius": 28.30311393737793,
         "container_size": 55.09065246582031,
@@ -2760,7 +2737,7 @@
       "text": {}
     },
     {
-      "t_ms": 110,
+      "t_ms": 109,
       "props": {
         "container_radius": 28.334125518798828,
         "container_size": 54.997615814208984,
@@ -2785,7 +2762,7 @@
       "text": {}
     },
     {
-      "t_ms": 111,
+      "t_ms": 110,
       "props": {
         "container_radius": 28.363840103149414,
         "container_size": 54.908477783203125,
@@ -2810,7 +2787,7 @@
       "text": {}
     },
     {
-      "t_ms": 112,
+      "t_ms": 111,
       "props": {
         "container_radius": 28.39227867126465,
         "container_size": 54.82316589355469,
@@ -2835,7 +2812,7 @@
       "text": {}
     },
     {
-      "t_ms": 113,
+      "t_ms": 112,
       "props": {
         "container_radius": 28.419456481933594,
         "container_size": 54.74163055419922,
@@ -2860,7 +2837,7 @@
       "text": {}
     },
     {
-      "t_ms": 114,
+      "t_ms": 113,
       "props": {
         "container_radius": 28.44540023803711,
         "container_size": 54.6638069152832,
@@ -2885,7 +2862,7 @@
       "text": {}
     },
     {
-      "t_ms": 115,
+      "t_ms": 114,
       "props": {
         "container_radius": 28.470125198364258,
         "container_size": 54.589630126953125,
@@ -2910,7 +2887,7 @@
       "text": {}
     },
     {
-      "t_ms": 116,
+      "t_ms": 115,
       "props": {
         "container_radius": 28.493654251098633,
         "container_size": 54.51903533935547,
@@ -2935,7 +2912,7 @@
       "text": {}
     },
     {
-      "t_ms": 117,
+      "t_ms": 116,
       "props": {
         "container_radius": 28.516010284423828,
         "container_size": 54.451961517333984,
@@ -2960,7 +2937,7 @@
       "text": {}
     },
     {
-      "t_ms": 118,
+      "t_ms": 117,
       "props": {
         "container_radius": 28.537220001220703,
         "container_size": 54.38834762573242,
@@ -2985,7 +2962,7 @@
       "text": {}
     },
     {
-      "t_ms": 119,
+      "t_ms": 118,
       "props": {
         "container_radius": 28.557292938232422,
         "container_size": 54.328121185302734,
@@ -3010,7 +2987,7 @@
       "text": {}
     },
     {
-      "t_ms": 120,
+      "t_ms": 119,
       "props": {
         "container_radius": 28.576261520385742,
         "container_size": 54.271217346191406,
@@ -3035,7 +3012,7 @@
       "text": {}
     },
     {
-      "t_ms": 121,
+      "t_ms": 120,
       "props": {
         "container_radius": 28.59414291381836,
         "container_size": 54.21757888793945,
@@ -3060,7 +3037,7 @@
       "text": {}
     },
     {
-      "t_ms": 122,
+      "t_ms": 121,
       "props": {
         "container_radius": 28.610958099365234,
         "container_size": 54.1671257019043,
@@ -3085,7 +3062,7 @@
       "text": {}
     },
     {
-      "t_ms": 123,
+      "t_ms": 122,
       "props": {
         "container_radius": 28.626733779907227,
         "container_size": 54.11980438232422,
@@ -3110,7 +3087,7 @@
       "text": {}
     },
     {
-      "t_ms": 124,
+      "t_ms": 123,
       "props": {
         "container_radius": 28.641490936279297,
         "container_size": 54.07553482055664,
@@ -3135,7 +3112,7 @@
       "text": {}
     },
     {
-      "t_ms": 125,
+      "t_ms": 124,
       "props": {
         "container_radius": 28.655248641967773,
         "container_size": 54.03425598144531,
@@ -3160,7 +3137,7 @@
       "text": {}
     },
     {
-      "t_ms": 126,
+      "t_ms": 125,
       "props": {
         "container_radius": 28.668033599853516,
         "container_size": 53.995906829833984,
@@ -3185,7 +3162,7 @@
       "text": {}
     },
     {
-      "t_ms": 127,
+      "t_ms": 126,
       "props": {
         "container_radius": 28.67986488342285,
         "container_size": 53.960411071777344,
@@ -3210,7 +3187,7 @@
       "text": {}
     },
     {
-      "t_ms": 128,
+      "t_ms": 127,
       "props": {
         "container_radius": 28.690767288208008,
         "container_size": 53.927703857421875,
@@ -3235,7 +3212,7 @@
       "text": {}
     },
     {
-      "t_ms": 129,
+      "t_ms": 128,
       "props": {
         "container_radius": 28.700763702392578,
         "container_size": 53.8977165222168,
@@ -3260,7 +3237,7 @@
       "text": {}
     },
     {
-      "t_ms": 130,
+      "t_ms": 129,
       "props": {
         "container_radius": 28.709871292114258,
         "container_size": 53.870384216308594,
@@ -3285,7 +3262,7 @@
       "text": {}
     },
     {
-      "t_ms": 131,
+      "t_ms": 130,
       "props": {
         "container_radius": 28.718120574951172,
         "container_size": 53.845638275146484,
@@ -3310,7 +3287,7 @@
       "text": {}
     },
     {
-      "t_ms": 132,
+      "t_ms": 131,
       "props": {
         "container_radius": 28.725528717041016,
         "container_size": 53.82341384887695,
@@ -3335,7 +3312,7 @@
       "text": {}
     },
     {
-      "t_ms": 133,
+      "t_ms": 132,
       "props": {
         "container_radius": 28.732118606567383,
         "container_size": 53.80364227294922,
@@ -3360,7 +3337,7 @@
       "text": {}
     },
     {
-      "t_ms": 134,
+      "t_ms": 133,
       "props": {
         "container_radius": 28.737913131713867,
         "container_size": 53.7862548828125,
@@ -3385,7 +3362,7 @@
       "text": {}
     },
     {
-      "t_ms": 135,
+      "t_ms": 134,
       "props": {
         "container_radius": 28.742935180664062,
         "container_size": 53.77119445800781,
@@ -3410,7 +3387,7 @@
       "text": {}
     },
     {
-      "t_ms": 136,
+      "t_ms": 135,
       "props": {
         "container_radius": 28.747203826904297,
         "container_size": 53.75838851928711,
@@ -3435,7 +3412,7 @@
       "text": {}
     },
     {
-      "t_ms": 137,
+      "t_ms": 136,
       "props": {
         "container_radius": 28.750741958618164,
         "container_size": 53.747772216796875,
@@ -3460,7 +3437,7 @@
       "text": {}
     },
     {
-      "t_ms": 138,
+      "t_ms": 137,
       "props": {
         "container_radius": 28.753572463989258,
         "container_size": 53.739280700683594,
@@ -3485,7 +3462,7 @@
       "text": {}
     },
     {
-      "t_ms": 139,
+      "t_ms": 138,
       "props": {
         "container_radius": 28.755718231201172,
         "container_size": 53.732852935791016,
@@ -3510,7 +3487,7 @@
       "text": {}
     },
     {
-      "t_ms": 140,
+      "t_ms": 139,
       "props": {
         "container_radius": 28.757192611694336,
         "container_size": 53.728416442871094,
@@ -3535,7 +3512,7 @@
       "text": {}
     },
     {
-      "t_ms": 141,
+      "t_ms": 140,
       "props": {
         "container_radius": 28.758024215698242,
         "container_size": 53.725921630859375,
@@ -3560,7 +3537,7 @@
       "text": {}
     },
     {
-      "t_ms": 142,
+      "t_ms": 141,
       "props": {
         "container_radius": 28.758235931396484,
         "container_size": 53.72529983520508,
@@ -3585,7 +3562,7 @@
       "text": {}
     },
     {
-      "t_ms": 143,
+      "t_ms": 142,
       "props": {
         "container_radius": 28.75783920288086,
         "container_size": 53.72648239135742,
@@ -3610,7 +3587,7 @@
       "text": {}
     },
     {
-      "t_ms": 144,
+      "t_ms": 143,
       "props": {
         "container_radius": 28.75686264038086,
         "container_size": 53.72941970825195,
@@ -3635,7 +3612,7 @@
       "text": {}
     },
     {
-      "t_ms": 145,
+      "t_ms": 144,
       "props": {
         "container_radius": 28.755319595336914,
         "container_size": 53.734039306640625,
@@ -3660,7 +3637,7 @@
       "text": {}
     },
     {
-      "t_ms": 146,
+      "t_ms": 145,
       "props": {
         "container_radius": 28.753236770629883,
         "container_size": 53.74028778076172,
@@ -3685,7 +3662,7 @@
       "text": {}
     },
     {
-      "t_ms": 147,
+      "t_ms": 146,
       "props": {
         "container_radius": 28.750629425048828,
         "container_size": 53.748104095458984,
@@ -3710,7 +3687,7 @@
       "text": {}
     },
     {
-      "t_ms": 148,
+      "t_ms": 147,
       "props": {
         "container_radius": 28.747522354125977,
         "container_size": 53.75743865966797,
@@ -3735,7 +3712,7 @@
       "text": {}
     },
     {
-      "t_ms": 149,
+      "t_ms": 148,
       "props": {
         "container_radius": 28.743928909301758,
         "container_size": 53.768218994140625,
@@ -3760,7 +3737,7 @@
       "text": {}
     },
     {
-      "t_ms": 150,
+      "t_ms": 149,
       "props": {
         "container_radius": 28.739870071411133,
         "container_size": 53.7803955078125,
@@ -3785,7 +3762,7 @@
       "text": {}
     },
     {
-      "t_ms": 151,
+      "t_ms": 150,
       "props": {
         "container_radius": 28.73536491394043,
         "container_size": 53.793907165527344,
@@ -3810,7 +3787,7 @@
       "text": {}
     },
     {
-      "t_ms": 152,
+      "t_ms": 151,
       "props": {
         "container_radius": 28.730430603027344,
         "container_size": 53.80870819091797,
@@ -3835,7 +3812,7 @@
       "text": {}
     },
     {
-      "t_ms": 153,
+      "t_ms": 152,
       "props": {
         "container_radius": 28.725088119506836,
         "container_size": 53.824737548828125,
@@ -3860,7 +3837,7 @@
       "text": {}
     },
     {
-      "t_ms": 154,
+      "t_ms": 153,
       "props": {
         "container_radius": 28.719350814819336,
         "container_size": 53.841941833496094,
@@ -3885,7 +3862,7 @@
       "text": {}
     },
     {
-      "t_ms": 155,
+      "t_ms": 154,
       "props": {
         "container_radius": 28.71324348449707,
         "container_size": 53.86027526855469,
@@ -3910,7 +3887,7 @@
       "text": {}
     },
     {
-      "t_ms": 156,
+      "t_ms": 155,
       "props": {
         "container_radius": 28.706775665283203,
         "container_size": 53.87967300415039,
@@ -3935,7 +3912,7 @@
       "text": {}
     },
     {
-      "t_ms": 157,
+      "t_ms": 156,
       "props": {
         "container_radius": 28.699968338012695,
         "container_size": 53.90009307861328,
@@ -3960,7 +3937,7 @@
       "text": {}
     },
     {
-      "t_ms": 158,
+      "t_ms": 157,
       "props": {
         "container_radius": 28.69283676147461,
         "container_size": 53.92148208618164,
@@ -3985,7 +3962,7 @@
       "text": {}
     },
     {
-      "t_ms": 159,
+      "t_ms": 158,
       "props": {
         "container_radius": 28.685401916503906,
         "container_size": 53.94379425048828,
@@ -4010,7 +3987,7 @@
       "text": {}
     },
     {
-      "t_ms": 160,
+      "t_ms": 159,
       "props": {
         "container_radius": 28.67767333984375,
         "container_size": 53.96697998046875,
@@ -4035,7 +4012,7 @@
       "text": {}
     },
     {
-      "t_ms": 161,
+      "t_ms": 160,
       "props": {
         "container_radius": 28.66967010498047,
         "container_size": 53.990989685058594,
@@ -4060,7 +4037,7 @@
       "text": {}
     },
     {
-      "t_ms": 162,
+      "t_ms": 161,
       "props": {
         "container_radius": 28.661407470703125,
         "container_size": 54.015777587890625,
@@ -4085,7 +4062,7 @@
       "text": {}
     },
     {
-      "t_ms": 163,
+      "t_ms": 162,
       "props": {
         "container_radius": 28.65289878845215,
         "container_size": 54.041297912597656,
@@ -4110,7 +4087,7 @@
       "text": {}
     },
     {
-      "t_ms": 164,
+      "t_ms": 163,
       "props": {
         "container_radius": 28.644161224365234,
         "container_size": 54.067508697509766,
@@ -4135,7 +4112,7 @@
       "text": {}
     },
     {
-      "t_ms": 165,
+      "t_ms": 164,
       "props": {
         "container_radius": 28.635210037231445,
         "container_size": 54.09436798095703,
@@ -4160,7 +4137,7 @@
       "text": {}
     },
     {
-      "t_ms": 166,
+      "t_ms": 165,
       "props": {
         "container_radius": 28.626056671142578,
         "container_size": 54.121822357177734,
@@ -4185,7 +4162,7 @@
       "text": {}
     },
     {
-      "t_ms": 167,
+      "t_ms": 166,
       "props": {
         "container_radius": 28.616718292236328,
         "container_size": 54.149845123291016,
@@ -4210,7 +4187,7 @@
       "text": {}
     },
     {
-      "t_ms": 168,
+      "t_ms": 167,
       "props": {
         "container_radius": 28.607206344604492,
         "container_size": 54.178382873535156,
@@ -4235,7 +4212,7 @@
       "text": {}
     },
     {
-      "t_ms": 169,
+      "t_ms": 168,
       "props": {
         "container_radius": 28.597530364990234,
         "container_size": 54.207401275634766,
@@ -4260,7 +4237,7 @@
       "text": {}
     },
     {
-      "t_ms": 170,
+      "t_ms": 169,
       "props": {
         "container_radius": 28.587711334228516,
         "container_size": 54.23686599731445,
@@ -4285,7 +4262,7 @@
       "text": {}
     },
     {
-      "t_ms": 171,
+      "t_ms": 170,
       "props": {
         "container_radius": 28.577754974365234,
         "container_size": 54.266727447509766,
@@ -4310,7 +4287,7 @@
       "text": {}
     },
     {
-      "t_ms": 172,
+      "t_ms": 171,
       "props": {
         "container_radius": 28.567678451538086,
         "container_size": 54.296958923339844,
@@ -4335,7 +4312,7 @@
       "text": {}
     },
     {
-      "t_ms": 173,
+      "t_ms": 172,
       "props": {
         "container_radius": 28.557493209838867,
         "container_size": 54.32752227783203,
@@ -4360,7 +4337,7 @@
       "text": {}
     },
     {
-      "t_ms": 174,
+      "t_ms": 173,
       "props": {
         "container_radius": 28.547204971313477,
         "container_size": 54.35838317871094,
@@ -4385,7 +4362,7 @@
       "text": {}
     },
     {
-      "t_ms": 175,
+      "t_ms": 174,
       "props": {
         "container_radius": 28.53683090209961,
         "container_size": 54.38949966430664,
@@ -4410,7 +4387,7 @@
       "text": {}
     },
     {
-      "t_ms": 176,
+      "t_ms": 175,
       "props": {
         "container_radius": 28.526386260986328,
         "container_size": 54.42084884643555,
@@ -4435,7 +4412,7 @@
       "text": {}
     },
     {
-      "t_ms": 177,
+      "t_ms": 176,
       "props": {
         "container_radius": 28.515869140625,
         "container_size": 54.452392578125,
@@ -4460,7 +4437,7 @@
       "text": {}
     },
     {
-      "t_ms": 178,
+      "t_ms": 177,
       "props": {
         "container_radius": 28.505298614501953,
         "container_size": 54.48409652709961,
@@ -4485,7 +4462,7 @@
       "text": {}
     },
     {
-      "t_ms": 179,
+      "t_ms": 178,
       "props": {
         "container_radius": 28.494686126708984,
         "container_size": 54.51594161987305,
@@ -4510,7 +4487,7 @@
       "text": {}
     },
     {
-      "t_ms": 180,
+      "t_ms": 179,
       "props": {
         "container_radius": 28.48403549194336,
         "container_size": 54.54788589477539,
@@ -4535,7 +4512,7 @@
       "text": {}
     },
     {
-      "t_ms": 181,
+      "t_ms": 180,
       "props": {
         "container_radius": 28.473363876342773,
         "container_size": 54.57991027832031,
@@ -4560,7 +4537,7 @@
       "text": {}
     },
     {
-      "t_ms": 182,
+      "t_ms": 181,
       "props": {
         "container_radius": 28.46267318725586,
         "container_size": 54.61198043823242,
@@ -4585,7 +4562,7 @@
       "text": {}
     },
     {
-      "t_ms": 183,
+      "t_ms": 182,
       "props": {
         "container_radius": 28.451974868774414,
         "container_size": 54.644073486328125,
@@ -4610,7 +4587,7 @@
       "text": {}
     },
     {
-      "t_ms": 184,
+      "t_ms": 183,
       "props": {
         "container_radius": 28.4412784576416,
         "container_size": 54.67616271972656,
@@ -4635,7 +4612,7 @@
       "text": {}
     },
     {
-      "t_ms": 185,
+      "t_ms": 184,
       "props": {
         "container_radius": 28.430591583251953,
         "container_size": 54.70821762084961,
@@ -4660,7 +4637,7 @@
       "text": {}
     },
     {
-      "t_ms": 186,
+      "t_ms": 185,
       "props": {
         "container_radius": 28.419923782348633,
         "container_size": 54.74022674560547,
@@ -4685,7 +4662,7 @@
       "text": {}
     },
     {
-      "t_ms": 187,
+      "t_ms": 186,
       "props": {
         "container_radius": 28.409282684326172,
         "container_size": 54.772151947021484,
@@ -4710,7 +4687,7 @@
       "text": {}
     },
     {
-      "t_ms": 188,
+      "t_ms": 187,
       "props": {
         "container_radius": 28.39867401123047,
         "container_size": 54.803977966308594,
@@ -4735,7 +4712,7 @@
       "text": {}
     },
     {
-      "t_ms": 189,
+      "t_ms": 188,
       "props": {
         "container_radius": 28.388105392456055,
         "container_size": 54.83568572998047,
@@ -4760,7 +4737,7 @@
       "text": {}
     },
     {
-      "t_ms": 190,
+      "t_ms": 189,
       "props": {
         "container_radius": 28.37758445739746,
         "container_size": 54.86724853515625,
@@ -4785,7 +4762,7 @@
       "text": {}
     },
     {
-      "t_ms": 191,
+      "t_ms": 190,
       "props": {
         "container_radius": 28.367115020751953,
         "container_size": 54.89864730834961,
@@ -4810,7 +4787,7 @@
       "text": {}
     },
     {
-      "t_ms": 192,
+      "t_ms": 191,
       "props": {
         "container_radius": 28.35671043395996,
         "container_size": 54.92987060546875,
@@ -4835,7 +4812,7 @@
       "text": {}
     },
     {
-      "t_ms": 193,
+      "t_ms": 192,
       "props": {
         "container_radius": 28.34636878967285,
         "container_size": 54.96089172363281,
@@ -4860,7 +4837,7 @@
       "text": {}
     },
     {
-      "t_ms": 194,
+      "t_ms": 193,
       "props": {
         "container_radius": 28.336103439331055,
         "container_size": 54.99169158935547,
@@ -4885,7 +4862,7 @@
       "text": {}
     },
     {
-      "t_ms": 195,
+      "t_ms": 194,
       "props": {
         "container_radius": 28.325916290283203,
         "container_size": 55.02225875854492,
@@ -4910,7 +4887,7 @@
       "text": {}
     },
     {
-      "t_ms": 196,
+      "t_ms": 195,
       "props": {
         "container_radius": 28.31580924987793,
         "container_size": 55.052574157714844,
@@ -4935,7 +4912,7 @@
       "text": {}
     },
     {
-      "t_ms": 197,
+      "t_ms": 196,
       "props": {
         "container_radius": 28.305789947509766,
         "container_size": 55.08262252807617,
@@ -4960,7 +4937,7 @@
       "text": {}
     },
     {
-      "t_ms": 198,
+      "t_ms": 197,
       "props": {
         "container_radius": 28.29587173461914,
         "container_size": 55.11239242553711,
@@ -4985,7 +4962,7 @@
       "text": {}
     },
     {
-      "t_ms": 199,
+      "t_ms": 198,
       "props": {
         "container_radius": 28.28604507446289,
         "container_size": 55.14186477661133,
@@ -5010,7 +4987,7 @@
       "text": {}
     },
     {
-      "t_ms": 200,
+      "t_ms": 199,
       "props": {
         "container_radius": 28.276323318481445,
         "container_size": 55.17102813720703,
@@ -5035,7 +5012,7 @@
       "text": {}
     },
     {
-      "t_ms": 201,
+      "t_ms": 200,
       "props": {
         "container_radius": 28.26671028137207,
         "container_size": 55.19987487792969,
@@ -5060,7 +5037,7 @@
       "text": {}
     },
     {
-      "t_ms": 202,
+      "t_ms": 201,
       "props": {
         "container_radius": 28.2572078704834,
         "container_size": 55.22837829589844,
@@ -5085,7 +5062,7 @@
       "text": {}
     },
     {
-      "t_ms": 203,
+      "t_ms": 202,
       "props": {
         "container_radius": 28.247817993164062,
         "container_size": 55.25654602050781,
@@ -5110,7 +5087,7 @@
       "text": {}
     },
     {
-      "t_ms": 204,
+      "t_ms": 203,
       "props": {
         "container_radius": 28.238548278808594,
         "container_size": 55.28435516357422,
@@ -5135,7 +5112,7 @@
       "text": {}
     },
     {
-      "t_ms": 205,
+      "t_ms": 204,
       "props": {
         "container_radius": 28.229398727416992,
         "container_size": 55.311798095703125,
@@ -5160,7 +5137,7 @@
       "text": {}
     },
     {
-      "t_ms": 206,
+      "t_ms": 205,
       "props": {
         "container_radius": 28.220378875732422,
         "container_size": 55.338871002197266,
@@ -5185,7 +5162,7 @@
       "text": {}
     },
     {
-      "t_ms": 207,
+      "t_ms": 206,
       "props": {
         "container_radius": 28.211483001708984,
         "container_size": 55.36555862426758,
@@ -5210,7 +5187,7 @@
       "text": {}
     },
     {
-      "t_ms": 208,
+      "t_ms": 207,
       "props": {
         "container_radius": 28.202714920043945,
         "container_size": 55.39185333251953,
@@ -5235,7 +5212,7 @@
       "text": {}
     },
     {
-      "t_ms": 209,
+      "t_ms": 208,
       "props": {
         "container_radius": 28.19408416748047,
         "container_size": 55.417747497558594,
@@ -5260,7 +5237,7 @@
       "text": {}
     },
     {
-      "t_ms": 210,
+      "t_ms": 209,
       "props": {
         "container_radius": 28.185588836669922,
         "container_size": 55.443241119384766,
@@ -5285,7 +5262,7 @@
       "text": {}
     },
     {
-      "t_ms": 211,
+      "t_ms": 210,
       "props": {
         "container_radius": 28.177228927612305,
         "container_size": 55.46831512451172,
@@ -5310,7 +5287,7 @@
       "text": {}
     },
     {
-      "t_ms": 212,
+      "t_ms": 211,
       "props": {
         "container_radius": 28.169008255004883,
         "container_size": 55.49297332763672,
@@ -5335,7 +5312,7 @@
       "text": {}
     },
     {
-      "t_ms": 213,
+      "t_ms": 212,
       "props": {
         "container_radius": 28.160930633544922,
         "container_size": 55.517208099365234,
@@ -5360,7 +5337,7 @@
       "text": {}
     },
     {
-      "t_ms": 214,
+      "t_ms": 213,
       "props": {
         "container_radius": 28.15299415588379,
         "container_size": 55.541015625,
@@ -5385,7 +5362,7 @@
       "text": {}
     },
     {
-      "t_ms": 215,
+      "t_ms": 214,
       "props": {
         "container_radius": 28.145206451416016,
         "container_size": 55.564388275146484,
@@ -5410,7 +5387,7 @@
       "text": {}
     },
     {
-      "t_ms": 216,
+      "t_ms": 215,
       "props": {
         "container_radius": 28.137561798095703,
         "container_size": 55.58732223510742,
@@ -5435,7 +5412,7 @@
       "text": {}
     },
     {
-      "t_ms": 217,
+      "t_ms": 216,
       "props": {
         "container_radius": 28.130062103271484,
         "container_size": 55.60981369018555,
@@ -5460,7 +5437,7 @@
       "text": {}
     },
     {
-      "t_ms": 218,
+      "t_ms": 217,
       "props": {
         "container_radius": 28.122713088989258,
         "container_size": 55.631866455078125,
@@ -5485,7 +5462,7 @@
       "text": {}
     },
     {
-      "t_ms": 219,
+      "t_ms": 218,
       "props": {
         "container_radius": 28.11551284790039,
         "container_size": 55.65346908569336,
@@ -5510,7 +5487,7 @@
       "text": {}
     },
     {
-      "t_ms": 220,
+      "t_ms": 219,
       "props": {
         "container_radius": 28.10845947265625,
         "container_size": 55.67462158203125,
@@ -5535,7 +5512,7 @@
       "text": {}
     },
     {
-      "t_ms": 221,
+      "t_ms": 220,
       "props": {
         "container_radius": 28.1015567779541,
         "container_size": 55.69532775878906,
@@ -5560,7 +5537,7 @@
       "text": {}
     },
     {
-      "t_ms": 222,
+      "t_ms": 221,
       "props": {
         "container_radius": 28.094804763793945,
         "container_size": 55.71558380126953,
@@ -5585,7 +5562,7 @@
       "text": {}
     },
     {
-      "t_ms": 223,
+      "t_ms": 222,
       "props": {
         "container_radius": 28.088207244873047,
         "container_size": 55.73538589477539,
@@ -5610,7 +5587,7 @@
       "text": {}
     },
     {
-      "t_ms": 224,
+      "t_ms": 223,
       "props": {
         "container_radius": 28.081754684448242,
         "container_size": 55.754730224609375,
@@ -5635,7 +5612,7 @@
       "text": {}
     },
     {
-      "t_ms": 225,
+      "t_ms": 224,
       "props": {
         "container_radius": 28.075456619262695,
         "container_size": 55.77362823486328,
@@ -5660,7 +5637,7 @@
       "text": {}
     },
     {
-      "t_ms": 226,
+      "t_ms": 225,
       "props": {
         "container_radius": 28.06930923461914,
         "container_size": 55.79207229614258,
@@ -5685,7 +5662,7 @@
       "text": {}
     },
     {
-      "t_ms": 227,
+      "t_ms": 226,
       "props": {
         "container_radius": 28.063312530517578,
         "container_size": 55.810062408447266,
@@ -5710,7 +5687,7 @@
       "text": {}
     },
     {
-      "t_ms": 228,
+      "t_ms": 227,
       "props": {
         "container_radius": 28.057466506958008,
         "container_size": 55.827606201171875,
@@ -5735,7 +5712,7 @@
       "text": {}
     },
     {
-      "t_ms": 229,
+      "t_ms": 228,
       "props": {
         "container_radius": 28.051767349243164,
         "container_size": 55.844696044921875,
@@ -5760,7 +5737,7 @@
       "text": {}
     },
     {
-      "t_ms": 230,
+      "t_ms": 229,
       "props": {
         "container_radius": 28.046222686767578,
         "container_size": 55.8613395690918,
@@ -5785,7 +5762,7 @@
       "text": {}
     },
     {
-      "t_ms": 231,
+      "t_ms": 230,
       "props": {
         "container_radius": 28.040822982788086,
         "container_size": 55.877532958984375,
@@ -5810,7 +5787,7 @@
       "text": {}
     },
     {
-      "t_ms": 232,
+      "t_ms": 231,
       "props": {
         "container_radius": 28.03557014465332,
         "container_size": 55.893287658691406,
@@ -5835,7 +5812,7 @@
       "text": {}
     },
     {
-      "t_ms": 233,
+      "t_ms": 232,
       "props": {
         "container_radius": 28.030467987060547,
         "container_size": 55.90859603881836,
@@ -5860,7 +5837,7 @@
       "text": {}
     },
     {
-      "t_ms": 234,
+      "t_ms": 233,
       "props": {
         "container_radius": 28.025508880615234,
         "container_size": 55.923465728759766,
@@ -5885,7 +5862,7 @@
       "text": {}
     },
     {
-      "t_ms": 235,
+      "t_ms": 234,
       "props": {
         "container_radius": 28.02069854736328,
         "container_size": 55.937904357910156,
@@ -5910,7 +5887,7 @@
       "text": {}
     },
     {
-      "t_ms": 236,
+      "t_ms": 235,
       "props": {
         "container_radius": 28.016033172607422,
         "container_size": 55.951908111572266,
@@ -5935,7 +5912,7 @@
       "text": {}
     },
     {
-      "t_ms": 237,
+      "t_ms": 236,
       "props": {
         "container_radius": 28.01150894165039,
         "container_size": 55.96548080444336,
@@ -5960,7 +5937,7 @@
       "text": {}
     },
     {
-      "t_ms": 238,
+      "t_ms": 237,
       "props": {
         "container_radius": 28.007123947143555,
         "container_size": 55.97862243652344,
@@ -5985,7 +5962,7 @@
       "text": {}
     },
     {
-      "t_ms": 239,
+      "t_ms": 238,
       "props": {
         "container_radius": 28.00288200378418,
         "container_size": 55.99134826660156,
@@ -6010,7 +5987,7 @@
       "text": {}
     },
     {
-      "t_ms": 240,
+      "t_ms": 239,
       "props": {
         "container_radius": 27.998781204223633,
         "container_size": 56.003662109375,
@@ -6035,7 +6012,7 @@
       "text": {}
     },
     {
-      "t_ms": 241,
+      "t_ms": 240,
       "props": {
         "container_radius": 27.994815826416016,
         "container_size": 56.01555252075195,
@@ -6060,7 +6037,7 @@
       "text": {}
     },
     {
-      "t_ms": 242,
+      "t_ms": 241,
       "props": {
         "container_radius": 27.99098777770996,
         "container_size": 56.02703857421875,
@@ -6085,7 +6062,7 @@
       "text": {}
     },
     {
-      "t_ms": 243,
+      "t_ms": 242,
       "props": {
         "container_radius": 27.987295150756836,
         "container_size": 56.038116455078125,
@@ -6110,7 +6087,7 @@
       "text": {}
     },
     {
-      "t_ms": 244,
+      "t_ms": 243,
       "props": {
         "container_radius": 27.983734130859375,
         "container_size": 56.048797607421875,
@@ -6135,7 +6112,7 @@
       "text": {}
     },
     {
-      "t_ms": 245,
+      "t_ms": 244,
       "props": {
         "container_radius": 27.98030662536621,
         "container_size": 56.05908203125,
@@ -6160,7 +6137,7 @@
       "text": {}
     },
     {
-      "t_ms": 246,
+      "t_ms": 245,
       "props": {
         "container_radius": 27.977008819580078,
         "container_size": 56.0689811706543,
@@ -6185,7 +6162,7 @@
       "text": {}
     },
     {
-      "t_ms": 247,
+      "t_ms": 246,
       "props": {
         "container_radius": 27.97383689880371,
         "container_size": 56.0784912109375,
@@ -6210,7 +6187,7 @@
       "text": {}
     },
     {
-      "t_ms": 248,
+      "t_ms": 247,
       "props": {
         "container_radius": 27.970792770385742,
         "container_size": 56.087623596191406,
@@ -6235,7 +6212,7 @@
       "text": {}
     },
     {
-      "t_ms": 249,
+      "t_ms": 248,
       "props": {
         "container_radius": 27.967872619628906,
         "container_size": 56.09638214111328,
@@ -6260,7 +6237,7 @@
       "text": {}
     },
     {
-      "t_ms": 250,
+      "t_ms": 249,
       "props": {
         "container_radius": 27.965076446533203,
         "container_size": 56.10477066040039,
@@ -6285,7 +6262,7 @@
       "text": {}
     },
     {
-      "t_ms": 251,
+      "t_ms": 250,
       "props": {
         "container_radius": 27.962400436401367,
         "container_size": 56.11280059814453,
@@ -6310,7 +6287,7 @@
       "text": {}
     },
     {
-      "t_ms": 252,
+      "t_ms": 251,
       "props": {
         "container_radius": 27.959842681884766,
         "container_size": 56.1204719543457,
@@ -6335,7 +6312,7 @@
       "text": {}
     },
     {
-      "t_ms": 253,
+      "t_ms": 252,
       "props": {
         "container_radius": 27.9574031829834,
         "container_size": 56.12779235839844,
@@ -6360,7 +6337,7 @@
       "text": {}
     },
     {
-      "t_ms": 254,
+      "t_ms": 253,
       "props": {
         "container_radius": 27.955076217651367,
         "container_size": 56.134765625,
@@ -6385,7 +6362,7 @@
       "text": {}
     },
     {
-      "t_ms": 255,
+      "t_ms": 254,
       "props": {
         "container_radius": 27.952865600585938,
         "container_size": 56.14140319824219,
@@ -6410,7 +6387,7 @@
       "text": {}
     },
     {
-      "t_ms": 256,
+      "t_ms": 255,
       "props": {
         "container_radius": 27.950763702392578,
         "container_size": 56.147708892822266,
@@ -6435,7 +6412,7 @@
       "text": {}
     },
     {
-      "t_ms": 257,
+      "t_ms": 256,
       "props": {
         "container_radius": 27.94877052307129,
         "container_size": 56.1536865234375,
@@ -6460,7 +6437,7 @@
       "text": {}
     },
     {
-      "t_ms": 258,
+      "t_ms": 257,
       "props": {
         "container_radius": 27.94688606262207,
         "container_size": 56.15934753417969,
@@ -6485,7 +6462,7 @@
       "text": {}
     },
     {
-      "t_ms": 259,
+      "t_ms": 258,
       "props": {
         "container_radius": 27.945104598999023,
         "container_size": 56.16468811035156,
@@ -6510,7 +6487,7 @@
       "text": {}
     },
     {
-      "t_ms": 260,
+      "t_ms": 259,
       "props": {
         "container_radius": 27.94342613220215,
         "container_size": 56.16972351074219,
@@ -6535,7 +6512,7 @@
       "text": {}
     },
     {
-      "t_ms": 261,
+      "t_ms": 260,
       "props": {
         "container_radius": 27.94184684753418,
         "container_size": 56.17445373535156,
@@ -6560,7 +6537,7 @@
       "text": {}
     },
     {
-      "t_ms": 262,
+      "t_ms": 261,
       "props": {
         "container_radius": 27.94036865234375,
         "container_size": 56.17889404296875,
@@ -6585,7 +6562,7 @@
       "text": {}
     },
     {
-      "t_ms": 263,
+      "t_ms": 262,
       "props": {
         "container_radius": 27.93898582458496,
         "container_size": 56.18304443359375,
@@ -6610,7 +6587,7 @@
       "text": {}
     },
     {
-      "t_ms": 264,
+      "t_ms": 263,
       "props": {
         "container_radius": 27.93769645690918,
         "container_size": 56.186912536621094,
@@ -6635,7 +6612,7 @@
       "text": {}
     },
     {
-      "t_ms": 265,
+      "t_ms": 264,
       "props": {
         "container_radius": 27.93649673461914,
         "container_size": 56.19050216674805,
@@ -6660,7 +6637,7 @@
       "text": {}
     },
     {
-      "t_ms": 266,
+      "t_ms": 265,
       "props": {
         "container_radius": 27.935392379760742,
         "container_size": 56.193824768066406,
@@ -6685,7 +6662,7 @@
       "text": {}
     },
     {
-      "t_ms": 267,
+      "t_ms": 266,
       "props": {
         "container_radius": 27.934371948242188,
         "container_size": 56.19688415527344,
@@ -6710,7 +6687,7 @@
       "text": {}
     },
     {
-      "t_ms": 268,
+      "t_ms": 267,
       "props": {
         "container_radius": 27.93343734741211,
         "container_size": 56.19968795776367,
@@ -6735,7 +6712,7 @@
       "text": {}
     },
     {
-      "t_ms": 269,
+      "t_ms": 268,
       "props": {
         "container_radius": 27.932588577270508,
         "container_size": 56.202239990234375,
@@ -6760,7 +6737,7 @@
       "text": {}
     },
     {
-      "t_ms": 270,
+      "t_ms": 269,
       "props": {
         "container_radius": 27.93181800842285,
         "container_size": 56.20454406738281,
@@ -6785,7 +6762,7 @@
       "text": {}
     },
     {
-      "t_ms": 271,
+      "t_ms": 270,
       "props": {
         "container_radius": 27.931129455566406,
         "container_size": 56.20661163330078,
@@ -6810,7 +6787,7 @@
       "text": {}
     },
     {
-      "t_ms": 272,
+      "t_ms": 271,
       "props": {
         "container_radius": 27.930517196655273,
         "container_size": 56.20845031738281,
@@ -6835,7 +6812,7 @@
       "text": {}
     },
     {
-      "t_ms": 273,
+      "t_ms": 272,
       "props": {
         "container_radius": 27.929981231689453,
         "container_size": 56.21006393432617,
@@ -6860,7 +6837,7 @@
       "text": {}
     },
     {
-      "t_ms": 274,
+      "t_ms": 273,
       "props": {
         "container_radius": 27.929513931274414,
         "container_size": 56.211456298828125,
@@ -6885,7 +6862,7 @@
       "text": {}
     },
     {
-      "t_ms": 275,
+      "t_ms": 274,
       "props": {
         "container_radius": 27.929121017456055,
         "container_size": 56.2126350402832,
@@ -6910,7 +6887,7 @@
       "text": {}
     },
     {
-      "t_ms": 276,
+      "t_ms": 275,
       "props": {
         "container_radius": 27.928796768188477,
         "container_size": 56.21360778808594,
@@ -6935,7 +6912,7 @@
       "text": {}
     },
     {
-      "t_ms": 277,
+      "t_ms": 276,
       "props": {
         "container_radius": 27.928539276123047,
         "container_size": 56.21438217163086,
@@ -6960,7 +6937,7 @@
       "text": {}
     },
     {
-      "t_ms": 278,
+      "t_ms": 277,
       "props": {
         "container_radius": 27.928348541259766,
         "container_size": 56.214962005615234,
@@ -6985,7 +6962,7 @@
       "text": {}
     },
     {
-      "t_ms": 279,
+      "t_ms": 278,
       "props": {
         "container_radius": 27.9282169342041,
         "container_size": 56.21535110473633,
@@ -7010,7 +6987,7 @@
       "text": {}
     },
     {
-      "t_ms": 280,
+      "t_ms": 279,
       "props": {
         "container_radius": 27.92814826965332,
         "container_size": 56.21556091308594,
@@ -7035,7 +7012,7 @@
       "text": {}
     },
     {
-      "t_ms": 281,
+      "t_ms": 280,
       "props": {
         "container_radius": 27.92813491821289,
         "container_size": 56.2155876159668,
@@ -7060,7 +7037,7 @@
       "text": {}
     },
     {
-      "t_ms": 282,
+      "t_ms": 281,
       "props": {
         "container_radius": 27.92818260192871,
         "container_size": 56.215450286865234,
@@ -7085,7 +7062,7 @@
       "text": {}
     },
     {
-      "t_ms": 283,
+      "t_ms": 282,
       "props": {
         "container_radius": 27.92828369140625,
         "container_size": 56.21514892578125,
@@ -7110,7 +7087,7 @@
       "text": {}
     },
     {
-      "t_ms": 284,
+      "t_ms": 283,
       "props": {
         "container_radius": 27.928438186645508,
         "container_size": 56.214683532714844,
@@ -7135,7 +7112,7 @@
       "text": {}
     },
     {
-      "t_ms": 285,
+      "t_ms": 284,
       "props": {
         "container_radius": 27.928646087646484,
         "container_size": 56.21406936645508,
@@ -7160,11 +7137,36 @@
       "text": {}
     },
     {
-      "t_ms": 286,
+      "t_ms": 285,
       "props": {
         "container_radius": 27.92889976501465,
         "container_size": 56.21330261230469,
         "checked_progress": 0.9911123514175415
+      },
+      "elements": {
+        "button0": {
+          "x": 30,
+          "y": 30,
+          "w": 80,
+          "h": 80,
+          "opacity": 1
+        },
+        "button0>button-bg0": {
+          "x": 54,
+          "y": 30,
+          "w": 56,
+          "h": 56,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 286,
+      "props": {
+        "container_radius": 28,
+        "container_size": 56,
+        "checked_progress": 1
       },
       "elements": {
         "button0": {
@@ -15035,5 +15037,5 @@
       "text": {}
     }
   ],
-  "settle_ms": 286
+  "settle_ms": 285
 }
