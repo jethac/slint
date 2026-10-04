@@ -608,13 +608,8 @@ impl RendererSealed for TestingWindow {
         font_request: i_slint_core::graphics::FontRequest,
     ) -> Option<LogicalLength> {
         let pixel_size = font_request.pixel_size.map_or(10., |s| s.get());
-        if is_fixed_test_font(&font_request.family) {
-            Some(LogicalLength::new(fixed_test_font_line_height(&font_request, pixel_size)))
-        } else {
-            let ctx = self.slint_context()?;
-            let mut font_ctx = ctx.font_context().borrow_mut();
-            sharedparley::text_line_height(&mut font_ctx, &font_request)
-        }
+        is_fixed_test_font(&font_request.family)
+            .then(|| LogicalLength::new(fixed_test_font_line_height(&font_request, pixel_size)))
     }
 
     fn char_size(

@@ -709,6 +709,33 @@ fn single_line_height(
     }
 }
 
+/// A per-line height for the `min-lines` clamp, measured by the shared parley
+/// layout — the same engine `text_size` measures with — for backends whose
+/// renderer has no `text_line_height` answer of its own.
+#[cfg(feature = "shared-parley")]
+fn shared_parley_line_height(
+    window_adapter: &Rc<dyn WindowAdapter>,
+    font_request: &crate::graphics::FontRequest,
+) -> Option<Coord> {
+    crate::window::WindowInner::from_pub(window_adapter.window())
+        .try_context()
+        .and_then(|ctx| {
+            crate::textlayout::sharedparley::text_line_height(
+                &mut ctx.font_context().borrow_mut(),
+                font_request,
+            )
+        })
+        .map(|h| h.get())
+}
+
+#[cfg(not(feature = "shared-parley"))]
+fn shared_parley_line_height(
+    _window_adapter: &Rc<dyn WindowAdapter>,
+    _font_request: &crate::graphics::FontRequest,
+) -> Option<Coord> {
+    None
+}
+
 // The compiler's single-cell box layout lowering relies on text and image
 // items keeping the default stretch of 0 in their layout info.
 fn text_layout_info(
@@ -768,12 +795,17 @@ fn text_layout_info(
                 }
             }
             .ceil();
-            if let min_lines @ 1.. = text.min_lines()
-                && let Some(line_height) = window_adapter
+            if let min_lines @ 1.. = text.min_lines() {
+                let font_request = text.font_request(self_rc);
+                let line_height = window_adapter
                     .renderer()
-                    .text_line_height(text.font_request(self_rc))
+                    .text_line_height(font_request.clone())
                     .map(|h| h.get())
-            {
+                    .or_else(|| shared_parley_line_height(window_adapter, &font_request))
+                    // With no line-height metric at all there is no reliable
+                    // per-line unit (the text's own height is a multiple of it),
+                    // so the minimum can't be applied.
+                    .unwrap_or(0 as Coord);
                 h = h.max(line_height * min_lines as Coord).ceil();
             }
             LayoutInfo { min: h, preferred: h, ..LayoutInfo::default() }
