@@ -18,34 +18,84 @@
           "x": 16,
           "y": 16,
           "w": 608,
-          "h": 48
+          "h": 48,
+          "opacity": 1
         },
         "tabrow0item0": {
           "x": 16,
           "y": 16,
           "w": 152,
-          "h": 48
+          "h": 48,
+          "opacity": 1
         },
         "tabrow0item1": {
           "x": 168,
           "y": 16,
           "w": 152,
-          "h": 48
+          "h": 48,
+          "opacity": 1
         },
         "tabrow0item2": {
           "x": 320,
           "y": 16,
           "w": 152,
-          "h": 48
+          "h": 48,
+          "opacity": 1
         },
         "tabrow0item3": {
           "x": 472,
           "y": 16,
           "w": 152,
-          "h": 48
+          "h": 48,
+          "opacity": 1
         }
       },
-      "text": {}
+      "text": {
+        "text:0": {
+          "x": 69,
+          "y": 30,
+          "w": 46,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 46,
+          "unhint_w": 45.8125,
+          "chars": 6
+        },
+        "text:1": {
+          "x": 235,
+          "y": 30,
+          "w": 18.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 18.5,
+          "unhint_w": 17.8125,
+          "chars": 2
+        },
+        "text:2": {
+          "x": 376.5,
+          "y": 30,
+          "w": 39,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 39,
+          "unhint_w": 38.5625,
+          "chars": 5
+        },
+        "text:3": {
+          "x": 528,
+          "y": 30,
+          "w": 40.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 40.5,
+          "unhint_w": 39.6875,
+          "chars": 5
+        }
+      }
     },
     {
       "t_ms": 1,
@@ -130548,5 +130598,5 @@
       }
     }
   ],
-  "settle_ms": 0
+  "settle_ms": null
 }

@@ -4,134 +4,7 @@
   ],
   "frames": [
     {
-      "t_ms": 1,
-      "props": {},
-      "elements": {
-        "tabrow0": {
-          "x": 16,
-          "y": 16,
-          "w": 608,
-          "h": 48
-        },
-        "tabrow0item0": {
-          "x": 16,
-          "y": 16,
-          "w": 202,
-          "h": 48
-        },
-        "tabrow0item1": {
-          "x": 218,
-          "y": 16,
-          "w": 202,
-          "h": 48
-        },
-        "tabrow0item2": {
-          "x": 420,
-          "y": 16,
-          "w": 202,
-          "h": 48
-        },
-        "tabrow1": {
-          "x": 16,
-          "y": 80,
-          "w": 608,
-          "h": 72
-        },
-        "tabrow1item0": {
-          "x": 16,
-          "y": 80,
-          "w": 202,
-          "h": 72
-        },
-        "tabrow1item1": {
-          "x": 218,
-          "y": 80,
-          "w": 202,
-          "h": 72
-        },
-        "tabrow1item2": {
-          "x": 420,
-          "y": 80,
-          "w": 202,
-          "h": 72
-        },
-        "tabrow2": {
-          "x": 16,
-          "y": 168,
-          "w": 608,
-          "h": 48
-        },
-        "tabrow2item0": {
-          "x": 16,
-          "y": 168,
-          "w": 202,
-          "h": 48
-        },
-        "tabrow2item1": {
-          "x": 218,
-          "y": 168,
-          "w": 202,
-          "h": 48
-        },
-        "tabrow2item2": {
-          "x": 420,
-          "y": 168,
-          "w": 202,
-          "h": 48
-        },
-        "tabrow3": {
-          "x": 16,
-          "y": 232,
-          "w": 608,
-          "h": 48
-        },
-        "tabrow3item0": {
-          "x": 16,
-          "y": 232,
-          "w": 202,
-          "h": 48
-        },
-        "tabrow3item1": {
-          "x": 218,
-          "y": 232,
-          "w": 202,
-          "h": 48
-        },
-        "tabrow3item2": {
-          "x": 420,
-          "y": 232,
-          "w": 202,
-          "h": 48
-        },
-        "tabrow4": {
-          "x": 16,
-          "y": 296,
-          "w": 608,
-          "h": 72
-        },
-        "tabrow4item0": {
-          "x": 16,
-          "y": 296,
-          "w": 202,
-          "h": 72
-        },
-        "tabrow4item1": {
-          "x": 218,
-          "y": 296,
-          "w": 202,
-          "h": 72
-        },
-        "tabrow4item2": {
-          "x": 420,
-          "y": 296,
-          "w": 202,
-          "h": 72
-        }
-      },
-      "text": {}
-    },
-    {
-      "t_ms": 51,
+      "t_ms": 0,
       "props": {},
       "elements": {
         "tabrow0": {
@@ -444,7 +317,7 @@
       }
     },
     {
-      "t_ms": 101,
+      "t_ms": 50,
       "props": {},
       "elements": {
         "tabrow0": {
@@ -757,7 +630,7 @@
       }
     },
     {
-      "t_ms": 151,
+      "t_ms": 100,
       "props": {},
       "elements": {
         "tabrow0": {
@@ -1070,7 +943,7 @@
       }
     },
     {
-      "t_ms": 201,
+      "t_ms": 150,
       "props": {},
       "elements": {
         "tabrow0": {
@@ -1383,7 +1256,7 @@
       }
     },
     {
-      "t_ms": 251,
+      "t_ms": 200,
       "props": {},
       "elements": {
         "tabrow0": {
@@ -1696,7 +1569,7 @@
       }
     },
     {
-      "t_ms": 301,
+      "t_ms": 250,
       "props": {},
       "elements": {
         "tabrow0": {
@@ -2009,7 +1882,7 @@
       }
     },
     {
-      "t_ms": 351,
+      "t_ms": 300,
       "props": {},
       "elements": {
         "tabrow0": {
@@ -2322,7 +2195,7 @@
       }
     },
     {
-      "t_ms": 401,
+      "t_ms": 350,
       "props": {},
       "elements": {
         "tabrow0": {
@@ -2635,7 +2508,7 @@
       }
     },
     {
-      "t_ms": 451,
+      "t_ms": 400,
       "props": {},
       "elements": {
         "tabrow0": {
@@ -2948,7 +2821,7 @@
       }
     },
     {
-      "t_ms": 501,
+      "t_ms": 450,
       "props": {},
       "elements": {
         "tabrow0": {
@@ -3261,7 +3134,7 @@
       }
     },
     {
-      "t_ms": 551,
+      "t_ms": 500,
       "props": {},
       "elements": {
         "tabrow0": {
@@ -3574,7 +3447,7 @@
       }
     },
     {
-      "t_ms": 601,
+      "t_ms": 550,
       "props": {},
       "elements": {
         "tabrow0": {
@@ -3887,7 +3760,7 @@
       }
     },
     {
-      "t_ms": 651,
+      "t_ms": 600,
       "props": {},
       "elements": {
         "tabrow0": {
@@ -4200,7 +4073,7 @@
       }
     },
     {
-      "t_ms": 701,
+      "t_ms": 650,
       "props": {},
       "elements": {
         "tabrow0": {
@@ -4513,7 +4386,7 @@
       }
     },
     {
-      "t_ms": 751,
+      "t_ms": 700,
       "props": {},
       "elements": {
         "tabrow0": {
@@ -4826,7 +4699,7 @@
       }
     },
     {
-      "t_ms": 801,
+      "t_ms": 750,
       "props": {},
       "elements": {
         "tabrow0": {
@@ -5139,7 +5012,7 @@
       }
     },
     {
-      "t_ms": 851,
+      "t_ms": 800,
       "props": {},
       "elements": {
         "tabrow0": {
@@ -5452,7 +5325,7 @@
       }
     },
     {
-      "t_ms": 901,
+      "t_ms": 850,
       "props": {},
       "elements": {
         "tabrow0": {
@@ -5765,7 +5638,7 @@
       }
     },
     {
-      "t_ms": 951,
+      "t_ms": 900,
       "props": {},
       "elements": {
         "tabrow0": {
@@ -6078,7 +5951,7 @@
       }
     },
     {
-      "t_ms": 1001,
+      "t_ms": 950,
       "props": {},
       "elements": {
         "tabrow0": {
@@ -6391,7 +6264,7 @@
       }
     },
     {
-      "t_ms": 1051,
+      "t_ms": 1000,
       "props": {},
       "elements": {
         "tabrow0": {
@@ -6704,7 +6577,7 @@
       }
     },
     {
-      "t_ms": 1101,
+      "t_ms": 1050,
       "props": {},
       "elements": {
         "tabrow0": {
@@ -7017,7 +6890,7 @@
       }
     },
     {
-      "t_ms": 1151,
+      "t_ms": 1100,
       "props": {},
       "elements": {
         "tabrow0": {
@@ -7330,7 +7203,7 @@
       }
     },
     {
-      "t_ms": 1201,
+      "t_ms": 1150,
       "props": {},
       "elements": {
         "tabrow0": {
@@ -7643,7 +7516,7 @@
       }
     },
     {
-      "t_ms": 1251,
+      "t_ms": 1200,
       "props": {},
       "elements": {
         "tabrow0": {
@@ -7956,7 +7829,7 @@
       }
     },
     {
-      "t_ms": 1301,
+      "t_ms": 1250,
       "props": {},
       "elements": {
         "tabrow0": {
@@ -8269,7 +8142,7 @@
       }
     },
     {
-      "t_ms": 1351,
+      "t_ms": 1300,
       "props": {},
       "elements": {
         "tabrow0": {
@@ -8582,7 +8455,7 @@
       }
     },
     {
-      "t_ms": 1401,
+      "t_ms": 1350,
       "props": {},
       "elements": {
         "tabrow0": {
@@ -8895,7 +8768,7 @@
       }
     },
     {
-      "t_ms": 1451,
+      "t_ms": 1400,
       "props": {},
       "elements": {
         "tabrow0": {
@@ -9208,7 +9081,7 @@
       }
     },
     {
-      "t_ms": 1501,
+      "t_ms": 1450,
       "props": {},
       "elements": {
         "tabrow0": {
@@ -9521,7 +9394,7 @@
       }
     },
     {
-      "t_ms": 1551,
+      "t_ms": 1500,
       "props": {},
       "elements": {
         "tabrow0": {
@@ -9834,7 +9707,7 @@
       }
     },
     {
-      "t_ms": 1601,
+      "t_ms": 1550,
       "props": {},
       "elements": {
         "tabrow0": {
@@ -10147,7 +10020,7 @@
       }
     },
     {
-      "t_ms": 1651,
+      "t_ms": 1600,
       "props": {},
       "elements": {
         "tabrow0": {
@@ -10460,7 +10333,7 @@
       }
     },
     {
-      "t_ms": 1701,
+      "t_ms": 1650,
       "props": {},
       "elements": {
         "tabrow0": {
@@ -10773,7 +10646,7 @@
       }
     },
     {
-      "t_ms": 1751,
+      "t_ms": 1700,
       "props": {},
       "elements": {
         "tabrow0": {
@@ -11086,7 +10959,7 @@
       }
     },
     {
-      "t_ms": 1801,
+      "t_ms": 1750,
       "props": {},
       "elements": {
         "tabrow0": {
@@ -11399,7 +11272,7 @@
       }
     },
     {
-      "t_ms": 1851,
+      "t_ms": 1800,
       "props": {},
       "elements": {
         "tabrow0": {
@@ -11712,7 +11585,7 @@
       }
     },
     {
-      "t_ms": 1901,
+      "t_ms": 1850,
       "props": {},
       "elements": {
         "tabrow0": {
@@ -12025,7 +11898,7 @@
       }
     },
     {
-      "t_ms": 1951,
+      "t_ms": 1900,
       "props": {},
       "elements": {
         "tabrow0": {
@@ -12338,7 +12211,320 @@
       }
     },
     {
-      "t_ms": 2001,
+      "t_ms": 1950,
+      "props": {},
+      "elements": {
+        "tabrow0": {
+          "x": 16,
+          "y": 16,
+          "w": 608,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1": {
+          "x": 16,
+          "y": 80,
+          "w": 608,
+          "h": 72,
+          "opacity": 1
+        },
+        "tabrow2": {
+          "x": 16,
+          "y": 168,
+          "w": 608,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow3": {
+          "x": 16,
+          "y": 232,
+          "w": 608,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow4": {
+          "x": 16,
+          "y": 296,
+          "w": 608,
+          "h": 72,
+          "opacity": 1
+        },
+        "tabrow0item0": {
+          "x": 16,
+          "y": 16,
+          "w": 202,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item1": {
+          "x": 218,
+          "y": 16,
+          "w": 202,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item2": {
+          "x": 420,
+          "y": 16,
+          "w": 202,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item0": {
+          "x": 16,
+          "y": 80,
+          "w": 202,
+          "h": 72,
+          "opacity": 1
+        },
+        "tabrow1item1": {
+          "x": 218,
+          "y": 80,
+          "w": 202,
+          "h": 72,
+          "opacity": 1
+        },
+        "tabrow1item2": {
+          "x": 420,
+          "y": 80,
+          "w": 202,
+          "h": 72,
+          "opacity": 1
+        },
+        "tabrow2item0": {
+          "x": 16,
+          "y": 168,
+          "w": 202,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2item1": {
+          "x": 218,
+          "y": 168,
+          "w": 202,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2item2": {
+          "x": 420,
+          "y": 168,
+          "w": 202,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow3item0": {
+          "x": 16,
+          "y": 232,
+          "w": 202,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow3item1": {
+          "x": 218,
+          "y": 232,
+          "w": 202,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow3item2": {
+          "x": 420,
+          "y": 232,
+          "w": 202,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow4item0": {
+          "x": 16,
+          "y": 296,
+          "w": 202,
+          "h": 72,
+          "opacity": 1
+        },
+        "tabrow4item1": {
+          "x": 218,
+          "y": 296,
+          "w": 202,
+          "h": 72,
+          "opacity": 1
+        },
+        "tabrow4item2": {
+          "x": 420,
+          "y": 296,
+          "w": 202,
+          "h": 72,
+          "opacity": 1
+        }
+      },
+      "text": {
+        "text:0": {
+          "x": 93,
+          "y": 30,
+          "w": 48,
+          "h": 20,
+          "baseline": 15,
+          "lines": 1,
+          "frac_w": 48,
+          "unhint_w": 45.875,
+          "chars": 6
+        },
+        "text:1": {
+          "x": 309,
+          "y": 30,
+          "w": 20,
+          "h": 20,
+          "baseline": 15,
+          "lines": 1,
+          "frac_w": 20,
+          "unhint_w": 17.875,
+          "chars": 2
+        },
+        "text:10": {
+          "x": 296,
+          "y": 246,
+          "w": 47,
+          "h": 20,
+          "baseline": 15,
+          "lines": 1,
+          "frac_w": 47,
+          "unhint_w": 43.875,
+          "chars": 7
+        },
+        "text:11": {
+          "x": 494,
+          "y": 246,
+          "w": 55,
+          "h": 20,
+          "baseline": 15,
+          "lines": 1,
+          "frac_w": 55,
+          "unhint_w": 52.5,
+          "chars": 7
+        },
+        "text:12": {
+          "x": 100,
+          "y": 336,
+          "w": 35,
+          "h": 20,
+          "baseline": 15,
+          "lines": 1,
+          "frac_w": 35,
+          "unhint_w": 32.75,
+          "chars": 4
+        },
+        "text:13": {
+          "x": 300,
+          "y": 336,
+          "w": 38,
+          "h": 20,
+          "baseline": 15,
+          "lines": 1,
+          "frac_w": 38,
+          "unhint_w": 35.625,
+          "chars": 4
+        },
+        "text:14": {
+          "x": 505,
+          "y": 336,
+          "w": 33,
+          "h": 20,
+          "baseline": 15,
+          "lines": 1,
+          "frac_w": 33,
+          "unhint_w": 30.5,
+          "chars": 4
+        },
+        "text:2": {
+          "x": 501,
+          "y": 30,
+          "w": 40,
+          "h": 20,
+          "baseline": 15,
+          "lines": 1,
+          "frac_w": 40,
+          "unhint_w": 38.625,
+          "chars": 5
+        },
+        "text:3": {
+          "x": 104,
+          "y": 120,
+          "w": 27,
+          "h": 20,
+          "baseline": 15,
+          "lines": 1,
+          "frac_w": 27,
+          "unhint_w": 24.25,
+          "chars": 4
+        },
+        "text:4": {
+          "x": 289,
+          "y": 120,
+          "w": 60,
+          "h": 20,
+          "baseline": 15,
+          "lines": 1,
+          "frac_w": 60,
+          "unhint_w": 56.75,
+          "chars": 8
+        },
+        "text:5": {
+          "x": 503,
+          "y": 120,
+          "w": 37,
+          "h": 20,
+          "baseline": 15,
+          "lines": 1,
+          "frac_w": 37,
+          "unhint_w": 35.75,
+          "chars": 5
+        },
+        "text:6": {
+          "x": 120,
+          "y": 182,
+          "w": 27,
+          "h": 20,
+          "baseline": 15,
+          "lines": 1,
+          "frac_w": 27,
+          "unhint_w": 24.25,
+          "chars": 4
+        },
+        "text:7": {
+          "x": 305,
+          "y": 182,
+          "w": 60,
+          "h": 20,
+          "baseline": 15,
+          "lines": 1,
+          "frac_w": 60,
+          "unhint_w": 56.75,
+          "chars": 8
+        },
+        "text:8": {
+          "x": 519,
+          "y": 182,
+          "w": 37,
+          "h": 20,
+          "baseline": 15,
+          "lines": 1,
+          "frac_w": 37,
+          "unhint_w": 35.75,
+          "chars": 5
+        },
+        "text:9": {
+          "x": 87,
+          "y": 246,
+          "w": 61,
+          "h": 20,
+          "baseline": 15,
+          "lines": 1,
+          "frac_w": 61,
+          "unhint_w": 58.25,
+          "chars": 8
+        }
+      }
+    },
+    {
+      "t_ms": 2000,
       "props": {},
       "elements": {
         "tabrow0": {
@@ -12651,5 +12837,5 @@
       }
     }
   ],
-  "settle_ms": 1
+  "settle_ms": null
 }
