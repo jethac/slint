@@ -3232,7 +3232,7 @@ private fun StateScaffold(
         topBar = {
             if (widget.topBar) {
                 TopAppBar(
-                    title = { Text(widget.title) },
+                    title = { Text(widget.title ?: "Scaffold") },
                     modifier = Modifier.track(tracer, "appbar$i"),
                     windowInsets = insets,
                 )

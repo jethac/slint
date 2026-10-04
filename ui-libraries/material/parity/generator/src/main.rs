@@ -182,7 +182,8 @@ struct Widget {
     radius: Option<f64>,
     #[serde(default)]
     text: Option<String>,
-    /// `alert-dialog`/`basic-alert-dialog`: the dialog title.
+    /// `alert-dialog`/`basic-alert-dialog` dialog title; `material-scaffold`
+    /// top-bar title text.
     #[serde(default)]
     title: Option<String>,
     /// `date-picker`/`date-range-picker` initial `DisplayMode` — `picker`
@@ -513,9 +514,6 @@ struct Widget {
     snack_width: Option<f64>,
     #[serde(default)]
     snack_height: Option<f64>,
-    /// `material-scaffold` top-bar title text.
-    #[serde(default)]
-    title: Option<String>,
 }
 
 /// One item of a `connected-button-group`: the label, an optional leading
