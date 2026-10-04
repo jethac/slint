@@ -15,7 +15,8 @@
           "x": 36,
           "y": 36,
           "w": 24,
-          "h": 24
+          "h": 24,
+          "opacity": 1
         }
       },
       "text": {}
@@ -1975,7 +1976,7 @@
     {
       "t_ms": 123,
       "props": {
-        "dot_radius": 0
+        "dot_radius": 0.0023729181848466396
       },
       "elements": {
         "button0": {
@@ -1991,7 +1992,7 @@
     {
       "t_ms": 124,
       "props": {
-        "dot_radius": 0.0023729181848466396
+        "dot_radius": 0.009383922442793846
       },
       "elements": {
         "button0": {
@@ -2007,7 +2008,7 @@
     {
       "t_ms": 125,
       "props": {
-        "dot_radius": 0.009383922442793846
+        "dot_radius": 0.02087271772325039
       },
       "elements": {
         "button0": {
@@ -2023,7 +2024,7 @@
     {
       "t_ms": 126,
       "props": {
-        "dot_radius": 0.02087271772325039
+        "dot_radius": 0.036680836230516434
       },
       "elements": {
         "button0": {
@@ -2039,7 +2040,7 @@
     {
       "t_ms": 127,
       "props": {
-        "dot_radius": 0.036680836230516434
+        "dot_radius": 0.056651707738637924
       },
       "elements": {
         "button0": {
@@ -2055,7 +2056,7 @@
     {
       "t_ms": 128,
       "props": {
-        "dot_radius": 0.056651707738637924
+        "dot_radius": 0.08063069730997086
       },
       "elements": {
         "button0": {
@@ -2071,7 +2072,7 @@
     {
       "t_ms": 129,
       "props": {
-        "dot_radius": 0.08063069730997086
+        "dot_radius": 0.10846519470214844
       },
       "elements": {
         "button0": {
@@ -2087,7 +2088,7 @@
     {
       "t_ms": 130,
       "props": {
-        "dot_radius": 0.10846519470214844
+        "dot_radius": 0.14000463485717773
       },
       "elements": {
         "button0": {
@@ -2103,7 +2104,7 @@
     {
       "t_ms": 131,
       "props": {
-        "dot_radius": 0.14000463485717773
+        "dot_radius": 0.17510057985782623
       },
       "elements": {
         "button0": {
@@ -2119,7 +2120,7 @@
     {
       "t_ms": 132,
       "props": {
-        "dot_radius": 0.17510057985782623
+        "dot_radius": 0.21360674500465393
       },
       "elements": {
         "button0": {
@@ -2135,7 +2136,7 @@
     {
       "t_ms": 133,
       "props": {
-        "dot_radius": 0.21360674500465393
+        "dot_radius": 0.2553790211677551
       },
       "elements": {
         "button0": {
@@ -2151,7 +2152,7 @@
     {
       "t_ms": 134,
       "props": {
-        "dot_radius": 0.2553790211677551
+        "dot_radius": 0.300275593996048
       },
       "elements": {
         "button0": {
@@ -2167,7 +2168,7 @@
     {
       "t_ms": 135,
       "props": {
-        "dot_radius": 0.300275593996048
+        "dot_radius": 0.3481568396091461
       },
       "elements": {
         "button0": {
@@ -2183,7 +2184,7 @@
     {
       "t_ms": 136,
       "props": {
-        "dot_radius": 0.3481568396091461
+        "dot_radius": 0.3988855183124542
       },
       "elements": {
         "button0": {
@@ -2199,7 +2200,7 @@
     {
       "t_ms": 137,
       "props": {
-        "dot_radius": 0.3988855183124542
+        "dot_radius": 0.4523267149925232
       },
       "elements": {
         "button0": {
@@ -2215,7 +2216,7 @@
     {
       "t_ms": 138,
       "props": {
-        "dot_radius": 0.4523267149925232
+        "dot_radius": 0.5083478689193726
       },
       "elements": {
         "button0": {
@@ -2231,7 +2232,7 @@
     {
       "t_ms": 139,
       "props": {
-        "dot_radius": 0.5083478689193726
+        "dot_radius": 0.5668188333511353
       },
       "elements": {
         "button0": {
@@ -2247,7 +2248,7 @@
     {
       "t_ms": 140,
       "props": {
-        "dot_radius": 0.5668188333511353
+        "dot_radius": 0.6276118159294128
       },
       "elements": {
         "button0": {
@@ -2263,7 +2264,7 @@
     {
       "t_ms": 141,
       "props": {
-        "dot_radius": 0.6276118159294128
+        "dot_radius": 0.6906015872955322
       },
       "elements": {
         "button0": {
@@ -2279,7 +2280,7 @@
     {
       "t_ms": 142,
       "props": {
-        "dot_radius": 0.6906015872955322
+        "dot_radius": 0.7556652426719666
       },
       "elements": {
         "button0": {
@@ -2295,7 +2296,7 @@
     {
       "t_ms": 143,
       "props": {
-        "dot_radius": 0.7556652426719666
+        "dot_radius": 0.8226823806762695
       },
       "elements": {
         "button0": {
@@ -2311,7 +2312,7 @@
     {
       "t_ms": 144,
       "props": {
-        "dot_radius": 0.8226823806762695
+        "dot_radius": 0.8915351629257202
       },
       "elements": {
         "button0": {
@@ -2327,7 +2328,7 @@
     {
       "t_ms": 145,
       "props": {
-        "dot_radius": 0.8915351629257202
+        "dot_radius": 0.9621081948280334
       },
       "elements": {
         "button0": {
@@ -2343,7 +2344,7 @@
     {
       "t_ms": 146,
       "props": {
-        "dot_radius": 0.9621081948280334
+        "dot_radius": 1.0342884063720703
       },
       "elements": {
         "button0": {
@@ -2359,7 +2360,7 @@
     {
       "t_ms": 147,
       "props": {
-        "dot_radius": 1.0342884063720703
+        "dot_radius": 1.1079655885696411
       },
       "elements": {
         "button0": {
@@ -2375,7 +2376,7 @@
     {
       "t_ms": 148,
       "props": {
-        "dot_radius": 1.1079655885696411
+        "dot_radius": 1.183031678199768
       },
       "elements": {
         "button0": {
@@ -2391,7 +2392,7 @@
     {
       "t_ms": 149,
       "props": {
-        "dot_radius": 1.183031678199768
+        "dot_radius": 1.2593814134597778
       },
       "elements": {
         "button0": {
@@ -2407,7 +2408,7 @@
     {
       "t_ms": 150,
       "props": {
-        "dot_radius": 1.2593814134597778
+        "dot_radius": 1.3369117975234985
       },
       "elements": {
         "button0": {
@@ -2423,7 +2424,7 @@
     {
       "t_ms": 151,
       "props": {
-        "dot_radius": 1.3369117975234985
+        "dot_radius": 1.415522575378418
       },
       "elements": {
         "button0": {
@@ -2439,7 +2440,7 @@
     {
       "t_ms": 152,
       "props": {
-        "dot_radius": 1.415522575378418
+        "dot_radius": 1.4951156377792358
       },
       "elements": {
         "button0": {
@@ -2455,7 +2456,7 @@
     {
       "t_ms": 153,
       "props": {
-        "dot_radius": 1.4951156377792358
+        "dot_radius": 1.5755958557128906
       },
       "elements": {
         "button0": {
@@ -2471,7 +2472,7 @@
     {
       "t_ms": 154,
       "props": {
-        "dot_radius": 1.5755958557128906
+        "dot_radius": 1.6568702459335327
       },
       "elements": {
         "button0": {
@@ -2487,7 +2488,7 @@
     {
       "t_ms": 155,
       "props": {
-        "dot_radius": 1.6568702459335327
+        "dot_radius": 1.738848328590393
       },
       "elements": {
         "button0": {
@@ -2503,7 +2504,7 @@
     {
       "t_ms": 156,
       "props": {
-        "dot_radius": 1.738848328590393
+        "dot_radius": 1.8214421272277832
       },
       "elements": {
         "button0": {
@@ -2519,7 +2520,7 @@
     {
       "t_ms": 157,
       "props": {
-        "dot_radius": 1.8214421272277832
+        "dot_radius": 1.9045661687850952
       },
       "elements": {
         "button0": {
@@ -2535,7 +2536,7 @@
     {
       "t_ms": 158,
       "props": {
-        "dot_radius": 1.9045661687850952
+        "dot_radius": 1.9881374835968018
       },
       "elements": {
         "button0": {
@@ -2551,7 +2552,7 @@
     {
       "t_ms": 159,
       "props": {
-        "dot_radius": 1.9881374835968018
+        "dot_radius": 2.072075128555298
       },
       "elements": {
         "button0": {
@@ -2567,7 +2568,7 @@
     {
       "t_ms": 160,
       "props": {
-        "dot_radius": 2.072075128555298
+        "dot_radius": 2.156301259994507
       },
       "elements": {
         "button0": {
@@ -2583,7 +2584,7 @@
     {
       "t_ms": 161,
       "props": {
-        "dot_radius": 2.156301259994507
+        "dot_radius": 2.240739583969116
       },
       "elements": {
         "button0": {
@@ -2599,7 +2600,7 @@
     {
       "t_ms": 162,
       "props": {
-        "dot_radius": 2.240739583969116
+        "dot_radius": 2.325316905975342
       },
       "elements": {
         "button0": {
@@ -2615,7 +2616,7 @@
     {
       "t_ms": 163,
       "props": {
-        "dot_radius": 2.325316905975342
+        "dot_radius": 2.4099619388580322
       },
       "elements": {
         "button0": {
@@ -2631,7 +2632,7 @@
     {
       "t_ms": 164,
       "props": {
-        "dot_radius": 2.4099619388580322
+        "dot_radius": 2.4946060180664062
       },
       "elements": {
         "button0": {
@@ -2647,7 +2648,7 @@
     {
       "t_ms": 165,
       "props": {
-        "dot_radius": 2.4946060180664062
+        "dot_radius": 2.5791823863983154
       },
       "elements": {
         "button0": {
@@ -2663,7 +2664,7 @@
     {
       "t_ms": 166,
       "props": {
-        "dot_radius": 2.5791823863983154
+        "dot_radius": 2.6636269092559814
       },
       "elements": {
         "button0": {
@@ -2679,7 +2680,7 @@
     {
       "t_ms": 167,
       "props": {
-        "dot_radius": 2.6636269092559814
+        "dot_radius": 2.747877359390259
       },
       "elements": {
         "button0": {
@@ -2695,7 +2696,7 @@
     {
       "t_ms": 168,
       "props": {
-        "dot_radius": 2.747877359390259
+        "dot_radius": 2.831874132156372
       },
       "elements": {
         "button0": {
@@ -2711,7 +2712,7 @@
     {
       "t_ms": 169,
       "props": {
-        "dot_radius": 2.831874132156372
+        "dot_radius": 2.915559768676758
       },
       "elements": {
         "button0": {
@@ -2727,7 +2728,7 @@
     {
       "t_ms": 170,
       "props": {
-        "dot_radius": 2.915559768676758
+        "dot_radius": 2.9988787174224854
       },
       "elements": {
         "button0": {
@@ -2743,7 +2744,7 @@
     {
       "t_ms": 171,
       "props": {
-        "dot_radius": 2.9988787174224854
+        "dot_radius": 3.081777334213257
       },
       "elements": {
         "button0": {
@@ -2759,7 +2760,7 @@
     {
       "t_ms": 172,
       "props": {
-        "dot_radius": 3.081777334213257
+        "dot_radius": 3.1642048358917236
       },
       "elements": {
         "button0": {
@@ -2775,7 +2776,7 @@
     {
       "t_ms": 173,
       "props": {
-        "dot_radius": 3.1642048358917236
+        "dot_radius": 3.246112108230591
       },
       "elements": {
         "button0": {
@@ -2791,7 +2792,7 @@
     {
       "t_ms": 174,
       "props": {
-        "dot_radius": 3.246112108230591
+        "dot_radius": 3.3274519443511963
       },
       "elements": {
         "button0": {
@@ -2807,7 +2808,7 @@
     {
       "t_ms": 175,
       "props": {
-        "dot_radius": 3.3274519443511963
+        "dot_radius": 3.408179521560669
       },
       "elements": {
         "button0": {
@@ -2823,7 +2824,7 @@
     {
       "t_ms": 176,
       "props": {
-        "dot_radius": 3.408179521560669
+        "dot_radius": 3.4882514476776123
       },
       "elements": {
         "button0": {
@@ -2839,7 +2840,7 @@
     {
       "t_ms": 177,
       "props": {
-        "dot_radius": 3.4882514476776123
+        "dot_radius": 3.567626953125
       },
       "elements": {
         "button0": {
@@ -2855,7 +2856,7 @@
     {
       "t_ms": 178,
       "props": {
-        "dot_radius": 3.567626953125
+        "dot_radius": 3.646266460418701
       },
       "elements": {
         "button0": {
@@ -2871,7 +2872,7 @@
     {
       "t_ms": 179,
       "props": {
-        "dot_radius": 3.646266460418701
+        "dot_radius": 3.724133014678955
       },
       "elements": {
         "button0": {
@@ -2887,7 +2888,7 @@
     {
       "t_ms": 180,
       "props": {
-        "dot_radius": 3.724133014678955
+        "dot_radius": 3.8011910915374756
       },
       "elements": {
         "button0": {
@@ -2903,7 +2904,7 @@
     {
       "t_ms": 181,
       "props": {
-        "dot_radius": 3.8011910915374756
+        "dot_radius": 3.8774070739746094
       },
       "elements": {
         "button0": {
@@ -2919,7 +2920,7 @@
     {
       "t_ms": 182,
       "props": {
-        "dot_radius": 3.8774070739746094
+        "dot_radius": 3.952749013900757
       },
       "elements": {
         "button0": {
@@ -2935,7 +2936,7 @@
     {
       "t_ms": 183,
       "props": {
-        "dot_radius": 3.952749013900757
+        "dot_radius": 4.027186870574951
       },
       "elements": {
         "button0": {
@@ -2951,7 +2952,7 @@
     {
       "t_ms": 184,
       "props": {
-        "dot_radius": 4.027186870574951
+        "dot_radius": 4.100692272186279
       },
       "elements": {
         "button0": {
@@ -2967,7 +2968,7 @@
     {
       "t_ms": 185,
       "props": {
-        "dot_radius": 4.100692272186279
+        "dot_radius": 4.173238754272461
       },
       "elements": {
         "button0": {
@@ -2983,7 +2984,7 @@
     {
       "t_ms": 186,
       "props": {
-        "dot_radius": 4.173238754272461
+        "dot_radius": 4.244800567626953
       },
       "elements": {
         "button0": {
@@ -2999,7 +3000,7 @@
     {
       "t_ms": 187,
       "props": {
-        "dot_radius": 4.244800567626953
+        "dot_radius": 4.31535530090332
       },
       "elements": {
         "button0": {
@@ -3015,7 +3016,7 @@
     {
       "t_ms": 188,
       "props": {
-        "dot_radius": 4.31535530090332
+        "dot_radius": 4.384880065917969
       },
       "elements": {
         "button0": {
@@ -3031,7 +3032,7 @@
     {
       "t_ms": 189,
       "props": {
-        "dot_radius": 4.384880065917969
+        "dot_radius": 4.453355312347412
       },
       "elements": {
         "button0": {
@@ -3047,7 +3048,7 @@
     {
       "t_ms": 190,
       "props": {
-        "dot_radius": 4.453355312347412
+        "dot_radius": 4.520761489868164
       },
       "elements": {
         "button0": {
@@ -3063,7 +3064,7 @@
     {
       "t_ms": 191,
       "props": {
-        "dot_radius": 4.520761489868164
+        "dot_radius": 4.587082386016846
       },
       "elements": {
         "button0": {
@@ -3079,7 +3080,7 @@
     {
       "t_ms": 192,
       "props": {
-        "dot_radius": 4.587082386016846
+        "dot_radius": 4.652300834655762
       },
       "elements": {
         "button0": {
@@ -3095,7 +3096,7 @@
     {
       "t_ms": 193,
       "props": {
-        "dot_radius": 4.652300834655762
+        "dot_radius": 4.716403007507324
       },
       "elements": {
         "button0": {
@@ -3111,7 +3112,7 @@
     {
       "t_ms": 194,
       "props": {
-        "dot_radius": 4.716403007507324
+        "dot_radius": 4.779375076293945
       },
       "elements": {
         "button0": {
@@ -3127,7 +3128,7 @@
     {
       "t_ms": 195,
       "props": {
-        "dot_radius": 4.779375076293945
+        "dot_radius": 4.8412065505981445
       },
       "elements": {
         "button0": {
@@ -3143,7 +3144,7 @@
     {
       "t_ms": 196,
       "props": {
-        "dot_radius": 4.8412065505981445
+        "dot_radius": 4.901885509490967
       },
       "elements": {
         "button0": {
@@ -3159,7 +3160,7 @@
     {
       "t_ms": 197,
       "props": {
-        "dot_radius": 4.901885509490967
+        "dot_radius": 4.9614033699035645
       },
       "elements": {
         "button0": {
@@ -3175,7 +3176,7 @@
     {
       "t_ms": 198,
       "props": {
-        "dot_radius": 4.9614033699035645
+        "dot_radius": 5.01975154876709
       },
       "elements": {
         "button0": {
@@ -3191,7 +3192,7 @@
     {
       "t_ms": 199,
       "props": {
-        "dot_radius": 5.01975154876709
+        "dot_radius": 5.076923847198486
       },
       "elements": {
         "button0": {
@@ -3207,7 +3208,7 @@
     {
       "t_ms": 200,
       "props": {
-        "dot_radius": 5.076923847198486
+        "dot_radius": 5.1329145431518555
       },
       "elements": {
         "button0": {
@@ -3223,7 +3224,7 @@
     {
       "t_ms": 201,
       "props": {
-        "dot_radius": 5.1329145431518555
+        "dot_radius": 5.187718391418457
       },
       "elements": {
         "button0": {
@@ -3239,7 +3240,7 @@
     {
       "t_ms": 202,
       "props": {
-        "dot_radius": 5.187718391418457
+        "dot_radius": 5.241332054138184
       },
       "elements": {
         "button0": {
@@ -3255,7 +3256,7 @@
     {
       "t_ms": 203,
       "props": {
-        "dot_radius": 5.241332054138184
+        "dot_radius": 5.293753623962402
       },
       "elements": {
         "button0": {
@@ -3271,7 +3272,7 @@
     {
       "t_ms": 204,
       "props": {
-        "dot_radius": 5.293753623962402
+        "dot_radius": 5.344980716705322
       },
       "elements": {
         "button0": {
@@ -3287,7 +3288,7 @@
     {
       "t_ms": 205,
       "props": {
-        "dot_radius": 5.344980716705322
+        "dot_radius": 5.395013809204102
       },
       "elements": {
         "button0": {
@@ -3303,7 +3304,7 @@
     {
       "t_ms": 206,
       "props": {
-        "dot_radius": 5.395013809204102
+        "dot_radius": 5.443853378295898
       },
       "elements": {
         "button0": {
@@ -3319,7 +3320,7 @@
     {
       "t_ms": 207,
       "props": {
-        "dot_radius": 5.443853378295898
+        "dot_radius": 5.491500377655029
       },
       "elements": {
         "button0": {
@@ -3335,7 +3336,7 @@
     {
       "t_ms": 208,
       "props": {
-        "dot_radius": 5.491500377655029
+        "dot_radius": 5.537956714630127
       },
       "elements": {
         "button0": {
@@ -3351,7 +3352,7 @@
     {
       "t_ms": 209,
       "props": {
-        "dot_radius": 5.537956714630127
+        "dot_radius": 5.583226680755615
       },
       "elements": {
         "button0": {
@@ -3367,7 +3368,7 @@
     {
       "t_ms": 210,
       "props": {
-        "dot_radius": 5.583226680755615
+        "dot_radius": 5.627313613891602
       },
       "elements": {
         "button0": {
@@ -3383,7 +3384,7 @@
     {
       "t_ms": 211,
       "props": {
-        "dot_radius": 5.627313613891602
+        "dot_radius": 5.670222282409668
       },
       "elements": {
         "button0": {
@@ -3399,7 +3400,7 @@
     {
       "t_ms": 212,
       "props": {
-        "dot_radius": 5.670222282409668
+        "dot_radius": 5.711958408355713
       },
       "elements": {
         "button0": {
@@ -3415,7 +3416,7 @@
     {
       "t_ms": 213,
       "props": {
-        "dot_radius": 5.711958408355713
+        "dot_radius": 5.752528667449951
       },
       "elements": {
         "button0": {
@@ -3431,7 +3432,7 @@
     {
       "t_ms": 214,
       "props": {
-        "dot_radius": 5.752528667449951
+        "dot_radius": 5.7919392585754395
       },
       "elements": {
         "button0": {
@@ -3447,7 +3448,7 @@
     {
       "t_ms": 215,
       "props": {
-        "dot_radius": 5.7919392585754395
+        "dot_radius": 5.830198287963867
       },
       "elements": {
         "button0": {
@@ -3463,7 +3464,7 @@
     {
       "t_ms": 216,
       "props": {
-        "dot_radius": 5.830198287963867
+        "dot_radius": 5.867314338684082
       },
       "elements": {
         "button0": {
@@ -3479,7 +3480,7 @@
     {
       "t_ms": 217,
       "props": {
-        "dot_radius": 5.867314338684082
+        "dot_radius": 5.903295993804932
       },
       "elements": {
         "button0": {
@@ -3495,7 +3496,7 @@
     {
       "t_ms": 218,
       "props": {
-        "dot_radius": 5.903295993804932
+        "dot_radius": 5.938153266906738
       },
       "elements": {
         "button0": {
@@ -3511,7 +3512,7 @@
     {
       "t_ms": 219,
       "props": {
-        "dot_radius": 5.938153266906738
+        "dot_radius": 5.971895694732666
       },
       "elements": {
         "button0": {
@@ -3527,7 +3528,7 @@
     {
       "t_ms": 220,
       "props": {
-        "dot_radius": 5.971895694732666
+        "dot_radius": 6.004533767700195
       },
       "elements": {
         "button0": {
@@ -3543,7 +3544,7 @@
     {
       "t_ms": 221,
       "props": {
-        "dot_radius": 6.004533767700195
+        "dot_radius": 6.0360798835754395
       },
       "elements": {
         "button0": {
@@ -3559,7 +3560,7 @@
     {
       "t_ms": 222,
       "props": {
-        "dot_radius": 6.0360798835754395
+        "dot_radius": 6.066544532775879
       },
       "elements": {
         "button0": {
@@ -3575,7 +3576,7 @@
     {
       "t_ms": 223,
       "props": {
-        "dot_radius": 6.066544532775879
+        "dot_radius": 6.095940113067627
       },
       "elements": {
         "button0": {
@@ -3591,7 +3592,7 @@
     {
       "t_ms": 224,
       "props": {
-        "dot_radius": 6.095940113067627
+        "dot_radius": 6.124279022216797
       },
       "elements": {
         "button0": {
@@ -3607,7 +3608,7 @@
     {
       "t_ms": 225,
       "props": {
-        "dot_radius": 6.124279022216797
+        "dot_radius": 6.151574611663818
       },
       "elements": {
         "button0": {
@@ -3623,7 +3624,7 @@
     {
       "t_ms": 226,
       "props": {
-        "dot_radius": 6.151574611663818
+        "dot_radius": 6.177840232849121
       },
       "elements": {
         "button0": {
@@ -3639,7 +3640,7 @@
     {
       "t_ms": 227,
       "props": {
-        "dot_radius": 6.177840232849121
+        "dot_radius": 6.203089714050293
       },
       "elements": {
         "button0": {
@@ -3655,7 +3656,7 @@
     {
       "t_ms": 228,
       "props": {
-        "dot_radius": 6.203089714050293
+        "dot_radius": 6.227336406707764
       },
       "elements": {
         "button0": {
@@ -3671,7 +3672,7 @@
     {
       "t_ms": 229,
       "props": {
-        "dot_radius": 6.227336406707764
+        "dot_radius": 6.2505950927734375
       },
       "elements": {
         "button0": {
@@ -3687,7 +3688,7 @@
     {
       "t_ms": 230,
       "props": {
-        "dot_radius": 6.2505950927734375
+        "dot_radius": 6.272881031036377
       },
       "elements": {
         "button0": {
@@ -3703,7 +3704,7 @@
     {
       "t_ms": 231,
       "props": {
-        "dot_radius": 6.272881031036377
+        "dot_radius": 6.29420804977417
       },
       "elements": {
         "button0": {
@@ -3719,7 +3720,7 @@
     {
       "t_ms": 232,
       "props": {
-        "dot_radius": 6.29420804977417
+        "dot_radius": 6.314592361450195
       },
       "elements": {
         "button0": {
@@ -3735,7 +3736,7 @@
     {
       "t_ms": 233,
       "props": {
-        "dot_radius": 6.314592361450195
+        "dot_radius": 6.334048748016357
       },
       "elements": {
         "button0": {
@@ -3751,7 +3752,7 @@
     {
       "t_ms": 234,
       "props": {
-        "dot_radius": 6.334048748016357
+        "dot_radius": 6.352592945098877
       },
       "elements": {
         "button0": {
@@ -3767,7 +3768,7 @@
     {
       "t_ms": 235,
       "props": {
-        "dot_radius": 6.352592945098877
+        "dot_radius": 6.370241165161133
       },
       "elements": {
         "button0": {
@@ -3783,7 +3784,7 @@
     {
       "t_ms": 236,
       "props": {
-        "dot_radius": 6.370241165161133
+        "dot_radius": 6.387009620666504
       },
       "elements": {
         "button0": {
@@ -3799,7 +3800,7 @@
     {
       "t_ms": 237,
       "props": {
-        "dot_radius": 6.387009620666504
+        "dot_radius": 6.402913570404053
       },
       "elements": {
         "button0": {
@@ -3815,7 +3816,7 @@
     {
       "t_ms": 238,
       "props": {
-        "dot_radius": 6.402913570404053
+        "dot_radius": 6.417970180511475
       },
       "elements": {
         "button0": {
@@ -3831,7 +3832,7 @@
     {
       "t_ms": 239,
       "props": {
-        "dot_radius": 6.417970180511475
+        "dot_radius": 6.43219518661499
       },
       "elements": {
         "button0": {
@@ -3847,7 +3848,7 @@
     {
       "t_ms": 240,
       "props": {
-        "dot_radius": 6.43219518661499
+        "dot_radius": 6.445605754852295
       },
       "elements": {
         "button0": {
@@ -3863,7 +3864,7 @@
     {
       "t_ms": 241,
       "props": {
-        "dot_radius": 6.445605754852295
+        "dot_radius": 6.458218574523926
       },
       "elements": {
         "button0": {
@@ -3879,7 +3880,7 @@
     {
       "t_ms": 242,
       "props": {
-        "dot_radius": 6.458218574523926
+        "dot_radius": 6.470049858093262
       },
       "elements": {
         "button0": {
@@ -3895,7 +3896,7 @@
     {
       "t_ms": 243,
       "props": {
-        "dot_radius": 6.470049858093262
+        "dot_radius": 6.481116771697998
       },
       "elements": {
         "button0": {
@@ -3911,7 +3912,7 @@
     {
       "t_ms": 244,
       "props": {
-        "dot_radius": 6.481116771697998
+        "dot_radius": 6.491435527801514
       },
       "elements": {
         "button0": {
@@ -3927,7 +3928,7 @@
     {
       "t_ms": 245,
       "props": {
-        "dot_radius": 6.491435527801514
+        "dot_radius": 6.501023769378662
       },
       "elements": {
         "button0": {
@@ -3943,7 +3944,7 @@
     {
       "t_ms": 246,
       "props": {
-        "dot_radius": 6.501023769378662
+        "dot_radius": 6.509897708892822
       },
       "elements": {
         "button0": {
@@ -3959,7 +3960,7 @@
     {
       "t_ms": 247,
       "props": {
-        "dot_radius": 6.509897708892822
+        "dot_radius": 6.518074989318848
       },
       "elements": {
         "button0": {
@@ -3975,7 +3976,7 @@
     {
       "t_ms": 248,
       "props": {
-        "dot_radius": 6.518074989318848
+        "dot_radius": 6.525571346282959
       },
       "elements": {
         "button0": {
@@ -3991,7 +3992,7 @@
     {
       "t_ms": 249,
       "props": {
-        "dot_radius": 6.525571346282959
+        "dot_radius": 6.53240442276001
       },
       "elements": {
         "button0": {
@@ -4007,7 +4008,7 @@
     {
       "t_ms": 250,
       "props": {
-        "dot_radius": 6.53240442276001
+        "dot_radius": 6.538590431213379
       },
       "elements": {
         "button0": {
@@ -4023,7 +4024,7 @@
     {
       "t_ms": 251,
       "props": {
-        "dot_radius": 6.538590431213379
+        "dot_radius": 6.54414701461792
       },
       "elements": {
         "button0": {
@@ -4039,7 +4040,7 @@
     {
       "t_ms": 252,
       "props": {
-        "dot_radius": 6.54414701461792
+        "dot_radius": 6.549089431762695
       },
       "elements": {
         "button0": {
@@ -4055,7 +4056,7 @@
     {
       "t_ms": 253,
       "props": {
-        "dot_radius": 6.549089431762695
+        "dot_radius": 6.553435802459717
       },
       "elements": {
         "button0": {
@@ -4071,7 +4072,7 @@
     {
       "t_ms": 254,
       "props": {
-        "dot_radius": 6.553435802459717
+        "dot_radius": 6.557201385498047
       },
       "elements": {
         "button0": {
@@ -4087,7 +4088,7 @@
     {
       "t_ms": 255,
       "props": {
-        "dot_radius": 6.557201385498047
+        "dot_radius": 6.560402870178223
       },
       "elements": {
         "button0": {
@@ -4103,7 +4104,7 @@
     {
       "t_ms": 256,
       "props": {
-        "dot_radius": 6.560402870178223
+        "dot_radius": 6.563056945800781
       },
       "elements": {
         "button0": {
@@ -4119,7 +4120,7 @@
     {
       "t_ms": 257,
       "props": {
-        "dot_radius": 6.563056945800781
+        "dot_radius": 6.565179824829102
       },
       "elements": {
         "button0": {
@@ -4135,7 +4136,7 @@
     {
       "t_ms": 258,
       "props": {
-        "dot_radius": 6.565179824829102
+        "dot_radius": 6.566787242889404
       },
       "elements": {
         "button0": {
@@ -4151,7 +4152,7 @@
     {
       "t_ms": 259,
       "props": {
-        "dot_radius": 6.566787242889404
+        "dot_radius": 6.56789493560791
       },
       "elements": {
         "button0": {
@@ -4167,7 +4168,7 @@
     {
       "t_ms": 260,
       "props": {
-        "dot_radius": 6.56789493560791
+        "dot_radius": 6.568519115447998
       },
       "elements": {
         "button0": {
@@ -4183,7 +4184,7 @@
     {
       "t_ms": 261,
       "props": {
-        "dot_radius": 6.568519115447998
+        "dot_radius": 6.568675518035889
       },
       "elements": {
         "button0": {
@@ -4199,7 +4200,7 @@
     {
       "t_ms": 262,
       "props": {
-        "dot_radius": 6.568675518035889
+        "dot_radius": 6.5683794021606445
       },
       "elements": {
         "button0": {
@@ -4215,7 +4216,7 @@
     {
       "t_ms": 263,
       "props": {
-        "dot_radius": 6.5683794021606445
+        "dot_radius": 6.567646026611328
       },
       "elements": {
         "button0": {
@@ -4231,7 +4232,7 @@
     {
       "t_ms": 264,
       "props": {
-        "dot_radius": 6.567646026611328
+        "dot_radius": 6.566490650177002
       },
       "elements": {
         "button0": {
@@ -4247,7 +4248,7 @@
     {
       "t_ms": 265,
       "props": {
-        "dot_radius": 6.566490650177002
+        "dot_radius": 6.56492805480957
       },
       "elements": {
         "button0": {
@@ -4263,7 +4264,7 @@
     {
       "t_ms": 266,
       "props": {
-        "dot_radius": 6.56492805480957
+        "dot_radius": 6.562973499298096
       },
       "elements": {
         "button0": {
@@ -4279,7 +4280,7 @@
     {
       "t_ms": 267,
       "props": {
-        "dot_radius": 6.562973499298096
+        "dot_radius": 6.560641288757324
       },
       "elements": {
         "button0": {
@@ -4295,7 +4296,7 @@
     {
       "t_ms": 268,
       "props": {
-        "dot_radius": 6.560641288757324
+        "dot_radius": 6.55794620513916
       },
       "elements": {
         "button0": {
@@ -4311,7 +4312,7 @@
     {
       "t_ms": 269,
       "props": {
-        "dot_radius": 6.55794620513916
+        "dot_radius": 6.554902076721191
       },
       "elements": {
         "button0": {
@@ -4327,7 +4328,7 @@
     {
       "t_ms": 270,
       "props": {
-        "dot_radius": 6.554902076721191
+        "dot_radius": 6.551522731781006
       },
       "elements": {
         "button0": {
@@ -4343,7 +4344,7 @@
     {
       "t_ms": 271,
       "props": {
-        "dot_radius": 6.551522731781006
+        "dot_radius": 6.547822952270508
       },
       "elements": {
         "button0": {
@@ -4359,7 +4360,7 @@
     {
       "t_ms": 272,
       "props": {
-        "dot_radius": 6.547822952270508
+        "dot_radius": 6.543815612792969
       },
       "elements": {
         "button0": {
@@ -4375,7 +4376,7 @@
     {
       "t_ms": 273,
       "props": {
-        "dot_radius": 6.543815612792969
+        "dot_radius": 6.539514064788818
       },
       "elements": {
         "button0": {
@@ -4391,7 +4392,7 @@
     {
       "t_ms": 274,
       "props": {
-        "dot_radius": 6.539514064788818
+        "dot_radius": 6.534931659698486
       },
       "elements": {
         "button0": {
@@ -4407,7 +4408,7 @@
     {
       "t_ms": 275,
       "props": {
-        "dot_radius": 6.534931659698486
+        "dot_radius": 6.530081748962402
       },
       "elements": {
         "button0": {
@@ -4423,7 +4424,7 @@
     {
       "t_ms": 276,
       "props": {
-        "dot_radius": 6.530081748962402
+        "dot_radius": 6.52497673034668
       },
       "elements": {
         "button0": {
@@ -4439,7 +4440,7 @@
     {
       "t_ms": 277,
       "props": {
-        "dot_radius": 6.52497673034668
+        "dot_radius": 6.519629001617432
       },
       "elements": {
         "button0": {
@@ -4455,7 +4456,7 @@
     {
       "t_ms": 278,
       "props": {
-        "dot_radius": 6.519629001617432
+        "dot_radius": 6.5140509605407715
       },
       "elements": {
         "button0": {
@@ -4471,7 +4472,7 @@
     {
       "t_ms": 279,
       "props": {
-        "dot_radius": 6.5140509605407715
+        "dot_radius": 6.5082550048828125
       },
       "elements": {
         "button0": {
@@ -4487,7 +4488,7 @@
     {
       "t_ms": 280,
       "props": {
-        "dot_radius": 6.5082550048828125
+        "dot_radius": 6.502252578735352
       },
       "elements": {
         "button0": {
@@ -4503,7 +4504,7 @@
     {
       "t_ms": 281,
       "props": {
-        "dot_radius": 6.502252578735352
+        "dot_radius": 6.496055603027344
       },
       "elements": {
         "button0": {
@@ -4519,7 +4520,7 @@
     {
       "t_ms": 282,
       "props": {
-        "dot_radius": 6.496055603027344
+        "dot_radius": 6.489675045013428
       },
       "elements": {
         "button0": {
@@ -4535,7 +4536,7 @@
     {
       "t_ms": 283,
       "props": {
-        "dot_radius": 6.489675045013428
+        "dot_radius": 6.4831223487854
       },
       "elements": {
         "button0": {
@@ -4551,7 +4552,7 @@
     {
       "t_ms": 284,
       "props": {
-        "dot_radius": 6.4831223487854
+        "dot_radius": 6.4764084815979
       },
       "elements": {
         "button0": {
@@ -4567,7 +4568,7 @@
     {
       "t_ms": 285,
       "props": {
-        "dot_radius": 6.4764084815979
+        "dot_radius": 6.469543933868408
       },
       "elements": {
         "button0": {
@@ -4583,7 +4584,7 @@
     {
       "t_ms": 286,
       "props": {
-        "dot_radius": 6.469543933868408
+        "dot_radius": 6.462538719177246
       },
       "elements": {
         "button0": {
@@ -4599,7 +4600,7 @@
     {
       "t_ms": 287,
       "props": {
-        "dot_radius": 6.462538719177246
+        "dot_radius": 6.455403804779053
       },
       "elements": {
         "button0": {
@@ -4615,7 +4616,7 @@
     {
       "t_ms": 288,
       "props": {
-        "dot_radius": 6.455403804779053
+        "dot_radius": 6.44814920425415
       },
       "elements": {
         "button0": {
@@ -4631,7 +4632,7 @@
     {
       "t_ms": 289,
       "props": {
-        "dot_radius": 6.44814920425415
+        "dot_radius": 6.440783500671387
       },
       "elements": {
         "button0": {
@@ -4647,7 +4648,7 @@
     {
       "t_ms": 290,
       "props": {
-        "dot_radius": 6.440783500671387
+        "dot_radius": 6.4333176612854
       },
       "elements": {
         "button0": {
@@ -4663,7 +4664,7 @@
     {
       "t_ms": 291,
       "props": {
-        "dot_radius": 6.4333176612854
+        "dot_radius": 6.425759792327881
       },
       "elements": {
         "button0": {
@@ -4679,7 +4680,7 @@
     {
       "t_ms": 292,
       "props": {
-        "dot_radius": 6.425759792327881
+        "dot_radius": 6.418118953704834
       },
       "elements": {
         "button0": {
@@ -4695,7 +4696,7 @@
     {
       "t_ms": 293,
       "props": {
-        "dot_radius": 6.418118953704834
+        "dot_radius": 6.410404682159424
       },
       "elements": {
         "button0": {
@@ -4711,7 +4712,7 @@
     {
       "t_ms": 294,
       "props": {
-        "dot_radius": 6.410404682159424
+        "dot_radius": 6.402624607086182
       },
       "elements": {
         "button0": {
@@ -4727,7 +4728,7 @@
     {
       "t_ms": 295,
       "props": {
-        "dot_radius": 6.402624607086182
+        "dot_radius": 6.394787788391113
       },
       "elements": {
         "button0": {
@@ -4743,7 +4744,7 @@
     {
       "t_ms": 296,
       "props": {
-        "dot_radius": 6.394787788391113
+        "dot_radius": 6.386902332305908
       },
       "elements": {
         "button0": {
@@ -4759,7 +4760,7 @@
     {
       "t_ms": 297,
       "props": {
-        "dot_radius": 6.386902332305908
+        "dot_radius": 6.3789753913879395
       },
       "elements": {
         "button0": {
@@ -4775,7 +4776,7 @@
     {
       "t_ms": 298,
       "props": {
-        "dot_radius": 6.3789753913879395
+        "dot_radius": 6.371014595031738
       },
       "elements": {
         "button0": {
@@ -4791,7 +4792,7 @@
     {
       "t_ms": 299,
       "props": {
-        "dot_radius": 6.371014595031738
+        "dot_radius": 6.363028049468994
       },
       "elements": {
         "button0": {
@@ -4807,7 +4808,7 @@
     {
       "t_ms": 300,
       "props": {
-        "dot_radius": 6.363028049468994
+        "dot_radius": 6.355022430419922
       },
       "elements": {
         "button0": {
@@ -4823,7 +4824,7 @@
     {
       "t_ms": 301,
       "props": {
-        "dot_radius": 6.355022430419922
+        "dot_radius": 6.347004413604736
       },
       "elements": {
         "button0": {
@@ -4839,7 +4840,7 @@
     {
       "t_ms": 302,
       "props": {
-        "dot_radius": 6.347004413604736
+        "dot_radius": 6.338981628417969
       },
       "elements": {
         "button0": {
@@ -4855,7 +4856,7 @@
     {
       "t_ms": 303,
       "props": {
-        "dot_radius": 6.338981628417969
+        "dot_radius": 6.330959796905518
       },
       "elements": {
         "button0": {
@@ -4871,7 +4872,7 @@
     {
       "t_ms": 304,
       "props": {
-        "dot_radius": 6.330959796905518
+        "dot_radius": 6.3229451179504395
       },
       "elements": {
         "button0": {
@@ -4887,7 +4888,7 @@
     {
       "t_ms": 305,
       "props": {
-        "dot_radius": 6.3229451179504395
+        "dot_radius": 6.314943790435791
       },
       "elements": {
         "button0": {
@@ -4903,7 +4904,7 @@
     {
       "t_ms": 306,
       "props": {
-        "dot_radius": 6.314943790435791
+        "dot_radius": 6.306962013244629
       },
       "elements": {
         "button0": {
@@ -4919,7 +4920,7 @@
     {
       "t_ms": 307,
       "props": {
-        "dot_radius": 6.306962013244629
+        "dot_radius": 6.299005031585693
       },
       "elements": {
         "button0": {
@@ -4935,7 +4936,7 @@
     {
       "t_ms": 308,
       "props": {
-        "dot_radius": 6.299005031585693
+        "dot_radius": 6.291078567504883
       },
       "elements": {
         "button0": {
@@ -4951,7 +4952,7 @@
     {
       "t_ms": 309,
       "props": {
-        "dot_radius": 6.291078567504883
+        "dot_radius": 6.2831878662109375
       },
       "elements": {
         "button0": {
@@ -4967,7 +4968,7 @@
     {
       "t_ms": 310,
       "props": {
-        "dot_radius": 6.2831878662109375
+        "dot_radius": 6.275337219238281
       },
       "elements": {
         "button0": {
@@ -4983,7 +4984,7 @@
     {
       "t_ms": 311,
       "props": {
-        "dot_radius": 6.275337219238281
+        "dot_radius": 6.2675323486328125
       },
       "elements": {
         "button0": {
@@ -4999,7 +5000,7 @@
     {
       "t_ms": 312,
       "props": {
-        "dot_radius": 6.2675323486328125
+        "dot_radius": 6.259777545928955
       },
       "elements": {
         "button0": {
@@ -5015,7 +5016,7 @@
     {
       "t_ms": 313,
       "props": {
-        "dot_radius": 6.259777545928955
+        "dot_radius": 6.252077102661133
       },
       "elements": {
         "button0": {
@@ -5031,7 +5032,7 @@
     {
       "t_ms": 314,
       "props": {
-        "dot_radius": 6.252077102661133
+        "dot_radius": 6.2444353103637695
       },
       "elements": {
         "button0": {
@@ -5047,7 +5048,7 @@
     {
       "t_ms": 315,
       "props": {
-        "dot_radius": 6.2444353103637695
+        "dot_radius": 6.236856460571289
       },
       "elements": {
         "button0": {
@@ -5063,7 +5064,7 @@
     {
       "t_ms": 316,
       "props": {
-        "dot_radius": 6.236856460571289
+        "dot_radius": 6.229344367980957
       },
       "elements": {
         "button0": {
@@ -5079,7 +5080,7 @@
     {
       "t_ms": 317,
       "props": {
-        "dot_radius": 6.229344367980957
+        "dot_radius": 6.221902370452881
       },
       "elements": {
         "button0": {
@@ -5095,7 +5096,7 @@
     {
       "t_ms": 318,
       "props": {
-        "dot_radius": 6.221902370452881
+        "dot_radius": 6.214533805847168
       },
       "elements": {
         "button0": {
@@ -5111,7 +5112,7 @@
     {
       "t_ms": 319,
       "props": {
-        "dot_radius": 6.214533805847168
+        "dot_radius": 6.207242965698242
       },
       "elements": {
         "button0": {
@@ -5127,7 +5128,7 @@
     {
       "t_ms": 320,
       "props": {
-        "dot_radius": 6.207242965698242
+        "dot_radius": 6.2000322341918945
       },
       "elements": {
         "button0": {
@@ -5143,7 +5144,7 @@
     {
       "t_ms": 321,
       "props": {
-        "dot_radius": 6.2000322341918945
+        "dot_radius": 6.192904949188232
       },
       "elements": {
         "button0": {
@@ -5159,7 +5160,7 @@
     {
       "t_ms": 322,
       "props": {
-        "dot_radius": 6.192904949188232
+        "dot_radius": 6.185863494873047
       },
       "elements": {
         "button0": {
@@ -5175,7 +5176,7 @@
     {
       "t_ms": 323,
       "props": {
-        "dot_radius": 6.185863494873047
+        "dot_radius": 6.178911209106445
       },
       "elements": {
         "button0": {
@@ -5191,7 +5192,7 @@
     {
       "t_ms": 324,
       "props": {
-        "dot_radius": 6.178911209106445
+        "dot_radius": 6.1720499992370605
       },
       "elements": {
         "button0": {
@@ -5207,7 +5208,7 @@
     {
       "t_ms": 325,
       "props": {
-        "dot_radius": 6.1720499992370605
+        "dot_radius": 6.165282249450684
       },
       "elements": {
         "button0": {
@@ -5223,7 +5224,7 @@
     {
       "t_ms": 326,
       "props": {
-        "dot_radius": 6.165282249450684
+        "dot_radius": 6.158610820770264
       },
       "elements": {
         "button0": {
@@ -5239,7 +5240,7 @@
     {
       "t_ms": 327,
       "props": {
-        "dot_radius": 6.158610820770264
+        "dot_radius": 6.152036666870117
       },
       "elements": {
         "button0": {
@@ -5255,7 +5256,7 @@
     {
       "t_ms": 328,
       "props": {
-        "dot_radius": 6.152036666870117
+        "dot_radius": 6.145562648773193
       },
       "elements": {
         "button0": {
@@ -5271,7 +5272,7 @@
     {
       "t_ms": 329,
       "props": {
-        "dot_radius": 6.145562648773193
+        "dot_radius": 6.139190196990967
       },
       "elements": {
         "button0": {
@@ -5287,7 +5288,7 @@
     {
       "t_ms": 330,
       "props": {
-        "dot_radius": 6.139190196990967
+        "dot_radius": 6.13292121887207
       },
       "elements": {
         "button0": {
@@ -5303,7 +5304,7 @@
     {
       "t_ms": 331,
       "props": {
-        "dot_radius": 6.13292121887207
+        "dot_radius": 6.12675666809082
       },
       "elements": {
         "button0": {
@@ -5319,7 +5320,7 @@
     {
       "t_ms": 332,
       "props": {
-        "dot_radius": 6.12675666809082
+        "dot_radius": 6.120697975158691
       },
       "elements": {
         "button0": {
@@ -5335,7 +5336,7 @@
     {
       "t_ms": 333,
       "props": {
-        "dot_radius": 6.120697975158691
+        "dot_radius": 6.114746570587158
       },
       "elements": {
         "button0": {
@@ -5351,7 +5352,7 @@
     {
       "t_ms": 334,
       "props": {
-        "dot_radius": 6.114746570587158
+        "dot_radius": 6.108903884887695
       },
       "elements": {
         "button0": {
@@ -5367,7 +5368,7 @@
     {
       "t_ms": 335,
       "props": {
-        "dot_radius": 6.108903884887695
+        "dot_radius": 6.103169918060303
       },
       "elements": {
         "button0": {
@@ -5383,7 +5384,7 @@
     {
       "t_ms": 336,
       "props": {
-        "dot_radius": 6.103169918060303
+        "dot_radius": 6.097546577453613
       },
       "elements": {
         "button0": {
@@ -5399,7 +5400,7 @@
     {
       "t_ms": 337,
       "props": {
-        "dot_radius": 6.097546577453613
+        "dot_radius": 6.092034339904785
       },
       "elements": {
         "button0": {
@@ -5415,7 +5416,7 @@
     {
       "t_ms": 338,
       "props": {
-        "dot_radius": 6.092034339904785
+        "dot_radius": 6.086633205413818
       },
       "elements": {
         "button0": {
@@ -5431,7 +5432,7 @@
     {
       "t_ms": 339,
       "props": {
-        "dot_radius": 6.086633205413818
+        "dot_radius": 6.0813446044921875
       },
       "elements": {
         "button0": {
@@ -5447,7 +5448,7 @@
     {
       "t_ms": 340,
       "props": {
-        "dot_radius": 6.0813446044921875
+        "dot_radius": 6.076168060302734
       },
       "elements": {
         "button0": {
@@ -5463,7 +5464,7 @@
     {
       "t_ms": 341,
       "props": {
-        "dot_radius": 6.076168060302734
+        "dot_radius": 6.071104526519775
       },
       "elements": {
         "button0": {
@@ -5479,7 +5480,7 @@
     {
       "t_ms": 342,
       "props": {
-        "dot_radius": 6.071104526519775
+        "dot_radius": 6.0661540031433105
       },
       "elements": {
         "button0": {
@@ -5495,7 +5496,7 @@
     {
       "t_ms": 343,
       "props": {
-        "dot_radius": 6.0661540031433105
+        "dot_radius": 6.061316967010498
       },
       "elements": {
         "button0": {
@@ -5511,7 +5512,7 @@
     {
       "t_ms": 344,
       "props": {
-        "dot_radius": 6.061316967010498
+        "dot_radius": 6.05659294128418
       },
       "elements": {
         "button0": {
@@ -5527,7 +5528,7 @@
     {
       "t_ms": 345,
       "props": {
-        "dot_radius": 6.05659294128418
+        "dot_radius": 6.0519819259643555
       },
       "elements": {
         "button0": {
@@ -5543,7 +5544,7 @@
     {
       "t_ms": 346,
       "props": {
-        "dot_radius": 6.0519819259643555
+        "dot_radius": 6.047483921051025
       },
       "elements": {
         "button0": {
@@ -5559,7 +5560,7 @@
     {
       "t_ms": 347,
       "props": {
-        "dot_radius": 6.047483921051025
+        "dot_radius": 6.0430989265441895
       },
       "elements": {
         "button0": {
@@ -5575,7 +5576,7 @@
     {
       "t_ms": 348,
       "props": {
-        "dot_radius": 6.0430989265441895
+        "dot_radius": 6.038825988769531
       },
       "elements": {
         "button0": {
@@ -5591,7 +5592,7 @@
     {
       "t_ms": 349,
       "props": {
-        "dot_radius": 6.038825988769531
+        "dot_radius": 6.034665584564209
       },
       "elements": {
         "button0": {
@@ -5607,7 +5608,7 @@
     {
       "t_ms": 350,
       "props": {
-        "dot_radius": 6.034665584564209
+        "dot_radius": 6.030616283416748
       },
       "elements": {
         "button0": {
@@ -5623,7 +5624,7 @@
     {
       "t_ms": 351,
       "props": {
-        "dot_radius": 6.030616283416748
+        "dot_radius": 6.026678562164307
       },
       "elements": {
         "button0": {
@@ -5639,7 +5640,7 @@
     {
       "t_ms": 352,
       "props": {
-        "dot_radius": 6.026678562164307
+        "dot_radius": 6.022850513458252
       },
       "elements": {
         "button0": {
@@ -5655,7 +5656,7 @@
     {
       "t_ms": 353,
       "props": {
-        "dot_radius": 6.022850513458252
+        "dot_radius": 6.0191330909729
       },
       "elements": {
         "button0": {
@@ -5671,7 +5672,7 @@
     {
       "t_ms": 354,
       "props": {
-        "dot_radius": 6.0191330909729
+        "dot_radius": 6.015523910522461
       },
       "elements": {
         "button0": {
@@ -5687,7 +5688,7 @@
     {
       "t_ms": 355,
       "props": {
-        "dot_radius": 6.015523910522461
+        "dot_radius": 6.012023448944092
       },
       "elements": {
         "button0": {
@@ -5703,7 +5704,7 @@
     {
       "t_ms": 356,
       "props": {
-        "dot_radius": 6.012023448944092
+        "dot_radius": 6.008630275726318
       },
       "elements": {
         "button0": {
@@ -5719,7 +5720,7 @@
     {
       "t_ms": 357,
       "props": {
-        "dot_radius": 6.008630275726318
+        "dot_radius": 6.005343437194824
       },
       "elements": {
         "button0": {
@@ -5735,7 +5736,7 @@
     {
       "t_ms": 358,
       "props": {
-        "dot_radius": 6.005343437194824
+        "dot_radius": 6.002161979675293
       },
       "elements": {
         "button0": {
@@ -5751,7 +5752,7 @@
     {
       "t_ms": 359,
       "props": {
-        "dot_radius": 6.002161979675293
+        "dot_radius": 5.999085426330566
       },
       "elements": {
         "button0": {
@@ -5767,7 +5768,7 @@
     {
       "t_ms": 360,
       "props": {
-        "dot_radius": 5.999085426330566
+        "dot_radius": 5.996111869812012
       },
       "elements": {
         "button0": {
@@ -5783,7 +5784,7 @@
     {
       "t_ms": 361,
       "props": {
-        "dot_radius": 5.996111869812012
+        "dot_radius": 5.993240833282471
       },
       "elements": {
         "button0": {
@@ -5799,7 +5800,7 @@
     {
       "t_ms": 362,
       "props": {
-        "dot_radius": 5.993240833282471
+        "dot_radius": 5.9904704093933105
       },
       "elements": {
         "button0": {
@@ -5815,7 +5816,7 @@
     {
       "t_ms": 363,
       "props": {
-        "dot_radius": 5.9904704093933105
+        "dot_radius": 5.987800598144531
       },
       "elements": {
         "button0": {
@@ -5831,7 +5832,7 @@
     {
       "t_ms": 364,
       "props": {
-        "dot_radius": 5.987800598144531
+        "dot_radius": 5.985229015350342
       },
       "elements": {
         "button0": {
@@ -5847,7 +5848,7 @@
     {
       "t_ms": 365,
       "props": {
-        "dot_radius": 5.985229015350342
+        "dot_radius": 5.982755184173584
       },
       "elements": {
         "button0": {
@@ -5863,7 +5864,7 @@
     {
       "t_ms": 366,
       "props": {
-        "dot_radius": 5.982755184173584
+        "dot_radius": 5.980377197265625
       },
       "elements": {
         "button0": {
@@ -5879,7 +5880,7 @@
     {
       "t_ms": 367,
       "props": {
-        "dot_radius": 5.980377197265625
+        "dot_radius": 5.978094100952148
       },
       "elements": {
         "button0": {
@@ -5895,7 +5896,7 @@
     {
       "t_ms": 368,
       "props": {
-        "dot_radius": 5.978094100952148
+        "dot_radius": 5.97590446472168
       },
       "elements": {
         "button0": {
@@ -5911,7 +5912,7 @@
     {
       "t_ms": 369,
       "props": {
-        "dot_radius": 5.97590446472168
+        "dot_radius": 5.973806858062744
       },
       "elements": {
         "button0": {
@@ -5927,7 +5928,7 @@
     {
       "t_ms": 370,
       "props": {
-        "dot_radius": 5.973806858062744
+        "dot_radius": 5.971799850463867
       },
       "elements": {
         "button0": {
@@ -5943,7 +5944,7 @@
     {
       "t_ms": 371,
       "props": {
-        "dot_radius": 5.971799850463867
+        "dot_radius": 5.969882011413574
       },
       "elements": {
         "button0": {
@@ -5959,7 +5960,7 @@
     {
       "t_ms": 372,
       "props": {
-        "dot_radius": 5.969882011413574
+        "dot_radius": 5.968051910400391
       },
       "elements": {
         "button0": {
@@ -5975,7 +5976,7 @@
     {
       "t_ms": 373,
       "props": {
-        "dot_radius": 5.968051910400391
+        "dot_radius": 5.966308116912842
       },
       "elements": {
         "button0": {
@@ -5991,7 +5992,7 @@
     {
       "t_ms": 374,
       "props": {
-        "dot_radius": 5.966308116912842
+        "dot_radius": 5.964648723602295
       },
       "elements": {
         "button0": {
@@ -6007,7 +6008,7 @@
     {
       "t_ms": 375,
       "props": {
-        "dot_radius": 5.964648723602295
+        "dot_radius": 5.963072776794434
       },
       "elements": {
         "button0": {
@@ -6023,7 +6024,7 @@
     {
       "t_ms": 376,
       "props": {
-        "dot_radius": 5.963072776794434
+        "dot_radius": 5.961578369140625
       },
       "elements": {
         "button0": {
@@ -6039,7 +6040,7 @@
     {
       "t_ms": 377,
       "props": {
-        "dot_radius": 5.961578369140625
+        "dot_radius": 5.9601640701293945
       },
       "elements": {
         "button0": {
@@ -6055,7 +6056,7 @@
     {
       "t_ms": 378,
       "props": {
-        "dot_radius": 5.9601640701293945
+        "dot_radius": 5.958827972412109
       },
       "elements": {
         "button0": {
@@ -6071,7 +6072,7 @@
     {
       "t_ms": 379,
       "props": {
-        "dot_radius": 5.958827972412109
+        "dot_radius": 5.957569122314453
       },
       "elements": {
         "button0": {
@@ -6087,7 +6088,7 @@
     {
       "t_ms": 380,
       "props": {
-        "dot_radius": 5.957569122314453
+        "dot_radius": 5.956385612487793
       },
       "elements": {
         "button0": {
@@ -6103,7 +6104,7 @@
     {
       "t_ms": 381,
       "props": {
-        "dot_radius": 5.956385612487793
+        "dot_radius": 5.955276012420654
       },
       "elements": {
         "button0": {
@@ -6119,7 +6120,7 @@
     {
       "t_ms": 382,
       "props": {
-        "dot_radius": 5.955276012420654
+        "dot_radius": 5.954238414764404
       },
       "elements": {
         "button0": {
@@ -6135,7 +6136,7 @@
     {
       "t_ms": 383,
       "props": {
-        "dot_radius": 5.954238414764404
+        "dot_radius": 5.953271865844727
       },
       "elements": {
         "button0": {
@@ -6151,7 +6152,7 @@
     {
       "t_ms": 384,
       "props": {
-        "dot_radius": 5.953271865844727
+        "dot_radius": 5.95237398147583
       },
       "elements": {
         "button0": {
@@ -6167,7 +6168,7 @@
     {
       "t_ms": 385,
       "props": {
-        "dot_radius": 5.95237398147583
+        "dot_radius": 5.95154333114624
       },
       "elements": {
         "button0": {
@@ -6183,7 +6184,7 @@
     {
       "t_ms": 386,
       "props": {
-        "dot_radius": 5.95154333114624
+        "dot_radius": 5.950778961181641
       },
       "elements": {
         "button0": {
@@ -6199,7 +6200,7 @@
     {
       "t_ms": 387,
       "props": {
-        "dot_radius": 5.950778961181641
+        "dot_radius": 5.95007848739624
       },
       "elements": {
         "button0": {
@@ -6215,7 +6216,7 @@
     {
       "t_ms": 388,
       "props": {
-        "dot_radius": 5.95007848739624
+        "dot_radius": 5.949440956115723
       },
       "elements": {
         "button0": {
@@ -6231,7 +6232,7 @@
     {
       "t_ms": 389,
       "props": {
-        "dot_radius": 5.949440956115723
+        "dot_radius": 5.948863983154297
       },
       "elements": {
         "button0": {
@@ -6247,7 +6248,7 @@
     {
       "t_ms": 390,
       "props": {
-        "dot_radius": 5.948863983154297
+        "dot_radius": 5.948347091674805
       },
       "elements": {
         "button0": {
@@ -6263,7 +6264,7 @@
     {
       "t_ms": 391,
       "props": {
-        "dot_radius": 5.948347091674805
+        "dot_radius": 5.947887420654297
       },
       "elements": {
         "button0": {
@@ -6279,7 +6280,7 @@
     {
       "t_ms": 392,
       "props": {
-        "dot_radius": 5.947887420654297
+        "dot_radius": 5.947484493255615
       },
       "elements": {
         "button0": {
@@ -6295,7 +6296,7 @@
     {
       "t_ms": 393,
       "props": {
-        "dot_radius": 5.947484493255615
+        "dot_radius": 5.947136402130127
       },
       "elements": {
         "button0": {
@@ -6311,7 +6312,7 @@
     {
       "t_ms": 394,
       "props": {
-        "dot_radius": 5.947136402130127
+        "dot_radius": 5.946841239929199
       },
       "elements": {
         "button0": {
@@ -6327,7 +6328,7 @@
     {
       "t_ms": 395,
       "props": {
-        "dot_radius": 5.946841239929199
+        "dot_radius": 5.946598052978516
       },
       "elements": {
         "button0": {
@@ -6343,7 +6344,7 @@
     {
       "t_ms": 396,
       "props": {
-        "dot_radius": 5.946598052978516
+        "dot_radius": 5.946404457092285
       },
       "elements": {
         "button0": {
@@ -6359,7 +6360,7 @@
     {
       "t_ms": 397,
       "props": {
-        "dot_radius": 5.946404457092285
+        "dot_radius": 5.94625997543335
       },
       "elements": {
         "button0": {
@@ -6375,7 +6376,7 @@
     {
       "t_ms": 398,
       "props": {
-        "dot_radius": 5.94625997543335
+        "dot_radius": 5.946162223815918
       },
       "elements": {
         "button0": {
@@ -6391,7 +6392,7 @@
     {
       "t_ms": 399,
       "props": {
-        "dot_radius": 5.946162223815918
+        "dot_radius": 5.946110248565674
       },
       "elements": {
         "button0": {
@@ -6407,7 +6408,7 @@
     {
       "t_ms": 400,
       "props": {
-        "dot_radius": 5.946110248565674
+        "dot_radius": 5.946102619171143
       },
       "elements": {
         "button0": {
@@ -6423,7 +6424,7 @@
     {
       "t_ms": 401,
       "props": {
-        "dot_radius": 5.946102619171143
+        "dot_radius": 5.946137428283691
       },
       "elements": {
         "button0": {
@@ -6439,7 +6440,7 @@
     {
       "t_ms": 402,
       "props": {
-        "dot_radius": 5.946137428283691
+        "dot_radius": 5.946213245391846
       },
       "elements": {
         "button0": {
@@ -6455,7 +6456,7 @@
     {
       "t_ms": 403,
       "props": {
-        "dot_radius": 5.946213245391846
+        "dot_radius": 5.946329116821289
       },
       "elements": {
         "button0": {
@@ -6471,7 +6472,7 @@
     {
       "t_ms": 404,
       "props": {
-        "dot_radius": 5.946329116821289
+        "dot_radius": 5.946483135223389
       },
       "elements": {
         "button0": {
@@ -6487,7 +6488,7 @@
     {
       "t_ms": 405,
       "props": {
-        "dot_radius": 5.946483135223389
+        "dot_radius": 5.946674346923828
       },
       "elements": {
         "button0": {
@@ -6503,7 +6504,7 @@
     {
       "t_ms": 406,
       "props": {
-        "dot_radius": 5.946674346923828
+        "dot_radius": 5.946900844573975
       },
       "elements": {
         "button0": {
@@ -6519,7 +6520,7 @@
     {
       "t_ms": 407,
       "props": {
-        "dot_radius": 5.946900844573975
+        "dot_radius": 5.947161674499512
       },
       "elements": {
         "button0": {
@@ -6535,7 +6536,7 @@
     {
       "t_ms": 408,
       "props": {
-        "dot_radius": 5.947161674499512
+        "dot_radius": 5.947455406188965
       },
       "elements": {
         "button0": {
@@ -6551,7 +6552,7 @@
     {
       "t_ms": 409,
       "props": {
-        "dot_radius": 5.947455406188965
+        "dot_radius": 5.947780609130859
       },
       "elements": {
         "button0": {
@@ -6567,7 +6568,7 @@
     {
       "t_ms": 410,
       "props": {
-        "dot_radius": 5.947780609130859
+        "dot_radius": 5.948135852813721
       },
       "elements": {
         "button0": {
@@ -6583,7 +6584,7 @@
     {
       "t_ms": 411,
       "props": {
-        "dot_radius": 5.948135852813721
+        "dot_radius": 5.948520183563232
       },
       "elements": {
         "button0": {
@@ -6599,7 +6600,7 @@
     {
       "t_ms": 412,
       "props": {
-        "dot_radius": 5.948520183563232
+        "dot_radius": 5.948932647705078
       },
       "elements": {
         "button0": {
@@ -6615,7 +6616,7 @@
     {
       "t_ms": 413,
       "props": {
-        "dot_radius": 5.948932647705078
+        "dot_radius": 5.949370861053467
       },
       "elements": {
         "button0": {
@@ -6631,7 +6632,7 @@
     {
       "t_ms": 414,
       "props": {
-        "dot_radius": 5.949370861053467
+        "dot_radius": 5.94983434677124
       },
       "elements": {
         "button0": {
@@ -6647,7 +6648,7 @@
     {
       "t_ms": 415,
       "props": {
-        "dot_radius": 5.94983434677124
+        "dot_radius": 5.950322151184082
       },
       "elements": {
         "button0": {
@@ -6663,7 +6664,7 @@
     {
       "t_ms": 416,
       "props": {
-        "dot_radius": 5.950322151184082
+        "dot_radius": 5.950832366943359
       },
       "elements": {
         "button0": {
@@ -6679,7 +6680,7 @@
     {
       "t_ms": 417,
       "props": {
-        "dot_radius": 5.950832366943359
+        "dot_radius": 5.951364517211914
       },
       "elements": {
         "button0": {
@@ -6695,7 +6696,7 @@
     {
       "t_ms": 418,
       "props": {
-        "dot_radius": 5.951364517211914
+        "dot_radius": 5.9519171714782715
       },
       "elements": {
         "button0": {
@@ -6711,7 +6712,7 @@
     {
       "t_ms": 419,
       "props": {
-        "dot_radius": 5.9519171714782715
+        "dot_radius": 5.952488899230957
       },
       "elements": {
         "button0": {
@@ -6727,7 +6728,7 @@
     {
       "t_ms": 420,
       "props": {
-        "dot_radius": 5.952488899230957
+        "dot_radius": 5.9530792236328125
       },
       "elements": {
         "button0": {
@@ -6743,7 +6744,7 @@
     {
       "t_ms": 421,
       "props": {
-        "dot_radius": 5.9530792236328125
+        "dot_radius": 5.953686714172363
       },
       "elements": {
         "button0": {
@@ -6759,7 +6760,7 @@
     {
       "t_ms": 422,
       "props": {
-        "dot_radius": 5.953686714172363
+        "dot_radius": 5.954310417175293
       },
       "elements": {
         "button0": {
@@ -6775,7 +6776,7 @@
     {
       "t_ms": 423,
       "props": {
-        "dot_radius": 5.954310417175293
+        "dot_radius": 5.954948902130127
       },
       "elements": {
         "button0": {
@@ -6791,7 +6792,7 @@
     {
       "t_ms": 424,
       "props": {
-        "dot_radius": 5.954948902130127
+        "dot_radius": 5.955601692199707
       },
       "elements": {
         "button0": {
@@ -6807,7 +6808,7 @@
     {
       "t_ms": 425,
       "props": {
-        "dot_radius": 5.955601692199707
+        "dot_radius": 5.956267833709717
       },
       "elements": {
         "button0": {
@@ -6823,7 +6824,7 @@
     {
       "t_ms": 426,
       "props": {
-        "dot_radius": 5.956267833709717
+        "dot_radius": 5.956945896148682
       },
       "elements": {
         "button0": {
@@ -6839,7 +6840,7 @@
     {
       "t_ms": 427,
       "props": {
-        "dot_radius": 5.956945896148682
+        "dot_radius": 5.957635402679443
       },
       "elements": {
         "button0": {
@@ -6855,7 +6856,7 @@
     {
       "t_ms": 428,
       "props": {
-        "dot_radius": 5.957635402679443
+        "dot_radius": 5.958334922790527
       },
       "elements": {
         "button0": {
@@ -6871,7 +6872,7 @@
     {
       "t_ms": 429,
       "props": {
-        "dot_radius": 5.958334922790527
+        "dot_radius": 5.959043979644775
       },
       "elements": {
         "button0": {
@@ -6887,7 +6888,7 @@
     {
       "t_ms": 430,
       "props": {
-        "dot_radius": 5.959043979644775
+        "dot_radius": 5.959761619567871
       },
       "elements": {
         "button0": {
@@ -6903,7 +6904,7 @@
     {
       "t_ms": 431,
       "props": {
-        "dot_radius": 5.959761619567871
+        "dot_radius": 5.960486888885498
       },
       "elements": {
         "button0": {
@@ -6919,7 +6920,7 @@
     {
       "t_ms": 432,
       "props": {
-        "dot_radius": 5.960486888885498
+        "dot_radius": 5.961219310760498
       },
       "elements": {
         "button0": {
@@ -6935,7 +6936,7 @@
     {
       "t_ms": 433,
       "props": {
-        "dot_radius": 5.961219310760498
+        "dot_radius": 5.9619574546813965
       },
       "elements": {
         "button0": {
@@ -6951,7 +6952,7 @@
     {
       "t_ms": 434,
       "props": {
-        "dot_radius": 5.9619574546813965
+        "dot_radius": 5.962701320648193
       },
       "elements": {
         "button0": {
@@ -6967,7 +6968,7 @@
     {
       "t_ms": 435,
       "props": {
-        "dot_radius": 5.962701320648193
+        "dot_radius": 5.963449001312256
       },
       "elements": {
         "button0": {
@@ -6983,7 +6984,7 @@
     {
       "t_ms": 436,
       "props": {
-        "dot_radius": 5.963449001312256
+        "dot_radius": 5.964200973510742
       },
       "elements": {
         "button0": {
@@ -6999,7 +7000,7 @@
     {
       "t_ms": 437,
       "props": {
-        "dot_radius": 5.964200973510742
+        "dot_radius": 5.964956283569336
       },
       "elements": {
         "button0": {
@@ -7015,7 +7016,7 @@
     {
       "t_ms": 438,
       "props": {
-        "dot_radius": 5.964956283569336
+        "dot_radius": 5.9657135009765625
       },
       "elements": {
         "button0": {
@@ -7031,7 +7032,7 @@
     {
       "t_ms": 439,
       "props": {
-        "dot_radius": 5.9657135009765625
+        "dot_radius": 5.966472148895264
       },
       "elements": {
         "button0": {
@@ -7047,7 +7048,7 @@
     {
       "t_ms": 440,
       "props": {
-        "dot_radius": 5.966472148895264
+        "dot_radius": 5.9672322273254395
       },
       "elements": {
         "button0": {
@@ -7063,7 +7064,7 @@
     {
       "t_ms": 441,
       "props": {
-        "dot_radius": 5.9672322273254395
+        "dot_radius": 5.967992782592773
       },
       "elements": {
         "button0": {
@@ -7079,7 +7080,7 @@
     {
       "t_ms": 442,
       "props": {
-        "dot_radius": 5.967992782592773
+        "dot_radius": 5.968753337860107
       },
       "elements": {
         "button0": {
@@ -7095,7 +7096,7 @@
     {
       "t_ms": 443,
       "props": {
-        "dot_radius": 5.968753337860107
+        "dot_radius": 5.969512462615967
       },
       "elements": {
         "button0": {
@@ -7111,7 +7112,7 @@
     {
       "t_ms": 444,
       "props": {
-        "dot_radius": 5.969512462615967
+        "dot_radius": 5.97027063369751
       },
       "elements": {
         "button0": {
@@ -7127,7 +7128,7 @@
     {
       "t_ms": 445,
       "props": {
-        "dot_radius": 5.97027063369751
+        "dot_radius": 5.97102689743042
       },
       "elements": {
         "button0": {
@@ -7143,7 +7144,7 @@
     {
       "t_ms": 446,
       "props": {
-        "dot_radius": 5.97102689743042
+        "dot_radius": 5.971780776977539
       },
       "elements": {
         "button0": {
@@ -7159,7 +7160,7 @@
     {
       "t_ms": 447,
       "props": {
-        "dot_radius": 5.971780776977539
+        "dot_radius": 5.972531318664551
       },
       "elements": {
         "button0": {
@@ -7175,7 +7176,7 @@
     {
       "t_ms": 448,
       "props": {
-        "dot_radius": 5.972531318664551
+        "dot_radius": 5.973278522491455
       },
       "elements": {
         "button0": {
@@ -7191,7 +7192,7 @@
     {
       "t_ms": 449,
       "props": {
-        "dot_radius": 5.973278522491455
+        "dot_radius": 5.974021911621094
       },
       "elements": {
         "button0": {
@@ -7207,7 +7208,7 @@
     {
       "t_ms": 450,
       "props": {
-        "dot_radius": 5.974021911621094
+        "dot_radius": 5.974761009216309
       },
       "elements": {
         "button0": {
@@ -7223,7 +7224,7 @@
     {
       "t_ms": 451,
       "props": {
-        "dot_radius": 5.974761009216309
+        "dot_radius": 5.975495338439941
       },
       "elements": {
         "button0": {
@@ -7239,7 +7240,7 @@
     {
       "t_ms": 452,
       "props": {
-        "dot_radius": 5.975495338439941
+        "dot_radius": 5.976224422454834
       },
       "elements": {
         "button0": {
@@ -7255,7 +7256,7 @@
     {
       "t_ms": 453,
       "props": {
-        "dot_radius": 5.976224422454834
+        "dot_radius": 5.976947784423828
       },
       "elements": {
         "button0": {
@@ -7271,7 +7272,7 @@
     {
       "t_ms": 454,
       "props": {
-        "dot_radius": 5.976947784423828
+        "dot_radius": 5.977664947509766
       },
       "elements": {
         "button0": {
@@ -7287,7 +7288,7 @@
     {
       "t_ms": 455,
       "props": {
-        "dot_radius": 5.977664947509766
+        "dot_radius": 5.9783759117126465
       },
       "elements": {
         "button0": {
@@ -7303,7 +7304,7 @@
     {
       "t_ms": 456,
       "props": {
-        "dot_radius": 5.9783759117126465
+        "dot_radius": 5.9790802001953125
       },
       "elements": {
         "button0": {
@@ -7319,7 +7320,7 @@
     {
       "t_ms": 457,
       "props": {
-        "dot_radius": 5.9790802001953125
+        "dot_radius": 5.9797773361206055
       },
       "elements": {
         "button0": {
@@ -7335,7 +7336,7 @@
     {
       "t_ms": 458,
       "props": {
-        "dot_radius": 5.9797773361206055
+        "dot_radius": 5.980467319488525
       },
       "elements": {
         "button0": {
@@ -7351,7 +7352,7 @@
     {
       "t_ms": 459,
       "props": {
-        "dot_radius": 5.980467319488525
+        "dot_radius": 5.981149673461914
       },
       "elements": {
         "button0": {
@@ -7367,7 +7368,7 @@
     {
       "t_ms": 460,
       "props": {
-        "dot_radius": 5.981149673461914
+        "dot_radius": 5.981823921203613
       },
       "elements": {
         "button0": {
@@ -7383,7 +7384,7 @@
     {
       "t_ms": 461,
       "props": {
-        "dot_radius": 5.981823921203613
+        "dot_radius": 5.982489585876465
       },
       "elements": {
         "button0": {
@@ -7399,7 +7400,7 @@
     {
       "t_ms": 462,
       "props": {
-        "dot_radius": 5.982489585876465
+        "dot_radius": 5.983147144317627
       },
       "elements": {
         "button0": {
@@ -7415,7 +7416,7 @@
     {
       "t_ms": 463,
       "props": {
-        "dot_radius": 5.983147144317627
+        "dot_radius": 5.983796119689941
       },
       "elements": {
         "button0": {
@@ -7431,7 +7432,7 @@
     {
       "t_ms": 464,
       "props": {
-        "dot_radius": 5.983796119689941
+        "dot_radius": 5.98443603515625
       },
       "elements": {
         "button0": {
@@ -7447,7 +7448,7 @@
     {
       "t_ms": 465,
       "props": {
-        "dot_radius": 5.98443603515625
+        "dot_radius": 5.985066890716553
       },
       "elements": {
         "button0": {
@@ -7463,7 +7464,7 @@
     {
       "t_ms": 466,
       "props": {
-        "dot_radius": 5.985066890716553
+        "dot_radius": 5.98568868637085
       },
       "elements": {
         "button0": {
@@ -7479,7 +7480,7 @@
     {
       "t_ms": 467,
       "props": {
-        "dot_radius": 5.98568868637085
+        "dot_radius": 5.986300945281982
       },
       "elements": {
         "button0": {
@@ -7495,7 +7496,7 @@
     {
       "t_ms": 468,
       "props": {
-        "dot_radius": 5.986300945281982
+        "dot_radius": 5.986903190612793
       },
       "elements": {
         "button0": {
@@ -7511,7 +7512,7 @@
     {
       "t_ms": 469,
       "props": {
-        "dot_radius": 5.986903190612793
+        "dot_radius": 5.9874958992004395
       },
       "elements": {
         "button0": {
@@ -7527,7 +7528,7 @@
     {
       "t_ms": 470,
       "props": {
-        "dot_radius": 5.9874958992004395
+        "dot_radius": 5.988078594207764
       },
       "elements": {
         "button0": {
@@ -7543,7 +7544,7 @@
     {
       "t_ms": 471,
       "props": {
-        "dot_radius": 5.988078594207764
+        "dot_radius": 5.988651275634766
       },
       "elements": {
         "button0": {
@@ -7559,7 +7560,7 @@
     {
       "t_ms": 472,
       "props": {
-        "dot_radius": 5.988651275634766
+        "dot_radius": 5.989213466644287
       },
       "elements": {
         "button0": {
@@ -7575,7 +7576,7 @@
     {
       "t_ms": 473,
       "props": {
-        "dot_radius": 5.989213466644287
+        "dot_radius": 5.989765644073486
       },
       "elements": {
         "button0": {
@@ -7591,7 +7592,7 @@
     {
       "t_ms": 474,
       "props": {
-        "dot_radius": 5.989765644073486
+        "dot_radius": 5.990307331085205
       },
       "elements": {
         "button0": {
@@ -7607,7 +7608,7 @@
     {
       "t_ms": 475,
       "props": {
-        "dot_radius": 5.990307331085205
+        "dot_radius": 5.990838527679443
       },
       "elements": {
         "button0": {
@@ -7623,7 +7624,7 @@
     {
       "t_ms": 476,
       "props": {
-        "dot_radius": 5.990838527679443
+        "dot_radius": 5.991359710693359
       },
       "elements": {
         "button0": {
@@ -7639,7 +7640,7 @@
     {
       "t_ms": 477,
       "props": {
-        "dot_radius": 5.991359710693359
+        "dot_radius": 5.991869926452637
       },
       "elements": {
         "button0": {
@@ -7655,7 +7656,7 @@
     {
       "t_ms": 478,
       "props": {
-        "dot_radius": 5.991869926452637
+        "dot_radius": 5.992369174957275
       },
       "elements": {
         "button0": {
@@ -7671,7 +7672,7 @@
     {
       "t_ms": 479,
       "props": {
-        "dot_radius": 5.992369174957275
+        "dot_radius": 5.992858409881592
       },
       "elements": {
         "button0": {
@@ -7687,7 +7688,7 @@
     {
       "t_ms": 480,
       "props": {
-        "dot_radius": 5.992858409881592
+        "dot_radius": 5.993336200714111
       },
       "elements": {
         "button0": {
@@ -7703,7 +7704,7 @@
     {
       "t_ms": 481,
       "props": {
-        "dot_radius": 5.993336200714111
+        "dot_radius": 5.993803977966309
       },
       "elements": {
         "button0": {
@@ -7719,7 +7720,7 @@
     {
       "t_ms": 482,
       "props": {
-        "dot_radius": 5.993803977966309
+        "dot_radius": 5.994260787963867
       },
       "elements": {
         "button0": {
@@ -7735,7 +7736,7 @@
     {
       "t_ms": 483,
       "props": {
-        "dot_radius": 5.994260787963867
+        "dot_radius": 5.994706630706787
       },
       "elements": {
         "button0": {
@@ -7751,7 +7752,7 @@
     {
       "t_ms": 484,
       "props": {
-        "dot_radius": 5.994706630706787
+        "dot_radius": 5.995141983032227
       },
       "elements": {
         "button0": {
@@ -7767,7 +7768,7 @@
     {
       "t_ms": 485,
       "props": {
-        "dot_radius": 5.995141983032227
+        "dot_radius": 5.9955668449401855
       },
       "elements": {
         "button0": {
@@ -7783,7 +7784,7 @@
     {
       "t_ms": 486,
       "props": {
-        "dot_radius": 5.9955668449401855
+        "dot_radius": 5.995980739593506
       },
       "elements": {
         "button0": {
@@ -7799,7 +7800,7 @@
     {
       "t_ms": 487,
       "props": {
-        "dot_radius": 5.995980739593506
+        "dot_radius": 5.9963836669921875
       },
       "elements": {
         "button0": {
@@ -7815,7 +7816,7 @@
     {
       "t_ms": 488,
       "props": {
-        "dot_radius": 5.9963836669921875
+        "dot_radius": 5.996776580810547
       },
       "elements": {
         "button0": {
@@ -7831,7 +7832,7 @@
     {
       "t_ms": 489,
       "props": {
-        "dot_radius": 5.996776580810547
+        "dot_radius": 5.997158527374268
       },
       "elements": {
         "button0": {
@@ -7847,7 +7848,7 @@
     {
       "t_ms": 490,
       "props": {
-        "dot_radius": 5.997158527374268
+        "dot_radius": 5.997529983520508
       },
       "elements": {
         "button0": {
@@ -7863,7 +7864,7 @@
     {
       "t_ms": 491,
       "props": {
-        "dot_radius": 5.997529983520508
+        "dot_radius": 5.997891426086426
       },
       "elements": {
         "button0": {
@@ -7879,7 +7880,7 @@
     {
       "t_ms": 492,
       "props": {
-        "dot_radius": 5.997891426086426
+        "dot_radius": 5.998241901397705
       },
       "elements": {
         "button0": {
@@ -7895,7 +7896,7 @@
     {
       "t_ms": 493,
       "props": {
-        "dot_radius": 5.998241901397705
+        "dot_radius": 5.998582363128662
       },
       "elements": {
         "button0": {
@@ -7911,7 +7912,7 @@
     {
       "t_ms": 494,
       "props": {
-        "dot_radius": 5.998582363128662
+        "dot_radius": 5.998912334442139
       },
       "elements": {
         "button0": {
@@ -7927,7 +7928,7 @@
     {
       "t_ms": 495,
       "props": {
-        "dot_radius": 5.998912334442139
+        "dot_radius": 5.999232292175293
       },
       "elements": {
         "button0": {
@@ -7943,7 +7944,7 @@
     {
       "t_ms": 496,
       "props": {
-        "dot_radius": 5.999232292175293
+        "dot_radius": 5.999542236328125
       },
       "elements": {
         "button0": {
@@ -7959,7 +7960,7 @@
     {
       "t_ms": 497,
       "props": {
-        "dot_radius": 5.999542236328125
+        "dot_radius": 5.999842166900635
       },
       "elements": {
         "button0": {
@@ -7975,7 +7976,7 @@
     {
       "t_ms": 498,
       "props": {
-        "dot_radius": 5.999842166900635
+        "dot_radius": 6.0001325607299805
       },
       "elements": {
         "button0": {
@@ -7991,7 +7992,7 @@
     {
       "t_ms": 499,
       "props": {
-        "dot_radius": 6.0001325607299805
+        "dot_radius": 6.000412464141846
       },
       "elements": {
         "button0": {
@@ -8007,7 +8008,7 @@
     {
       "t_ms": 500,
       "props": {
-        "dot_radius": 6.000412464141846
+        "dot_radius": 6.000683307647705
       },
       "elements": {
         "button0": {
@@ -8023,7 +8024,7 @@
     {
       "t_ms": 501,
       "props": {
-        "dot_radius": 6.000683307647705
+        "dot_radius": 6.000944137573242
       },
       "elements": {
         "button0": {
@@ -8039,7 +8040,7 @@
     {
       "t_ms": 502,
       "props": {
-        "dot_radius": 6.000944137573242
+        "dot_radius": 6.001195907592773
       },
       "elements": {
         "button0": {
@@ -8055,7 +8056,7 @@
     {
       "t_ms": 503,
       "props": {
-        "dot_radius": 6.001195907592773
+        "dot_radius": 6.001438140869141
       },
       "elements": {
         "button0": {
@@ -8071,7 +8072,7 @@
     {
       "t_ms": 504,
       "props": {
-        "dot_radius": 6.001438140869141
+        "dot_radius": 6.001671314239502
       },
       "elements": {
         "button0": {
@@ -8087,7 +8088,7 @@
     {
       "t_ms": 505,
       "props": {
-        "dot_radius": 6.001671314239502
+        "dot_radius": 6.001894950866699
       },
       "elements": {
         "button0": {
@@ -8103,7 +8104,7 @@
     {
       "t_ms": 506,
       "props": {
-        "dot_radius": 6.001894950866699
+        "dot_radius": 6.002110004425049
       },
       "elements": {
         "button0": {
@@ -8119,7 +8120,7 @@
     {
       "t_ms": 507,
       "props": {
-        "dot_radius": 6.002110004425049
+        "dot_radius": 6.002315998077393
       },
       "elements": {
         "button0": {
@@ -8135,7 +8136,7 @@
     {
       "t_ms": 508,
       "props": {
-        "dot_radius": 6.002315998077393
+        "dot_radius": 6.002513408660889
       },
       "elements": {
         "button0": {
@@ -8151,7 +8152,7 @@
     {
       "t_ms": 509,
       "props": {
-        "dot_radius": 6.002513408660889
+        "dot_radius": 6.002702236175537
       },
       "elements": {
         "button0": {
@@ -8167,7 +8168,7 @@
     {
       "t_ms": 510,
       "props": {
-        "dot_radius": 6.002702236175537
+        "dot_radius": 6.002882957458496
       },
       "elements": {
         "button0": {
@@ -8183,7 +8184,7 @@
     {
       "t_ms": 511,
       "props": {
-        "dot_radius": 6.002882957458496
+        "dot_radius": 6.003055095672607
       },
       "elements": {
         "button0": {
@@ -8199,7 +8200,7 @@
     {
       "t_ms": 512,
       "props": {
-        "dot_radius": 6.003055095672607
+        "dot_radius": 6
       },
       "elements": {
         "button0": {
@@ -18421,5 +18422,5 @@
       "text": {}
     }
   ],
-  "settle_ms": 415
+  "settle_ms": 414
 }
