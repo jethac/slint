@@ -1,0 +1,134 @@
+{
+  "name": "sheet-commit-hide",
+  "type": "canvas",
+  "parity": "motion",
+  "size": [
+    360,
+    240
+  ],
+  "densities": [
+    1,
+    2
+  ],
+  "theme": {
+    "seed": "6750A4",
+    "variant": "tonal-spot",
+    "spec": "spec2025",
+    "platform": "phone",
+    "dark": false,
+    "contrast": 0.0
+  },
+  "fonts": {
+    "plain": "Roboto",
+    "brand": "Roboto"
+  },
+  "times": [
+    0,
+    200,
+    650,
+    750,
+    900,
+    1200
+  ],
+  "trace_elements": [
+    "sheet0",
+    "sheet-pill0"
+  ],
+  "trace_props": [
+    "sheet-offset",
+    "current-value",
+    "target-value",
+    "dragging",
+    "is-visible"
+  ],
+  "actions": [
+    {
+      "kind": "press",
+      "x": 180,
+      "y": 90,
+      "at": 0
+    },
+    {
+      "kind": "move",
+      "x": 180,
+      "y": 110,
+      "at": 16
+    },
+    {
+      "kind": "move",
+      "x": 180,
+      "y": 130,
+      "at": 33
+    },
+    {
+      "kind": "move",
+      "x": 180,
+      "y": 150,
+      "at": 50
+    },
+    {
+      "kind": "move",
+      "x": 180,
+      "y": 170,
+      "at": 66
+    },
+    {
+      "kind": "move",
+      "x": 180,
+      "y": 180,
+      "at": 125
+    },
+    {
+      "kind": "move",
+      "x": 180,
+      "y": 190,
+      "at": 250
+    },
+    {
+      "kind": "move",
+      "x": 180,
+      "y": 200,
+      "at": 375
+    },
+    {
+      "kind": "move",
+      "x": 180,
+      "y": 210,
+      "at": 500
+    },
+    {
+      "kind": "move",
+      "x": 180,
+      "y": 220,
+      "at": 625
+    },
+    {
+      "kind": "release",
+      "x": 180,
+      "y": 220,
+      "at": 652,
+      "velocity": 80
+    }
+  ],
+  "widgets": [
+    {
+      "kind": "bottom-sheet",
+      "x": 0,
+      "y": 0,
+      "width": 360,
+      "height": 240,
+      "sheet_height": 120,
+      "initial": "expanded",
+      "content_color": "tertiary-container"
+    }
+  ],
+  "params": {
+    "note": "trailing 10px/125ms moves leave a sub-threshold 80px/s release; the offset at 202 sits 82px past the partial anchor toward hidden \u2014 \u226556dp PositionalThreshold commits the fling to hidden"
+  },
+  "mask_decor": {
+    "sheet-pill0": [
+      750,
+      900
+    ]
+  }
+}

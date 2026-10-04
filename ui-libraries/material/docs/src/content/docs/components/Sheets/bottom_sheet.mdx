@@ -1,0 +1,159 @@
+---
+title: BottomSheet
+description: BottomSheet API.
+---
+
+import CodeSnippetMD from '@slint/common-files/src/components/CodeSnippetMD.astro';
+import SlintProperty from '@slint/common-files/src/components/SlintProperty.astro';
+
+<CodeSnippetMD imagePath="/src/assets/generated/bottomsheet.png" scale="3" imageWidth="400" imageHeight="300" imageAlt="">
+```slint
+import { BottomSheet, SheetValue } from "@material";
+export component Example inherits Window {
+    width: 400px;
+    height: 300px;
+    background: transparent;
+    BottomSheet {
+        width: 100%;
+        height: 100%;
+        initial-value: SheetValue.partially-expanded;
+
+        Rectangle {
+            height: 120px;
+        }
+    }
+}
+```
+</CodeSnippetMD>
+
+A `BottomSheet` is the standard, non-modal sheet: it docks to the bottom edge of its container and
+coexists with the content behind it. The component fills its parent's bounds, which are the anchor
+space for `hidden`, `partially-expanded` and `expanded`. Drag the sheet by its handle or call the
+state functions to move between values; the motion uses the spatial springs for show/expand and the
+effects springs for hide/partial-collapse.
+
+<CodeSnippetMD imagePath="/src/assets/generated/bottomsheet-draghandle.png" scale="3" imageWidth="400" imageHeight="120" imageAlt="">
+```slint
+import { BottomSheetDragHandle } from "@material";
+export component Example inherits Window {
+    width: 400px;
+    height: 120px;
+    background: transparent;
+    BottomSheetDragHandle {
+        enabled: true;
+    }
+}
+```
+</CodeSnippetMD>
+
+`BottomSheetDragHandle` is the pill strip every sheet draws when `has-drag-handle` is set —
+click it to toggle, or use it standalone for custom sheet chrome. It exposes `expand()`,
+`collapse()` and `clicked()` for the accessibility actions.
+
+## Properties
+
+### container-color
+<SlintProperty propName="container-color" typeName="color" defaultValue="SheetBottomTokens.docked_container_color">
+The sheet surface's fill color.
+</SlintProperty>
+
+### elevation-level
+<SlintProperty propName="elevation-level" typeName="int" defaultValue="0">
+The tonal/shadow elevation level applied to the sheet surface — the standard sheet uses level 0.
+</SlintProperty>
+
+### gestures-enabled
+<SlintProperty propName="gestures-enabled" typeName="bool" defaultValue="true">
+Whether the sheet can be dragged between its anchors, including fling-with-release-velocity settle.
+</SlintProperty>
+
+### has-drag-handle
+<SlintProperty propName="has-drag-handle" typeName="bool" defaultValue="true">
+Whether the 48 dp drag-handle strip with the pill is drawn at the sheet's top edge.
+</SlintProperty>
+
+### initial-value
+<SlintProperty propName="initial-value" typeName="enum" enumName="SheetValue" defaultValue="SheetValue.hidden">
+The anchor the sheet starts on.
+</SlintProperty>
+
+### pane-title
+<SlintProperty propName="pane-title" typeName="string" defaultValue="Bottom sheet">
+The accessibility pane title announced for the sheet.
+</SlintProperty>
+
+### sheet-max-width
+<SlintProperty propName="sheet-max-width" typeName="length" defaultValue="640px">
+The width cap applied to the sheet surface — wider containers center the sheet.
+</SlintProperty>
+
+### sheet-shape
+<SlintProperty propName="sheet-shape" typeName="enum" enumName="MaterialCornerShape" defaultValue="SheetBottomTokens.docked_container_shape">
+The top-corner shape of the sheet surface (`corner-extra-large-top` by default).
+</SlintProperty>
+
+### skip-partially-expanded
+<SlintProperty propName="skip-partially-expanded" typeName="bool" defaultValue="false">
+Removes the `partially-expanded` anchor — drags and programmatic moves settle directly between
+`hidden` and `expanded`.
+</SlintProperty>
+
+### sheet-offset
+<SlintProperty propName="sheet-offset" typeName="length" propertyVisibility="in-out">
+The surface's current top edge in container coordinates — unclamped while a spring is in flight,
+so it may overshoot past an anchor; `clamped-offset` is the bounded form.
+</SlintProperty>
+
+## State
+
+### anchor-current
+<SlintProperty propName="anchor-current" typeName="enum" enumName="SheetValue" propertyVisibility="out">
+The anchor the surface currently occupies — `current-value` is the settle target, this tracks
+where the surface actually rests while a spring is in flight.
+</SlintProperty>
+
+### current-value / target-value
+<SlintProperty propName="current-value" typeName="enum" enumName="SheetValue" propertyVisibility="out">
+The value the sheet is settling to and the value it is currently animating toward.
+</SlintProperty>
+
+### is-visible
+<SlintProperty propName="is-visible" typeName="bool" propertyVisibility="out">
+Whether the surface has left the `hidden` anchor.
+</SlintProperty>
+
+### dragging
+<SlintProperty propName="dragging" typeName="bool" propertyVisibility="out">
+Whether a pointer is currently dragging the sheet.
+</SlintProperty>
+
+### has-expanded-state / has-partially-expanded-state
+<SlintProperty propName="has-expanded-state" typeName="bool" propertyVisibility="out">
+Whether the corresponding anchor is available in the current container.
+</SlintProperty>
+
+### sheet-height / surface-x / surface-y / surface-width / surface-height
+<SlintProperty propName="sheet-height" typeName="length" propertyVisibility="out">
+The measured sheet height and the surface's live geometry in container coordinates.
+</SlintProperty>
+
+## Functions
+
+### show() / expand() / partial-expand() / hide()
+Moves the sheet to the named anchor with the matching spring.
+
+### snap-to(value: SheetValue)
+Moves to `value` without velocity — the frame-accurate jump used for programmatic changes.
+
+### animate-to-dismiss() / settle-to-dismiss()
+Dismiss paths: `animate-to-dismiss()` plays the hide spring and reports `on-dismiss-request()`
+when the surface reaches `hidden`; `settle-to-dismiss()` jumps immediately.
+
+## Callbacks
+
+### deny-value-change(value: SheetValue) -> bool
+Return `true` to veto an anchor change — the upstream `confirmValueChange`.
+
+### on-dismiss-request()
+Invoked when the sheet completed its dismiss motion and asks to be removed.
+</content>

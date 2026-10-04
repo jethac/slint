@@ -6,19 +6,115 @@ description: ModalBottomSheet API.
 import CodeSnippetMD from '@slint/common-files/src/components/CodeSnippetMD.astro';
 import SlintProperty from '@slint/common-files/src/components/SlintProperty.astro';
 
-<CodeSnippetMD imagePath="" noScreenShot scale="3" imageWidth="300" imageHeight="200" imageAlt="">
+<CodeSnippetMD imagePath="/src/assets/generated/modalbottomsheet.png" scale="3" imageWidth="400" imageHeight="300" imageAlt="">
 ```slint
-import { ModalBottomSheet } from "@material";
+import { ModalBottomSheet, FilledButton } from "@material";
 export component Example inherits Window {
     width: 400px;
     height: 300px;
     background: transparent;
-    ModalBottomSheet {
-        width: 320px;
-        height: 200px;
+
+    FilledButton {
+        text: "Show modal sheet";
+        clicked => { sheet.show(); }
+    }
+
+    sheet := ModalBottomSheet {
+        width: root.width;
+        height: root.height;
+
+        Rectangle {
+            height: 160px;
+        }
     }
 }
 ```
 </CodeSnippetMD>
 
-A `ModalBottomSheet` is a modal overlay that slides up from the bottom of the screen, typically used for presenting additional options or content.
+A `ModalBottomSheet` is a modal overlay that slides up from the bottom of the screen over a scrim,
+typically used for presenting additional options or content. The component is a popup: set its
+`width`/`height` (and `x`/`y`, which default to the window origin) so it covers the window. Call
+`show()` to open it — the sheet enters with the spatial show spring while the scrim fades in on the
+effects spec. Scrim taps, Escape and drag-down-to-hidden dismiss it; `on-dismiss-request()` reports
+the completed dismiss so the host can close the popup.
+
+## Properties
+
+### container-color
+<SlintProperty propName="container-color" typeName="color" defaultValue="SheetBottomTokens.docked_container_color">
+The sheet surface's fill color.
+</SlintProperty>
+
+### gestures-enabled
+<SlintProperty propName="gestures-enabled" typeName="bool" defaultValue="true">
+Whether the sheet can be dragged between its anchors, including fling-with-release-velocity settle.
+</SlintProperty>
+
+### has-drag-handle
+<SlintProperty propName="has-drag-handle" typeName="bool" defaultValue="true">
+Whether the 48 dp drag-handle strip with the pill is drawn at the sheet's top edge.
+</SlintProperty>
+
+### pane-title
+<SlintProperty propName="pane-title" typeName="string" defaultValue="Bottom sheet">
+The accessibility pane title announced for the sheet.
+</SlintProperty>
+
+### scrim-color
+<SlintProperty propName="scrim-color" typeName="color" defaultValue="MaterialPalette.background_modal">
+The scrim's color; its opacity follows the sheet's `target-value` on the default effects spring.
+</SlintProperty>
+
+### sheet-max-width
+<SlintProperty propName="sheet-max-width" typeName="length" defaultValue="640px">
+The width cap applied to the sheet surface — wider containers center the sheet.
+</SlintProperty>
+
+### sheet-shape
+<SlintProperty propName="sheet-shape" typeName="enum" enumName="MaterialCornerShape" defaultValue="SheetBottomTokens.docked_container_shape">
+The top-corner shape of the sheet surface.
+</SlintProperty>
+
+### should-dismiss-on-back-press
+<SlintProperty propName="should-dismiss-on-back-press" typeName="bool" defaultValue="true">
+Whether Escape dismisses the sheet.
+</SlintProperty>
+
+### should-dismiss-on-click-outside
+<SlintProperty propName="should-dismiss-on-click-outside" typeName="bool" defaultValue="true">
+Whether a scrim tap dismisses the sheet — the upstream `sheetGesturesEnabled`-style outer tap.
+</SlintProperty>
+
+### skip-partially-expanded
+<SlintProperty propName="skip-partially-expanded" typeName="bool" defaultValue="false">
+Removes the `partially-expanded` anchor — drags and programmatic moves settle directly between
+`hidden` and `expanded`.
+</SlintProperty>
+
+## State
+
+`current-value`, `target-value`, `anchor-current`, `is-visible`, `dragging`,
+`has-expanded-state`, `has-partially-expanded-state`, `sheet-offset`, `clamped-offset`,
+`sheet-height`, `surface-x`, `surface-y`, `surface-width`, `surface-height` — same meaning as
+`BottomSheet`'s state properties.
+
+## Functions
+
+### show()
+Opens the popup — the sheet plays the show spring from `hidden` to `expanded` (or
+`partially-expanded` when available) once its first layout produced anchors.
+
+### expand() / partial-expand() / hide() / snap-to(value: SheetValue)
+Moves the sheet to the named anchor — see `BottomSheet`.
+
+### animate-to-dismiss() / settle-to-dismiss()
+Dismiss paths that finish by reporting `on-dismiss-request()`.
+
+## Callbacks
+
+### deny-value-change(value: SheetValue) -> bool
+Return `true` to veto an anchor change — the upstream `confirmValueChange`.
+
+### on-dismiss-request()
+Invoked when the dismiss motion completed — close the popup here.
+</content>

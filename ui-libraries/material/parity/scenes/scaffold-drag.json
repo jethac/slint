@@ -1,0 +1,95 @@
+{
+  "name": "scaffold-drag",
+  "type": "canvas",
+  "parity": "motion",
+  "size": [
+    360,
+    240
+  ],
+  "densities": [
+    1,
+    2
+  ],
+  "theme": {
+    "seed": "6750A4",
+    "variant": "tonal-spot",
+    "spec": "spec2025",
+    "platform": "phone",
+    "dark": false,
+    "contrast": 0.0
+  },
+  "fonts": {
+    "plain": "Roboto",
+    "brand": "Roboto"
+  },
+  "times": [
+    0,
+    50,
+    80,
+    150,
+    300,
+    600
+  ],
+  "trace_elements": [
+    "sheet0",
+    "sheet-pill0"
+  ],
+  "trace_props": [
+    "sheet-offset",
+    "current-value",
+    "target-value",
+    "dragging",
+    "is-visible"
+  ],
+  "actions": [
+    {
+      "kind": "press",
+      "x": 180,
+      "y": 190,
+      "at": 0
+    },
+    {
+      "kind": "move",
+      "x": 180,
+      "y": 170,
+      "at": 20
+    },
+    {
+      "kind": "move",
+      "x": 180,
+      "y": 150,
+      "at": 40
+    },
+    {
+      "kind": "release",
+      "x": 180,
+      "y": 150,
+      "at": 80,
+      "velocity": -1000
+    }
+  ],
+  "widgets": [
+    {
+      "kind": "bottom-sheet-scaffold",
+      "x": 0,
+      "y": 0,
+      "width": 360,
+      "height": 240,
+      "sheet_height": 100,
+      "peek_height": 56,
+      "initial": "partially-expanded",
+      "body_color": "surface",
+      "content_color": "tertiary-container",
+      "sheet_elevation": 0
+    }
+  ],
+  "params": {
+    "note": "scaffold partial at 184 \u2014 a 40px upward drag to 144 then a -1000px/s fling lands on the expanded anchor at 92; no BoundaryDampeningZone on the scaffold path"
+  },
+  "mask_decor": {
+    "sheet-pill0": [
+      150,
+      300
+    ]
+  }
+}

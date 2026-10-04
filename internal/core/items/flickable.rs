@@ -57,6 +57,7 @@ use num_traits::Float;
 mod animation;
 mod velocity_tracker;
 use animation::{FlickAnimation, FlickAnimationParameter};
+pub(crate) mod data_ringbuffer;
 
 /// Fixed-duration animation used for wheel scrolling, where we don't have enough phase
 /// information to derive a fling velocity.
@@ -94,6 +95,10 @@ pub enum AutoBool {
     /// Always off
     Off,
 }
+/// The maximum duration between a move and a release event to start an animation
+/// If the duration is larger than this value, no animation will be executed because
+/// it is not desired
+pub(super) const MAX_DURATION: Duration = Duration::from_millis(100);
 
 /// The implementation of the `Flickable` element
 #[repr(C)]

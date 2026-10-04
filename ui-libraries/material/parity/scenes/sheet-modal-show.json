@@ -1,0 +1,46 @@
+{
+  "name": "sheet-modal-show",
+  "type": "canvas",
+  "parity": "motion",
+  "size": [
+    360,
+    400
+  ],
+  "densities": [
+    1,
+    2
+  ],
+  "theme": {
+    "seed": "6750A4",
+    "variant": "tonal-spot",
+    "spec": "spec2025",
+    "platform": "phone",
+    "dark": false,
+    "contrast": 0.0
+  },
+  "fonts": {
+    "plain": "Roboto",
+    "brand": "Roboto"
+  },
+  "times": [
+    120,
+    300,
+    600,
+    1200
+  ],
+  "trace_elements": [
+    "modal0"
+  ],
+  "trace_props": [
+    "current-value",
+    "target-value",
+    "is-visible"
+  ],
+  "widgets": [
+    {
+      "kind": "modal-bottom-sheet",
+      "sheet_height": 200,
+      "content_color": "tertiary-container"
+    }
+  ]
+}

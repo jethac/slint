@@ -4,46 +4,7 @@
   ],
   "frames": [
     {
-      "t_ms": 1,
-      "props": {
-        "container_radius": 16
-      },
-      "elements": {
-        "item0": {
-          "x": 12,
-          "y": 16,
-          "w": 336,
-          "h": 56
-        },
-        "item1": {
-          "x": 12,
-          "y": 80,
-          "w": 336,
-          "h": 56
-        },
-        "item2": {
-          "x": 12,
-          "y": 144,
-          "w": 336,
-          "h": 56
-        },
-        "item3": {
-          "x": 12,
-          "y": 208,
-          "w": 336,
-          "h": 56
-        },
-        "item4": {
-          "x": 12,
-          "y": 272,
-          "w": 336,
-          "h": 56
-        }
-      },
-      "text": {}
-    },
-    {
-      "t_ms": 51,
+      "t_ms": 0,
       "props": {
         "container_radius": 16
       },
@@ -143,7 +104,7 @@
       }
     },
     {
-      "t_ms": 101,
+      "t_ms": 50,
       "props": {
         "container_radius": 16
       },
@@ -243,7 +204,7 @@
       }
     },
     {
-      "t_ms": 151,
+      "t_ms": 100,
       "props": {
         "container_radius": 16
       },
@@ -343,7 +304,7 @@
       }
     },
     {
-      "t_ms": 201,
+      "t_ms": 150,
       "props": {
         "container_radius": 16
       },
@@ -443,7 +404,7 @@
       }
     },
     {
-      "t_ms": 251,
+      "t_ms": 200,
       "props": {
         "container_radius": 16
       },
@@ -543,7 +504,7 @@
       }
     },
     {
-      "t_ms": 301,
+      "t_ms": 250,
       "props": {
         "container_radius": 16
       },
@@ -643,7 +604,7 @@
       }
     },
     {
-      "t_ms": 351,
+      "t_ms": 300,
       "props": {
         "container_radius": 16
       },
@@ -743,7 +704,7 @@
       }
     },
     {
-      "t_ms": 401,
+      "t_ms": 350,
       "props": {
         "container_radius": 16
       },
@@ -843,7 +804,7 @@
       }
     },
     {
-      "t_ms": 451,
+      "t_ms": 400,
       "props": {
         "container_radius": 16
       },
@@ -943,7 +904,7 @@
       }
     },
     {
-      "t_ms": 501,
+      "t_ms": 450,
       "props": {
         "container_radius": 16
       },
@@ -1043,7 +1004,7 @@
       }
     },
     {
-      "t_ms": 551,
+      "t_ms": 500,
       "props": {
         "container_radius": 16
       },
@@ -1143,7 +1104,7 @@
       }
     },
     {
-      "t_ms": 601,
+      "t_ms": 550,
       "props": {
         "container_radius": 16
       },
@@ -1243,7 +1204,7 @@
       }
     },
     {
-      "t_ms": 651,
+      "t_ms": 600,
       "props": {
         "container_radius": 16
       },
@@ -1343,7 +1304,7 @@
       }
     },
     {
-      "t_ms": 701,
+      "t_ms": 650,
       "props": {
         "container_radius": 16
       },
@@ -1443,7 +1404,7 @@
       }
     },
     {
-      "t_ms": 751,
+      "t_ms": 700,
       "props": {
         "container_radius": 16
       },
@@ -1543,7 +1504,7 @@
       }
     },
     {
-      "t_ms": 801,
+      "t_ms": 750,
       "props": {
         "container_radius": 16
       },
@@ -1643,7 +1604,7 @@
       }
     },
     {
-      "t_ms": 851,
+      "t_ms": 800,
       "props": {
         "container_radius": 16
       },
@@ -1743,7 +1704,7 @@
       }
     },
     {
-      "t_ms": 901,
+      "t_ms": 850,
       "props": {
         "container_radius": 16
       },
@@ -1843,7 +1804,7 @@
       }
     },
     {
-      "t_ms": 951,
+      "t_ms": 900,
       "props": {
         "container_radius": 16
       },
@@ -1943,7 +1904,7 @@
       }
     },
     {
-      "t_ms": 1001,
+      "t_ms": 950,
       "props": {
         "container_radius": 16
       },
@@ -2043,7 +2004,7 @@
       }
     },
     {
-      "t_ms": 1051,
+      "t_ms": 1000,
       "props": {
         "container_radius": 16
       },
@@ -2143,7 +2104,7 @@
       }
     },
     {
-      "t_ms": 1101,
+      "t_ms": 1050,
       "props": {
         "container_radius": 16
       },
@@ -2243,7 +2204,7 @@
       }
     },
     {
-      "t_ms": 1151,
+      "t_ms": 1100,
       "props": {
         "container_radius": 16
       },
@@ -2343,7 +2304,7 @@
       }
     },
     {
-      "t_ms": 1201,
+      "t_ms": 1150,
       "props": {
         "container_radius": 16
       },
@@ -2443,7 +2404,7 @@
       }
     },
     {
-      "t_ms": 1251,
+      "t_ms": 1200,
       "props": {
         "container_radius": 16
       },
@@ -2543,7 +2504,7 @@
       }
     },
     {
-      "t_ms": 1301,
+      "t_ms": 1250,
       "props": {
         "container_radius": 16
       },
@@ -2643,7 +2604,7 @@
       }
     },
     {
-      "t_ms": 1351,
+      "t_ms": 1300,
       "props": {
         "container_radius": 16
       },
@@ -2743,7 +2704,7 @@
       }
     },
     {
-      "t_ms": 1401,
+      "t_ms": 1350,
       "props": {
         "container_radius": 16
       },
@@ -2843,7 +2804,7 @@
       }
     },
     {
-      "t_ms": 1451,
+      "t_ms": 1400,
       "props": {
         "container_radius": 16
       },
@@ -2943,7 +2904,7 @@
       }
     },
     {
-      "t_ms": 1501,
+      "t_ms": 1450,
       "props": {
         "container_radius": 16
       },
@@ -3043,7 +3004,7 @@
       }
     },
     {
-      "t_ms": 1551,
+      "t_ms": 1500,
       "props": {
         "container_radius": 16
       },
@@ -3143,7 +3104,7 @@
       }
     },
     {
-      "t_ms": 1601,
+      "t_ms": 1550,
       "props": {
         "container_radius": 16
       },
@@ -3243,7 +3204,7 @@
       }
     },
     {
-      "t_ms": 1651,
+      "t_ms": 1600,
       "props": {
         "container_radius": 16
       },
@@ -3343,7 +3304,7 @@
       }
     },
     {
-      "t_ms": 1701,
+      "t_ms": 1650,
       "props": {
         "container_radius": 16
       },
@@ -3443,7 +3404,7 @@
       }
     },
     {
-      "t_ms": 1751,
+      "t_ms": 1700,
       "props": {
         "container_radius": 16
       },
@@ -3543,7 +3504,7 @@
       }
     },
     {
-      "t_ms": 1801,
+      "t_ms": 1750,
       "props": {
         "container_radius": 16
       },
@@ -3643,7 +3604,7 @@
       }
     },
     {
-      "t_ms": 1851,
+      "t_ms": 1800,
       "props": {
         "container_radius": 16
       },
@@ -3743,7 +3704,7 @@
       }
     },
     {
-      "t_ms": 1901,
+      "t_ms": 1850,
       "props": {
         "container_radius": 16
       },
@@ -3843,7 +3804,7 @@
       }
     },
     {
-      "t_ms": 1951,
+      "t_ms": 1900,
       "props": {
         "container_radius": 16
       },
@@ -3943,7 +3904,107 @@
       }
     },
     {
-      "t_ms": 2001,
+      "t_ms": 1950,
+      "props": {
+        "container_radius": 16
+      },
+      "elements": {
+        "item0": {
+          "x": 12,
+          "y": 16,
+          "w": 336,
+          "h": 56,
+          "opacity": 1
+        },
+        "item1": {
+          "x": 12,
+          "y": 80,
+          "w": 336,
+          "h": 56,
+          "opacity": 1
+        },
+        "item2": {
+          "x": 12,
+          "y": 144,
+          "w": 336,
+          "h": 56,
+          "opacity": 1
+        },
+        "item3": {
+          "x": 12,
+          "y": 208,
+          "w": 336,
+          "h": 56,
+          "opacity": 1
+        },
+        "item4": {
+          "x": 12,
+          "y": 272,
+          "w": 336,
+          "h": 56,
+          "opacity": 1
+        }
+      },
+      "text": {
+        "text:0": {
+          "x": 28,
+          "y": 32,
+          "w": 64,
+          "h": 24,
+          "baseline": 17,
+          "lines": 1,
+          "frac_w": 62.8359375,
+          "unhint_w": 63.875,
+          "chars": 7
+        },
+        "text:1": {
+          "x": 28,
+          "y": 96,
+          "w": 62,
+          "h": 24,
+          "baseline": 17,
+          "lines": 1,
+          "frac_w": 60.6328125,
+          "unhint_w": 62.375,
+          "chars": 7
+        },
+        "text:2": {
+          "x": 28,
+          "y": 160,
+          "w": 65,
+          "h": 24,
+          "baseline": 17,
+          "lines": 1,
+          "frac_w": 63.5,
+          "unhint_w": 65,
+          "chars": 8
+        },
+        "text:3": {
+          "x": 28,
+          "y": 224,
+          "w": 67,
+          "h": 24,
+          "baseline": 17,
+          "lines": 1,
+          "frac_w": 65.5,
+          "unhint_w": 65.25,
+          "chars": 8
+        },
+        "text:4": {
+          "x": 28,
+          "y": 288,
+          "w": 64,
+          "h": 24,
+          "baseline": 17,
+          "lines": 1,
+          "frac_w": 62.84375,
+          "unhint_w": 64.625,
+          "chars": 7
+        }
+      }
+    },
+    {
+      "t_ms": 2000,
       "props": {
         "container_radius": 16
       },
@@ -4043,5 +4104,5 @@
       }
     }
   ],
-  "settle_ms": 1
+  "settle_ms": null
 }

@@ -1,0 +1,47 @@
+{
+  "name": "drag-handles",
+  "type": "canvas",
+  "parity": "static",
+  "size": [360, 200],
+  "densities": [1, 2],
+  "theme": {
+    "seed": "6750A4",
+    "variant": "tonal-spot",
+    "spec": "spec2025",
+    "platform": "phone",
+    "dark": false,
+    "contrast": 0.0
+  },
+  "fonts": {
+    "plain": "Roboto",
+    "brand": "Roboto"
+  },
+  "trace_elements": ["vhandle0", "vhandle1", "vhandle2"],
+  "trace_props": [],
+  "widgets": [
+    {
+      "kind": "drag-handle",
+      "x": 0,
+      "y": 24,
+      "width": 360
+    },
+    {
+      "kind": "vertical-drag-handle",
+      "x": 56,
+      "y": 120,
+      "state": "enabled"
+    },
+    {
+      "kind": "vertical-drag-handle",
+      "x": 156,
+      "y": 120,
+      "state": "pressed"
+    },
+    {
+      "kind": "vertical-drag-handle",
+      "x": 256,
+      "y": 120,
+      "state": "dragged"
+    }
+  ]
+}

@@ -1,0 +1,67 @@
+{
+  "name": "modal-scrim-dismiss",
+  "type": "canvas",
+  "parity": "motion",
+  "size": [
+    360,
+    400
+  ],
+  "densities": [
+    1,
+    2
+  ],
+  "theme": {
+    "seed": "6750A4",
+    "variant": "tonal-spot",
+    "spec": "spec2025",
+    "platform": "phone",
+    "dark": false,
+    "contrast": 0.0
+  },
+  "fonts": {
+    "plain": "Roboto",
+    "brand": "Roboto"
+  },
+  "times": [
+    0,
+    300,
+    600,
+    700,
+    800,
+    900,
+    1000,
+    1300
+  ],
+  "trace_elements": [
+    "modal0"
+  ],
+  "trace_props": [
+    "current-value",
+    "target-value",
+    "is-visible"
+  ],
+  "actions": [
+    {
+      "kind": "press",
+      "x": 180,
+      "y": 50,
+      "at": 900
+    },
+    {
+      "kind": "release",
+      "x": 180,
+      "y": 50,
+      "at": 900
+    }
+  ],
+  "widgets": [
+    {
+      "kind": "modal-bottom-sheet",
+      "sheet_height": 200,
+      "content_color": "tertiary-container"
+    }
+  ],
+  "params": {
+    "note": "the modal opens via show() to partially-expanded at offset 200; the press at y=50 lands above the sheet top \u2014 the scrim consumes the tap and runs animateToDismiss \u2192 hide() with the fast-effects spring"
+  }
+}

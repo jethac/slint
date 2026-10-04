@@ -4,62 +4,7 @@
   ],
   "frames": [
     {
-      "t_ms": 1,
-      "props": {},
-      "elements": {
-        "appbar0": {
-          "x": 0,
-          "y": 0,
-          "w": 360,
-          "h": 64
-        },
-        "appbar1": {
-          "x": 0,
-          "y": 64,
-          "w": 360,
-          "h": 64
-        },
-        "appbar2": {
-          "x": 0,
-          "y": 128,
-          "w": 360,
-          "h": 112
-        },
-        "appbar3": {
-          "x": 0,
-          "y": 240,
-          "w": 360,
-          "h": 136
-        },
-        "appbar4": {
-          "x": 0,
-          "y": 376,
-          "w": 360,
-          "h": 152
-        },
-        "appbar5": {
-          "x": 0,
-          "y": 528,
-          "w": 360,
-          "h": 152
-        },
-        "appbar6": {
-          "x": 0,
-          "y": 640,
-          "w": 360,
-          "h": 64
-        },
-        "appbar7": {
-          "x": 0,
-          "y": 704,
-          "w": 360,
-          "h": 100
-        }
-      },
-      "text": {}
-    },
-    {
-      "t_ms": 51,
+      "t_ms": 0,
       "props": {},
       "elements": {
         "appbar0": {
@@ -122,7 +67,7 @@
       "text": {}
     },
     {
-      "t_ms": 101,
+      "t_ms": 50,
       "props": {},
       "elements": {
         "appbar0": {
@@ -185,7 +130,7 @@
       "text": {}
     },
     {
-      "t_ms": 151,
+      "t_ms": 100,
       "props": {},
       "elements": {
         "appbar0": {
@@ -248,7 +193,7 @@
       "text": {}
     },
     {
-      "t_ms": 201,
+      "t_ms": 150,
       "props": {},
       "elements": {
         "appbar0": {
@@ -311,7 +256,7 @@
       "text": {}
     },
     {
-      "t_ms": 251,
+      "t_ms": 200,
       "props": {},
       "elements": {
         "appbar0": {
@@ -374,7 +319,7 @@
       "text": {}
     },
     {
-      "t_ms": 301,
+      "t_ms": 250,
       "props": {},
       "elements": {
         "appbar0": {
@@ -437,7 +382,7 @@
       "text": {}
     },
     {
-      "t_ms": 351,
+      "t_ms": 300,
       "props": {},
       "elements": {
         "appbar0": {
@@ -500,7 +445,7 @@
       "text": {}
     },
     {
-      "t_ms": 401,
+      "t_ms": 350,
       "props": {},
       "elements": {
         "appbar0": {
@@ -563,7 +508,7 @@
       "text": {}
     },
     {
-      "t_ms": 451,
+      "t_ms": 400,
       "props": {},
       "elements": {
         "appbar0": {
@@ -626,7 +571,7 @@
       "text": {}
     },
     {
-      "t_ms": 501,
+      "t_ms": 450,
       "props": {},
       "elements": {
         "appbar0": {
@@ -689,7 +634,7 @@
       "text": {}
     },
     {
-      "t_ms": 551,
+      "t_ms": 500,
       "props": {},
       "elements": {
         "appbar0": {
@@ -752,7 +697,7 @@
       "text": {}
     },
     {
-      "t_ms": 601,
+      "t_ms": 550,
       "props": {},
       "elements": {
         "appbar0": {
@@ -815,7 +760,7 @@
       "text": {}
     },
     {
-      "t_ms": 651,
+      "t_ms": 600,
       "props": {},
       "elements": {
         "appbar0": {
@@ -878,7 +823,7 @@
       "text": {}
     },
     {
-      "t_ms": 701,
+      "t_ms": 650,
       "props": {},
       "elements": {
         "appbar0": {
@@ -941,7 +886,7 @@
       "text": {}
     },
     {
-      "t_ms": 751,
+      "t_ms": 700,
       "props": {},
       "elements": {
         "appbar0": {
@@ -1004,7 +949,7 @@
       "text": {}
     },
     {
-      "t_ms": 801,
+      "t_ms": 750,
       "props": {},
       "elements": {
         "appbar0": {
@@ -1067,7 +1012,7 @@
       "text": {}
     },
     {
-      "t_ms": 851,
+      "t_ms": 800,
       "props": {},
       "elements": {
         "appbar0": {
@@ -1130,7 +1075,7 @@
       "text": {}
     },
     {
-      "t_ms": 901,
+      "t_ms": 850,
       "props": {},
       "elements": {
         "appbar0": {
@@ -1193,7 +1138,7 @@
       "text": {}
     },
     {
-      "t_ms": 951,
+      "t_ms": 900,
       "props": {},
       "elements": {
         "appbar0": {
@@ -1256,7 +1201,7 @@
       "text": {}
     },
     {
-      "t_ms": 1001,
+      "t_ms": 950,
       "props": {},
       "elements": {
         "appbar0": {
@@ -1319,7 +1264,7 @@
       "text": {}
     },
     {
-      "t_ms": 1051,
+      "t_ms": 1000,
       "props": {},
       "elements": {
         "appbar0": {
@@ -1382,7 +1327,7 @@
       "text": {}
     },
     {
-      "t_ms": 1101,
+      "t_ms": 1050,
       "props": {},
       "elements": {
         "appbar0": {
@@ -1445,7 +1390,7 @@
       "text": {}
     },
     {
-      "t_ms": 1151,
+      "t_ms": 1100,
       "props": {},
       "elements": {
         "appbar0": {
@@ -1508,7 +1453,7 @@
       "text": {}
     },
     {
-      "t_ms": 1201,
+      "t_ms": 1150,
       "props": {},
       "elements": {
         "appbar0": {
@@ -1571,7 +1516,7 @@
       "text": {}
     },
     {
-      "t_ms": 1251,
+      "t_ms": 1200,
       "props": {},
       "elements": {
         "appbar0": {
@@ -1634,7 +1579,7 @@
       "text": {}
     },
     {
-      "t_ms": 1301,
+      "t_ms": 1250,
       "props": {},
       "elements": {
         "appbar0": {
@@ -1697,7 +1642,7 @@
       "text": {}
     },
     {
-      "t_ms": 1351,
+      "t_ms": 1300,
       "props": {},
       "elements": {
         "appbar0": {
@@ -1760,7 +1705,7 @@
       "text": {}
     },
     {
-      "t_ms": 1401,
+      "t_ms": 1350,
       "props": {},
       "elements": {
         "appbar0": {
@@ -1823,7 +1768,7 @@
       "text": {}
     },
     {
-      "t_ms": 1451,
+      "t_ms": 1400,
       "props": {},
       "elements": {
         "appbar0": {
@@ -1886,7 +1831,7 @@
       "text": {}
     },
     {
-      "t_ms": 1501,
+      "t_ms": 1450,
       "props": {},
       "elements": {
         "appbar0": {
@@ -1949,7 +1894,7 @@
       "text": {}
     },
     {
-      "t_ms": 1551,
+      "t_ms": 1500,
       "props": {},
       "elements": {
         "appbar0": {
@@ -2012,7 +1957,7 @@
       "text": {}
     },
     {
-      "t_ms": 1601,
+      "t_ms": 1550,
       "props": {},
       "elements": {
         "appbar0": {
@@ -2075,7 +2020,7 @@
       "text": {}
     },
     {
-      "t_ms": 1651,
+      "t_ms": 1600,
       "props": {},
       "elements": {
         "appbar0": {
@@ -2138,7 +2083,7 @@
       "text": {}
     },
     {
-      "t_ms": 1701,
+      "t_ms": 1650,
       "props": {},
       "elements": {
         "appbar0": {
@@ -2201,7 +2146,7 @@
       "text": {}
     },
     {
-      "t_ms": 1751,
+      "t_ms": 1700,
       "props": {},
       "elements": {
         "appbar0": {
@@ -2264,7 +2209,7 @@
       "text": {}
     },
     {
-      "t_ms": 1801,
+      "t_ms": 1750,
       "props": {},
       "elements": {
         "appbar0": {
@@ -2327,7 +2272,7 @@
       "text": {}
     },
     {
-      "t_ms": 1851,
+      "t_ms": 1800,
       "props": {},
       "elements": {
         "appbar0": {
@@ -2390,7 +2335,7 @@
       "text": {}
     },
     {
-      "t_ms": 1901,
+      "t_ms": 1850,
       "props": {},
       "elements": {
         "appbar0": {
@@ -2453,7 +2398,7 @@
       "text": {}
     },
     {
-      "t_ms": 1951,
+      "t_ms": 1900,
       "props": {},
       "elements": {
         "appbar0": {
@@ -2516,7 +2461,70 @@
       "text": {}
     },
     {
-      "t_ms": 2001,
+      "t_ms": 1950,
+      "props": {},
+      "elements": {
+        "appbar0": {
+          "x": 0,
+          "y": 0,
+          "w": 360,
+          "h": 64,
+          "opacity": 1
+        },
+        "appbar1": {
+          "x": 0,
+          "y": 64,
+          "w": 360,
+          "h": 64,
+          "opacity": 1
+        },
+        "appbar2": {
+          "x": 0,
+          "y": 128,
+          "w": 360,
+          "h": 112,
+          "opacity": 1
+        },
+        "appbar3": {
+          "x": 0,
+          "y": 240,
+          "w": 360,
+          "h": 136,
+          "opacity": 1
+        },
+        "appbar4": {
+          "x": 0,
+          "y": 376,
+          "w": 360,
+          "h": 152,
+          "opacity": 1
+        },
+        "appbar5": {
+          "x": 0,
+          "y": 528,
+          "w": 360,
+          "h": 152,
+          "opacity": 1
+        },
+        "appbar6": {
+          "x": 0,
+          "y": 640,
+          "w": 360,
+          "h": 64,
+          "opacity": 1
+        },
+        "appbar7": {
+          "x": 0,
+          "y": 704,
+          "w": 360,
+          "h": 100,
+          "opacity": 1
+        }
+      },
+      "text": {}
+    },
+    {
+      "t_ms": 2000,
       "props": {},
       "elements": {
         "appbar0": {
@@ -2579,5 +2587,5 @@
       "text": {}
     }
   ],
-  "settle_ms": 1
+  "settle_ms": null
 }
