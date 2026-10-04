@@ -1,7 +1,7 @@
 {
     "name": "loading-indicator-states",
     "type": "canvas",
-    "parity": "xfail:femtovg",
+    "parity": "static",
     "size": [
         400,
         144
