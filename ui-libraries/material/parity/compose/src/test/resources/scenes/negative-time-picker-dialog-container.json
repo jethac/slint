@@ -83,6 +83,7 @@
   "widgets": [
     {
       "alignment": null,
+      "always_show_label": null,
       "avatar": null,
       "body_color": null,
       "checkable": null,
@@ -104,6 +105,7 @@
       "height_offset": null,
       "hour": 10,
       "icon": null,
+      "icon_position": null,
       "icons": [],
       "indeterminate": null,
       "index": null,
@@ -118,6 +120,7 @@
       "level": null,
       "minute": 30,
       "multi_select": null,
+      "nav_arrangement": null,
       "nav_icon": null,
       "overline": null,
       "peek_height": null,
