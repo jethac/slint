@@ -10,6 +10,7 @@
   },
   "mask_decor": {},
   "mask_inner": {},
+  "mask_shadow": {},
   "name": "navigation-bar-select-morph",
   "negative_note": "issue #27 class: the Slint key dispatch is synchronous while the Compose `selected` state flips inside the frame pump, so identical-timestamp frames report a systematic lead during the DefaultSpatial/FastSpatial indicator expansion — a silent pass would mean the harness went blind",
   "params": {
@@ -105,7 +106,6 @@
   "type": "canvas",
   "widgets": [
     {
-      "alignment": null,
       "always_show_label": null,
       "avatar": null,
       "body_color": null,
@@ -120,7 +120,6 @@
       "dragged": null,
       "elevation": null,
       "enabled": null,
-      "expanded": null,
       "gestures": null,
       "height": null,
       "height_offset": null,
@@ -209,7 +208,6 @@
       "y": 0.0
     },
     {
-      "alignment": null,
       "always_show_label": null,
       "avatar": null,
       "body_color": null,
@@ -224,7 +222,6 @@
       "dragged": null,
       "elevation": null,
       "enabled": null,
-      "expanded": null,
       "gestures": null,
       "height": null,
       "height_offset": null,

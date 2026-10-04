@@ -2837,6 +2837,52 @@ private fun PressInkOverlay(
             .background(color.copy(alpha = alpha)),
     )
 }
+/** Upstream `containerSize{,Medium,Large}` / `containerCornerRadius{,Medium,Large}`
+ * for the widget's `fab_size` — the (Float) -> Dp lambdas the public
+ * `ToggleFloatingActionButton` overload takes. */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+private fun fabMenuDefaults(
+    widget: Widget,
+): Triple<(Float) -> Dp, (Float) -> Dp, (Float) -> Dp> {
+    val d = ToggleFloatingActionButtonDefaults
+    return when (widget.fabSize) {
+        "medium" -> Triple(d.containerSizeMedium(), d.containerCornerRadiusMedium(), d.iconSizeMedium())
+        "large" -> Triple(d.containerSizeLarge(), d.containerCornerRadiusLarge(), d.iconSizeLarge())
+        else -> Triple(d.containerSize(), d.containerCornerRadius(), d.iconSize())
+    }
+}
+
+/** The resting container size/radius `containerSize(0f)` evaluates to —
+ * upstream's `Fab{,Medium,Large}Initial{Size,CornerRadius}` (56/80/96 dp
+ * and 16/20/28 dp). Used only by the trace probe; the composable itself
+ * gets the `(Float) -> Dp` defaults above. */
+private fun fabInitial(widget: Widget): Pair<Dp, Dp> = when (widget.fabSize) {
+    "medium" -> 80.dp to 20.dp
+    "large" -> 96.dp to 28.dp
+    else -> 56.dp to 16.dp
+}
+
+/** The morph probe: the component's own `checkedProgress` is internal, so
+ * the trace re-derives it with the spec `ToggleFloatingActionButton`
+ * hands `animateFloatAsState` — `MotionSchemeKeyTokens.FastSpatial` —
+ * and the `(Float) -> Dp` defaults map it to size/radius, the same math
+ * the real lambdas apply. */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun fabMorphProbe(widget: Widget, checked: Boolean, tracer: Tracer) {
+    val motionScheme = androidx.compose.material3.MaterialTheme.motionScheme
+    val p by animateFloatAsState(
+        targetValue = if (checked) 1f else 0f,
+        animationSpec = motionScheme.fastSpatialSpec<Float>(),
+        label = "checked_progress",
+    )
+    val (_, _) = fabInitial(widget)
+    val (sizeFn, radiusFn, _) = fabMenuDefaults(widget)
+    tracer.propGetters["checked_progress"] = { p.toDouble() }
+    tracer.propGetters["container_size"] = { sizeFn(p).value.toDouble() }
+    tracer.propGetters["container_radius"] = { radiusFn(p).value.toDouble() }
+}
+
 
 /** `ToggleFloatingActionButton` — the morphing FAB that can host a menu.
  * A `press`+`release` action pair is the upstream click: `checked` flips
@@ -4475,5 +4521,91 @@ private fun NavItemIcon(item: GroupItem, i: Int, selectedIndex: Int) {
         }
     } else {
         Icon(sceneIcon(stem), contentDescription = null)
+    }
+}
+
+/** `FloatingActionButtonMenu` — the items column above a toggle FAB.
+ * `expanded` is the upstream `expanded` parameter; a `press`+`release`
+ * action pair on the button is its click, so `expanded` flips at the
+ * release's `at` time. */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun FabMenu(
+    widget: Widget,
+    scene: Scene,
+    tracer: Tracer,
+    elementId: String,
+    density: Float,
+    emitPress: java.util.concurrent.CopyOnWriteArrayList<Pair<Long, Runnable>>,
+    textBase: Int,
+) {
+    var expanded by remember { mutableStateOf(widget.expanded) }
+    DisposableEffect(Unit) {
+        val flip = Runnable { expanded = !expanded }
+        val at = scene.actions.firstOrNull { it.kind == "release" }?.at ?: 0L
+        val entry = at to flip
+        if (sceneActionsClick(scene)) {
+            emitPress.add(entry)
+        }
+        onDispose { emitPress.remove(entry) }
+    }
+    fabMorphProbe(widget, expanded, tracer)
+    val (sizeFn, radiusFn, iconSizeFn) = fabMenuDefaults(widget)
+    val iconColor = ToggleFloatingActionButtonDefaults.iconColor()
+    FloatingActionButtonMenu(
+        expanded = expanded,
+        modifier = Modifier.offset(widget.x.dp, widget.y.dp).track(tracer, elementId),
+        horizontalAlignment = when (widget.alignment) {
+            "start" -> Alignment.Start
+            "center" -> Alignment.CenterHorizontally
+            else -> Alignment.End
+        },
+        button = {
+            ToggleFloatingActionButton(
+                checked = expanded,
+                onCheckedChange = { expanded = it },
+                modifier = Modifier.track(tracer, "$elementId>toggle0"),
+                containerSize = sizeFn,
+                containerCornerRadius = radiusFn,
+            ) {
+                val iconName = if (checkedProgress > 0.5f) {
+                    widget.checkedIcon ?: widget.icon
+                } else {
+                    widget.icon
+                }
+                if (iconName != null) {
+                    Icon(
+                        sceneIcon(iconName),
+                        contentDescription = null,
+                        modifier = Modifier.size(iconSizeFn(checkedProgress)),
+                        tint = iconColor(checkedProgress),
+                    )
+                }
+            }
+        },
+    ) {
+        widget.items.forEachIndexed { i, item ->
+            FloatingActionButtonMenuItem(
+                onClick = {},
+                modifier = Modifier.track(tracer, "$elementId>container$i"),
+                text = {
+                    val textId = "text:${textBase + i}"
+                    Text(
+                        item.text ?: "",
+                        modifier = Modifier.trackText(tracer, textId, density),
+                        onTextLayout = recordTextLayout(
+                            tracer,
+                            textId,
+                            LocalDensity.current,
+                            androidx.compose.ui.platform.LocalFontFamilyResolver.current,
+                            androidx.compose.material3.MaterialTheme.typography.titleMedium.fontFamily,
+                        ),
+                    )
+                },
+                icon = {
+                    item.icon?.let { Icon(sceneIcon(it), contentDescription = null) }
+                },
+            )
+        }
     }
 }

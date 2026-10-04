@@ -10,6 +10,7 @@
   },
   "mask_decor": {},
   "mask_inner": {},
+  "mask_shadow": {},
   "name": "negative-navigation-bar",
   "negative_note": "selected_index and nav_arrangement overrides: the indicator pill lands on a different item and the items tile the full width instead of the centered band — definite deltas in different pixels, so a silent pass would mean the harness went blind",
   "params": {},
@@ -84,7 +85,6 @@
   "type": "canvas",
   "widgets": [
     {
-      "alignment": null,
       "always_show_label": null,
       "avatar": null,
       "body_color": null,
@@ -99,7 +99,6 @@
       "dragged": null,
       "elevation": null,
       "enabled": null,
-      "expanded": null,
       "gestures": null,
       "height": null,
       "height_offset": null,
@@ -190,7 +189,6 @@
       "y": 0.0
     },
     {
-      "alignment": null,
       "always_show_label": null,
       "avatar": null,
       "body_color": null,
@@ -205,7 +203,6 @@
       "dragged": null,
       "elevation": null,
       "enabled": null,
-      "expanded": null,
       "gestures": null,
       "height": null,
       "height_offset": null,
