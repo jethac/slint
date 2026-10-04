@@ -176,11 +176,44 @@ jobs:
           - name: Verify committed Compose references are reproducible
             # Re-record every scene, then require a clean tree under
             # references/ — proves the committed PNGs/masks/traces are what
-            # the harness produces, not a stale local render.
+            # the harness produces, not a stale local render. PNG bytes are
+            # not exactly reproducible: layoutlib's antialiasing jitters a
+            # handful of edge pixels by ±1 between runs, so byte-drifted
+            # images go through the harness's toleranced pixel comparer
+            # (VerifyRefs) instead of failing outright. Non-image refs and
+            # untracked/deleted files stay byte-strict.
             run: |
+              set -euo pipefail
               ./gradlew testDebugUnitTest -Pparity.record=1 --no-daemon
-              if ! git diff --exit-code -- references || \
-                 [ -n "$(git status --porcelain -- references)" ]; then
+              ./gradlew :harness:compileJava --no-daemon -q
+              drifted=0
+              while IFS= read -r f; do
+                [ -n "$f" ] || continue
+                case "$f" in
+                  references/*.png)
+                    if ! git show "HEAD:$f" > /tmp/committed_ref.png 2>/dev/null; then
+                      echo "::error::$f has no committed reference — commit it"
+                      drifted=1
+                      continue
+                    fi
+                    if ! java -cp harness/build/classes/java/main org.slint.material.parity.VerifyRefs /tmp/committed_ref.png "$f"; then
+                      echo "::error::$f drifted beyond the raster noise floor"
+                      drifted=1
+                    fi
+                    ;;
+                  references/*)
+                    echo "::error::$f drifted — non-image references must reproduce byte-for-byte"
+                    drifted=1
+                    ;;
+                esac
+              done < <(git diff --name-only -- references)
+              untracked="$(git status --porcelain -- references | grep '^??' || true)"
+              if [ -n "$untracked" ]; then
+                echo "::error::uncommitted reference files:"
+                echo "$untracked"
+                drifted=1
+              fi
+              if [ "$drifted" != 0 ]; then
                 echo "::error::Compose parity references drifted — re-record locally: cd ui-libraries/material/parity/compose && ./gradlew testDebugUnitTest -Pparity.record=1, then commit the result."
                 mkdir -p "$GITHUB_WORKSPACE/target/parity-artifacts"
                 cp -r references "$GITHUB_WORKSPACE/target/parity-artifacts/re-recorded-references"
