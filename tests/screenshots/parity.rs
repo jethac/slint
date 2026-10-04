@@ -2456,7 +2456,11 @@ pub fn run_parity_case<C: i_slint_core::api::ComponentHandle>(
         }
 
         if let Some(compose) = &compose {
-            let (mut errors, phase) = if !spec.times.is_empty() {
+            // Negative cases also run the trace comparison without
+            // `//TIMES=`: a geometry defect (a rail that ignores `expanded`)
+            // produces a traced-bounds disagreement the strict layer
+            // legitimately masks — only the trace layer can see it.
+            let (mut errors, phase) = if !spec.times.is_empty() || negative {
                 compare_traces(&frames, compose)
             } else {
                 (Vec::new(), None)
@@ -2534,7 +2538,7 @@ pub fn run_parity_case<C: i_slint_core::api::ComponentHandle>(
                 .collect();
             return Err(format!(
                 "negative case {case_rel} produced no strict-pixel{} differences at {}{} — the harness did not catch the deliberate defect: {}",
-                if spec.times.is_empty() { "" } else { " or trace" },
+                if spec.times.is_empty() && !negative { "" } else { " or trace" },
                 missed.join(","),
                 if failures.is_empty() {
                     String::new()
