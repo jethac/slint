@@ -3781,7 +3781,7 @@ private fun TpPickerBody(widget: Widget, vibrant: Boolean) {
 /** `TimeInputImpl` — fields (96×72 classic, 100×120 vibrant) + the
  * period toggle; `SupportingText` (7dp top pad, `BodySmall`,
  * `onSurfaceVariant`, `minLines = 2`) under classic fields. The
- * unselected field is a borderless `TimeSelector`; the selected one is
+ * unselected field is a `TimeSelector` with no border; the selected one is
  * the `OutlinedTextField` container — `primaryContainer` + 2dp `outline`
  * classic, `surfaceContainerLowest` + 2dp `primary` vibrant. */
 @Composable

@@ -754,7 +754,7 @@ component TimeTextField {
         // Vibrant `timeTextFieldColors`: both focused/unfocused container
         // colors are surfaceContainerLowest.
         background: root.vibrant ? MaterialPalette.surface_container_lowest : TimeInputTokens.time_field_container_color;
-        // Upstream renders unselected fields as a borderless
+        // Upstream renders unselected fields with no border —
         // `TimeSelector`; only the focused `OutlinedTextField` container
         // carries a border (2dp `Outline` classic / `primary` vibrant).
         border-width: 0px;
@@ -886,7 +886,7 @@ component ScrollWheelField inherits Rectangle {
     // Item column: the pager composes pages spaced `item_height` apart and
     // snaps the current page to center. A 120dp window shows ~1.8 items.
     for slot in [0, 1, 2, 3, 4]: item := TouchArea {
-        // slot 2 is the centered one at rest; neighbours wrap mod count.
+        // slot 2 is the centered one at rest; adjacent slots wrap mod count.
         property <int> index: mod(Math.floor(root.pos) + slot - 2, root.item_count);
         property <length> slot_y: (slot - 2 - (root.pos - Math.floor(root.pos))) * root.item_height;
 
@@ -1495,14 +1495,14 @@ export component VibrantTimePickerDialogContent inherits Rectangle {
     in property <MaterialCornerShape> container_shape: DialogTokens.container_shape;
     in property <length> actions_spacing: 8px;
 
-    width: vcontent.min_width + 24px;
-    height: vcontent.min_height + actions_row.min_height + 36px;
+    width: v_content.min_width + 24px;
+    height: v_content.min_height + actions_row.min_height + 36px;
     border_radius: root.container_shape.top_left;
     clip: true;
     background: root.container_color;
 
     // A layout wraps `@children` so the surface can size to the content.
-    vcontent := HorizontalLayout {
+    v_content := HorizontalLayout {
         x: (parent.width - self.min_width) / 2;
         y: 12px;
         width: self.min_width;
@@ -1512,9 +1512,9 @@ export component VibrantTimePickerDialogContent inherits Rectangle {
     }
 
     actions_row := HorizontalLayout {
-        x: vcontent.x;
-        y: vcontent.y + vcontent.min_height + 12px;
-        width: vcontent.min_width;
+        x: v_content.x;
+        y: v_content.y + v_content.min_height + 12px;
+        width: v_content.min_width;
         // Unbound `height` fills the pane and vertically centers the
         // action labels outside the clipped surface — pin the row to its
         // content like `TimePickerDialogContent.actions_row`.
@@ -1701,12 +1701,12 @@ export component VibrantTimePickerDialog inherits PopupWindow {
             x: (parent.width - self.width) / 2;
             y: (parent.height - self.height) / 2;
             opacity: 0;
-            width: vdlg_content.min_width;
-            height: vdlg_content.min_height;
+            width: v_dlg_content.min_width;
+            height: v_dlg_content.min_height;
 
             animate opacity { enabled: !MaterialPalette.reduced-motion; duration: MaterialAnimations.opacity_duration; easing: MaterialAnimations.opacity_easing; }
 
-            vdlg_content := VibrantTimePickerDialogContent {
+            v_dlg_content := VibrantTimePickerDialogContent {
                 dismiss_text: root.dismiss_text;
                 confirm_text: root.confirm_text;
                 confirm_enabled: root.confirm_enabled;

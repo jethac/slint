@@ -12,7 +12,7 @@
   "mask_decor": {},
   "mask_inner": {},
   "name": "negative-time-picker-selector",
-  "negative_note": "the selector handle draws at 80dp instead of the ClockDialSelectorHandleContainerSize 48dp, covering neighbouring dial labels",
+  "negative_note": "the selector handle draws at 80dp instead of the ClockDialSelectorHandleContainerSize 48dp, covering adjacent dial labels",
   "params": {},
   "parity": "negative",
   "scheme": {
