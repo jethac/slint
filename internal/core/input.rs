@@ -1526,7 +1526,17 @@ pub(crate) fn handle_mouse_grab(
     window_adapter: &Rc<dyn WindowAdapter>,
     mouse_input_state: &mut MouseInputState,
 ) -> MouseGrabResult {
-    if !mouse_input_state.grabbed || mouse_input_state.item_stack.is_empty() {
+    // While a `DelayForwarding` press is parked, later events from the same
+    // pointer still belong to that press's stack: an interested filter may
+    // claim them even when the pointer has already left the item's geometry
+    // — a swipe that crosses the item's bounds before its distance threshold
+    // must still reach the handler.
+    let parked = !mouse_input_state.grabbed
+        && mouse_input_state
+            .delayed
+            .as_ref()
+            .is_some_and(|(_, event)| event.touch_finger_id() == mouse_event.touch_finger_id());
+    if mouse_input_state.item_stack.is_empty() || (!mouse_input_state.grabbed && !parked) {
         return MouseGrabResult { event: Some(mouse_event.clone()), accepted: false };
     };
 
@@ -1585,6 +1595,17 @@ pub(crate) fn handle_mouse_grab(
         return MouseGrabResult { event: Some(mouse_event.clone()), accepted: false };
     }
 
+    // A parked stack claims the event only through an interception; anything
+    // else continues to hit-test dispatch so children still see their taps.
+    if !mouse_input_state.grabbed && !intercept {
+        return MouseGrabResult { event: Some(mouse_event.clone()), accepted: false };
+    }
+    if intercept {
+        // The interceptor claimed the gesture: drop the press parked for the
+        // children it would otherwise reach out of time.
+        mouse_input_state.delayed = None;
+    }
+
     let grabber = mouse_input_state.top_item().unwrap();
     let input_result = grabber.borrow().as_ref().input_event(
         &event,
@@ -1593,7 +1614,10 @@ pub(crate) fn handle_mouse_grab(
         &mut mouse_input_state.cursor,
     );
     match input_result {
-        InputEventResult::GrabMouse => MouseGrabResult { event: None, accepted: true },
+        InputEventResult::GrabMouse => {
+            mouse_input_state.grabbed = true;
+            MouseGrabResult { event: None, accepted: true }
+        }
         InputEventResult::StartDrag => {
             mouse_input_state.grabbed = false;
             let drag_area_item = grabber.downcast::<crate::items::DragArea>().unwrap();

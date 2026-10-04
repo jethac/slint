@@ -2,13 +2,25 @@
 <!-- Copyright © SixtyFPS GmbH <info@slint.dev> -->
 <!-- SPDX-License-Identifier: MIT -->
 <!-- Paparazzi does not load aar resources for unit-test renders (resources.json
-     lists no aarExplodedDirs), so material3's internal getString() lookups fail.
-     Declaring the two strings the pinned SearchBarDefaults.InputField resolves
-     here gives them the same merged ids with their official default values
-     (androidx.compose.material3:material3:1.5.0-alpha18, values.xml). -->
+     lists no aarExplodedDirs), so the internal getString() lookups of the
+     SearchBarDefaults.InputField, BottomSheetImpl, DragHandleWithTooltip and
+     ModalBottomSheetScrim paths fail. Declaring the strings they resolve here
+     gives them the same merged ids with their official default values
+     (androidx.compose.material3:material3:1.5.0-alpha18, values.xml;
+     androidx.compose.ui:ui's close_sheet; androidx.compose.foundation:foundation's
+     tooltip_*). -->
 <resources>
     <string name="m3c_search_bar_search">Search</string>
     <string name="m3c_suggestions_available">Suggestions below</string>
+    <string name="m3c_bottom_sheet_pane_title">Bottom Sheet</string>
+    <string name="m3c_bottom_sheet_collapse_description">Collapse bottom sheet</string>
+    <string name="m3c_bottom_sheet_dismiss_description">Dismiss bottom sheet</string>
+    <string name="m3c_bottom_sheet_drag_handle_description">Drag handle</string>
+    <string name="m3c_bottom_sheet_expand_description">Expand bottom sheet</string>
+    <string name="m3c_snackbar_pane_title">Alert</string>
+    <string name="close_sheet">Close sheet</string>
+    <string name="tooltip_label">show tooltip</string>
+    <string name="tooltip_description">tooltip</string>
     <!-- The `m3c_time_picker_*`/`m3c_time_*_dialog_title` strings the pinned
          TimePicker.kt/TimePickerDialog.kt getString() calls resolve. -->
     <string name="m3c_time_picker_pm">PM</string>

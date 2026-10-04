@@ -1,0 +1,45 @@
+{
+  "name": "negative-sheet-color",
+  "type": "canvas",
+  "parity": "negative",
+  "negative_note": "the Slint sheet paints the docked container in surface-container-highest instead of the SheetBottomTokens.docked_container_color (surface-container-low) \u2014 a wrong container token must fail the strict-pixel check",
+  "size": [
+    360,
+    240
+  ],
+  "densities": [
+    1,
+    2
+  ],
+  "theme": {
+    "seed": "6750A4",
+    "variant": "tonal-spot",
+    "spec": "spec2025",
+    "platform": "phone",
+    "dark": false,
+    "contrast": 0.0
+  },
+  "fonts": {
+    "plain": "Roboto",
+    "brand": "Roboto"
+  },
+  "trace_elements": [
+    "sheet0"
+  ],
+  "trace_props": [],
+  "widgets": [
+    {
+      "kind": "bottom-sheet",
+      "x": 0,
+      "y": 0,
+      "width": 360,
+      "height": 240,
+      "sheet_height": 120,
+      "initial": "expanded",
+      "content_color": "tertiary-container",
+      "slint_overrides": {
+        "container_color": "surface-container-highest"
+      }
+    }
+  ]
+}
