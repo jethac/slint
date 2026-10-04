@@ -184,6 +184,7 @@
   "widgets": [
     {
       "always_show_label": null,
+      "arrangement": null,
       "avatar": null,
       "body_color": null,
       "border_color": null,
@@ -203,9 +204,11 @@
       "dragged": null,
       "elevation": null,
       "enabled": null,
+      "fab_icon": null,
       "gestures": null,
       "height": 240.0,
       "height_offset": null,
+      "hide_on_collapse": null,
       "icon": null,
       "icon_position": null,
       "icons": [],
@@ -229,6 +232,7 @@
       "position": null,
       "progress": null,
       "radius": null,
+      "rail_items": [],
       "selectable": null,
       "selectable_from": null,
       "selectable_to": null,
