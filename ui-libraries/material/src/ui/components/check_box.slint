@@ -116,12 +116,20 @@ export component CheckBox {
     ]
 }
 
+// The checkbox tile is `ListItem(checked, onCheckedChange)` upstream:
+// `checkable` gives the row checkbox semantics + checked visuals while the
+// trailing `CheckBox` owns the toggle (its `check_state` also covers
+// partially-checked).
 export component CheckBoxTile inherits ListTile {
     in_out property <CheckState> check_state <=> check_box.check_state;
     in_out property <bool> tristate <=> check_box.tristate;
     in property <bool> has_error <=> check_box.has_error;
 
     callback checked_state_changed <=> check_box.checked_state_changed;
+
+    interactive: true;
+    checkable: true;
+    checked: root.check_state == CheckState.checked;
 
     Rectangle {
         horizontal-stretch: 0;
