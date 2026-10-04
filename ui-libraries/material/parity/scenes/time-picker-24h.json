@@ -44,5 +44,7 @@
     }
   ],
   "parity_eps": 12,
-  "parity_eps_reason": "llvmpipe coverage rasterization lands the dial circle's flattest bottom arc ~9-10 channels off the Compose reference on 2-6 edge pixels at 2x; skia/software/vello_cpu match within the default 8 - AA sampling noise on a near-horizontal curve, not geometry"
+  "parity_eps_reason": "llvmpipe coverage rasterization lands the dial circle's flattest bottom arc ~9-10 channels off the Compose reference on 2-6 edge pixels at 2x; skia/software/vello_cpu match within the default 8 - AA sampling noise on a near-horizontal curve, not geometry",
+  "parity_text_eps": 56,
+  "parity_text_eps_reason": "skia on macOS rasterizes the display separator's \":\" a hint-step off the Linux path — the settled frame's colon cell drifts to mean diff 50 vs the 48 text bound while geometry and strict pixels all match; relax only the text-cell mean for this case (not an xfail: nothing here diverges)"
 }

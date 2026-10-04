@@ -102,6 +102,14 @@ struct Scene {
     /// Why `parity_eps` is set — required when it is.
     #[serde(default)]
     parity_eps_reason: Option<String>,
+    /// `//PARITY_TEXT_EPS=<n>` — per-case mean-diff bound for text cells,
+    /// in d1 device px (density-scaled by the harness); for platform
+    /// font-rasterization drift that sits inside text-classified pixels.
+    #[serde(default)]
+    parity_text_eps: Option<u32>,
+    /// Why `parity_text_eps` is set — required when it is.
+    #[serde(default)]
+    parity_text_eps_reason: Option<String>,
 }
 
 #[derive(serde::Deserialize, serde::Serialize)]
@@ -771,6 +779,15 @@ fn slint_case(scene: &Scene) -> String {
         )
         .unwrap();
         writeln!(s, "//PARITY_EPS={eps}").unwrap();
+    }
+    if let Some(eps) = scene.parity_text_eps {
+        writeln!(
+            s,
+            "// {}",
+            scene.parity_text_eps_reason.as_deref().unwrap_or("(undocumented)")
+        )
+        .unwrap();
+        writeln!(s, "//PARITY_TEXT_EPS={eps}").unwrap();
     }
     writeln!(s, "//SIZE={}x{}", scene.size[0], scene.size[1]).unwrap();
     if !scene.times.is_empty() {

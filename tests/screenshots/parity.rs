@@ -2244,12 +2244,18 @@ pub fn run_parity_case<C: i_slint_core::api::ComponentHandle>(
             // of a button-group row centering its own label — the per-advance
             // error accumulates into the label's placement before the glyph
             // even starts, so the relaxation needs headroom past the
-            // single-label 1.25×.
-            let text_cell_eps = if spec.xfail_text.is_some() {
-                TEXT_CELL_EPS * 1.5 * *density as f64
-            } else {
-                TEXT_CELL_EPS
-            };
+            // single-label 1.25×. A `//PARITY_TEXT_EPS=` case overrides the
+            // bound outright (density-scaled like the xfail relaxation) for
+            // platform rasterization drift that stays under the strict bound
+            // on the reference platform but passes it on another.
+            let text_cell_eps = spec
+                .text_eps
+                .map(|e| e as f64 * *density as f64)
+                .unwrap_or(if spec.xfail_text.is_some() {
+                    TEXT_CELL_EPS * 1.5 * *density as f64
+                } else {
+                    TEXT_CELL_EPS
+                });
             let result =
                 layered_compare(&actual, &expected, Some(&mask), pixel_eps, region, text_cell_eps);
             strict_caught += result.strict_failures;

@@ -251,6 +251,10 @@ fn test_extract_library_paths() {
 ///   (default: `1,2`).
 /// - `//PARITY_EPS=8` — per-channel strict-pixel tolerance override; only use
 ///   with a comment on the case explaining why this case needs it.
+/// - `//PARITY_TEXT_EPS=56` — mean-diff bound per text cell, in d1 device px
+///   (scaled by density); use for platform font-rasterization drift that
+///   `//PARITY_EPS=` cannot cover because it sits inside text-classified
+///   pixels. Only use with a comment on the case explaining why.
 /// - `//MASK_INNER=id@t1,t2` — at the listed timestamps the element's
 ///   interior is excluded from pixel comparison (overlay ink mid-flight,
 ///   e.g. a ripple whose coverage is implementation detail); its boundary
@@ -282,6 +286,8 @@ pub struct ParityMarkers {
     pub actions: Vec<ParityAction>,
     pub densities: Vec<u32>,
     pub eps: Option<f32>,
+    /// `//PARITY_TEXT_EPS=` — per-case mean-diff bound for text cells.
+    pub text_eps: Option<f32>,
     /// `PARITY=negative` cases declare what they get wrong after a `:`.
     pub negative_note: Option<String>,
     /// `PARITY=xfail` cases name the tracked divergence after a `:`.
@@ -426,6 +432,13 @@ pub fn extract_parity(source: &str) -> ParityMarkers {
             .expect("Cannot parse PARITY_EPS=")
     });
 
+    let text_eps = source.find("PARITY_TEXT_EPS=").map(|p| {
+        let rest = &source[p + "PARITY_TEXT_EPS=".len()..];
+        rest.find(char::is_whitespace)
+            .and_then(|end| rest[..end].parse().ok())
+            .expect("Cannot parse PARITY_TEXT_EPS=")
+    });
+
     let mut mask_inner = Vec::new();
     static MASK_INNER_RX: LazyLock<Regex> =
         LazyLock::new(|| Regex::new(r"//MASK_INNER=\s*([A-Za-z0-9_-]+)\s*@\s*([0-9,\s]+)").unwrap());
@@ -464,6 +477,7 @@ pub fn extract_parity(source: &str) -> ParityMarkers {
         actions,
         densities,
         eps,
+        text_eps,
         negative_note,
         xfail_note,
         xfail_renderers,

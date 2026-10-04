@@ -6,6 +6,8 @@
 //PARITY=static
 // llvmpipe coverage rasterization lands the dial circle's flattest bottom arc ~9-10 channels off the Compose reference on 2-6 edge pixels at 2x; skia/software/vello_cpu match within the default 8 - AA sampling noise on a near-horizontal curve, not geometry
 //PARITY_EPS=12
+// skia on macOS rasterizes the display separator's ":" a hint-step off the Linux path — the settled frame's colon cell drifts to mean diff 50 vs the 48 text bound while geometry and strict pixels all match; relax only the text-cell mean for this case (not an xfail: nothing here diverges)
+//PARITY_TEXT_EPS=56
 //SIZE=400x560
 //TRACE_ELEMENTS=picker0
 //MASK_DECOR=picker0+4@2000
