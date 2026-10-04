@@ -1026,7 +1026,6 @@ private fun StateRadioButton(
         interactionSource = interactionSource,
     )
 }
-}
 
 /** Container height per size bucket (dp) — `ButtonDefaults` `*ContainerHeight`. */
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
