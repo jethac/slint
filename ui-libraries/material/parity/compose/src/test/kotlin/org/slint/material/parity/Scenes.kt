@@ -5118,7 +5118,7 @@ private fun FabMenu(
             }
         },
     ) {
-        widget.items.forEachIndexed { i, item ->
+        widget.fabItems.forEachIndexed { i, item ->
             FloatingActionButtonMenuItem(
                 onClick = {},
                 modifier = Modifier.track(tracer, "$elementId>container$i"),
