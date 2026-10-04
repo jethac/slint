@@ -4605,5 +4605,3 @@ private fun NavItemIcon(item: GroupItem, i: Int, selectedIndex: Int) {
     }
 }
 
-    }
-}
