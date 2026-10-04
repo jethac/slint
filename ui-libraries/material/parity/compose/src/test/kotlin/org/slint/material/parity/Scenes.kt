@@ -52,6 +52,9 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.IconButtonDefaults.IconButtonWidthOption
 import androidx.compose.material3.IconToggleButton
+import androidx.compose.material3.ListItem
+import androidx.compose.material3.ListItemDefaults
+import androidx.compose.material3.SegmentedListItem
 import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.ContainedLoadingIndicator
 import androidx.compose.material3.LocalMinimumInteractiveComponentSize
@@ -513,6 +516,7 @@ private fun CanvasScene(
         // ahead of a button leaves `button0` intact.
         var buttons = 0
         var surfaces = 0
+        var items = 0
         var appbars = 0
         var sheets = 0
         var vhandles = 0
@@ -601,6 +605,29 @@ private fun CanvasScene(
                     density,
                     emitPress,
                 )
+                widget.isListItem -> {
+                    // `text:<n>` ids pair with the Slint side's Text
+                    // elements in document order — each item emits its
+                    // avatar label, overline, headline, supporting, and
+                    // trailing text in that order.
+                    val nTexts = 1 +
+                        listOfNotNull(
+                            widget.avatar,
+                            widget.overline,
+                            widget.supporting,
+                            widget.trailingText,
+                        ).size
+                    StateListItem(
+                        widget,
+                        scene,
+                        tracer,
+                        texts,
+                        "item${items++}",
+                        density,
+                        emitPress,
+                    )
+                    texts += nTexts
+                }
                 widget.kind == "top-app-bar" ||
                     widget.kind == "bottom-app-bar" ||
                     widget.kind == "search-bar" ||
@@ -968,11 +995,12 @@ private fun emitStateInteractions(
         // the driver's synthetic pointer press carries no hover either, and
         // the interior pixels stay within tolerance of Slint's state layer.
         // The flow replays its latest emission, so the button's collectors
-        // receive the press whenever they subscribe during the pump. The
-        // registration goes to the frame sink, which runs it right after
-        // the first presented frame: the Slint driver dispatches //ACTION=
-        // just after its own pre-press baseline frame, and an earlier emit
-        // would put pressed ink (and the morph's start) into frame 0 — the
+        // receive the press whenever they subscribe during the pump.
+        //
+        // Timed scenes still go through the
+        // frame sink — the Slint driver dispatches //ACTION= just after its
+        // own pre-press baseline frame, and an earlier emit would put
+        // pressed ink (and the morph's start) into frame 0 — the
         // composition runs ahead of the pump during setup. Landing after
         // frame 0 also keeps the press off uptime 0, where a ripple's frame
         // callback would abort layoutlib.
@@ -2694,6 +2722,290 @@ private fun PressInkOverlay(
             .clip(shape)
             .background(color.copy(alpha = PRESSED_STATE_LAYER_ALPHA)),
     )
+}
+
+/** A `ListItem`/`SegmentedListItem` parity widget. The overload dispatch
+ * mirrors the scene fields: `checkable` → `onCheckedChange`, `selectable`
+ * → `selected`+`onClick`, `interactive` → plain `onClick`, else the
+ * non-interactive base overload. On `selectable`/`checkable` the host owns
+ * the state — a press+release action pair is the click, flipping
+ * `selected`/`checked` at the release's `at` time like the Slint case's
+ * `clicked` handler. `container_radius` probes the shape morph at
+ * `MotionScheme.fastSpatialSpec` — `ListItemShapes`' `shapeAnimationSpec`
+ * — following pressed → selected → resting; focus, hover, and `dragged`
+ * never reach a scene (no scene action emits focus, and platform shadows
+ * deadlock layoutlib, so no scene asserts a dragged item's Level4
+ * elevation). */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun StateListItem(
+    widget: Widget,
+    scene: Scene,
+    tracer: Tracer,
+    textBase: Int,
+    elementId: String,
+    density: Float,
+    emitPress: java.util.concurrent.CopyOnWriteArrayList<Pair<Long, Runnable>>,
+) {
+    val interactionSource = remember { ReplayableInteractionSource() }
+    val interactive = widget.interactive || widget.selectable || widget.checkable
+    if (interactive) {
+        emitStateInteractions(
+            widget, scene, tracer, elementId, interactionSource, emitPress,
+            Offset(40f * density, 20f * density), density,
+        )
+    }
+
+    var checked by remember { mutableStateOf(widget.checked) }
+    var selected by remember { mutableStateOf(widget.selected) }
+    val clickToggles = (widget.checkable || widget.selectable) && sceneActionsClick(scene)
+    DisposableEffect(Unit) {
+        val flip = Runnable { if (widget.checkable) checked = !checked else selected = !selected }
+        val entry =
+            (scene.actions.firstOrNull { it.kind == "release" }?.at ?: 0L) to flip
+        if (clickToggles) emitPress.add(entry)
+        onDispose { emitPress.remove(entry) }
+    }
+    val selectedEffective =
+        if (widget.selectable) selected else if (widget.checkable) checked else false
+
+    val segmented = widget.kind == "segmented-list-item"
+    val shapes = if (segmented) {
+        ListItemDefaults.segmentedShapes(widget.index, widget.count)
+    } else {
+        ListItemDefaults.shapes()
+    }
+    val colors =
+        if (segmented) ListItemDefaults.segmentedColors() else ListItemDefaults.colors()
+
+    // `container_radius` — every list container corner is an absolute-dp
+    // token, so `radiusOf`'s height argument is inert (it only resolves
+    // percent corners, which list shapes never use).
+    val pressed by interactionSource.collectIsPressedAsState()
+    val radius by animateFloatAsState(
+        targetValue = radiusOf(
+            when {
+                pressed -> shapes.pressedShape
+                selectedEffective -> shapes.selectedShape
+                else -> shapes.shape
+            },
+            56.dp,
+            density,
+        ),
+        animationSpec =
+            androidx.compose.material3.MaterialTheme.motionScheme.fastSpatialSpec<Float>(),
+        label = "container_radius",
+    )
+    tracer.propGetters["container_radius"] = { radius.toDouble() }
+
+    var modifier = Modifier.offset(widget.x.dp, widget.y.dp)
+    if (widget.width > 0) {
+        modifier = modifier.width(widget.width.dp)
+    }
+    modifier = modifier.track(tracer, elementId)
+
+    val resolver = androidx.compose.ui.platform.LocalFontFamilyResolver.current
+    val localDensity = LocalDensity.current
+    // `text:<n>` ids follow the Slint side's Text element order: the avatar
+    // label sits in the leading slot before the column's overline/headline/
+    // supporting and the row's trailing text.
+    var tid = textBase
+    fun nextTextId() = "text:${tid++}"
+    fun slotText(id: String, t: String, color: Color): @Composable () -> Unit = {
+        Text(
+            text = t,
+            color = color,
+            modifier = Modifier.trackText(tracer, id, density),
+            onTextLayout =
+                recordTextLayout(tracer, id, localDensity, resolver, null),
+        )
+    }
+    // The leading slot mirrors the Slint `ListTile` slots: the 40px avatar
+    // circle (`ItemLeadingAvatarColor`/`ItemLeadingAvatarLabelColor`), a
+    // 56px `leading_image` clipped to `ItemLeadingImageExpressiveShape`
+    // (`corner_small` = 8dp), or the 24px `leading_icon`.
+    val leading: (@Composable () -> Unit)? = when {
+        widget.avatar != null -> {
+            val avatarSlot = slotText(
+                nextTextId(),
+                widget.avatar!!,
+                schemeColor("on-primary-container"),
+            )
+            val slot: @Composable () -> Unit = {
+                Box(
+                    Modifier.size(40.dp)
+                        .clip(androidx.compose.foundation.shape.CircleShape)
+                        .background(schemeColor("primary-container")),
+                    contentAlignment = androidx.compose.ui.Alignment.Center,
+                ) {
+                    avatarSlot()
+                }
+            }
+            slot
+        }
+        widget.leadingImage != null -> {
+            {
+                androidx.compose.foundation.Image(
+                    imageVector = sceneIcon(widget.leadingImage!!),
+                    contentDescription = null,
+                    modifier = Modifier.size(56.dp)
+                        .clip(androidx.compose.foundation.shape.RoundedCornerShape(8.dp)),
+                    contentScale = androidx.compose.ui.layout.ContentScale.FillBounds,
+                )
+            }
+        }
+        widget.icon != null -> {
+            {
+                Icon(
+                    sceneIcon(widget.icon!!),
+                    contentDescription = null,
+                    modifier = Modifier.size(24.dp),
+                )
+            }
+        }
+        else -> null
+    }
+    val overline: (@Composable () -> Unit)? = widget.overline?.let { t ->
+        slotText(nextTextId(), t, Color.Unspecified)
+    }
+    val content: @Composable () -> Unit =
+        slotText(nextTextId(), widget.text ?: "", Color.Unspecified)
+    val supporting: (@Composable () -> Unit)? = widget.supporting?.let { t ->
+        slotText(nextTextId(), t, Color.Unspecified)
+    }
+    val trailing: (@Composable () -> Unit)? = when {
+        widget.trailingIcon != null -> {
+            {
+                Icon(
+                    sceneIcon(widget.trailingIcon!!),
+                    contentDescription = null,
+                    modifier = Modifier.size(24.dp),
+                )
+            }
+        }
+        widget.trailingText != null ->
+            slotText(nextTextId(), widget.trailingText!!, Color.Unspecified)
+        else -> null
+    }
+
+    if (segmented) {
+        when {
+            widget.checkable -> SegmentedListItem(
+                checked = checked,
+                onCheckedChange = { checked = it },
+                shapes = shapes,
+                modifier = modifier,
+                enabled = widget.enabled,
+                leadingContent = leading,
+                trailingContent = trailing,
+                overlineContent = overline,
+                supportingContent = supporting,
+                colors = colors,
+                interactionSource = interactionSource,
+                content = content,
+            )
+            widget.selectable -> SegmentedListItem(
+                selected = selected,
+                onClick = { selected = !selected },
+                shapes = shapes,
+                modifier = modifier,
+                enabled = widget.enabled,
+                leadingContent = leading,
+                trailingContent = trailing,
+                overlineContent = overline,
+                supportingContent = supporting,
+                colors = colors,
+                interactionSource = interactionSource,
+                content = content,
+            )
+            interactive -> SegmentedListItem(
+                onClick = {},
+                shapes = shapes,
+                modifier = modifier,
+                enabled = widget.enabled,
+                leadingContent = leading,
+                trailingContent = trailing,
+                overlineContent = overline,
+                supportingContent = supporting,
+                colors = colors,
+                interactionSource = interactionSource,
+                content = content,
+            )
+            else -> SegmentedListItem(
+                // material3 1.5.0-alpha18 ships no non-interactive
+                // SegmentedListItem overload; a no-op onClick draws the
+                // identical resting visual (ripple only appears on touch,
+                // and no scene action touches a non-interactive item).
+                onClick = {},
+                shapes = shapes,
+                modifier = modifier,
+                enabled = widget.enabled,
+                leadingContent = leading,
+                trailingContent = trailing,
+                overlineContent = overline,
+                supportingContent = supporting,
+                colors = colors,
+                interactionSource = interactionSource,
+                content = content,
+            )
+        }
+    } else {
+        when {
+            widget.checkable -> ListItem(
+                checked = checked,
+                onCheckedChange = { checked = it },
+                modifier = modifier,
+                enabled = widget.enabled,
+                leadingContent = leading,
+                trailingContent = trailing,
+                overlineContent = overline,
+                supportingContent = supporting,
+                shapes = shapes,
+                colors = colors,
+                interactionSource = interactionSource,
+                content = content,
+            )
+            widget.selectable -> ListItem(
+                selected = selected,
+                onClick = { selected = !selected },
+                modifier = modifier,
+                enabled = widget.enabled,
+                leadingContent = leading,
+                trailingContent = trailing,
+                overlineContent = overline,
+                supportingContent = supporting,
+                shapes = shapes,
+                colors = colors,
+                interactionSource = interactionSource,
+                content = content,
+            )
+            interactive -> ListItem(
+                onClick = {},
+                modifier = modifier,
+                enabled = widget.enabled,
+                leadingContent = leading,
+                trailingContent = trailing,
+                overlineContent = overline,
+                supportingContent = supporting,
+                shapes = shapes,
+                colors = colors,
+                interactionSource = interactionSource,
+                content = content,
+            )
+            else -> ListItem(
+                // The legacy `headlineContent` overload is upstream's only
+                // non-interactive ListItem: flat `ListItemDefaults.shape`
+                // corners, no `enabled` — it cannot render a disabled item.
+                headlineContent = content,
+                modifier = modifier,
+                leadingContent = leading,
+                trailingContent = trailing,
+                overlineContent = overline,
+                supportingContent = supporting,
+                colors = colors,
+            )
+        }
+    }
 }
 
 
