@@ -1,3 +1,4 @@
+badges
 bottom-app-bars
 button-focus
 button-hover
@@ -29,8 +30,14 @@ icon-button-press-morph
 icon-button-states
 icon-buttons
 icons
+list-basic
+list-press-morph
+list-select-morph
+list-states
 loading-indicator-motion
 loading-indicator-states
+negative-badge-offset
+negative-badge-text
 negative-button-focus-ring
 negative-button-press-morph
 negative-button-ripple-clip
@@ -48,6 +55,8 @@ negative-focus-layer
 negative-hover-layer
 negative-icon-button-morph
 negative-icon-offset
+negative-list-segmented
+negative-list-select
 negative-press-overlay
 negative-radius
 negative-recolor
@@ -65,6 +74,7 @@ negative-time-picker-selector
 negative-toggle-select
 negative-wrong-shadow
 search-bars
+segmented-list
 split-button-check-morph
 split-button-check-rotate
 split-button-elevated
@@ -73,6 +83,10 @@ split-button-sizes
 split-button-states
 split-button-styles
 spring-motion
+switch-hover
+switch-off-morph
+switch-on-morph
+switch-states
 time-input-classic
 time-input-vibrant
 time-picker-12h

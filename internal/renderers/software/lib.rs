@@ -3596,13 +3596,39 @@ impl<T: ProcessScene> i_slint_core::item_rendering::ItemRenderer for SceneBuilde
                     self.alpha_color(rect.border_color().color()).into();
                 let border = rect.border_width().cast() * self.scale_factor;
                 if border.get() > 0.01 && border_color.alpha > 0 {
-                    let stroke_contours = shape_raster::stroke_to_fill(
-                        &contours,
-                        border.get(),
-                        i_slint_core::items::LineCap::Butt,
-                        i_slint_core::items::LineJoin::Miter,
-                        4.,
-                    );
+                    // A CSS border is drawn entirely inside the geometry. The
+                    // stroke is centered on the outline path, so the path is
+                    // fitted to the geometry shrunk by half the border width —
+                    // what `BorderRectLayout::border_rect` gives the other
+                    // renderers.
+                    let border_inset = rect.border_width().cast::<f32>().get() / 2.;
+                    let stroke_geom = logical_geom.inflate(-border_inset, -border_inset);
+                    let stroke_contours = if stroke_geom.is_empty() {
+                        Vec::new()
+                    } else {
+                        let unrotated_stroke: Vec<shape_raster::Contour> = rect
+                            .outline()
+                            .flatten(
+                                stroke_geom,
+                                shape_raster::FLATTEN_TOLERANCE / scale_factor.get(),
+                            )
+                            .into_iter()
+                            .map(|c| c.into_iter().map(|p| p * scale_factor).collect())
+                            .collect();
+                        let centered: Vec<shape_raster::Contour> = unrotated_stroke
+                            .into_iter()
+                            .map(|c| {
+                                c.into_iter().map(|p| transform_continuous(p, rotation)).collect()
+                            })
+                            .collect();
+                        shape_raster::stroke_to_fill(
+                            &alloc::rc::Rc::new(centered),
+                            border.get(),
+                            i_slint_core::items::LineCap::Butt,
+                            i_slint_core::items::LineJoin::Miter,
+                            4.,
+                        )
+                    };
                     if let Some(stroke_bounds) = contours_bounds(&stroke_contours)
                         && let Some(stroke_clip) =
                             stroke_bounds.round_out().cast().intersection(&clipped)

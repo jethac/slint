@@ -7,6 +7,11 @@
 #![allow(deprecated)]
 
 // cSpell: ignore dalvik jboolean jfloat jint
+#![allow(
+    deprecated,
+    reason = "jni's bind_java_type! calls AtomicBool::fetch_update: https://github.com/jni-rs/jni-rs/issues/846"
+)]
+
 use super::*;
 use i_slint_common::unicode_utils::{
     byte_offset_to_utf16_offset, utf16_offset_to_byte_offset_clamped,
