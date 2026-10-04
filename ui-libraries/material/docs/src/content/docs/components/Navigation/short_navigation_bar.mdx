@@ -1,0 +1,65 @@
+---
+title: ShortNavigationBar
+description: ShortNavigationBar API.
+---
+
+import CodeSnippetMD from '@slint/common-files/src/components/CodeSnippetMD.astro';
+import SlintProperty from '@slint/common-files/src/components/SlintProperty.astro';
+
+<CodeSnippetMD imagePath="/src/assets/generated/shortnavigationbar.png" scale="3" imageWidth="300" imageHeight="200" imageAlt="">
+```slint
+import { ShortNavigationBar } from "@material";
+export component Example inherits Window {
+    width: 400px;
+    height: 200px;
+    background: transparent;
+    ShortNavigationBar {
+        width: parent.width;
+        items: [
+            { icon: @image-url("../icons/share.svg"), text: "Home" },
+            { icon: @image-url("../icons/search.svg"), text: "Search" },
+            { icon: @image-url("../icons/settings.svg"), text: "Settings" }
+        ];
+    }
+}
+```
+</CodeSnippetMD>
+
+A `ShortNavigationBar` is the expressive navigation bar: a 64dp-high bar that holds a row of navigation items, each with an icon, an optional label, and a pill-shaped indicator behind the selected item. With `icon-position: top` (default) the icon sits above the label; with `icon-position: start` it sits before it. Items with no label are rendered icon-only.
+
+## Properties
+
+### arrangement
+<SlintProperty propName="arrangement" typeName="enum" enumName="ShortNavigationBarArrangement">
+How items share the bar's width: `equal-weight` gives every item an equal share; `centered` sizes items to their content and centers the group with equal leading/trailing padding.
+</SlintProperty>
+
+### current-index
+<SlintProperty propName="current-index" typeName="int" propertyVisibility="in-out">
+The index of the currently selected navigation item.
+</SlintProperty>
+
+### icon-position
+<SlintProperty propName="icon-position" typeName="enum" enumName="NavigationItemIconPosition">
+`top` places the icon above the label (default); `start` places it before the label.
+</SlintProperty>
+
+### item-min-size
+<SlintProperty propName="item-min-size" typeName="length">
+The minimum touch target each item enforces, applied to its intrinsic size. Defaults to 48px.
+</SlintProperty>
+
+### items
+<SlintProperty propName="items" typeName="[struct]" structName="NavigationItem">
+An array of navigation items to display in the bar. Each item's `enabled` field renders it inactive at reduced opacity and removes it from input when false.
+</SlintProperty>
+
+## Callbacks
+
+### index-changed(index: int)
+Invoked when the `current-index` changes.
+
+## Functions
+
+### select(index: int)
+Selects the navigation item at the specified index.

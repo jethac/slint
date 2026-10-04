@@ -62,7 +62,13 @@ pub(crate) fn mock_drag_window(
 pub(crate) const MISSING_DEBUG_INFO_MESSAGE: &str = "The use of the ElementHandle API requires the presence of debug info in Slint compiler generated code. Set the `SLINT_EMIT_DEBUG_INFO=1` environment variable at application build time or use `compile_with_config` and `with_debug_info` with `slint_build`'s `CompilerConfiguration`";
 
 fn warn_missing_debug_info() {
-    i_slint_core::debug_log!("{}", MISSING_DEBUG_INFO_MESSAGE)
+    // Element queries iterate every item in the tree, so without a once-guard
+    // this message is repeated once per item per query — tens of thousands of
+    // identical lines flooding the test log.
+    static WARNED: core::sync::atomic::AtomicBool = core::sync::atomic::AtomicBool::new(false);
+    if !WARNED.swap(true, core::sync::atomic::Ordering::Relaxed) {
+        i_slint_core::debug_log!("{}", MISSING_DEBUG_INFO_MESSAGE)
+    }
 }
 
 mod internal {

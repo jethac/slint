@@ -30,6 +30,11 @@ A `NavigationBar` is a bottom navigation component that displays a row of naviga
 
 ## Properties
 
+### always-show-label
+<SlintProperty propName="always-show-label" typeName="bool">
+Whether labels stay visible on unselected items (the upstream default); when false, a label appears only on the selected item and fades in with the selection animation.
+</SlintProperty>
+
 ### current-index
 <SlintProperty propName="current-index" typeName="int" propertyVisibility="in-out">
 The index of the currently selected navigation item.
@@ -43,7 +48,7 @@ NavigationBar {
 
 ### items
 <SlintProperty propName="items" typeName="[struct]" structName="NavigationItem">
-An array of navigation items to display in the bar.
+An array of navigation items to display in the bar. Each item's `enabled` field renders it inactive at reduced opacity and removes it from input when false.
 </SlintProperty>
 
 ## Callbacks

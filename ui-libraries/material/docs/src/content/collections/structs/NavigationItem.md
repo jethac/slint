@@ -12,3 +12,4 @@ This structure represents a NavigationItem with an icon, text, badge, and empty 
 - **`text`** (_string_): The text to display in the item.
 - **`show-badge`** (_bool_): Whether the badge is empty.
 - **`badge`** (_string_): The badge to display in the item.
+- **`enabled`** (_bool_): Whether the item takes input. A disabled item renders in the inactive color at reduced opacity.

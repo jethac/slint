@@ -11,12 +11,15 @@ export component BaseNavigationItemTemplate {
     in property <bool> selected;
     in property <bool> show_badge;
     in property <string> badge;
+    /// `NavigationBarItem.enabled` / `ShortNavigationBarItem.enabled`.
+    in property <bool> enabled: true;
 
     callback clicked;
     callback pointer_event(event: PointerEvent, position: Point);
 
     accessible-role: tab;
     accessible-label: root.text;
+    accessible-enabled: root.enabled;
     accessible-item-index: root.index;
     accessible-item-selectable: true;
     accessible-item-selected: root.selected;

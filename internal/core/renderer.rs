@@ -330,9 +330,13 @@ pub trait RendererSealed {
         path: &std::path::Path,
     ) -> Result<(), Box<dyn std::error::Error>> {
         let requested_path = path.canonicalize().unwrap_or_else(|_| path.into());
-        let contents = std::fs::read(requested_path)?;
         let ctx = self.slint_context().ok_or("slint platform not initialized")?;
-        ctx.font_context().borrow_mut().collection.register_fonts(contents.into(), None);
+        let mut font_context = ctx.font_context().borrow_mut();
+        if font_context.is_font_path_registered(&requested_path) {
+            return Ok(());
+        }
+        let contents = std::fs::read(&requested_path)?;
+        font_context.register_font_path(requested_path, contents);
         Ok(())
     }
 

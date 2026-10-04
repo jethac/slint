@@ -6,7 +6,11 @@ export struct NavigationItem {
     selected_icon: image,
     text: string,
     show_badge: bool,
-    badge: string
+    badge: string,
+    /// `enabled` on each `ShortNavigationBarItem`/`NavigationBarItem` — a
+    /// disabled item renders in the inactive color at 38% opacity and takes
+    /// no input.
+    enabled: bool = true
 }
 
 export struct NavigationGroup {
