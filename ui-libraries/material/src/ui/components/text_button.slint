@@ -74,8 +74,15 @@ export component TextButton {
 
         text: root.text;
         icon: root.icon;
-        padding_horizontal: MaterialButtonMetrics.horizontal-padding(root.size);
-        padding_vertical: MaterialButtonMetrics.vertical-padding(root.size);
+        // `ButtonDefaults.TextButtonContentPadding` is a Kotlin constant,
+        // not the size tokens: `TextButtonHorizontalPadding` 12dp
+        // horizontally and `ContentPadding`'s `ButtonVerticalPadding` 8dp
+        // vertically (Button.kt, androidx/androidx@23327507).
+        // With an icon upstream swaps in `TextButtonWithIconContentPadding`
+        // — same 12dp start, `TextButtonWithIconHorizontalEndPadding` 16dp end.
+        padding_horizontal: 12px;
+        padding_end: root.icon.width > 0 ? 4px : 0px;
+        padding_vertical: 8px;
         icon_size: MaterialButtonMetrics.icon-size(root.size);
         icon_spacing: MaterialButtonMetrics.icon-spacing(root.size);
         label_style: MaterialButtonMetrics.label-style(root.size, false);

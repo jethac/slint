@@ -1,674 +1,1869 @@
 // Copyright © SixtyFPS GmbH <info@slint.dev>
 // SPDX-License-Identifier: MIT
+//
+// Material 3 Expressive time pickers and their dialogs, reworked to the
+// pinned upstream sources:
+//   compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/
+//     TimePicker.kt        — TimePicker, TimeInput, TimeScroll, ClockFace,
+//                            VerticalPeriodToggle/HorizontalPeriodToggle,
+//                            TimePickerTextField, DisplaySeparator
+//     TimePickerDialog.kt  — TimePickerDialog, VibrantTimePickerDialog,
+//                            TimePickerCustomLayout, VibrantTimePickerCustomLayout,
+//                            TimePickerDialogDefaults (incl. Title and the
+//                            DisplayModeToggle/ScrollDisplayModeToggle buttons)
+//     internal/ScrollField.kt — the `ScrollField` wheel used by TimeScroll
+//   tokens/TimePickerTokens.kt, tokens/TimeInputTokens.kt
+// at androidx/androidx@23327507f7fc7d5b19d65fec4b090f60c970079b.
+//
+// `ComposeMaterial3Flags.isUpdatedTimepickerToggleEnabled` is `true` at the
+// pin, so the AM/PM control is the updated variant: separate ToggleButton
+// items (resting `CircleShape`, checked `RoundedCornerShape(12.dp)`) with a
+// gap, instead of a shared bordered box with a divider line.
 
-import { BaseDialog } from "./dialog.slint";
+import { Modal } from "./modal.slint";
 import { Icons } from "../icons/icons.slint";
+import { Icon } from "./icon.slint";
+import { IconButton } from "./icon_button.slint";
 import { MaterialText } from "./material_text.slint";
-import { MaterialStyleMetrics } from "../styling/material_style_metrics.slint";
-import { MaterialTypography } from "../styling/material_typography.slint";
+import { TextButton } from "./text_button.slint";
 import { MaterialPalette } from "../styling/material_palette.slint";
+import { MaterialStyleMetrics } from "../styling/material_style_metrics.slint";
+import { MaterialTypography, MaterialTypeStyle } from "../styling/material_typography.slint";
+import { Elevation } from "./elevation.slint";
+import { MaterialAnimations } from "../styling/material_animations.slint";
 import { StateLayerArea } from "state_layer.slint";
+import { TimePickerTokens, TimeInputTokens, DialogTokens } from "../styling/generated/material_component_tokens.slint";
+import { ShapeTokens, MaterialCornerShape } from "../styling/generated/material_shape_tokens.slint";
+import { TypographyTokens } from "../styling/generated/material_typography_tokens.slint";
+import { ElevationTokens } from "../styling/generated/material_elevation_tokens.slint";
 
-component TimeSelector inherits Rectangle {
-    in property <bool> selected;
-    in property <int> value;
-
-    callback clicked <=> touch_area.clicked;
-
-    width: max(MaterialStyleMetrics.size_48, text_label.min_width);
-    height: max(MaterialStyleMetrics.size_48, text_label.min_height);
-    border_radius: max(root.width, root.height) / 2;
-    vertical_stretch: 0;
-    horizontal_stretch: 0;
-
-    touch_area := TouchArea {
-        text_label := MaterialText {
-            text: root.value;
-            vertical_alignment: center;
-            horizontal_alignment: center;
-            style: MaterialTypography.body_large;
-            color: MaterialPalette.on_surface;
-        }
-    }
-
-    states [
-        selected when root.selected: {
-            text_label.color: MaterialPalette.on_primary;
-        }
-    ]
-}
-
-component Clock {
-    in property <[int]> model;
-    in property <bool> two_columns;
-    in property <int> total;
-    in_out property <int> current_index;
-    in property <int> current_value;
-
-    callback current_index_changed(index: int);
-
-    property <length> radius: max(root.width, root.height) / 2;
-    property <length> picker_diameter: MaterialStyleMetrics.size_48;
-    property <length> center: root.radius - root.picker_diameter / 2;
-    property <length> outer_padding: 2px;
-    property <length> inner_padding: 32px;
-    property <length> radius_outer: root.center - root.outer_padding;
-    property <length> radius_inner: root.center - root.inner_padding;
-    property <int> half_total: root.total / 2;
-    property <angle> rotation: 0.25turn;
-    property <length> current_x: get_index_x(root.current_value);
-    property <length> current_y: get_index_y(root.current_value);
-
-    min_width: MaterialStyleMetrics.size_256;
-    min_height: self.min_width;
-    vertical_stretch: 0;
-    horizontal_stretch: 0;
-
-    background_layer := Rectangle {
-        border_radius: max(self.width, self.height) / 2;
-        background: MaterialPalette.surface_container_highest;
-
-        if root.current_index >= 0 && root.current_index < root.model.length: Path {
-            stroke: MaterialPalette.primary;
-            stroke_width: 2px;
-            viewbox_width: self.width / 1px;
-            viewbox_height: self.height / 1px;
-
-            MoveTo {
-                x: root.width / 2px;
-                y: root.height / 2px;
-            }
-
-            LineTo {
-                x: (root.current_x + root.picker_diameter / 2) / 1px;
-                y: (root.current_y + root.picker_diameter / 2) / 1px;
-            }
-        }
-
-        Rectangle {
-            width: MaterialStyleMetrics.size_8;
-            height: self.width;
-            background: MaterialPalette.primary;
-            border_radius: self.width / 2;
-        }
-
-        if root.current_index < root.model.length: Rectangle {
-            x: root.current_x;
-            y: root.current_y;
-            width: root.picker_diameter;
-            height: root.picker_diameter;
-            border_radius: root.picker_diameter / 2;
-                background: MaterialPalette.primary;
-
-            if root.current_index < 0: Rectangle {
-                width: MaterialStyleMetrics.size_4;
-                height: self.width;
-                border_radius: self.width / 2;
-                background: MaterialPalette.on_primary;
-            }
-        }
-
-        for val[index] in root.model: TimeSelector {
-            x: get_index_x(val);
-            y: get_index_y(val);
-            width: root.picker_diameter;
-            height: root.picker_diameter;
-            value: val;
-            selected: index == root.current_index;
-            accessible_role: button;
-            accessible_label: @tr("{} Hours or minutes of {}", val, root.total);
-            accessible_action_default => {
-                self.clicked();
-            }
-
-            clicked => {
-                root.set_current_index(index);
-            }
-        }
-    }
-
-
-    pure function value_to_angle(value: int) -> angle {
-        if root.two_columns {
-            if value >= root.half_total {
-                return clamp((value - root.half_total) / root.half_total * 1turn, 0, 0.999999turn) - root.rotation;
-            }
-            return clamp(value / root.half_total * 1turn, 0, 0.99999turn) - root.rotation;
-        }
-
-        clamp(value / root.total * 1turn, 0, 0.99999turn) - root.rotation
-    }
-
-    pure function get_index_x(value: int) -> length {
-        if root.two_columns && value >= root.half_total {
-            return root.center + (root.radius_inner / 1px * cos(root.value_to_angle(value))) * 1px;
-        }
-
-        root.center + (root.radius_outer / 1px * cos(root.value_to_angle(value))) * 1px
-    }
-
-    pure function get_index_y(value: int) -> length {
-        // this is only for 24 mode
-        if root.total == 24 && value == 0 {
-            return root.center + (root.radius_inner / 1px * sin(root.value_to_angle(value))) * 1px;
-        }
-        if root.total == 24 && value == 12 {
-            return root.center + (root.radius_outer / 1px * sin(root.value_to_angle(value))) * 1px;
-        }
-        if root.two_columns && value >= root.half_total {
-            return root.center + (root.radius_inner / 1px * sin(root.value_to_angle(value))) * 1px;
-        }
-
-        root.center + (root.radius_outer / 1px * sin(root.value_to_angle(value))) * 1px
-    }
-
-    function set_current_index(index: int) {
-        root.current_index_changed(index);
-    }
-}
-
-component TimePickerInput {
-    in property <bool> read_only <=> text_input.read_only;
-    in property <bool> checked;
-    in_out property <string> text <=> text_input.text;
-
-    callback clicked;
-    callback edited(value: int);
-
-    width: MaterialStyleMetrics.size_90;
-    min_height: max(MaterialStyleMetrics.size_80, layout.min_height);
-    vertical_stretch: 0;
-    horizontal_stretch: 0;
-
-    forward_focus: text_input;
-
-    background_layer := Rectangle {
-        border_radius: MaterialStyleMetrics.border_radius_8;
-        background: MaterialPalette.surface_container_highest;
-        clip: true;
-
-        layout := HorizontalLayout {
-            padding: MaterialStyleMetrics.padding_8;
-
-            text_input := TextInput {
-                vertical_alignment: center;
-                horizontal_alignment: center;
-                color: MaterialPalette.on_surface;
-                font_size: MaterialTypography.display_large.font_size;
-                font_weight: MaterialTypography.display_large.font_weight;
-                input_type: number;
-                visible: !root.read_only;
-
-                edited => {
-                    root.edited(self.text.to_float());
-                }
-            }
-        }
-
-        if root.read_only : StateLayerArea {
-            border_radius: background_layer.border_radius;
-            color: MaterialPalette.on_surface;
-
-            HorizontalLayout {
-                padding: MaterialStyleMetrics.padding_8;
-
-                MaterialText {
-                    text: root.text.to_float() >= 10 ? root.text : "0" + root.text;
-                    style: MaterialTypography.display_large;
-                    color: MaterialPalette.on_surface;
-                    horizontal_alignment: center;
-                    vertical_alignment: center;
-                }
-            }
-
-            clicked => {
-                root.clicked();
-            }
-        }
-    }
-
-    states [
-        has_focus when text_input.has_focus && !root.read_only: {
-            background_layer.background: MaterialPalette.primary_container;
-            background_layer.border_width: 2px;
-            background_layer.border_color: MaterialPalette.primary;
-            text_input.color: MaterialPalette.on_primary_container;
-        }
-        checked when root.checked: {
-            background_layer.background: MaterialPalette.primary_container;
-            text_input.color: MaterialPalette.on_primary_container;
-        }
-    ]
-}
-
-component PeriodSelectorItem {
-    in property <string> text <=> label.text;
-    in property <bool> checked;
-
-    callback clicked <=> state_layer.clicked;
-
-    background_layer := Rectangle {
-        state_layer := StateLayerArea {
-            color: label.color;
-
-            label := MaterialText {
-                color: MaterialPalette.on_surface_variant;
-                horizontal_alignment: center;
-            }
-        }
-    }
-
-    states [
-        checked when root.checked: {
-            background_layer.background: MaterialPalette.tertiary_container;
-            label.color: MaterialPalette.on_tertiary_container;
-        }
-    ]
-}
-
-
-component PeriodSelector {
-    in property <bool> am_selected;
-    in property <bool> horizontal;
-
-    callback update_period(am_selected: bool);
-
-    min_width: max(MaterialStyleMetrics.size_52, layout.min_width);
-    min_height: max(root.horizontal ? MaterialStyleMetrics.size_38 : MaterialStyleMetrics.size_80, layout.min_height);
-    accessible_label: "AM or PM";
-    accessible_role: checkbox;
-    accessible_checked: root.am_selected;
-
-    Rectangle {
-        border_radius: border.border_radius;
-        clip: true;
-
-        layout := VerticalLayout {
-            if root.horizontal : HorizontalLayout {
-                PeriodSelectorItem {
-                    text: "AM";
-                    checked: root.am_selected;
-
-                    clicked => {
-                        if root.am_selected {
-                            return;
-                        }
-                        root.update_period(true);
-                    }
-                }
-
-                Rectangle {
-                    width: 1px;
-                    background: border.border_color;
-                    vertical_stretch: 0;
-                }
-
-                PeriodSelectorItem {
-                    text: "PM";
-                    checked: !root.am_selected;
-
-                    clicked => {
-                        if !root.am_selected {
-                            return;
-                        }
-                        root.update_period(false);
-                    }
-                }
-            }
-
-            if !root.horizontal : VerticalLayout {
-                PeriodSelectorItem {
-                    text: "AM";
-                    checked: root.am_selected;
-
-                    clicked => {
-                        if root.am_selected {
-                            return;
-                        }
-                        root.update_period(true);
-                    }
-                }
-
-                Rectangle {
-                    height: 1px;
-                    background: border.border_color;
-                    vertical_stretch: 0;
-                }
-
-                PeriodSelectorItem {
-                    text: "PM";
-                    checked: !root.am_selected;
-
-                    clicked => {
-                        if !root.am_selected {
-                            return;
-                        }
-                        root.update_period(false);
-                    }
-                }
-            }
-        }
-    }
-
-    border := Rectangle {
-        border_radius: MaterialStyleMetrics.border_radius_8;
-        border_width: 1px;
-        border_color: MaterialPalette.outline;
-    }
-}
-
+/// The time value carried by the picker state.
 export struct Time {
     hour: int,
     minute: int,
     second: int
 }
 
+/// Upstream `TimePickerLayoutType`: the picker arranges its clock display
+/// and dial side by side (`horizontal`, landscape) or stacked
+/// (`vertical`, portrait). Upstream picks from the window aspect; callers
+/// choose here.
+export enum TimePickerLayoutType {
+    horizontal,
+    vertical,
+}
+
+/// Upstream `TimePickerDisplayMode` (TimePickerDialog.kt).
+export enum TimePickerDisplayMode {
+    picker,
+    input,
+    scroll,
+}
+
+/// Which display field is active — upstream `TimePickerSelectionMode`.
+export enum TimePickerSelection {
+    hour,
+    minute,
+}
+
+/// Upstream `TimePickerPeriod` semantics folded into a bool like
+/// `TimePickerState.isPm`. Kept as an enum for call-site readability.
+export enum TimePickerPeriod {
+    am,
+    pm,
+}
+
+// Private geometry constants lifted from the private vals at the bottom of
+// TimePicker.kt (all `get() = N.dp` at the pin):
+//   ClockDisplayBottomMargin = 36   ClockFaceBottomMargin = 24
+//   DisplaySeparatorWidth = 24      SupportLabelTop = 7
+//   MaxDistance = 74                MinimumInteractiveSize = 48
+//   VibrantTimeFieldWidth = 100     VibrantTimeFieldWidthPortrait = 132
+//   VibrantTimeFieldHeight = 120    VibrantSeparatorWidth = 16
+//   VibrantPeriodToggleWidth = 56   VibrantPeriodToggleHeight = 120
+//   UncontainedTimeFieldHeight = 136  UncontainedToggleHeight = 140
+//   VibrantPeriodToggleHorizontalHeight = 40
+//   VibrantPeriodTogglePadding = 8  VibrantPeriodToggleLargePadding = 16
+//   VibrantHorizontalTimePickerGap = 52  VibrantVerticalTimePickerGap = 12
+//   PeriodTogglePaddingSmall = 4
+//   OuterCircleToSizeRatio = 101/256  InnerCircleToSizeRatio = 69/256
+//   TimePickerMaxHeight = 384  TimePickerMidHeight = 330
+//   ClockDialMidContainerSize = 238  ClockDialMinContainerSize = 200
+
+// Two-digit zero-padded value — upstream `toLocalString(minDigits = 2)`.
+global TimePickerFormat {
+    pure public function pad2(value: int) -> string {
+        value < 10 ? "0" + value : value
+    }
+}
+
+/// The ":" between the hour and minute fields — `DisplaySeparator`
+/// (TimePicker.kt): centered, raised 4dp.
+component TimeSeparator {
+    in property <length> separator_width: 24px;
+    in property <length> separator_height: TimePickerTokens.time_selector_container_height;
+    in property <MaterialTypeStyle> font: TimePickerTokens.time_selector_separator_font;
+    in property <color> color: TimePickerTokens.time_selector_separator_color;
+
+    width: root.separator_width;
+    height: root.separator_height;
+
+    MaterialText {
+        text: ":";
+        style: root.font;
+        color: root.color;
+        horizontal_alignment: center;
+        vertical_alignment: center;
+        y: -4px;
+        width: 100%;
+        height: 100%;
+    }
+}
+
+/// One half of the updated AM/PM toggle — `ToggleItem`'s
+/// `isUpdatedTimepickerToggleEnabled` branch: a `ToggleButton` with
+/// resting `CircleShape`, checked/pressed `RoundedCornerShape(12.dp)` and
+/// the `periodSelector*` colors (surfaceContainerLowest /
+/// onSurfaceVariant resting, primaryContainer / onPrimaryContainer
+/// checked).
+component PeriodToggleItem {
+    in property <string> text;
+    in property <bool> checked;
+    in property <color> container_color: MaterialPalette.surface_container_lowest;
+    in property <color> content_color: MaterialPalette.on_surface_variant;
+    in property <color> checked_container_color: MaterialPalette.primary_container;
+    in property <color> checked_content_color: MaterialPalette.on_primary_container;
+
+    callback clicked <=> touch.clicked;
+
+    forward_focus: focus_scope;
+
+    focus_scope := FocusScope {
+        x: 0;
+        width: 0;
+        enabled: root.enabled;
+
+        key_pressed(event) => {
+            if event.text == Key.Return || event.text == Key.Space {
+                root.clicked();
+                return accept;
+            }
+            reject
+        }
+    }
+
+    background := Rectangle {
+        border_radius: max(self.width, self.height) / 2;
+        background: root.container_color;
+        clip: true;
+
+        touch := StateLayerArea {
+            color: label.color;
+        }
+
+        label := MaterialText {
+            text: root.text;
+            style: TimePickerTokens.period_selector_label_text_font;
+            color: root.content_color;
+            horizontal_alignment: center;
+            vertical_alignment: center;
+            width: 100%;
+            height: 100%;
+        }
+    }
+
+    states [
+        checked when root.checked: {
+            background.background: root.checked_container_color;
+            background.border_radius: 12px;
+            label.color: root.checked_content_color;
+        }
+        disabled when !root.enabled: {
+            label.color: root.content_color;
+        }
+    ]
+
+    in property <bool> enabled: true;
+    accessible-role: AccessibleRole.radio_button;
+    accessible-label: root.text;
+    accessible-checked: root.checked;
+}
+
+/// The updated AM/PM segmented control — `VerticalPeriodToggle` /
+/// `HorizontalPeriodToggle` at the pin. Splits its box into the two
+/// `ToggleItem`s with the flag's gap (4dp classic, 8dp vibrant) and no
+/// outer border or divider.
+component TimePeriodToggle {
+    in property <bool> am_selected;
+    /// Horizontal split (`HorizontalPeriodToggle`) vs. the default
+    /// vertical stack (`VerticalPeriodToggle`).
+    in property <bool> horizontal;
+    /// Vibrant paddings/metrics — upstream's `shapes != null` path.
+    in property <bool> vibrant;
+
+    callback period_changed(am: bool);
+
+    // `useUpdatedToggle` measure policies: vertical stacks gap
+    // `orVibrant(PeriodTogglePaddingSmall, VibrantPeriodTogglePadding)` =
+    // 4|8; horizontal rows gap `orVibrant(PeriodTogglePaddingSmall,
+    // VibrantSeparatorWidth)` = 4|16.
+    property <length> gap: root.vibrant ? (root.horizontal ? 16px : 8px) : 4px;
+    // Vibrant toggles take CornerFull halves upstream (`PeriodSelectorShape
+    // = CornerFull`), but the flag's ToggleItem path overrides them with
+    // CircleShape/12dp — identical visuals either way here.
+
+    accessible-role: AccessibleRole.groupbox;
+    accessible-label: @tr("Select AM or PM");
+
+    if root.horizontal : HorizontalLayout {
+        spacing: root.gap;
+        padding: 0;
+
+        am_item := PeriodToggleItem {
+            text: @tr("AM");
+            checked: root.am_selected;
+
+            clicked => {
+                if !root.am_selected {
+                    root.period_changed(true);
+                }
+            }
+        }
+
+        pm_item := PeriodToggleItem {
+            text: @tr("PM");
+            checked: !root.am_selected;
+
+            clicked => {
+                if root.am_selected {
+                    root.period_changed(false);
+                }
+            }
+        }
+    }
+
+    if !root.horizontal : VerticalLayout {
+        spacing: root.gap;
+        padding: 0;
+
+        am_v := PeriodToggleItem {
+            text: @tr("AM");
+            checked: root.am_selected;
+
+            clicked => {
+                if !root.am_selected {
+                    root.period_changed(true);
+                }
+            }
+        }
+
+        pm_v := PeriodToggleItem {
+            text: @tr("PM");
+            checked: !root.am_selected;
+
+            clicked => {
+                if root.am_selected {
+                    root.period_changed(false);
+                }
+            }
+        }
+    }
+}
+
+/// A dial label — upstream `ClockText`: the number plus its
+/// `MinimumInteractiveSize` target.
+component DialLabel {
+    in property <string> text;
+    in property <bool> selected;
+
+    callback clicked <=> touch.clicked;
+
+    width: 48px;
+    height: 48px;
+
+    accessible-role: AccessibleRole.button;
+    accessible-label: root.text;
+
+    touch := TouchArea {}
+
+    label := MaterialText {
+        text: root.text;
+        style: TimePickerTokens.clock_dial_label_text_font;
+        color: TimePickerTokens.clock_dial_unselected_label_text_color;
+        horizontal_alignment: center;
+        vertical_alignment: center;
+        width: 100%;
+        height: 100%;
+    }
+
+    states [
+        selected when root.selected: {
+            label.color: TimePickerTokens.clock_dial_selected_label_text_color;
+        }
+    ]
+}
+
+/// The analog dial — upstream `ClockFace` + the `ClockDialNode` gesture
+/// handler. Labels sit on the outer ring at `OuterCircleToSizeRatio`
+/// (101/256) of the dial size, the 24h hour mode gets the inner ring at
+/// `InnerCircleToSizeRatio` (69/256); the selector is the 48dp handle
+/// circle, the 2dp track from the center and the 8dp center dot.
+component ClockDial {
+    /// Minutes (`Minutes` ring, labels every 5) vs. hours (`Hours`).
+    in property <bool> minute_mode;
+    /// `is24hour` — adds the `ExtraHours` inner ring ([12..23]).
+    in property <bool> is_24h;
+    /// Currently selected value shown by the selector.
+    in property <int> value;
+    /// `state.isPm && selection == Hour` upstream — the selector rides the
+    /// inner ring.
+    in property <bool> inner_ring;
+    /// Upstream `ClockFaceSizeModifier` bands: >=384px available height →
+    /// 256, >=330 → 238, else 200. Default to the full dial.
+    in property <length> dial_size: TimePickerTokens.clock_dial_container_size;
+    /// `TimePickerColors.clockDial` / selector overrides.
+    in property <brush> dial_color: TimePickerTokens.clock_dial_color;
+    in property <brush> selector_color: TimePickerTokens.clock_dial_selector_handle_container_color;
+    /// `ClockDialSelectorHandleContainerSize` — the handle disc diameter.
+    in property <length> selector_size: TimePickerTokens.clock_dial_selector_handle_container_size;
+
+    callback value_selected(value: int);
+    /// Emitted after a value is committed by tap/drag — upstream's
+    /// `autoSwitchToMinute`.
+    callback advance_selection();
+
+    width: root.dial_size;
+    height: root.dial_size;
+    forward_focus: focus_scope;
+
+    property <length> dial_center: self.width / 2;
+    property <length> outer_radius: self.width * (101px / 256px);
+    property <length> inner_radius: self.width * (69px / 256px);
+    property <length> handle_radius: root.selector_size / 2;
+    property <length> active_radius: root.on_inner ? root.inner_radius : root.outer_radius;
+    property <bool> on_inner: root.inner_ring && root.is_24h && !root.minute_mode;
+    property <int> ring_count: 12;
+    property <angle> value_angle: 360deg * root.index_for_value(root.value) / root.ring_count - 90deg;
+    property <length> selector_x: root.dial_center + Math.cos(root.value_angle) * root.active_radius - root.handle_radius;
+    property <length> selector_y: root.dial_center + Math.sin(root.value_angle) * root.active_radius - root.handle_radius;
+
+    // Keyboard: arrows step the value (upstream `dialFocusRequester`
+    // handling), Enter/Space activate.
+    focus_scope := FocusScope {
+        x: 0;
+        width: 0;
+        enabled: true;
+
+        key_pressed(event) => {
+            if event.text == Key.RightArrow || event.text == Key.DownArrow {
+                root.step(1);
+                return accept;
+            }
+            if event.text == Key.LeftArrow || event.text == Key.UpArrow {
+                root.step(-1);
+                return accept;
+            }
+            reject
+        }
+    }
+
+    // Dial background circle.
+    background := Rectangle {
+        width: 100%;
+        height: 100%;
+        border_radius: self.width / 2;
+        background: root.dial_color;
+    }
+
+    // Selector track — `drawLine` from the dial center to the handle edge.
+    Path {
+        width: 100%;
+        height: 100%;
+        viewbox_width: self.width / 1px;
+        viewbox_height: self.height / 1px;
+        // `selector_color` covers the whole selector — the upstream roles
+        // `clockDialSelector{Track,Handle,Center}ContainerColor` all
+        // default to `primary`.
+        stroke: root.selector_color;
+        stroke_width: TimePickerTokens.clock_dial_selector_track_container_width;
+
+        MoveTo {
+            x: root.dial_center / 1px;
+            y: root.dial_center / 1px;
+        }
+        LineTo {
+            x: (root.selector_x + root.handle_radius) / 1px;
+            y: (root.selector_y + root.handle_radius) / 1px;
+        }
+    }
+
+    // Selector handle — `ClockDialSelectorHandleContainerSize`.
+    handle := Rectangle {
+        x: root.selector_x;
+        y: root.selector_y;
+        width: root.selector_size;
+        height: self.width;
+        border_radius: self.width / 2;
+        background: root.selector_color;
+    }
+
+    // Center dot — `ClockDialSelectorCenterContainerSize`.
+    Rectangle {
+        width: TimePickerTokens.clock_dial_selector_center_container_size;
+        height: self.width;
+        x: root.dial_center - self.width / 2;
+        y: root.dial_center - self.height / 2;
+        border_radius: self.width / 2;
+        background: root.selector_color;
+    }
+
+    // Outer ring labels (`CircularLayout`, theta = 2π/N, start -π/2).
+    // `Hours` shows `Hours[index]` — [12,1..11] for 12h, [0..11] for 24h;
+    // `Minutes` shows `index * 5`.
+    for i in [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]: outer := DialLabel {
+        property <angle> theta: 360deg * i / 12 - 90deg;
+        x: Math.round((root.dial_center + Math.cos(self.theta) * root.outer_radius - self.width / 2) / 1px) * 1px;
+        y: Math.round((root.dial_center + Math.sin(self.theta) * root.outer_radius - self.height / 2) / 1px) * 1px;
+        text: root.minute_mode ? i * 5 : (root.is_24h ? i : (i == 0 ? 12 : i));
+        // The Xor overlay upstream colors any label the handle overlaps;
+        // at rest the handle sits exactly on the selected label.
+        selected: root.handle_overlaps(self.x + self.width / 2, self.y + self.height / 2);
+
+        clicked => {
+            root.select_value(root.outer_value(i));
+        }
+    }
+
+    // Inner ring — `ExtraHours` = [12..23], 24h hour mode only.
+    if root.is_24h && !root.minute_mode : Rectangle {
+        for i in [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]: inner := DialLabel {
+            property <angle> theta: 360deg * i / 12 - 90deg;
+            x: Math.round((root.dial_center + Math.cos(self.theta) * root.inner_radius - self.width / 2) / 1px) * 1px;
+            y: Math.round((root.dial_center + Math.sin(self.theta) * root.inner_radius - self.height / 2) / 1px) * 1px;
+            text: i + 12;
+            selected: root.on_inner && i + 12 == root.value;
+
+            clicked => {
+                root.select_value(i + 12);
+            }
+        }
+    }
+
+    // Dial gestures: tap and drag — `ClockDialNode`'s
+    // `pointerInputTapNode`/`pointerInputDragNode` → `onTap` /
+    // `moveSelector` with the `MaxDistance` inner-ring split.
+    touch := TouchArea {
+        width: 100%;
+        height: 100%;
+
+        property <length> cx: root.dial_center;
+        property <length> cy: root.dial_center;
+
+        clicked => {
+            root.pointer_pick(self.mouse_x, self.mouse_y, true);
+        }
+        moved => {
+            if self.pressed {
+                root.pointer_pick(self.mouse_x, self.mouse_y, false);
+            }
+        }
+    }
+
+    accessible-role: AccessibleRole.groupbox;
+
+    pure function handle_overlaps(x: length, y: length) -> bool {
+        let dx = (x - (root.selector_x + root.handle_radius)) / 1px;
+        let dy = (y - (root.selector_y + root.handle_radius)) / 1px;
+        dx * dx + dy * dy <= (root.handle_radius / 1px) * (root.handle_radius / 1px)
+    }
+
+    // Index on the current ring for `value` — `hours % 12`, `minutes / 5`.
+    pure function index_for_value(value: int) -> int {
+        if root.minute_mode {
+            return mod(Math.round(value / 5), 12);
+        }
+        if root.on_inner {
+            return mod(value - 12, 12);
+        }
+        mod(value, 12)
+    }
+
+    // Ring index → committed value: `Minutes[index] * 5`, `Hours[index]`
+    // (0-based on 24h, `index == 0` is 12 on 12h), +12 on the inner ring.
+    pure function outer_value(index: int) -> int {
+        root.minute_mode ? index * 5 : (root.is_24h ? index : (index == 0 ? 12 : index))
+    }
+
+    function pointer_pick(x: length, y: length, is_tap: bool) {
+        let dx = (x - root.dial_center) / 1px;
+        let dy = (y - root.dial_center) / 1px;
+        let dist = Math.sqrt(dx * dx + dy * dy);
+        let angle = Math.atan2(dy, dx);
+        // `MaxDistance` splits inner/outer rings on the 24h hour dial.
+        let on_inner = root.is_24h && !root.minute_mode && dist <= root.max_dist();
+        // Snap to the nearest label — upstream taps snap minutes to 5s.
+        let snapped = mod(Math.round((angle / 1deg + 90) / 30), 12);
+        let picked = on_inner ? snapped + 12 : root.outer_value(snapped);
+        let was = root.value;
+        root.value_selected(picked);
+        if is_tap && picked != was {
+            root.advance_selection();
+        }
+    }
+
+    // `MaxDistance` scaled like upstream (`maxDist * currentDiameter /
+    // ClockDialContainerSize`).
+    pure function max_dist() -> float {
+        74 * (root.width / TimePickerTokens.clock_dial_container_size)
+    }
+
+    function step(dir: int) {
+        let i = root.index_for_value(root.value);
+        let next = mod(i + dir, 12);
+        root.value_selected(root.on_inner ? next + 12 : root.outer_value(next));
+    }
+
+    function select_value(value: int) {
+        let was = root.value;
+        root.value_selected(value);
+        if value != was {
+            root.advance_selection();
+        }
+    }
+}
+
+/// The classic display field on top of the dial — upstream `TimeSelector`
+/// (96×80 `corner_small`, `DisplayLarge`): the hour/minute readout that
+/// also picks which field the dial edits. Vibrant takes the 100×120
+/// `corner_large` field with the 2dp selected outline.
+component TimeDisplayField {
+    in property <int> value;
+    in property <bool> selected;
+    in property <bool> vibrant;
+    /// `VibrantTimeFieldWidthPortrait` (132) for the 24h portrait vibrant
+    /// display, `VibrantTimeFieldWidth` (100) otherwise; 96 classic.
+    in property <length> field_width: root.vibrant ? 100px : TimePickerTokens.time_selector_container_width;
+
+    callback clicked <=> state_layer.clicked;
+
+    width: root.field_width;
+    height: root.vibrant ? 120px : TimePickerTokens.time_selector_container_height;
+    forward_focus: focus_scope;
+
+    focus_scope := FocusScope {
+        x: 0;
+        width: 0;
+
+        key_pressed(event) => {
+            if event.text == Key.Return || event.text == Key.Space {
+                root.clicked();
+                return accept;
+            }
+            reject
+        }
+    }
+
+    background := Rectangle {
+        border_radius: root.vibrant ? 16px : TimePickerTokens.time_selector_container_shape.top_left;
+        // Vibrant `timeSelector*ContainerColor` are both
+        // surfaceContainerLowest.
+        background: root.vibrant ? MaterialPalette.surface_container_lowest :
+            TimePickerTokens.time_selector_unselected_container_color;
+        // Vibrant's selected `BorderStroke(2.dp, primary)`.
+        border-width: 0px;
+        border-color: MaterialPalette.primary;
+        clip: true;
+
+        state_layer := StateLayerArea {
+            color: label.color;
+        }
+
+        label := MaterialText {
+            text: TimePickerFormat.pad2(root.value);
+            style: TimePickerTokens.time_selector_label_text_font;
+            color: TimePickerTokens.time_selector_unselected_label_text_color;
+            horizontal_alignment: center;
+            vertical_alignment: center;
+            width: 100%;
+            height: 100%;
+        }
+    }
+
+    states [
+        selected when root.selected && !root.vibrant: {
+            background.background: TimePickerTokens.time_selector_selected_container_color;
+            label.color: TimePickerTokens.time_selector_selected_label_text_color;
+        }
+        vibrant_selected when root.selected && root.vibrant: {
+            background.border-width: 2px;
+            label.color: MaterialPalette.primary;
+        }
+    ]
+
+    accessible-role: AccessibleRole.radio_button;
+    accessible-checked: root.selected;
+}
+
+/// The `ClockDisplayNumbers` + period-toggle row of the dial picker —
+/// `VerticalClockDisplay` (numbers row then toggle, 4dp start pad) or
+/// `HorizontalClockDisplay` (numbers column above the 216×38 toggle,
+/// `VibrantPeriodToggleLargePadding` 16 on vibrant).
+component ClockDisplay {
+    in property <int> hour;
+    in property <int> minute;
+    in property <TimePickerSelection> selection;
+    in property <bool> is_24h;
+    in property <bool> horizontal;
+    in property <bool> vibrant;
+
+    callback selection_changed(selection: TimePickerSelection);
+    callback period_changed(am: bool);
+
+    width: outer.min_width;
+    height: outer.min_height;
+
+    outer := VerticalLayout {
+        spacing: 0;
+
+        if !root.horizontal : vert_layout := VerticalLayout {
+        spacing: 0;
+
+        numbers_row := HorizontalLayout {
+            spacing: 0;
+            alignment: center;
+
+            hour_field := TimeDisplayField {
+                value: root.hour;
+                selected: root.selection == TimePickerSelection.hour;
+                vibrant: root.vibrant;
+                // `VibrantTimeFieldWidthPortrait` on the 24h vertical vibrant.
+                field_width: root.vibrant ? (root.is_24h ? 132px : 100px) : 96px;
+
+                clicked => { root.selection_changed(TimePickerSelection.hour); }
+            }
+
+            TimeSeparator {
+                separator_width: root.vibrant ? 16px : 24px;
+                separator_height: hour_field.height;
+            }
+
+            minute_field := TimeDisplayField {
+                value: root.minute;
+                selected: root.selection == TimePickerSelection.minute;
+                vibrant: root.vibrant;
+                field_width: root.vibrant ? (root.is_24h ? 132px : 100px) : 96px;
+
+                clicked => { root.selection_changed(TimePickerSelection.minute); }
+            }
+
+            if !root.is_24h : Rectangle {
+                // `padding(start = orVibrant(startPadding = 4,
+                // VibrantPeriodToggleLargePadding = 16))`.
+                width: root.vibrant ? 16px : 4px;
+            }
+
+            if !root.is_24h : TimePeriodToggle {
+                am_selected: root.hour < 12;
+                vibrant: root.vibrant;
+                width: root.vibrant ? 56px : TimePickerTokens.period_selector_vertical_container_width;
+                height: root.vibrant ? 120px : TimePickerTokens.period_selector_vertical_container_height;
+
+                period_changed(am) => { root.period_changed(am); }
+            }
+        }
+    }
+
+        if root.horizontal : hor_layout := VerticalLayout {
+            spacing: 0;
+            alignment: center;
+
+            numbers_row_h := HorizontalLayout {
+            spacing: 0;
+            alignment: center;
+
+            hour_field_h := TimeDisplayField {
+                value: root.hour;
+                selected: root.selection == TimePickerSelection.hour;
+                vibrant: root.vibrant;
+                field_width: root.vibrant ? 100px : 96px;
+
+                clicked => { root.selection_changed(TimePickerSelection.hour); }
+            }
+
+            TimeSeparator {
+                separator_width: root.vibrant ? 16px : 24px;
+                separator_height: hour_field_h.height;
+            }
+
+            minute_field_h := TimeDisplayField {
+                value: root.minute;
+                selected: root.selection == TimePickerSelection.minute;
+                vibrant: root.vibrant;
+                field_width: root.vibrant ? 100px : 96px;
+
+                clicked => { root.selection_changed(TimePickerSelection.minute); }
+            }
+        }
+
+        if !root.is_24h : Rectangle {
+            height: root.vibrant ? 16px : 16px;
+        }
+
+        if !root.is_24h : TimePeriodToggle {
+            horizontal: true;
+            am_selected: root.hour < 12;
+            vibrant: root.vibrant;
+            width: TimePickerTokens.period_selector_horizontal_container_width;
+            height: root.vibrant ? 40px : TimePickerTokens.period_selector_horizontal_container_height;
+
+            period_changed(am) => { root.period_changed(am); }
+        }
+    }
+    }
+}
+
+/// An hour/minute text field — upstream `TimePickerTextField`
+/// (`TimeFieldContainer*` 96×72 corner_small + `SupportingText`
+/// "Hour"/"Minute" at `SupportLabelTop`). Classic: containerHighest fill,
+/// 1dp outline resting / `primary_container` + 2dp outline focused.
+component TimeTextField {
+    in property <string> text;
+    in property <string> supporting_text;
+    in property <bool> selected;
+    in property <bool> is_valid: true;
+
+    callback edited(text: string);
+    callback focused();
+
+    /// Field height without the supporting label — for the separator.
+    out property <length> field_height <=> field.height;
+
+    width: root.vibrant ? 100px : TimeInputTokens.time_field_container_width;
+    height: field.height + label_block.height;
+    forward_focus: text_input;
+
+    in property <bool> vibrant;
+
+    field := Rectangle {
+        // `root.height` binds to `field.height`, and Slint centers a child
+        // whose `y` is unbound in that sizing cycle — pin it.
+        y: 0;
+        width: root.vibrant ? 100px : TimeInputTokens.time_field_container_width;
+        height: root.vibrant ? 120px : TimeInputTokens.time_field_container_height;
+        border_radius: root.vibrant ? ShapeTokens.corner_large.top_left : TimeInputTokens.time_field_container_shape.top_left;
+        // Vibrant `timeTextFieldColors`: both focused/unfocused container
+        // colors are surfaceContainerLowest.
+        background: root.vibrant ? MaterialPalette.surface_container_lowest : TimeInputTokens.time_field_container_color;
+        // Upstream renders unselected fields as a borderless
+        // `TimeSelector`; only the focused `OutlinedTextField` container
+        // carries a border (2dp `Outline` classic / `primary` vibrant).
+        border-width: 0px;
+        border-color: MaterialPalette.outline;
+        clip: true;
+
+        text_input := TextInput {
+            text: root.text;
+            // `TimeInputImpl` textStyle: orVibrant(DisplayMedium, DisplayLarge).
+            font-size: root.vibrant ? MaterialTypography.display_large.font_size : TimeInputTokens.time_field_label_text_font.font_size;
+            font-weight: root.vibrant ? MaterialTypography.display_large.font_weight : TimeInputTokens.time_field_label_text_font.font_weight;
+            color: TimeInputTokens.time_field_label_text_color;
+            horizontal_alignment: center;
+            vertical_alignment: center;
+            input_type: number;
+            width: 100%;
+            height: 100%;
+
+            edited => {
+                root.edited(self.text);
+            }
+            accepted => {
+                root.focused();
+            }
+            // `onFocusChanged`: focusing a field selects it upstream.
+            changed has_focus => {
+                if self.has_focus {
+                    root.focused();
+                }
+            }
+        }
+    }
+
+    // `SupportingText` — hidden on the vibrant path (`shapes == null`
+    // upstream), error swaps text and color. Always instantiated (zero
+    // height on vibrant) so callers can measure `field_height`.
+    label_block := Rectangle {
+        y: field.height;
+        width: 100%;
+        height: root.vibrant ? 0px : support.preferred_height * 2 + 7px;
+        visible: !root.vibrant;
+
+
+        support := MaterialText {
+            y: 7px;
+            width: 100%;
+            text: root.is_valid ? root.supporting_text : "";
+            style: TimeInputTokens.time_field_supporting_text_font;
+            color: root.is_valid ? TimeInputTokens.time_field_supporting_text_color : MaterialPalette.error;
+            wrap: word-wrap;
+            // `minLines = 2`: the text stays top-aligned inside the
+            // reserved two-line block.
+            vertical_alignment: top;
+            height: self.preferred_height * 2;
+        }
+    }
+
+    states [
+        focused when (root.selected || text_input.has_focus) && root.is_valid && !root.vibrant: {
+            field.background: TimeInputTokens.time_field_focus_container_color;
+            field.border-width: TimeInputTokens.time_field_focus_outline_width;
+            field.border-color: MaterialPalette.outline;
+            text_input.color: TimeInputTokens.time_field_focus_label_text_color;
+        }
+        vibrant_focused when (root.selected || text_input.has_focus) && root.is_valid && root.vibrant: {
+            field.border-width: 2px;
+            field.border-color: MaterialPalette.primary;
+            field.background: MaterialPalette.surface_container_lowest;
+            text_input.color: MaterialPalette.primary;
+        }
+        error when !root.is_valid: {
+            field.background: MaterialPalette.error_container;
+            field.border-color: MaterialPalette.error;
+            field.border-width: 2px;
+            text_input.color: MaterialPalette.on_error_container;
+        }
+    ]
+}
+
+/// The vibrant scroll wheel — upstream `ScrollField` (ScrollField.kt):
+/// a 100dp vertical pager, page size `ScrollFieldHeight/3` (≈66.67dp),
+/// `ShapeDefaults.Large` container on `surfaceContainerLowest`, selected
+/// item `onSurface`, the rest `outline`.
+component ScrollWheelField inherits Rectangle {
+    /// Number of items (12 or 24 hours, 60 minutes).
+    in property <int> item_count;
+    /// Text for item i — `(i + 1)` for 12h hours, `i` otherwise.
+    in property <bool> one_based;
+    in_out property <int> selected;
+
+    callback selected_changed(index: int);
+
+    width: 100px;
+    height: 120px;
+    clip: true;
+    forward_focus: focus_scope;
+
+    // `ScrollFieldHeight / 3` — the fixed page size.
+    property <length> item_height: 200px / 3;
+    // Fractional scroll position in items; `selected` = round(pos).
+    property <float> pos: root.selected;
+    property <bool> dragging;
+
+    focus_scope := FocusScope {
+        x: 0;
+        width: 0;
+
+        key_pressed(event) => {
+            // ScrollField.kt `onKeyEvent`: DirectionUp/Down page.
+            if event.text == Key.UpArrow {
+                root.step_to(root.selected - 1);
+                return accept;
+            }
+            if event.text == Key.DownArrow {
+                root.step_to(root.selected + 1);
+                return accept;
+            }
+            reject
+        }
+    }
+
+    container := Rectangle {
+        width: 100%;
+        height: 100%;
+        border_radius: ShapeTokens.corner_large.top_left;
+        background: MaterialPalette.surface_container_lowest;
+    }
+
+    // Item column: the pager composes pages spaced `item_height` apart and
+    // snaps the current page to center. A 120dp window shows ~1.8 items.
+    for slot in [0, 1, 2, 3, 4]: item := TouchArea {
+        // slot 2 is the centered one at rest; neighbours wrap mod count.
+        property <int> index: mod(Math.floor(root.pos) + slot - 2, root.item_count);
+        property <length> slot_y: (slot - 2 - (root.pos - Math.floor(root.pos))) * root.item_height;
+
+        y: slot_y + (root.height - root.item_height) / 2;
+        width: 100%;
+        height: root.item_height;
+
+        property <bool> is_selected: Math.abs(Math.floor(root.pos) + slot - 2 - root.pos) < 0.5 &&
+                   Math.abs(root.pos - Math.round(root.pos)) < 0.4 &&
+                   mod(Math.floor(root.pos) + slot - 2, root.item_count) == root.selected;
+
+        MaterialText {
+            // `index.toLocalString(minDigits = 2)` — zero-padded.
+            text: TimePickerFormat.pad2(root.one_based ? item.index + 1 : item.index);
+            // `ScrollFieldDefaults.Item` lerps displayMedium →
+            // displayLargeEmphasized on the selection fraction (1 centered).
+            style: item.is_selected ? MaterialTypography.display_large_emphasized :
+                MaterialTypography.display_medium;
+            color: item.is_selected ? MaterialPalette.on_surface : MaterialPalette.outline;
+            horizontal_alignment: center;
+            vertical_alignment: center;
+            width: 100%;
+            height: 100%;
+        }
+
+        clicked => {
+            root.step_to(self.index);
+        }
+    }
+
+    touch := TouchArea {
+        width: 100%;
+        height: 100%;
+
+        property <length> press_y;
+        property <float> press_pos;
+
+        pointer_event(event) => {
+            if event.kind == down {
+                self.press_y = self.mouse_y;
+                self.press_pos = root.pos;
+                root.dragging = true;
+            } else if event.kind == move && self.pressed {
+                root.pos = self.press_pos - (self.mouse_y - self.press_y) / root.item_height;
+            }
+        }
+        // No release signal on TouchArea — snap on `changed pressed`.
+        changed pressed => {
+            if !self.pressed && root.dragging {
+                root.dragging = false;
+                root.pos = Math.round(root.pos);
+                root.commit();
+            }
+        }
+    }
+
+    animate pos { duration: root.dragging ? 0ms : (MaterialPalette.reduced-motion ? 0ms : 200ms); }
+
+    changed pos => {
+        if !root.dragging {
+            root.commit();
+        }
+    }
+
+    function commit() {
+        root.selected = mod(Math.round(root.pos), root.item_count);
+        root.selected_changed(root.selected);
+    }
+
+    function step_to(index: int) {
+        // Keep the wheel near the current position to scroll minimally.
+        root.pos = Math.round(root.pos) + mod(index - Math.round(root.pos) + root.item_count / 2, root.item_count) - root.item_count / 2;
+    }
+
+    accessible-role: AccessibleRole.slider;
+    accessible-value: root.selected;
+    accessible-value-minimum: 0;
+    accessible-value-maximum: root.item_count - 1;
+}
+
+/// `TimePicker` — the analog clock picker. `layout_type` picks the
+/// upstream `VerticalTimePicker`/`HorizontalTimePicker` arrangement;
+/// `vibrant` switches to the `vibrantColors`/`TimePickerShapes` variant.
+export component TimePicker {
+    in_out property <int> hour;
+    in_out property <int> minute;
+    /// `is24hour` — hides the AM/PM toggle and gives the dial the inner
+    /// ring (values 0–11 outside, 12–23 inside).
+    in property <bool> use_24_hour_format;
+    in property <TimePickerLayoutType> layout_type: TimePickerLayoutType.vertical;
+    /// `TimePickerSelectionMode` — which field the dial edits.
+    in_out property <TimePickerSelection> selection: TimePickerSelection.hour;
+    in property <bool> vibrant;
+    /// `TimePickerColors.clockDial`/`clockDialSelected` overrides.
+    /// Vibrant defaults to `SurfaceContainerLowest`
+    /// (`defaultVibrantTimePickerColors`).
+    in property <brush> clock_dial_color: root.vibrant ? MaterialPalette.surface_container_lowest : TimePickerTokens.clock_dial_color;
+    in property <brush> selector_color: TimePickerTokens.clock_dial_selector_handle_container_color;
+    /// `ClockDialSelectorHandleContainerSize` — the handle disc diameter.
+    in property <length> selector_size: TimePickerTokens.clock_dial_selector_handle_container_size;
+
+    callback hour_changed(hour: int);
+    callback minute_changed(minute: int);
+    callback selection_changed(selection: TimePickerSelection);
+
+    width: content.min_width;
+    height: content.min_height;
+
+    // `clockFaceValues` arithmetic: the outer ring shows `Hours % 12`
+    // ([12,1..11] / [0..11] for 24h), `ExtraHours` [12..23] goes inside,
+    // `Minutes` is every 5.
+    property <bool> is_pm: root.hour >= 12;
+    // `hourForDisplay`
+    property <int> display_hour: root.use_24_hour_format ? mod(root.hour, 24) :
+        (mod(root.hour, 12) == 0 ? 12 : (root.is_pm ? root.hour - 12 : root.hour));
+    property <bool> hour_inner_ring: root.use_24_hour_format && root.is_pm && root.selection == TimePickerSelection.hour;
+
+    // `ClockFaceSizeModifier` picks the dial size from the constraints
+    // upstream (>=384px → 256, >=330 → 238, else 200). Slint can't feed
+    // the measured height back into the layout, so callers pass the band
+    // they fall in (the default is `ClockDialContainerSize` = 256).
+    in property <length> dial_size: TimePickerTokens.clock_dial_container_size;
+
+    content := VerticalLayout {
+        spacing: 0;
+
+        if root.layout_type == TimePickerLayoutType.vertical : v_layout := VerticalLayout {
+            spacing: 0;
+            alignment: center;
+
+            ClockDisplay {
+                hour: root.display_hour;
+                minute: root.minute;
+                selection: root.selection;
+                is_24h: root.use_24_hour_format;
+                vibrant: root.vibrant;
+
+                selection_changed(s) => { root.select(s); }
+                period_changed(am) => { root.set_period(am); }
+            }
+
+            Rectangle { height: root.vibrant ? 12px : 36px; }
+
+            Rectangle {
+                height: root.dial_size;
+                horizontal-stretch: 1;
+                dial := ClockDial {
+                    x: (parent.width - self.width) / 2;
+                    width: root.dial_size;
+                    height: root.dial_size;
+                    minute_mode: root.selection == TimePickerSelection.minute;
+                    is_24h: root.use_24_hour_format;
+                    inner_ring: root.hour_inner_ring;
+                    value: root.selection == TimePickerSelection.minute ? mod(Math.round(root.minute / 5) * 5, 60) : root.hour;
+                    dial_color: root.clock_dial_color;
+                    selector_color: root.selector_color;
+                    selector_size: root.selector_size;
+
+                    value_selected(v) => { root.commit_dial(v); }
+                    advance_selection => { root.selection = TimePickerSelection.minute; }
+                }
+            }
+
+            // `ClockFaceBottomMargin` — classic only (vibrant 0dp).
+            if !root.vibrant : Rectangle { height: 24px; }
+        }
+
+        if root.layout_type == TimePickerLayoutType.horizontal : h_layout := HorizontalLayout {
+            spacing: 0;
+            alignment: center;
+
+            Rectangle {
+                width: h_display.width;
+                vertical-stretch: 1;
+                h_display := ClockDisplay {
+                    y: (parent.height - self.height) / 2;
+                    horizontal: true;
+                    hour: root.display_hour;
+                    minute: root.minute;
+                    selection: root.selection;
+                    is_24h: root.use_24_hour_format;
+                    vibrant: root.vibrant;
+
+                    selection_changed(s) => { root.select(s); }
+                    period_changed(am) => { root.set_period(am); }
+                }
+            }
+
+            Rectangle { width: root.vibrant ? 52px : 36px; }
+
+            Rectangle {
+                width: root.dial_size;
+                vertical-stretch: 1;
+                h_dial := ClockDial {
+                    y: (parent.height - self.height) / 2;
+                    width: root.dial_size;
+                    height: root.dial_size;
+                    minute_mode: root.selection == TimePickerSelection.minute;
+                    is_24h: root.use_24_hour_format;
+                    inner_ring: root.hour_inner_ring;
+                    value: root.selection == TimePickerSelection.minute ? mod(Math.round(root.minute / 5) * 5, 60) : root.hour;
+                    dial_color: root.clock_dial_color;
+                    selector_color: root.selector_color;
+                    selector_size: root.selector_size;
+
+                    value_selected(v) => { root.commit_dial(v); }
+                    advance_selection => { root.selection = TimePickerSelection.minute; }
+                }
+            }
+        }
+    }
+
+    function commit_dial(value: int) {
+        if root.selection == TimePickerSelection.minute {
+            root.minute = value;
+            root.minute_changed(value);
+            return;
+        }
+        // `moveSelector`: the inner ring carries the +12 offset already.
+        root.hour = value;
+        root.hour_changed(value);
+    }
+
+    function select(s: TimePickerSelection) {
+        root.selection = s;
+        root.selection_changed(s);
+    }
+
+    function set_period(am: bool) {
+        if am && root.hour >= 12 {
+            root.hour -= 12;
+            root.hour_changed(root.hour);
+        }
+        if !am && root.hour < 12 {
+            root.hour += 12;
+            root.hour_changed(root.hour);
+        }
+    }
+}
+
+/// `TimeInput` — the two text fields plus the vertical period toggle,
+/// upstream `TimeInputImpl` (classic: 96×72 fields, 24×72 separator,
+/// 52×72 toggle with 4dp padding; vibrant: 100×120 fields, 16×120
+/// separator, 56×120 toggle with 8dp padding).
+export component TimeInput {
+    in_out property <int> hour;
+    in_out property <int> minute;
+    in property <bool> use_24_hour_format;
+    in property <bool> vibrant;
+    in property <string> hour_label: @tr("Hour");
+    in property <string> minute_label: @tr("Minute");
+    /// `TimePickerSelectionMode` — which field renders selected.
+    in_out property <TimePickerSelection> selection: TimePickerSelection.hour;
+
+    callback hour_changed(hour: int);
+    callback minute_changed(minute: int);
+    callback selection_changed(selection: TimePickerSelection);
+
+    width: content.min_width;
+    height: content.min_height;
+
+    // `hourForDisplay`
+    property <int> display_hour: root.use_24_hour_format ? mod(root.hour, 24) :
+        (mod(root.hour, 12) == 0 ? 12 : (root.hour >= 12 ? root.hour - 12 : root.hour));
+
+    content := HorizontalLayout {
+        spacing: 0;
+        alignment: start;
+
+        hour_field := TimeTextField {
+            text: TimePickerFormat.pad2(root.display_hour);
+            supporting_text: root.hour_label;
+            vibrant: root.vibrant;
+            selected: root.selection == TimePickerSelection.hour;
+
+            focused => {
+                root.selection = TimePickerSelection.hour;
+                root.selection_changed(TimePickerSelection.hour);
+            }
+
+            edited(text) => {
+                let v = Math.clamp(Math.round(text.to-float()), 0, 99);
+                if root.use_24_hour_format {
+                    root.hour = Math.clamp(v, 0, 23);
+                } else {
+                    // 12h field stores the displayed 1..12 value.
+                    let clamped = Math.clamp(v, 1, 12);
+                    root.hour = root.hour >= 12 ? mod(clamped, 12) + 12 : mod(clamped, 12);
+                    if clamped == 12 {
+                        root.hour = root.hour >= 12 ? 12 : 0;
+                    }
+                }
+                root.hour_changed(root.hour);
+            }
+        }
+
+        TimeSeparator {
+            separator_width: root.vibrant ? 16px : 24px;
+            separator_height: hour_field.field_height;
+            font: root.vibrant ? MaterialTypography.display_large : TimePickerTokens.time_selector_separator_font;
+        }
+
+        minute_field := TimeTextField {
+            text: TimePickerFormat.pad2(mod(root.minute, 60));
+            supporting_text: root.minute_label;
+            vibrant: root.vibrant;
+            selected: root.selection == TimePickerSelection.minute;
+
+            focused => {
+                root.selection = TimePickerSelection.minute;
+                root.selection_changed(TimePickerSelection.minute);
+            }
+
+            edited(text) => {
+                let v = Math.clamp(Math.round(text.to-float()), 0, 59);
+                root.minute = v;
+                root.minute_changed(v);
+            }
+        }
+
+        if !root.use_24_hour_format : Rectangle {
+            width: root.vibrant ? 8px : 4px;
+        }
+
+        if !root.use_24_hour_format : TimePeriodToggle {
+            vibrant: root.vibrant;
+            am_selected: root.hour < 12;
+            width: root.vibrant ? 56px : TimeInputTokens.period_selector_container_width;
+            height: root.vibrant ? 120px : TimeInputTokens.period_selector_container_height;
+
+            period_changed(am) => {
+                if am && root.hour >= 12 {
+                    root.hour -= 12;
+                    root.hour_changed(root.hour);
+                }
+                if !am && root.hour < 12 {
+                    root.hour += 12;
+                    root.hour_changed(root.hour);
+                }
+            }
+        }
+    }
+}
+
+/// `TimeScroll` — the vibrant wheel variant (`TimeScrollImpl`): two
+/// `ScrollField`s (100×120) around a 16×120 separator, with the vibrant
+/// 56×120 period toggle — or the uncontained `SideControlColumn` when a
+/// mode toggle is present (fields grow to 136dp).
+export component TimeScroll {
+    in_out property <int> hour;
+    in_out property <int> minute;
+    in property <bool> use_24_hour_format;
+    /// Uncontained layout (`SideControlColumn`, 136dp fields, 140dp side
+    /// column) when a caller-provided mode toggle is shown.
+    in property <bool> has_toggle;
+
+    callback hour_changed(hour: int);
+    callback minute_changed(minute: int);
+
+    width: content.min_width;
+    height: content.min_height;
+
+    content := HorizontalLayout {
+        spacing: 0;
+        alignment: start;
+
+        hour_wheel := ScrollWheelField {
+            item_count: root.use_24_hour_format ? 24 : 12;
+            one_based: !root.use_24_hour_format;
+            height: root.has_toggle ? 136px : 120px;
+            selected: root.use_24_hour_format ? mod(root.hour, 24) :
+                (mod(root.hour, 12) == 0 ? 11 : mod(root.hour, 12) - 1);
+
+            selected_changed(i) => {
+                // TimeScrollImpl: 12h index → `base + amPmOffset`.
+                let v = root.use_24_hour_format ? i :
+                    mod(i + 1, 12) + (root.hour >= 12 ? 12 : 0);
+                root.hour = v;
+                root.hour_changed(v);
+            }
+        }
+
+        TimeSeparator {
+            separator_width: 16px;
+            separator_height: hour_wheel.height;
+            font: MaterialTypography.display_large;
+        }
+
+        minute_wheel := ScrollWheelField {
+            item_count: 60;
+            height: hour_wheel.height;
+            selected: mod(root.minute, 60);
+
+            selected_changed(i) => {
+                root.minute = i;
+                root.minute_changed(i);
+            }
+        }
+
+        if root.has_toggle : Rectangle {
+            width: 4px;
+        }
+
+        if root.has_toggle : side_col := Rectangle {
+            // `SideControlColumn` — 48dp tap-target items (AM, PM, toggle)
+            // in 140dp. The items are 48×48 boxes at amY −4 / pmY 44; the
+            // 40dp AM/PM visuals sit centered inside them (x+4, y+4), so
+            // AM's visual top aligns with the field tops at y=0.
+            width: 48px;
+            height: 140px;
+
+            if !root.use_24_hour_format : am_btn := PeriodToggleItem {
+                    x: (parent.width - 40px) / 2;
+                    y: 0px;
+                    width: 40px;
+                    height: 40px;
+                    text: @tr("AM");
+                    checked: root.hour < 12;
+                    clicked => {
+                        if root.hour >= 12 {
+                            root.hour -= 12;
+                            root.hour_changed(root.hour);
+                        }
+                    }
+                }
+
+                if !root.use_24_hour_format : pm_btn := PeriodToggleItem {
+                    x: (parent.width - 40px) / 2;
+                    y: 48px;
+                    width: 40px;
+                    height: 40px;
+                    text: @tr("PM");
+                    checked: root.hour >= 12;
+                    clicked => {
+                        if root.hour < 12 {
+                            root.hour += 12;
+                            root.hour_changed(root.hour);
+                        }
+                    }
+                }
+
+        }
+
+        if !root.has_toggle && !root.use_24_hour_format : Rectangle {
+            width: 8px;
+        }
+
+        if !root.has_toggle && !root.use_24_hour_format : TimePeriodToggle {
+            vibrant: true;
+            am_selected: root.hour < 12;
+            width: 56px;
+            height: 120px;
+
+            period_changed(am) => {
+                if am && root.hour >= 12 {
+                    root.hour -= 12;
+                    root.hour_changed(root.hour);
+                }
+                if !am && root.hour < 12 {
+                    root.hour += 12;
+                    root.hour_changed(root.hour);
+                }
+            }
+        }
+    }
+
+    // Mode-toggle slot — `@children` can't live inside a conditional
+    // element, so the slot is anchored over the side column's `toggleY`
+    // position: 92dp with AM/PM items (3-item layout), 84dp for 24h
+    // (1-item), both at the column's x.
+    toggle_slot := Rectangle {
+        x: content.min_width - 48px;
+        y: root.use_24_hour_format ? 84px : 92px;
+        width: 48px;
+        height: 48px;
+        visible: root.has_toggle;
+
+        @children
+    }
+}
+
+/// `TimePickerDialog`'s surface contents — `TimePickerCustomLayout`
+/// inside a `Surface` with `DialogTokens` color/shape. Portrait: title
+/// at (24,24), content centered under it, the action row below.
+/// `TimePickerDialog` wraps this in the modal scrim + elevation.
+export component TimePickerDialogContent inherits Rectangle {
+    // `TimePickerDialogDefaults.Title`: Input shows "Enter Time",
+    // Picker/Scroll show "Select Time" (strings.xml lines 128-132).
+    in property <string> title: root.display_mode == TimePickerDisplayMode.input ?
+        @tr("Enter Time") : @tr("Select Time");
+    in property <string> dismiss_text: @tr("Cancel");
+    in property <string> confirm_text: @tr("OK");
+    in property <bool> confirm_enabled: true;
+    in property <bool> show_mode_toggle;
+    /// `TimePickerDisplayMode` — drives the title text and toggle icon.
+    in property <TimePickerDisplayMode> display_mode: TimePickerDisplayMode.picker;
+
+    callback confirm_clicked();
+    callback dismiss_clicked();
+    /// `DisplayModeToggle` press — caller flips `display_mode`.
+    callback mode_toggle_clicked();
+
+    /// `TimePickerDialogDefaults.containerColor`/`shape` overrides.
+    in property <brush> container_color: DialogTokens.container_color;
+    in property <MaterialCornerShape> container_shape: DialogTokens.container_shape;
+    /// `Row(spacedBy(8.dp))` on the actions.
+    in property <length> actions_spacing: 8px;
+
+    width: content_box.min_width + 48px;
+    height: content_box.min_height + title_label.height + actions_row.min_height + 48px;
+    border_radius: root.container_shape.top_left;
+    clip: true;
+    background: root.container_color;
+
+    // `TimePickerCustomLayout`, portrait branch: title at (24,24)
+    // carrying its own `padding(bottom = 20.dp)`, content centered,
+    // actions right under the content, then the 24dp bottom pad.
+    title_label := MaterialText {
+        x: 24px;
+        y: 24px;
+        text: root.title;
+        style: MaterialTypography.label_medium;
+        // Upstream `Title` sets no color — it inherits the Surface's
+        // `LocalContentColor` (onSurface).
+        color: MaterialPalette.on_surface;
+        // Upstream `Title` composable's `padding(bottom = 20.dp)`.
+        height: self.preferred_height + 20px;
+    }
+
+    // A layout wraps `@children` so the surface can size to the
+    // content (upstream `contentPlaceable` measurement).
+    content_box := HorizontalLayout {
+        x: (parent.width - self.min_width) / 2;
+        y: 24px + title_label.height;
+        width: self.min_width;
+        height: self.min_height;
+
+        @children
+    }
+
+    // Actions row: `[toggle] |spacer| [dismiss] [confirm]`,
+    // spacedBy 8dp, width = content width, placed directly
+    // below the content (portrait), then the 24dp bottom pad.
+    actions_row := HorizontalLayout {
+        x: content_box.x;
+        y: content_box.y + content_box.min_height;
+        width: content_box.min_width;
+        height: self.min_height;
+        spacing: root.actions_spacing;
+        padding: 0;
+
+        if root.show_mode_toggle : mode_toggle := IconButton {
+            icon: root.display_mode == TimePickerDisplayMode.picker ? Icons.keyboard :
+                (root.display_mode == TimePickerDisplayMode.scroll ? Icons.swipe_vertical : Icons.schedule);
+            content-color: MaterialPalette.on_surface_variant;
+            inline: true;
+            width: 40px;
+            height: 40px;
+            horizontal_stretch: 0;
+
+            clicked => { root.mode_toggle_clicked(); }
+        }
+
+        // Only the spacer stretches (upstream `Spacer(Modifier.weight(1f))`)
+        // — without `horizontal_stretch: 0` the siblings share the slack
+        // and the actions land left of the row's right edge.
+        Rectangle { horizontal_stretch: 1; }
+
+        if root.dismiss_text != "" : dismiss_button := TextButton {
+            text: root.dismiss_text;
+            // Upstream's action `TextButton` measures at its 40dp container
+            // — the 48dp touch target is not part of the dialog layout.
+            enforce_touch_target: false;
+            horizontal_stretch: 0;
+
+            clicked => { root.dismiss_clicked(); }
+        }
+
+        if root.confirm_text != "" : confirm_button := TextButton {
+            text: root.confirm_text;
+            enabled: root.confirm_enabled;
+            enforce_touch_target: false;
+            horizontal_stretch: 0;
+
+            clicked => { root.confirm_clicked(); }
+        }
+    }
+}
+
+/// `VibrantTimePickerDialog`'s surface contents —
+/// `VibrantTimePickerCustomLayout`: no title, `surfaceContainer` fill,
+/// `CornerExtraLarge` shape, 12dp pads, actions 12dp under the content.
+export component VibrantTimePickerDialogContent inherits Rectangle {
+    in property <string> dismiss_text: @tr("Cancel");
+    in property <string> confirm_text: @tr("OK");
+    in property <bool> confirm_enabled: true;
+    in property <bool> show_mode_toggle;
+    in property <TimePickerDisplayMode> display_mode: TimePickerDisplayMode.picker;
+
+    callback confirm_clicked();
+    callback dismiss_clicked();
+    callback mode_toggle_clicked();
+
+    /// `TimePickerDialogDefaults.vibrantContainerColor`/`vibrantShape`.
+    in property <brush> container_color: MaterialPalette.surface_container;
+    in property <MaterialCornerShape> container_shape: DialogTokens.container_shape;
+    in property <length> actions_spacing: 8px;
+
+    width: vcontent.min_width + 24px;
+    height: vcontent.min_height + actions_row.min_height + 36px;
+    border_radius: root.container_shape.top_left;
+    clip: true;
+    background: root.container_color;
+
+    // A layout wraps `@children` so the surface can size to the content.
+    vcontent := HorizontalLayout {
+        x: (parent.width - self.min_width) / 2;
+        y: 12px;
+        width: self.min_width;
+        height: self.min_height;
+
+        @children
+    }
+
+    actions_row := HorizontalLayout {
+        x: vcontent.x;
+        y: vcontent.y + vcontent.min_height + 12px;
+        width: vcontent.min_width;
+        // Unbound `height` fills the pane and vertically centers the
+        // action labels outside the clipped surface — pin the row to its
+        // content like `TimePickerDialogContent.actions_row`.
+        height: self.min_height;
+        spacing: root.actions_spacing;
+        padding: 0;
+
+        if root.show_mode_toggle : IconButton {
+            // Upstream samples pair the vibrant dialog with
+            // `DisplayModeToggle` (Picker→Keyboard, Input→Schedule) or
+            // `ScrollDisplayModeToggle` (Scroll→Keyboard).
+            icon: root.display_mode == TimePickerDisplayMode.input ? Icons.schedule : Icons.keyboard;
+            content-color: MaterialPalette.on_surface_variant;
+            inline: true;
+            width: 40px;
+            height: 40px;
+            horizontal_stretch: 0;
+
+            clicked => { root.mode_toggle_clicked(); }
+        }
+
+        Rectangle { horizontal_stretch: 1; }
+
+        if root.dismiss_text != "" : TextButton {
+            text: root.dismiss_text;
+            enforce_touch_target: false;
+            horizontal_stretch: 0;
+
+            clicked => { root.dismiss_clicked(); }
+        }
+
+        if root.confirm_text != "" : TextButton {
+            text: root.confirm_text;
+            enabled: root.confirm_enabled;
+            enforce_touch_target: false;
+            horizontal_stretch: 0;
+
+            clicked => { root.confirm_clicked(); }
+        }
+    }
+}
+
+/// `TimePickerDialog` — `TimePickerCustomLayout` inside a `Surface` with
+/// `DialogTokens` color/shape/`ContainerElevation` over the modal scrim.
+export component TimePickerDialog inherits PopupWindow {
+    // `TimePickerDialogDefaults.Title`: Input shows "Enter Time",
+    // Picker/Scroll show "Select Time" (strings.xml lines 128-132).
+    in property <string> title: root.display_mode == TimePickerDisplayMode.input ?
+        @tr("Enter Time") : @tr("Select Time");
+    in property <string> dismiss_text: @tr("Cancel");
+    in property <string> confirm_text: @tr("OK");
+    in property <bool> confirm_enabled: true;
+    in property <bool> show_mode_toggle;
+    /// `TimePickerDisplayMode` — drives the title text and toggle icon.
+    in property <TimePickerDisplayMode> display_mode: TimePickerDisplayMode.picker;
+
+    callback dismissed();
+    callback confirm_clicked();
+    callback dismiss_clicked();
+    /// `DisplayModeToggle` press — caller flips `display_mode`.
+    callback mode_toggle_clicked();
+
+    close_policy: no_auto_close;
+    forward_focus: focus_scope;
+
+    focus_scope := FocusScope {
+        x: 0;
+        width: 0;
+
+        key_pressed(event) => {
+            if event.text == Key.Escape {
+                root.close();
+                root.dismissed();
+                return accept;
+            }
+            if event.text == Key.Return && root.confirm_text != "" {
+                root.confirm_clicked();
+                return accept;
+            }
+            reject
+        }
+    }
+
+    modal := Modal {
+        width: 100%;
+        height: 100%;
+
+        surface := Elevation {
+            level: 3;
+            border_radius: DialogTokens.container_shape.top_left;
+            background: DialogTokens.container_color;
+            x: (parent.width - self.width) / 2;
+            y: (parent.height - self.height) / 2;
+            opacity: 0;
+            width: dlg_content.min_width;
+            height: dlg_content.min_height;
+
+            animate opacity { enabled: !MaterialPalette.reduced-motion; duration: MaterialAnimations.opacity_duration; easing: MaterialAnimations.opacity_easing; }
+
+            dlg_content := TimePickerDialogContent {
+                title: root.title;
+                dismiss_text: root.dismiss_text;
+                confirm_text: root.confirm_text;
+                confirm_enabled: root.confirm_enabled;
+                show_mode_toggle: root.show_mode_toggle;
+                display_mode: root.display_mode;
+
+                confirm_clicked => {
+                    root.close();
+                    root.confirm_clicked();
+                }
+                dismiss_clicked => {
+                    root.close();
+                    root.dismissed();
+                    root.dismiss_clicked();
+                }
+                mode_toggle_clicked => { root.mode_toggle_clicked(); }
+
+                @children
+            }
+
+            TouchArea {
+                // Swallow clicks on the surface.
+            }
+        }
+
+        clicked => {
+            root.close();
+            root.dismissed();
+        }
+    }
+
+    Timer {
+        interval: 50ms;
+        triggered => {
+            surface.opacity = 1;
+            self.running = false;
+        }
+    }
+}
+
+/// `VibrantTimePickerDialog` — the vibrant `Surface` over the scrim.
+export component VibrantTimePickerDialog inherits PopupWindow {
+    in property <string> dismiss_text: @tr("Cancel");
+    in property <string> confirm_text: @tr("OK");
+    in property <bool> confirm_enabled: true;
+    in property <bool> show_mode_toggle;
+    in property <TimePickerDisplayMode> display_mode: TimePickerDisplayMode.picker;
+
+    callback dismissed();
+    callback confirm_clicked();
+    callback dismiss_clicked();
+    callback mode_toggle_clicked();
+
+    close_policy: no_auto_close;
+    forward_focus: focus_scope2;
+
+    focus_scope2 := FocusScope {
+        x: 0;
+        width: 0;
+
+        key_pressed(event) => {
+            if event.text == Key.Escape {
+                root.close();
+                root.dismissed();
+                return accept;
+            }
+            if event.text == Key.Return && root.confirm_text != "" {
+                root.confirm_clicked();
+                return accept;
+            }
+            reject
+        }
+    }
+
+    modal := Modal {
+        width: 100%;
+        height: 100%;
+
+        surface := Elevation {
+            level: 3;
+            border_radius: DialogTokens.container_shape.top_left;
+            background: MaterialPalette.surface_container;
+            x: (parent.width - self.width) / 2;
+            y: (parent.height - self.height) / 2;
+            opacity: 0;
+            width: vdlg_content.min_width;
+            height: vdlg_content.min_height;
+
+            animate opacity { enabled: !MaterialPalette.reduced-motion; duration: MaterialAnimations.opacity_duration; easing: MaterialAnimations.opacity_easing; }
+
+            vdlg_content := VibrantTimePickerDialogContent {
+                dismiss_text: root.dismiss_text;
+                confirm_text: root.confirm_text;
+                confirm_enabled: root.confirm_enabled;
+                show_mode_toggle: root.show_mode_toggle;
+                display_mode: root.display_mode;
+
+                confirm_clicked => {
+                    root.close();
+                    root.confirm_clicked();
+                }
+                dismiss_clicked => {
+                    root.close();
+                    root.dismissed();
+                    root.dismiss_clicked();
+                }
+                mode_toggle_clicked => { root.mode_toggle_clicked(); }
+
+                @children
+            }
+
+            TouchArea {}
+        }
+
+        clicked => {
+            root.close();
+            root.dismissed();
+        }
+    }
+
+    Timer {
+        interval: 50ms;
+        triggered => {
+            surface.opacity = 1;
+            self.running = false;
+        }
+    }
+}
+
+/// Backward-compatible popup: a `TimePickerDialog` hosting `TimePicker`
+/// (dial) or `TimeInput` (keyboard mode) with the upstream mode toggle.
+/// Prefer `TimePickerDialog` + `TimePicker`/`TimeInput` directly.
 export component TimePickerPopup inherits PopupWindow {
     in property <bool> use_24_hour_format: true;
-    in property <string> title: @tr("Select time");
+    // `TimePickerDialogDefaults.Title`: keyboard (input) mode shows
+    // "Enter Time", dial shows "Select Time" (strings.xml lines 128-132).
+    in property <string> title: root.keyboard_mode ? @tr("Enter Time") : @tr("Select Time");
     in property <string> cancel_text: @tr("Cancel");
     in property <string> ok_text: @tr("Ok");
-    in property <Time> time: { hour: 12 };
+    in_out property <Time> time: { hour: 12 };
     in property <string> hour_label: @tr("Hour");
     in property <string> minute_label: @tr("Minute");
 
     property <bool> keyboard_mode;
-    property <bool> minutes_selected;
-    property <bool> am_selected: true;
-    property <[int]> twelfth_hour_model: [12, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
-    property <[int]> use-24_hour_format_model: [
-        12,
-        1,
-        2,
-        3,
-        4,
-        5,
-        6,
-        7,
-        8,
-        9,
-        10,
-        11,
-        0,
-        13,
-        14,
-        15,
-        16,
-        17,
-        18,
-        19,
-        20,
-        21,
-        22,
-        23
-    ];
-    property <[int]> minute_model: [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55];
-    property <[int]> current_model: root.get_current_model();
-    property <int> current_index: root.minutes_selected ? root.index_of_minute(root.current_time.minute) : root.index_of_hour(root.current_time.hour);
-    property <Time> current_time: root.time;
-    property <int> time_picker_hour: hour_time_picker.text.to_float();
-    property <int> time_picker_minute:  minute_time_picker.text.to_float();
-    property <bool> horizontal: root.width >= MaterialStyleMetrics.size_572;
+    property <TimePickerSelection> selection: TimePickerSelection.hour;
 
     callback ok();
+    callback cancel_clicked();
 
     close_policy: no_auto_close;
-    forward_focus: base;
+    forward_focus: focus_scope;
 
-    base := BaseDialog {
+    focus_scope := FocusScope {
+        x: 0;
+        width: 0;
+
+        key_pressed(event) => {
+            if event.text == Key.Escape {
+                root.close();
+                root.cancel_clicked();
+                return accept;
+            }
+            reject
+        }
+    }
+
+    modal := Modal {
         width: 100%;
         height: 100%;
-        title: root.title;
-        action_button_icons: [
-            root.keyboard_mode ? Icons.schedule : Icons.keyboard
-        ];
-        actions: [
-            root.cancel_text,
-            root.ok_text
-        ];
 
-        layout := HorizontalLayout {
-            spacing: MaterialStyleMetrics.spacing_52;
+        surface := Elevation {
+            level: 3;
+            border_radius: DialogTokens.container_shape.top_left;
+            background: DialogTokens.container_color;
+            x: (parent.width - self.width) / 2;
+            y: (parent.height - self.height) / 2;
+            opacity: 0;
+            width: dlg_content.min_width;
+            height: dlg_content.min_height;
 
-            VerticalLayout {
-                alignment: center;
-                spacing: MaterialStyleMetrics.spacing_8;
+            animate opacity { enabled: !MaterialPalette.reduced-motion; duration: MaterialAnimations.opacity_duration; easing: MaterialAnimations.opacity_easing; }
 
-                HorizontalLayout {
-                    alignment: center;
+            dlg_content := TimePickerDialogContent {
+                title: root.title;
+                dismiss_text: root.cancel_text;
+                confirm_text: root.ok_text;
+                confirm_enabled: root.ok_enabled();
+                show_mode_toggle: true;
+                display_mode: root.keyboard_mode ? TimePickerDisplayMode.input : TimePickerDisplayMode.picker;
 
-                    hour_time_picker := TimePickerInput {
-                        read_only: !root.keyboard_mode;
-                        checked: self.read_only && !root.minutes_selected;
-                        text: root.current_time.hour;
-
-                        accessible_role: AccessibleRole.text_input;
-                        accessible_value: self.text;
-                        accessible_label: "hour";
-
-                        clicked => {
-                            root.minutes_selected = false;
-                        }
-                    }
-
-                    separator := MaterialText {
-                        min_width: MaterialStyleMetrics.size_24;
-                        text: ":";
-                        color: MaterialPalette.on_surface;
-                        style: MaterialTypography.display_large;
-                        vertical_alignment: center;
-                        horizontal_alignment: center;
-                    }
-
-                    minute_time_picker := TimePickerInput {
-                        read_only: !root.keyboard_mode;
-                        checked: self.read_only && root.minutes_selected;
-                        text: root.current_time.minute;
-
-                        accessible_role: AccessibleRole.text_input;
-                        accessible_value: self.text;
-                        accessible_label: "minute";
-
-                        clicked => {
-                            root.minutes_selected = true;
-                        }
-                    }
-
-                    // spacer
-                    if !root.use_24_hour_format && (!root.horizontal || root.keyboard_mode) : Rectangle {
-                        width: MaterialStyleMetrics.spacing_12;
-                    }
-
-                    if !root.use_24_hour_format && (!root.horizontal || root.keyboard_mode) : PeriodSelector {
-                        am_selected: root.am_selected;
-
-                        update-period(am) => {
-                            root.am-selected = am;
-                        }
-                    }
+                confirm_clicked => { root.ok(); }
+                dismiss_clicked => {
+                    root.close();
+                    root.cancel_clicked();
+                }
+                mode_toggle_clicked => {
+                    root.keyboard_mode = !root.keyboard_mode;
                 }
 
-                // labels
-                if root.keyboard_mode : HorizontalLayout {
-                    alignment: start;
+                if !root.keyboard_mode : picker := TimePicker {
+                    hour: root.time.hour;
+                    minute: root.time.minute;
+                    use_24_hour_format: root.use_24_hour_format;
+                    selection: root.selection;
 
-                    MaterialText {
-                        width: hour_time_picker.width;
-                        text: root.hour_label;
-                        color: MaterialPalette.on_surface_variant;
-                    }
-
-                    Rectangle {
-                        width: MaterialStyleMetrics.size_24;
-                    }
-
-                    MaterialText {
-                        text: root.minute_label;
-                        color: MaterialPalette.on_surface_variant;
-                    }
+                    hour_changed(h) => { root.set_time(h, root.time.minute); }
+                    minute_changed(m) => { root.set_time(root.time.hour, m); }
+                    selection_changed(s) => { root.selection = s; }
                 }
 
-                if !root.use_24_hour_format && !root.keyboard_mode && root.horizontal : PeriodSelector {
-                    am_selected: root.am_selected;
-                    horizontal: true;
+                if root.keyboard_mode : input := TimeInput {
+                    hour: root.time.hour;
+                    minute: root.time.minute;
+                    use_24_hour_format: root.use_24_hour_format;
+                    hour_label: root.hour_label;
+                    minute_label: root.minute_label;
 
-                    update-period(am) => {
-                        root.am-selected = am;
-                    }
+                    hour_changed(h) => { root.set_time(h, root.time.minute); }
+                    minute_changed(m) => { root.set_time(root.time.hour, m); }
                 }
             }
 
-            if root.horizontal && !root.keyboard_mode : Clock {
-                model: root.current_model;
-                two_columns: !root.minutes_selected && root.use-24_hour_format;
-                current_index: root.current_index;
-                total: root.minutes_selected ? 60 : root.use-24_hour_format ? 24 : 12;
-                current_value: root.minutes_selected ? root.current_time.minute : root.current_time.hour;
-
-                current_index_changed(index) => {
-                    root.update_time_by_item(index);
-
-                    if !root.minutes_selected {
-                        root.minutes_selected = true;
-                    }
-                }
-            }
+            TouchArea {}
         }
 
-        // spacer
-        if !root.horizontal && !root.keyboard_mode : Rectangle {
-            height: MaterialStyleMetrics.spacing_12;
-        }
-
-        if !root.horizontal && !root.keyboard_mode : Clock {
-            model: root.current_model;
-            two_columns: !root.minutes_selected && root.use-24_hour_format;
-            current_index: root.current_index;
-            total: root.minutes_selected ? 60 : root.use-24_hour_format ? 24 : 12;
-            current_value: root.minutes_selected ? root.current_time.minute : root.current_time.hour;
-            height: self.width;
-
-            current_index_changed(index) => {
-                root.update_time_by_item(index);
-
-                if !root.minutes_selected {
-                    root.minutes_selected = true;
-                }
-            }
-        }
-
-        action_button_clicked(index) => {
-            if index == 0 {
-                root.keyboard_mode = !root.keyboard_mode;
-            }
-        }
-
-        action_clicked(index) => {
-            // cancel
-            if index == 0 {
-                root.close();
-            } else if index == 1 {
-                root.ok();
-            }
-        }
-
-        close => {
+        clicked => {
             root.close();
+            root.cancel_clicked();
+        }
+    }
+
+    Timer {
+        interval: 50ms;
+        triggered => {
+            surface.opacity = 1;
+            self.running = false;
         }
     }
 
     pure public function ok_enabled() -> bool {
-        if !root.keyboard_mode {
-            return root.current_time.hour <= 23 && root.current_time.minute <= 59;
-        }
-
-        if root.use-24_hour_format {
-            return root.time_picker_hour <= 23 && root.time_picker_minute <= 59;
-        }
-
-        root.time_picker_hour <= 12 && root.time_picker_minute <= 59
+        root.time.hour <= 23 && root.time.minute <= 59 && root.time.hour >= 0 && root.time.minute >= 0
     }
 
     public function get_current_time() -> Time {
-        if root.keyboard_mode {
-            if !root.use-24_hour_format && !root.am_selected {
-                if root.current_time.hour == 12 {
-                    return { hour: 0, minute: root.current_time.minute };
-                }
-
-                return { hour: root.current_time.hour + 12, minute: root.current_time.minute };
-            }
-
-            return root.current_time;
-        }
-
-        return { hour: root.time_picker_hour, minute: root.time_picker_minute };
+        root.time
     }
 
-    changed keyboard_mode => {
-        if root.keyboard_mode {
-            return;
-        }
-
-        root.update_time(min(root.time_picker_hour, root.use-24_hour_format ? 23 : 12), min(root.time_picker_minute, 59));
-    }
-
-    changed time => {
-        root.current_time = root.time;
-    }
-
-    function update_time_by_item(index: int) {
-        root.update_time_by_value(root.current_model[index]);
-    }
-
-    function update_time_by_value(value: int) {
-        if root.minutes_selected {
-            root.update_time(root.current_time.hour, value);
-            return;
-        }
-
-        root.update_time(value, root.current_time.minute);
-    }
-
-    function update_time(hour: int, minute: int) {
-        root.current_time = { hour: hour, minute: minute };
-        hour_time_picker.text = root.current_time.hour;
-        minute_time_picker.text = minute;
-    }
-
-    pure function index_of_minute(minute: int) -> int {
-        if mod(minute, 5) != 0 {
-            return -1;
-        }
-
-        minute / 5
-    }
-
-    pure function index_of_hour(hour: int) -> int {
-        if hour == 12 {
-            return 0;
-        }
-
-        if hour == 0 {
-            return 12;
-        }
-
-        if !root.use-24_hour_format && hour > 12 {
-            return hour - 12;
-        }
-
-        hour
-    }
-
-    pure function get_current_model() -> [int] {
-        if root.minutes_selected {
-            return root.minute_model;
-        }
-
-        if root.use-24_hour_format {
-            return root.use-24_hour_format_model;
-        }
-
-        root.twelfth_hour_model
+    function set_time(hour: int, minute: int) {
+        root.time = { hour: hour, minute: minute, second: root.time.second };
     }
 }
