@@ -84,6 +84,9 @@
   "type": "canvas",
   "widgets": [
     {
+      "action_color": null,
+      "action_on_new_line": null,
+      "action_text": null,
       "alignment": null,
       "always_show_label": null,
       "avatar": null,
@@ -97,6 +100,7 @@
       "content_offset": null,
       "corner": null,
       "count": null,
+      "dismiss_color": null,
       "display_mode": null,
       "displayed": "2031-03",
       "dragged": null,
@@ -104,6 +108,7 @@
       "enabled": null,
       "expanded": null,
       "gestures": null,
+      "has_close_button": null,
       "height": null,
       "height_offset": null,
       "icon": null,
