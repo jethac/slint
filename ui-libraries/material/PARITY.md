@@ -426,7 +426,7 @@ States: hovered, pressed, selected
 
 | Component | Source | Status | Issues | Needs | Notes |
 |---|---|---|---|---|---|
-| Surface | Surface.kt | missing | #11 | dynamic color (#8) | - |
+| Surface | Surface.kt | done | #11 | dynamic color (#8) | Surface.kt all four overloads as flags: clickable/selectable/toggleable; surfaceColorAtElevation tint via surface_tint.mix; parent_absolute_tonal_elevation stands in for LocalAbsoluteTonalElevation; contentColor via MaterialPalette.content-color-for. Paparazzi can't draw Modifier.shadow — parity scenes exercise the tonal side only. |
 
 ### Swipe to dismiss
 
