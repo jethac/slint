@@ -292,6 +292,14 @@ fn test_extract_library_paths() {
 ///   the launch quantum is tolerated. Settle frames, intrinsic metrics
 ///   (`w`/`h`/`opacity`, prop values) and the strict pixel layer's
 ///   disagreement band stay identical-timestamp.
+/// - `//TICK_MS=<ms>` — advance the mock clock in `<ms>` steps between
+///   samples instead of one jump. `mock_elapsed_time` is the engine's
+///   frame — it updates animated bindings and runs `changed` handlers —
+///   so a jump past a threshold pins a downstream binding (an integer
+///   stagger gating item springs) to the sampled time rather than the
+///   instant it crossed. Ticking costs precision on closed-form springs
+///   whose mid-flight crossings feed `changed` writes, so only scenes
+///   that need the cadence declare it.
 #[derive(Debug, Default, Clone, PartialEq)]
 pub struct ParityMarkers {
     /// `Some("static"|"motion"|"negative")` when a `//PARITY=` marker is present.
@@ -329,6 +337,12 @@ pub struct ParityMarkers {
     pub mask_shadow: Vec<(String, u64)>,
     /// `//PHASE_TOL_MS=` — the anim-launch phase window, 0 unless marked.
     pub phase_tol_ms: u64,
+    /// `//TICK_MS=` — advance the mock clock in `<ms>` steps instead of one
+    /// jump, so `changed` handlers and integer-gated bindings fire at the
+    /// instant they would under a real frame cadence. 0 jumps straight to
+    /// each sampled time (the default, and the right mode for springs whose
+    /// closed-form trajectory must not observe intermediate crossings).
+    pub tick_ms: u64,
 }
 
 /// One `//ACTION=` input step. `at_ms` is the dispatch time within the
@@ -534,6 +548,11 @@ pub fn extract_parity(source: &str) -> ParityMarkers {
             let rest = &source[p + "//PHASE_TOL_MS=".len()..];
             let end = rest.find(char::is_whitespace).unwrap_or(rest.len());
             rest[..end].parse().expect("Cannot parse //PHASE_TOL_MS=")
+        }),
+        tick_ms: source.find("//TICK_MS=").map_or(0, |p| {
+            let rest = &source[p + "//TICK_MS=".len()..];
+            let end = rest.find(char::is_whitespace).unwrap_or(rest.len());
+            rest[..end].parse().expect("Cannot parse //TICK_MS=")
         }),
     }
 }

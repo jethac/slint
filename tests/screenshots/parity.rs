@@ -1116,7 +1116,7 @@ fn dispatch_action(window: &i_slint_core::api::Window, action: &ParityAction) {
     window.dispatch_event(event);
 }
 
-fn advance_mock_time_to(start_ms: u64, target_rel_ms: u64) {
+fn advance_mock_time_to(start_ms: u64, target_rel_ms: u64, step_ms: u64) {
     let target = start_ms + target_rel_ms;
     loop {
         let now = i_slint_backend_testing::get_mocked_time();
@@ -1124,13 +1124,20 @@ fn advance_mock_time_to(start_ms: u64, target_rel_ms: u64) {
         if delta == 0 {
             break;
         }
-        // Tick at 1ms granularity: `mock_elapsed_time` is the engine's frame
-        // — it updates animated bindings and runs change handlers — so a
-        // single big jump would pin every downstream binding (an integer
-        // stagger gating item springs) to the sampled times rather than the
-        // instant it actually crossed, skewing the scene's motion a whole
-        // interval late. Compose's trace samples the same continuous line.
-        i_slint_backend_testing::mock_elapsed_time(delta.min(1));
+        // `//TICK_MS=` ticks the engine at N-ms granularity:
+        // `mock_elapsed_time` is the engine's frame — it updates animated
+        // bindings and runs change handlers — so a single big jump would
+        // pin every downstream binding (an integer stagger gating item
+        // springs) to the sampled times rather than the instant it
+        // actually crossed, skewing the scene's motion a whole interval
+        // late. Unmarked scenes jump straight to the sample: a closed-form
+        // spring's mid-flight crossings feed `changed` writes (the sheet's
+        // anchor-current hop, for one) that must not run per millisecond.
+        i_slint_backend_testing::mock_elapsed_time(if step_ms > 0 {
+            delta.min(step_ms)
+        } else {
+            delta
+        });
     }
 }
 
@@ -2610,12 +2617,12 @@ pub fn run_parity_case<C: i_slint_core::api::ComponentHandle>(
             // clock time before this frame renders.
             for (i, action) in spec.actions.iter().enumerate() {
                 if !dispatched[i] && action.at_ms() > 0 && action.at_ms() <= t {
-                    advance_mock_time_to(start, action.at_ms());
+                    advance_mock_time_to(start, action.at_ms(), spec.tick_ms);
                     dispatch_action(component.window(), action);
                     dispatched[i] = true;
                 }
             }
-            advance_mock_time_to(start, t);
+            advance_mock_time_to(start, t, spec.tick_ms);
             let actual = render_frame(&component);
             frames.push(capture_trace(&component, t, spec, prop_value));
             if t == times[0] {

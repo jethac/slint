@@ -102,6 +102,11 @@ struct Scene {
     /// and text positions best-match within `±ms`.
     #[serde(default)]
     phase_tol_ms: u64,
+    /// `//TICK_MS=<ms>` — advances the mock clock in `<ms>` steps so
+    /// integer-gated bindings (the fab-menu item stagger) fire at their
+    /// crossing instant instead of the sampled time.
+    #[serde(default)]
+    tick_ms: u64,
     /// `//PARITY_EPS=<n>` — per-channel strict-pixel tolerance override for
     /// cases whose engine noise exceeds the default 8; carries the reason
     /// the override exists, emitted as a comment above the directive.
@@ -859,6 +864,9 @@ fn slint_case(scene: &Scene) -> String {
     }
     if scene.phase_tol_ms > 0 {
         writeln!(s, "//PHASE_TOL_MS={}", scene.phase_tol_ms).unwrap();
+    }
+    if scene.tick_ms > 0 {
+        writeln!(s, "//TICK_MS={}", scene.tick_ms).unwrap();
     }
     writeln!(
         s,
