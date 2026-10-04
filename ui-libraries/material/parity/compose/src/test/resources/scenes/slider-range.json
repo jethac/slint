@@ -12,9 +12,9 @@
   "mask_decor": {},
   "mask_inner": {},
   "name": "slider-range",
-  "negative_note": "issue #50 — the software renderer quantizes element geometry to integer device pixels; fractional track edges diverge up to ~1 device px",
+  "negative_note": "issue #50 — the software renderer quantizes element geometry to integer device pixels; fractional track edges diverge up to ~1 device px. Issue #53 — femtovg's stencil+fringe rasterizer runs the AA band ~0.5px off the coverage-integral drivers, so the range thumbs' stadium-cap corners report a few strict pixels at d2",
   "params": {},
-  "parity": "xfail:software",
+  "parity": "xfail:software,femtovg",
   "scheme": {
     "background": "FFFDF7FE",
     "error": "FFA8364B",

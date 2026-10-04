@@ -3,7 +3,7 @@
 
 // Scene: slider-range — generated from `ui-libraries/material/parity/scenes/slider-range.json`
 // (edit the scene, regenerate with `cargo run -p material-parity-generator`).
-//PARITY=xfail:software: issue #50 — the software renderer quantizes element geometry to integer device pixels; fractional track edges diverge up to ~1 device px
+//PARITY=xfail:software,femtovg: issue #50 — the software renderer quantizes element geometry to integer device pixels; fractional track edges diverge up to ~1 device px. Issue #53 — femtovg's stencil+fringe rasterizer runs the AA band ~0.5px off the coverage-integral drivers, so the range thumbs' stadium-cap corners report a few strict pixels at d2
 //SIZE=340x330
 //TRACE_ELEMENTS=slider0,slider1,slider2,slider3,slider4
 //DENSITIES=1,2
