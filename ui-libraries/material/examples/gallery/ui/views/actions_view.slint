@@ -38,6 +38,11 @@ import {
     ContainedLoadingIndicator,
     SnackBar,
     ModalBottomSheet,
+    BottomSheet,
+    BottomSheetScaffold,
+    BottomSheetDragHandle,
+    VerticalDragHandle,
+    SheetValue,
     MaterialText,
     MaterialStyleMetrics,
     MaterialButtonSize,
@@ -855,6 +860,101 @@ export component ActionsView {
 
                         clicked => {
                             modal_bottom_sheet.show();
+                        }
+                    }
+                }
+            }
+
+            ComponentCard {
+                title: "Bottom sheets";
+
+                VerticalLayout {
+                    spacing: MaterialStyleMetrics.spacing_8;
+
+                    // A cut-down scaffold: the sheet docks to the box's bottom
+                    // edge and drags over the body — grab the handle.
+                    Rectangle {
+                        width: 300px;
+                        height: 180px;
+                        border-radius: 12px;
+                        clip: true;
+                        background: MaterialPalette.surface;
+
+                        VerticalLayout {
+                            padding: 12px;
+
+                            MaterialText {
+                                text: "BottomSheetScaffold body";
+                                style: MaterialTypography.label-large;
+                            }
+                        }
+
+                        BottomSheetScaffold {
+                            width: 100%;
+                            height: 100%;
+                            sheet-peek-height: 56px;
+
+                            MaterialText {
+                                text: "Sheet content";
+                                horizontal-alignment: center;
+                                vertical-alignment: center;
+                            }
+                        }
+                    }
+
+                    // The standard sheet anchors to its container's bottom
+                    // edge; `partially-expanded` keeps the body visible.
+                    Rectangle {
+                        width: 300px;
+                        height: 160px;
+                        border-radius: 12px;
+                        clip: true;
+                        background: MaterialPalette.surface;
+
+                        BottomSheet {
+                            width: 100%;
+                            height: 100%;
+                            initial-value: SheetValue.partially-expanded;
+
+                            MaterialText {
+                                text: "Standard sheet";
+                                horizontal-alignment: center;
+                                vertical-alignment: center;
+                                height: 80px;
+                            }
+                        }
+                    }
+
+                    // The sheet's drag-handle pill and the pane-expansion
+                    // `VerticalDragHandle`, standalone.
+                    Horizontal {
+                        alignment: center;
+                        spacing: MaterialStyleMetrics.spacing_16;
+
+                        VerticalLayout {
+                            alignment: center;
+                            spacing: MaterialStyleMetrics.spacing_4;
+
+                            BottomSheetDragHandle {}
+
+                            MaterialText {
+                                text: "Drag handle";
+                                style: MaterialTypography.label-small;
+                                horizontal-alignment: center;
+                            }
+                        }
+
+                        VerticalLayout {
+                            alignment: center;
+                            spacing: MaterialStyleMetrics.spacing_4;
+
+                            VerticalDragHandle {}
+
+                            MaterialText {
+                                text: "Vertical";
+                                style: MaterialTypography.label-small;
+                                horizontal-alignment: center;
+                            }
                         }
                     }
                 }

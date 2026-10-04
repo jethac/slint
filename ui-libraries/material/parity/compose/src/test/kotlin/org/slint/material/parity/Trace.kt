@@ -88,6 +88,10 @@ class Tracer {
         val propsJson = JSONObject()
         for (name in props) {
             val v = propGetters[name]?.invoke() ?: continue
+            // A getter reports a non-finite number for "not measurable yet"
+            // (e.g. `requireOffset` before the first measure); the prop is
+            // absent from that frame, and org.json rejects NaN anyway.
+            if (v is Number && (v.toDouble().isNaN() || v.toDouble().isInfinite())) continue
             propsJson.put(
                 name,
                 when (v) {

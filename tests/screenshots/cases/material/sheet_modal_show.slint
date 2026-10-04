@@ -1,0 +1,83 @@
+// Copyright © SixtyFPS GmbH <info@slint.dev>
+// SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0
+
+// Scene: sheet-modal-show — generated from `ui-libraries/material/parity/scenes/sheet-modal-show.json`
+// (edit the scene, regenerate with `cargo run -p material-parity-generator`).
+//PARITY=motion
+//SIZE=360x400
+//TIMES=120,300,600,1200
+//TRACE_PROPS=current-value,target-value,is-visible
+//TRACE_ELEMENTS=modal0
+//DENSITIES=1,2
+import "../../fonts/Roboto-VariableFont.ttf";
+import { MaterialPalette, MaterialTheme, MaterialWindow, ModalBottomSheet, SheetValue } from "@material";
+
+export component TestCase inherits MaterialWindow {
+    init => {
+        // The scene pins seed #6750A4, tonal-spot, spec2025, light, contrast 0
+        // (all the library defaults; restated here so a default change can't
+        // silently move the parity baseline).
+        MaterialTheme.seed-color = #6750A4;
+        MaterialTheme.dark = false;
+        MaterialTheme.contrast-level = 0;
+        MaterialTheme.use-platform-color = false;
+        MaterialTheme.plain-family = "Roboto";
+        MaterialTheme.brand-family = "Roboto";
+        // Compose builds its scene scheme from the same seed — use the
+        // runtime-generated scheme, not the static expressive table.
+        MaterialPalette.dynamic = true;
+    }
+
+    in-out property <float> current-value;
+    in-out property <float> target-value;
+    in-out property <bool> is-visible;
+    in-out property <length> surface-x;
+    in-out property <length> surface-y;
+    in-out property <length> surface-width;
+    in-out property <length> surface-height;
+    modal0_win := ModalBottomSheet {
+        x: 0px;
+        y: 0px;
+        width: 360px;
+        height: 400px;
+        skip-partially-expanded: false;
+        gestures-enabled: true;
+        changed current_value => {
+            root.current-value = self.current_value == SheetValue.hidden ? 0 : self.current_value == SheetValue.partially-expanded ? 1 : 2;
+        }
+
+        changed target_value => {
+            root.target-value = self.target_value == SheetValue.hidden ? 0 : self.target_value == SheetValue.partially-expanded ? 1 : 2;
+        }
+
+        changed is_visible => {
+            root.is-visible = self.is-visible;
+        }
+
+        changed surface_x => {
+            root.surface-x = self.surface-x;
+        }
+        changed surface_y => {
+            root.surface-y = self.surface-y;
+        }
+        changed surface_width => {
+            root.surface-width = self.surface-width;
+        }
+        changed surface_height => {
+            root.surface-height = self.surface-height;
+        }
+            Rectangle {
+                height: 200px;
+                background: MaterialPalette.tertiary_container;
+            }
+    }
+
+    // `boundsInRoot` inside the popup is empty on the Compose side too.
+    modal0 := Rectangle {
+        x: 0px;
+        y: 0px;
+        width: 0px;
+        height: 0px;
+    }
+
+}

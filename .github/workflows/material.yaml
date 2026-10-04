@@ -136,7 +136,12 @@ jobs:
                 save-if: ${{ github.ref == 'refs/heads/master' }}
           - name: Run material parity cases on all renderers
             # mesa-vulkan-drivers provides llvmpipe, the WGPU adapter for the FemtoVG driver.
-            run: SLINT_TEST_FILTER=material cargo test --manifest-path tests/Cargo.toml -p test-driver-screenshots --features femtovg
+            # Each renderer runs as its own invocation, so a stalled one shows in the log.
+            # Skia runs serialized to rule out contention between tests.
+            run: |
+                SLINT_TEST_FILTER=material cargo test --manifest-path tests/Cargo.toml -p test-driver-screenshots --features femtovg -- software_material
+                SLINT_TEST_FILTER=material cargo test --manifest-path tests/Cargo.toml -p test-driver-screenshots --features femtovg -- skia_material --test-threads=1
+                SLINT_TEST_FILTER=material cargo test --manifest-path tests/Cargo.toml -p test-driver-screenshots --features femtovg -- femtovg_material
           - name: Build the Compose parity harness
             run: ./gradlew compileDebugUnitTestKotlin --no-daemon
             working-directory: ui-libraries/material/parity/compose

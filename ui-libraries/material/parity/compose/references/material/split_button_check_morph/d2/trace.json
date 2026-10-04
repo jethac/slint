@@ -23,19 +23,8 @@
           "x": 24,
           "y": 28,
           "w": 170,
-          "h": 40
-        },
-        "button0_leading": {
-          "x": 24,
-          "y": 28,
-          "w": 56,
-          "h": 40
-        },
-        "button0_trailing": {
-          "x": 82,
-          "y": 28,
-          "w": 48,
-          "h": 40
+          "h": 40,
+          "opacity": 1
         }
       },
       "text": {}
@@ -78,7 +67,7 @@
       "t_ms": 3,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 4
+        "trailing_inner_radius": 4.012463569641113
       },
       "elements": {
         "button0": {
@@ -95,7 +84,7 @@
       "t_ms": 4,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 4.012463569641113
+        "trailing_inner_radius": 4.048549652099609
       },
       "elements": {
         "button0": {
@@ -112,7 +101,7 @@
       "t_ms": 5,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 4.048549652099609
+        "trailing_inner_radius": 4.106385707855225
       },
       "elements": {
         "button0": {
@@ -129,7 +118,7 @@
       "t_ms": 6,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 4.106385707855225
+        "trailing_inner_radius": 4.184211254119873
       },
       "elements": {
         "button0": {
@@ -146,7 +135,7 @@
       "t_ms": 7,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 4.184211254119873
+        "trailing_inner_radius": 4.280369758605957
       },
       "elements": {
         "button0": {
@@ -163,7 +152,7 @@
       "t_ms": 8,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 4.280369758605957
+        "trailing_inner_radius": 4.393303394317627
       },
       "elements": {
         "button0": {
@@ -180,7 +169,7 @@
       "t_ms": 9,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 4.393303394317627
+        "trailing_inner_radius": 4.521548748016357
       },
       "elements": {
         "button0": {
@@ -197,7 +186,7 @@
       "t_ms": 10,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 4.521548748016357
+        "trailing_inner_radius": 4.663732528686523
       },
       "elements": {
         "button0": {
@@ -214,7 +203,7 @@
       "t_ms": 11,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 4.663732528686523
+        "trailing_inner_radius": 4.818562984466553
       },
       "elements": {
         "button0": {
@@ -231,7 +220,7 @@
       "t_ms": 12,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 4.818562984466553
+        "trailing_inner_radius": 4.984830856323242
       },
       "elements": {
         "button0": {
@@ -248,7 +237,7 @@
       "t_ms": 13,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 4.984830856323242
+        "trailing_inner_radius": 5.16140079498291
       },
       "elements": {
         "button0": {
@@ -265,7 +254,7 @@
       "t_ms": 14,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 5.16140079498291
+        "trailing_inner_radius": 5.347209453582764
       },
       "elements": {
         "button0": {
@@ -282,7 +271,7 @@
       "t_ms": 15,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 5.347209453582764
+        "trailing_inner_radius": 5.541260242462158
       },
       "elements": {
         "button0": {
@@ -299,7 +288,7 @@
       "t_ms": 16,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 5.541260242462158
+        "trailing_inner_radius": 5.742621898651123
       },
       "elements": {
         "button0": {
@@ -316,7 +305,7 @@
       "t_ms": 17,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 5.742621898651123
+        "trailing_inner_radius": 5.950422286987305
       },
       "elements": {
         "button0": {
@@ -333,7 +322,7 @@
       "t_ms": 18,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 5.950422286987305
+        "trailing_inner_radius": 6.163846969604492
       },
       "elements": {
         "button0": {
@@ -350,7 +339,7 @@
       "t_ms": 19,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 6.163846969604492
+        "trailing_inner_radius": 6.382135391235352
       },
       "elements": {
         "button0": {
@@ -367,7 +356,7 @@
       "t_ms": 20,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 6.382135391235352
+        "trailing_inner_radius": 6.604578018188477
       },
       "elements": {
         "button0": {
@@ -384,7 +373,7 @@
       "t_ms": 21,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 6.604578018188477
+        "trailing_inner_radius": 6.8305134773254395
       },
       "elements": {
         "button0": {
@@ -401,7 +390,7 @@
       "t_ms": 22,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 6.8305134773254395
+        "trailing_inner_radius": 7.059325695037842
       },
       "elements": {
         "button0": {
@@ -418,7 +407,7 @@
       "t_ms": 23,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 7.059325695037842
+        "trailing_inner_radius": 7.290441989898682
       },
       "elements": {
         "button0": {
@@ -435,7 +424,7 @@
       "t_ms": 24,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 7.290441989898682
+        "trailing_inner_radius": 7.523330211639404
       },
       "elements": {
         "button0": {
@@ -452,7 +441,7 @@
       "t_ms": 25,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 7.523330211639404
+        "trailing_inner_radius": 7.757494926452637
       },
       "elements": {
         "button0": {
@@ -469,7 +458,7 @@
       "t_ms": 26,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 7.757494926452637
+        "trailing_inner_radius": 7.99247932434082
       },
       "elements": {
         "button0": {
@@ -486,7 +475,7 @@
       "t_ms": 27,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 7.99247932434082
+        "trailing_inner_radius": 8.22785758972168
       },
       "elements": {
         "button0": {
@@ -503,7 +492,7 @@
       "t_ms": 28,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 8.22785758972168
+        "trailing_inner_radius": 8.463238716125488
       },
       "elements": {
         "button0": {
@@ -520,7 +509,7 @@
       "t_ms": 29,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 8.463238716125488
+        "trailing_inner_radius": 8.698261260986328
       },
       "elements": {
         "button0": {
@@ -537,7 +526,7 @@
       "t_ms": 30,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 8.698261260986328
+        "trailing_inner_radius": 8.932589530944824
       },
       "elements": {
         "button0": {
@@ -554,7 +543,7 @@
       "t_ms": 31,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 8.932589530944824
+        "trailing_inner_radius": 9.16591739654541
       },
       "elements": {
         "button0": {
@@ -571,7 +560,7 @@
       "t_ms": 32,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 9.16591739654541
+        "trailing_inner_radius": 9.397963523864746
       },
       "elements": {
         "button0": {
@@ -588,7 +577,7 @@
       "t_ms": 33,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 9.397963523864746
+        "trailing_inner_radius": 9.628469467163086
       },
       "elements": {
         "button0": {
@@ -605,7 +594,7 @@
       "t_ms": 34,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 9.628469467163086
+        "trailing_inner_radius": 9.857199668884277
       },
       "elements": {
         "button0": {
@@ -622,7 +611,7 @@
       "t_ms": 35,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 9.857199668884277
+        "trailing_inner_radius": 10.083937644958496
       },
       "elements": {
         "button0": {
@@ -639,7 +628,7 @@
       "t_ms": 36,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 10.083937644958496
+        "trailing_inner_radius": 10.308488845825195
       },
       "elements": {
         "button0": {
@@ -656,7 +645,7 @@
       "t_ms": 37,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 10.308488845825195
+        "trailing_inner_radius": 10.53067684173584
       },
       "elements": {
         "button0": {
@@ -673,7 +662,7 @@
       "t_ms": 38,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 10.53067684173584
+        "trailing_inner_radius": 10.750340461730957
       },
       "elements": {
         "button0": {
@@ -690,7 +679,7 @@
       "t_ms": 39,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 10.750340461730957
+        "trailing_inner_radius": 10.967336654663086
       },
       "elements": {
         "button0": {
@@ -707,7 +696,7 @@
       "t_ms": 40,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 10.967336654663086
+        "trailing_inner_radius": 11.181536674499512
       },
       "elements": {
         "button0": {
@@ -724,7 +713,7 @@
       "t_ms": 41,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 11.181536674499512
+        "trailing_inner_radius": 11.392826080322266
       },
       "elements": {
         "button0": {
@@ -741,7 +730,7 @@
       "t_ms": 42,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 11.392826080322266
+        "trailing_inner_radius": 11.601104736328125
       },
       "elements": {
         "button0": {
@@ -758,7 +747,7 @@
       "t_ms": 43,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 11.601104736328125
+        "trailing_inner_radius": 11.806282997131348
       },
       "elements": {
         "button0": {
@@ -775,7 +764,7 @@
       "t_ms": 44,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 11.806282997131348
+        "trailing_inner_radius": 12.008283615112305
       },
       "elements": {
         "button0": {
@@ -792,7 +781,7 @@
       "t_ms": 45,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 12.008283615112305
+        "trailing_inner_radius": 12.207040786743164
       },
       "elements": {
         "button0": {
@@ -809,7 +798,7 @@
       "t_ms": 46,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 12.207040786743164
+        "trailing_inner_radius": 12.402499198913574
       },
       "elements": {
         "button0": {
@@ -826,7 +815,7 @@
       "t_ms": 47,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 12.402499198913574
+        "trailing_inner_radius": 12.594610214233398
       },
       "elements": {
         "button0": {
@@ -843,7 +832,7 @@
       "t_ms": 48,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 12.594610214233398
+        "trailing_inner_radius": 12.78333568572998
       },
       "elements": {
         "button0": {
@@ -860,7 +849,7 @@
       "t_ms": 49,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 12.78333568572998
+        "trailing_inner_radius": 12.968647956848145
       },
       "elements": {
         "button0": {
@@ -877,7 +866,7 @@
       "t_ms": 50,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 12.968647956848145
+        "trailing_inner_radius": 13.15052318572998
       },
       "elements": {
         "button0": {
@@ -894,7 +883,7 @@
       "t_ms": 51,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 13.15052318572998
+        "trailing_inner_radius": 13.32894515991211
       },
       "elements": {
         "button0": {
@@ -911,7 +900,7 @@
       "t_ms": 52,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 13.32894515991211
+        "trailing_inner_radius": 13.50390625
       },
       "elements": {
         "button0": {
@@ -928,7 +917,7 @@
       "t_ms": 53,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 13.50390625
+        "trailing_inner_radius": 13.675403594970703
       },
       "elements": {
         "button0": {
@@ -945,7 +934,7 @@
       "t_ms": 54,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 13.675403594970703
+        "trailing_inner_radius": 13.843439102172852
       },
       "elements": {
         "button0": {
@@ -962,7 +951,7 @@
       "t_ms": 55,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 13.843439102172852
+        "trailing_inner_radius": 14.008021354675293
       },
       "elements": {
         "button0": {
@@ -979,7 +968,7 @@
       "t_ms": 56,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 14.008021354675293
+        "trailing_inner_radius": 14.169161796569824
       },
       "elements": {
         "button0": {
@@ -996,7 +985,7 @@
       "t_ms": 57,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 14.169161796569824
+        "trailing_inner_radius": 14.326878547668457
       },
       "elements": {
         "button0": {
@@ -1013,7 +1002,7 @@
       "t_ms": 58,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 14.326878547668457
+        "trailing_inner_radius": 14.48119068145752
       },
       "elements": {
         "button0": {
@@ -1030,7 +1019,7 @@
       "t_ms": 59,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 14.48119068145752
+        "trailing_inner_radius": 14.632124900817871
       },
       "elements": {
         "button0": {
@@ -1047,7 +1036,7 @@
       "t_ms": 60,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 14.632124900817871
+        "trailing_inner_radius": 14.779706954956055
       },
       "elements": {
         "button0": {
@@ -1064,7 +1053,7 @@
       "t_ms": 61,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 14.779706954956055
+        "trailing_inner_radius": 14.923969268798828
       },
       "elements": {
         "button0": {
@@ -1081,7 +1070,7 @@
       "t_ms": 62,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 14.923969268798828
+        "trailing_inner_radius": 15.064943313598633
       },
       "elements": {
         "button0": {
@@ -1098,7 +1087,7 @@
       "t_ms": 63,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 15.064943313598633
+        "trailing_inner_radius": 15.202666282653809
       },
       "elements": {
         "button0": {
@@ -1115,7 +1104,7 @@
       "t_ms": 64,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 15.202666282653809
+        "trailing_inner_radius": 15.337177276611328
       },
       "elements": {
         "button0": {
@@ -1132,7 +1121,7 @@
       "t_ms": 65,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 15.337177276611328
+        "trailing_inner_radius": 15.468515396118164
       },
       "elements": {
         "button0": {
@@ -1149,7 +1138,7 @@
       "t_ms": 66,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 15.468515396118164
+        "trailing_inner_radius": 15.596721649169922
       },
       "elements": {
         "button0": {
@@ -1166,7 +1155,7 @@
       "t_ms": 67,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 15.596721649169922
+        "trailing_inner_radius": 15.721841812133789
       },
       "elements": {
         "button0": {
@@ -1183,7 +1172,7 @@
       "t_ms": 68,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 15.721841812133789
+        "trailing_inner_radius": 15.84391975402832
       },
       "elements": {
         "button0": {
@@ -1200,7 +1189,7 @@
       "t_ms": 69,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 15.84391975402832
+        "trailing_inner_radius": 15.963001251220703
       },
       "elements": {
         "button0": {
@@ -1217,7 +1206,7 @@
       "t_ms": 70,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 15.963001251220703
+        "trailing_inner_radius": 16.079133987426758
       },
       "elements": {
         "button0": {
@@ -1234,7 +1223,7 @@
       "t_ms": 71,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 16.079133987426758
+        "trailing_inner_radius": 16.192367553710938
       },
       "elements": {
         "button0": {
@@ -1251,7 +1240,7 @@
       "t_ms": 72,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 16.192367553710938
+        "trailing_inner_radius": 16.30274772644043
       },
       "elements": {
         "button0": {
@@ -1268,7 +1257,7 @@
       "t_ms": 73,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 16.30274772644043
+        "trailing_inner_radius": 16.410327911376953
       },
       "elements": {
         "button0": {
@@ -1285,7 +1274,7 @@
       "t_ms": 74,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 16.410327911376953
+        "trailing_inner_radius": 16.515153884887695
       },
       "elements": {
         "button0": {
@@ -1302,7 +1291,7 @@
       "t_ms": 75,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 16.515153884887695
+        "trailing_inner_radius": 16.617279052734375
       },
       "elements": {
         "button0": {
@@ -1319,7 +1308,7 @@
       "t_ms": 76,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 16.617279052734375
+        "trailing_inner_radius": 16.716753005981445
       },
       "elements": {
         "button0": {
@@ -1336,7 +1325,7 @@
       "t_ms": 77,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 16.716753005981445
+        "trailing_inner_radius": 16.813627243041992
       },
       "elements": {
         "button0": {
@@ -1353,7 +1342,7 @@
       "t_ms": 78,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 16.813627243041992
+        "trailing_inner_radius": 16.9079532623291
       },
       "elements": {
         "button0": {
@@ -1370,7 +1359,7 @@
       "t_ms": 79,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 16.9079532623291
+        "trailing_inner_radius": 16.999780654907227
       },
       "elements": {
         "button0": {
@@ -1387,7 +1376,7 @@
       "t_ms": 80,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 16.999780654907227
+        "trailing_inner_radius": 17.08915901184082
       },
       "elements": {
         "button0": {
@@ -1404,7 +1393,7 @@
       "t_ms": 81,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 17.08915901184082
+        "trailing_inner_radius": 17.1761417388916
       },
       "elements": {
         "button0": {
@@ -1421,7 +1410,7 @@
       "t_ms": 82,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 17.1761417388916
+        "trailing_inner_radius": 17.260780334472656
       },
       "elements": {
         "button0": {
@@ -1438,7 +1427,7 @@
       "t_ms": 83,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 17.260780334472656
+        "trailing_inner_radius": 17.343120574951172
       },
       "elements": {
         "button0": {
@@ -1455,7 +1444,7 @@
       "t_ms": 84,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 17.343120574951172
+        "trailing_inner_radius": 17.4232177734375
       },
       "elements": {
         "button0": {
@@ -1472,7 +1461,7 @@
       "t_ms": 85,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 17.4232177734375
+        "trailing_inner_radius": 17.501115798950195
       },
       "elements": {
         "button0": {
@@ -1489,7 +1478,7 @@
       "t_ms": 86,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 17.501115798950195
+        "trailing_inner_radius": 17.576868057250977
       },
       "elements": {
         "button0": {
@@ -1506,7 +1495,7 @@
       "t_ms": 87,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 17.576868057250977
+        "trailing_inner_radius": 17.650522232055664
       },
       "elements": {
         "button0": {
@@ -1523,7 +1512,7 @@
       "t_ms": 88,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 17.650522232055664
+        "trailing_inner_radius": 17.722124099731445
       },
       "elements": {
         "button0": {
@@ -1540,7 +1529,7 @@
       "t_ms": 89,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 17.722124099731445
+        "trailing_inner_radius": 17.791725158691406
       },
       "elements": {
         "button0": {
@@ -1557,7 +1546,7 @@
       "t_ms": 90,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 17.791725158691406
+        "trailing_inner_radius": 17.8593692779541
       },
       "elements": {
         "button0": {
@@ -1574,7 +1563,7 @@
       "t_ms": 91,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 17.8593692779541
+        "trailing_inner_radius": 17.92510414123535
       },
       "elements": {
         "button0": {
@@ -1591,7 +1580,7 @@
       "t_ms": 92,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 17.92510414123535
+        "trailing_inner_radius": 17.98897361755371
       },
       "elements": {
         "button0": {
@@ -1608,7 +1597,7 @@
       "t_ms": 93,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 17.98897361755371
+        "trailing_inner_radius": 18.051025390625
       },
       "elements": {
         "button0": {
@@ -1625,7 +1614,7 @@
       "t_ms": 94,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 18.051025390625
+        "trailing_inner_radius": 18.111303329467773
       },
       "elements": {
         "button0": {
@@ -1642,7 +1631,7 @@
       "t_ms": 95,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 18.111303329467773
+        "trailing_inner_radius": 18.169851303100586
       },
       "elements": {
         "button0": {
@@ -1659,7 +1648,7 @@
       "t_ms": 96,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 18.169851303100586
+        "trailing_inner_radius": 18.22671127319336
       },
       "elements": {
         "button0": {
@@ -1676,7 +1665,7 @@
       "t_ms": 97,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 18.22671127319336
+        "trailing_inner_radius": 18.281925201416016
       },
       "elements": {
         "button0": {
@@ -1693,7 +1682,7 @@
       "t_ms": 98,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 18.281925201416016
+        "trailing_inner_radius": 18.335535049438477
       },
       "elements": {
         "button0": {
@@ -1710,7 +1699,7 @@
       "t_ms": 99,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 18.335535049438477
+        "trailing_inner_radius": 18.387582778930664
       },
       "elements": {
         "button0": {
@@ -1727,7 +1716,7 @@
       "t_ms": 100,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 18.387582778930664
+        "trailing_inner_radius": 18.438108444213867
       },
       "elements": {
         "button0": {
@@ -1744,7 +1733,7 @@
       "t_ms": 101,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 18.438108444213867
+        "trailing_inner_radius": 18.487152099609375
       },
       "elements": {
         "button0": {
@@ -1761,7 +1750,7 @@
       "t_ms": 102,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 18.487152099609375
+        "trailing_inner_radius": 18.534748077392578
       },
       "elements": {
         "button0": {
@@ -1778,7 +1767,7 @@
       "t_ms": 103,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 18.534748077392578
+        "trailing_inner_radius": 18.58094024658203
       },
       "elements": {
         "button0": {
@@ -1795,7 +1784,7 @@
       "t_ms": 104,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 18.58094024658203
+        "trailing_inner_radius": 18.625761032104492
       },
       "elements": {
         "button0": {
@@ -1812,7 +1801,7 @@
       "t_ms": 105,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 18.625761032104492
+        "trailing_inner_radius": 18.669248580932617
       },
       "elements": {
         "button0": {
@@ -1829,7 +1818,7 @@
       "t_ms": 106,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 18.669248580932617
+        "trailing_inner_radius": 18.71143913269043
       },
       "elements": {
         "button0": {
@@ -1846,7 +1835,7 @@
       "t_ms": 107,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 18.71143913269043
+        "trailing_inner_radius": 18.752368927001953
       },
       "elements": {
         "button0": {
@@ -1863,7 +1852,7 @@
       "t_ms": 108,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 18.752368927001953
+        "trailing_inner_radius": 18.79206657409668
       },
       "elements": {
         "button0": {
@@ -1880,7 +1869,7 @@
       "t_ms": 109,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 18.79206657409668
+        "trailing_inner_radius": 18.8305721282959
       },
       "elements": {
         "button0": {
@@ -1897,7 +1886,7 @@
       "t_ms": 110,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 18.8305721282959
+        "trailing_inner_radius": 18.8679141998291
       },
       "elements": {
         "button0": {
@@ -1914,7 +1903,7 @@
       "t_ms": 111,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 18.8679141998291
+        "trailing_inner_radius": 18.904125213623047
       },
       "elements": {
         "button0": {
@@ -1931,7 +1920,7 @@
       "t_ms": 112,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 18.904125213623047
+        "trailing_inner_radius": 18.939237594604492
       },
       "elements": {
         "button0": {
@@ -1948,7 +1937,7 @@
       "t_ms": 113,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 18.939237594604492
+        "trailing_inner_radius": 18.973281860351562
       },
       "elements": {
         "button0": {
@@ -1965,7 +1954,7 @@
       "t_ms": 114,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 18.973281860351562
+        "trailing_inner_radius": 19.00628662109375
       },
       "elements": {
         "button0": {
@@ -1982,7 +1971,7 @@
       "t_ms": 115,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 19.00628662109375
+        "trailing_inner_radius": 19.038280487060547
       },
       "elements": {
         "button0": {
@@ -1999,7 +1988,7 @@
       "t_ms": 116,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 19.038280487060547
+        "trailing_inner_radius": 19.06929588317871
       },
       "elements": {
         "button0": {
@@ -2016,7 +2005,7 @@
       "t_ms": 117,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 19.06929588317871
+        "trailing_inner_radius": 19.099355697631836
       },
       "elements": {
         "button0": {
@@ -2033,7 +2022,7 @@
       "t_ms": 118,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 19.099355697631836
+        "trailing_inner_radius": 19.128488540649414
       },
       "elements": {
         "button0": {
@@ -2050,7 +2039,7 @@
       "t_ms": 119,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 19.128488540649414
+        "trailing_inner_radius": 19.156723022460938
       },
       "elements": {
         "button0": {
@@ -2067,7 +2056,7 @@
       "t_ms": 120,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 19.156723022460938
+        "trailing_inner_radius": 19.18408203125
       },
       "elements": {
         "button0": {
@@ -2084,7 +2073,7 @@
       "t_ms": 121,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 19.18408203125
+        "trailing_inner_radius": 19.210594177246094
       },
       "elements": {
         "button0": {
@@ -2101,7 +2090,7 @@
       "t_ms": 122,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 19.210594177246094
+        "trailing_inner_radius": 19.236278533935547
       },
       "elements": {
         "button0": {
@@ -2118,7 +2107,7 @@
       "t_ms": 123,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 19.236278533935547
+        "trailing_inner_radius": 19.261165618896484
       },
       "elements": {
         "button0": {
@@ -2135,7 +2124,7 @@
       "t_ms": 124,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 19.261165618896484
+        "trailing_inner_radius": 19.2852725982666
       },
       "elements": {
         "button0": {
@@ -2152,7 +2141,7 @@
       "t_ms": 125,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 19.2852725982666
+        "trailing_inner_radius": 19.308626174926758
       },
       "elements": {
         "button0": {
@@ -2169,7 +2158,7 @@
       "t_ms": 126,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 19.308626174926758
+        "trailing_inner_radius": 19.331247329711914
       },
       "elements": {
         "button0": {
@@ -2186,7 +2175,7 @@
       "t_ms": 127,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 19.331247329711914
+        "trailing_inner_radius": 19.35315704345703
       },
       "elements": {
         "button0": {
@@ -2203,7 +2192,7 @@
       "t_ms": 128,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 19.35315704345703
+        "trailing_inner_radius": 19.37437629699707
       },
       "elements": {
         "button0": {
@@ -2220,7 +2209,7 @@
       "t_ms": 129,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 19.37437629699707
+        "trailing_inner_radius": 19.394927978515625
       },
       "elements": {
         "button0": {
@@ -2237,7 +2226,7 @@
       "t_ms": 130,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 19.394927978515625
+        "trailing_inner_radius": 19.414827346801758
       },
       "elements": {
         "button0": {
@@ -2254,7 +2243,7 @@
       "t_ms": 131,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 19.414827346801758
+        "trailing_inner_radius": 19.434097290039062
       },
       "elements": {
         "button0": {
@@ -2271,7 +2260,7 @@
       "t_ms": 132,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 19.434097290039062
+        "trailing_inner_radius": 19.452756881713867
       },
       "elements": {
         "button0": {
@@ -2288,7 +2277,7 @@
       "t_ms": 133,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 19.452756881713867
+        "trailing_inner_radius": 19.470823287963867
       },
       "elements": {
         "button0": {
@@ -2305,7 +2294,7 @@
       "t_ms": 134,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 19.470823287963867
+        "trailing_inner_radius": 19.488311767578125
       },
       "elements": {
         "button0": {
@@ -2322,7 +2311,7 @@
       "t_ms": 135,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 19.488311767578125
+        "trailing_inner_radius": 19.505245208740234
       },
       "elements": {
         "button0": {
@@ -2339,7 +2328,7 @@
       "t_ms": 136,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 19.505245208740234
+        "trailing_inner_radius": 19.521635055541992
       },
       "elements": {
         "button0": {
@@ -2356,7 +2345,7 @@
       "t_ms": 137,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 19.521635055541992
+        "trailing_inner_radius": 19.53750228881836
       },
       "elements": {
         "button0": {
@@ -2373,7 +2362,7 @@
       "t_ms": 138,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 19.53750228881836
+        "trailing_inner_radius": 19.552860260009766
       },
       "elements": {
         "button0": {
@@ -2390,7 +2379,7 @@
       "t_ms": 139,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 19.552860260009766
+        "trailing_inner_radius": 19.567724227905273
       },
       "elements": {
         "button0": {
@@ -2407,7 +2396,7 @@
       "t_ms": 140,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 19.567724227905273
+        "trailing_inner_radius": 19.582109451293945
       },
       "elements": {
         "button0": {
@@ -2424,7 +2413,7 @@
       "t_ms": 141,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 19.582109451293945
+        "trailing_inner_radius": 19.596033096313477
       },
       "elements": {
         "button0": {
@@ -2441,7 +2430,7 @@
       "t_ms": 142,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 19.596033096313477
+        "trailing_inner_radius": 19.60950469970703
       },
       "elements": {
         "button0": {
@@ -2458,7 +2447,7 @@
       "t_ms": 143,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 19.60950469970703
+        "trailing_inner_radius": 19.622543334960938
       },
       "elements": {
         "button0": {
@@ -2475,7 +2464,7 @@
       "t_ms": 144,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 19.622543334960938
+        "trailing_inner_radius": 19.63515853881836
       },
       "elements": {
         "button0": {
@@ -2492,7 +2481,7 @@
       "t_ms": 145,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 19.63515853881836
+        "trailing_inner_radius": 19.64736557006836
       },
       "elements": {
         "button0": {
@@ -2509,7 +2498,7 @@
       "t_ms": 146,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 19.64736557006836
+        "trailing_inner_radius": 19.659175872802734
       },
       "elements": {
         "button0": {
@@ -2526,7 +2515,7 @@
       "t_ms": 147,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 19.659175872802734
+        "trailing_inner_radius": 19.670602798461914
       },
       "elements": {
         "button0": {
@@ -2543,7 +2532,7 @@
       "t_ms": 148,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 19.670602798461914
+        "trailing_inner_radius": 19.681655883789062
       },
       "elements": {
         "button0": {
@@ -2560,7 +2549,7 @@
       "t_ms": 149,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 19.681655883789062
+        "trailing_inner_radius": 19.692350387573242
       },
       "elements": {
         "button0": {
@@ -2577,7 +2566,7 @@
       "t_ms": 150,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 19.692350387573242
+        "trailing_inner_radius": 19.702693939208984
       },
       "elements": {
         "button0": {
@@ -2594,7 +2583,7 @@
       "t_ms": 151,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 19.702693939208984
+        "trailing_inner_radius": 19.71270179748535
       },
       "elements": {
         "button0": {
@@ -2611,7 +2600,7 @@
       "t_ms": 152,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 19.71270179748535
+        "trailing_inner_radius": 19.722379684448242
       },
       "elements": {
         "button0": {
@@ -2628,7 +2617,7 @@
       "t_ms": 153,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 19.722379684448242
+        "trailing_inner_radius": 19.731740951538086
       },
       "elements": {
         "button0": {
@@ -2645,7 +2634,7 @@
       "t_ms": 154,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 19.731740951538086
+        "trailing_inner_radius": 19.740795135498047
       },
       "elements": {
         "button0": {
@@ -2662,7 +2651,7 @@
       "t_ms": 155,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 19.740795135498047
+        "trailing_inner_radius": 19.74955177307129
       },
       "elements": {
         "button0": {
@@ -2679,7 +2668,7 @@
       "t_ms": 156,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 19.74955177307129
+        "trailing_inner_radius": 19.758020401000977
       },
       "elements": {
         "button0": {
@@ -2696,7 +2685,7 @@
       "t_ms": 157,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 19.758020401000977
+        "trailing_inner_radius": 19.76620864868164
       },
       "elements": {
         "button0": {
@@ -2713,7 +2702,7 @@
       "t_ms": 158,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 19.76620864868164
+        "trailing_inner_radius": 19.774127960205078
       },
       "elements": {
         "button0": {
@@ -2730,7 +2719,7 @@
       "t_ms": 159,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 19.774127960205078
+        "trailing_inner_radius": 19.78178596496582
       },
       "elements": {
         "button0": {
@@ -2747,7 +2736,7 @@
       "t_ms": 160,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 19.78178596496582
+        "trailing_inner_radius": 19.7891902923584
       },
       "elements": {
         "button0": {
@@ -2764,7 +2753,7 @@
       "t_ms": 161,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 19.7891902923584
+        "trailing_inner_radius": 19.796350479125977
       },
       "elements": {
         "button0": {
@@ -2781,7 +2770,7 @@
       "t_ms": 162,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 19.796350479125977
+        "trailing_inner_radius": 19.803272247314453
       },
       "elements": {
         "button0": {
@@ -2798,7 +2787,7 @@
       "t_ms": 163,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 19.803272247314453
+        "trailing_inner_radius": 19.80996322631836
       },
       "elements": {
         "button0": {
@@ -2815,7 +2804,7 @@
       "t_ms": 164,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 19.80996322631836
+        "trailing_inner_radius": 19.81643295288086
       },
       "elements": {
         "button0": {
@@ -2832,7 +2821,7 @@
       "t_ms": 165,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 19.81643295288086
+        "trailing_inner_radius": 19.822689056396484
       },
       "elements": {
         "button0": {
@@ -2849,7 +2838,7 @@
       "t_ms": 166,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 19.822689056396484
+        "trailing_inner_radius": 19.8287353515625
       },
       "elements": {
         "button0": {
@@ -2866,7 +2855,7 @@
       "t_ms": 167,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 19.8287353515625
+        "trailing_inner_radius": 19.834579467773438
       },
       "elements": {
         "button0": {
@@ -2883,7 +2872,7 @@
       "t_ms": 168,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 19.834579467773438
+        "trailing_inner_radius": 19.840229034423828
       },
       "elements": {
         "button0": {
@@ -2900,7 +2889,7 @@
       "t_ms": 169,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 19.840229034423828
+        "trailing_inner_radius": 19.84568977355957
       },
       "elements": {
         "button0": {
@@ -2917,7 +2906,7 @@
       "t_ms": 170,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 19.84568977355957
+        "trailing_inner_radius": 19.850969314575195
       },
       "elements": {
         "button0": {
@@ -2934,7 +2923,7 @@
       "t_ms": 171,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 19.850969314575195
+        "trailing_inner_radius": 19.856069564819336
       },
       "elements": {
         "button0": {
@@ -2951,7 +2940,7 @@
       "t_ms": 172,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 19.856069564819336
+        "trailing_inner_radius": 19.861000061035156
       },
       "elements": {
         "button0": {
@@ -2968,7 +2957,7 @@
       "t_ms": 173,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 19.861000061035156
+        "trailing_inner_radius": 19.865766525268555
       },
       "elements": {
         "button0": {
@@ -2985,7 +2974,7 @@
       "t_ms": 174,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 19.865766525268555
+        "trailing_inner_radius": 19.870370864868164
       },
       "elements": {
         "button0": {
@@ -3002,7 +2991,7 @@
       "t_ms": 175,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 19.870370864868164
+        "trailing_inner_radius": 19.87482261657715
       },
       "elements": {
         "button0": {
@@ -3019,7 +3008,7 @@
       "t_ms": 176,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 19.87482261657715
+        "trailing_inner_radius": 19.87912368774414
       },
       "elements": {
         "button0": {
@@ -3036,7 +3025,7 @@
       "t_ms": 177,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 19.87912368774414
+        "trailing_inner_radius": 19.88327980041504
       },
       "elements": {
         "button0": {
@@ -3053,7 +3042,7 @@
       "t_ms": 178,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 19.88327980041504
+        "trailing_inner_radius": 19.88729476928711
       },
       "elements": {
         "button0": {
@@ -3070,7 +3059,7 @@
       "t_ms": 179,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 19.88729476928711
+        "trailing_inner_radius": 19.891176223754883
       },
       "elements": {
         "button0": {
@@ -3087,7 +3076,7 @@
       "t_ms": 180,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 19.891176223754883
+        "trailing_inner_radius": 19.89492416381836
       },
       "elements": {
         "button0": {
@@ -3104,7 +3093,7 @@
       "t_ms": 181,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 19.89492416381836
+        "trailing_inner_radius": 19.898548126220703
       },
       "elements": {
         "button0": {
@@ -3121,7 +3110,7 @@
       "t_ms": 182,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 19.898548126220703
+        "trailing_inner_radius": 19.902048110961914
       },
       "elements": {
         "button0": {
@@ -3138,7 +3127,7 @@
       "t_ms": 183,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 19.902048110961914
+        "trailing_inner_radius": 19.90542984008789
       },
       "elements": {
         "button0": {
@@ -3155,7 +3144,7 @@
       "t_ms": 184,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 19.90542984008789
+        "trailing_inner_radius": 19.9086971282959
       },
       "elements": {
         "button0": {
@@ -3172,7 +3161,7 @@
       "t_ms": 185,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 19.9086971282959
+        "trailing_inner_radius": 19.911853790283203
       },
       "elements": {
         "button0": {
@@ -3189,7 +3178,7 @@
       "t_ms": 186,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 19.911853790283203
+        "trailing_inner_radius": 19.914901733398438
       },
       "elements": {
         "button0": {
@@ -3206,7 +3195,7 @@
       "t_ms": 187,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 19.914901733398438
+        "trailing_inner_radius": 19.9178466796875
       },
       "elements": {
         "button0": {
@@ -3223,7 +3212,7 @@
       "t_ms": 188,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 19.9178466796875
+        "trailing_inner_radius": 19.920692443847656
       },
       "elements": {
         "button0": {
@@ -3240,7 +3229,7 @@
       "t_ms": 189,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 19.920692443847656
+        "trailing_inner_radius": 19.92344093322754
       },
       "elements": {
         "button0": {
@@ -3257,7 +3246,7 @@
       "t_ms": 190,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 19.92344093322754
+        "trailing_inner_radius": 19.926095962524414
       },
       "elements": {
         "button0": {
@@ -3274,7 +3263,7 @@
       "t_ms": 191,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 19.926095962524414
+        "trailing_inner_radius": 19.928661346435547
       },
       "elements": {
         "button0": {
@@ -3291,7 +3280,7 @@
       "t_ms": 192,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 19.928661346435547
+        "trailing_inner_radius": 19.931137084960938
       },
       "elements": {
         "button0": {
@@ -3308,7 +3297,7 @@
       "t_ms": 193,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 19.931137084960938
+        "trailing_inner_radius": 19.933530807495117
       },
       "elements": {
         "button0": {
@@ -3325,7 +3314,7 @@
       "t_ms": 194,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 19.933530807495117
+        "trailing_inner_radius": 19.935840606689453
       },
       "elements": {
         "button0": {
@@ -3342,7 +3331,7 @@
       "t_ms": 195,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 19.935840606689453
+        "trailing_inner_radius": 19.938072204589844
       },
       "elements": {
         "button0": {
@@ -3359,7 +3348,7 @@
       "t_ms": 196,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 19.938072204589844
+        "trailing_inner_radius": 19.940227508544922
       },
       "elements": {
         "button0": {
@@ -3376,7 +3365,7 @@
       "t_ms": 197,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 19.940227508544922
+        "trailing_inner_radius": 19.94230842590332
       },
       "elements": {
         "button0": {
@@ -3393,7 +3382,7 @@
       "t_ms": 198,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 19.94230842590332
+        "trailing_inner_radius": 19.944318771362305
       },
       "elements": {
         "button0": {
@@ -3410,7 +3399,7 @@
       "t_ms": 199,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 19.944318771362305
+        "trailing_inner_radius": 19.946260452270508
       },
       "elements": {
         "button0": {
@@ -3427,7 +3416,7 @@
       "t_ms": 200,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 19.946260452270508
+        "trailing_inner_radius": 19.948135375976562
       },
       "elements": {
         "button0": {
@@ -3444,7 +3433,7 @@
       "t_ms": 201,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 19.948135375976562
+        "trailing_inner_radius": 19.9499454498291
       },
       "elements": {
         "button0": {
@@ -3461,7 +3450,7 @@
       "t_ms": 202,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 19.9499454498291
+        "trailing_inner_radius": 19.951692581176758
       },
       "elements": {
         "button0": {
@@ -3478,7 +3467,7 @@
       "t_ms": 203,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 19.951692581176758
+        "trailing_inner_radius": 19.953380584716797
       },
       "elements": {
         "button0": {
@@ -3495,7 +3484,7 @@
       "t_ms": 204,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 19.953380584716797
+        "trailing_inner_radius": 19.95501136779785
       },
       "elements": {
         "button0": {
@@ -3512,7 +3501,7 @@
       "t_ms": 205,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 19.95501136779785
+        "trailing_inner_radius": 19.956584930419922
       },
       "elements": {
         "button0": {
@@ -3529,7 +3518,7 @@
       "t_ms": 206,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 19.956584930419922
+        "trailing_inner_radius": 19.95810317993164
       },
       "elements": {
         "button0": {
@@ -3546,7 +3535,7 @@
       "t_ms": 207,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 19.95810317993164
+        "trailing_inner_radius": 19.959571838378906
       },
       "elements": {
         "button0": {
@@ -3563,7 +3552,7 @@
       "t_ms": 208,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 19.959571838378906
+        "trailing_inner_radius": 19.960987091064453
       },
       "elements": {
         "button0": {
@@ -3580,7 +3569,7 @@
       "t_ms": 209,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 19.960987091064453
+        "trailing_inner_radius": 19.96235466003418
       },
       "elements": {
         "button0": {
@@ -3597,7 +3586,7 @@
       "t_ms": 210,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 19.96235466003418
+        "trailing_inner_radius": 19.963674545288086
       },
       "elements": {
         "button0": {
@@ -3614,7 +3603,7 @@
       "t_ms": 211,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 19.963674545288086
+        "trailing_inner_radius": 19.964948654174805
       },
       "elements": {
         "button0": {
@@ -3631,7 +3620,7 @@
       "t_ms": 212,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 19.964948654174805
+        "trailing_inner_radius": 19.9661808013916
       },
       "elements": {
         "button0": {
@@ -3648,7 +3637,7 @@
       "t_ms": 213,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 19.9661808013916
+        "trailing_inner_radius": 19.96736717224121
       },
       "elements": {
         "button0": {
@@ -3665,7 +3654,7 @@
       "t_ms": 214,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 19.96736717224121
+        "trailing_inner_radius": 19.968515396118164
       },
       "elements": {
         "button0": {
@@ -3682,7 +3671,7 @@
       "t_ms": 215,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 19.968515396118164
+        "trailing_inner_radius": 19.969621658325195
       },
       "elements": {
         "button0": {
@@ -3699,7 +3688,7 @@
       "t_ms": 216,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 19.969621658325195
+        "trailing_inner_radius": 19.97068977355957
       },
       "elements": {
         "button0": {
@@ -3716,7 +3705,7 @@
       "t_ms": 217,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 19.97068977355957
+        "trailing_inner_radius": 19.971721649169922
       },
       "elements": {
         "button0": {
@@ -3733,7 +3722,7 @@
       "t_ms": 218,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 19.971721649169922
+        "trailing_inner_radius": 19.97271728515625
       },
       "elements": {
         "button0": {
@@ -3750,7 +3739,7 @@
       "t_ms": 219,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 19.97271728515625
+        "trailing_inner_radius": 19.973678588867188
       },
       "elements": {
         "button0": {
@@ -3767,7 +3756,7 @@
       "t_ms": 220,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 19.973678588867188
+        "trailing_inner_radius": 19.974605560302734
       },
       "elements": {
         "button0": {
@@ -3784,7 +3773,7 @@
       "t_ms": 221,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 19.974605560302734
+        "trailing_inner_radius": 19.975500106811523
       },
       "elements": {
         "button0": {
@@ -3801,7 +3790,7 @@
       "t_ms": 222,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 19.975500106811523
+        "trailing_inner_radius": 19.976364135742188
       },
       "elements": {
         "button0": {
@@ -3818,7 +3807,7 @@
       "t_ms": 223,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 19.976364135742188
+        "trailing_inner_radius": 19.97719955444336
       },
       "elements": {
         "button0": {
@@ -3835,7 +3824,7 @@
       "t_ms": 224,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 19.97719955444336
+        "trailing_inner_radius": 19.978004455566406
       },
       "elements": {
         "button0": {
@@ -3852,7 +3841,7 @@
       "t_ms": 225,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 19.978004455566406
+        "trailing_inner_radius": 19.97878074645996
       },
       "elements": {
         "button0": {
@@ -3869,7 +3858,7 @@
       "t_ms": 226,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 19.97878074645996
+        "trailing_inner_radius": 19.979530334472656
       },
       "elements": {
         "button0": {
@@ -3886,7 +3875,7 @@
       "t_ms": 227,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 19.979530334472656
+        "trailing_inner_radius": 19.980255126953125
       },
       "elements": {
         "button0": {
@@ -3903,7 +3892,7 @@
       "t_ms": 228,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 19.980255126953125
+        "trailing_inner_radius": 19.980953216552734
       },
       "elements": {
         "button0": {
@@ -3920,7 +3909,7 @@
       "t_ms": 229,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 19.980953216552734
+        "trailing_inner_radius": 19.981626510620117
       },
       "elements": {
         "button0": {
@@ -3937,7 +3926,7 @@
       "t_ms": 230,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 19.981626510620117
+        "trailing_inner_radius": 19.982276916503906
       },
       "elements": {
         "button0": {
@@ -3954,7 +3943,7 @@
       "t_ms": 231,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 19.982276916503906
+        "trailing_inner_radius": 19.9829044342041
       },
       "elements": {
         "button0": {
@@ -3971,7 +3960,7 @@
       "t_ms": 232,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 19.9829044342041
+        "trailing_inner_radius": 19.983510971069336
       },
       "elements": {
         "button0": {
@@ -3988,7 +3977,7 @@
       "t_ms": 233,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 19.983510971069336
+        "trailing_inner_radius": 19.984094619750977
       },
       "elements": {
         "button0": {
@@ -4005,7 +3994,7 @@
       "t_ms": 234,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 19.984094619750977
+        "trailing_inner_radius": 19.98465919494629
       },
       "elements": {
         "button0": {
@@ -4022,7 +4011,7 @@
       "t_ms": 235,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 19.98465919494629
+        "trailing_inner_radius": 19.98520278930664
       },
       "elements": {
         "button0": {
@@ -4039,7 +4028,7 @@
       "t_ms": 236,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 19.98520278930664
+        "trailing_inner_radius": 19.985727310180664
       },
       "elements": {
         "button0": {
@@ -4056,7 +4045,7 @@
       "t_ms": 237,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 19.985727310180664
+        "trailing_inner_radius": 19.986234664916992
       },
       "elements": {
         "button0": {
@@ -4073,7 +4062,7 @@
       "t_ms": 238,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 19.986234664916992
+        "trailing_inner_radius": 19.986722946166992
       },
       "elements": {
         "button0": {
@@ -4090,7 +4079,7 @@
       "t_ms": 239,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 19.986722946166992
+        "trailing_inner_radius": 19.98719596862793
       },
       "elements": {
         "button0": {
@@ -4107,7 +4096,7 @@
       "t_ms": 240,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 19.98719596862793
+        "trailing_inner_radius": 19.98764991760254
       },
       "elements": {
         "button0": {
@@ -4124,7 +4113,7 @@
       "t_ms": 241,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 19.98764991760254
+        "trailing_inner_radius": 19.988088607788086
       },
       "elements": {
         "button0": {
@@ -4141,7 +4130,7 @@
       "t_ms": 242,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 19.988088607788086
+        "trailing_inner_radius": 19.988513946533203
       },
       "elements": {
         "button0": {
@@ -4158,7 +4147,7 @@
       "t_ms": 243,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 19.988513946533203
+        "trailing_inner_radius": 19.988922119140625
       },
       "elements": {
         "button0": {
@@ -4175,7 +4164,7 @@
       "t_ms": 244,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 19.988922119140625
+        "trailing_inner_radius": 19.989316940307617
       },
       "elements": {
         "button0": {
@@ -4192,7 +4181,7 @@
       "t_ms": 245,
       "props": {
         "leading_inner_radius": 4,
-        "trailing_inner_radius": 19.989316940307617
+        "trailing_inner_radius": 20
       },
       "elements": {
         "button0": {
@@ -25541,5 +25530,5 @@
       "text": {}
     }
   ],
-  "settle_ms": 202
+  "settle_ms": 201
 }

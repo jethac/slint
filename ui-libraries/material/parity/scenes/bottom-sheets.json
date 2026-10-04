@@ -1,0 +1,54 @@
+{
+  "name": "bottom-sheets",
+  "type": "canvas",
+  "parity": "static",
+  "size": [360, 480],
+  "densities": [1, 2],
+  "theme": {
+    "seed": "6750A4",
+    "variant": "tonal-spot",
+    "spec": "spec2025",
+    "platform": "phone",
+    "dark": false,
+    "contrast": 0.0
+  },
+  "fonts": {
+    "plain": "Roboto",
+    "brand": "Roboto"
+  },
+  "trace_elements": ["sheet0", "sheet1", "sheet2"],
+  "trace_props": [],
+  "widgets": [
+    {
+      "kind": "bottom-sheet",
+      "x": 0,
+      "y": 0,
+      "width": 360,
+      "height": 160,
+      "sheet_height": 100,
+      "initial": "expanded",
+      "content_color": "tertiary-container"
+    },
+    {
+      "kind": "bottom-sheet",
+      "x": 0,
+      "y": 160,
+      "width": 360,
+      "height": 160,
+      "sheet_height": 100,
+      "initial": "partially-expanded",
+      "content_color": "secondary-container"
+    },
+    {
+      "kind": "bottom-sheet",
+      "x": 0,
+      "y": 320,
+      "width": 360,
+      "height": 160,
+      "sheet_height": 100,
+      "initial": "expanded",
+      "skip_partial": true,
+      "content_color": "surface-container-highest"
+    }
+  ]
+}
