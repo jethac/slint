@@ -1,0 +1,110 @@
+// Copyright © SixtyFPS GmbH <info@slint.dev>
+// SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0
+
+// Scene: surfaces — generated from `ui-libraries/material/parity/scenes/surfaces.json`
+// (edit the scene, regenerate with `cargo run -p material-parity-generator`).
+//PARITY=static
+//SIZE=360x300
+//TRACE_ELEMENTS=msurface0,msurface1,msurface2,msurface3,msurface4,msurface5,msurface6,msurface7,msurface8
+//DENSITIES=1,2
+import "../../fonts/Roboto-VariableFont.ttf";
+import { MaterialPalette, MaterialTheme, MaterialWindow, Surface } from "@material";
+
+export component TestCase inherits MaterialWindow {
+    init => {
+        // The scene pins seed #6750A4, tonal-spot, spec2025, light, contrast 0
+        // (all the library defaults; restated here so a default change can't
+        // silently move the parity baseline).
+        MaterialTheme.seed-color = #6750A4;
+        MaterialTheme.dark = false;
+        MaterialTheme.contrast-level = 0;
+        MaterialTheme.use-platform-color = false;
+        MaterialTheme.plain-family = "Roboto";
+        MaterialTheme.brand-family = "Roboto";
+        // Compose builds its scene scheme from the same seed — use the
+        // runtime-generated scheme, not the static expressive table.
+        MaterialPalette.dynamic = true;
+    }
+
+    msurface0 := Surface {
+        x: 24px;
+        y: 24px;
+        width: 72px;
+        height: 56px;
+    }
+
+    msurface1 := Surface {
+        x: 124px;
+        y: 24px;
+        width: 72px;
+        height: 56px;
+        tonal_elevation: 1px;
+    }
+
+    msurface2 := Surface {
+        x: 224px;
+        y: 24px;
+        width: 72px;
+        height: 56px;
+        tonal_elevation: 3px;
+    }
+
+    msurface3 := Surface {
+        x: 24px;
+        y: 104px;
+        width: 72px;
+        height: 56px;
+        tonal_elevation: 5px;
+    }
+
+    msurface4 := Surface {
+        x: 124px;
+        y: 104px;
+        width: 72px;
+        height: 56px;
+        tonal_elevation: 1px;
+        parent_absolute_tonal_elevation: 2px;
+    }
+
+    msurface5 := Surface {
+        x: 224px;
+        y: 104px;
+        width: 72px;
+        height: 56px;
+        color: MaterialPalette.primary;
+        tonal_elevation: 3px;
+    }
+
+    msurface6 := Surface {
+        x: 24px;
+        y: 184px;
+        width: 72px;
+        height: 56px;
+        border_width: 1px;
+        border_color: MaterialPalette.outline;
+        border_radius: 16px;
+    }
+
+    msurface7 := Surface {
+        x: 124px;
+        y: 184px;
+        width: 72px;
+        height: 56px;
+        tonal_elevation: 2px;
+        border_radius: 16px;
+        selectable: true;
+        selected: true;
+    }
+
+    msurface8 := Surface {
+        x: 224px;
+        y: 184px;
+        width: 72px;
+        height: 56px;
+        tonal_elevation: 2px;
+        border_radius: 16px;
+        toggleable: true;
+        checked: true;
+    }
+
+}

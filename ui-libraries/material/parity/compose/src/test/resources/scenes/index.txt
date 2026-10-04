@@ -87,6 +87,9 @@ negative-split-button-checked-overlay
 negative-split-button-inner-corner
 negative-split-button-outer-corner
 negative-split-button-spacing
+negative-surface-color
+negative-surface-radius
+negative-surface-tonal
 negative-thumb-offset
 negative-toggle-select
 negative-wrong-shadow
@@ -115,6 +118,7 @@ split-button-sizes
 split-button-states
 split-button-styles
 spring-motion
+surfaces
 switch-hover
 switch-off-morph
 switch-on-morph
