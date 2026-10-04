@@ -50,7 +50,10 @@ import {
     PopupMenu,
     DropDownMenu,
     MenuItem,
-    DatePickerPopup
+    DatePicker,
+    DatePickerDialog,
+    DateRangePicker,
+    Icons
 } from "../../../../src/material.slint";
 
 import { Group } from "../components/group.slint";
@@ -734,6 +737,23 @@ export component NavigationView {
             }
 
             ComponentCard {
+                title: "Date range picker";
+
+                Horizontal {
+                    alignment: center;
+
+                    TextButton {
+                        icon: Icons.date_range;
+                        text: "Show date range picker";
+
+                        clicked => {
+                            date_range_picker.show();
+                        }
+                    }
+                }
+            }
+
+            ComponentCard {
                 title: "DropDown menu";
 
                 Horizontal {
@@ -1002,12 +1022,35 @@ export component NavigationView {
         }
     }
 
-    date_picker := DatePickerPopup {
+    date_picker := DatePickerDialog {
         // this is used to place the popup on 0,0 of the window and also to fill the window
         x: -root.absolute_position.x;
         y: -root.absolute_position.y;
         width: MainWindowAdapter.width;
         height: MainWindowAdapter.height;
-        title: @tr("Select date");
+
+        DatePicker {
+            title: @tr("Select date");
+        }
+
+        confirm_clicked => {
+            date_picker.close();
+        }
+    }
+
+    date_range_picker := DatePickerDialog {
+        // this is used to place the popup on 0,0 of the window and also to fill the window
+        x: -root.absolute_position.x;
+        y: -root.absolute_position.y;
+        width: MainWindowAdapter.width;
+        height: MainWindowAdapter.height;
+
+        DateRangePicker {
+            title: @tr("Select dates");
+        }
+
+        confirm_clicked => {
+            date_range_picker.close();
+        }
     }
 }
