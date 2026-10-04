@@ -1,0 +1,173 @@
+// Copyright © SixtyFPS GmbH <info@slint.dev>
+// SPDX-License-Identifier: MIT
+
+import {
+    ListTokens,
+    ReorderListTokens,
+} from "../styling/generated/material_component_tokens.slint";
+import { MaterialCornerShape } from "../styling/generated/material_shape_tokens.slint";
+import { MaterialTypeStyle } from "../styling/generated/material_typography_tokens.slint";
+import { MaterialTypography } from "../styling/material_typography.slint";
+
+/// The `ListItemType` of `InteractiveListItemMeasurePolicy` in
+/// `ListItem.kt`: `three-line` when both overline and supporting slots are
+/// present or the supporting text wraps to a second line, `two-line` when
+/// either slot is present, `one-line` otherwise.
+export enum MaterialListItemType { one-line, two-line, three-line }
+
+/// `ListItemDefaults` (pinned `ListItemDefaults.kt` @ 23327507f7fc) mapped
+/// onto the generated `ListTokens`/`ReorderListTokens`.
+export global MaterialListItemMetrics {
+    /// `ContentPadding`: `ItemLeadingSpace`/`ItemTrailingSpace` horizontally
+    /// and `InteractiveListTopPadding`/`BottomPadding` vertically — the
+    /// non-precision-pointer branch (`shouldUsePrecisionPointerComponentSizing`
+    /// in `PrecisionPointer.kt` defaults to false), i.e. `ItemTopSpace`/
+    /// `ItemBottomSpace`. The legacy `ListItem` overload instead uses its own
+    /// `verticalPadding` — see `legacy-vertical-space`.
+    out property <length> leading_space: ListTokens.item_leading_space;
+    out property <length> trailing_space: ListTokens.item_trailing_space;
+    out property <length> top_space: ListTokens.item_top_space;
+    out property <length> bottom_space: ListTokens.item_bottom_space;
+    /// `InteractiveListInternalSpacing` between the leading slot, the text
+    /// column and the trailing slot (`ItemBetweenSpace`) — the slot gap the
+    /// interactive decorators apply. The legacy `ListItem` overload pads its
+    /// leading and trailing slots by `LeadingContentEndPadding`/
+    /// `TrailingContentStartPadding` instead.
+    out property <length> between_space: ListTokens.item_between_space;
+    /// The legacy slot gap — `LeadingContentEndPadding` and
+    /// `TrailingContentStartPadding` in `ListItem.kt`, both 16dp
+    /// ("TODO: Make sure these values stay up to date until replaced with
+    /// tokens").
+    out property <length> legacy_between_space: 16px;
+    /// `SegmentedGap` — the gap between items of a segmented list.
+    out property <length> segmented_gap: ListTokens.segmented_gap;
+    /// `InteractiveListVerticalAlignmentBreakpoint` =
+    /// (three-line + two-line container height) / 2 − content padding:
+    /// items taller than this pin leading/trailing content to the top.
+    out property <length> alignment_breakpoint:
+        (ListTokens.item_three_line_container_height + ListTokens.item_two_line_container_height) / 2
+        - ListTokens.item_top_space - ListTokens.item_bottom_space;
+
+    out property <length> leading_icon_size: ListTokens.item_leading_icon_size;
+    out property <length> trailing_icon_size: ListTokens.item_trailing_icon_size;
+    out property <length> leading_avatar_size: ListTokens.item_leading_avatar_size;
+    out property <length> leading_image_width: ListTokens.item_leading_image_width;
+    out property <length> leading_image_height: ListTokens.item_leading_image_height;
+
+    /// `LocalContentColor`/`ProvideContentColorTextStyle` roles per slot.
+    out property <MaterialTypeStyle> label_font: ListTokens.item_label_text_font;
+    out property <MaterialTypeStyle> supporting_font: ListTokens.item_supporting_text_font;
+    out property <MaterialTypeStyle> overline_font: ListTokens.item_overline_font;
+    out property <MaterialTypeStyle> avatar_label_font: ListTokens.item_leading_avatar_label_font;
+    out property <MaterialTypeStyle> trailing_font: ListTokens.item_trailing_supporting_text_font;
+
+    /// The item type from the visible slots, including the multi-line
+    /// supporting-text heuristic (`isSupportingMultiline`,
+    /// FirstBaseline != LastBaseline — approximated by a caller-provided
+    /// flag since text extents are only known after layout).
+    pure public function item-type(has-overline: bool, has-supporting: bool, supporting-multiline: bool)
+        -> MaterialListItemType {
+        if (has-overline && has-supporting) || supporting-multiline {
+            return MaterialListItemType.three-line;
+        }
+        if has-overline || has-supporting {
+            return MaterialListItemType.two-line;
+        }
+        MaterialListItemType.one-line
+    }
+
+    /// The legacy `ListItem`'s `verticalPadding(listItemType)`:
+    /// `ListItemThreeLineVerticalPadding` for three-line items,
+    /// `ListItemVerticalPadding` otherwise (both "stay up to date until
+    /// replaced with tokens" constants in `ListItem.kt`).
+    pure public function legacy-vertical-space(three-line: bool) -> length {
+        if three-line {
+            return 12px;
+        }
+        8px
+    }
+
+    /// `defaultMinHeight` per item type (56/72/88dp) for the legacy
+    /// `ListItem`. Interactive items enforce the one-line height only:
+    /// `isExpressiveListItemHeightBasedOnTextLinesFixEnabled` is off in the
+    /// pinned material3 build (`material3:1.5.0-alpha18` — the flag defaults
+    /// to true on androidx-main, so this tracks the pinned artifact, and
+    /// upstream subtracts the content padding, making the outer minimum
+    /// `ItemOneLineContainerHeight`).
+    pure public function min-height(interactive: bool, type: MaterialListItemType) -> length {
+        if interactive {
+            return ListTokens.item_one_line_container_height;
+        }
+        if type == MaterialListItemType.three-line {
+            return ListTokens.item_three_line_container_height;
+        }
+        if type == MaterialListItemType.two-line {
+            return ListTokens.item_two_line_container_height;
+        }
+        ListTokens.item_one_line_container_height
+    }
+
+    /// `ListItemDefaults.segmentedShapes(index, count, defaultShapes)`:
+    /// the resting `shape` takes `ListTokens.container_shape`'s top corners
+    /// when `index == 0`, its bottom corners when `index == count - 1`, and
+    /// all four for a single-item group; state shapes are never overridden.
+    /// A non-segmented item is flat (`item_container_shape`) when nothing
+    /// makes it interactive — upstream's only non-interactive overload,
+    /// `ListItem(headlineContent)`, renders `ListItemDefaults.shape` =
+    /// `item_container_shape` and ignores every state shape.
+    pure public function container-shape(segmented: bool, interactive: bool, index: int, count: int)
+        -> MaterialCornerShape {
+        let base = ListTokens.item_container_expressive_shape;
+        if !interactive && !segmented {
+            return ListTokens.item_container_shape;
+        }
+        if !segmented {
+            return base;
+        }
+        let seg = ListTokens.container_shape;
+        if count <= 1 || (index == 0 && index == count - 1) {
+            return seg;
+        }
+        if index == 0 {
+            return {
+                top_left: seg.top_left,
+                top_right: seg.top_right,
+                bottom_right: base.bottom_right,
+                bottom_left: base.bottom_left,
+                full: false,
+            };
+        }
+        if index == count - 1 {
+            return {
+                top_left: base.top_left,
+                top_right: base.top_right,
+                bottom_right: seg.bottom_right,
+                bottom_left: seg.bottom_left,
+                full: false,
+            };
+        }
+        base
+    }
+
+    /// `shapeForInteraction` priority order: pressed → dragged → selected →
+    /// focused → hovered → resting `shape`.
+    pure public function state-shape(pressed: bool, dragged: bool, selected: bool,
+        focused: bool, hovered: bool, resting: MaterialCornerShape) -> MaterialCornerShape {
+        if pressed {
+            return ListTokens.item_pressed_container_expressive_shape;
+        }
+        if dragged {
+            return ReorderListTokens.item_shape;
+        }
+        if selected {
+            return ListTokens.item_selected_container_expressive_shape;
+        }
+        if focused {
+            return ListTokens.item_focused_container_expressive_shape;
+        }
+        if hovered {
+            return ListTokens.item_hovered_container_expressive_shape;
+        }
+        resting
+    }
+}
