@@ -103,6 +103,31 @@ class Widget(json: JSONObject) {
     val checked: Boolean = json.optBoolean("checked", false)
     /** Icon-button container width `narrow`/`uniform`/`wide`. */
     val widthOption: String = (json.opt("width_option") as? String) ?: "uniform"
+    /** `ListItem(onClick)` overload — `selectable`/`checkable` imply it. */
+    val interactive: Boolean = json.optBoolean("interactive", false)
+    /** `ListItem(selected, onClick)` overload. */
+    val selectable: Boolean = json.optBoolean("selectable", false)
+    val selected: Boolean = json.optBoolean("selected", false)
+    /** `segmentedShapes(index, count)` position for `segmented-list-item`. */
+    val index: Int = json.optInt("index", 0)
+    val count: Int = json.optInt("count", 1)
+    /** `overlineContent` text on a list item. */
+    val overline: String? = (json.opt("overline") as? String)?.takeIf { it.isNotEmpty() }
+    /** `supportingContent` text on a list item. */
+    val supporting: String? = (json.opt("supporting") as? String)?.takeIf { it.isNotEmpty() }
+    /** The `isSupportingMultiline` heuristic input to `ListItemType`. */
+    val supportingMultiline: Boolean = json.optBoolean("supporting_multiline", false)
+    /** 40px avatar circle with this label in the leading slot. */
+    val avatar: String? = (json.opt("avatar") as? String)?.takeIf { it.isNotEmpty() }
+    /** Icon stem (`Icons.*`) in the trailing slot — `icon` fills leading
+     * on a list item; on a `*-split-button` it's the trailing-half chevron
+     * (`keyboard_arrow_down` when unset); the standalone `menu-item`
+     * widget's trailing icon too. */
+    val trailingIcon: String? = (json.opt("trailing_icon") as? String)?.takeIf { it.isNotEmpty() }
+    val trailingText: String? = (json.opt("trailing_text") as? String)?.takeIf { it.isNotEmpty() }
+    /** Icon stem used as the 56x56 `leading_image` source — both sides
+     * rasterize the identical svg path clipped to the image shape. */
+    val leadingImage: String? = (json.opt("leading_image") as? String)?.takeIf { it.isNotEmpty() }
     /** Loading-indicator mode: indeterminate (the continuous morph loop,
      * default) or driven by [progress]. */
     val indeterminate: Boolean = json.optBoolean("indeterminate", true)
@@ -126,10 +151,6 @@ class Widget(json: JSONObject) {
     /** `*-split-button` kinds only: which half carries `state` and receives
      * the scripted pointer gesture — `leading` or `trailing`. */
     val side: String = (json.opt("side") as? String) ?: "trailing"
-    /** `*-split-button` trailing icon stem — `keyboard_arrow_down`, the
-     * chevron the upstream samples rotate, when unset — and the standalone
-     * `menu-item` widget's trailing icon. */
-    val trailingIcon: String? = (json.opt("trailing_icon") as? String)?.takeIf { it.isNotEmpty() }
     /** `connected-button` only: `start`/`middle`/`end` — the position's
      * `connected*ButtonShapes`. `start` is the leading item of a horizontal
      * group, the top item of a vertical one. */
@@ -170,6 +191,7 @@ class Widget(json: JSONObject) {
     val isIconButton: Boolean get() = kind.endsWith("icon-button")
     val isButton: Boolean get() =
         (isIconButton || isSplitButton || kind.endsWith("-button")) && kind != "connected-button"
+    val isListItem: Boolean get() = kind == "list-item" || kind == "segmented-list-item"
     /** `elevated-rect` only: the elevation in dp of the Android ambient+spot
      * shadow `Modifier.shadow` draws behind the caster. */
     val elevation: Float = json.optDouble("elevation", 0.0).toFloat()
