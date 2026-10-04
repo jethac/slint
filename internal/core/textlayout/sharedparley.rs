@@ -37,11 +37,19 @@ pub struct FontContext {
     /// `(ptr, len)` of each `&'static [u8]` already handed to fontique, so repeat
     /// `register_static_font` calls for the same embedded font are skipped.
     registered_static_fonts: HashSet<(usize, usize)>,
+    /// Canonical paths already handed to fontique, so repeat
+    /// `register_font_path` calls for the same file are skipped — each
+    /// registration retains the font's bytes for the context's lifetime.
+    registered_font_paths: HashSet<std::path::PathBuf>,
 }
 
 impl FontContext {
     pub fn new(inner: parley::FontContext) -> Self {
-        Self { inner, registered_static_fonts: HashSet::default() }
+        Self {
+            inner,
+            registered_static_fonts: HashSet::default(),
+            registered_font_paths: HashSet::default(),
+        }
     }
 
     pub fn register_static_font(&mut self, data: &'static [u8]) {
@@ -49,6 +57,18 @@ impl FontContext {
         if self.registered_static_fonts.insert(key) {
             self.inner.collection.register_fonts(fontique::Blob::new(Arc::new(data)), None);
         }
+    }
+
+    /// Register `data` under `path`, skipping the call entirely when the path
+    /// was registered before.
+    pub fn register_font_path(&mut self, path: std::path::PathBuf, data: Vec<u8>) {
+        if self.registered_font_paths.insert(path) {
+            self.inner.collection.register_fonts(data.into(), None);
+        }
+    }
+
+    pub fn is_font_path_registered(&self, path: &std::path::Path) -> bool {
+        self.registered_font_paths.contains(path)
     }
 
     pub fn clear_registered_static_fonts(&mut self) {

@@ -699,10 +699,11 @@
   },
   "NavigationBar": {
     "issues": [
+      11,
       12
     ],
-    "needs": "springs (#5), shapes (#6), adaptive (#12)",
-    "notes": "slint component: NavigationBar",
+    "needs": "adaptive (#12)",
+    "notes": "slint component: NavigationBar; tokens: generated component tokens; springs via active motion scheme",
     "status": "partial"
   },
   "NavigationDrawerItem": {
@@ -839,8 +840,8 @@
       11
     ],
     "needs": "shapes (#6)",
-    "notes": "slint component: RadioButton",
-    "status": "partial"
+    "notes": "slint component: RadioButton; tokens: generated component tokens; RadioButtonImpl geometry — 20dp IconSize canvas, 2dp RadioButtonPadding, 2dp RadioStrokeWidth, dot radius to RadioButtonDotSize/2 on FastSpatial (androidx/androidx@23327507f7fc, material3 1.5.0-alpha18)",
+    "status": "done"
   },
   "RangeSlider": {
     "issues": [
@@ -855,9 +856,9 @@
       11,
       12
     ],
-    "needs": "springs (#5), shapes (#6), adaptive (#12)",
-    "notes": "",
-    "status": "missing"
+    "needs": "adaptive (#12)",
+    "notes": "slint component: NavigationItemTemplate (internal); the RowScope receiver has no slint equivalent",
+    "status": "partial"
   },
   "Scaffold": {
     "issues": [
@@ -917,19 +918,21 @@
   },
   "ShortNavigationBar": {
     "issues": [
+      11,
       12
     ],
-    "needs": "springs (#5), shapes (#6), adaptive (#12)",
-    "notes": "",
-    "status": "missing"
+    "needs": "adaptive (#12)",
+    "notes": "slint component: ShortNavigationBar; tokens: generated component tokens; springs via active motion scheme",
+    "status": "partial"
   },
   "ShortNavigationBarItem": {
     "issues": [
+      11,
       12
     ],
-    "needs": "springs (#5), shapes (#6), adaptive (#12)",
-    "notes": "",
-    "status": "missing"
+    "needs": "adaptive (#12)",
+    "notes": "slint component: ShortNavigationBarItemTemplate (internal)",
+    "status": "partial"
   },
   "SingleChoiceSegmentedButtonRow": {
     "issues": [
