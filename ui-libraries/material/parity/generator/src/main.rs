@@ -1906,7 +1906,7 @@ fn slint_canvas(s: &mut String, scene: &Scene) {
                 }
                 if w.selectable.unwrap_or(false) {
                     writeln!(body, "        selectable: true;").unwrap();
-                    if w.selected.unwrap_or(false) {
+                    if w.selected.as_ref().and_then(|v| v.as_bool()).unwrap_or(false) {
                         writeln!(body, "        selected: true;").unwrap();
                     }
                 }
