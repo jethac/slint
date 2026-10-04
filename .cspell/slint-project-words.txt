@@ -741,6 +741,8 @@ srcroot
 SRCS
 SRGBA
 acosf
+bottomsheet
+bottomsheetscaffold
 sinf
 standardbutton
 startswith
@@ -754,6 +756,10 @@ STOOQ
 streamable
 STREQUAL
 cbrtf
+draghandle
+modalbottomsheet
+pressable
+scrimmed
 strikethrough
 strprop
 strs
@@ -842,6 +848,7 @@ unauthored
 unclipped
 uncoerced
 Uncontained
+UNDISPATCHED
 unfocus
 unfocusable
 unhinted
@@ -874,9 +881,12 @@ veniam
 venv
 VercodeOperation
 verticalbox
+verticaldraghandle
 verticallayout
 verts
 VGWGPU
+vhandle
+vhandles
 viewports
 Vlachou
 vlayout

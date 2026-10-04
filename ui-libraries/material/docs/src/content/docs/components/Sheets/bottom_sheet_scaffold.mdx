@@ -1,0 +1,130 @@
+---
+title: BottomSheetScaffold
+description: BottomSheetScaffold API.
+---
+
+import CodeSnippetMD from '@slint/common-files/src/components/CodeSnippetMD.astro';
+import SlintProperty from '@slint/common-files/src/components/SlintProperty.astro';
+
+<CodeSnippetMD imagePath="/src/assets/generated/bottomsheetscaffold.png" scale="3" imageWidth="400" imageHeight="300" imageAlt="">
+```slint
+import { BottomSheetScaffold, MaterialPalette, MaterialText } from "@material";
+export component Example inherits Window {
+    width: 400px;
+    height: 300px;
+    background: transparent;
+
+    // The scaffold's own content (body, app bar, snackbar host) stays as
+    // sibling elements behind the sheet.
+    Rectangle {
+        background: MaterialPalette.surface;
+        MaterialText {
+            text: "Scaffold body";
+            horizontal-alignment: center;
+            vertical-alignment: center;
+        }
+    }
+
+    BottomSheetScaffold {
+        width: 100%;
+        height: 100%;
+        sheet-peek-height: 56px;
+
+        MaterialText {
+            text: "Sheet content";
+            horizontal-alignment: center;
+            vertical-alignment: center;
+        }
+    }
+}
+```
+</CodeSnippetMD>
+
+A `BottomSheetScaffold` layers a docked sheet over sibling content. The declared children are the
+sheet content; the scaffold's body stays behind as siblings — place it before the scaffold so the
+sheet draws on top. The component fills its parent's bounds, which are the anchor space. The sheet
+sits at `partially-expanded` by default with `sheet-peek-height` visible above the bottom edge, and
+the `hidden` anchor is skipped (matching upstream's `BottomSheetScaffold`, which has no hidden state
+in its anchor set). `snackbar-top()` returns the Y offset a snackbar should use so it rests on the
+sheet's top edge while peeked.
+
+## Properties
+
+### has-drag-handle
+<SlintProperty propName="has-drag-handle" typeName="bool" defaultValue="true">
+Whether the 48 dp drag-handle strip with the pill is drawn at the sheet's top edge.
+</SlintProperty>
+
+### initial-value
+<SlintProperty propName="initial-value" typeName="enum" enumName="SheetValue" defaultValue="SheetValue.partially-expanded">
+The anchor the sheet starts on.
+</SlintProperty>
+
+### pane-title
+<SlintProperty propName="pane-title" typeName="string" defaultValue="Bottom sheet">
+The accessibility pane title announced for the sheet.
+</SlintProperty>
+
+### sheet-container-color
+<SlintProperty propName="sheet-container-color" typeName="color" defaultValue="SheetBottomTokens.docked_container_color">
+The sheet surface's fill color.
+</SlintProperty>
+
+### sheet-elevation-level
+<SlintProperty propName="sheet-elevation-level" typeName="int" defaultValue="1">
+The tonal/shadow elevation level applied to the sheet surface — the scaffold sheet uses level 1.
+</SlintProperty>
+
+### sheet-max-width
+<SlintProperty propName="sheet-max-width" typeName="length" defaultValue="640px">
+The width cap applied to the sheet surface — wider containers center the sheet.
+</SlintProperty>
+
+### sheet-peek-height
+<SlintProperty propName="sheet-peek-height" typeName="length" defaultValue="56px">
+The height of sheet visible above the bottom edge at `partially-expanded` —
+`BottomSheetScaffoldDefaults.SheetPeekHeight`.
+</SlintProperty>
+
+### sheet-shape
+<SlintProperty propName="sheet-shape" typeName="enum" enumName="MaterialCornerShape" defaultValue="SheetBottomTokens.docked_container_shape">
+The top-corner shape of the sheet surface.
+</SlintProperty>
+
+### sheet-swipe-enabled
+<SlintProperty propName="sheet-swipe-enabled" typeName="bool" defaultValue="true">
+Whether the sheet can be dragged between its anchors, including fling-with-release-velocity settle.
+</SlintProperty>
+
+### skip-hidden-state
+<SlintProperty propName="skip-hidden-state" typeName="bool" defaultValue="true">
+Removes the `hidden` anchor — the scaffold sheet defaults to skipping it, like upstream.
+</SlintProperty>
+
+### content-bottom-inset
+<SlintProperty propName="content-bottom-inset" typeName="length" propertyVisibility="out">
+The padding the body content should apply at its bottom edge so the peeked sheet doesn't cover it —
+equals `sheet-peek-height`.
+</SlintProperty>
+
+## State
+
+`current-value`, `target-value`, `anchor-current`, `is-visible`, `dragging`,
+`has-expanded-state`, `has-partially-expanded-state`, `sheet-offset`, `clamped-offset`,
+`sheet-height`, `surface-x`, `surface-y`, `surface-width`, `surface-height` — same meaning as
+`BottomSheet`'s state properties.
+
+## Functions
+
+### snackbar-top(snackbar-height: length) -> length
+`snackbarOffsetY` — the Y offset a snackbar should use: on the sheet's top edge while the sheet
+sits at `partially-expanded`, on the scaffold's bottom edge at any other value.
+
+### show() / expand() / partial-expand() / hide() / snap-to(value: SheetValue)
+Moves the sheet to the named anchor — see `BottomSheet`.
+
+## Callbacks
+
+### deny-value-change(value: SheetValue) -> bool
+Return `true` to veto an anchor change.
+</content>

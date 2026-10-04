@@ -1,0 +1,92 @@
+{
+  "name": "sheet-drag-expand",
+  "type": "canvas",
+  "parity": "motion",
+  "size": [
+    360,
+    240
+  ],
+  "densities": [
+    1,
+    2
+  ],
+  "theme": {
+    "seed": "6750A4",
+    "variant": "tonal-spot",
+    "spec": "spec2025",
+    "platform": "phone",
+    "dark": false,
+    "contrast": 0.0
+  },
+  "fonts": {
+    "plain": "Roboto",
+    "brand": "Roboto"
+  },
+  "times": [
+    0,
+    42,
+    80,
+    150,
+    300,
+    600
+  ],
+  "trace_elements": [
+    "sheet0",
+    "sheet-pill0"
+  ],
+  "trace_props": [
+    "sheet-offset",
+    "current-value",
+    "target-value",
+    "dragging",
+    "is-visible"
+  ],
+  "actions": [
+    {
+      "kind": "press",
+      "x": 180,
+      "y": 130,
+      "at": 0
+    },
+    {
+      "kind": "move",
+      "x": 180,
+      "y": 120,
+      "at": 20
+    },
+    {
+      "kind": "move",
+      "x": 180,
+      "y": 110,
+      "at": 40
+    },
+    {
+      "kind": "release",
+      "x": 180,
+      "y": 110,
+      "at": 81,
+      "velocity": -500
+    }
+  ],
+  "widgets": [
+    {
+      "kind": "bottom-sheet",
+      "x": 0,
+      "y": 0,
+      "width": 360,
+      "height": 240,
+      "sheet_height": 120,
+      "initial": "partially-expanded",
+      "content_color": "tertiary-container"
+    }
+  ],
+  "params": {
+    "note": "upward fling from offset 100: |v|\u2265125 takes the directional branch \u2014 the closest anchor at-or-below is expanded at 72"
+  },
+  "mask_decor": {
+    "sheet-pill0": [
+      150,
+      300
+    ]
+  }
+}
