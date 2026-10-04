@@ -63,10 +63,10 @@ States: dragged, pressed, focused
 
 | Component | Source | Status | Issues | Needs | Notes |
 |---|---|---|---|---|---|
-| BottomSheet | BottomSheet.kt | missing | #11 | springs (#5) | - |
-| BottomSheetScaffold | BottomSheetScaffold.kt | missing | #11 | springs (#5) | - |
-| ModalBottomSheet | ModalBottomSheet.kt | partial | #11 | springs (#5) | slint component: ModalBottomSheet |
-| VerticalDragHandle | DragHandle.kt | missing | #11 | springs (#5) | - |
+| BottomSheet | BottomSheet.kt | partial | #11 | none | slint component: BottomSheet; tokens: SheetBottomTokens, DragHandleTokens; springs via active motion scheme; release velocity via SwipeGestureHandler |
+| BottomSheetScaffold | BottomSheetScaffold.kt | partial | #11 | none | slint component: BottomSheetScaffold; tokens: SheetBottomTokens, DragHandleTokens; springs via active motion scheme |
+| ModalBottomSheet | ModalBottomSheet.kt | partial | #11 | none | slint component: ModalBottomSheet (reworked: anchored states, springs, scrim spec); tokens: SheetBottomTokens, DragHandleTokens |
+| VerticalDragHandle | DragHandle.kt | partial | #11 | none | slint component: VerticalDragHandle; tokens: DragHandleTokens; state-layer ink |
 
 ### Button groups
 
@@ -241,8 +241,8 @@ States: collapsed, expanded, focused, disabled, dragged, hovered, pressed, selec
 
 | Component | Source | Status | Issues | Needs | Notes |
 |---|---|---|---|---|---|
-| ListItem | ListItem.kt | partial | #11 | shapes (#6) | slint component: ListTile |
-| SegmentedListItem | ListItem.kt | missing | #11 | shapes (#6) | - |
+| ListItem | ListItem.kt | done | #11 | shapes (#6) | slint component: ListTile — interactive/selectable/checkable, interactive shape morph |
+| SegmentedListItem | ListItem.kt | done | #11 | shapes (#6) | slint component: SegmentedListItem — index/count segmentedShapes positions |
 
 ### Loading indicator
 

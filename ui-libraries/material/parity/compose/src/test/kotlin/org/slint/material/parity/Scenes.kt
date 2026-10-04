@@ -52,6 +52,9 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.IconButtonDefaults.IconButtonWidthOption
 import androidx.compose.material3.IconToggleButton
+import androidx.compose.material3.ListItem
+import androidx.compose.material3.ListItemDefaults
+import androidx.compose.material3.SegmentedListItem
 import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.ContainedLoadingIndicator
 import androidx.compose.material3.LocalMinimumInteractiveComponentSize
@@ -107,6 +110,34 @@ import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.AppBarWithSearch
 import androidx.compose.material3.rememberSearchBarState
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.requiredHeight
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.gestures.AnchoredDraggableDefaults
+import androidx.compose.foundation.gestures.AnchoredDraggableState
+import androidx.compose.foundation.gestures.DraggableAnchors
+import androidx.compose.foundation.gestures.FlingBehavior
+import androidx.compose.foundation.gestures.ScrollScope
+import androidx.compose.foundation.interaction.collectIsDraggedAsState
+import androidx.compose.material3.BottomSheet
+import androidx.compose.material3.BottomSheetDefaults
+import androidx.compose.material3.BottomSheetScaffold
+import androidx.compose.material3.SheetValue
+import androidx.compose.material3.VerticalDragHandle
+import androidx.compose.material3.SheetState
+import androidx.compose.material3.rememberBottomSheetScaffoldState
+import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.material3.rememberStandardBottomSheetState
+import androidx.compose.foundation.gestures.animateTo
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.platform.LocalViewConfiguration
+import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.withFrameNanos
+import kotlin.math.roundToInt
+import kotlinx.coroutines.launch
 import androidx.compose.ui.graphics.vector.path
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -118,12 +149,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.State
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Modifier
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.Shape
@@ -139,7 +170,6 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.Dp
 import androidx.compose.foundation.interaction.Interaction
-import kotlinx.coroutines.launch
 import androidx.compose.ui.unit.dp
 import kotlin.math.PI
 
@@ -151,6 +181,33 @@ fun Modifier.track(tracer: Tracer, id: String): Modifier =
     testTag(id).onGloballyPositioned { coords: LayoutCoordinates ->
         tracer.elementBounds[id] = coords.boundsInRoot()
         tracer.backfill(id, coords.boundsInRoot())
+    }
+
+/** Sheet surface: track bounds like [track] and also register
+ * `sheet-pill{i}` — the drag-handle pill's bounds derived from the surface
+ * (the real BottomSheet draws its own handle): 32x4 dp centered, 22 dp
+ * below the surface top (`SheetDefaults.kt`'s DragHandleVerticalPadding). */
+fun Modifier.trackSheet(
+    tracer: Tracer,
+    id: String,
+    uiDensity: androidx.compose.ui.unit.Density,
+): Modifier =
+    testTag(id).onGloballyPositioned { coords: LayoutCoordinates ->
+        val b = coords.boundsInRoot()
+        tracer.elementBounds[id] = b
+        tracer.backfill(id, b)
+        val pill = "sheet-pill" + id.filter(Char::isDigit)
+        val w32 = with(uiDensity) { 32.dp.toPx() }
+        val h4 = with(uiDensity) { 4.dp.toPx() }
+        val v22 = with(uiDensity) { 22.dp.toPx() }
+        val pb = Rect(
+            b.left + (b.width - w32) / 2f,
+            b.top + v22,
+            b.left + (b.width - w32) / 2f + w32,
+            b.top + v22 + h4,
+        )
+        tracer.elementBounds[pill] = pb
+        tracer.backfill(pill, pb)
     }
 
 /** Text node: track bounds (mask + numeric compare) and text-layout metrics
@@ -429,7 +486,6 @@ fun SceneContent(
             LocalRippleThemeConfiguration provides
                 RippleDefaults.InsetFocusRingRippleThemeConfiguration,
         ) {
-            FrameRecorder(scene, tracer)
             when (scene.type) {
                 "canvas" -> CanvasScene(scene, tracer, emitPress)
                 "spring-motion" -> SpringMotionScene(scene, tracer)
@@ -439,21 +495,11 @@ fun SceneContent(
     }
 }
 
-/** Records one trace frame per Composable frame tick — under Paparazzi the
- * frame clock advances in exact `1/fps` steps, so `tNanos` indexes frames. */
-@Composable
-private fun FrameRecorder(scene: Scene, tracer: Tracer) {
-    val density = androidx.compose.ui.platform.LocalDensity.current.density
-    LaunchedEffect(scene.name) {
-        while (true) {
-            withFrameNanos { nanos ->
-                tracer.recordFrame(nanos / 1_000_000, scene.traceProps, scene.traceElements, density)
-            }
-        }
-    }
-}
-
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+// Trace frames are recorded from the snapshot handler after each drawn
+// frame (see RenderTest) — post-draw sampling keeps `trace@N` aligned with
+// the pixels of `frame_N`, which pre-draw `withFrameNanos` sampling cannot
+// (it records the state drawn in the previous frame).
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun CanvasScene(
     scene: Scene,
@@ -471,7 +517,10 @@ private fun CanvasScene(
         // ahead of a button leaves `button0` intact.
         var buttons = 0
         var surfaces = 0
+        var items = 0
         var appbars = 0
+        var sheets = 0
+        var vhandles = 0
         var groups = 0
         var icons = 0
         var dividers = 0
@@ -570,6 +619,29 @@ private fun CanvasScene(
                     density,
                     emitPress,
                 )
+                widget.isListItem -> {
+                    // `text:<n>` ids pair with the Slint side's Text
+                    // elements in document order — each item emits its
+                    // avatar label, overline, headline, supporting, and
+                    // trailing text in that order.
+                    val nTexts = 1 +
+                        listOfNotNull(
+                            widget.avatar,
+                            widget.overline,
+                            widget.supporting,
+                            widget.trailingText,
+                        ).size
+                    StateListItem(
+                        widget,
+                        scene,
+                        tracer,
+                        texts,
+                        "item${items++}",
+                        density,
+                        emitPress,
+                    )
+                    texts += nTexts
+                }
                 widget.kind == "top-app-bar" ||
                     widget.kind == "bottom-app-bar" ||
                     widget.kind == "search-bar" ||
@@ -614,6 +686,34 @@ private fun CanvasScene(
                             .background(schemeColor(widget.color ?: "surface"))
                             .track(tracer, tag),
                     )
+                }
+                widget.kind == "drag-handle" ->
+                    // SheetDefaults.kt's DragHandle: a 48dp-tall strip with
+                    // the 32x4 pill centered — the Slint BottomSheetDragHandle
+                    // draws the same strip.
+                    Box(
+                        Modifier.offset(widget.x.dp, widget.y.dp)
+                            .size(widget.width.dp, 48.dp),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        BottomSheetDefaults.DragHandle()
+                    }
+                widget.kind == "vertical-drag-handle" ->
+                    StateVerticalDragHandle(
+                        widget, scene, tracer, emitPress, "vhandle${vhandles++}")
+                widget.kind == "bottom-sheet" ||
+                    widget.kind == "bottom-sheet-scaffold" ||
+                    widget.kind == "modal-bottom-sheet" -> {
+                    // `modal{n}` matches the Slint element id the generator
+                    // emits for the popup.
+                    val tag =
+                        if (widget.kind == "modal-bottom-sheet")
+                            "modal${sheets++}" else "sheet${sheets++}"
+                    if (sheetNeedsGestureReplay(widget, scene)) {
+                        ParitySheet(widget, scene, tracer, emitPress, tag)
+                    } else {
+                        SheetWidget(widget, scene, tracer, emitPress, tag)
+                    }
                 }
                 widget.kind == "icon" -> {
                     // The bare `Icon` takes its painter's intrinsic size
@@ -960,11 +1060,12 @@ private fun emitStateInteractions(
         // the driver's synthetic pointer press carries no hover either, and
         // the interior pixels stay within tolerance of Slint's state layer.
         // The flow replays its latest emission, so the button's collectors
-        // receive the press whenever they subscribe during the pump. The
-        // registration goes to the frame sink, which runs it right after
-        // the first presented frame: the Slint driver dispatches //ACTION=
-        // just after its own pre-press baseline frame, and an earlier emit
-        // would put pressed ink (and the morph's start) into frame 0 — the
+        // receive the press whenever they subscribe during the pump.
+        //
+        // Timed scenes still go through the
+        // frame sink — the Slint driver dispatches //ACTION= just after its
+        // own pre-press baseline frame, and an earlier emit would put
+        // pressed ink (and the morph's start) into frame 0 — the
         // composition runs ahead of the pump during setup. Landing after
         // frame 0 also keeps the press off uptime 0, where a ripple's frame
         // callback would abort layoutlib.
@@ -1357,6 +1458,20 @@ fun Widget.elevationDp(): Dp =
         else -> 0.dp
     }
 
+/** Same level→dp table for `sheet_elevation`; -1 = the pinned default
+ * (`BottomSheetDefaults.Elevation` for scaffold shadows). */
+@OptIn(ExperimentalMaterial3Api::class)
+fun Widget.sheetElevationDp(): Dp =
+    when (sheetElevation) {
+        -1 -> BottomSheetDefaults.Elevation
+        1 -> 1.dp
+        2 -> 3.dp
+        3 -> 6.dp
+        4 -> 8.dp
+        5 -> 12.dp
+        else -> 0.dp
+    }
+
 /** The `MaterialShapes` polygon a scene's `surface` widget names — the same
  * kebab name `MaterialShapes.<kebab>` exposes on the Slint side. */
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
@@ -1415,6 +1530,7 @@ private fun schemeColor(role: String): Color =
             "onPrimary" -> scheme.onPrimary
             "primaryContainer" -> scheme.primaryContainer
             "onPrimaryContainer" -> scheme.onPrimaryContainer
+            "inversePrimary" -> scheme.inversePrimary
             "secondary" -> scheme.secondary
             "onSecondary" -> scheme.onSecondary
             "secondaryContainer" -> scheme.secondaryContainer
@@ -1429,23 +1545,35 @@ private fun schemeColor(role: String): Color =
             "onSurfaceVariant" -> scheme.onSurfaceVariant
             "inverseSurface" -> scheme.inverseSurface
             "inverseOnSurface" -> scheme.inverseOnSurface
-            "inversePrimary" -> scheme.inversePrimary
             "background" -> scheme.background
             "onBackground" -> scheme.onBackground
+            "surfaceTint" -> scheme.surfaceTint
             "error" -> scheme.error
             "onError" -> scheme.onError
             "errorContainer" -> scheme.errorContainer
             "onErrorContainer" -> scheme.onErrorContainer
             "outline" -> scheme.outline
             "outlineVariant" -> scheme.outlineVariant
-            "surfaceContainerLowest" -> scheme.surfaceContainerLowest
-            "surfaceContainerLow" -> scheme.surfaceContainerLow
+            "scrim" -> scheme.scrim
+            "surfaceBright" -> scheme.surfaceBright
+            "surfaceDim" -> scheme.surfaceDim
             "surfaceContainer" -> scheme.surfaceContainer
             "surfaceContainerHigh" -> scheme.surfaceContainerHigh
             "surfaceContainerHighest" -> scheme.surfaceContainerHighest
-            "surfaceDim" -> scheme.surfaceDim
-            "surfaceBright" -> scheme.surfaceBright
-            "scrim" -> scheme.scrim
+            "surfaceContainerLow" -> scheme.surfaceContainerLow
+            "surfaceContainerLowest" -> scheme.surfaceContainerLowest
+            "primaryFixed" -> scheme.primaryFixed
+            "primaryFixedDim" -> scheme.primaryFixedDim
+            "onPrimaryFixed" -> scheme.onPrimaryFixed
+            "onPrimaryFixedVariant" -> scheme.onPrimaryFixedVariant
+            "secondaryFixed" -> scheme.secondaryFixed
+            "secondaryFixedDim" -> scheme.secondaryFixedDim
+            "onSecondaryFixed" -> scheme.onSecondaryFixed
+            "onSecondaryFixedVariant" -> scheme.onSecondaryFixedVariant
+            "tertiaryFixed" -> scheme.tertiaryFixed
+            "tertiaryFixedDim" -> scheme.tertiaryFixedDim
+            "onTertiaryFixed" -> scheme.onTertiaryFixed
+            "onTertiaryFixedVariant" -> scheme.onTertiaryFixedVariant
             else -> error("scene catalog has no ColorScheme role for $role")
         }
     }
@@ -2661,6 +2789,290 @@ private fun PressInkOverlay(
     )
 }
 
+/** A `ListItem`/`SegmentedListItem` parity widget. The overload dispatch
+ * mirrors the scene fields: `checkable` → `onCheckedChange`, `selectable`
+ * → `selected`+`onClick`, `interactive` → plain `onClick`, else the
+ * non-interactive base overload. On `selectable`/`checkable` the host owns
+ * the state — a press+release action pair is the click, flipping
+ * `selected`/`checked` at the release's `at` time like the Slint case's
+ * `clicked` handler. `container_radius` probes the shape morph at
+ * `MotionScheme.fastSpatialSpec` — `ListItemShapes`' `shapeAnimationSpec`
+ * — following pressed → selected → resting; focus, hover, and `dragged`
+ * never reach a scene (no scene action emits focus, and platform shadows
+ * deadlock layoutlib, so no scene asserts a dragged item's Level4
+ * elevation). */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun StateListItem(
+    widget: Widget,
+    scene: Scene,
+    tracer: Tracer,
+    textBase: Int,
+    elementId: String,
+    density: Float,
+    emitPress: java.util.concurrent.CopyOnWriteArrayList<Pair<Long, Runnable>>,
+) {
+    val interactionSource = remember { ReplayableInteractionSource() }
+    val interactive = widget.interactive || widget.selectable || widget.checkable
+    if (interactive) {
+        emitStateInteractions(
+            widget, scene, tracer, elementId, interactionSource, emitPress,
+            Offset(40f * density, 20f * density), density,
+        )
+    }
+
+    var checked by remember { mutableStateOf(widget.checked) }
+    var selected by remember { mutableStateOf(widget.selected) }
+    val clickToggles = (widget.checkable || widget.selectable) && sceneActionsClick(scene)
+    DisposableEffect(Unit) {
+        val flip = Runnable { if (widget.checkable) checked = !checked else selected = !selected }
+        val entry =
+            (scene.actions.firstOrNull { it.kind == "release" }?.at ?: 0L) to flip
+        if (clickToggles) emitPress.add(entry)
+        onDispose { emitPress.remove(entry) }
+    }
+    val selectedEffective =
+        if (widget.selectable) selected else if (widget.checkable) checked else false
+
+    val segmented = widget.kind == "segmented-list-item"
+    val shapes = if (segmented) {
+        ListItemDefaults.segmentedShapes(widget.index, widget.count)
+    } else {
+        ListItemDefaults.shapes()
+    }
+    val colors =
+        if (segmented) ListItemDefaults.segmentedColors() else ListItemDefaults.colors()
+
+    // `container_radius` — every list container corner is an absolute-dp
+    // token, so `radiusOf`'s height argument is inert (it only resolves
+    // percent corners, which list shapes never use).
+    val pressed by interactionSource.collectIsPressedAsState()
+    val radius by animateFloatAsState(
+        targetValue = radiusOf(
+            when {
+                pressed -> shapes.pressedShape
+                selectedEffective -> shapes.selectedShape
+                else -> shapes.shape
+            },
+            56.dp,
+            density,
+        ),
+        animationSpec =
+            androidx.compose.material3.MaterialTheme.motionScheme.fastSpatialSpec<Float>(),
+        label = "container_radius",
+    )
+    tracer.propGetters["container_radius"] = { radius.toDouble() }
+
+    var modifier = Modifier.offset(widget.x.dp, widget.y.dp)
+    if (widget.width > 0) {
+        modifier = modifier.width(widget.width.dp)
+    }
+    modifier = modifier.track(tracer, elementId)
+
+    val resolver = androidx.compose.ui.platform.LocalFontFamilyResolver.current
+    val localDensity = LocalDensity.current
+    // `text:<n>` ids follow the Slint side's Text element order: the avatar
+    // label sits in the leading slot before the column's overline/headline/
+    // supporting and the row's trailing text.
+    var tid = textBase
+    fun nextTextId() = "text:${tid++}"
+    fun slotText(id: String, t: String, color: Color): @Composable () -> Unit = {
+        Text(
+            text = t,
+            color = color,
+            modifier = Modifier.trackText(tracer, id, density),
+            onTextLayout =
+                recordTextLayout(tracer, id, localDensity, resolver, null),
+        )
+    }
+    // The leading slot mirrors the Slint `ListTile` slots: the 40px avatar
+    // circle (`ItemLeadingAvatarColor`/`ItemLeadingAvatarLabelColor`), a
+    // 56px `leading_image` clipped to `ItemLeadingImageExpressiveShape`
+    // (`corner_small` = 8dp), or the 24px `leading_icon`.
+    val leading: (@Composable () -> Unit)? = when {
+        widget.avatar != null -> {
+            val avatarSlot = slotText(
+                nextTextId(),
+                widget.avatar!!,
+                schemeColor("on-primary-container"),
+            )
+            val slot: @Composable () -> Unit = {
+                Box(
+                    Modifier.size(40.dp)
+                        .clip(androidx.compose.foundation.shape.CircleShape)
+                        .background(schemeColor("primary-container")),
+                    contentAlignment = androidx.compose.ui.Alignment.Center,
+                ) {
+                    avatarSlot()
+                }
+            }
+            slot
+        }
+        widget.leadingImage != null -> {
+            {
+                androidx.compose.foundation.Image(
+                    imageVector = sceneIcon(widget.leadingImage!!),
+                    contentDescription = null,
+                    modifier = Modifier.size(56.dp)
+                        .clip(androidx.compose.foundation.shape.RoundedCornerShape(8.dp)),
+                    contentScale = androidx.compose.ui.layout.ContentScale.FillBounds,
+                )
+            }
+        }
+        widget.icon != null -> {
+            {
+                Icon(
+                    sceneIcon(widget.icon!!),
+                    contentDescription = null,
+                    modifier = Modifier.size(24.dp),
+                )
+            }
+        }
+        else -> null
+    }
+    val overline: (@Composable () -> Unit)? = widget.overline?.let { t ->
+        slotText(nextTextId(), t, Color.Unspecified)
+    }
+    val content: @Composable () -> Unit =
+        slotText(nextTextId(), widget.text ?: "", Color.Unspecified)
+    val supporting: (@Composable () -> Unit)? = widget.supporting?.let { t ->
+        slotText(nextTextId(), t, Color.Unspecified)
+    }
+    val trailing: (@Composable () -> Unit)? = when {
+        widget.trailingIcon != null -> {
+            {
+                Icon(
+                    sceneIcon(widget.trailingIcon!!),
+                    contentDescription = null,
+                    modifier = Modifier.size(24.dp),
+                )
+            }
+        }
+        widget.trailingText != null ->
+            slotText(nextTextId(), widget.trailingText!!, Color.Unspecified)
+        else -> null
+    }
+
+    if (segmented) {
+        when {
+            widget.checkable -> SegmentedListItem(
+                checked = checked,
+                onCheckedChange = { checked = it },
+                shapes = shapes,
+                modifier = modifier,
+                enabled = widget.enabled,
+                leadingContent = leading,
+                trailingContent = trailing,
+                overlineContent = overline,
+                supportingContent = supporting,
+                colors = colors,
+                interactionSource = interactionSource,
+                content = content,
+            )
+            widget.selectable -> SegmentedListItem(
+                selected = selected,
+                onClick = { selected = !selected },
+                shapes = shapes,
+                modifier = modifier,
+                enabled = widget.enabled,
+                leadingContent = leading,
+                trailingContent = trailing,
+                overlineContent = overline,
+                supportingContent = supporting,
+                colors = colors,
+                interactionSource = interactionSource,
+                content = content,
+            )
+            interactive -> SegmentedListItem(
+                onClick = {},
+                shapes = shapes,
+                modifier = modifier,
+                enabled = widget.enabled,
+                leadingContent = leading,
+                trailingContent = trailing,
+                overlineContent = overline,
+                supportingContent = supporting,
+                colors = colors,
+                interactionSource = interactionSource,
+                content = content,
+            )
+            else -> SegmentedListItem(
+                // material3 1.5.0-alpha18 ships no non-interactive
+                // SegmentedListItem overload; a no-op onClick draws the
+                // identical resting visual (ripple only appears on touch,
+                // and no scene action touches a non-interactive item).
+                onClick = {},
+                shapes = shapes,
+                modifier = modifier,
+                enabled = widget.enabled,
+                leadingContent = leading,
+                trailingContent = trailing,
+                overlineContent = overline,
+                supportingContent = supporting,
+                colors = colors,
+                interactionSource = interactionSource,
+                content = content,
+            )
+        }
+    } else {
+        when {
+            widget.checkable -> ListItem(
+                checked = checked,
+                onCheckedChange = { checked = it },
+                modifier = modifier,
+                enabled = widget.enabled,
+                leadingContent = leading,
+                trailingContent = trailing,
+                overlineContent = overline,
+                supportingContent = supporting,
+                shapes = shapes,
+                colors = colors,
+                interactionSource = interactionSource,
+                content = content,
+            )
+            widget.selectable -> ListItem(
+                selected = selected,
+                onClick = { selected = !selected },
+                modifier = modifier,
+                enabled = widget.enabled,
+                leadingContent = leading,
+                trailingContent = trailing,
+                overlineContent = overline,
+                supportingContent = supporting,
+                shapes = shapes,
+                colors = colors,
+                interactionSource = interactionSource,
+                content = content,
+            )
+            interactive -> ListItem(
+                onClick = {},
+                modifier = modifier,
+                enabled = widget.enabled,
+                leadingContent = leading,
+                trailingContent = trailing,
+                overlineContent = overline,
+                supportingContent = supporting,
+                shapes = shapes,
+                colors = colors,
+                interactionSource = interactionSource,
+                content = content,
+            )
+            else -> ListItem(
+                // The legacy `headlineContent` overload is upstream's only
+                // non-interactive ListItem: flat `ListItemDefaults.shape`
+                // corners, no `enabled` — it cannot render a disabled item.
+                headlineContent = content,
+                modifier = modifier,
+                leadingContent = leading,
+                trailingContent = trailing,
+                overlineContent = overline,
+                supportingContent = supporting,
+                colors = colors,
+            )
+        }
+    }
+}
+
 
 /** App-bar family widgets (`top-app-bar` variants, `bottom-app-bar`,
  * `search-bar`, `app-bar-with-search`): geometry plus the props the Slint
@@ -2824,6 +3236,657 @@ private fun StateAppBar(widget: Widget, tracer: Tracer, tag: String) {
             )
         }
         else -> error("unknown app-bar kind ${widget.kind}")
+    }
+}
+
+// ── Bottom sheets ──────────────────────────────────────────────────────────
+// Mirrors BottomSheet.kt, BottomSheetScaffold.kt, ModalBottomSheet.kt,
+// SheetDefaults.kt, DragHandle.kt and AnchoredDraggable.kt at the pinned
+// androidx commit (23327507f7fc).
+
+@OptIn(ExperimentalMaterial3Api::class)
+private fun sheetValue(name: String): SheetValue = when (name) {
+    "hidden" -> SheetValue.Hidden
+    "partially-expanded" -> SheetValue.PartiallyExpanded
+    "expanded" -> SheetValue.Expanded
+    else -> error("unknown sheet value $name")
+}
+
+/** `SheetValue` → the numeric trace proxy both engines emit:
+ * hidden = 0, partially-expanded = 1, expanded = 2. */
+@OptIn(ExperimentalMaterial3Api::class)
+private fun sheetValueNum(value: SheetValue): Double = when (value) {
+    SheetValue.Hidden -> 0.0
+    SheetValue.PartiallyExpanded -> 1.0
+    SheetValue.Expanded -> 2.0
+}
+
+/** A pointer `actions` entry inside the widget's box means the scene wants a
+ * real drag replayed — routed to [ParitySheet], which drives the public
+ * `AnchoredDraggableState` the composables use internally. Pointer-free
+ * scenes get the real composables ([SheetWidget]) so the rendered pixels
+ * come from the same code path an app would use. */
+@OptIn(ExperimentalMaterial3Api::class)
+private fun sheetNeedsGestureReplay(widget: Widget, scene: Scene): Boolean =
+    scene.actions.any { a ->
+        (a.kind == "press" || a.kind == "move" || a.kind == "release") &&
+            a.x >= widget.x && a.x <= widget.x + widget.width &&
+            a.y >= widget.y && a.y <= widget.y + widget.height
+    }
+
+/** Registers the programmatic sheet ops (`show`/`hide`/`expand`/
+ * `partial-expand`) the scene's `actions` declare as post-frame-0 runnables —
+ * the same public `SheetState` calls the pinned composables' callbacks make
+ * (a scrim tap is `sheetState.hide()`, ModalBottomSheet.kt's
+ * `animateToDismiss`). */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun registerSheetOps(
+    scene: Scene,
+    show: suspend (String) -> Unit,
+    emitPress: java.util.concurrent.CopyOnWriteArrayList<Pair<Long, Runnable>>,
+) {
+    val scope = androidx.compose.runtime.rememberCoroutineScope()
+    val runnables = scene.actions.mapNotNull { a ->
+        when (a.kind) {
+            "show", "hide", "expand", "partial-expand" -> {
+                val kind = a.kind
+                a.at to Runnable { scope.launch { show(kind) } }
+            }
+            else -> null
+        }
+    }
+    DisposableEffect(Unit) {
+        runnables.forEach { emitPress.add(it) }
+        onDispose { runnables.forEach { emitPress.remove(it) } }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+private suspend fun sheetOp(state: SheetState, kind: String) = when (kind) {
+    "show" -> state.show()
+    "hide" -> state.hide()
+    "expand" -> state.expand()
+    "partial-expand" -> state.partialExpand()
+    else -> error("unknown sheet op $kind")
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+private suspend fun sheetOp(state: AnchoredDraggableState<SheetValue>, kind: String,
+    showSpec: androidx.compose.animation.core.AnimationSpec<Float>,
+    anchoredSpec: androidx.compose.animation.core.AnimationSpec<Float>,
+    hideSpec: androidx.compose.animation.core.AnimationSpec<Float>,
+) {
+    // SheetDefaults.kt at the pin: `show`/`expand` run on showMotionSpec
+    // (defaultSpatial), `partialExpand`/`hide` on hideMotionSpec (fastEffects).
+    when (kind) {
+        "show" -> state.animateTo(
+            if (state.anchors.hasPositionFor(SheetValue.PartiallyExpanded))
+                SheetValue.PartiallyExpanded else SheetValue.Expanded,
+            showSpec,
+        )
+        "hide" -> state.animateTo(SheetValue.Hidden, hideSpec)
+        "expand" -> state.animateTo(SheetValue.Expanded, showSpec)
+        "partial-expand" -> state.animateTo(SheetValue.PartiallyExpanded, hideSpec)
+        else -> error("unknown sheet op $kind")
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+private fun registerSheetTraceProps(tracer: Tracer, offsetPx: () -> Float,
+    currentValue: () -> SheetValue, targetValue: () -> SheetValue,
+    isVisible: () -> Boolean, dragging: () -> Boolean,
+    hasExpanded: () -> Boolean, hasPartial: () -> Boolean,
+    sheetHeightDp: Float, density: Float,
+    surfaceTag: String? = null, uiDensity: androidx.compose.ui.unit.Density? = null,
+) {
+    // propGetters are looked up per name the scene lists in `trace_props`;
+    // unregistered names are simply skipped in the recorded frame.
+    tracer.propGetters["sheet-offset"] = {
+        val v = offsetPx()
+        if (surfaceTag != null && uiDensity != null) {
+            // `sheet-pill{i}` tracks the live offset, not the modifier's
+            // static bounds: the drag-handle pill rides the surface, so its
+            // bounds are offset + DragHandleVerticalPadding (22 dp) under
+            // the surface's top edge, centered, 32x4 dp.
+            val s = tracer.elementBounds[surfaceTag]
+            if (s != null && !v.isNaN()) {
+                val w32 = with(uiDensity) { 32.dp.toPx() }
+                val h4 = with(uiDensity) { 4.dp.toPx() }
+                val v22 = with(uiDensity) { 22.dp.toPx() }
+                val pill = "sheet-pill" + surfaceTag.filter(Char::isDigit)
+                val pb = Rect(
+                    s.left + (s.width - w32) / 2f,
+                    v + v22,
+                    s.left + (s.width - w32) / 2f + w32,
+                    v + v22 + h4,
+                )
+                tracer.elementBounds[pill] = pb
+                tracer.backfill(pill, pb)
+                // `sheet-surface{i}` is the moving surface itself: same x/w
+                // as the tracked modifier, top at the live offset, height
+                // `sheetHeightDp` — the metrics the Slint proxy exposes.
+                val tag = "sheet-surface" + surfaceTag.filter(Char::isDigit)
+                val maxW = with(uiDensity) { 640.dp.toPx() }
+                val sw = minOf(s.width, maxW)
+                val sb = Rect(
+                    s.left + (s.width - sw) / 2f,
+                    v,
+                    s.left + (s.width - sw) / 2f + sw,
+                    v + with(uiDensity) { sheetHeightDp.dp.toPx() },
+                )
+                tracer.elementBounds[tag] = sb
+                tracer.backfill(tag, sb)
+                // `sheet-content{i}` is the surface minus its 48 dp handle
+                // strip — the handle/content edge is a painted boundary that
+                // `mask_decor` can reach only through a traced element.
+                val handlePx = with(uiDensity) { 48.dp.toPx() }
+                val ctag = "sheet-content" + surfaceTag.filter(Char::isDigit)
+                val cb = Rect(sb.left, v + handlePx, sb.right, sb.bottom)
+                tracer.elementBounds[ctag] = cb
+                tracer.backfill(ctag, cb)
+            }
+        }
+        if (v.isNaN()) Double.NaN else (v / density).toDouble()
+    }
+    tracer.propGetters["sheet-height"] = { sheetHeightDp.toDouble() }
+    tracer.propGetters["current-value"] = { sheetValueNum(currentValue()) }
+    tracer.propGetters["target-value"] = { sheetValueNum(targetValue()) }
+    tracer.propGetters["is-visible"] = { isVisible() }
+    tracer.propGetters["dragging"] = { dragging() }
+    tracer.propGetters["has-expanded-state"] = { hasExpanded() }
+    tracer.propGetters["has-partially-expanded-state"] = { hasPartial() }
+}
+
+/** DragHandle.kt's VerticalDragHandle — the real composable, so its pill
+ * geometry comes from `VerticalDragHandleDefaults` at the pin. `isPressed`
+ * is a pressable-internal `remember` var and can't be faked through the
+ * interaction source, but at this token pin `pressed_*` and `dragged_*`
+ * produce the identical 12x52 / onSurface / cornerMedium pill, so a
+ * `DragInteraction.Start` covers both scene states. */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun StateVerticalDragHandle(
+    widget: Widget,
+    scene: Scene,
+    tracer: Tracer,
+    emitPress: java.util.concurrent.CopyOnWriteArrayList<Pair<Long, Runnable>>,
+    tag: String,
+) {
+    val source = remember { ReplayableInteractionSource() }
+    // `pressable` reports through the hoisted source, so the trace props
+    // read the composable's own interaction bookkeeping.
+    val isPressed by source.collectIsPressedAsState()
+    val isDragged by source.collectIsDraggedAsState()
+    tracer.propGetters["pressed"] = { isPressed }
+    tracer.propGetters["dragged"] = { isDragged }
+    tracer.propGetters["active"] = { isPressed || isDragged }
+    CompositionLocalProvider(LocalMinimumInteractiveComponentSize provides 48.dp) {
+        VerticalDragHandle(
+            modifier = Modifier.offset(widget.x.dp, widget.y.dp)
+                .track(tracer, tag),
+            interactionSource = source,
+        )
+    }
+    if (widget.state == "pressed" || widget.state == "dragged") {
+        val emit = remember {
+            Runnable { source.tryEmit(androidx.compose.foundation.interaction.DragInteraction.Start()) }
+        }
+        DisposableEffect(emit) {
+            val entry = 0L to emit
+            emitPress.add(entry)
+            onDispose { emitPress.remove(entry) }
+        }
+    }
+}
+
+/** The real composables — used by every scene without pointer actions on the
+ * sheet, including programmatic-op motion scenes (`show`/`hide`/`expand`/
+ * `partial-expand` runnables drive the public `SheetState`). */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun SheetWidget(
+    widget: Widget,
+    scene: Scene,
+    tracer: Tracer,
+    emitPress: java.util.concurrent.CopyOnWriteArrayList<Pair<Long, Runnable>>,
+    tag: String,
+) {
+    val density = androidx.compose.ui.platform.LocalDensity.current.density
+    val uiDensity = androidx.compose.ui.platform.LocalDensity.current
+    when (widget.kind) {
+        "bottom-sheet" -> {
+            // The published alpha18 jar predates the pin's
+            // `rememberBottomSheetState`: the public surface to a non-default
+            // initial value is the companion `Saver`, whose `restore` builds
+            // a `SheetState` with the given flags and initial value.
+            val state = remember {
+                SheetState.Saver(
+                    skipPartiallyExpanded = widget.skipPartial,
+                    positionalThreshold = { with(uiDensity) { 56.dp.toPx() } },
+                    velocityThreshold = { with(uiDensity) { 125.dp.toPx() } },
+                    confirmValueChange = { true },
+                    skipHiddenState = false,
+                ).restore(sheetValue(widget.initial))
+                    ?: error("SheetState.Saver.restore returned null")
+            }
+            registerSheetOps(scene, { sheetOp(state, it) }, emitPress)
+            registerSheetTraceProps(
+                tracer,
+                offsetPx = { if (state.hasExpandedState) state.requireOffset() else Float.NaN },
+                currentValue = { state.currentValue },
+                targetValue = { state.targetValue },
+                isVisible = { state.isVisible },
+                dragging = { false },
+                hasExpanded = { state.hasExpandedState },
+                hasPartial = { state.hasPartiallyExpandedState },
+                sheetHeightDp = widget.sheetHeight + 48f,
+                density = density,
+                surfaceTag = tag,
+                uiDensity = uiDensity,
+            )
+            Box(Modifier.offset(widget.x.dp, widget.y.dp).size(widget.width.dp, widget.height.dp)) {
+                BottomSheet(
+                    state = state,
+                    gesturesEnabled = widget.gestures,
+                    contentWindowInsets = { WindowInsets(0, 0, 0, 0) },
+                    modifier = Modifier.trackSheet(tracer, tag, uiDensity),
+                ) {
+                    Box(
+                        Modifier.fillMaxWidth()
+                            .height(widget.sheetHeight.dp)
+                            .background(schemeColor(widget.contentColor)),
+                    )
+                }
+            }
+        }
+        "bottom-sheet-scaffold" -> {
+            // `rememberStandardBottomSheetState` — the alpha18 public API —
+            // maps straight to the pin's scaffold state flags.
+            val state = rememberStandardBottomSheetState(
+                initialValue = sheetValue(
+                    if (widget.initial == "hidden" && widget.skipHidden)
+                        "partially-expanded" else widget.initial
+                ),
+                confirmValueChange = { true },
+                skipHiddenState = widget.skipHidden,
+            )
+            val scaffoldState = rememberBottomSheetScaffoldState(bottomSheetState = state)
+            registerSheetOps(scene, { sheetOp(state, it) }, emitPress)
+            registerSheetTraceProps(
+                tracer,
+                offsetPx = { if (state.hasExpandedState) state.requireOffset() else Float.NaN },
+                currentValue = { state.currentValue },
+                targetValue = { state.targetValue },
+                isVisible = { state.isVisible },
+                dragging = { false },
+                hasExpanded = { state.hasExpandedState },
+                hasPartial = { state.hasPartiallyExpandedState },
+                sheetHeightDp = widget.sheetHeight + 48f,
+                density = density,
+                surfaceTag = tag,
+                uiDensity = uiDensity,
+            )
+            Box(Modifier.offset(widget.x.dp, widget.y.dp).size(widget.width.dp, widget.height.dp)) {
+                BottomSheetScaffold(
+                    scaffoldState = scaffoldState,
+                    sheetPeekHeight = widget.peekHeight.dp,
+                    // Platform shadows deadlock layoutlib — scenes pass
+                    // sheet_elevation 0; shadow parity lives in the elevation
+                    // scenes.
+                    sheetShadowElevation = widget.sheetElevationDp(),
+                    sheetSwipeEnabled = widget.gestures,
+                    snackbarHost = {},
+                    sheetContent = {
+                        Box(
+                            Modifier.fillMaxWidth()
+                                .height(widget.sheetHeight.dp)
+                                .background(schemeColor(widget.contentColor)),
+                        )
+                    },
+                    modifier = Modifier.trackSheet(tracer, tag, uiDensity),
+                ) {
+                    Box(
+                        Modifier.fillMaxSize()
+                            .background(schemeColor(widget.bodyColor)),
+                    )
+                }
+            }
+        }
+        "modal-bottom-sheet" -> {
+            // ModalBottomSheet.kt:139-160 — the sheet lives in a Dialog the
+            // scene can't host, so the mirror inlines its Box{Scrim +
+            // BottomSheet} at the widget's bounds; everything below the pin's
+            // `content` lambda is the real composable.
+            val state = rememberModalBottomSheetState(
+                skipPartiallyExpanded = widget.skipPartial,
+            )
+            registerSheetOps(scene, { sheetOp(state, it) }, emitPress)
+            registerSheetTraceProps(
+                tracer,
+                offsetPx = { if (state.hasExpandedState) state.requireOffset() else Float.NaN },
+                currentValue = { state.currentValue },
+                targetValue = { state.targetValue },
+                isVisible = { state.isVisible },
+                dragging = { false },
+                hasExpanded = { state.hasExpandedState },
+                hasPartial = { state.hasPartiallyExpandedState },
+                sheetHeightDp = widget.sheetHeight + 48f,
+                density = density,
+                surfaceTag = tag,
+                uiDensity = uiDensity,
+            )
+            LaunchedEffect(state.hasExpandedState) {
+                if (state.hasExpandedState) state.show()
+            }
+            Box(Modifier.offset(widget.x.dp, widget.y.dp).size(widget.width.dp, widget.height.dp)) {
+                val scrimAlpha by animateFloatAsState(
+                    targetValue = if (state.targetValue != SheetValue.Hidden) 1f else 0f,
+                    animationSpec =
+                        androidx.compose.material3.MaterialTheme.motionScheme
+                            .defaultEffectsSpec(),
+                    label = "ScrimAlphaAnimation",
+                )
+                Box(
+                    Modifier.fillMaxSize()
+                        .background(
+                            BottomSheetDefaults.ScrimColor.copy(alpha = scrimAlpha)
+                        ),
+                )
+                Box(Modifier.align(Alignment.TopCenter)) {
+                    BottomSheet(
+                        state = state,
+                        gesturesEnabled = widget.gestures,
+                        contentWindowInsets = { WindowInsets(0, 0, 0, 0) },
+                        modifier = Modifier.trackSheet(tracer, tag, uiDensity),
+                    ) {
+                        Box(
+                            Modifier.fillMaxWidth()
+                                .height(widget.sheetHeight.dp)
+                                .background(schemeColor(widget.contentColor)),
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+/** The gesture-replay sheet: pointer `actions` are replayed on the public
+ * `AnchoredDraggableState` — the same class BottomSheetImpl uses internally
+ * — so the drag and fling paths execute the pin's real clamping, target
+ * selection, and dampening. Anchor tables and the fling prelude are copied
+ * from the pinned sources. `isVisible`/dismiss is rendered but not
+ * propagated (there is no Dialog to close). */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ParitySheet(
+    widget: Widget,
+    scene: Scene,
+    tracer: Tracer,
+    emitPress: java.util.concurrent.CopyOnWriteArrayList<Pair<Long, Runnable>>,
+    tag: String,
+) {
+    val density = androidx.compose.ui.platform.LocalDensity.current.density
+    val uiDensity = androidx.compose.ui.platform.LocalDensity.current
+    val scope = androidx.compose.runtime.rememberCoroutineScope()
+    val isScaffold = widget.kind == "bottom-sheet-scaffold"
+    val isModal = widget.kind == "modal-bottom-sheet"
+    val layoutH = widget.height
+    val sheetH = widget.sheetHeight + 48f
+    val peekPx = widget.peekHeight
+
+    val initial = sheetValue(
+        if (isScaffold && widget.initial == "hidden") "partially-expanded" else widget.initial
+    )
+    val state = remember { AnchoredDraggableState<SheetValue>(initial) }
+    val anchors = remember {
+        androidx.compose.foundation.gestures.DraggableAnchors {
+            // `DraggableAnchors` positions are pixels; the widget numbers are dp.
+            if (isScaffold) {
+                // BottomSheetScaffold.kt:297-343 — declaration order P, H, E.
+                val partialAvailable =
+                    !widget.skipPartial && peekPx > 0f && peekPx != sheetH
+                val hiddenAvailable = sheetH == 0f || peekPx == 0f || !widget.skipHidden
+                if (partialAvailable) {
+                    SheetValue.PartiallyExpanded at (layoutH - peekPx) * density
+                }
+                if (hiddenAvailable) {
+                    SheetValue.Hidden at layoutH * density
+                }
+                if (sheetH > 0f) {
+                    SheetValue.Expanded at (layoutH - sheetH) * density
+                }
+            } else {
+                // BottomSheet.kt:299-308 — declaration order H, P, E; the
+                // deterministic `isPartiallyExpandedAnchorAvailable` and
+                // `calculatePartiallyExpandedOffset` (fullHeight - min(half,
+                // sheetHeight)).
+                SheetValue.Hidden at layoutH * density
+                if (!widget.skipPartial) {
+                    SheetValue.PartiallyExpanded at
+                        (layoutH - kotlin.math.min(layoutH / 2f, sheetH)) * density
+                }
+                if (sheetH != 0f) {
+                    SheetValue.Expanded at kotlin.math.max(0f, layoutH - sheetH) * density
+                }
+            }
+        }
+    }
+    // The pin's resolve table on first anchor update
+    // (BottomSheetScaffold.kt:345-360 / BottomSheet.kt:311-326); old anchors
+    // are empty so `shouldPromoteToExpanded` can never fire.
+    val resolvedTarget = when (initial) {
+        SheetValue.Hidden ->
+            if (isScaffold && !anchors.hasPositionFor(SheetValue.Hidden)) initial
+            else SheetValue.Hidden
+        SheetValue.PartiallyExpanded -> when {
+            anchors.hasPositionFor(SheetValue.PartiallyExpanded) -> SheetValue.PartiallyExpanded
+            anchors.hasPositionFor(SheetValue.Expanded) -> SheetValue.Expanded
+            anchors.hasPositionFor(SheetValue.Hidden) -> SheetValue.Hidden
+            else -> initial
+        }
+        SheetValue.Expanded ->
+            if (anchors.hasPositionFor(SheetValue.Expanded)) SheetValue.Expanded
+            else SheetValue.Hidden
+    }
+    androidx.compose.runtime.SideEffect { state.updateAnchors(anchors, resolvedTarget) }
+
+    val viewConfiguration = androidx.compose.ui.platform.LocalViewConfiguration.current
+    val spatialFlingSpec =
+        androidx.compose.material3.MaterialTheme.motionScheme.defaultSpatialSpec<Float>()
+    val showSpec = spatialFlingSpec
+    val hideSpec =
+        androidx.compose.material3.MaterialTheme.motionScheme.fastEffectsSpec<Float>()
+    if (isModal) {
+        // ModalBottomSheet.kt — `LaunchedEffect { if (hasExpandedState)
+        // { show() } }`: the modal opens itself once anchors exist.
+        androidx.compose.runtime.LaunchedEffect(state.anchors.hasPositionFor(SheetValue.Expanded)) {
+            if (state.anchors.hasPositionFor(SheetValue.Expanded)) {
+                sheetOp(state, "show", showSpec, showSpec, hideSpec)
+            }
+        }
+    }
+    val anchoredDraggableFlingBehavior =
+        androidx.compose.foundation.gestures.AnchoredDraggableDefaults.flingBehavior(
+            state = state,
+            // BottomSheetDefaults.PositionalThreshold — internal, 56.dp.
+            positionalThreshold = { _ ->
+                with(uiDensity) { 56.dp.toPx() }
+            },
+            animationSpec = spatialFlingSpec,
+        )
+    val flingBehavior = androidx.compose.runtime.remember(
+        anchoredDraggableFlingBehavior, viewConfiguration, density,
+    ) {
+        if (isScaffold) {
+            anchoredDraggableFlingBehavior
+        } else {
+            // BottomSheet.kt:219-256 — `modalBottomSheetFlingBehavior`, the
+            // same BoundaryDampeningZone prelude the docked and modal sheets
+            // share.
+            object : androidx.compose.foundation.gestures.FlingBehavior {
+                override suspend fun androidx.compose.foundation.gestures.ScrollScope.performFling(
+                    initialVelocity: Float,
+                ): Float {
+                    val maxSystemVelocity = viewConfiguration.maximumFlingVelocity
+                    var safeVelocity =
+                        initialVelocity.coerceIn(-maxSystemVelocity, maxSystemVelocity)
+                    if (safeVelocity > 0f && anchors.hasPositionFor(SheetValue.Hidden)) {
+                        val hiddenAnchor = anchors.positionOf(SheetValue.Hidden)
+                        val currentOffset = state.requireOffset()
+                        val distanceToFloor = kotlin.math.max(0f, hiddenAnchor - currentOffset)
+                        // BottomSheetDefaults.BoundaryDampeningZone — 125.dp.
+                        val dampeningZone =
+                            with(uiDensity) {
+                                125.dp.toPx()
+                            }
+                        if (distanceToFloor < dampeningZone) {
+                            val factor = distanceToFloor / dampeningZone
+                            safeVelocity *= (factor * factor)
+                            // BottomSheetDefaults.VelocityThreshold — 125.dp.
+                            val velocityThresholdPx =
+                                with(uiDensity) {
+                                    125.dp.toPx()
+                                }
+                            if (initialVelocity >= velocityThresholdPx) {
+                                safeVelocity = kotlin.math.max(safeVelocity, velocityThresholdPx)
+                            }
+                        }
+                    }
+                    return with(anchoredDraggableFlingBehavior) { performFling(safeVelocity) }
+                }
+            }
+        }
+    }
+
+    // Replay state — the press baseline for `move` deltas and the dragging
+    // trace flag.
+    var pressed by remember { androidx.compose.runtime.mutableStateOf(false) }
+    var lastY = 0f
+    val sheetOpsEnabled = widget.gestures
+
+    val runnables = scene.actions.mapNotNull { a ->
+        val insideSheet = a.y >= widget.y &&
+            a.y <= widget.y + widget.height && a.x >= widget.x && a.x <= widget.x + widget.width
+        when {
+            a.kind == "press" && insideSheet -> a.at to Runnable {
+                if (isModal && a.y * density < state.offset) {
+                    // Above the sheet's top edge: the pin's Scrim consumes the
+                    // tap and calls animateToDismiss → sheetState.hide().
+                    // UNDISPATCHED starts the op in this frame — a plain
+                    // launch lands a variable 1-3 frames later and makes the
+                    // spring's start nondeterministic vs the Slint timeline.
+                    scope.launch(start = kotlinx.coroutines.CoroutineStart.UNDISPATCHED) {
+                        sheetOp(state, "hide", showSpec, showSpec, hideSpec)
+                    }
+                } else if (sheetOpsEnabled) {
+                    pressed = true
+                    lastY = a.y * density
+                }
+            }
+            // A move past the sheet's edge is still part of the gesture —
+            // only the initiating press is bounds-checked.
+            a.kind == "move" -> a.at to Runnable {
+                if (pressed && sheetOpsEnabled) {
+                    val y = a.y * density
+                    // The real drag pipes each delta through dragTo —
+                    // dispatchRawDelta is the same call (AnchoredDraggable.kt
+                    // :1248).
+                    state.dispatchRawDelta(y - lastY)
+                    lastY = y
+                }
+            }
+            a.kind == "release" -> a.at to Runnable {
+                if (pressed && sheetOpsEnabled) {
+                    pressed = false
+                    val v = a.velocity * density
+                    scope.launch(start = kotlinx.coroutines.CoroutineStart.UNDISPATCHED) {
+                        state.anchoredDrag {
+                            val scrollScope = object :
+                                androidx.compose.foundation.gestures.ScrollScope {
+                                override fun scrollBy(pixels: Float): Float =
+                                    state.dispatchRawDelta(pixels)
+                            }
+                            with(flingBehavior) { scrollScope.performFling(v) }
+                        }
+                    }
+                }
+            }
+            a.kind == "show" || a.kind == "hide" || a.kind == "expand" ||
+                a.kind == "partial-expand" -> a.at to Runnable {
+                val kind = a.kind
+                scope.launch(start = kotlinx.coroutines.CoroutineStart.UNDISPATCHED) {
+                    sheetOp(state, kind, showSpec, showSpec, hideSpec)
+                }
+            }
+            else -> null
+        }
+    }
+    DisposableEffect(Unit) {
+        runnables.forEach { emitPress.add(it) }
+        onDispose { runnables.forEach { emitPress.remove(it) } }
+    }
+
+    registerSheetTraceProps(
+        tracer,
+        offsetPx = { state.offset },
+        currentValue = { state.currentValue },
+        targetValue = { state.targetValue },
+        isVisible = { state.currentValue != SheetValue.Hidden },
+        dragging = { pressed },
+        hasExpanded = { state.anchors.hasPositionFor(SheetValue.Expanded) },
+        hasPartial = { state.anchors.hasPositionFor(SheetValue.PartiallyExpanded) },
+        sheetHeightDp = sheetH,
+        density = density,
+        surfaceTag = tag,
+        uiDensity = uiDensity,
+    )
+
+    Box(Modifier.offset(widget.x.dp, widget.y.dp).size(widget.width.dp, widget.height.dp)) {
+        if (isModal) {
+            val scrimAlpha by animateFloatAsState(
+                targetValue = if (state.targetValue != SheetValue.Hidden) 1f else 0f,
+                animationSpec =
+                    androidx.compose.material3.MaterialTheme.motionScheme.defaultEffectsSpec(),
+                label = "ScrimAlphaAnimation",
+            )
+            Box(
+                Modifier.fillMaxSize()
+                    .background(BottomSheetDefaults.ScrimColor.copy(alpha = scrimAlpha)),
+            )
+        }
+        if (isScaffold) {
+            Box(Modifier.fillMaxSize().background(schemeColor(widget.bodyColor)))
+        }
+        // BottomSheet.kt's `verticalScaleUp` (:340-360): past the topmost
+        // anchor the surface stretches so its floor stays on the min anchor;
+        // the column's content keeps natural height pinned to the top.
+        val offsetDp = if (state.offset.isNaN()) layoutH else state.offset / density
+        val minAnchorDp = state.anchors.minPosition() / density
+        val stretched = sheetH + kotlin.math.max(0f, minAnchorDp - offsetDp)
+        Column(
+            Modifier.align(Alignment.TopCenter)
+                .widthIn(max = BottomSheetDefaults.SheetMaxWidth)
+                .fillMaxWidth()
+                .offset { IntOffset(0, (offsetDp * density).roundToInt()) }
+                .requiredHeight(stretched.dp)
+                .clip(BottomSheetDefaults.ExpandedShape)
+                .background(BottomSheetDefaults.ContainerColor)
+                .track(tracer, tag),
+        ) {
+            Box(
+                Modifier.fillMaxWidth().height(48.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                BottomSheetDefaults.DragHandle()
+            }
+            Box(
+                Modifier.fillMaxWidth()
+                    .height(widget.sheetHeight.dp)
+                    .background(schemeColor(widget.contentColor)),
+            )
+        }
     }
 }
 
@@ -3167,3 +4230,4 @@ private fun StateConnectedGroup(
         }
     }
 }
+

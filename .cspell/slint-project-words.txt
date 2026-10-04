@@ -211,6 +211,7 @@ dynamiccolor
 eabi
 eabihf
 Eeprom
+embeddedfonts
 eiusmod
 ELCDIF
 elementwise
@@ -462,6 +463,7 @@ linebreaker
 LINRGB
 linuxkms
 lipo
+listtile
 Literata
 Llff
 Lmaterial
@@ -649,6 +651,7 @@ recompiles
 recompositions
 rects
 redoable
+reemit
 REFR
 relpath
 remoteviewer
@@ -695,6 +698,7 @@ sdkmanager
 seatd
 segmentedbutton
 segmenteditem
+segmentedlistitem
 Segoe
 serde
 setattr
@@ -735,6 +739,8 @@ srcroot
 SRCS
 SRGBA
 acosf
+bottomsheet
+bottomsheetscaffold
 sinf
 standardbutton
 startswith
@@ -748,6 +754,10 @@ STOOQ
 streamable
 STREQUAL
 cbrtf
+draghandle
+modalbottomsheet
+pressable
+scrimmed
 strikethrough
 strprop
 strs
@@ -836,6 +846,7 @@ unauthored
 unclipped
 uncoerced
 Uncontained
+UNDISPATCHED
 unfocus
 unfocusable
 unhinted
@@ -867,9 +878,12 @@ veniam
 venv
 VercodeOperation
 verticalbox
+verticaldraghandle
 verticallayout
 verts
 VGWGPU
+vhandle
+vhandles
 viewports
 Vlachou
 vlayout

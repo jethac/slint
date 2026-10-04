@@ -149,15 +149,94 @@ fn outline_to_femtovg_path(
     outline: &i_slint_core::graphics::ElementOutline,
     target: PhysicalRect,
 ) -> femtovg::Path {
+    use i_slint_core::graphics::OutlinePathEl;
+
+    // FemtoVG's fringe expansion is directional: for a contour winding the
+    // "wrong" way (positive signed area — the convention Slint's own outlines
+    // use) the miter direction points outward and the opaque fringe vertex
+    // lands ~1.5px outside the silhouette. Its own path builders emit the
+    // opposite winding, so reverse contours here before handing them over.
+    let mut verbs = Vec::new();
+    outline.for_each_path(target, &mut |el| verbs.push(el));
+
     let mut path = femtovg::Path::new();
-    outline.for_each_path(target, &mut |el| match el {
-        i_slint_core::graphics::OutlinePathEl::MoveTo(p) => path.move_to(p.x, p.y),
-        i_slint_core::graphics::OutlinePathEl::LineTo(p) => path.line_to(p.x, p.y),
-        i_slint_core::graphics::OutlinePathEl::CurveTo(c0, c1, p) => {
-            path.bezier_to(c0.x, c0.y, c1.x, c1.y, p.x, p.y)
+    let emit = |path: &mut femtovg::Path, el: &OutlinePathEl| match el {
+        OutlinePathEl::MoveTo(p) => path.move_to(p.x, p.y),
+        OutlinePathEl::LineTo(p) => path.line_to(p.x, p.y),
+        OutlinePathEl::CurveTo(c0, c1, p) => path.bezier_to(c0.x, c0.y, c1.x, c1.y, p.x, p.y),
+        OutlinePathEl::Close => path.close(),
+    };
+
+    // Segment the path into `Close`-terminated contours; each entry is
+    // (start_point, verb). The signed area over the segment endpoints tells
+    // the contour's winding (curves count by their endpoints, which is enough
+    // for the sign here).
+    let mut contours: Vec<Vec<(i_slint_core::graphics::OutlinePoint, OutlinePathEl)>> = Vec::new();
+    let mut contour: Vec<(i_slint_core::graphics::OutlinePoint, OutlinePathEl)> = Vec::new();
+    let mut pen = None;
+    for el in &verbs {
+        match el {
+            OutlinePathEl::MoveTo(p) => pen = Some(*p),
+            OutlinePathEl::LineTo(..) | OutlinePathEl::CurveTo(..) => {
+                let Some(start) = pen else { continue };
+                contour.push((start, *el));
+                pen = match el {
+                    OutlinePathEl::LineTo(p) | OutlinePathEl::CurveTo(.., p) => Some(*p),
+                    _ => pen,
+                };
+            }
+            OutlinePathEl::Close => {
+                contours.push(std::mem::take(&mut contour));
+                pen = None;
+            }
         }
-        i_slint_core::graphics::OutlinePathEl::Close => path.close(),
-    });
+    }
+    if !contour.is_empty() {
+        contours.push(contour);
+    }
+
+    // Reverse ALL contours together when the path's net winding is positive:
+    // flipping only some of them would break holes under the nonzero fill
+    // rule, while reversing the whole path preserves the relative winding and
+    // fixes the fringe direction on every contour.
+    let area2: f32 = contours
+        .iter()
+        .flat_map(|c| c.iter())
+        .map(|(start, el)| {
+            let end = match el {
+                OutlinePathEl::LineTo(p) | OutlinePathEl::CurveTo(.., p) => *p,
+                _ => *start,
+            };
+            start.x * end.y - end.x * start.y
+        })
+        .sum();
+    if area2 <= 0. {
+        for el in &verbs {
+            emit(&mut path, el);
+        }
+        return path;
+    }
+    for contour in &contours {
+        // Each segment goes backwards, ending at its original start point.
+        let Some((_, last_el)) = contour.last() else { continue };
+        let start = match last_el {
+            OutlinePathEl::LineTo(p) | OutlinePathEl::CurveTo(.., p) => *p,
+            _ => continue,
+        };
+        path.move_to(start.x, start.y);
+        for (start, el) in contour.iter().rev() {
+            match el {
+                OutlinePathEl::LineTo(..) => {
+                    path.line_to(start.x, start.y);
+                }
+                OutlinePathEl::CurveTo(c0, c1, ..) => {
+                    path.bezier_to(c1.x, c1.y, c0.x, c0.y, start.x, start.y);
+                }
+                _ => {}
+            }
+        }
+        path.close();
+    }
     path
 }
 
