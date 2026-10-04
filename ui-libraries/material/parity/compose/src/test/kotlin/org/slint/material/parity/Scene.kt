@@ -61,6 +61,9 @@ class Action(json: JSONObject) {
     /** Dispatch time within the frame sequence (ms); `0` fires right after
      * the pre-gesture baseline frame, as before. */
     val at: Long = json.optLong("at", 0)
+    /** Sheet fling scenes: the release velocity in dp/s the Slint gesture
+     * measures — the value the mirror feeds to the fling behavior. */
+    val velocity: Float = json.optDouble("velocity", 0.0).toFloat()
 }
 
 class Widget(json: JSONObject) {
@@ -164,10 +167,12 @@ class Widget(json: JSONObject) {
     /** Groups: every item carries its own checked state instead of one
      * [selectedIndex]. */
     val multiSelect: Boolean = json.optBoolean("multi_select", false)
-    /** Single-select groups: the checked item (`-1` selects none). */
-    val selectedIndex: Int = json.optInt("selected_index", -1)
-    /** `extended-fab` expansion state (`expanded` upstream). */
-    val expanded: Boolean = json.optBoolean("expanded", true)
+    /** Single-select groups: the checked item (`-1` selects none); for
+     * rails, the selected item index (`current-index` on the Slint side). */
+    val selectedIndex: Int = json.optInt("selected_index", if (kind.contains("rail")) 0 else -1)
+    /** `extended-fab` expansion state (`expanded` upstream); for rails,
+     * `WideNavigationRailValue` — expanded when true, collapsed when false. */
+    val expanded: Boolean = json.optBoolean("expanded", if (kind.contains("rail")) false else true)
     /** `fab`/`extended-fab` visibility — `visible` on
      * `Modifier.animateFloatingActionButton` upstream. */
     val shown: Boolean = json.optBoolean("shown", true)
@@ -194,8 +199,6 @@ class Widget(json: JSONObject) {
     val railItems: List<RailItem> =
         json.optJSONArray("rail_items")?.let { a -> (0 until a.length()).map { RailItem(a.getJSONObject(it)) } }
             ?: emptyList()
-    /** `WideNavigationRailValue` — expanded when true, collapsed when false. */
-    val expanded: Boolean = json.optBoolean("expanded", false)
     /** `ModalWideNavigationRail`'s `hideOnCollapse` — the standalone modal
      * sheet that slides in instead of keeping a persistent rail. */
     val hideOnCollapse: Boolean = json.optBoolean("hide_on_collapse", false)
@@ -206,8 +209,6 @@ class Widget(json: JSONObject) {
     val fabIcon: String? = (json.opt("fab_icon") as? String)?.takeIf { it.isNotEmpty() }
     /** `NavigationRailItem.alwaysShowLabel` — narrow rail only. */
     val alwaysShowLabel: Boolean = json.optBoolean("always_show_label", true)
-    /** The selected item index (`current-index` on the Slint side). */
-    val selectedIndex: Int = json.optInt("selected_index", 0)
 
     val isFab: Boolean get() = kind == "fab" || kind == "extended-fab"
     val isSplitButton: Boolean get() = kind.endsWith("split-button")
@@ -218,6 +219,28 @@ class Widget(json: JSONObject) {
     /** `elevated-rect` only: the elevation in dp of the Android ambient+spot
      * shadow `Modifier.shadow` draws behind the caster. */
     val elevation: Float = json.optDouble("elevation", 0.0).toFloat()
+    /** Sheet kinds: the `sheetContent` rect's measured height in dp. */
+    val sheetHeight: Float = json.optDouble("sheet_height", 120.0).toFloat()
+    /** `bottom-sheet-scaffold` only: `sheetPeekHeight` (56 dp default). */
+    val peekHeight: Float = json.optDouble("peek_height", 56.0).toFloat()
+    /** Sheet kinds: `initialValue` — `hidden`, `partially-expanded`,
+     * `expanded`. */
+    val initial: String = (json.opt("initial") as? String) ?: "hidden"
+    /** Sheet kinds: `skipPartiallyExpanded`. */
+    val skipPartial: Boolean = json.optBoolean("skip_partial", false)
+    /** `bottom-sheet-scaffold` only: `skipHiddenState` (default true). */
+    val skipHidden: Boolean = json.optBoolean("skip_hidden", true)
+    /** Sheet kinds: `gesturesEnabled`/`sheetSwipeEnabled` (default true). */
+    val gestures: Boolean = json.optBoolean("gestures", true)
+    /** Sheet kinds: scheme role for the sheet content rect. */
+    val contentColor: String = (json.opt("content_color") as? String) ?: "tertiary-container"
+    /** `bottom-sheet-scaffold` only: scheme role for the scaffold body. */
+    val bodyColor: String = (json.opt("body_color") as? String) ?: "surface"
+    /** Sheet kinds: the M3 elevation level for `sheet-elevation-level`/
+     * `sheetShadowElevation` (-1 = the pinned default; scenes pass 0 —
+     * platform shadows deadlock layoutlib and shadow parity lives in the
+     * elevation scenes). */
+    val sheetElevation: Int = json.optInt("sheet_elevation", -1)
 }
 
 /** One rail item (`NavigationItem` on the Slint side): `{ "text": "Inbox",

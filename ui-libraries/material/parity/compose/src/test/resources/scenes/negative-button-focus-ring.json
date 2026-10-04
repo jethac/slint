@@ -3,6 +3,7 @@
     {
       "at": 0.0,
       "kind": "key:Tab",
+      "velocity": 0.0,
       "x": 0.0,
       "y": 0.0
     }
@@ -95,10 +96,12 @@
       "always_show_label": null,
       "arrangement": null,
       "avatar": null,
+      "body_color": null,
       "checkable": null,
       "checked": null,
       "checked_icon": null,
       "color": null,
+      "content_color": null,
       "content_offset": null,
       "corner": null,
       "count": null,
@@ -107,6 +110,7 @@
       "enabled": null,
       "expanded": null,
       "fab_icon": null,
+      "gestures": null,
       "height": null,
       "height_offset": null,
       "hide_on_collapse": null,
@@ -114,6 +118,7 @@
       "icons": [],
       "indeterminate": null,
       "index": null,
+      "initial": null,
       "interactive": null,
       "items": [],
       "kind": "filled-button",
@@ -123,6 +128,7 @@
       "multi_select": null,
       "nav_icon": null,
       "overline": null,
+      "peek_height": null,
       "placeholder": null,
       "position": null,
       "progress": null,
@@ -132,9 +138,13 @@
       "selected": null,
       "selected_index": null,
       "shape": null,
+      "sheet_elevation": null,
+      "sheet_height": null,
       "shown": null,
       "side": null,
       "size": null,
+      "skip_hidden": null,
+      "skip_partial": null,
       "slint_overrides": {
         "cover": {
           "fill": "primary"

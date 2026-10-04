@@ -998,6 +998,14 @@ fn gen_corelib(
         .export
         .pre_body
         .insert("SystemTrayIconDataBox".to_owned(), "struct SystemTrayIconData;".into());
+    config.export.body.insert(
+        "SwipeGestureHandler".to_owned(),
+        "    inline SwipeGestureHandler(); inline ~SwipeGestureHandler();".into(),
+    );
+    config
+        .export
+        .pre_body
+        .insert("SwipeVelocityDataBox".to_owned(), "struct SwipeVelocityData;".into());
     // cbindgen only derives the special member functions and equality for tagged enums in the
     // separate special-config pass, not for the types generated here, so they are provided by
     // hand. The `CustomMouseCursor` variant holds a non-trivial `Image`, so the active union
