@@ -3,12 +3,14 @@
     {
       "at": 0.0,
       "kind": "press",
+      "velocity": 0.0,
       "x": 150.0,
       "y": 48.0
     },
     {
       "at": 350.0,
       "kind": "release",
+      "velocity": 0.0,
       "x": 150.0,
       "y": 48.0
     }
@@ -129,10 +131,12 @@
     {
       "alignment": null,
       "avatar": null,
+      "body_color": null,
       "checkable": null,
       "checked": null,
       "checked_icon": null,
       "color": null,
+      "content_color": null,
       "content_offset": null,
       "corner": null,
       "count": null,
@@ -142,12 +146,14 @@
       "enabled": null,
       "expanded": null,
       "expanded_ratio": null,
+      "gestures": null,
       "height": null,
       "height_offset": null,
       "icon": null,
       "icons": [],
       "indeterminate": null,
       "index": null,
+      "initial": null,
       "interactive": null,
       "items": [
         {
@@ -188,6 +194,7 @@
       "multi_select": null,
       "nav_icon": null,
       "overline": null,
+      "peek_height": null,
       "placeholder": null,
       "position": null,
       "press_index": null,
@@ -198,9 +205,13 @@
       "selected_index": null,
       "selection": null,
       "shape": null,
+      "sheet_elevation": null,
+      "sheet_height": null,
       "shown": null,
       "side": null,
       "size": null,
+      "skip_hidden": null,
+      "skip_partial": null,
       "slint_overrides": {},
       "spacing": null,
       "state": null,

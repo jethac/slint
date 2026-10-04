@@ -3,12 +3,14 @@
     {
       "at": 0.0,
       "kind": "press",
+      "velocity": 0.0,
       "x": 200.0,
       "y": 60.0
     },
     {
       "at": 0.0,
       "kind": "release",
+      "velocity": 0.0,
       "x": 200.0,
       "y": 60.0
     }
