@@ -74,6 +74,8 @@ class Widget(json: JSONObject) {
     val height: Float = json.optDouble("height", 0.0).toFloat()
     val radius: Float = json.optDouble("radius", 0.0).toFloat()
     val text: String? = (json.opt("text") as? String)?.takeIf { it.isNotEmpty() }
+    /** `alert-dialog`/`basic-alert-dialog`: the dialog title. */
+    val title: String? = (json.opt("title") as? String)?.takeIf { it.isNotEmpty() }
     /** Stem of an svg under `src/ui/icons/` (`check` → `icons/check.svg`),
      * loaded as an [ImageVector] — the same path the Slint `Icons` image
      * rasterizes. */
@@ -185,9 +187,39 @@ class Widget(json: JSONObject) {
     /** `extended-fab` label-slot width pin — `Modifier.width` on the
      * upstream `text` composable; 0/unset sizes it to the text. */
     val labelWidth: Float = json.optDouble("label_width", 0.0).toFloat()
+
+    /** `date-picker`/`date-range-picker` initial `DisplayMode` —
+     * `picker` (default) or `input`. */
+    val displayMode: String = (json.opt("display_mode") as? String) ?: "picker"
+    /** `date-picker` selected day — `DatePickerState.selectedDateMillis`
+     * as an ISO `YYYY-MM-DD`. Shares the `selected` JSON key with the list
+     * `Boolean` (per-kind value type), so it needs its own accessor name. */
+    val selectedDate: String? = (json.opt("selected") as? String)?.takeIf { it.isNotEmpty() }
+    /** `date-range-picker` selection bounds — `selectedStartDateMillis`
+     * and `selectedEndDateMillis` as ISO dates. */
+    val selectedStart: String? =
+        (json.opt("selected_start") as? String)?.takeIf { it.isNotEmpty() }
+    val selectedEnd: String? = (json.opt("selected_end") as? String)?.takeIf { it.isNotEmpty() }
+    /** `displayedMonthMillis` — ISO `YYYY-MM-DD` or `YYYY-MM` (day 1). */
+    val displayed: String? = (json.opt("displayed") as? String)?.takeIf { it.isNotEmpty() }
+    /** `SelectableDates` window the mirror implements as a contiguous
+     * millis range — ISO dates; a missing bound is unrestricted. */
+    val selectableFrom: String? =
+        (json.opt("selectable_from") as? String)?.takeIf { it.isNotEmpty() }
+    val selectableTo: String? =
+        (json.opt("selectable_to") as? String)?.takeIf { it.isNotEmpty() }
+    /** `yearRange` on the picker state — the upstream default 1900–2100. */
+    val yearMin: Int = json.optInt("year_min", 1900)
+    val yearMax: Int = json.optInt("year_max", 2100)
+    /** `showModeToggle` on `DatePicker`/`DateRangePicker`. */
+    val showModeToggle: Boolean = json.optBoolean("show_mode_toggle", true)
+    /** The dialog's confirm `TextButton` enabled state. */
+    val confirmEnabled: Boolean = json.optBoolean("confirm_enabled", true)
+
     /** `*-divider` line thickness in dp — `DividerDefaults.Thickness` when
      * unset; `0` is the upstream `Dp.Hairline` (one physical pixel). */
     val thickness: Float = json.optDouble("thickness", 1.0).toFloat()
+
 
     val isFab: Boolean get() = kind == "fab" || kind == "extended-fab"
     val isSplitButton: Boolean get() = kind.endsWith("split-button")
@@ -236,6 +268,29 @@ class Widget(json: JSONObject) {
     val isMenu: Boolean get() =
         kind == "menu" || kind == "menu-popup" || kind == "menu-group" ||
             kind == "menu-item" || kind == "menu-divider" || kind == "menu-group-label"
+
+    /** Sheet kinds: the `sheetContent` rect's measured height in dp. */
+    val sheetHeight: Float = json.optDouble("sheet_height", 120.0).toFloat()
+    /** `bottom-sheet-scaffold` only: `sheetPeekHeight` (56 dp default). */
+    val peekHeight: Float = json.optDouble("peek_height", 56.0).toFloat()
+    /** Sheet kinds: `initialValue` — `hidden`, `partially-expanded`,
+     * `expanded`. */
+    val initial: String = (json.opt("initial") as? String) ?: "hidden"
+    /** Sheet kinds: `skipPartiallyExpanded`. */
+    val skipPartial: Boolean = json.optBoolean("skip_partial", false)
+    /** `bottom-sheet-scaffold` only: `skipHiddenState` (default true). */
+    val skipHidden: Boolean = json.optBoolean("skip_hidden", true)
+    /** Sheet kinds: `gesturesEnabled`/`sheetSwipeEnabled` (default true). */
+    val gestures: Boolean = json.optBoolean("gestures", true)
+    /** Sheet kinds: scheme role for the sheet content rect. */
+    val contentColor: String = (json.opt("content_color") as? String) ?: "tertiary-container"
+    /** `bottom-sheet-scaffold` only: scheme role for the scaffold body. */
+    val bodyColor: String = (json.opt("body_color") as? String) ?: "surface"
+    /** Sheet kinds: the M3 elevation level for `sheet-elevation-level`/
+     * `sheetShadowElevation` (-1 = the pinned default; scenes pass 0 —
+     * platform shadows deadlock layoutlib and shadow parity lives in the
+     * elevation scenes). */
+    val sheetElevation: Int = json.optInt("sheet_elevation", -1)
 }
 
 /** One entry of a menu `items`/`groups[].items` model — the slots of
@@ -261,28 +316,6 @@ class MenuGroup(json: JSONObject) {
     val items: List<MenuItem> =
         json.optJSONArray("items")?.let { a -> (0 until a.length()).map { MenuItem(a.getJSONObject(it)) } }
             ?: emptyList()
-    /** Sheet kinds: the `sheetContent` rect's measured height in dp. */
-    val sheetHeight: Float = json.optDouble("sheet_height", 120.0).toFloat()
-    /** `bottom-sheet-scaffold` only: `sheetPeekHeight` (56 dp default). */
-    val peekHeight: Float = json.optDouble("peek_height", 56.0).toFloat()
-    /** Sheet kinds: `initialValue` — `hidden`, `partially-expanded`,
-     * `expanded`. */
-    val initial: String = (json.opt("initial") as? String) ?: "hidden"
-    /** Sheet kinds: `skipPartiallyExpanded`. */
-    val skipPartial: Boolean = json.optBoolean("skip_partial", false)
-    /** `bottom-sheet-scaffold` only: `skipHiddenState` (default true). */
-    val skipHidden: Boolean = json.optBoolean("skip_hidden", true)
-    /** Sheet kinds: `gesturesEnabled`/`sheetSwipeEnabled` (default true). */
-    val gestures: Boolean = json.optBoolean("gestures", true)
-    /** Sheet kinds: scheme role for the sheet content rect. */
-    val contentColor: String = (json.opt("content_color") as? String) ?: "tertiary-container"
-    /** `bottom-sheet-scaffold` only: scheme role for the scaffold body. */
-    val bodyColor: String = (json.opt("body_color") as? String) ?: "surface"
-    /** Sheet kinds: the M3 elevation level for `sheet-elevation-level`/
-     * `sheetShadowElevation` (-1 = the pinned default; scenes pass 0 —
-     * platform shadows deadlock layoutlib and shadow parity lives in the
-     * elevation scenes). */
-    val sheetElevation: Int = json.optInt("sheet_elevation", -1)
 }
 
 /** One item of a `connected-button-group`: the label, an optional leading
