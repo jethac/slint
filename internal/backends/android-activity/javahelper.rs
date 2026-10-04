@@ -5,7 +5,6 @@
 // renamed to `try_update` and deprecated on newer toolchains (jni 0.22.4 is the
 // latest release).
 #![allow(deprecated)]
-
 // cSpell: ignore dalvik jboolean jfloat jint
 #![allow(
     deprecated,
