@@ -7,13 +7,11 @@
      ModalBottomSheetScrim and RangeSliderImpl paths fail. Declaring the
      strings they resolve here gives them the same merged ids with their
      official default values (androidx.compose.material3:material3:1.5.0-alpha18,
-     values.xml; androidx.compose.ui:ui's close_sheet/range_start/range_end;
+     values.xml; androidx.compose.ui:ui's close_sheet;
      androidx.compose.foundation:foundation's tooltip_*). -->
 <resources>
     <string name="m3c_search_bar_search">Search</string>
     <string name="m3c_suggestions_available">Suggestions below</string>
-    <string name="range_start">Range start</string>
-    <string name="range_end">Range end</string>
     <string name="m3c_bottom_sheet_pane_title">Bottom Sheet</string>
     <string name="m3c_bottom_sheet_collapse_description">Collapse bottom sheet</string>
     <string name="m3c_bottom_sheet_dismiss_description">Dismiss bottom sheet</string>
