@@ -16,12 +16,11 @@ fn floating_toolbar_scroll_collapse() -> Result<(), Box<dyn Error>> {
     slint_testing::init_no_event_loop();
     slint_testing::configure_test_fonts();
 
-    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
-        .join("material_toolbar_scroll.slint");
+    let path =
+        std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("material_toolbar_scroll.slint");
     let compiler = slint_interpreter::Compiler::default();
-    let result = spin_on::spin_on(
-        compiler.build_from_source(std::fs::read_to_string(&path)?, path),
-    );
+    let result =
+        spin_on::spin_on(compiler.build_from_source(std::fs::read_to_string(&path)?, path));
     slint_interpreter::print_diagnostics(&result.diagnostics().collect::<Vec<_>>());
     assert!(!result.has_errors());
     let instance = result.component("TestCase").unwrap().create().unwrap();
