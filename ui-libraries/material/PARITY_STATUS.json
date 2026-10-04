@@ -1013,8 +1013,8 @@
       11
     ],
     "needs": "dynamic color (#8)",
-    "notes": "",
-    "status": "missing"
+    "notes": "Surface.kt all four overloads as flags: clickable/selectable/toggleable; surfaceColorAtElevation tint via surface_tint.mix; parent_absolute_tonal_elevation stands in for LocalAbsoluteTonalElevation; contentColor via MaterialPalette.content-color-for. Paparazzi can't draw Modifier.shadow — parity scenes exercise the tonal side only.",
+    "status": "done"
   },
   "SwipeToDismissBox": {
     "issues": [

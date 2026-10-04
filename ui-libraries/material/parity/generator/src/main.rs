@@ -462,6 +462,28 @@ struct Widget {
     /// `NavigationItemIconPosition` — `top` (default) or `start`.
     #[serde(default)]
     icon_position: Option<String>,
+    /// `material-surface`: upstream `tonalElevation` in dp.
+    #[serde(default)]
+    tonal_elevation: Option<f64>,
+    /// `material-surface`: the ambient `LocalAbsoluteTonalElevation` a parent
+    /// Surface would provide (dp) — the absolute-elevation sum is the tint
+    /// key, so `tonal_elevation` + `parent_elevation` tints like a nested
+    /// surface.
+    #[serde(default)]
+    parent_elevation: Option<f64>,
+    /// `material-surface`: `BorderStroke` — `border_width` in dp and
+    /// `border_color` as a palette role (default `outline`).
+    #[serde(default)]
+    border_width: Option<f64>,
+    #[serde(default)]
+    border_color: Option<String>,
+    /// `material-surface` overloads: `clickable` (`onClick`) and
+    /// `toggleable` (`checked`, reuses the `checked` field) — `selectable`
+    /// and `selected` are declared above with the list-item overloads.
+    #[serde(default)]
+    clickable: Option<bool>,
+    #[serde(default)]
+    toggleable: Option<bool>,
     /// What this widget deliberately gets wrong on the Slint side
     /// (`negative` scenes only). Keys shadow the widget's own fields.
     #[serde(default)]
@@ -942,6 +964,7 @@ fn slint_case(scene: &Scene) -> String {
             "extended-fab" => "ExtendedFloatingActionButton",
             "radio-button" => "RadioButton",
             "switch" => "Switch",
+            "material-surface" => "Surface",
             // `surface` imports `Elevation`/`MaterialShapes` below instead;
             // `rect`/`elevated-rect` are plain `Rectangle`s — no import.
             "rect" | "surface" | "elevated-rect" => continue,
@@ -1072,6 +1095,9 @@ fn slint_case(scene: &Scene) -> String {
     }
     if scene.widgets.iter().any(|w| w.slint_overrides.contains_key("sheet_shape")) {
         imports.push("ShapeTokens");
+    }
+    if scene.widgets.iter().any(|w| w.kind == "material-surface" && w.text.is_some()) {
+        imports.push("MaterialText");
     }
     imports.sort();
     imports.dedup();
@@ -1711,6 +1737,7 @@ fn slint_canvas(s: &mut String, scene: &Scene) {
     let mut buttons = 0;
     let mut surfaces = 0;
     let mut items = 0;
+    let mut material_surfaces = 0;
     let mut appbars = 0;
     let mut sheets = 0;
     // `handle{n}` counts `drag-handle`s, `vhandle{n}` counts
@@ -1852,6 +1879,94 @@ fn slint_canvas(s: &mut String, scene: &Scene) {
                 continue;
             }
 
+            "material-surface" => {
+                let i = material_surfaces;
+                material_surfaces += 1;
+                let mut body = String::new();
+                // `slint_overrides.color`/`tonal_elevation`/`radius` plant the
+                // wrong token on the Slint side — the negative scenes'
+                // deliberate defects.
+                let color = w
+                    .slint_overrides
+                    .get("color")
+                    .and_then(|v| v.as_str())
+                    .map(str::to_string)
+                    .or_else(|| w.color.clone());
+                if let Some(c) = &color {
+                    writeln!(body, "        color: MaterialPalette.{};", c.replace('-', "_")).unwrap();
+                }
+                let tonal = w
+                    .slint_overrides
+                    .get("tonal_elevation")
+                    .map(|v| widget_num(v))
+                    .or(w.tonal_elevation);
+                if let Some(t) = tonal {
+                    writeln!(body, "        tonal_elevation: {t}px;").unwrap();
+                }
+                if let Some(p) = w.parent_elevation {
+                    writeln!(body, "        parent_absolute_tonal_elevation: {p}px;").unwrap();
+                }
+                // Compose can't draw `Modifier.shadow` under Paparazzi —
+                // scenes keep `elevation` unset (0); the prop is still
+                // emitted so a scene can opt in where both sides render.
+                if let Some(e) = w.elevation {
+                    writeln!(body, "        shadow_elevation: {e}px;").unwrap();
+                }
+                if let Some(bw) = w.border_width {
+                    writeln!(body, "        border_width: {bw}px;").unwrap();
+                    writeln!(
+                        body,
+                        "        border_color: MaterialPalette.{};",
+                        w.border_color.as_deref().unwrap_or("outline").replace('-', "_")
+                    )
+                    .unwrap();
+                }
+                let radius = w
+                    .slint_overrides
+                    .get("radius")
+                    .map(|v| widget_num(v))
+                    .or(w.radius);
+                if let Some(r) = radius {
+                    writeln!(body, "        border_radius: {r}px;").unwrap();
+                }
+                if w.clickable.unwrap_or(false) {
+                    writeln!(body, "        clickable: true;").unwrap();
+                }
+                if w.selectable.unwrap_or(false) {
+                    writeln!(body, "        selectable: true;").unwrap();
+                    if w.selected.as_ref().and_then(|v| v.as_bool()).unwrap_or(false) {
+                        writeln!(body, "        selected: true;").unwrap();
+                    }
+                }
+                if w.toggleable.unwrap_or(false) {
+                    writeln!(body, "        toggleable: true;").unwrap();
+                    if w.checked.unwrap_or(false) {
+                        writeln!(body, "        checked: true;").unwrap();
+                    }
+                }
+                if w.enabled == Some(false) {
+                    writeln!(body, "        enabled: false;").unwrap();
+                }
+                writeln!(
+                    s,
+                    "    msurface{i} := Surface {{\n        x: {}px;\n        y: {}px;\n        width: {}px;\n        height: {}px;\n{body}    }}\n",
+                    w.x as i64,
+                    w.y as i64,
+                    w.width.unwrap() as i64,
+                    w.height.unwrap() as i64,
+                )
+                .unwrap();
+                // An optional text child draws in the surface's provided
+                // `content_color` — the `LocalContentColor` stand-in.
+                if let Some(text) = &w.text {
+                    writeln!(
+                        s,
+                        "    MaterialText {{\n        x: msurface{i}.x + 8px;\n        y: msurface{i}.y + 8px;\n        text: \"{text}\";\n        color: msurface{i}.content_color;\n    }}\n"
+                    )
+                    .unwrap();
+                }
+                continue;
+            }
             // Unlike `surface` (the Material `Elevation` component, which sets
             // the layer colors explicitly), `elevated-rect` exercises a plain
             // `Rectangle`'s `elevation` — the compiler-default shadow colors.
