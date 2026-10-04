@@ -3940,15 +3940,18 @@ impl<T: ProcessScene> i_slint_core::item_rendering::ItemRenderer for SceneBuilde
                 .cast::<i16>()
                 .transformed(self.rotation);
 
-        let Some(clipped_geom) = bounds.round_out().cast().intersection(&physical_clip) else {
-            return;
-        };
+        // A degenerate path bounds (e.g. a perfectly axis-aligned line) rounds
+        // out to an empty rect and yields no fill clip — skip the fill, but
+        // still emit the stroke, whose expanded bounds are non-degenerate.
+        let clipped_geom = bounds.round_out().cast().intersection(&physical_clip);
 
         let alpha = self.current_state.alpha;
         let contours = alloc::rc::Rc::new(contours);
 
         // Fill
-        if let Some(brush) = path_brush(&path.fill(), alpha, brush_bounds) {
+        if let Some(clipped_geom) = clipped_geom
+            && let Some(brush) = path_brush(&path.fill(), alpha, brush_bounds)
+        {
             self.processor.process_path(
                 alloc::rc::Rc::new(PathCommandData {
                     contours: contours.clone(),
