@@ -48,10 +48,6 @@ global TabMetrics {
 /// composables unified — `leading_icon` switches between the stacked
 /// `TabBaselineLayout` arrangement and the leading-icon row.
 component TabItemTemplate inherits BaseNavigationItemTemplate {
-    /// `Tab.enabled`. A disabled item keeps its content colors (upstream
-    /// leaves dimming to the caller) but takes no focus, clicks or
-    /// state layers.
-    in property <bool> enabled: true;
     /// Lay out like `LeadingIconTab`: icon and label side by side inside
     /// `HorizontalTextPadding`, instead of the stacked `Tab` arrangement.
     in property <bool> leading_icon;
