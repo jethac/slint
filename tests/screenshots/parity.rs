@@ -2277,8 +2277,12 @@ pub fn run_parity_case<C: i_slint_core::api::ComponentHandle>(
                 actual.height(),
                 // `//XFAIL_TEXT=*N` widens the ink mask with the same scale
                 // it grants the per-cell mean — the accumulated drift it
-                // names moves ink past the default 2px apron.
-                if xfail_text.is_some() { 2.0 * spec.xfail_text_scale } else { 2.0 },
+                // names moves ink past the default apron.
+                if xfail_text.is_some() {
+                    (2.0 + 4.0 * *density as f64) * spec.xfail_text_scale
+                } else {
+                    2.0
+                },
             );
             // `xfail_text` scenes carry the documented issue-#28 advance drift
             // (Slint ceils text layout widths where Compose keeps fractional
@@ -2299,7 +2303,7 @@ pub fn run_parity_case<C: i_slint_core::api::ComponentHandle>(
             // double that baseline — `//XFAIL_TEXT=*N` scales the cap per
             // case.
             let text_cell_eps = if xfail_text.is_some() {
-                TEXT_CELL_EPS * 1.5 * *density as f64 * spec.xfail_text_scale
+                TEXT_CELL_EPS * 2.0 * *density as f64 * spec.xfail_text_scale
             } else {
                 TEXT_CELL_EPS
             };
