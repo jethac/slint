@@ -198,6 +198,16 @@ class Widget(json: JSONObject) {
 
     val isFab: Boolean get() = kind == "fab" || kind == "extended-fab"
     val isSplitButton: Boolean get() = kind.endsWith("split-button")
+    // --- navigation-rail / navigation-bar kinds ---
+    /** `NavigationRailItem.alwaysShowLabel` / `NavigationBarItem.alwaysShowLabel`
+     * — narrow rail and tall navigation bar only. */
+    val alwaysShowLabel: Boolean = json.optBoolean("always_show_label", true)
+    /** `ShortNavigationBarArrangement` — `equal-weight` (default) or
+     * `centered`. */
+    val navArrangement: String = (json.opt("nav_arrangement") as? String) ?: "equal-weight"
+    /** `NavigationItemIconPosition` — `top` (default) or `start`. */
+    val iconPosition: String = (json.opt("icon_position") as? String) ?: "top"
+
     val isIconButton: Boolean get() = kind.endsWith("icon-button")
     val isButton: Boolean get() =
         (isIconButton || isSplitButton || kind.endsWith("-button")) && kind != "connected-button"
@@ -235,7 +245,7 @@ class Widget(json: JSONObject) {
  * while checked, a `weight` width share, `disabled`/`enabled`, `checked`,
  * and an interaction `state` emitted on the item's own `InteractionSource`. */
 class GroupItem(json: JSONObject) {
-    val text: String? = (json.opt("text") as? String)?.takeIf { it.isNotEmpty() }
+    val text: String = json.optString("text", "")
     /** Icon stem under `src/ui/icons/` — loaded like a widget's `icon`. */
     val icon: String? = (json.opt("icon") as? String)?.takeIf { it.isNotEmpty() }
     val checkedIcon: String? = (json.opt("checked_icon") as? String)?.takeIf { it.isNotEmpty() }
@@ -249,6 +259,10 @@ class GroupItem(json: JSONObject) {
     val state: String = (json.opt("state") as? String) ?: "enabled"
     /** The item participates when both sides' enable flags say so. */
     fun isEnabled() = enabled && !disabled
+    // --- rail / navigation-bar item fields ---
+    val selectedIcon: String? =
+        (json.opt("selected_icon") as? String)?.takeIf { it.isNotEmpty() }
+    val badge: String? = (json.opt("badge") as? String)?.takeIf { it.isNotEmpty() }
 }
 
 /** "primary-container" → "primaryContainer" for `scheme` map lookups. */
