@@ -509,6 +509,24 @@ SPDX-FileCopyrightText = "Copyright © SixtyFPS GmbH <info@slint.dev>"
 SPDX-License-Identifier = "MIT"
 
 [[annotations]]
+path = ["ui-libraries/material/parity/compose/src/main/res/values/foundation_strings.xml"]
+precedence = "aggregate"
+SPDX-FileCopyrightText = "Copyright 2023 The Android Open Source Project"
+SPDX-License-Identifier = "Apache-2.0"
+
+[[annotations]]
+path = ["ui-libraries/material/parity/compose/src/main/res/values/m3c_strings.xml"]
+precedence = "aggregate"
+SPDX-FileCopyrightText = "Copyright 2022 The Android Open Source Project"
+SPDX-License-Identifier = "Apache-2.0"
+
+[[annotations]]
+path = ["ui-libraries/material/parity/compose/src/main/res/values/ui_strings.xml"]
+precedence = "aggregate"
+SPDX-FileCopyrightText = "Copyright 2021 The Android Open Source Project"
+SPDX-License-Identifier = "Apache-2.0"
+
+[[annotations]]
 path = ["ui-libraries/material/parity/compose/src/test/resources/fonts/**.ttf"]
 precedence = "aggregate"
 SPDX-FileCopyrightText = "Roboto <https://fonts.google.com/specimen/Roboto/about>"

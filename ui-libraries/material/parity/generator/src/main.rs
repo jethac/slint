@@ -185,6 +185,47 @@ struct Widget {
     /// `alert-dialog`/`basic-alert-dialog`: the dialog title.
     #[serde(default)]
     title: Option<String>,
+    /// `date-picker`/`date-range-picker` initial `DisplayMode` — `picker`
+    /// (default) or `input`.
+    #[serde(default)]
+    display_mode: Option<String>,
+    /// `date-picker` selected day — ISO `YYYY-MM-DD` — and the `ListItem`
+    /// `selected` visual state (`item_selected_*` colors + selected
+    /// container shape; `checked` plays the same role for `checkable`
+    /// widgets). The Kotlin side reads the same key polymorphically per
+    /// widget kind, so the field stays a raw value here.
+    #[serde(default)]
+    selected: Option<serde_json::Value>,
+    /// `date-range-picker` selection bounds — ISO dates.
+    #[serde(default)]
+    selected_start: Option<String>,
+    #[serde(default)]
+    selected_end: Option<String>,
+    /// `displayedMonth` — `YYYY-MM-DD` or `YYYY-MM` (day 1).
+    #[serde(default)]
+    displayed: Option<String>,
+    /// `SelectableDates` contiguous window — ISO dates, missing bound is
+    /// unrestricted.
+    #[serde(default)]
+    selectable_from: Option<String>,
+    #[serde(default)]
+    selectable_to: Option<String>,
+    /// `yearRange` — the upstream default 1900–2100.
+    #[serde(default)]
+    year_min: Option<i64>,
+    #[serde(default)]
+    year_max: Option<i64>,
+    /// `showModeToggle` on the pickers — upstream default true.
+    #[serde(default)]
+    show_mode_toggle: Option<bool>,
+    /// The dialog confirm `TextButton`'s enabled state.
+    #[serde(default)]
+    confirm_enabled: Option<bool>,
+    /// `date-range-picker` months composed — the slint side renders a
+    /// bounded list while upstream's `LazyColumn` composes every month in
+    /// `yearRange`; the viewport only shows the same leading months.
+    #[serde(default)]
+    months_to_show: Option<i64>,
     /// Named icon for `icon-button` kinds or a leading icon on a text
     /// button: the stem of an svg under `src/ui/icons/` (e.g. `check` for
     /// `Icons.check`). The generator copies the svg into the Compose
@@ -229,11 +270,6 @@ struct Widget {
     /// `ListItem(selected, onClick)` overload — `selectable` on the Slint side.
     #[serde(default)]
     selectable: Option<bool>,
-    /// The `selected` visual state (`item_selected_*` colors + selected
-    /// container shape). The `checked` field plays the same role for
-    /// `checkable` widgets.
-    #[serde(default)]
-    selected: Option<bool>,
     /// `DragInteraction` visual state on a list item (`ReorderListTokens`
     /// colors, dragged shape, dragged elevation). Scenes should not use it:
     /// the platform shadow it needs deadlocks layoutlib's renderer.
@@ -920,6 +956,8 @@ fn slint_case(scene: &Scene) -> String {
             // content uses components.
             "alert-dialog" => "AlertDialogContent",
             "basic-alert-dialog" => "MaterialText",
+            "date-picker" => "DatePicker",
+            "date-range-picker" => "DateRangePicker",
 
             "navigation-bar" => "NavigationBar",
             "short-navigation-bar" => "ShortNavigationBar",
@@ -928,6 +966,10 @@ fn slint_case(scene: &Scene) -> String {
         imports.push(component);
         if w.kind == "basic-alert-dialog" {
             imports.extend(["MaterialStyleMetrics", "MaterialTypography", "TextButton"]);
+        }
+        if w.kind == "date-picker" || w.kind == "date-range-picker" {
+            imports.push("DatePickerDialogContent");
+            imports.push("DatePickerDisplayMode");
         }
         if matches!(
             w.kind.as_str(),
@@ -1609,7 +1651,7 @@ fn list_props(w: &Widget, timed: bool, segmented: bool) -> String {
     if bool_over("checkable", w.checkable) {
         p.push_str("        checkable: true;\n");
     }
-    if bool_over("selected", w.selected) {
+    if bool_over("selected", w.selected.as_ref().and_then(|v| v.as_bool())) {
         p.push_str("        selected: true;\n");
     }
     if bool_over("checked", w.checked) {
@@ -1659,6 +1701,7 @@ fn slint_canvas(s: &mut String, scene: &Scene) {
     let mut drags = 0usize;
     let mut groups = 0;
     let mut dialogs = 0;
+    let mut pickers = 0;
     let mut icons = 0;
     let mut dividers = 0;
     let mut badges = 0;
@@ -1845,10 +1888,17 @@ fn slint_canvas(s: &mut String, scene: &Scene) {
                 connected_group_widget(s, w, i, scene);
                 continue;
             }
+
             "alert-dialog" | "basic-alert-dialog" => {
                 let i = dialogs;
                 dialogs += 1;
                 dialog_widget(s, w, i, scene);
+                continue;
+            }
+            "date-picker" | "date-range-picker" => {
+                let i = pickers;
+                pickers += 1;
+                date_picker_widget(s, w, i);
                 continue;
             }
             "icon" => {
@@ -2622,6 +2672,125 @@ fn dialog_widget(s: &mut String, w: &Widget, i: usize, scene: &Scene) {
     writeln!(
         s,
         "    dialog{i} := AlertDialogContent {{\n        x: (parent.width - self.width) / 2;\n        y: (parent.height - self.height) / 2;\n        available_width: parent.width;\n{p}    }}\n",
+    )
+    .unwrap();
+}
+
+
+/// ISO `YYYY-MM-DD`/`YYYY-MM` → a `Date` struct literal for the emitted
+/// `.slint` — `{ day: D, month: M, year: Y }`.
+fn slint_date_literal(iso: &str) -> String {
+    let mut it = iso.split('-');
+    let year: i64 = it.next().unwrap().parse().unwrap();
+    let month: i64 = it.next().unwrap().parse().unwrap();
+    let day: i64 = it.next().map(|d| d.parse().unwrap()).unwrap_or(1);
+    format!("{{ day: {day}, month: {month}, year: {year} }}")
+}
+
+/// A `date-picker`/`date-range-picker` inside `DatePickerDialogContent` —
+/// `DatePickerDialog` inline: the `Modal` scrim plus the centered 360dp
+/// pane capped at `ContainerHeight` (568), mirrored by
+/// `StateDatePickerDialog`.
+fn date_picker_widget(s: &mut String, w: &Widget, i: usize) {
+    let over = &w.slint_overrides;
+    writeln!(
+        s,
+        "    scrim{i} := Rectangle {{\n        x: 0px;\n        y: 0px;\n        width: 100%;\n        height: 100%;\n        background: MaterialPalette.background_modal;\n    }}\n",
+    )
+    .unwrap();
+
+    let mut p = String::new();
+    // `LocalMinimumInteractiveComponentSize` is 0 on the Compose side.
+    p.push_str("        enforce_touch_target: false;\n");
+    writeln!(p, "        confirm_enabled: {};", w.confirm_enabled.unwrap_or(true)).unwrap();
+    // `slint_overrides` defects for `negative` scenes.
+    if let Some(corner) = over.get("corner").and_then(|v| v.as_f64()) {
+        writeln!(
+            p,
+            "        container_shape: {{ top_left: {corner}px, top_right: {corner}px, bottom_right: {corner}px, bottom_left: {corner}px, full: false }};",
+        )
+        .unwrap();
+    }
+    if let Some(fill) = over.get("container").and_then(|v| v.as_str()) {
+        writeln!(p, "        container_color: MaterialPalette.{};", fill.replace('-', "_"))
+            .unwrap();
+    }
+    if let Some(v) = over.get("actions_spacing").and_then(|v| v.as_f64()) {
+        writeln!(p, "        actions_spacing: {v}px;").unwrap();
+    }
+
+    let mut inner = String::new();
+    let component = if w.kind == "date-range-picker" { "DateRangePicker" } else { "DatePicker" };
+    let display = match w.display_mode.as_deref() {
+        Some("input") => "DatePickerDisplayMode.input",
+        _ => "DatePickerDisplayMode.picker",
+    };
+    writeln!(inner, "            display_mode: {display};").unwrap();
+    if let Some(t) = &w.title {
+        writeln!(inner, "            title: \"{}\";", slint_str(t)).unwrap();
+    }
+    if let Some(v) = w.show_mode_toggle {
+        writeln!(inner, "            show_mode_toggle: {v};").unwrap();
+    }
+    inner.push_str("            enforce_touch_target: false;\n");
+    if let Some(d) = &w.displayed {
+        writeln!(inner, "            displayed_date: {};", slint_date_literal(d)).unwrap();
+    }
+    if w.kind == "date-picker" {
+        if let Some(d) = w.selected.as_ref().and_then(|v| v.as_str()) {
+            writeln!(inner, "            selected_date: {};", slint_date_literal(d)).unwrap();
+        }
+        if let Some(v) = w.year_min {
+            writeln!(inner, "            year_min: {v};").unwrap();
+        }
+        if let Some(v) = w.year_max {
+            writeln!(inner, "            year_max: {v};").unwrap();
+        }
+    } else {
+        if let Some(d) = &w.selected_start {
+            writeln!(inner, "            selected_start_date: {};", slint_date_literal(d))
+                .unwrap();
+        }
+        if let Some(d) = &w.selected_end {
+            writeln!(inner, "            selected_end_date: {};", slint_date_literal(d)).unwrap();
+        }
+        if let Some(v) = w.months_to_show {
+            writeln!(inner, "            months_to_show: {v};").unwrap();
+        }
+    }
+    if let Some(d) = &w.selectable_from {
+        writeln!(inner, "            selectable_from: {};", slint_date_literal(d)).unwrap();
+    }
+    if let Some(d) = &w.selectable_to {
+        writeln!(inner, "            selectable_to: {};", slint_date_literal(d)).unwrap();
+    }
+    if let Some(fill) = over.get("selected_day_container").and_then(|v| v.as_str()) {
+        writeln!(
+            inner,
+            "            selected_day_container_color: MaterialPalette.{};",
+            fill.replace('-', "_"),
+        )
+        .unwrap();
+    }
+    if w.kind == "date-range-picker" {
+        if let Some(fill) = over.get("range_band").and_then(|v| v.as_str()) {
+            writeln!(
+                inner,
+                "            day_in_range_container_color: MaterialPalette.{};",
+                fill.replace('-', "_"),
+            )
+            .unwrap();
+        }
+    }
+
+            // Compose lays out in physical pixels: `Center` snaps an odd
+        // (size - content) delta to an integer *device* pixel. `phx`
+        // rounds the same quantity in the same space - logical `px`
+        // rounding would be a half-pixel off at density 1 and a full one
+        // at density 2.
+writeln!(
+        s,
+        "    picker{i} := DatePickerDialogContent {{\n        x: Math.round((parent.width - self.width) / 1phx / 2) * 1phx;\n        y: Math.round((parent.height - self.height) / 1phx / 2) * 1phx;\n{p}\n        {component} {{\n{inner}        }}\n    }}\n",
     )
     .unwrap();
 }

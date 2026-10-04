@@ -1,0 +1,53 @@
+// Copyright © SixtyFPS GmbH <info@slint.dev>
+// SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0
+
+// Scene: negative-date-picker-selected-day — generated from `ui-libraries/material/parity/scenes/negative-date-picker-selected-day.json`
+// (edit the scene, regenerate with `cargo run -p material-parity-generator`).
+//PARITY=negative: the selected day fills with secondary-container instead of DateSelectedContainerColor's primary
+//SIZE=500x620
+//XFAIL_TEXT=issue #28: Slint ceils text layout widths where Compose keeps fractional advances
+//DENSITIES=1,2
+import "../../fonts/Roboto-VariableFont.ttf";
+import { DatePicker, DatePickerDialogContent, DatePickerDisplayMode, MaterialPalette, MaterialTheme, MaterialWindow } from "@material";
+
+export component TestCase inherits MaterialWindow {
+    init => {
+        // The scene pins seed #6750A4, tonal-spot, spec2025, light, contrast 0
+        // (all the library defaults; restated here so a default change can't
+        // silently move the parity baseline).
+        MaterialTheme.seed-color = #6750A4;
+        MaterialTheme.dark = false;
+        MaterialTheme.contrast-level = 0;
+        MaterialTheme.use-platform-color = false;
+        MaterialTheme.plain-family = "Roboto";
+        MaterialTheme.brand-family = "Roboto";
+        // Compose builds its scene scheme from the same seed — use the
+        // runtime-generated scheme, not the static expressive table.
+        MaterialPalette.dynamic = true;
+    }
+
+    scrim0 := Rectangle {
+        x: 0px;
+        y: 0px;
+        width: 100%;
+        height: 100%;
+        background: MaterialPalette.background_modal;
+    }
+
+    picker0 := DatePickerDialogContent {
+        x: Math.round((parent.width - self.width) / 1phx / 2) * 1phx;
+        y: Math.round((parent.height - self.height) / 1phx / 2) * 1phx;
+        enforce_touch_target: false;
+        confirm_enabled: true;
+
+        DatePicker {
+            display_mode: DatePickerDisplayMode.picker;
+            title: "Select date";
+            enforce_touch_target: false;
+            displayed_date: { day: 1, month: 3, year: 2031 };
+            selected_date: { day: 14, month: 3, year: 2031 };
+            selected_day_container_color: MaterialPalette.secondary_container;
+        }
+    }
+
+}

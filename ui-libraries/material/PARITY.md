@@ -152,8 +152,8 @@ States: selected, unselected, active
 
 | Component | Source | Status | Issues | Needs | Notes |
 |---|---|---|---|---|---|
-| DatePicker | DatePicker.kt | partial | #11 | none | slint component: DatePickerPopup |
-| DateRangePicker | DateRangePicker.kt | missing | #11 | none | - |
+| DatePicker | DatePicker.kt | done | #11 | none | slint component: DatePicker; parity cases: date_picker, date_picker_dark, date_picker_disabled, date_picker_empty, date_picker_input, negative-date-picker-{container,corner,selected-day} |
+| DateRangePicker | DateRangePicker.kt | done | #11 | none | slint component: DateRangePicker; parity cases: date_picker_range, date_picker_range_partial, date_picker_range_input, negative-date-picker-range-band |
 
 ### Dialogs
 
@@ -165,7 +165,7 @@ States: focused, hovered, pressed
 |---|---|---|---|---|---|
 | AlertDialog | AlertDialog.kt | done | #11 | none | slint components: Dialog, AlertDialogContent; parity cases: alert-dialog, alert-dialog-no-icon, alert-dialog-stacked, alert-dialog-dark, alert-dialog-action-hover, alert-dialog-action-press, alert-dialog-action-focus, negative-alert-dialog-{corner,container,padding,actions} |
 | BasicAlertDialog | AlertDialog.kt | done | #11 | none | slint component: BasicAlertDialog; parity case: basic-alert-dialog |
-| DatePickerDialog | DatePickerDialog.kt | partial | #11 | none | slint component: DatePickerPopup |
+| DatePickerDialog | DatePickerDialog.kt | done | #11 | none | slint components: DatePickerDialog, DatePickerDialogContent; host of the date_picker* parity cases |
 
 ### Divider
 

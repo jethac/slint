@@ -1,0 +1,41 @@
+{
+  "densities": [
+    1,
+    2
+  ],
+  "fonts": {
+    "brand": "Roboto",
+    "plain": "Roboto"
+  },
+  "name": "negative-date-picker-corner",
+  "negative_note": "the dialog pane rounds to 4dp instead of CornerExtraLarge's 28dp",
+  "parity": "negative",
+  "size": [
+    500,
+    620
+  ],
+  "theme": {
+    "contrast": 0.0,
+    "dark": false,
+    "platform": "phone",
+    "seed": "6750A4",
+    "spec": "spec2025",
+    "variant": "tonal-spot"
+  },
+  "trace_elements": [],
+  "trace_items": {},
+  "trace_props": [],
+  "type": "canvas",
+  "widgets": [
+    {
+      "displayed": "2031-03",
+      "kind": "date-picker",
+      "selected": "2031-03-14",
+      "slint_overrides": {
+        "corner": 4
+      },
+      "title": "Select date"
+    }
+  ],
+  "xfail_text": "issue #28: Slint ceils text layout widths where Compose keeps fractional advances"
+}
