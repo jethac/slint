@@ -6,12 +6,11 @@ import { MaterialTheme } from "../styling/material_theme.slint";
 
 export global MaterialWindowAdapter {
     in property <bool> disable_hover;
-    /// Logical size of the `MaterialWindow`, forwarded so overlay position
-    /// providers (e.g. `TooltipBox`) can clamp to the window edge like the
-    /// upstream `windowSize`-aware providers. `0` while unset — providers
-    /// skip the clamp.
-    in property <length> viewport_width;
-    in property <length> viewport_height;
+    /// The hosting window's logical size, published so overlay popups
+    /// (`ModalWideNavigationRail`'s dialog, modal sheets) can cover the
+    /// window; elements inside a component cannot reach `Window` otherwise.
+    in property <length> window-width;
+    in property <length> window-height;
 }
 
 export component MaterialWindow inherits Window {
@@ -24,20 +23,20 @@ export component MaterialWindow inherits Window {
     // under a variable font: engine `auto` would tie `opsz` to the pixel size.
     default-font-optical-sizing: none;
 
-    changed disable_hover => {
-        MaterialWindowAdapter.disable_hover = root.disable_hover;
-    }
-
     init => {
-        MaterialWindowAdapter.viewport_width = root.width;
-        MaterialWindowAdapter.viewport_height = root.height;
+        MaterialWindowAdapter.window-width = root.width;
+        MaterialWindowAdapter.window-height = root.height;
     }
 
     changed width => {
-        MaterialWindowAdapter.viewport_width = root.width;
+        MaterialWindowAdapter.window-width = root.width;
     }
 
     changed height => {
-        MaterialWindowAdapter.viewport_height = root.height;
+        MaterialWindowAdapter.window-height = root.height;
+    }
+
+    changed disable_hover => {
+        MaterialWindowAdapter.disable_hover = root.disable_hover;
     }
 }
