@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Verbatim copies of the compose-ui internal strings the parity scenes
+     render, taken from
+     compose/ui/ui/src/androidMain/res/values/strings.xml
+     at androidx/androidx@23327507f7fc7d5b19d65fec4b090f60c970079b.
+     Paparazzi does not explode library AAR resources, so composables that
+     call getString() on these (e.g. tooltip labels) fail to resolve
+     without the declarations here. -->
+<resources xmlns:android="http://schemas.android.com/apk/res/android" xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" xmlns:tools="http://schemas.android.com/tools">
+    <!-- Spoken description of indeterminate state of a tri-state checkbox -->
+    <string name="indeterminate">Partially checked</string>
+    <!-- Spoken description of on state of a switch -->
+    <string name="state_on">On</string>
+    <!-- Spoken description of off state of a switch -->
+    <string name="state_off">Off</string>
+    <!-- Spoken description naming a Switch Material UI widget -->
+    <string name="switch_role">Switch</string>
+    <!-- Spoken description of selected state of a selectable item -->
+    <string name="selected">Selected</string>
+    <!-- Spoken description of not selected state of a switch -->
+    <string name="not_selected">Not selected</string>
+    <!-- Spoken template for announcing the progress of a progress indicator os slider -->
+    <string name="template_percent"><xliff:g id="percentage">%1$d</xliff:g> percent.</string>
+    <!-- Spoken description of the progress of an indeterminate progress bar -->
+    <string name="in_progress">In progress</string>
+    <!-- Spoken description of a Tab. -->
+    <string name="tab">Tab</string>
+    <!-- Spoken title when a navigation drawer opens. -->
+    <string name="navigation_menu">"Navigation menu"</string>
+    <!-- Spoken title of a dropdown menu. -->
+    <string name="dropdown_menu">"Dropdown menu"</string>
+    <!--
+      Spoken content description of an element which will close the navigation menu when clicked.
+    -->
+    <string name="close_drawer">"Close navigation menu"</string>
+    <!-- Spoken content description of an element which will close the sheet when clicked. -->
+    <!-- Default accessibility error text for an editable text field. -->
+    <string name="default_error_message">"Invalid input"</string>
+    <!-- Spoken description of an empty editable text field -->
+    <string name="state_empty">Empty</string>
+    <!-- Default title of the popup window to be read by a screen reader. -->
+    <string name="default_popup_window_title" tools:ignore="ExtraTranslation">"Pop-Up Window"</string>
+
+    <!-- Spoken content description of the start seek control in a range slider. -->
+    <string name="range_start">"Range start"</string>
+    <!-- Spoken content description of the end seek control in a range slider. -->
+    <string name="range_end">"Range end"</string>
+    <!-- Accessibility pane title for a snackbar -->
+    <string name="snackbar_pane_title">Alert</string>
+    <!-- Item on toolbar menu. This action is used to request autofill. -->
+    <string name="androidx_compose_ui_autofill">Autofill</string>
+</resources>
