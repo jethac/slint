@@ -10,6 +10,7 @@
     1,
     2
   ],
+  "xfail_text": "skia: issue #28: skia positions the appbar title's ink 1px lower than layoutlib (issue-#28 text-metric quantization); the other rasterizers keep the cell inside eps",
   "theme": {
     "seed": "6750A4",
     "variant": "tonal-spot",
