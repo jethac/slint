@@ -266,7 +266,9 @@ fn test_extract_library_paths() {
 ///   ceil-quantized text widths (the tracked divergence the reason names,
 ///   e.g. `issue #28`): `sw − unhinted advance` may land anywhere in
 ///   `(−0.15, 1.15]`. Without the marker the bound is 0.5 px —
-///   `(−0.15, 0.65]`. A drift past a whole pixel fails either way.
+///   `(−0.15, 0.65]`. A drift past a whole pixel fails either way. An
+///   optional driver scope — `//XFAIL_TEXT=skia,software:<reason>` —
+///   applies the marker only on the listed drivers, like `PARITY=xfail`.
 /// - `//TEXT_DILATE=<dp>` — widens the `Text`/`TextInput` ink mask by `dp`
 ///   logical px on top of the built-in 2 device px, for cases whose
 ///   structure derives from a measured text width (an outlined text
@@ -299,6 +301,19 @@ pub struct ParityMarkers {
     /// `//XFAIL_TEXT=<reason>` marks the text-width layer's ceil-quantization
     /// window an expected divergence rather than a failure.
     pub xfail_text: Option<String>,
+    /// Non-empty when `XFAIL_TEXT` was scoped to specific drivers —
+    /// `//XFAIL_TEXT=skia,software:<reason>` relaxes the text layer only
+    /// there, keeping the others strict. An optional `*N` at the end of
+    /// the scope — `//XFAIL_TEXT=*1.5: <reason>` or
+    /// `//XFAIL_TEXT=skia,femtovg*1.5: <reason>` — multiplies the relaxed
+    /// per-cell bound for cases whose ink displacement runs larger than
+    /// the calibrated default (a row item's position inherits every
+    /// earlier label's width drift).
+    pub xfail_text_renderers: Vec<String>,
+    /// `> 1.0` when `//XFAIL_TEXT=` carried a `*N` bound multiplier. The
+    /// scale also widens the text ink mask's dilation (2px × N) — the drift
+    /// it names moves ink past the default apron.
+    pub xfail_text_scale: f64,
     /// `//XFAIL_SILHOUETTE=<reason>` marks the software driver's
     /// `//MASK_INNER=` silhouette findings an expected divergence rather
     /// than a failure; zero findings re-arms the check.
@@ -366,6 +381,8 @@ pub fn extract_parity(source: &str) -> ParityMarkers {
         let end = rest.find('\n').unwrap_or(rest.len());
         rest[..end].trim().to_string()
     });
+    let mut xfail_text_renderers = Vec::new();
+    let mut xfail_text_scale = 1.0;
     let (parity, negative_note, xfail_note, xfail_renderers) =
         match parity.as_deref().map(str::trim) {
             Some(v) if v.starts_with("negative") => (
@@ -478,11 +495,65 @@ pub fn extract_parity(source: &str) -> ParityMarkers {
         negative_note,
         xfail_note,
         xfail_renderers,
-        xfail_text: source.find("//XFAIL_TEXT=").map(|p| {
-            let rest = &source[p + "//XFAIL_TEXT=".len()..];
-            let end = rest.find('\n').unwrap_or(rest.len());
-            rest[..end].trim().to_string()
-        }),
+        xfail_text: {
+            let marker = source.find("//XFAIL_TEXT=").map(|p| {
+                let rest = &source[p + "//XFAIL_TEXT=".len()..];
+                let end = rest.find('\n').unwrap_or(rest.len());
+                rest[..end].trim().to_string()
+            });
+            match marker {
+                Some(v) => {
+                    // `<driver>[,<driver>…]: <reason>` — same scoping as
+                    // `PARITY=xfail`: a pre-colon run of known driver names
+                    // limits where the marker applies.
+                    const DRIVERS: &[&str] = &[
+                        "software",
+                        "skia",
+                        "femtovg",
+                        "interpreter",
+                        "anyrender",
+                        "vello_cpu",
+                    ];
+                    let (renderers, scale, reason) = match v.split_once(':') {
+                        Some((scope, reason)) => {
+                            let (drivers_part, scale) = match scope.rsplit_once('*') {
+                                Some((d, s)) => {
+                                    (d.trim_end_matches(','), s.trim().parse::<f64>())
+                                }
+                                None => (scope, Ok(1.0)),
+                            };
+                            let scoped = !drivers_part.is_empty()
+                                && drivers_part
+                                    .split(',')
+                                    .all(|d| DRIVERS.contains(&d.trim()));
+                            if scoped || (drivers_part.is_empty() && scale.is_ok()) {
+                                (
+                                    if scoped {
+                                        drivers_part
+                                            .split(',')
+                                            .map(|d| d.trim().to_string())
+                                            .collect()
+                                    } else {
+                                        Vec::new()
+                                    },
+                                    scale.unwrap_or(1.0),
+                                    reason.trim().to_string(),
+                                )
+                            } else {
+                                (Vec::new(), 1.0, v)
+                            }
+                        }
+                        _ => (Vec::new(), 1.0, v),
+                    };
+                    xfail_text_renderers = renderers;
+                    xfail_text_scale = scale;
+                    Some(reason)
+                }
+                None => None,
+            }
+        },
+        xfail_text_renderers,
+        xfail_text_scale,
         xfail_silhouette: source.find("//XFAIL_SILHOUETTE=").map(|p| {
             let rest = &source[p + "//XFAIL_SILHOUETTE=".len()..];
             let end = rest.find('\n').unwrap_or(rest.len());
