@@ -37,6 +37,7 @@
       600
     ]
   },
+  "mask_shadow": {},
   "name": "button-group-press-morph",
   "negative_note": "issue #10: the Compose frame clock starts the press ~2ms after the Slint dispatch (same skew as button-press-morph, issue #27), so identical-timestamp frames report a systematic lead in the neighbor-width morph — a silent pass would mean the harness went blind",
   "params": {},
@@ -129,7 +130,6 @@
   "type": "canvas",
   "widgets": [
     {
-      "alignment": null,
       "always_show_label": null,
       "arrangement": null,
       "avatar": null,
@@ -152,7 +152,6 @@
       "dragged": null,
       "elevation": null,
       "enabled": null,
-      "expanded": null,
       "expanded_ratio": null,
       "fab_icon": null,
       "gestures": null,

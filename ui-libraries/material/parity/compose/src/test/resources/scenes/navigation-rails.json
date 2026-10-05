@@ -125,11 +125,7 @@
       "dragged": null,
       "elevation": null,
       "enabled": null,
-<<<<<<< HEAD
-=======
-      "expanded": null,
       "expanded_ratio": null,
->>>>>>> origin/master
       "fab_icon": "edit",
       "gestures": null,
       "height": 420.0,

@@ -11,6 +11,7 @@
   },
   "mask_decor": {},
   "mask_inner": {},
+  "mask_shadow": {},
   "name": "negative-button-group-weight",
   "negative_note": "Slint lays the weighted group out 40px narrower — a weight split that misses the measure target must fail",
   "params": {},
@@ -88,7 +89,6 @@
   "type": "canvas",
   "widgets": [
     {
-      "alignment": null,
       "always_show_label": null,
       "arrangement": null,
       "avatar": null,
@@ -111,7 +111,6 @@
       "dragged": null,
       "elevation": null,
       "enabled": null,
-      "expanded": null,
       "expanded_ratio": null,
       "fab_icon": null,
       "gestures": null,
