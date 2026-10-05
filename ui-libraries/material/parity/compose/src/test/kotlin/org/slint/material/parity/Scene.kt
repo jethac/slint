@@ -152,8 +152,11 @@ class Widget(json: JSONObject) {
     val icons: List<String> =
         json.optJSONArray("icons")?.let { a -> (0 until a.length()).map(a::getString) } ?: emptyList()
     val placeholder: String? = (json.opt("placeholder") as? String)?.takeIf { it.isNotEmpty() }
-    /** `button-group` selection: `none` (clickable items, default),
-     * `single`/`multiple` (toggle items). */
+    /** `button-group` selection (`none` clickable default / `single` /
+     * `multiple` toggle) or `time-picker*` `TimePickerSelectionMode`
+     * (`hour` / `minute`) — same JSON key on disjoint widget kinds; a
+     * missing value reads `none`, which time-picker consumers treat as
+     * hour (`!= "minute"`). */
     val selection: String = (json.opt("selection") as? String) ?: "none"
     /** `button-group` `expanded-ratio` — `ButtonGroupDefaults.ExpandedRatio`. */
     val expandedRatio: Float = json.optDouble("expanded_ratio", 0.15).toFloat()
@@ -234,8 +237,6 @@ class Widget(json: JSONObject) {
     /** `is24hour` — hides the AM/PM toggle and gives the hour dial the
      * inner ring upstream. */
     val is24h: Boolean = json.optBoolean("is24h", false)
-    /** `TimePickerSelectionMode` — `"hour"` (default) or `"minute"`. */
-    val selection: String = (json.opt("selection") as? String) ?: "hour"
     /** `TimePickerLayoutType` — `"vertical"` (default) or `"horizontal"`. */
     val layout: String = (json.opt("layout") as? String) ?: "vertical"
     /** Vibrant styling — upstream `vibrantColors()` + `TimePickerShapes`. */
