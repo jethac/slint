@@ -18,6 +18,11 @@ export component FilledButton {
     in property <MaterialButtonShape> button_shape: MaterialButtonShape.round;
     /// Turn the button into a toggle: `checked` becomes the selected state.
     in property <bool> checkable;
+    /// Whether pressing morphs the container shape (`Button(shapes:)` /
+    /// `ToggleButton`). Upstream's `ClickableButtonGroupItem` resolves the
+    /// static `Button(shape:)` overload — `ButtonGroup` clears this for its
+    /// non-checkable items so a press keeps the resting shape.
+    in property <bool> press_shape_morph: true;
     in-out property <bool> checked;
     in property <bool> enabled: true;
     in property <string> tooltip;
@@ -27,6 +32,12 @@ export component FilledButton {
     /// the parity harness's per-widget state hook.
     in property <bool> simulate_hover;
     in property <bool> simulate_press;
+    /// Content padding overrides — negative values fall back to the
+    /// `*For(height)` metrics (`ButtonGroup` items pass explicit upstream
+    /// `ContentPadding`/`ButtonWithIconContentPadding` values instead).
+    in property <length> padding_leading: -1px;
+    in property <length> padding_trailing: -1px;
+    in property <length> padding_vertical: -1px;
 
     callback clicked <=> base.clicked;
 
@@ -61,7 +72,9 @@ export component FilledButton {
 
         container_height: MaterialButtonMetrics.container-height(root.size);
         resting_radius: MaterialButtonMetrics.resting-radius(root.size, root.button_shape, self.container_height);
-        pressed_radius: MaterialButtonMetrics.pressed-radius(root.size, root.checkable);
+        pressed_radius: root.press_shape_morph
+            ? MaterialButtonMetrics.pressed-radius(root.size, root.checkable)
+            : MaterialButtonMetrics.resting-radius(root.size, root.button_shape, self.container_height);
         checked_radius: MaterialButtonMetrics.checked-radius(root.size);
         min_button_width: root.checkable ? 0px : 58px; // `ButtonDefaults.MinWidth`
         fast_spatial: root.checkable;
@@ -82,7 +95,9 @@ export component FilledButton {
         icon: root.icon;
         checked_icon: root.icon;
         padding_horizontal: MaterialButtonMetrics.horizontal-padding(root.size);
-        padding_vertical: MaterialButtonMetrics.vertical-padding(root.size);
+        padding_leading: root.padding_leading;
+        padding_trailing: root.padding_trailing;
+        padding_vertical: root.padding_vertical >= 0px ? root.padding_vertical : MaterialButtonMetrics.vertical-padding(root.size);
         icon_size: MaterialButtonMetrics.icon-size(root.size);
         icon_spacing: MaterialButtonMetrics.icon-spacing(root.size);
         label_style: MaterialButtonMetrics.label-style(root.size, root.checkable);

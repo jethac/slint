@@ -78,7 +78,7 @@ States: pressed, selected
 
 | Component | Source | Status | Issues | Needs | Notes |
 |---|---|---|---|---|---|
-| ButtonGroup | ButtonGroup.kt | partial | #5, #9, #10 | springs (#5), shapes (#6) | connected variants: slint components ConnectedButtonGroup, ConnectedButton, VerticalConnectedButtonGroup; parity cases: connected-button-groups, connected-button-morph, connected-button-press-morph, negative-connected-button-group; standard variant pending (#10) |
+| ButtonGroup | ButtonGroup.kt | partial | #10 | springs (#5), shapes (#6) | connected variants: slint components ConnectedButtonGroup, ConnectedButton, VerticalConnectedButtonGroup; standard variant: slint component ButtonGroup (#10); parity cases: connected-button-groups, connected-button-morph, connected-button-press-morph, negative-connected-button-group, button-group, button-group-weights, button-group-overflow, button-group-toggle, button-group-press, button-group-press-morph, negative-button-group-spacing, negative-button-group-weight |
 
 ### Buttons
 

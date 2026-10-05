@@ -1,0 +1,90 @@
+---
+title: ButtonGroup
+description: ButtonGroup API.
+---
+
+import CodeSnippetMD from '@slint/common-files/src/components/CodeSnippetMD.astro';
+import SlintProperty from '@slint/common-files/src/components/SlintProperty.astro';
+
+<CodeSnippetMD imagePath="/src/assets/generated/buttongroup.png" scale="3" imageWidth="300" imageHeight="200" imageAlt="">
+```slint
+import { ButtonGroup } from "@material";
+export component Example inherits Window {
+    width: 300px;
+    height: 100px;
+    background: transparent;
+    ButtonGroup {
+        items: [
+            { icon: @image-url("../icons/share.svg"), text: "Share" },
+            { icon: @image-url("../icons/music_note.svg"), text: "Music" }
+        ];
+    }
+}
+```
+</CodeSnippetMD>
+
+A `ButtonGroup` displays a set of related buttons as a single control. Pressing a
+button makes it grow while its neighbors shrink by an equal amount, animated with a
+fast spatial spring. When the group does not fit its available width, overflowing
+items collapse into a "More options" menu.
+
+## Properties
+
+### items
+<SlintProperty propName="items" typeName="[struct]" structName="ButtonGroupItem">
+An array of group items. Each item has `text`, an optional leading `icon`,
+`checked`/`enabled`/`weight`/`alignment`/`compression-limit`, and fields the
+component writes back with the item's resolved geometry.
+</SlintProperty>
+
+### selection
+<SlintProperty propName="selection" typeName="enum" enumName="ButtonGroupSelection">
+`none` (default): plain buttons. `single`: checking an item unchecks the others;
+`current-index` tracks the selected item. `multiple`: items toggle independently.
+</SlintProperty>
+
+### current-index
+<SlintProperty propName="current-index" typeName="int" propertyVisibility="in-out">
+The index of the currently selected item (`single` selection), -1 when none.
+</SlintProperty>
+
+### expanded-ratio
+<SlintProperty propName="expanded-ratio" typeName="float">
+Fraction of the pressed item's own width it may grow by, `0.15` by default.
+</SlintProperty>
+
+### spacing
+<SlintProperty propName="spacing" typeName="length">
+Space between adjacent items, `12px` by default.
+</SlintProperty>
+
+### vertical-alignment
+<SlintProperty propName="vertical-alignment" typeName="enum" enumName="ButtonGroupItemAlignment">
+Vertical alignment of items whose `alignment` is `inherit`: `top` (default),
+`center`, or `bottom`.
+</SlintProperty>
+
+### size
+<SlintProperty propName="size" typeName="enum" enumName="MaterialButtonSize">
+The size bucket of every item in the group.
+</SlintProperty>
+
+### button-shape
+<SlintProperty propName="button-shape" typeName="enum" enumName="MaterialButtonShape">
+`round` (default) or `square` resting shape.
+</SlintProperty>
+
+### overflow-icon / overflow-tooltip
+<SlintProperty propName="overflow-icon" typeName="image">
+The icon and tooltip of the overflow indicator shown when items do not fit.
+</SlintProperty>
+
+## Callbacks
+
+### activated(index: int)
+Invoked when the item at `index` is clicked.
+
+## Functions
+
+### select(index: int)
+Selects the item at `index` in `single` selection mode.

@@ -1,0 +1,93 @@
+{
+  "name": "button-group-weights",
+  "type": "canvas",
+  "parity": "motion",
+  "size": [
+    320,
+    140
+  ],
+  "densities": [
+    1,
+    2
+  ],
+  "theme": {
+    "seed": "6750A4",
+    "variant": "tonal-spot",
+    "spec": "spec2025",
+    "platform": "phone",
+    "dark": false,
+    "contrast": 0.0
+  },
+  "fonts": {
+    "plain": "Roboto",
+    "brand": "Roboto"
+  },
+  "widgets": [
+    {
+      "kind": "button-group",
+      "x": 16,
+      "y": 24,
+      "width": 288,
+      "items": [
+        {
+          "text": "Day"
+        },
+        {
+          "text": "Week",
+          "weight": 1
+        },
+        {
+          "text": "Month",
+          "weight": 2
+        }
+      ]
+    },
+    {
+      "kind": "button-group",
+      "x": 16,
+      "y": 80,
+      "width": 288,
+      "items": [
+        {
+          "text": "Day",
+          "weight": 1
+        },
+        {
+          "text": "Week",
+          "weight": 2
+        },
+        {
+          "text": "Month",
+          "weight": 1
+        }
+      ]
+    }
+  ],
+  "trace_props": [
+    "g0i0_w",
+    "g0i1_w",
+    "g0i2_w",
+    "g0i1_x"
+  ],
+  "xfail_text": "skia,femtovg,software: issue #28: Slint ceils text layout widths where Compose keeps fractional advances",
+  "trace_elements": [
+    "group0",
+    "group1",
+    "group0item0",
+    "group0item1",
+    "group0item2",
+    "group1item0",
+    "group1item1",
+    "group1item2"
+  ],
+  "trace_items": {
+    "group0": [
+      "item",
+      "indicator"
+    ],
+    "group1": [
+      "item",
+      "indicator"
+    ]
+  }
+}

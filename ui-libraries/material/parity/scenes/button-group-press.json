@@ -1,0 +1,69 @@
+{
+  "name": "button-group-press",
+  "type": "canvas",
+  "parity": "motion",
+  "size": [
+    340,
+    96
+  ],
+  "densities": [
+    1,
+    2
+  ],
+  "theme": {
+    "seed": "6750A4",
+    "variant": "tonal-spot",
+    "spec": "spec2025",
+    "platform": "phone",
+    "dark": false,
+    "contrast": 0.0
+  },
+  "fonts": {
+    "plain": "Roboto",
+    "brand": "Roboto"
+  },
+  "widgets": [
+    {
+      "kind": "button-group",
+      "x": 16,
+      "y": 28,
+      "state": "pressed",
+      "press_index": 1,
+      "items": [
+        {
+          "text": "Day"
+        },
+        {
+          "text": "Week"
+        },
+        {
+          "text": "Month"
+        }
+      ]
+    }
+  ],
+  "trace_props": [
+    "g0i0_w",
+    "g0i1_w",
+    "g0i2_w",
+    "g0i1_x"
+  ],
+  "xfail_text": "*1.5: issue #28: Slint ceils text layout widths where Compose keeps fractional advances",
+  "trace_elements": [
+    "group0",
+    "group0item0",
+    "group0item1",
+    "group0item2"
+  ],
+  "mask_inner": {
+    "group0item1": [
+      2000
+    ]
+  },
+  "trace_items": {
+    "group0": [
+      "item",
+      "indicator"
+    ]
+  }
+}
