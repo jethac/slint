@@ -106,14 +106,11 @@
   },
   "ButtonGroup": {
     "issues": [
-      5,
-      9,
       10
     ],
     "needs": "springs (#5), shapes (#6)",
-    "notes": "connected variants: slint components ConnectedButtonGroup, ConnectedButton, VerticalConnectedButtonGroup; parity cases: connected-button-groups, connected-button-morph, connected-button-press-morph, negative-connected-button-group; standard variant pending (#10)",
-    "status": "partial"
-  },
+    "notes": "connected variants: slint components ConnectedButtonGroup, ConnectedButton, VerticalConnectedButtonGroup; standard variant: slint component ButtonGroup (#10); parity cases: connected-button-groups, connected-button-morph, connected-button-press-morph, negative-connected-button-group, button-group, button-group-weights, button-group-overflow, button-group-toggle, button-group-press, button-group-press-morph, negative-button-group-spacing, negative-button-group-weight",
+    "status": "partial"  },
   "Card": {
     "issues": [
       11

@@ -81,6 +81,7 @@ bstar
 bugtracker
 buildcode
 builtinfunctions
+buttongroup
 bytemuck
 calloop
 cand
@@ -414,6 +415,7 @@ laboris
 langtype
 layoutinfo
 LBUTTONUP
+layoutlib
 lerp
 lerped
 lerping

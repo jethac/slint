@@ -99,21 +99,20 @@
       "checked_icon": null,
       "clickable": null,
       "color": null,
-      "color_style": null,
       "confirm_enabled": null,
       "content_color": null,
       "content_offset": null,
       "corner": null,
       "count": null,
+      "current_index": null,
       "display_mode": null,
       "displayed": null,
       "dragged": null,
       "elevation": null,
       "enabled": null,
       "expanded": null,
-      "expanded_height": null,
+      "expanded_ratio": null,
       "fab_icon": null,
-      "fab_position": null,
       "gestures": null,
       "height": null,
       "height_offset": null,
@@ -135,7 +134,8 @@
           "icon": "check",
           "selected_icon": "arrow_right",
           "state": null,
-          "text": "Inbox"
+          "text": "Inbox",
+          "weight": null
         },
         {
           "badge": null,
@@ -146,7 +146,8 @@
           "icon": "schedule",
           "selected_icon": null,
           "state": null,
-          "text": "Share"
+          "text": "Share",
+          "weight": null
         },
         {
           "badge": null,
@@ -157,7 +158,8 @@
           "icon": "keyboard",
           "selected_icon": null,
           "state": null,
-          "text": "Saved"
+          "text": "Saved",
+          "weight": null
         },
         {
           "badge": null,
@@ -168,12 +170,12 @@
           "icon": "more_vert",
           "selected_icon": null,
           "state": null,
-          "text": "More"
+          "text": "More",
+          "weight": null
         }
       ],
       "kind": "navigation-bar",
       "label_width": null,
-      "leading_icons": [],
       "leading_image": null,
       "level": null,
       "months_to_show": null,
@@ -185,6 +187,7 @@
       "peek_height": null,
       "placeholder": null,
       "position": null,
+      "press_index": null,
       "progress": null,
       "radius": null,
       "rail_items": [],
@@ -195,6 +198,7 @@
       "selected_end": null,
       "selected_index": 0,
       "selected_start": null,
+      "selection": null,
       "shape": null,
       "sheet_elevation": null,
       "sheet_height": null,
@@ -218,7 +222,6 @@
       "toggleable": null,
       "tonal_elevation": null,
       "trailing_icon": null,
-      "trailing_icons": [],
       "trailing_text": null,
       "variant": null,
       "vertical": null,
@@ -242,21 +245,20 @@
       "checked_icon": null,
       "clickable": null,
       "color": null,
-      "color_style": null,
       "confirm_enabled": null,
       "content_color": null,
       "content_offset": null,
       "corner": null,
       "count": null,
+      "current_index": null,
       "display_mode": null,
       "displayed": null,
       "dragged": null,
       "elevation": null,
       "enabled": null,
       "expanded": null,
-      "expanded_height": null,
+      "expanded_ratio": null,
       "fab_icon": null,
-      "fab_position": null,
       "gestures": null,
       "height": null,
       "height_offset": null,
@@ -278,7 +280,8 @@
           "icon": "check",
           "selected_icon": null,
           "state": null,
-          "text": "Inbox"
+          "text": "Inbox",
+          "weight": null
         },
         {
           "badge": null,
@@ -289,7 +292,8 @@
           "icon": "schedule",
           "selected_icon": null,
           "state": null,
-          "text": "Share"
+          "text": "Share",
+          "weight": null
         },
         {
           "badge": null,
@@ -300,7 +304,8 @@
           "icon": "keyboard",
           "selected_icon": null,
           "state": null,
-          "text": "Saved"
+          "text": "Saved",
+          "weight": null
         },
         {
           "badge": null,
@@ -311,12 +316,12 @@
           "icon": "more_vert",
           "selected_icon": null,
           "state": null,
-          "text": "More"
+          "text": "More",
+          "weight": null
         }
       ],
       "kind": "navigation-bar",
       "label_width": null,
-      "leading_icons": [],
       "leading_image": null,
       "level": null,
       "months_to_show": null,
@@ -328,6 +333,7 @@
       "peek_height": null,
       "placeholder": null,
       "position": null,
+      "press_index": null,
       "progress": null,
       "radius": null,
       "rail_items": [],
@@ -338,6 +344,7 @@
       "selected_end": null,
       "selected_index": 1,
       "selected_start": null,
+      "selection": null,
       "shape": null,
       "sheet_elevation": null,
       "sheet_height": null,
@@ -361,7 +368,6 @@
       "toggleable": null,
       "tonal_elevation": null,
       "trailing_icon": null,
-      "trailing_icons": [],
       "trailing_text": null,
       "variant": null,
       "vertical": null,
@@ -385,21 +391,20 @@
       "checked_icon": null,
       "clickable": null,
       "color": null,
-      "color_style": null,
       "confirm_enabled": null,
       "content_color": null,
       "content_offset": null,
       "corner": null,
       "count": null,
+      "current_index": null,
       "display_mode": null,
       "displayed": null,
       "dragged": null,
       "elevation": null,
       "enabled": null,
       "expanded": null,
-      "expanded_height": null,
+      "expanded_ratio": null,
       "fab_icon": null,
-      "fab_position": null,
       "gestures": null,
       "height": null,
       "height_offset": null,
@@ -421,7 +426,8 @@
           "icon": "check",
           "selected_icon": "arrow_right",
           "state": null,
-          "text": "Inbox"
+          "text": "Inbox",
+          "weight": null
         },
         {
           "badge": null,
@@ -432,7 +438,8 @@
           "icon": "schedule",
           "selected_icon": null,
           "state": null,
-          "text": "Share"
+          "text": "Share",
+          "weight": null
         },
         {
           "badge": null,
@@ -443,12 +450,12 @@
           "icon": "keyboard",
           "selected_icon": null,
           "state": null,
-          "text": "Saved"
+          "text": "Saved",
+          "weight": null
         }
       ],
       "kind": "short-navigation-bar",
       "label_width": null,
-      "leading_icons": [],
       "leading_image": null,
       "level": null,
       "months_to_show": null,
@@ -460,6 +467,7 @@
       "peek_height": null,
       "placeholder": null,
       "position": null,
+      "press_index": null,
       "progress": null,
       "radius": null,
       "rail_items": [],
@@ -470,6 +478,7 @@
       "selected_end": null,
       "selected_index": 0,
       "selected_start": null,
+      "selection": null,
       "shape": null,
       "sheet_elevation": null,
       "sheet_height": null,
@@ -493,7 +502,6 @@
       "toggleable": null,
       "tonal_elevation": null,
       "trailing_icon": null,
-      "trailing_icons": [],
       "trailing_text": null,
       "variant": null,
       "vertical": null,
@@ -517,21 +525,20 @@
       "checked_icon": null,
       "clickable": null,
       "color": null,
-      "color_style": null,
       "confirm_enabled": null,
       "content_color": null,
       "content_offset": null,
       "corner": null,
       "count": null,
+      "current_index": null,
       "display_mode": null,
       "displayed": null,
       "dragged": null,
       "elevation": null,
       "enabled": null,
       "expanded": null,
-      "expanded_height": null,
+      "expanded_ratio": null,
       "fab_icon": null,
-      "fab_position": null,
       "gestures": null,
       "height": null,
       "height_offset": null,
@@ -553,7 +560,8 @@
           "icon": "check",
           "selected_icon": "arrow_right",
           "state": null,
-          "text": "Inbox"
+          "text": "Inbox",
+          "weight": null
         },
         {
           "badge": null,
@@ -564,7 +572,8 @@
           "icon": "schedule",
           "selected_icon": null,
           "state": null,
-          "text": "Share"
+          "text": "Share",
+          "weight": null
         },
         {
           "badge": null,
@@ -575,12 +584,12 @@
           "icon": "keyboard",
           "selected_icon": null,
           "state": null,
-          "text": "Saved"
+          "text": "Saved",
+          "weight": null
         }
       ],
       "kind": "short-navigation-bar",
       "label_width": null,
-      "leading_icons": [],
       "leading_image": null,
       "level": null,
       "months_to_show": null,
@@ -592,6 +601,7 @@
       "peek_height": null,
       "placeholder": null,
       "position": null,
+      "press_index": null,
       "progress": null,
       "radius": null,
       "rail_items": [],
@@ -602,6 +612,7 @@
       "selected_end": null,
       "selected_index": 1,
       "selected_start": null,
+      "selection": null,
       "shape": null,
       "sheet_elevation": null,
       "sheet_height": null,
@@ -625,7 +636,6 @@
       "toggleable": null,
       "tonal_elevation": null,
       "trailing_icon": null,
-      "trailing_icons": [],
       "trailing_text": null,
       "variant": null,
       "vertical": null,
@@ -649,21 +659,20 @@
       "checked_icon": null,
       "clickable": null,
       "color": null,
-      "color_style": null,
       "confirm_enabled": null,
       "content_color": null,
       "content_offset": null,
       "corner": null,
       "count": null,
+      "current_index": null,
       "display_mode": null,
       "displayed": null,
       "dragged": null,
       "elevation": null,
       "enabled": null,
       "expanded": null,
-      "expanded_height": null,
+      "expanded_ratio": null,
       "fab_icon": null,
-      "fab_position": null,
       "gestures": null,
       "height": null,
       "height_offset": null,
@@ -685,7 +694,8 @@
           "icon": "check",
           "selected_icon": null,
           "state": null,
-          "text": ""
+          "text": "",
+          "weight": null
         },
         {
           "badge": null,
@@ -696,7 +706,8 @@
           "icon": "schedule",
           "selected_icon": null,
           "state": null,
-          "text": ""
+          "text": "",
+          "weight": null
         },
         {
           "badge": null,
@@ -707,7 +718,8 @@
           "icon": "keyboard",
           "selected_icon": null,
           "state": null,
-          "text": ""
+          "text": "",
+          "weight": null
         },
         {
           "badge": null,
@@ -718,12 +730,12 @@
           "icon": "close",
           "selected_icon": null,
           "state": null,
-          "text": ""
+          "text": "",
+          "weight": null
         }
       ],
       "kind": "short-navigation-bar",
       "label_width": null,
-      "leading_icons": [],
       "leading_image": null,
       "level": null,
       "months_to_show": null,
@@ -735,6 +747,7 @@
       "peek_height": null,
       "placeholder": null,
       "position": null,
+      "press_index": null,
       "progress": null,
       "radius": null,
       "rail_items": [],
@@ -745,6 +758,7 @@
       "selected_end": null,
       "selected_index": 2,
       "selected_start": null,
+      "selection": null,
       "shape": null,
       "sheet_elevation": null,
       "sheet_height": null,
@@ -768,7 +782,6 @@
       "toggleable": null,
       "tonal_elevation": null,
       "trailing_icon": null,
-      "trailing_icons": [],
       "trailing_text": null,
       "variant": null,
       "vertical": null,
