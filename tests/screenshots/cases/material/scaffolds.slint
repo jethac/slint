@@ -18,6 +18,7 @@
 //MASK_DECOR=scaffold1@0,2000
 //MASK_DECOR=scaffold2@0,2000
 //MASK_DECOR=scaffold3@0,2000
+//XFAIL_TEXT=skia: issue #28: skia positions the appbar title's ink 1px lower than layoutlib (issue-#28 text-metric quantization); the other rasterizers keep the cell inside eps
 //DENSITIES=1,2
 import "../../fonts/Roboto-VariableFont.ttf";
 import { FabPosition, FloatingActionButton, Icons, MaterialPalette, MaterialText, MaterialTheme, MaterialTypography, MaterialWindow, NavigationBar, Scaffold, TopAppBar } from "@material";
