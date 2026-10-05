@@ -98,11 +98,20 @@
       "content_offset": null,
       "corner": null,
       "count": null,
+<<<<<<< HEAD
+=======
+      "current_index": null,
+>>>>>>> origin/master
       "display_mode": null,
       "displayed": null,
       "dragged": null,
       "elevation": null,
       "enabled": null,
+<<<<<<< HEAD
+=======
+      "expanded": null,
+      "expanded_ratio": null,
+>>>>>>> origin/master
       "fab_icon": null,
       "gestures": null,
       "height": 48.0,
@@ -129,6 +138,7 @@
       "peek_height": null,
       "placeholder": null,
       "position": null,
+      "press_index": null,
       "progress": null,
       "radius": 24.0,
       "rail_items": [],
@@ -139,6 +149,10 @@
       "selected_end": null,
       "selected_index": null,
       "selected_start": null,
+<<<<<<< HEAD
+=======
+      "selection": null,
+>>>>>>> origin/master
       "shape": null,
       "sheet_elevation": null,
       "sheet_height": null,
@@ -151,6 +165,7 @@
       "slint_overrides": {
         "radius": 4
       },
+      "spacing": null,
       "state": null,
       "subtitle": null,
       "supporting": null,

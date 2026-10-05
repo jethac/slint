@@ -109,11 +109,17 @@
       "content_offset": null,
       "corner": null,
       "count": null,
+      "current_index": null,
       "display_mode": null,
       "displayed": null,
       "dragged": null,
       "elevation": null,
       "enabled": null,
+<<<<<<< HEAD
+=======
+      "expanded": null,
+      "expanded_ratio": null,
+>>>>>>> origin/master
       "fab_icon": null,
       "gestures": null,
       "height": null,
@@ -140,6 +146,7 @@
       "peek_height": null,
       "placeholder": null,
       "position": null,
+      "press_index": null,
       "progress": null,
       "radius": null,
       "rail_items": [],
@@ -150,6 +157,7 @@
       "selected_end": null,
       "selected_index": null,
       "selected_start": null,
+      "selection": null,
       "shape": null,
       "sheet_elevation": null,
       "sheet_height": null,
@@ -164,6 +172,7 @@
           "fill": "primary"
         }
       },
+      "spacing": null,
       "state": "focused",
       "subtitle": null,
       "supporting": null,

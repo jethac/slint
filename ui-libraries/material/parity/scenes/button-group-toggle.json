@@ -1,0 +1,120 @@
+{
+  "name": "button-group-toggle",
+  "type": "canvas",
+  "parity": "motion",
+  "size": [
+    400,
+    140
+  ],
+  "densities": [
+    1,
+    2
+  ],
+  "theme": {
+    "seed": "6750A4",
+    "variant": "tonal-spot",
+    "spec": "spec2025",
+    "platform": "phone",
+    "dark": false,
+    "contrast": 0.0
+  },
+  "fonts": {
+    "plain": "Roboto",
+    "brand": "Roboto"
+  },
+  "widgets": [
+    {
+      "kind": "button-group",
+      "x": 16,
+      "y": 24,
+      "selection": "multiple",
+      "items": [
+        {
+          "text": "Day",
+          "checked": true
+        },
+        {
+          "text": "Week"
+        },
+        {
+          "text": "Month",
+          "checked": true
+        }
+      ]
+    },
+    {
+      "kind": "button-group",
+      "x": 16,
+      "y": 80,
+      "selection": "single",
+      "current_index": 1,
+      "items": [
+        {
+          "text": "Day"
+        },
+        {
+          "text": "Week",
+          "checked": true
+        },
+        {
+          "text": "Month"
+        }
+      ]
+    }
+  ],
+  "xfail_text": "*1.5: issue #28: Slint ceils text layout widths where Compose keeps fractional advances",
+  "trace_elements": [
+    "group0",
+    "group1",
+    "group0item0",
+    "group0item1",
+    "group0item2",
+    "group1item0",
+    "group1item1",
+    "group1item2"
+  ],
+  "trace_items": {
+    "group0": [
+      "item",
+      "indicator"
+    ],
+    "group1": [
+      "item",
+      "indicator"
+    ]
+  },
+  "mask_decor": {
+    "group0": [
+      0,
+      2000
+    ],
+    "group0item0": [
+      0,
+      2000
+    ],
+    "group0item1": [
+      0,
+      2000
+    ],
+    "group0item2": [
+      0,
+      2000
+    ],
+    "group1": [
+      0,
+      2000
+    ],
+    "group1item0": [
+      0,
+      2000
+    ],
+    "group1item1": [
+      0,
+      2000
+    ],
+    "group1item2": [
+      0,
+      2000
+    ]
+  }
+}
