@@ -24,8 +24,11 @@ import {
     FilledIconButton,
     TonalIconButton,
     OutlineIconButton,
+    SegmentedButton,
     ConnectedButtonGroup,
     VerticalConnectedButtonGroup,
+    ButtonGroup,
+    ButtonGroupSelection,
     FilledSplitButton,
     TonalSplitButton,
     ElevatedSplitButton,
@@ -713,6 +716,77 @@ export component ActionsView {
                                 { text: "Undo" },
                                 { text: "Redo" },
                             ];
+                        }
+                    }
+                }
+            }
+
+            ComponentCard {
+                title: "Button groups";
+
+                Vertical {
+                    HorizontalLayout {
+                        alignment: center;
+
+                        ButtonGroup {
+                            items: [
+                                { icon: OutlinedIcons.today, text: "Day" },
+                                { icon: OutlinedIcons.view_week, text: "Week" },
+                                { icon: OutlinedIcons.calendar_month, text: "Month" },
+                            ];
+                        }
+                    }
+
+                    HorizontalLayout {
+                        alignment: center;
+
+                        ButtonGroup {
+                            selection: ButtonGroupSelection.multiple;
+                            items: [
+                                { text: "XS" },
+                                { text: "S" },
+                                { text: "M" },
+                                { text: "L" },
+                                { text: "XL" },
+                            ];
+                        }
+                    }
+
+                    HorizontalLayout {
+                        alignment: center;
+
+                        Rectangle {
+                            width: 300px;
+                            height: 48px;
+
+                            ButtonGroup {
+                                width: 300px;
+                                items: [
+                                    { text: "Alpha", weight: 1 },
+                                    { text: "Bravo", weight: 2 },
+                                    { text: "Charlie", weight: 1 },
+                                ];
+                            }
+                        }
+                    }
+
+                    HorizontalLayout {
+                        alignment: center;
+
+                        Rectangle {
+                            width: 260px;
+                            height: 48px;
+
+                            ButtonGroup {
+                                width: 260px;
+                                items: [
+                                    { text: "First" },
+                                    { text: "Second" },
+                                    { text: "Third" },
+                                    { text: "Fourth" },
+                                    { text: "Fifth" },
+                                ];
+                            }
                         }
                     }
                 }
