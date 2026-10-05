@@ -119,12 +119,14 @@
       "content_offset": null,
       "corner": null,
       "count": null,
+      "current_index": null,
       "display_mode": null,
       "displayed": null,
       "dragged": null,
       "elevation": null,
       "enabled": null,
       "expanded": null,
+      "expanded_ratio": null,
       "fab_icon": null,
       "gestures": null,
       "height": null,
@@ -148,7 +150,8 @@
           "leading": null,
           "selected_icon": null,
           "state": null,
-          "text": "Movies"
+          "text": "Movies",
+          "weight": null
         },
         {
           "badge": null,
@@ -160,7 +163,8 @@
           "leading": null,
           "selected_icon": null,
           "state": null,
-          "text": "TV"
+          "text": "TV",
+          "weight": null
         },
         {
           "badge": null,
@@ -172,7 +176,8 @@
           "leading": null,
           "selected_icon": null,
           "state": null,
-          "text": "Music"
+          "text": "Music",
+          "weight": null
         }
       ],
       "kind": "tab-row",
@@ -188,6 +193,7 @@
       "peek_height": null,
       "placeholder": null,
       "position": null,
+      "press_index": null,
       "progress": null,
       "radius": null,
       "rail_items": [],
@@ -198,6 +204,7 @@
       "selected_end": null,
       "selected_index": 1,
       "selected_start": null,
+      "selection": null,
       "shape": null,
       "sheet_elevation": null,
       "sheet_height": null,
@@ -208,6 +215,7 @@
       "skip_hidden": null,
       "skip_partial": null,
       "slint_overrides": {},
+      "spacing": null,
       "state": null,
       "subtitle": null,
       "supporting": null,
@@ -248,12 +256,14 @@
       "content_offset": null,
       "corner": null,
       "count": null,
+      "current_index": null,
       "display_mode": null,
       "displayed": null,
       "dragged": null,
       "elevation": null,
       "enabled": null,
       "expanded": null,
+      "expanded_ratio": null,
       "fab_icon": null,
       "gestures": null,
       "height": null,
@@ -277,7 +287,8 @@
           "leading": null,
           "selected_icon": null,
           "state": null,
-          "text": "Edit"
+          "text": "Edit",
+          "weight": null
         },
         {
           "badge": null,
@@ -289,7 +300,8 @@
           "leading": null,
           "selected_icon": null,
           "state": null,
-          "text": "Calendar"
+          "text": "Calendar",
+          "weight": null
         },
         {
           "badge": null,
@@ -301,7 +313,8 @@
           "leading": null,
           "selected_icon": null,
           "state": null,
-          "text": "Clock"
+          "text": "Clock",
+          "weight": null
         }
       ],
       "kind": "tab-row",
@@ -317,6 +330,7 @@
       "peek_height": null,
       "placeholder": null,
       "position": null,
+      "press_index": null,
       "progress": null,
       "radius": null,
       "rail_items": [],
@@ -327,6 +341,7 @@
       "selected_end": null,
       "selected_index": 0,
       "selected_start": null,
+      "selection": null,
       "shape": null,
       "sheet_elevation": null,
       "sheet_height": null,
@@ -337,6 +352,7 @@
       "skip_hidden": null,
       "skip_partial": null,
       "slint_overrides": {},
+      "spacing": null,
       "state": null,
       "subtitle": null,
       "supporting": null,
@@ -377,12 +393,14 @@
       "content_offset": null,
       "corner": null,
       "count": null,
+      "current_index": null,
       "display_mode": null,
       "displayed": null,
       "dragged": null,
       "elevation": null,
       "enabled": null,
       "expanded": null,
+      "expanded_ratio": null,
       "fab_icon": null,
       "gestures": null,
       "height": null,
@@ -406,7 +424,8 @@
           "leading": true,
           "selected_icon": null,
           "state": null,
-          "text": "Edit"
+          "text": "Edit",
+          "weight": null
         },
         {
           "badge": null,
@@ -418,7 +437,8 @@
           "leading": true,
           "selected_icon": null,
           "state": null,
-          "text": "Calendar"
+          "text": "Calendar",
+          "weight": null
         },
         {
           "badge": null,
@@ -430,7 +450,8 @@
           "leading": true,
           "selected_icon": null,
           "state": null,
-          "text": "Clock"
+          "text": "Clock",
+          "weight": null
         }
       ],
       "kind": "tab-row",
@@ -446,6 +467,7 @@
       "peek_height": null,
       "placeholder": null,
       "position": null,
+      "press_index": null,
       "progress": null,
       "radius": null,
       "rail_items": [],
@@ -456,6 +478,7 @@
       "selected_end": null,
       "selected_index": 2,
       "selected_start": null,
+      "selection": null,
       "shape": null,
       "sheet_elevation": null,
       "sheet_height": null,
@@ -466,6 +489,7 @@
       "skip_hidden": null,
       "skip_partial": null,
       "slint_overrides": {},
+      "spacing": null,
       "state": null,
       "subtitle": null,
       "supporting": null,
@@ -506,12 +530,14 @@
       "content_offset": null,
       "corner": null,
       "count": null,
+      "current_index": null,
       "display_mode": null,
       "displayed": null,
       "dragged": null,
       "elevation": null,
       "enabled": null,
       "expanded": null,
+      "expanded_ratio": null,
       "fab_icon": null,
       "gestures": null,
       "height": null,
@@ -535,7 +561,8 @@
           "leading": null,
           "selected_icon": null,
           "state": null,
-          "text": "Overview"
+          "text": "Overview",
+          "weight": null
         },
         {
           "badge": null,
@@ -547,7 +574,8 @@
           "leading": null,
           "selected_icon": null,
           "state": null,
-          "text": "Details"
+          "text": "Details",
+          "weight": null
         },
         {
           "badge": null,
@@ -559,7 +587,8 @@
           "leading": null,
           "selected_icon": null,
           "state": null,
-          "text": "Reviews"
+          "text": "Reviews",
+          "weight": null
         }
       ],
       "kind": "tab-row",
@@ -575,6 +604,7 @@
       "peek_height": null,
       "placeholder": null,
       "position": null,
+      "press_index": null,
       "progress": null,
       "radius": null,
       "rail_items": [],
@@ -585,6 +615,7 @@
       "selected_end": null,
       "selected_index": 0,
       "selected_start": null,
+      "selection": null,
       "shape": null,
       "sheet_elevation": null,
       "sheet_height": null,
@@ -595,6 +626,7 @@
       "skip_hidden": null,
       "skip_partial": null,
       "slint_overrides": {},
+      "spacing": null,
       "state": null,
       "subtitle": null,
       "supporting": null,
@@ -635,12 +667,14 @@
       "content_offset": null,
       "corner": null,
       "count": null,
+      "current_index": null,
       "display_mode": null,
       "displayed": null,
       "dragged": null,
       "elevation": null,
       "enabled": null,
       "expanded": null,
+      "expanded_ratio": null,
       "fab_icon": null,
       "gestures": null,
       "height": null,
@@ -664,7 +698,8 @@
           "leading": null,
           "selected_icon": null,
           "state": null,
-          "text": "Done"
+          "text": "Done",
+          "weight": null
         },
         {
           "badge": null,
@@ -676,7 +711,8 @@
           "leading": null,
           "selected_icon": null,
           "state": null,
-          "text": "Menu"
+          "text": "Menu",
+          "weight": null
         },
         {
           "badge": null,
@@ -688,7 +724,8 @@
           "leading": null,
           "selected_icon": null,
           "state": null,
-          "text": "Keys"
+          "text": "Keys",
+          "weight": null
         }
       ],
       "kind": "tab-row",
@@ -704,6 +741,7 @@
       "peek_height": null,
       "placeholder": null,
       "position": null,
+      "press_index": null,
       "progress": null,
       "radius": null,
       "rail_items": [],
@@ -714,6 +752,7 @@
       "selected_end": null,
       "selected_index": 1,
       "selected_start": null,
+      "selection": null,
       "shape": null,
       "sheet_elevation": null,
       "sheet_height": null,
@@ -724,6 +763,7 @@
       "skip_hidden": null,
       "skip_partial": null,
       "slint_overrides": {},
+      "spacing": null,
       "state": null,
       "subtitle": null,
       "supporting": null,

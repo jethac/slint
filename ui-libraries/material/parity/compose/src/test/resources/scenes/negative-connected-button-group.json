@@ -102,12 +102,14 @@
       "content_offset": null,
       "corner": null,
       "count": null,
+      "current_index": null,
       "display_mode": null,
       "displayed": null,
       "dragged": null,
       "elevation": null,
       "enabled": null,
       "expanded": null,
+      "expanded_ratio": null,
       "fab_icon": null,
       "gestures": null,
       "height": null,
@@ -131,7 +133,8 @@
           "leading": null,
           "selected_icon": null,
           "state": null,
-          "text": "Day"
+          "text": "Day",
+          "weight": null
         },
         {
           "badge": null,
@@ -143,7 +146,8 @@
           "leading": null,
           "selected_icon": null,
           "state": null,
-          "text": "Week"
+          "text": "Week",
+          "weight": null
         },
         {
           "badge": null,
@@ -155,7 +159,8 @@
           "leading": null,
           "selected_icon": null,
           "state": null,
-          "text": "Month"
+          "text": "Month",
+          "weight": null
         }
       ],
       "kind": "connected-button-group",
@@ -171,6 +176,7 @@
       "peek_height": null,
       "placeholder": null,
       "position": null,
+      "press_index": null,
       "progress": null,
       "radius": null,
       "rail_items": [],
@@ -181,6 +187,7 @@
       "selected_end": null,
       "selected_index": 1,
       "selected_start": null,
+      "selection": null,
       "shape": null,
       "sheet_elevation": null,
       "sheet_height": null,
@@ -193,6 +200,7 @@
       "slint_overrides": {
         "selected_index": 0
       },
+      "spacing": null,
       "state": null,
       "subtitle": null,
       "supporting": null,
@@ -233,12 +241,14 @@
       "content_offset": null,
       "corner": null,
       "count": null,
+      "current_index": null,
       "display_mode": null,
       "displayed": null,
       "dragged": null,
       "elevation": null,
       "enabled": null,
       "expanded": null,
+      "expanded_ratio": null,
       "fab_icon": null,
       "gestures": null,
       "height": null,
@@ -265,6 +275,7 @@
       "peek_height": null,
       "placeholder": null,
       "position": "start",
+      "press_index": null,
       "progress": null,
       "radius": null,
       "rail_items": [],
@@ -275,6 +286,7 @@
       "selected_end": null,
       "selected_index": null,
       "selected_start": null,
+      "selection": null,
       "shape": null,
       "sheet_elevation": null,
       "sheet_height": null,
@@ -287,6 +299,7 @@
       "slint_overrides": {
         "position": "middle"
       },
+      "spacing": null,
       "state": null,
       "subtitle": null,
       "supporting": null,

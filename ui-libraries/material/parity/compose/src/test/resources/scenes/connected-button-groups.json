@@ -258,12 +258,14 @@
       "content_offset": null,
       "corner": null,
       "count": null,
+      "current_index": null,
       "display_mode": null,
       "displayed": null,
       "dragged": null,
       "elevation": null,
       "enabled": null,
       "expanded": null,
+      "expanded_ratio": null,
       "fab_icon": null,
       "gestures": null,
       "height": null,
@@ -287,7 +289,8 @@
           "leading": null,
           "selected_icon": null,
           "state": null,
-          "text": "Day"
+          "text": "Day",
+          "weight": null
         },
         {
           "badge": null,
@@ -299,7 +302,8 @@
           "leading": null,
           "selected_icon": null,
           "state": "focused",
-          "text": "Week"
+          "text": "Week",
+          "weight": null
         },
         {
           "badge": null,
@@ -311,7 +315,8 @@
           "leading": null,
           "selected_icon": null,
           "state": null,
-          "text": "Month"
+          "text": "Month",
+          "weight": null
         }
       ],
       "kind": "connected-button-group",
@@ -327,6 +332,7 @@
       "peek_height": null,
       "placeholder": null,
       "position": null,
+      "press_index": null,
       "progress": null,
       "radius": null,
       "rail_items": [],
@@ -337,6 +343,7 @@
       "selected_end": null,
       "selected_index": 1,
       "selected_start": null,
+      "selection": null,
       "shape": null,
       "sheet_elevation": null,
       "sheet_height": null,
@@ -347,6 +354,7 @@
       "skip_hidden": null,
       "skip_partial": null,
       "slint_overrides": {},
+      "spacing": null,
       "state": null,
       "subtitle": null,
       "supporting": null,
@@ -387,12 +395,14 @@
       "content_offset": null,
       "corner": null,
       "count": null,
+      "current_index": null,
       "display_mode": null,
       "displayed": null,
       "dragged": null,
       "elevation": null,
       "enabled": null,
       "expanded": null,
+      "expanded_ratio": null,
       "fab_icon": null,
       "gestures": null,
       "height": null,
@@ -416,7 +426,8 @@
           "leading": null,
           "selected_icon": null,
           "state": null,
-          "text": "Mon"
+          "text": "Mon",
+          "weight": null
         },
         {
           "badge": null,
@@ -428,7 +439,8 @@
           "leading": null,
           "selected_icon": null,
           "state": null,
-          "text": "Tue"
+          "text": "Tue",
+          "weight": null
         },
         {
           "badge": null,
@@ -440,7 +452,8 @@
           "leading": null,
           "selected_icon": null,
           "state": null,
-          "text": "Wed"
+          "text": "Wed",
+          "weight": null
         },
         {
           "badge": null,
@@ -452,7 +465,8 @@
           "leading": null,
           "selected_icon": null,
           "state": null,
-          "text": "Thu"
+          "text": "Thu",
+          "weight": null
         }
       ],
       "kind": "connected-button-group",
@@ -468,6 +482,7 @@
       "peek_height": null,
       "placeholder": null,
       "position": null,
+      "press_index": null,
       "progress": null,
       "radius": null,
       "rail_items": [],
@@ -478,6 +493,7 @@
       "selected_end": null,
       "selected_index": null,
       "selected_start": null,
+      "selection": null,
       "shape": null,
       "sheet_elevation": null,
       "sheet_height": null,
@@ -488,6 +504,7 @@
       "skip_hidden": null,
       "skip_partial": null,
       "slint_overrides": {},
+      "spacing": null,
       "state": null,
       "subtitle": null,
       "supporting": null,
@@ -528,12 +545,14 @@
       "content_offset": null,
       "corner": null,
       "count": null,
+      "current_index": null,
       "display_mode": null,
       "displayed": null,
       "dragged": null,
       "elevation": null,
       "enabled": null,
       "expanded": null,
+      "expanded_ratio": null,
       "fab_icon": null,
       "gestures": null,
       "height": null,
@@ -557,7 +576,8 @@
           "leading": null,
           "selected_icon": null,
           "state": null,
-          "text": "Edit"
+          "text": "Edit",
+          "weight": null
         },
         {
           "badge": null,
@@ -569,7 +589,8 @@
           "leading": null,
           "selected_icon": null,
           "state": null,
-          "text": "Save"
+          "text": "Save",
+          "weight": null
         },
         {
           "badge": null,
@@ -581,7 +602,8 @@
           "leading": null,
           "selected_icon": null,
           "state": "hovered",
-          "text": "Go"
+          "text": "Go",
+          "weight": null
         }
       ],
       "kind": "connected-button-group",
@@ -597,6 +619,7 @@
       "peek_height": null,
       "placeholder": null,
       "position": null,
+      "press_index": null,
       "progress": null,
       "radius": null,
       "rail_items": [],
@@ -607,6 +630,7 @@
       "selected_end": null,
       "selected_index": 2,
       "selected_start": null,
+      "selection": null,
       "shape": null,
       "sheet_elevation": null,
       "sheet_height": null,
@@ -617,6 +641,7 @@
       "skip_hidden": null,
       "skip_partial": null,
       "slint_overrides": {},
+      "spacing": null,
       "state": null,
       "subtitle": null,
       "supporting": null,
@@ -657,12 +682,14 @@
       "content_offset": null,
       "corner": null,
       "count": null,
+      "current_index": null,
       "display_mode": null,
       "displayed": null,
       "dragged": null,
       "elevation": null,
       "enabled": null,
       "expanded": null,
+      "expanded_ratio": null,
       "fab_icon": null,
       "gestures": null,
       "height": null,
@@ -686,7 +713,8 @@
           "leading": null,
           "selected_icon": null,
           "state": null,
-          "text": "One"
+          "text": "One",
+          "weight": null
         },
         {
           "badge": null,
@@ -698,7 +726,8 @@
           "leading": null,
           "selected_icon": null,
           "state": "pressed",
-          "text": "Two"
+          "text": "Two",
+          "weight": null
         },
         {
           "badge": null,
@@ -710,7 +739,8 @@
           "leading": null,
           "selected_icon": null,
           "state": null,
-          "text": "Three"
+          "text": "Three",
+          "weight": null
         }
       ],
       "kind": "connected-button-group",
@@ -726,6 +756,7 @@
       "peek_height": null,
       "placeholder": null,
       "position": null,
+      "press_index": null,
       "progress": null,
       "radius": null,
       "rail_items": [],
@@ -736,6 +767,7 @@
       "selected_end": null,
       "selected_index": null,
       "selected_start": null,
+      "selection": null,
       "shape": null,
       "sheet_elevation": null,
       "sheet_height": null,
@@ -746,6 +778,7 @@
       "skip_hidden": null,
       "skip_partial": null,
       "slint_overrides": {},
+      "spacing": null,
       "state": null,
       "subtitle": null,
       "supporting": null,
@@ -786,12 +819,14 @@
       "content_offset": null,
       "corner": null,
       "count": null,
+      "current_index": null,
       "display_mode": null,
       "displayed": null,
       "dragged": null,
       "elevation": null,
       "enabled": null,
       "expanded": null,
+      "expanded_ratio": null,
       "fab_icon": null,
       "gestures": null,
       "height": null,
@@ -815,7 +850,8 @@
           "leading": null,
           "selected_icon": null,
           "state": null,
-          "text": "Yes"
+          "text": "Yes",
+          "weight": null
         },
         {
           "badge": null,
@@ -827,7 +863,8 @@
           "leading": null,
           "selected_icon": null,
           "state": null,
-          "text": "No"
+          "text": "No",
+          "weight": null
         },
         {
           "badge": null,
@@ -839,7 +876,8 @@
           "leading": null,
           "selected_icon": null,
           "state": null,
-          "text": "Maybe"
+          "text": "Maybe",
+          "weight": null
         }
       ],
       "kind": "connected-button-group",
@@ -855,6 +893,7 @@
       "peek_height": null,
       "placeholder": null,
       "position": null,
+      "press_index": null,
       "progress": null,
       "radius": null,
       "rail_items": [],
@@ -865,6 +904,7 @@
       "selected_end": null,
       "selected_index": 0,
       "selected_start": null,
+      "selection": null,
       "shape": null,
       "sheet_elevation": null,
       "sheet_height": null,
@@ -875,6 +915,7 @@
       "skip_hidden": null,
       "skip_partial": null,
       "slint_overrides": {},
+      "spacing": null,
       "state": null,
       "subtitle": null,
       "supporting": null,
@@ -915,12 +956,14 @@
       "content_offset": null,
       "corner": null,
       "count": null,
+      "current_index": null,
       "display_mode": null,
       "displayed": null,
       "dragged": null,
       "elevation": null,
       "enabled": null,
       "expanded": null,
+      "expanded_ratio": null,
       "fab_icon": null,
       "gestures": null,
       "height": null,
@@ -944,7 +987,8 @@
           "leading": null,
           "selected_icon": null,
           "state": null,
-          "text": "Top"
+          "text": "Top",
+          "weight": null
         },
         {
           "badge": null,
@@ -956,7 +1000,8 @@
           "leading": null,
           "selected_icon": null,
           "state": null,
-          "text": "Mid"
+          "text": "Mid",
+          "weight": null
         },
         {
           "badge": null,
@@ -968,7 +1013,8 @@
           "leading": null,
           "selected_icon": null,
           "state": null,
-          "text": "Bot"
+          "text": "Bot",
+          "weight": null
         }
       ],
       "kind": "vertical-connected-button-group",
@@ -984,6 +1030,7 @@
       "peek_height": null,
       "placeholder": null,
       "position": null,
+      "press_index": null,
       "progress": null,
       "radius": null,
       "rail_items": [],
@@ -994,6 +1041,7 @@
       "selected_end": null,
       "selected_index": 0,
       "selected_start": null,
+      "selection": null,
       "shape": null,
       "sheet_elevation": null,
       "sheet_height": null,
@@ -1004,6 +1052,7 @@
       "skip_hidden": null,
       "skip_partial": null,
       "slint_overrides": {},
+      "spacing": null,
       "state": null,
       "subtitle": null,
       "supporting": null,
@@ -1044,12 +1093,14 @@
       "content_offset": null,
       "corner": null,
       "count": null,
+      "current_index": null,
       "display_mode": null,
       "displayed": null,
       "dragged": null,
       "elevation": null,
       "enabled": null,
       "expanded": null,
+      "expanded_ratio": null,
       "fab_icon": null,
       "gestures": null,
       "height": null,
@@ -1076,6 +1127,7 @@
       "peek_height": null,
       "placeholder": null,
       "position": "start",
+      "press_index": null,
       "progress": null,
       "radius": null,
       "rail_items": [],
@@ -1086,6 +1138,7 @@
       "selected_end": null,
       "selected_index": null,
       "selected_start": null,
+      "selection": null,
       "shape": null,
       "sheet_elevation": null,
       "sheet_height": null,
@@ -1096,6 +1149,7 @@
       "skip_hidden": null,
       "skip_partial": null,
       "slint_overrides": {},
+      "spacing": null,
       "state": null,
       "subtitle": null,
       "supporting": null,
@@ -1136,12 +1190,14 @@
       "content_offset": null,
       "corner": null,
       "count": null,
+      "current_index": null,
       "display_mode": null,
       "displayed": null,
       "dragged": null,
       "elevation": null,
       "enabled": null,
       "expanded": null,
+      "expanded_ratio": null,
       "fab_icon": null,
       "gestures": null,
       "height": null,
@@ -1168,6 +1224,7 @@
       "peek_height": null,
       "placeholder": null,
       "position": "middle",
+      "press_index": null,
       "progress": null,
       "radius": null,
       "rail_items": [],
@@ -1178,6 +1235,7 @@
       "selected_end": null,
       "selected_index": null,
       "selected_start": null,
+      "selection": null,
       "shape": null,
       "sheet_elevation": null,
       "sheet_height": null,
@@ -1188,6 +1246,7 @@
       "skip_hidden": null,
       "skip_partial": null,
       "slint_overrides": {},
+      "spacing": null,
       "state": null,
       "subtitle": null,
       "supporting": null,
@@ -1228,12 +1287,14 @@
       "content_offset": null,
       "corner": null,
       "count": null,
+      "current_index": null,
       "display_mode": null,
       "displayed": null,
       "dragged": null,
       "elevation": null,
       "enabled": null,
       "expanded": null,
+      "expanded_ratio": null,
       "fab_icon": null,
       "gestures": null,
       "height": null,
@@ -1260,6 +1321,7 @@
       "peek_height": null,
       "placeholder": null,
       "position": "end",
+      "press_index": null,
       "progress": null,
       "radius": null,
       "rail_items": [],
@@ -1270,6 +1332,7 @@
       "selected_end": null,
       "selected_index": null,
       "selected_start": null,
+      "selection": null,
       "shape": null,
       "sheet_elevation": null,
       "sheet_height": null,
@@ -1280,6 +1343,7 @@
       "skip_hidden": null,
       "skip_partial": null,
       "slint_overrides": {},
+      "spacing": null,
       "state": null,
       "subtitle": null,
       "supporting": null,
