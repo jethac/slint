@@ -374,7 +374,9 @@ struct Widget {
     /// on the rails, the `Arrangement.Vertical` of the item stack.
     #[serde(default)]
     arrangement: Option<String>,
-    /// `flexible-bottom-app-bar` `spacing` for the `spaced` arrangement.
+    /// `flexible-bottom-app-bar` `spacing` for the `spaced` arrangement, or
+    /// `button-group` `spacing` (default `ButtonGroupSmallTokens.
+    /// BetweenSpace`, 12px).
     #[serde(default)]
     spacing: Option<f64>,
     /// `flexible-bottom-app-bar` `expandedHeight`.
@@ -539,10 +541,6 @@ struct Widget {
     /// ExpandedRatio` (0.15).
     #[serde(default)]
     expanded_ratio: Option<f64>,
-    /// `button-group` `spacing` — default `ButtonGroupSmallTokens.
-    /// BetweenSpace` (12px).
-    #[serde(default)]
-    spacing: Option<f64>,
     /// `button-group` item the `pressed`/`hovered` `state` applies to
     /// (`simulate-index` on the Slint side, that item's interaction source
     /// upstream). Defaults to item 0.
