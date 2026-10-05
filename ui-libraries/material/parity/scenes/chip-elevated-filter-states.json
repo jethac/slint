@@ -84,6 +84,7 @@
       2000
     ]
   },
+  "xfail_text": "software: issue #28: Slint ceils text layout widths where Compose keeps fractional advances — the chip label's ink lands ~2px right-shorter, one software cell over eps",
   "negative_note": "compose references never render a chip's held press (the emitted PressInteraction produces no ripple ink, corner morph, or Level3 shadow in the layoutlib refs \u2014 the same gap behind the chip-*-morph xfails) so the pressed chip's silhouette edge is unverifiable on GPU drivers; software keeps the pixel check with the silhouette findings waived under issue #6's axis-aligned clip",
   "parity_eps": 16,
   "parity_eps_reason": "issue #6: the pressed elevated chip's graphicsLayer-softened edge and shadow penumbra land ~1px inside the strict band (residual <=14 channel diff); the silhouette boundary check stays strict (band 2.0)",

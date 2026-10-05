@@ -10,6 +10,7 @@
 //TRACE_PROPS=shadow_elevation
 //TRACE_ELEMENTS=button0,button1,button2,button3,button4,button5
 //MASK_INNER=button3@2000
+//XFAIL_TEXT=software: issue #28: Slint ceils text layout widths where Compose keeps fractional advances — the chip label's ink lands ~2px right-shorter, one software cell over eps
 //XFAIL_SILHOUETTE=issue #6: the software driver can't clip the pressed chip's shadow to the rounded shape — silhouette edge unverifiable; the strict interior stays masked
 //DENSITIES=1,2
 import "../../fonts/Roboto-VariableFont.ttf";

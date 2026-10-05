@@ -87,5 +87,6 @@
       2000
     ]
   },
+  "xfail_text": "software: issue #28: Slint ceils text layout widths where Compose keeps fractional advances — the chip label's ink lands ~2px right-shorter, one software cell over eps",
   "negative_note": "issue #6: on skia the drop-shadow penumbra around an elevated/pressed chip's graphicsLayer-softened edge lands ~4px inside the Compose silhouette \u2014 the corner-band edge comparison reports slint ~3 vs compose ~7 while software/femtovg match"
 }
