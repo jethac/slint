@@ -531,6 +531,7 @@ struct Widget {
     /// upstream `Dp.Hairline` (one physical pixel).
     #[serde(default)]
     thickness: Option<f64>,
+    /// Group rows — `button-group` `clickableItem`/`toggleableItem` calls or
     /// `connected-button-group`/`vertical-connected-button-group` items —
     /// and rail/navigation-bar items (`navigation-rail`,
     /// `wide-navigation-rail`, `modal-navigation-rail`, `navigation-bar`,
@@ -540,15 +541,37 @@ struct Widget {
     /// are disjoint keys of the merged `GroupItem`.
     #[serde(default)]
     items: Vec<GroupItem>,
+    /// `button-group` selection mode: `none` (clickable items, default),
+    /// `single` or `multiple` (toggle items).
+    #[serde(default)]
+    selection: Option<String>,
+    /// `button-group` `expanded-ratio` — default `ButtonGroupDefaults.
+    /// ExpandedRatio` (0.15).
+    #[serde(default)]
+    expanded_ratio: Option<f64>,
+    /// `button-group` `spacing` — default `ButtonGroupSmallTokens.
+    /// BetweenSpace` (12px).
+    #[serde(default)]
+    spacing: Option<f64>,
+    /// `button-group` item the `pressed`/`hovered` `state` applies to
+    /// (`simulate-index` on the Slint side, that item's interaction source
+    /// upstream). Defaults to item 0.
+    #[serde(default)]
+    press_index: Option<i64>,
+    /// `button-group` `current-index` for `single` selection (default -1).
+    #[serde(default)]
+    current_index: Option<i64>,
     /// Groups: every item carries its own checked state instead of one
     /// `selected_index`.
     #[serde(default)]
     multi_select: Option<bool>,
 }
 
-/// One item of a `connected-button-group`: the label, an optional leading
-/// icon, a `checked_icon` swap, `disabled`, `checked` (multi-select), and
-/// an interaction `state` the Compose side emits on that item's source.
+/// One group item — the arguments an upstream `clickableItem`/
+/// `toggleableItem` (standard `button-group`) or a `connected-button-group`
+/// item takes: the label, an optional leading `icon`, a `checked_icon` swap
+/// while checked, a `weight` width share, `disabled`/`enabled`, `checked`,
+/// and an interaction `state` the Compose side emits on that item's source.
 #[derive(serde::Deserialize, serde::Serialize)]
 struct GroupItem {
     #[serde(default)]
@@ -559,8 +582,16 @@ struct GroupItem {
     icon: Option<String>,
     #[serde(default)]
     checked_icon: Option<String>,
+    /// Weighted width share — `button-group` only (`Float.NaN` upstream
+    /// when absent).
+    #[serde(default)]
+    weight: Option<f64>,
     #[serde(default)]
     disabled: Option<bool>,
+    /// `enabled` on the item — button-group rows and
+    /// `NavigationItem.enabled` for rail/bar items alike.
+    #[serde(default)]
+    enabled: Option<bool>,
     #[serde(default)]
     checked: Option<bool>,
     /// `pressed`/`hovered`/`focused` — static scenes bind it through
@@ -574,9 +605,6 @@ struct GroupItem {
     /// Badge text on the rail/bar item.
     #[serde(default)]
     badge: Option<String>,
-    /// `NavigationItem.enabled` on the Slint side.
-    #[serde(default)]
-    enabled: Option<bool>,
 }
 
 /// One rail item (`NavigationItem` on the Slint side).
@@ -622,6 +650,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         // Compose side rasterizes literally the same path the Slint
         // `Icons.<name>` image does.
         for w in &scene.widgets {
+            let widget_item_icons = w.items.iter().filter_map(|it| it.icon.as_ref()).collect::<Vec<_>>();
+            // The overflow indicator always uses the `more_vert` glyph on
+            // both sides.
+            let more_vert = String::from("more_vert");
+            let group_icon = (w.kind == "button-group").then_some(&more_vert);
             for icon in w
                 .icon
                 .iter()
@@ -630,6 +663,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 .chain(w.fab_icon.iter())
                 .chain(w.icons.iter())
                 .chain(w.selected_icon.iter())
+                .chain(widget_item_icons)
+                .chain(group_icon)
                 .chain(w.rail_items.iter().flat_map(|i| [i.icon.iter(), i.selected_icon.iter()].into_iter().flatten()))
                 .chain(w.trailing_icon.iter())
                 .chain(w.leading_image.iter())
@@ -1063,6 +1098,7 @@ fn slint_case(scene: &Scene) -> String {
             "bottom-sheet" => "BottomSheet",
             "bottom-sheet-scaffold" => "BottomSheetScaffold",
             "modal-bottom-sheet" => "ModalBottomSheet",
+            "button-group" => "ButtonGroup",
             "connected-button" => "ConnectedButton",
             "connected-button-group" => "ConnectedButtonGroup",
             "vertical-connected-button-group" => "VerticalConnectedButtonGroup",
@@ -1126,7 +1162,13 @@ fn slint_case(scene: &Scene) -> String {
         {
             needs_icons = true;
         }
-        if w.size.is_some() || w.corner.is_some() || w.width_option.is_some() {
+        if w.kind == "button-group" {
+            imports.push("ButtonGroupSelection");
+            if w.size.is_some() || w.corner.is_some() {
+                imports.push("MaterialButtonSize");
+                imports.push("MaterialButtonShape");
+            }
+        } else if w.size.is_some() || w.corner.is_some() || w.width_option.is_some() {
             imports.push("MaterialButtonSize");
             imports.push("MaterialButtonShape");
             imports.push("IconButtonWidth");
@@ -2016,6 +2058,129 @@ fn slint_canvas(s: &mut String, scene: &Scene) {
     let mut nav_bars = 0;
     for w in scene.widgets.iter() {
         let component = match w.kind.as_str() {
+            "button-group" => {
+                let i = groups;
+                groups += 1;
+                let over = &w.slint_overrides;
+                let mut p = String::new();
+                let width = over.get("width").map(widget_num).or(w.width);
+                if let Some(width) = width {
+                    writeln!(p, "        width: {width}px;").unwrap();
+                }
+                let selection = over
+                    .get("selection")
+                    .and_then(|v| v.as_str())
+                    .map(str::to_string)
+                    .or_else(|| w.selection.clone());
+                if let Some(selection) = selection {
+                    writeln!(p, "        selection: ButtonGroupSelection.{selection};").unwrap();
+                }
+                let ratio = over
+                    .get("expanded_ratio")
+                    .map(widget_num)
+                    .or(w.expanded_ratio);
+                if let Some(ratio) = ratio {
+                    writeln!(p, "        expanded-ratio: {ratio};").unwrap();
+                }
+                let spacing = over.get("spacing").map(widget_num).or(w.spacing);
+                if let Some(spacing) = spacing {
+                    writeln!(p, "        spacing: {spacing}px;").unwrap();
+                }
+                if let Some(size) = &w.size {
+                    writeln!(p, "        size: MaterialButtonSize.{};", size_variant(size))
+                        .unwrap();
+                }
+                if w.corner.as_deref() == Some("square") {
+                    p.push_str("        button-shape: MaterialButtonShape.square;\n");
+                }
+                if w.enabled == Some(false) {
+                    p.push_str("        enabled: false;\n");
+                }
+                if let Some(current) = w.current_index {
+                    writeln!(p, "        current-index: {current};").unwrap();
+                }
+                // `state` drives `simulate_*` on `press_index`'s item — the
+                // same hook every button-family component exposes. Timed
+                // scenes take real pointer `actions` instead so the width
+                // morph animates on camera.
+                if scene.times.is_empty() {
+                    match w.state.as_deref() {
+                        Some("hovered") => p.push_str("        simulate-hover: true;\n"),
+                        Some("pressed") => p.push_str("        simulate-press: true;\n"),
+                        _ => {}
+                    }
+                    if matches!(w.state.as_deref(), Some("hovered") | Some("pressed"))
+                        || w.press_index.is_some()
+                    {
+                        writeln!(
+                            p,
+                            "        simulate-index: {};",
+                            w.press_index.unwrap_or(0)
+                        )
+                        .unwrap();
+                    }
+                }
+                let items = &w.items;
+                let rows = items
+                    .iter()
+                    .map(|it| {
+                        let mut f = String::new();
+                        if let Some(text) = &it.text {
+                            f.push_str(&format!("text: \"{text}\", "));
+                        }
+                        if let Some(icon) = &it.icon {
+                            f.push_str(&format!("icon: Icons.{icon}, "));
+                        }
+                        if let Some(weight) = it.weight {
+                            f.push_str(&format!("weight: {weight}, "));
+                        }
+                        if it.checked == Some(true) {
+                            f.push_str("checked: true, ");
+                        }
+                        if it.enabled == Some(false) {
+                            f.push_str("enabled: false, ");
+                        }
+                        format!("{{ {f}}}")
+                    })
+                    .collect::<Vec<_>>()
+                    .join(", ");
+                writeln!(
+                    s,
+                    "    group{i} := ButtonGroup {{\n        x: {}px;\n        y: {}px;\n{p}        items: [{rows}];\n    }}\n",
+                    w.x as i64,
+                    w.y as i64,
+                )
+                .unwrap();
+                // `g{i}i{k}_w`/`g{i}i{k}_x` trace props read row `k`'s live
+                // measure results off the model — the same numbers the
+                // Compose side pulls from `elementBounds["group{i}item{k}"]`.
+                for prop in &scene.trace_props {
+                    let Some(rest) = prop.strip_prefix(&format!("g{i}i")) else {
+                        continue;
+                    };
+                    if let Some(k) =
+                        rest.strip_suffix("_w").and_then(|n| n.parse::<usize>().ok())
+                    {
+                        writeln!(
+                            s,
+                            "    out property <length> {prop}: group{i}.items[{k}].final-w;\n"
+                        )
+                        .unwrap();
+                    } else if let Some(k) =
+                        rest.strip_suffix("_x").and_then(|n| n.parse::<usize>().ok())
+                    {
+                        writeln!(
+                            s,
+                            "    out property <length> {prop}: group{i}.items[{k}].x-pos;\n"
+                        )
+                        .unwrap();
+                    } else {
+                        panic!("no forwarding known for trace prop {prop:?} on a button-group");
+                    }
+                }
+
+                continue;
+            }
             "filled-button" => "FilledButton",
             "tonal-button" => "TonalButton",
             "elevated-button" => "ElevatedButton",

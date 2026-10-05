@@ -81,6 +81,7 @@ bstar
 bugtracker
 buildcode
 builtinfunctions
+buttongroup
 bytemuck
 calloop
 cand

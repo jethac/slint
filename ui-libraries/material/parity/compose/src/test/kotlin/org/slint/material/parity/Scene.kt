@@ -153,6 +153,13 @@ class Widget(json: JSONObject) {
     val icons: List<String> =
         json.optJSONArray("icons")?.let { a -> (0 until a.length()).map(a::getString) } ?: emptyList()
     val placeholder: String? = (json.opt("placeholder") as? String)?.takeIf { it.isNotEmpty() }
+    /** `button-group` selection: `none` (clickable items, default),
+     * `single`/`multiple` (toggle items). */
+    val selection: String = (json.opt("selection") as? String) ?: "none"
+    /** `button-group` `expanded-ratio` — `ButtonGroupDefaults.ExpandedRatio`. */
+    val expandedRatio: Float = json.optDouble("expanded_ratio", 0.15).toFloat()
+    /** `button-group` item a `pressed`/`hovered` `state` applies to. */
+    val pressIndex: Int = json.optInt("press_index", 0)
     /** `*-split-button` kinds only: which half carries `state` and receives
      * the scripted pointer gesture — `leading` or `trailing`. */
     val side: String = (json.opt("side") as? String) ?: "trailing"
@@ -163,7 +170,8 @@ class Widget(json: JSONObject) {
     /** `connected-button` only: the `VerticalButtonGroupSample` shapes —
      * `CornerSize(100)` caps on `start`/`end`, uniform 6dp pressed. */
     val vertical: Boolean = json.optBoolean("vertical", false)
-    /** `connected-button-group`/`vertical-connected-button-group` items. */
+    /** Group rows — `button-group` `clickableItem`/`toggleableItem` calls or
+     * `connected-button-group`/`vertical-connected-button-group` items. */
     val items: List<GroupItem> =
         json.optJSONArray("items")?.let { a -> (0 until a.length()).map { GroupItem(a.getJSONObject(it)) } }
             ?: emptyList()
@@ -362,23 +370,30 @@ class RailItem(json: JSONObject) {
     val enabled: Boolean = json.optBoolean("enabled", true)
 }
 
-/** One item of a `connected-button-group`: the label, an optional leading
- * icon, a `checked_icon` swap while checked, `disabled`, `checked`
- * (multi-select), and an interaction `state` emitted on the item's own
- * `InteractionSource`. */
+/** One group item — the arguments an upstream `clickableItem`/
+ * `toggleableItem` (standard `button-group`) or a `connected-button-group`
+ * item takes: the label, an optional leading `icon`, a `checked_icon` swap
+ * while checked, a `weight` width share, `disabled`/`enabled`, `checked`,
+ * and an interaction `state` emitted on the item's own `InteractionSource`. */
 class GroupItem(json: JSONObject) {
     val text: String = json.optString("text", "")
+    /** Icon stem under `src/ui/icons/` — loaded like a widget's `icon`. */
     val icon: String? = (json.opt("icon") as? String)?.takeIf { it.isNotEmpty() }
     val checkedIcon: String? = (json.opt("checked_icon") as? String)?.takeIf { it.isNotEmpty() }
+    /** Weighted width share; `null` → upstream's `Float.NaN` (unweighted). */
+    val weight: Float? =
+        if (!json.isNull("weight")) json.getDouble("weight").toFloat() else null
     val disabled: Boolean = json.optBoolean("disabled", false)
+    val enabled: Boolean = json.optBoolean("enabled", true)
     val checked: Boolean = json.optBoolean("checked", false)
     /** `enabled` (default), `pressed`, `hovered`, or `focused`. */
     val state: String = (json.opt("state") as? String) ?: "enabled"
+    /** The item participates when both sides' enable flags say so. */
+    fun isEnabled() = enabled && !disabled
     // --- rail / navigation-bar item fields ---
     val selectedIcon: String? =
         (json.opt("selected_icon") as? String)?.takeIf { it.isNotEmpty() }
     val badge: String? = (json.opt("badge") as? String)?.takeIf { it.isNotEmpty() }
-    val enabled: Boolean = json.optBoolean("enabled", true)
 }
 
 /** "primary-container" → "primaryContainer" for `scheme` map lookups. */

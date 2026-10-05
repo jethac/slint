@@ -7,7 +7,7 @@ import { MaterialPalette } from "../styling/material_palette.slint";
 import { MaterialTypography } from "../styling/material_typography.slint";
 import { MaterialWindowAdapter } from "./material_window.slint";
 import { MaterialCornerShape, ShapeTokens } from "../styling/generated/material_shape_tokens.slint";
-import { MenuTokens, SegmentedMenuTokens } from "../styling/generated/material_component_tokens.slint";
+import { MenuTokens, SegmentedMenuTokens, ListTokens } from "../styling/generated/material_component_tokens.slint";
 import {
     MaterialMenuMetrics,
     MenuVariant,
@@ -441,6 +441,77 @@ export component MenuItemContent {
         height: parent.height - 2 * root.inset-v;
         current-shape: root.current-shape;
     }
+}
+
+export component MenuItemTemplate {
+    in property <image> icon;
+    in property <string> text;
+    in property <string> trailing_text;
+    in property <bool> enabled <=> state_area.enabled;
+    in property <bool> selected;
+
+    callback clicked();
+
+    property <bool> has_icon: root.icon.width > 0 && root.icon.height > 0;
+    property <color> color: MaterialPalette.on_surface;
+    property <color> color_variant: MaterialPalette.on_surface_variant;
+
+    min_height: max(MaterialStyleMetrics.size_56, layout.min_height);
+
+    background_layer := Rectangle {
+        state_area := StateLayerArea {
+            color: root.color;
+
+            layout := HorizontalLayout {
+                padding_left: MaterialStyleMetrics.padding_12;
+                padding_right: self.padding_left;
+                padding_top: MaterialStyleMetrics.padding_8;
+                padding_bottom: self.padding_top;
+                spacing: MaterialStyleMetrics.spacing_12;
+
+                if root.has_icon : VerticalLayout {
+                    alignment: center;
+
+                    Icon {
+                        // Upstream DropdownMenuItem wraps the leading icon in a
+                        // `defaultMinSize(ListTokens.ItemLeadingIconSize)` box (Menu.kt).
+                        width: ListTokens.item_leading_icon_size;
+                        height: self.width;
+                        source: root.icon;
+                        colorize: root.color;
+                    }
+                }
+
+                MaterialText {
+                    horizontal_stretch: 1;
+                    text: root.text;
+                    style: MaterialTypography.body_large;
+                    color: root.color;
+                    vertical_alignment: center;
+                }
+
+                if root.trailing_text != "" : MaterialText {
+                    text: root.trailing_text;
+                    style: MaterialTypography.body_large;
+                    color: root.color_variant;
+                    vertical_alignment: center;
+                }
+            }
+
+            clicked => {
+                root.clicked();
+            }
+        }
+    }
+
+    states [
+        disabled when !root.enabled : {
+            state_area.opacity: MaterialPalette.disable_opacity;
+        }
+        selected when root.selected : {
+            background_layer.background: MaterialPalette.surface_container_highest;
+        }
+    ]
 }
 
 /// `DropdownMenuGroupLabel` — a start-aligned label inside a group:
