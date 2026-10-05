@@ -2,6 +2,12 @@ badges
 bottom-app-bars
 bottom-sheets
 button-focus
+button-group-overflow
+button-group-press-morph
+button-group-press
+button-group-toggle
+button-group-weights
+button-group
 button-hover
 button-icons
 button-press-dark
@@ -58,6 +64,8 @@ navigation-rails
 negative-badge-offset
 negative-badge-text
 negative-button-focus-ring
+negative-button-group-spacing
+negative-button-group-weight
 negative-button-press-morph
 negative-button-ripple-clip
 negative-button-role
