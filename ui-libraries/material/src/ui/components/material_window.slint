@@ -6,6 +6,11 @@ import { MaterialTheme } from "../styling/material_theme.slint";
 
 export global MaterialWindowAdapter {
     in property <bool> disable_hover;
+    /// The hosting window's logical size, published so overlay popups
+    /// (`ModalWideNavigationRail`'s dialog, modal sheets) can cover the
+    /// window; elements inside a component cannot reach `Window` otherwise.
+    in property <length> window-width;
+    in property <length> window-height;
 }
 
 export component MaterialWindow inherits Window {
@@ -17,6 +22,19 @@ export component MaterialWindow inherits Window {
     // pins no `opsz`), so Material text renders at the optical-size default even
     // under a variable font: engine `auto` would tie `opsz` to the pixel size.
     default-font-optical-sizing: none;
+
+    init => {
+        MaterialWindowAdapter.window-width = root.width;
+        MaterialWindowAdapter.window-height = root.height;
+    }
+
+    changed width => {
+        MaterialWindowAdapter.window-width = root.width;
+    }
+
+    changed height => {
+        MaterialWindowAdapter.window-height = root.height;
+    }
 
     changed disable_hover => {
         MaterialWindowAdapter.disable_hover = root.disable_hover;
