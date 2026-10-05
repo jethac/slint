@@ -38,12 +38,15 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ButtonGroup
 import androidx.compose.material3.ButtonGroupDefaults
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ToggleButtonShapes
 import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.ElevatedToggleButton
@@ -570,7 +573,8 @@ private fun CanvasScene(
             (texts).also {
                 texts += when {
                     w.kind == "connected-button-group" ||
-                        w.kind == "vertical-connected-button-group" -> w.items.size
+                        w.kind == "vertical-connected-button-group" ||
+                        w.kind == "button-group" -> w.items.size
                     // `radio-button` renders no Text — the single text
                     // slot is only for button-family widgets.
                     w.kind == "connected-button" ||
@@ -611,6 +615,18 @@ private fun CanvasScene(
                         emitPress,
                         textBase,
                     )
+                widget.kind == "button-group" -> {
+                    StateButtonGroup(
+                        widget,
+                        scene,
+                        tracer,
+                        "group${groups++}",
+                        groups - 1,
+                        textBase,
+                        density,
+                        emitPress,
+                    )
+                }
                 widget.isFab -> StateFab(
                     widget,
                     scene,
@@ -1319,8 +1335,10 @@ private fun sceneIcon(name: String): androidx.compose.ui.graphics.vector.ImageVe
     val svg = Scene::class.java.classLoader!!
         .getResourceAsStream("icons/$name.svg")!!
         .bufferedReader().readText()
+    // SVG `viewBox` is `min-x min-y width height`; an ImageVector viewport is
+    // always (0,0)-(w,h), so the group carries the -min translation.
     val vb = Regex("""viewBox="([\d.\- ]+)"""").find(svg)!!.groupValues[1]
-        .trim().split(" ").map { it.toFloat() }
+        .trim().split(Regex("\\s+")).map { it.toFloat() }
     // `Icon` renders an ImageVector at its intrinsic `defaultWidth/Height`
     // when no explicit size is given, so an icon authored on a non-24
     // viewBox (e.g. the 960-unit Material Symbols grid) must still declare
@@ -1576,6 +1594,251 @@ private fun StateButton(
             // stays inside the drawn arc mid-morph like upstream's own clip.
             RoundedCornerShape(radius.dp),
             buttonInkColor(widget, checked),
+        )
+    }
+}
+
+/** `button-group` scenes render upstream `ButtonGroup` — the standard
+ * (unconnected) variant — with `customItem`s replicating `clickableItem`/
+ * `toggleableItem` verbatim: the same `Button`/`ToggleButton` call, the same
+ * `EnlargeOnPressElement` (`Modifier.animateWidth` — its null
+ * compressionLimit resolves to `ContentPadding`'s 24dp end padding, what
+ * `clickableItem` computes explicitly), and the same `ButtonGroupElement`
+ * weight. `customItem`
+ * is the only item path that takes an external `interactionSource` and a
+ * caller `Modifier` — both needed to press a chosen item and to track each
+ * item's bounds for the `item{i}_w`/`item{i}_x` traces and per-item hit
+ * testing. `press_index` selects the item a `pressed`/`hovered` `state`
+ * holds, matching the Slint side's `simulate-index`. */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun StateButtonGroup(
+    widget: Widget,
+    scene: Scene,
+    tracer: Tracer,
+    elementId: String,
+    groupOrd: Int,
+    textBase: Int,
+    density: Float,
+    emitPress: java.util.concurrent.CopyOnWriteArrayList<Pair<Long, Runnable>>,
+) {
+    val itemSources = widget.items.map { remember { ReplayableInteractionSource() } }
+    val h = buttonHeight(widget)
+    val checkable = widget.selection != "none"
+    val heldIndex = widget.pressIndex.coerceIn(itemSources.indices)
+
+    widget.items.forEachIndexed { i, _ ->
+        val itemId = "${elementId}item$i"
+        tracer.propGetters["g${groupOrd}i${i}_w"] = {
+            ((tracer.elementBounds[itemId]?.width ?: 0f) / density).toDouble()
+        }
+        // `x-pos` is group-relative on the Slint side; the tracked bounds
+        // are scene-root-relative — subtract the group's offset.
+        tracer.propGetters["g${groupOrd}i${i}_x"] = {
+            ((tracer.elementBounds[itemId]?.left ?: 0f) / density - widget.x).toDouble()
+        }
+    }
+
+    // A held state (and scene `actions`) drive the pressed item's own
+    // interaction source — `emitStateInteractions` per item, hit-testing
+    // each item's tracked bounds instead of one widget rect.
+    itemSources.forEachIndexed { i, src ->
+        when {
+            widget.state == "hovered" && i == heldIndex -> LaunchedEffect(Unit) {
+                src.emit(HoverInteraction.Enter())
+            }
+            widget.state == "focused" && i == heldIndex -> LaunchedEffect(Unit) {
+                src.emit(FocusInteraction.Focus())
+            }
+            widget.state == "pressed" && i == heldIndex -> {
+                val press = remember {
+                    Runnable {
+                        src.tryEmit(PressInteraction.Press(Offset(40f * density, 20f * density)))
+                    }
+                }
+                DisposableEffect(press) {
+                    val entry = 0L to press
+                    emitPress.add(entry)
+                    onDispose { emitPress.remove(entry) }
+                }
+            }
+        }
+    }
+    val pressAction = scene.actions.firstOrNull { it.kind == "press" }
+    val releaseAction = scene.actions.firstOrNull { it.kind == "release" }
+    if (pressAction != null && widget.state != "pressed") {
+        var emitted: Pair<Int, PressInteraction.Press>? = null
+        val press = Runnable {
+            val hit = widget.items.indices.firstOrNull { i ->
+                val b = tracer.elementBounds["${elementId}item$i"]
+                b != null &&
+                    pressAction.x * density >= b.left && pressAction.x * density <= b.right &&
+                    pressAction.y * density >= b.top && pressAction.y * density <= b.bottom
+            }
+            hit?.let { i ->
+                val p = PressInteraction.Press(Offset(40f * density, 20f * density))
+                emitted = i to p
+                itemSources[i].tryEmit(p)
+            }
+        }
+        DisposableEffect(press) {
+            val entry = pressAction.at to press
+            emitPress.add(entry)
+            onDispose { emitPress.remove(entry) }
+        }
+        if (releaseAction != null) {
+            val release = Runnable {
+                emitted?.let { (i, p) -> itemSources[i].tryEmit(PressInteraction.Release(p)) }
+                emitted = null
+            }
+            DisposableEffect(release) {
+                val entry = releaseAction.at to release
+                emitPress.add(entry)
+                onDispose { emitPress.remove(entry) }
+            }
+        }
+    }
+
+    ButtonGroup(
+        // `ButtonGroupDefaults.OverflowIndicator` is a TooltipBox around a
+        // `FilledIconButton` with `Icons.Filled.MoreVert` — the tooltip only
+        // exists on hover, so the resting visual is the button alone. Its
+        // `getString(Strings.ButtonGroupMoreOptions)` lookup crashes under
+        // layoutlib, and the harness convention rasterizes the Slint svg —
+        // `sceneIcon("more_vert")` is that same path.
+        overflowIndicator = { menuState ->
+            FilledIconButton(
+                onClick = { if (menuState.isShowing) menuState.dismiss() else menuState.show() },
+                modifier = Modifier.track(tracer, "${elementId}item${widget.items.size}"),
+            ) {
+                Icon(sceneIcon("more_vert"), contentDescription = "More options")
+            }
+        },
+        // ButtonGroup's measure policy keeps the incoming minWidth when it
+        // measures the overflow indicator, so a fixed-width modifier (min ==
+        // max) crashes upstream on the overflow path. Real callers only ever
+        // constrain the max, so the scene does the same.
+        modifier = Modifier.offset(widget.x.dp, widget.y.dp)
+            .then(if (widget.width > 0f) Modifier.widthIn(max = widget.width.dp) else Modifier)
+            .track(tracer, elementId),
+        expandedRatio = widget.expandedRatio,
+    ) {
+        widget.items.forEachIndexed { i, item ->
+            val src = itemSources[i]
+            val iconVector = item.icon?.let { sceneIcon(it) }
+            customItem(
+                buttonGroupContent = {
+                    // ClickableButtonGroupItem/ToggleableButtonGroupItem:
+                    // end-padding compression limit, ContentPadding or
+                    // ButtonWithIconContentPadding, weight element.
+                    val contentPadding = if (iconVector != null) {
+                        ButtonDefaults.ButtonWithIconContentPadding
+                    } else {
+                        ButtonDefaults.ContentPadding
+                    }
+                    // `animateWidth`'s null compressionLimit resolves to
+                    // `ContentPadding`'s end padding (24dp) — identical to
+                    // the limit `clickableItem` computes, since both paddings
+                    // end at 24dp.
+                    val itemModifier = Modifier
+                        .animateWidth(src)
+                        .then(item.weight?.let { Modifier.weight(it) } ?: Modifier)
+                        .track(tracer, "${elementId}item$i")
+                    // Plain items take `labelLarge` (alpha18 hard-codes it);
+                    // toggle items follow `textStyleFor(height)` — the same
+                    // pinning `StateButton` applies.
+                    val labelStyle = if (checkable) {
+                        ButtonDefaults.textStyleFor(h)
+                    } else {
+                        androidx.compose.material3.MaterialTheme.typography.labelLarge
+                    }
+                    val content: @Composable androidx.compose.foundation.layout.RowScope.() -> Unit = {
+                        if (iconVector != null) {
+                            Icon(
+                                iconVector,
+                                contentDescription = null,
+                                modifier = Modifier.size(ButtonDefaults.iconSizeFor(h)),
+                            )
+                            Spacer(Modifier.size(ButtonDefaults.IconSpacing))
+                        }
+                        Text(
+                            item.text ?: "",
+                            style = labelStyle,
+                            maxLines = 1,
+                            softWrap = false,
+                            overflow = androidx.compose.ui.text.style.TextOverflow.Visible,
+                            modifier = Modifier.trackText(
+                                tracer,
+                                "text:${textBase + i}",
+                                density,
+                            ),
+                            onTextLayout = recordTextLayout(
+                                tracer,
+                                "text:${textBase + i}",
+                                LocalDensity.current,
+                                androidx.compose.ui.platform.LocalFontFamilyResolver.current,
+                                labelStyle.fontFamily,
+                            ),
+                        )
+                    }
+                    if (checkable) {
+                        ToggleButton(
+                            checked = item.checked,
+                            onCheckedChange = {},
+                            modifier = itemModifier,
+                            interactionSource = src,
+                            enabled = item.isEnabled(),
+                            contentPadding = contentPadding,
+                            content = content,
+                        )
+                    } else {
+                        Button(
+                            onClick = {},
+                            modifier = itemModifier,
+                            interactionSource = src,
+                            enabled = item.isEnabled(),
+                            contentPadding = contentPadding,
+                            content = content,
+                        )
+                    }
+                },
+                menuContent = { menuState ->
+                    DropdownMenuItem(
+                        leadingIcon = iconVector?.let { iv ->
+                            @Composable { Icon(iv, contentDescription = null) }
+                        },
+                        text = { Text(item.text ?: "") },
+                        onClick = { menuState.dismiss() },
+                        enabled = item.isEnabled(),
+                    )
+                },
+            )
+        }
+    }
+
+    // The held-press ink replica, drawn over the pressed item's live bounds
+    // (same `PressInkOverlay` the single buttons use — upstream's ripple
+    // animator never advances under layoutlib).
+    val pressInk = pressInkMarker(widget, emitPress)
+    if (pressInk.value && widget.items.isNotEmpty()) {
+        val inkColor = if (checkable) {
+            ToggleButtonDefaults.toggleButtonColors().let {
+                if (widget.items[heldIndex].checked) it.checkedContentColor else it.contentColor
+            }
+        } else {
+            ButtonDefaults.buttonColors().contentColor
+        }
+        PressInkOverlay(
+            widget,
+            tracer,
+            "item$heldIndex",
+            density,
+            if (checkable) {
+                ToggleButtonDefaults.shapesFor(h).pressedShape
+            } else {
+                ButtonDefaults.shapesFor(h).pressedShape
+            },
+            inkColor,
         )
     }
 }
