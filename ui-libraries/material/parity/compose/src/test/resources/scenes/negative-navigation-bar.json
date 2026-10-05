@@ -100,12 +100,14 @@
       "content_offset": null,
       "corner": null,
       "count": null,
+      "current_index": null,
       "display_mode": null,
       "displayed": null,
       "dragged": null,
       "elevation": null,
       "enabled": null,
       "expanded": null,
+      "expanded_ratio": null,
       "fab_icon": null,
       "gestures": null,
       "height": null,
@@ -128,7 +130,8 @@
           "icon": "check",
           "selected_icon": null,
           "state": null,
-          "text": "Inbox"
+          "text": "Inbox",
+          "weight": null
         },
         {
           "badge": null,
@@ -139,7 +142,8 @@
           "icon": "schedule",
           "selected_icon": null,
           "state": null,
-          "text": "Sent"
+          "text": "Sent",
+          "weight": null
         },
         {
           "badge": null,
@@ -150,7 +154,8 @@
           "icon": "keyboard",
           "selected_icon": null,
           "state": null,
-          "text": "Files"
+          "text": "Files",
+          "weight": null
         }
       ],
       "kind": "short-navigation-bar",
@@ -166,6 +171,7 @@
       "peek_height": null,
       "placeholder": null,
       "position": null,
+      "press_index": null,
       "progress": null,
       "radius": null,
       "rail_items": [],
@@ -176,6 +182,7 @@
       "selected_end": null,
       "selected_index": 0,
       "selected_start": null,
+      "selection": null,
       "shape": null,
       "sheet_elevation": null,
       "sheet_height": null,
@@ -188,6 +195,7 @@
       "slint_overrides": {
         "selected_index": 2
       },
+      "spacing": null,
       "state": null,
       "subtitle": null,
       "supporting": null,
@@ -227,12 +235,14 @@
       "content_offset": null,
       "corner": null,
       "count": null,
+      "current_index": null,
       "display_mode": null,
       "displayed": null,
       "dragged": null,
       "elevation": null,
       "enabled": null,
       "expanded": null,
+      "expanded_ratio": null,
       "fab_icon": null,
       "gestures": null,
       "height": null,
@@ -255,7 +265,8 @@
           "icon": "check",
           "selected_icon": null,
           "state": null,
-          "text": "Inbox"
+          "text": "Inbox",
+          "weight": null
         },
         {
           "badge": null,
@@ -266,7 +277,8 @@
           "icon": "schedule",
           "selected_icon": null,
           "state": null,
-          "text": "Sent"
+          "text": "Sent",
+          "weight": null
         },
         {
           "badge": null,
@@ -277,7 +289,8 @@
           "icon": "keyboard",
           "selected_icon": null,
           "state": null,
-          "text": "Files"
+          "text": "Files",
+          "weight": null
         }
       ],
       "kind": "short-navigation-bar",
@@ -293,6 +306,7 @@
       "peek_height": null,
       "placeholder": null,
       "position": null,
+      "press_index": null,
       "progress": null,
       "radius": null,
       "rail_items": [],
@@ -303,6 +317,7 @@
       "selected_end": null,
       "selected_index": 0,
       "selected_start": null,
+      "selection": null,
       "shape": null,
       "sheet_elevation": null,
       "sheet_height": null,
@@ -315,6 +330,7 @@
       "slint_overrides": {
         "nav_arrangement": "equal-weight"
       },
+      "spacing": null,
       "state": null,
       "subtitle": null,
       "supporting": null,

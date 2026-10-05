@@ -78,6 +78,11 @@ export component MaterialButtonBase {
     /// icon, so this defaults to `icon` in the callers).
     in property <image> checked_icon;
     in property <length> padding_horizontal;
+    /// Asymmetric horizontal padding overrides — a negative value falls
+    /// back to `padding_horizontal` (upstream `PaddingValues(start, end)`
+    /// where the two ends differ, e.g. `ButtonWithIconContentPadding`).
+    in property <length> padding_leading: -1px;
+    in property <length> padding_trailing: -1px;
     in property <length> padding_vertical;
     /// Extra leading/trailing content padding — the split button's
     /// asymmetric `leadingButtonContentPaddingFor`/`trailingButtonContentPaddingFor`.
@@ -264,12 +269,18 @@ export component MaterialButtonBase {
         }
 
         layout := HorizontalLayout {
-            padding_left: root.icon_button ? 0px : root.padding_horizontal + root.padding_start + root.optical_offset;
+            // `padding_leading`/`padding_trailing` replace the whole side
+            // when set (button-group item slots); otherwise the base
+            // `padding_horizontal` plus the split button's `padding_start`/
+            // `padding_end` extras and the optical-centering offset apply.
+            padding_left: root.icon_button ? 0px : (root.padding_leading >= 0px ? root.padding_leading
+                : root.padding_horizontal + root.padding_start + root.optical_offset);
             // Compose's content is `Icon + Spacer(iconSpacing) + Text` — the
             // spacer is emitted whenever an icon is present, so it still
             // counts when the label is empty.
-            padding_right: root.icon_button ? 0px : root.padding_horizontal + root.padding_end - root.optical_offset
-                + (root.icon.width > 0 && root.text == "" ? root.icon_spacing : 0px);
+            padding_right: root.icon_button ? 0px : (root.padding_trailing >= 0px ? root.padding_trailing
+                : root.padding_horizontal + root.padding_end - root.optical_offset
+                    + (root.icon.width > 0 && root.text == "" ? root.icon_spacing : 0px));
             padding_top: root.icon_button ? 0px : root.padding_vertical;
             padding_bottom: root.icon_button ? 0px : root.padding_vertical;
             spacing: root.icon_spacing;
