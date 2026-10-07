@@ -93,9 +93,11 @@ jobs:
           - name: Check generated parity scenes are up to date
             run: cargo run -p material-parity-generator -- --check
 
-  material_parity_build:
-      # Compiles the Slint-side parity test binary once; the material_parity
+  material_parity:
+      # Compiles the Slint-side parity test binary once; the material_parity_shard
       # shard jobs download it instead of each paying the release build.
+      # Named material_parity so its cargo cache restores the saved
+      # v0-rust-parity-material_parity entry.
       if: ${{ github.event_name != 'pull_request' || github.repository != 'slint-ui/slint' }}
       env:
           CARGO_PROFILE_RELEASE_OPT_LEVEL: s
@@ -113,9 +115,7 @@ jobs:
             uses: dtolnay/rust-toolchain@stable
           - uses: Swatinem/rust-cache@v2
             with:
-                # Share material_tests' key: its dep tree overlaps the
-                # screenshot driver's and the parity key has no warm entry.
-                key: tests
+                key: parity
                 save-if: ${{ github.ref == 'refs/heads/master' }}
           - name: Build the parity test binary
             run: |
@@ -134,14 +134,14 @@ jobs:
                 path: parity-bin/
                 retention-days: 1
 
-  material_parity:
+  material_parity_shard:
       # Slint-side parity harness on all renderers, sharded across jobs.
       # The committed Paparazzi/layoutlib references under
       # ui-libraries/material/parity/compose/references are required:
       # PARITY_REQUIRE_REFS=1 makes the Slint comparisons fail when a
       # reference is missing, stale, or differs.
       if: ${{ github.event_name != 'pull_request' || github.repository != 'slint-ui/slint' }}
-      needs: [material_parity_build]
+      needs: [material_parity]
       env:
           PARITY_REQUIRE_REFS: "1"
           # Absolute: the test binaries run with CWD = tests/, so a relative
