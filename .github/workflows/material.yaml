@@ -113,7 +113,9 @@ jobs:
             uses: dtolnay/rust-toolchain@stable
           - uses: Swatinem/rust-cache@v2
             with:
-                key: parity
+                # Share material_tests' key: its dep tree overlaps the
+                # screenshot driver's and the parity key has no warm entry.
+                key: tests
                 save-if: ${{ github.ref == 'refs/heads/master' }}
           - name: Build the parity test binary
             run: |
