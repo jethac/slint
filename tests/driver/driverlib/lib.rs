@@ -33,6 +33,18 @@ impl TestCase {
     }
 }
 
+/// `SLINT_TEST_FILTER` splits on commas: a case is selected when its path
+/// relative to the case root contains any of the listed substrings. An unset
+/// or empty variable selects every case. The path is matched with `/`
+/// separators so a filter works the same on Windows and Unix.
+pub fn test_filter_matches(filter: Option<&str>, relative_path: &str) -> bool {
+    let Some(filter) = filter else { return true };
+    let normalized = relative_path.replace('\\', "/");
+    let parts: Vec<&str> =
+        filter.split(',').map(str::trim).filter(|part| !part.is_empty()).collect();
+    parts.is_empty() || parts.iter().any(|part| normalized.contains(part))
+}
+
 /// Returns a list of all the `.slint` files in the subfolders e.g. `tests/cases` .
 pub fn collect_test_cases(sub_folders: &str) -> std::io::Result<Vec<TestCase>> {
     let mut results = Vec::new();
@@ -59,9 +71,7 @@ pub fn collect_test_cases(sub_folders: &str) -> std::io::Result<Vec<TestCase>> {
         let absolute_path = entry.into_path();
         let relative_path =
             std::path::PathBuf::from(absolute_path.strip_prefix(&case_root_dir).unwrap());
-        if let Some(filter) = &filter
-            && !relative_path.to_str().unwrap().contains(filter)
-        {
+        if !test_filter_matches(filter.as_deref(), relative_path.to_str().unwrap()) {
             continue;
         }
         if let Some(ext) = absolute_path.extension()
@@ -640,4 +650,24 @@ fn test_extract_cpp_namespace() {
 
     let r = extract_cpp_namespace(source);
     assert_eq!(r, Some("ui".to_string()));
+}
+
+#[test]
+fn test_test_filter_matches() {
+    assert!(test_filter_matches(None, "material/foo.slint"));
+    assert!(test_filter_matches(Some(""), "material/foo.slint"));
+    assert!(test_filter_matches(Some(" , "), "material/foo.slint"));
+    assert!(test_filter_matches(Some("material"), "material/foo.slint"));
+    assert!(test_filter_matches(Some("material/foo.slint"), "material/foo.slint"));
+    assert!(!test_filter_matches(Some("material/foo.slint"), "material/foo_2.slint"));
+    assert!(test_filter_matches(
+        Some("material/bar.slint,material/foo.slint"),
+        "material/foo.slint"
+    ));
+    assert!(!test_filter_matches(
+        Some("material/bar.slint,material/baz.slint"),
+        "material/foo.slint"
+    ));
+    // Windows-style separators in the relative path still match `/` filters.
+    assert!(test_filter_matches(Some("material/foo.slint"), "material\\foo.slint"));
 }
