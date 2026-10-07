@@ -93,21 +93,15 @@ jobs:
           - name: Check generated parity scenes are up to date
             run: cargo run -p material-parity-generator -- --check
 
-  material_parity:
-      # Slint-side parity harness on all renderers + Compose harness build.
-      # The committed Paparazzi/layoutlib references under
-      # ui-libraries/material/parity/compose/references are required:
-      # PARITY_REQUIRE_REFS=1 makes the Slint comparisons fail when a
-      # reference is missing, stale, or differs.
+  material_parity_build:
+      # Compiles the Slint-side parity test binary once; the material_parity
+      # shard jobs download it instead of each paying the release build.
       if: ${{ github.event_name != 'pull_request' || github.repository != 'slint-ui/slint' }}
       env:
           CARGO_PROFILE_RELEASE_OPT_LEVEL: s
           CARGO_INCREMENTAL: false
-          PARITY_REQUIRE_REFS: "1"
-          # Absolute: the test binaries run with CWD = tests/, so a relative
-          # path would dump artifacts under tests/target/ instead of here.
-          PARITY_ARTIFACT_DIR: ${{ github.workspace }}/target/parity-artifacts
       runs-on: ubuntu-latest
+      timeout-minutes: 30
       steps:
           - uses: actions/checkout@v7
           - name: Install Linux dependencies
@@ -117,6 +111,111 @@ jobs:
             shell: bash
           - name: Install Rust
             uses: dtolnay/rust-toolchain@stable
+          - uses: Swatinem/rust-cache@v2
+            with:
+                key: parity
+                save-if: ${{ github.ref == 'refs/heads/master' }}
+          - name: Build the parity test binary
+            run: |
+              set -euo pipefail
+              SLINT_TEST_FILTER=material cargo test --release --manifest-path tests/Cargo.toml -p test-driver-screenshots --features femtovg --no-run \
+                --message-format=json | tee /tmp/build.jsonl | grep -aoE '"executable":"[^"]*screenshot[^"]*"' | tail -1 | cut -d'"' -f4 > /tmp/binpath
+              bin="$(cat /tmp/binpath)"
+              [ -n "$bin" ] && [ -x "$bin" ] || { echo "::error::parity test binary not found"; exit 1; }
+              mkdir -p parity-bin
+              cp "$bin" parity-bin/parity-tests
+            shell: bash
+          - name: Upload parity test binary
+            uses: actions/upload-artifact@v7
+            with:
+                name: material-parity-test-bin
+                path: parity-bin/
+                retention-days: 1
+
+  material_parity:
+      # Slint-side parity harness on all renderers, sharded across jobs.
+      # The committed Paparazzi/layoutlib references under
+      # ui-libraries/material/parity/compose/references are required:
+      # PARITY_REQUIRE_REFS=1 makes the Slint comparisons fail when a
+      # reference is missing, stale, or differs.
+      if: ${{ github.event_name != 'pull_request' || github.repository != 'slint-ui/slint' }}
+      needs: [material_parity_build]
+      env:
+          PARITY_REQUIRE_REFS: "1"
+          # Absolute: the test binaries run with CWD = tests/, so a relative
+          # path would dump artifacts under tests/target/ instead of here.
+          PARITY_ARTIFACT_DIR: ${{ github.workspace }}/target/parity-artifacts
+      runs-on: ubuntu-latest
+      timeout-minutes: 20
+      strategy:
+          fail-fast: false
+          matrix:
+              shard: [0, 1, 2, 3]
+      steps:
+          - uses: actions/checkout@v7
+          - name: Install Linux dependencies
+            run: |
+              sudo timeout 600 apt-get update
+              sudo timeout 600 apt-get install libxcb-shape0-dev libxcb-xfixes0-dev libxkbcommon-dev libxkbcommon-x11-dev libfontconfig-dev libegl1-mesa-dev libgl1-mesa-dri mesa-utils xvfb
+            shell: bash
+          - uses: actions/download-artifact@v8
+            with:
+                name: material-parity-test-bin
+                path: parity-bin/
+          - name: Check headless EGL (FemtoVG renders through surfaceless Mesa)
+            run: |
+              ls /usr/share/glvnd/egl_vendor.d/
+              eglinfo -p surfaceless 2>&1 | head -20 || true
+            shell: bash
+          - name: Run material parity cases on all renderers
+            # xvfb gives the EGL default display an X server to land on when
+            # Mesa's surfaceless platform can't initialize headless (no
+            # /dev/dri on the runner); the driver falls back to it.
+            # The suite's per-test state isn't fully released inside one
+            # test process (~60 MB/test, ~20 GB over the suite — enough to
+            # OOM the runner), so the cases run in shards: each shard is a
+            # separate test-binary invocation whose heap is freed when the
+            # process exits. Shard boundaries also split the log the way the
+            # old per-renderer invocations did. The binary runs from tests/
+            # because that's the CWD `cargo test` gave it.
+            run: |
+              set -euo pipefail
+              chmod +x parity-bin/parity-tests
+              cd tests
+              bin="../parity-bin/parity-tests"
+              mapfile -t names < <(xvfb-run -a env SLINT_TEST_FILTER=material "$bin" --list 2>/dev/null | sed -n 's/: test$//p')
+              ((${#names[@]})) || { echo "::error::parity test list is empty"; exit 1; }
+              sel=()
+              for ((i=${{ matrix.shard }}; i<${#names[@]}; i+=${{ strategy.job-total }})); do sel+=("${names[i]}"); done
+              echo "${#sel[@]} of ${#names[@]} parity cases in shard ${{ matrix.shard }}"
+              ((${#sel[@]})) || exit 0
+              shard=40
+              for ((i=0; i<${#sel[@]}; i+=shard)); do
+                last=$((i + shard < ${#sel[@]} ? i + shard : ${#sel[@]}))
+                echo "::group::cases $((i + 1))-$last of ${#sel[@]}"
+                xvfb-run -a env SLINT_TEST_FILTER=material "$bin" --exact "${sel[@]:i:shard}"
+                echo "::endgroup::"
+              done
+            shell: bash
+          - name: Upload parity artifacts
+            if: failure()
+            uses: actions/upload-artifact@v7
+            with:
+                name: material-parity-artifacts-${{ matrix.shard }}
+                path: target/parity-artifacts/
+                retention-days: 30
+
+  material_compose:
+      # Compose-side harness: compiles the Paparazzi test module and proves
+      # the committed references reproduce. Split from the Slint-side leg so
+      # each job is short enough to survive hosted-runner reclaim windows.
+      if: ${{ github.event_name != 'pull_request' || github.repository != 'slint-ui/slint' }}
+      env:
+          PARITY_ARTIFACT_DIR: ${{ github.workspace }}/target/parity-artifacts
+      runs-on: ubuntu-latest
+      timeout-minutes: 20
+      steps:
+          - uses: actions/checkout@v7
           - uses: actions/setup-java@v4
             with:
                 distribution: temurin
@@ -136,39 +235,6 @@ jobs:
               SDKMANAGER="$SDK_ROOT/cmdline-tools/ci/bin/sdkmanager"
               yes | "$SDKMANAGER" --sdk_root="$SDK_ROOT" --licenses > /dev/null || true
               "$SDKMANAGER" --sdk_root="$SDK_ROOT" "platforms;android-36" "build-tools;36.0.0"
-            shell: bash
-          - uses: Swatinem/rust-cache@v2
-            with:
-                key: parity
-                save-if: ${{ github.ref == 'refs/heads/master' }}
-          - name: Check headless EGL (FemtoVG renders through surfaceless Mesa)
-            run: |
-              ls /usr/share/glvnd/egl_vendor.d/
-              eglinfo -p surfaceless 2>&1 | head -20 || true
-            shell: bash
-          - name: Run material parity cases on all renderers
-            # xvfb gives the EGL default display an X server to land on when
-            # Mesa's surfaceless platform can't initialize headless (no
-            # /dev/dri on the runner); the driver falls back to it.
-            # The suite's per-test state isn't fully released inside one
-            # test process (~60 MB/test, ~20 GB over the suite — enough to
-            # OOM the runner), so the cases run in shards: each shard is a
-            # separate `cargo test` invocation whose heap is freed when the
-            # process exits. Shard boundaries also split the log the way the
-            # old per-renderer invocations did.
-            run: |
-              set -euo pipefail
-              args=(env SLINT_TEST_FILTER=material cargo test --release --manifest-path tests/Cargo.toml -p test-driver-screenshots --features femtovg)
-              mapfile -t names < <(xvfb-run -a "${args[@]}" -- --list 2>/dev/null | sed -n 's/: test$//p')
-              ((${#names[@]})) || { echo "::error::parity test list is empty"; exit 1; }
-              echo "${#names[@]} parity cases"
-              shard=40
-              for ((i=0; i<${#names[@]}; i+=shard)); do
-                last=$((i + shard < ${#names[@]} ? i + shard : ${#names[@]}))
-                echo "::group::cases $((i + 1))-$last of ${#names[@]}"
-                xvfb-run -a "${args[@]}" -- --exact "${names[@]:i:shard}"
-                echo "::endgroup::"
-              done
             shell: bash
           - name: Build the Compose parity harness
             run: ./gradlew compileDebugUnitTestKotlin --no-daemon
@@ -228,7 +294,7 @@ jobs:
             if: failure()
             uses: actions/upload-artifact@v7
             with:
-                name: material-parity-artifacts
+                name: material-compose-artifacts
                 path: target/parity-artifacts/
                 retention-days: 30
 
