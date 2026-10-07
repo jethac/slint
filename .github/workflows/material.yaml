@@ -120,7 +120,7 @@ jobs:
           - name: Build the parity test binary
             run: |
               set -euo pipefail
-              SLINT_TEST_FILTER=material cargo test --release --manifest-path tests/Cargo.toml -p test-driver-screenshots --features femtovg --no-run \
+              RUSTFLAGS="-C link-arg=-fuse-ld=lld" SLINT_TEST_FILTER=material cargo test --release --manifest-path tests/Cargo.toml -p test-driver-screenshots --features femtovg --no-run \
                 --message-format=json | tee /tmp/build.jsonl | grep -aoE '"executable":"[^"]*screenshot[^"]*"' | tail -1 | cut -d'"' -f4 > /tmp/binpath
               bin="$(cat /tmp/binpath)"
               [ -n "$bin" ] && [ -x "$bin" ] || { echo "::error::parity test binary not found"; exit 1; }
@@ -152,7 +152,7 @@ jobs:
       strategy:
           fail-fast: false
           matrix:
-              shard: [0, 1, 2, 3]
+              shard: [0, 1, 2, 3, 4, 5]
       steps:
           - uses: actions/checkout@v7
           - name: Install Linux dependencies
