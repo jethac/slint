@@ -1,0 +1,23 @@
+{
+    "name": "negative-pull-refresh-fraction",
+    "type": "pull-refresh",
+    "parity": "negative",
+    "negative_note": "the Slint side snaps to a different distance fraction — the indicator's travel and progress arc must not match",
+    "size": [400, 240],
+    "densities": [1, 2],
+    "theme": {
+        "seed": "6750A4",
+        "variant": "tonal-spot",
+        "spec": "spec2025",
+        "platform": "phone",
+        "dark": false,
+        "contrast": 0.0
+    },
+    "fonts": { "plain": "Roboto", "brand": "Roboto" },
+    "slint_overrides": { "fraction": 0.68 },
+    "params": {
+        "boxes": [
+            { "x": 90, "y": 60, "w": 220, "h": 140, "fraction": 0.5, "kind": "classic", "content": "surface-container" }
+        ]
+    }
+}

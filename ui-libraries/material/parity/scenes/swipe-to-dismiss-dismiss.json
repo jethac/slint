@@ -1,0 +1,30 @@
+{
+    "name": "swipe-to-dismiss-dismiss",
+    "type": "swipe-to-dismiss",
+    "parity": "xfail",
+    "negative_note": "issue #27: the Compose frame clock starts the animation ~2ms after the Slint dispatch, so identical-timestamp comparison reports a systematic lead — a silent pass would mean the harness went blind",
+    "size": [420, 200],
+    "densities": [1, 2],
+    "theme": {
+        "seed": "6750A4",
+        "variant": "tonal-spot",
+        "spec": "spec2025",
+        "platform": "phone",
+        "dark": false,
+        "contrast": 0.0
+    },
+    "fonts": { "plain": "Roboto", "brand": "Roboto" },
+    "times": [0, 400, 450, 500, 550, 600, 650, 700, 750, 900],
+    "trace_props": ["offset0", "progress0"],
+    "trace_elements": ["fg0"],
+    "actions": [
+        { "kind": "press", "x": 8, "y": 8, "at": 400 },
+        { "kind": "release", "x": 8, "y": 8, "at": 400 }
+    ],
+    "params": {
+        "boxes": [
+            { "x": 60, "y": 60, "w": 300, "h": 72, "initial": "settled", "bg": "error-container", "content": "surface-container-highest", "radius": 8 }
+        ],
+        "settle": { "box": 0, "op": "dismiss", "dir": "end-to-start" }
+    }
+}

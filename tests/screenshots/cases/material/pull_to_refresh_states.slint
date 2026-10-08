@@ -1,0 +1,86 @@
+// Copyright © SixtyFPS GmbH <info@slint.dev>
+// SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0
+
+// Scene: pull-to-refresh-states — generated from `ui-libraries/material/parity/scenes/pull-to-refresh-states.json`
+// (edit the scene, regenerate with `cargo run -p material-parity-generator`).
+//PARITY=xfail:femtovg: issue #53 class: femtovg rasterizes stroked edges via stencil+fringe with the AA band running -0.5px inside to +1.5px outside, so the thin ink strokes (48dp ring, 2.5dp arrow, morph-blob outlines) cover a device-px sliver differently than coverage-integral drivers (software, skia, vello, Compose) — isolated edge pixels read near-background where layoutlib/Skia has near-full ink (9px at d1, 116px at d2, worst channel diff 139) while geometry, fills and the strict body match; verified identical on software and skia — a silent pass on femtovg would mean the harness went blind
+// thin stroked outlines (arc, arrow, morph-blob edges): legitimate ~1px/sub-pixel AA divergence past the default 8/255 (worst channel diff ~31); edges verified identical at ±1px
+//PARITY_EPS=32
+//SIZE=560x400
+//DENSITIES=1,2
+import "../../fonts/Roboto-VariableFont.ttf";
+import { MaterialPalette, MaterialTheme, MaterialWindow, PullToRefreshBox, PullToRefreshIndicatorKind } from "@material";
+
+export component TestCase inherits MaterialWindow {
+    init => {
+        // The scene pins seed #6750A4, tonal-spot, spec2025, light, contrast 0
+        // (all the library defaults; restated here so a default change can't
+        // silently move the parity baseline).
+        MaterialTheme.seed-color = #6750A4;
+        MaterialTheme.dark = false;
+        MaterialTheme.contrast-level = 0;
+        MaterialTheme.use-platform-color = false;
+        MaterialTheme.plain-family = "Roboto";
+        MaterialTheme.brand-family = "Roboto";
+        // Compose builds its scene scheme from the same seed — use the
+        // runtime-generated scheme, not the static expressive table.
+        MaterialPalette.dynamic = true;
+    }
+
+    box0 := PullToRefreshBox {
+        x: 40px;
+        y: 60px;
+        width: 220px;
+        height: 130px;
+        indicator-kind: PullToRefreshIndicatorKind.classic;
+        Rectangle {
+            background: MaterialPalette.surface_container;
+        }
+        init => {
+            box0.snap-to(0.5);
+        }
+    }
+
+    box1 := PullToRefreshBox {
+        x: 300px;
+        y: 60px;
+        width: 220px;
+        height: 130px;
+        indicator-kind: PullToRefreshIndicatorKind.classic;
+        Rectangle {
+            background: MaterialPalette.surface_container;
+        }
+        init => {
+            box1.snap-to(1);
+        }
+    }
+
+    box2 := PullToRefreshBox {
+        x: 40px;
+        y: 230px;
+        width: 220px;
+        height: 130px;
+        indicator-kind: PullToRefreshIndicatorKind.classic;
+        Rectangle {
+            background: MaterialPalette.surface_container;
+        }
+        init => {
+            box2.snap-to(1.4);
+        }
+    }
+
+    box3 := PullToRefreshBox {
+        x: 300px;
+        y: 230px;
+        width: 220px;
+        height: 130px;
+        indicator-kind: PullToRefreshIndicatorKind.loading-indicator;
+        Rectangle {
+            background: MaterialPalette.surface_container;
+        }
+        init => {
+            box3.snap-to(0.6);
+        }
+    }
+
+}

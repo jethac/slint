@@ -1,0 +1,29 @@
+{
+    "name": "pull-refresh-settle",
+    "type": "pull-refresh",
+    "parity": "xfail",
+    "negative_note": "issue #27: the Compose frame clock starts the animation ~2ms after the Slint dispatch, so identical-timestamp comparison reports a systematic lead — a silent pass would mean the harness went blind",
+    "size": [400, 240],
+    "densities": [1, 2],
+    "theme": {
+        "seed": "6750A4",
+        "variant": "tonal-spot",
+        "spec": "spec2025",
+        "platform": "phone",
+        "dark": false,
+        "contrast": 0.0
+    },
+    "fonts": { "plain": "Roboto", "brand": "Roboto" },
+    "times": [0, 300, 325, 350, 400, 450, 500, 550, 650, 800, 1200],
+    "trace_props": ["fraction0"],
+    "actions": [
+        { "kind": "press", "x": 8, "y": 8, "at": 300 },
+        { "kind": "release", "x": 8, "y": 8, "at": 300 }
+    ],
+    "params": {
+        "boxes": [
+            { "x": 90, "y": 60, "w": 220, "h": 140, "fraction": 1.4, "kind": "classic", "content": "surface-container" }
+        ],
+        "settle": { "box": 0, "op": "to-hidden" }
+    }
+}

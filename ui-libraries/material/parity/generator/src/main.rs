@@ -911,12 +911,8 @@ fn slint_case(scene: &Scene) -> String {
         kind => writeln!(s, "//PARITY={kind}").unwrap(),
     }
     if let Some(eps) = scene.parity_eps {
-        writeln!(
-            s,
-            "// {}",
-            scene.parity_eps_reason.as_deref().unwrap_or("(undocumented)")
-        )
-        .unwrap();
+        writeln!(s, "// {}", scene.parity_eps_reason.as_deref().unwrap_or("(undocumented)"))
+            .unwrap();
         writeln!(s, "//PARITY_EPS={eps}").unwrap();
     }
     writeln!(s, "//SIZE={}x{}", scene.size[0], scene.size[1]).unwrap();
@@ -965,11 +961,8 @@ fn slint_case(scene: &Scene) -> String {
     let trace_items = item_containers
         .iter()
         .map(|c| {
-            let locals = scene
-                .trace_items
-                .get(c)
-                .cloned()
-                .unwrap_or_else(|| vec!["item".to_string()]);
+            let locals =
+                scene.trace_items.get(c).cloned().unwrap_or_else(|| vec!["item".to_string()]);
             format!("{c}:{}", locals.join("+"))
         })
         .collect::<Vec<_>>()
@@ -1201,17 +1194,24 @@ fn slint_case(scene: &Scene) -> String {
     if needs_icons {
         imports.push("Icons");
     }
+    match scene.ty.as_str() {
+        "pull-refresh" => {
+            imports.push("PullToRefreshBox");
+            imports.push("PullToRefreshIndicatorKind");
+        }
+        "swipe-to-dismiss" => {
+            imports.push("SwipeToDismissBox");
+            imports.push("SwipeToDismissBoxValue");
+        }
+        _ => {}
+    }
     if scene.widgets.iter().any(|w| w.kind == "surface") {
         imports.push("Elevation");
         if scene.widgets.iter().any(|w| w.shape.as_deref().is_some_and(|sh| sh != "rect")) {
             imports.push("MaterialShapes");
         }
     }
-    if scene
-        .widgets
-        .iter()
-        .any(|w| w.slint_overrides.contains_key("sheet_shape"))
-    {
+    if scene.widgets.iter().any(|w| w.slint_overrides.contains_key("sheet_shape")) {
         imports.push("ShapeTokens");
     }
     if scene.widgets.iter().any(|w| w.kind == "material-surface" && w.text.is_some()) {
@@ -1247,6 +1247,8 @@ fn slint_case(scene: &Scene) -> String {
     match scene.ty.as_str() {
         "canvas" => slint_canvas(&mut s, scene),
         "spring-motion" => slint_spring_motion(&mut s, scene),
+        "pull-refresh" => slint_pull_refresh(&mut s, scene),
+        "swipe-to-dismiss" => slint_swipe_dismiss(&mut s, scene),
         other => panic!("unknown scene type {other:?}"),
     }
     writeln!(s, "}}").unwrap();
@@ -1295,13 +1297,12 @@ fn widget_actions(scene: &Scene) -> Vec<Action> {
         }
         if w.state.as_deref() == Some("focused") {
             // Focused split halves: `leading` is the first of the pair.
-            let target = if w.kind.ends_with("split-button")
-                && w.side.as_deref() == Some("trailing")
-            {
-                ordinal + 1
-            } else {
-                ordinal
-            };
+            let target =
+                if w.kind.ends_with("split-button") && w.side.as_deref() == Some("trailing") {
+                    ordinal + 1
+                } else {
+                    ordinal
+                };
             for _ in tabs_emitted..=target {
                 actions.push(Action {
                     kind: "key:Tab".into(),
@@ -1385,20 +1386,17 @@ fn widget_actions(scene: &Scene) -> Vec<Action> {
             };
             // A `radio-button`'s drawn control is a 24dp slot — aim at its
             // center, not the button-bucket point.
-            let (x, y) = if w.kind == "radio-button" {
-                (w.x + 12.0, w.y + 12.0)
-            } else {
-                (x, w.y + 16.0)
-            };
+            let (x, y) =
+                if w.kind == "radio-button" { (w.x + 12.0, w.y + 12.0) } else { (x, w.y + 16.0) };
             actions.push(Action { kind: kind.into(), x, y, at: 0.0, velocity: 0.0 });
         }
     }
     for w in &scene.widgets {
-        match w
-            .state
-            .as_deref()
-            .unwrap_or(if w.enabled == Some(false) { "disabled" } else { "enabled" })
-        {
+        match w.state.as_deref().unwrap_or(if w.enabled == Some(false) {
+            "disabled"
+        } else {
+            "enabled"
+        }) {
             "hovered" | "pressed" | "enabled" | "disabled" | "focused" | "dragged" => {}
             other => panic!("unknown widget state {other:?}"),
         }
@@ -1546,11 +1544,8 @@ fn split_button_props(w: &Widget, timed: bool) -> String {
     if let Some(text) = &w.text {
         writeln!(p, "        text: \"{text}\";").unwrap();
     }
-    let size = over
-        .get("size")
-        .and_then(|v| v.as_str())
-        .map(str::to_string)
-        .or_else(|| w.size.clone());
+    let size =
+        over.get("size").and_then(|v| v.as_str()).map(str::to_string).or_else(|| w.size.clone());
     if let Some(size) = size {
         writeln!(p, "        size: MaterialButtonSize.{};", size_variant(&size)).unwrap();
     }
@@ -1560,11 +1555,8 @@ fn split_button_props(w: &Widget, timed: bool) -> String {
     if bool_over("checked", w.checked) {
         p.push_str("        checked: true;\n");
     }
-    let icon = over
-        .get("icon")
-        .and_then(|v| v.as_str())
-        .map(str::to_string)
-        .or_else(|| w.icon.clone());
+    let icon =
+        over.get("icon").and_then(|v| v.as_str()).map(str::to_string).or_else(|| w.icon.clone());
     if let Some(icon) = icon {
         writeln!(p, "        icon: Icons.{icon};").unwrap();
     }
@@ -1620,8 +1612,13 @@ fn on_color_role(role: &str) -> &str {
         "error" => "on_error",
         "error-container" => "on_error_container",
         "inverse-surface" => "inverse_on_surface",
-        "surface" | "surface-bright" | "surface-dim" | "surface-container"
-        | "surface-container-high" | "surface-container-highest" | "surface-container-low"
+        "surface"
+        | "surface-bright"
+        | "surface-dim"
+        | "surface-container"
+        | "surface-container-high"
+        | "surface-container-highest"
+        | "surface-container-low"
         | "surface-container-lowest" => "on_surface",
         "surface-variant" => "on_surface_variant",
         other => panic!("no content-color role known for {other:?}"),
@@ -1655,32 +1652,21 @@ fn fab_props(w: &Widget, timed: bool) -> String {
             writeln!(p, "        tooltip: \"{text}\";").unwrap();
         }
     }
-    let size = over
-        .get("size")
-        .and_then(|v| v.as_str())
-        .map(str::to_string)
-        .or_else(|| w.size.clone());
+    let size =
+        over.get("size").and_then(|v| v.as_str()).map(str::to_string).or_else(|| w.size.clone());
     if let Some(size) = size {
         let en = if extended { "ExtendedFabSize" } else { "FabSize" };
         writeln!(p, "        size: {en}.{size};").unwrap();
     }
-    let icon = over
-        .get("icon")
-        .and_then(|v| v.as_str())
-        .map(str::to_string)
-        .or_else(|| w.icon.clone());
+    let icon =
+        over.get("icon").and_then(|v| v.as_str()).map(str::to_string).or_else(|| w.icon.clone());
     if let Some(icon) = icon {
         writeln!(p, "        icon: Icons.{icon};").unwrap();
     }
     if let Some(color) = &w.color {
         let role = color.replace('-', "_");
         writeln!(p, "        container_color: MaterialPalette.{role};").unwrap();
-        writeln!(
-            p,
-            "        content_color: MaterialPalette.{};",
-            on_color_role(color)
-        )
-        .unwrap();
+        writeln!(p, "        content_color: MaterialPalette.{};", on_color_role(color)).unwrap();
     }
     let variant = over
         .get("variant")
@@ -1890,10 +1876,7 @@ fn list_props(w: &Widget, timed: bool, segmented: bool) -> String {
         over.get(k).and_then(|v| v.as_bool()).unwrap_or(authored.unwrap_or(false))
     };
     let str_over = |k: &str, authored: &Option<String>| -> Option<String> {
-        over.get(k)
-            .and_then(|v| v.as_str())
-            .map(str::to_string)
-            .or_else(|| authored.clone())
+        over.get(k).and_then(|v| v.as_str()).map(str::to_string).or_else(|| authored.clone())
     };
     if let Some(text) = str_over("text", &w.text) {
         writeln!(p, "        text: \"{text}\";").unwrap();
@@ -1967,7 +1950,9 @@ fn list_props(w: &Widget, timed: bool, segmented: bool) -> String {
     // the generated case flips it so a press+release action animates the
     // morph, like `checkable`'s self-toggle.
     if bool_over("selectable", w.selectable) {
-        p.push_str("        clicked => {\n            self.selected = !self.selected;\n        }\n");
+        p.push_str(
+            "        clicked => {\n            self.selected = !self.selected;\n        }\n",
+        );
     }
     p
 }
@@ -2155,7 +2140,7 @@ fn slint_canvas(s: &mut String, scene: &Scene) {
                 .unwrap();
                 continue;
             }
-           "filled-split-button" => "FilledSplitButton",
+            "filled-split-button" => "FilledSplitButton",
             "tonal-split-button" => "TonalSplitButton",
             "elevated-split-button" => "ElevatedSplitButton",
             "outlined-split-button" => "OutlineSplitButton",
@@ -2224,7 +2209,8 @@ fn slint_canvas(s: &mut String, scene: &Scene) {
             "list-item" | "segmented-list-item" => {
                 let i = items;
                 items += 1;
-                let component = if w.kind == "list-item" { "ListTile" } else { "SegmentedListItem" };
+                let component =
+                    if w.kind == "list-item" { "ListTile" } else { "SegmentedListItem" };
                 writeln!(
                     s,
                     "    item{i} := {component} {{\n        x: {}px;\n        y: {}px;\n{}    }}\n",
@@ -2261,7 +2247,8 @@ fn slint_canvas(s: &mut String, scene: &Scene) {
                     .map(str::to_string)
                     .or_else(|| w.color.clone());
                 if let Some(c) = &color {
-                    writeln!(body, "        color: MaterialPalette.{};", c.replace('-', "_")).unwrap();
+                    writeln!(body, "        color: MaterialPalette.{};", c.replace('-', "_"))
+                        .unwrap();
                 }
                 let tonal = w
                     .slint_overrides
@@ -2289,11 +2276,7 @@ fn slint_canvas(s: &mut String, scene: &Scene) {
                     )
                     .unwrap();
                 }
-                let radius = w
-                    .slint_overrides
-                    .get("radius")
-                    .map(|v| widget_num(v))
-                    .or(w.radius);
+                let radius = w.slint_overrides.get("radius").map(|v| widget_num(v)).or(w.radius);
                 if let Some(r) = radius {
                     writeln!(body, "        border_radius: {r}px;").unwrap();
                 }
@@ -2443,24 +2426,17 @@ fn slint_canvas(s: &mut String, scene: &Scene) {
                     .map(str::to_string)
                     .or_else(|| w.color.clone());
                 let colorize_prop = color
-                    .map(|c| format!("\n        colorize: MaterialPalette.{};", c.replace('-', "_")))
+                    .map(|c| {
+                        format!("\n        colorize: MaterialPalette.{};", c.replace('-', "_"))
+                    })
                     .unwrap_or_default();
                 // No `width`/`height` authored → the icon takes the
                 // source's natural size (`defaultSizeFor` upstream).
                 let size_prop = |v: Option<f64>, name: &str| {
-                    v.map(|v| format!("\n        {name}: {v}px;"))
-                        .unwrap_or_default()
+                    v.map(|v| format!("\n        {name}: {v}px;")).unwrap_or_default()
                 };
-                let width = w
-                    .slint_overrides
-                    .get("width")
-                    .map(widget_num)
-                    .or(w.width);
-                let height = w
-                    .slint_overrides
-                    .get("height")
-                    .map(widget_num)
-                    .or(w.height);
+                let width = w.slint_overrides.get("width").map(widget_num).or(w.width);
+                let height = w.slint_overrides.get("height").map(widget_num).or(w.height);
                 let x = w.slint_overrides.get("x").map(widget_num).unwrap_or(w.x);
                 let y = w.slint_overrides.get("y").map(widget_num).unwrap_or(w.y);
                 writeln!(
@@ -2488,14 +2464,9 @@ fn slint_canvas(s: &mut String, scene: &Scene) {
                 // is the divider's own `thickness` (`DividerDefaults.
                 // Thickness` upstream when unset). `slint_overrides` shadow
                 // the authored values for the negative scenes.
-                let thickness = w
-                    .slint_overrides
-                    .get("thickness")
-                    .map(widget_num)
-                    .or(w.thickness);
-                let thickness_prop = thickness
-                    .map(|t| format!("\n        thickness: {t}px;"))
-                    .unwrap_or_default();
+                let thickness = w.slint_overrides.get("thickness").map(widget_num).or(w.thickness);
+                let thickness_prop =
+                    thickness.map(|t| format!("\n        thickness: {t}px;")).unwrap_or_default();
                 let color = w
                     .slint_overrides
                     .get("color")
@@ -2533,7 +2504,12 @@ fn slint_canvas(s: &mut String, scene: &Scene) {
                     .map(str::to_string)
                     .or_else(|| w.color.clone());
                 let container_prop = container
-                    .map(|c| format!("\n        container_color: MaterialPalette.{};", c.replace('-', "_")))
+                    .map(|c| {
+                        format!(
+                            "\n        container_color: MaterialPalette.{};",
+                            c.replace('-', "_")
+                        )
+                    })
                     .unwrap_or_default();
                 let text_prop = w
                     .text
@@ -2561,7 +2537,12 @@ fn slint_canvas(s: &mut String, scene: &Scene) {
                     .map(str::to_string)
                     .or_else(|| w.color.clone());
                 let container_prop = container
-                    .map(|c| format!("\n        badge_container_color: MaterialPalette.{};", c.replace('-', "_")))
+                    .map(|c| {
+                        format!(
+                            "\n        badge_container_color: MaterialPalette.{};",
+                            c.replace('-', "_")
+                        )
+                    })
                     .unwrap_or_default();
                 let badge_text = w
                     .slint_overrides
@@ -2693,6 +2674,10 @@ fn trace_prop_type(prop: &str) -> &'static str {
         "trailing_icon_rotation" => "angle",
         "resolved_content_color" => "color",
         "label_alpha" | "show_scale" | "show_alpha" | "expand_progress" => "float",
+        // `pull-refresh`/`swipe-to-dismiss` scenes forward per-box props —
+        // the name's trailing digit picks the box.
+        other if other.starts_with("offset") => "length",
+        other if other.starts_with("fraction") || other.starts_with("progress") => "float",
         other => panic!("no forwarding type known for trace prop {other:?}"),
     }
 }
@@ -2710,8 +2695,7 @@ fn emit_button_cover(s: &mut String, w: &Widget, i: usize) {
             format!("MaterialPalette.{}", fill.replace('-', "_"))
         };
         let label = if cover["label"].as_bool().unwrap_or(true) {
-            let label_fill =
-                cover["label_fill"].as_str().unwrap_or("on-primary").replace('-', "_");
+            let label_fill = cover["label_fill"].as_str().unwrap_or("on-primary").replace('-', "_");
             format!(
                 "        Text {{\n            text: \"{}\";\n            color: MaterialPalette.{label_fill};\n            font-family: \"Roboto\";\n            font-weight: 500;\n            font-size: 14px;\n            horizontal-alignment: center;\n            vertical-alignment: center;\n        }}\n",
                 w.text.as_deref().unwrap_or_default()
@@ -2745,22 +2729,15 @@ fn connected_button_widget(s: &mut String, w: &Widget, i: usize, scene: &Scene) 
         .or_else(|| w.position.clone())
         .unwrap_or_else(|| "middle".to_string());
     writeln!(p, "        position: ConnectedButtonPosition.{position};").unwrap();
-    let vertical = over
-        .get("vertical")
-        .and_then(|v| v.as_bool())
-        .or(w.vertical)
-        .unwrap_or(false);
+    let vertical = over.get("vertical").and_then(|v| v.as_bool()).or(w.vertical).unwrap_or(false);
     if vertical {
         p.push_str("        vertical: true;\n");
     }
     if let Some(text) = &w.text {
         writeln!(p, "        text: \"{text}\";").unwrap();
     }
-    let icon = over
-        .get("icon")
-        .and_then(|v| v.as_str())
-        .map(str::to_string)
-        .or_else(|| w.icon.clone());
+    let icon =
+        over.get("icon").and_then(|v| v.as_str()).map(str::to_string).or_else(|| w.icon.clone());
     if let Some(icon) = icon {
         writeln!(p, "        icon: Icons.{icon};").unwrap();
     }
@@ -2772,19 +2749,11 @@ fn connected_button_widget(s: &mut String, w: &Widget, i: usize, scene: &Scene) 
     if let Some(icon) = checked_icon {
         writeln!(p, "        checked_icon: Icons.{icon};").unwrap();
     }
-    let checked = over
-        .get("checked")
-        .and_then(|v| v.as_bool())
-        .or(w.checked)
-        .unwrap_or(false);
+    let checked = over.get("checked").and_then(|v| v.as_bool()).or(w.checked).unwrap_or(false);
     if checked {
         p.push_str("        checked: true;\n");
     }
-    let enabled = over
-        .get("enabled")
-        .and_then(|v| v.as_bool())
-        .or(w.enabled)
-        .unwrap_or(true);
+    let enabled = over.get("enabled").and_then(|v| v.as_bool()).or(w.enabled).unwrap_or(true);
     if !enabled {
         p.push_str("        enabled: false;\n");
     }
@@ -2806,9 +2775,7 @@ fn connected_button_widget(s: &mut String, w: &Widget, i: usize, scene: &Scene) 
     writeln!(
         s,
         "    button{i} := ConnectedButton {{\n        x: {}px;\n        y: {}px;\n{}    }}\n",
-        w.x as i64,
-        w.y as i64,
-        p,
+        w.x as i64, w.y as i64, p,
     )
     .unwrap();
     if i == 0 {
@@ -2859,11 +2826,8 @@ fn connected_group_widget(s: &mut String, w: &Widget, i: usize, scene: &Scene) {
     if w.multi_select.unwrap_or(false) {
         p.push_str("        multi_select: true;\n");
     }
-    let selected = over
-        .get("selected_index")
-        .map(|v| widget_num(v) as i64)
-        .or(w.selected_index)
-        .unwrap_or(-1);
+    let selected =
+        over.get("selected_index").map(|v| widget_num(v) as i64).or(w.selected_index).unwrap_or(-1);
     writeln!(p, "        selected_index: {selected};").unwrap();
     if let Some(spacing) = over.get("between_space").map(widget_num) {
         writeln!(p, "        between_space: {spacing}px;").unwrap();
@@ -2900,9 +2864,7 @@ fn connected_group_widget(s: &mut String, w: &Widget, i: usize, scene: &Scene) {
     writeln!(
         s,
         "    group{i} := {component} {{\n        x: {}px;\n        y: {}px;\n{}    }}\n",
-        w.x as i64,
-        w.y as i64,
-        p,
+        w.x as i64, w.y as i64, p,
     )
     .unwrap();
     if let Some(cover) = w.slint_overrides.get("cover") {
@@ -2919,7 +2881,6 @@ fn connected_group_widget(s: &mut String, w: &Widget, i: usize, scene: &Scene) {
         )
         .unwrap();
     }
-
 }
 
 fn slint_spring_motion(s: &mut String, scene: &Scene) {
@@ -3083,20 +3044,12 @@ fn dialog_widget(s: &mut String, w: &Widget, i: usize, scene: &Scene) {
             let labels = w
                 .items
                 .iter()
-                .map(|item| {
-                    format!("\"{}\"", slint_str(item.text.as_deref().unwrap_or_default()))
-                })
+                .map(|item| format!("\"{}\"", slint_str(item.text.as_deref().unwrap_or_default())))
                 .collect::<Vec<_>>()
                 .join(", ");
             // The repeated `action` id is what `//TRACE_ITEMS=` enumerates.
-            let hover = w
-                .items
-                .iter()
-                .position(|it| it.state.as_deref() == Some("hovered"));
-            let press = w
-                .items
-                .iter()
-                .position(|it| it.state.as_deref() == Some("pressed"));
+            let hover = w.items.iter().position(|it| it.state.as_deref() == Some("hovered"));
+            let press = w.items.iter().position(|it| it.state.as_deref() == Some("pressed"));
             content.push_str("            // align(End) on the actions box\n            HorizontalLayout {\n                alignment: end;\n                spacing: 8px;\n");
             writeln!(
                 content,
@@ -3197,7 +3150,6 @@ fn dialog_widget(s: &mut String, w: &Widget, i: usize, scene: &Scene) {
     .unwrap();
 }
 
-
 /// ISO `YYYY-MM-DD`/`YYYY-MM` → a `Date` struct literal for the emitted
 /// `.slint` — `{ day: D, month: M, year: Y }`.
 fn slint_date_literal(iso: &str) -> String {
@@ -3269,8 +3221,7 @@ fn date_picker_widget(s: &mut String, w: &Widget, i: usize) {
         }
     } else {
         if let Some(d) = &w.selected_start {
-            writeln!(inner, "            selected_start_date: {};", slint_date_literal(d))
-                .unwrap();
+            writeln!(inner, "            selected_start_date: {};", slint_date_literal(d)).unwrap();
         }
         if let Some(d) = &w.selected_end {
             writeln!(inner, "            selected_end_date: {};", slint_date_literal(d)).unwrap();
@@ -3304,12 +3255,12 @@ fn date_picker_widget(s: &mut String, w: &Widget, i: usize) {
         }
     }
 
-            // Compose lays out in physical pixels: `Center` snaps an odd
-        // (size - content) delta to an integer *device* pixel. `phx`
-        // rounds the same quantity in the same space - logical `px`
-        // rounding would be a half-pixel off at density 1 and a full one
-        // at density 2.
-writeln!(
+    // Compose lays out in physical pixels: `Center` snaps an odd
+    // (size - content) delta to an integer *device* pixel. `phx`
+    // rounds the same quantity in the same space - logical `px`
+    // rounding would be a half-pixel off at density 1 and a full one
+    // at density 2.
+    writeln!(
         s,
         "    picker{i} := DatePickerDialogContent {{\n        x: Math.round((parent.width - self.width) / 1phx / 2) * 1phx;\n        y: Math.round((parent.height - self.height) / 1phx / 2) * 1phx;\n{p}\n        {component} {{\n{inner}        }}\n    }}\n",
     )
@@ -3499,11 +3450,7 @@ fn rail_widget(s: &mut String, scene: &Scene, w: &Widget, i: usize) {
 /// measured size is identical on both sides.
 fn sheet_content_rect(w: &Widget) -> String {
     let h = w.sheet_height.unwrap_or(120.0);
-    let color = w
-        .content_color
-        .as_deref()
-        .unwrap_or("tertiary-container")
-        .replace('-', "_");
+    let color = w.content_color.as_deref().unwrap_or("tertiary-container").replace('-', "_");
     format!(
         "            Rectangle {{\n                height: {h}px;\n                background: MaterialPalette.{color};\n            }}\n",
         h = h as i64,
@@ -3615,10 +3562,9 @@ fn sheet_widget(s: &mut String, w: &Widget, i: usize, scene: &Scene) {
             let shape_override = over
                 .get("sheet_shape")
                 .map(|v| format!("\n            sheet-shape: {};", corner_shape_expr(v)));
-            let color_override = over
-                .get("container_color")
-                .and_then(|v| v.as_str())
-                .map(|c| format!("\n            container-color: MaterialPalette.{};", c.replace('-', "_")));
+            let color_override = over.get("container_color").and_then(|v| v.as_str()).map(|c| {
+                format!("\n            container-color: MaterialPalette.{};", c.replace('-', "_"))
+            });
             let skip_partial = over
                 .get("skip_partial")
                 .and_then(|v| v.as_bool())
@@ -3645,11 +3591,7 @@ fn sheet_widget(s: &mut String, w: &Widget, i: usize, scene: &Scene) {
             .unwrap();
         }
         "bottom-sheet-scaffold" => {
-            let body_color = w
-                .body_color
-                .as_deref()
-                .unwrap_or("surface")
-                .replace('-', "_");
+            let body_color = w.body_color.as_deref().unwrap_or("surface").replace('-', "_");
             let shape_override = over
                 .get("sheet_shape")
                 .map(|v| format!("\n            sheet-shape: {};", corner_shape_expr(v)));
@@ -3703,8 +3645,7 @@ fn sheet_widget(s: &mut String, w: &Widget, i: usize, scene: &Scene) {
                         // `ParitySheet` tracks `AnchoredDraggableState`'s
                         // bound-crossing `currentValue`; `SheetWidget`
                         // reports `SheetState.currentValue` = `settledValue`.
-                        let src = if prop == "current-value"
-                            && sheet_needs_gesture_replay(w, scene)
+                        let src = if prop == "current-value" && sheet_needs_gesture_replay(w, scene)
                         {
                             "anchor_current".to_string()
                         } else {
@@ -3718,7 +3659,9 @@ fn sheet_widget(s: &mut String, w: &Widget, i: usize, scene: &Scene) {
                         )
                         .unwrap();
                     }
-                    "dragging" | "is-visible" | "has-expanded-state"
+                    "dragging"
+                    | "is-visible"
+                    | "has-expanded-state"
                     | "has-partially-expanded-state" => {
                         writeln!(
                             handlers,
@@ -3787,11 +3730,8 @@ const SHEET_OPS: [&str; 4] = ["show", "hide", "expand", "partial-expand"];
 /// the motion is meant to begin (the Compose runnable launches the same
 /// `animateTo` there, ~2 ms of coroutine dispatch later).
 fn sheet_op_timers(s: &mut String, scene: &Scene) {
-    let ops: Vec<&Action> = scene
-        .actions
-        .iter()
-        .filter(|a| SHEET_OPS.contains(&a.kind.as_str()))
-        .collect();
+    let ops: Vec<&Action> =
+        scene.actions.iter().filter(|a| SHEET_OPS.contains(&a.kind.as_str())).collect();
     if ops.is_empty() {
         return;
     }
@@ -3890,7 +3830,6 @@ fn sheet_trace_forwards(s: &mut String, scene: &Scene) {
         }
     }
 }
-
 /// One navigation-bar family widget (`navigation-bar`, the 80dp tall bar;
 /// `short-navigation-bar`, the 64dp expressive bar). Elements are named
 /// `navbar{n}` in scene order.
@@ -3949,11 +3888,8 @@ fn navbar_widget(s: &mut String, w: &Widget, i: usize) {
             writeln!(p, "        always-show-label: {v};").unwrap();
         }
     }
-    let selected = w
-        .slint_overrides
-        .get("selected_index")
-        .and_then(|v| v.as_i64())
-        .or(w.selected_index);
+    let selected =
+        w.slint_overrides.get("selected_index").and_then(|v| v.as_i64()).or(w.selected_index);
     if let Some(v) = selected {
         writeln!(p, "        current-index: {v};").unwrap();
     }
@@ -3979,11 +3915,161 @@ fn navbar_widget(s: &mut String, w: &Widget, i: usize) {
         }
         writeln!(p, "        ];").unwrap();
     }
-    writeln!(
-        s,
-        "    navbar{i} := {component} {{\n{p}    }}\n",
-    )
-    .unwrap();
+    writeln!(s, "    navbar{i} := {component} {{\n{p}    }}\n",).unwrap();
+}
+
+/// The scripted input a `pull-refresh`/`swipe-to-dismiss` settle fires: one
+/// `fire` zone top-left the `//ACTION=press/release` lands on, wired to the
+/// public state call the Compose side's emitPress runnable mirrors.
+/// Returns the emitted call (`box{n}.animate-to-hidden()` etc).
+fn gesture_settle_call(settle: &serde_json::Value) -> String {
+    let box_i = settle["box"].as_u64().unwrap_or(0);
+    match settle["op"].as_str().unwrap_or("to-hidden") {
+        "to-hidden" => format!("box{box_i}.animate-to-hidden();"),
+        "to-threshold" => format!("box{box_i}.animate-to-threshold();"),
+        "snap" => format!("box{box_i}.snap-to({});", widget_num(&settle["target"])),
+        "reset" => format!("box{box_i}.reset();"),
+        "dismiss" => format!(
+            "box{box_i}.dismiss(SwipeToDismissBoxValue.{});",
+            settle["dir"].as_str().unwrap_or("end-to-start")
+        ),
+        "snap-value" => format!(
+            "box{box_i}.snap-to(SwipeToDismissBoxValue.{});",
+            settle["value"].as_str().unwrap_or("settled")
+        ),
+        other => panic!("unknown settle op {other:?}"),
+    }
+}
+
+/// `pull-refresh` scenes: `PullToRefreshBox` instances pinned at authored
+/// `distance-fraction`s via `snap-to` (the public `PullToRefreshState` call
+/// the Compose mirror launches identically), optionally followed by a settle
+/// fired through `animate-to-threshold`/`animate-to-hidden`. `params.boxes`
+/// rows: `x`, `y`, `w`, `h`, `fraction`, `kind` (`classic`/`loading`),
+/// `refreshing`, `content` (scheme role), `threshold`. `params.settle`:
+/// `{box, op, at?}` — the `at` lives in `actions` (the press lands on the
+/// emitted `fire` zone).
+fn slint_pull_refresh(s: &mut String, scene: &Scene) {
+    let p = &scene.params;
+    let boxes = p["boxes"].as_array().expect("pull-refresh params.boxes");
+    for (i, b) in boxes.iter().enumerate() {
+        let get = |k: &str| b[k].as_f64().unwrap_or(0.0);
+        let kind = match b["kind"].as_str().unwrap_or("classic") {
+            "loading" => "loading-indicator".to_string(),
+            other => other.to_string(),
+        };
+        let mut extra = String::new();
+        if b.get("threshold").is_some() {
+            writeln!(extra, "        threshold: {}px;", get("threshold") as i64).unwrap();
+        }
+        if b["refreshing"].as_bool().unwrap_or(false) {
+            extra.push_str("        is-refreshing: true;\n");
+        }
+        writeln!(
+            extra,
+            "        Rectangle {{\n            background: MaterialPalette.{};\n        }}",
+            b["content"].as_str().unwrap_or("surface-container").replace('-', "_"),
+        )
+        .unwrap();
+        // `snap-to` in the instance's own `init` runs after the box's
+        // internal `snapTo(isRefreshing ? 1 : 0)`, so a `refreshing` box
+        // must pin `fraction` 1.
+        let fraction = scene
+            .slint_overrides
+            .get("fraction")
+            .map(widget_num)
+            .unwrap_or_else(|| get("fraction"));
+        writeln!(
+            s,
+            "    box{i} := PullToRefreshBox {{\n        x: {}px;\n        y: {}px;\n        width: {}px;\n        height: {}px;\n        indicator-kind: PullToRefreshIndicatorKind.{kind};\n{extra}        init => {{\n            box{i}.snap-to({fraction});\n        }}\n    }}\n",
+            get("x") as i64,
+            get("y") as i64,
+            get("w") as i64,
+            get("h") as i64,
+        )
+        .unwrap();
+    }
+    if let Some(settle) = p.get("settle") {
+        writeln!(
+            s,
+            "    // The `fire` zone: the timed press/release action clicks it and\n    // the scripted state call runs at the same clock time the Compose\n    // side's emitPress runnable does.\n    fire := TouchArea {{\n        x: 0px;\n        y: 0px;\n        width: 20px;\n        height: 20px;\n        clicked => {{\n            {}\n        }}\n    }}\n",
+            gesture_settle_call(settle),
+        )
+        .unwrap();
+    }
+    for prop in &scene.trace_props {
+        if let Some(i) = prop.strip_prefix("fraction").and_then(|r| r.parse::<usize>().ok()) {
+            writeln!(s, "    out property <float> {prop}: box{i}.distance-fraction;\n").unwrap();
+        }
+    }
+}
+
+/// `swipe-to-dismiss` scenes: `SwipeToDismissBox` instances over a revealed
+/// background (the sibling `backgroundContent`), positioned by
+/// `initial-value` snaps or driven through `reset`/`dismiss`/`snap-to` —
+/// the same state surface the Compose mirror calls from emitPress
+/// runnables. `params.boxes` rows: `x`, `y`, `w`, `h`, `initial`
+/// (`settled`/`start-to-end`/`end-to-start`), `bg`, `content` (scheme
+/// roles), `s2e`, `e2s`, `threshold`. `params.settle`: `{box, op, dir?}`.
+fn slint_swipe_dismiss(s: &mut String, scene: &Scene) {
+    let p = &scene.params;
+    let boxes = p["boxes"].as_array().expect("swipe-to-dismiss params.boxes");
+    for (i, b) in boxes.iter().enumerate() {
+        let get = |k: &str| b[k].as_f64().unwrap_or(0.0);
+        let initial = scene
+            .slint_overrides
+            .get("initial")
+            .and_then(|v| v.as_str())
+            .map(str::to_string)
+            .unwrap_or_else(|| b["initial"].as_str().unwrap_or("settled").to_string());
+        writeln!(
+            s,
+            "    sd_bg{i} := Rectangle {{\n        x: {}px;\n        y: {}px;\n        width: {}px;\n        height: {}px;\n        border-radius: {}px;\n        background: MaterialPalette.{};\n    }}\n",
+            get("x") as i64,
+            get("y") as i64,
+            get("w") as i64,
+            get("h") as i64,
+            get("radius"),
+            b["bg"].as_str().unwrap_or("error-container").replace('-', "_"),
+        )
+        .unwrap();
+        writeln!(
+            s,
+            "    box{i} := SwipeToDismissBox {{\n        x: {}px;\n        y: {}px;\n        width: {}px;\n        height: {}px;\n        initial-value: SwipeToDismissBoxValue.{initial};\n        enable-dismiss-from-start-to-end: {};\n        enable-dismiss-from-end-to-start: {};\n        positional-threshold: {}px;\n\n        fg{i} := Rectangle {{\n            border-radius: {}px;\n            background: MaterialPalette.{};\n        }}\n    }}\n",
+            get("x") as i64,
+            get("y") as i64,
+            get("w") as i64,
+            get("h") as i64,
+            b["s2e"].as_bool().unwrap_or(true),
+            b["e2s"].as_bool().unwrap_or(true),
+            b["threshold"].as_f64().unwrap_or(56.0) as i64,
+            get("radius"),
+            b["content"].as_str().unwrap_or("surface-container-high").replace('-', "_"),
+        )
+        .unwrap();
+    }
+    if let Some(settle) = p.get("settle") {
+        writeln!(
+            s,
+            "    // The `fire` zone: the timed press/release action clicks it and\n    // the scripted state call runs at the same clock time the Compose\n    // side's emitPress runnable does.\n    fire := TouchArea {{\n        x: 0px;\n        y: 0px;\n        width: 20px;\n        height: 20px;\n        clicked => {{\n            {}\n        }}\n    }}\n",
+            gesture_settle_call(settle),
+        )
+        .unwrap();
+    }
+    for prop in &scene.trace_props {
+        let (i, suffix) = prop
+            .find(|c: char| c.is_ascii_digit())
+            .map(|d| (&prop[..d], prop[d..].parse::<usize>().ok()))
+            .map(|(stem, i)| (i, stem))
+            .and_then(|(i, stem)| i.map(|i| (i, stem)))
+            .unwrap_or((0, prop.as_str()));
+        let (ty, member) = match suffix {
+            "offset" => ("length", "offset"),
+            "progress" => ("float", "progress"),
+            other => panic!("no forwarding member known for trace prop {other:?}"),
+        };
+        writeln!(s, "    out property <{ty}> {prop}: box{i}.{member};\n").unwrap();
+    }
 }
 
 /// A `material-scaffold` widget: the `Scaffold` and its slot children.
