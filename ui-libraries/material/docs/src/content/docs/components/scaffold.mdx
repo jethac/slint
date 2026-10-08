@@ -1,0 +1,118 @@
+---
+title: Scaffold
+description: Scaffold API.
+---
+
+import CodeSnippetMD from '@slint/common-files/src/components/CodeSnippetMD.astro';
+import SlintProperty from '@slint/common-files/src/components/SlintProperty.astro';
+
+<CodeSnippetMD imagePath="/src/assets/generated/scaffold.png" scale="3" imageWidth="280" imageHeight="260" imageAlt="">
+```slint
+import { Scaffold, TopAppBar, NavigationBar, FloatingActionButton, MaterialText, Icons } from "@material";
+export component Example inherits Window {
+    width: 280px;
+    height: 260px;
+
+    scaffold := Scaffold {
+        Rectangle {
+            width: parent.width;
+            height: parent.height;
+
+            MaterialText {
+                x: 16px;
+                y: scaffold.content_padding_top + 16px;
+                text: "Content";
+            }
+        }
+
+        TopAppBar {
+            y: 0;
+            width: parent.width;
+            height <=> scaffold.top_bar_height;
+            title: "Scaffold";
+        }
+
+        NavigationBar {
+            y: scaffold.bottom_bar_y;
+            width: parent.width;
+            height <=> scaffold.bottom_bar_height;
+            items: [
+                { icon: Icons.menu, selected_icon: Icons.menu, text: "Home" },
+                { icon: Icons.schedule, selected_icon: Icons.schedule, text: "Saved" }
+            ];
+        }
+
+        FloatingActionButton {
+            x: scaffold.fab_x;
+            y: scaffold.fab_y;
+            width <=> scaffold.fab_width;
+            height <=> scaffold.fab_height;
+            icon: Icons.add;
+        }
+    }
+}
+```
+</CodeSnippetMD>
+
+The basic Material layout structure — a `Scaffold` in `Scaffold.kt` upstream.
+It positions the app's slots: `content` fills the whole area underneath the
+bars, a `top_bar` sits at the top edge, the `snackbar` and `bottom_bar` sit
+above the bottom edge, and the `floatingActionButton` floats over them.
+
+Compose's slot lambdas have no Slint counterpart, so the slots are regular
+children that report their measured size through the `in-out` measurement
+properties and position themselves on the exported offsets. Declare them in
+upstream z-order — content, top bar, snackbar, bottom bar, FAB — so later
+children paint on top. `content_window_insets` has no Slint counterpart:
+every inset reads `0px`.
+
+## Scaffold Properties
+
+### fab_position
+<SlintProperty propName="fab_position" typeName="FabPosition" defaultValue="FabPosition.end">
+Where the `floatingActionButton` slot lands — `FabPosition` upstream.
+`start` is the left edge (Slint layouts are left-to-right), `center` centers
+it, `end` floats it above `bottom_bar_height` on the right edge and
+`end-overlay` ignores the bottom bar's height.
+</SlintProperty>
+
+### container_color
+<SlintProperty propName="container_color" typeName="color" defaultValue="MaterialPalette.background">
+The background behind every slot — `colorScheme.background` upstream.
+</SlintProperty>
+
+### content_color
+<SlintProperty propName="content_color" typeName="color" defaultValue="contentColorFor(container_color)">
+The `LocalContentColor` fallback — `contentColorFor(containerColor)`
+upstream, `on_surface` when the container isn't a known scheme role. Slint
+has no ambient content color — apply it to content children explicitly.
+</SlintProperty>
+
+## Slot Measurements
+
+Bind each slot's size to the matching `in-out` property so `Scaffold` can
+place the dependent offsets, exactly as `ScaffoldLayout` measures the
+slot lambdas upstream.
+
+### top_bar_height / bottom_bar_height / snackbar_width / snackbar_height / fab_width / fab_height
+<SlintProperty propName="top_bar_height" typeName="length">
+The measured sizes of the `top_bar`, `bottom_bar`, `snackbar` and `fab`
+slots. `<=>`-bind them to the slot element's `width`/`height`.
+</SlintProperty>
+
+## Content Padding
+
+### content_padding_top / content_padding_bottom / content_padding_start / content_padding_end
+<SlintProperty propName="content_padding_top" typeName="length">
+The `PaddingValues` handed to `content` upstream — `top_bar_height` and
+`bottom_bar_height`; the start/end insets read `0px`.
+</SlintProperty>
+
+## Slot Offsets
+
+### fab_x / fab_y / snackbar_x / snackbar_y / bottom_bar_y
+<SlintProperty propName="fab_x" typeName="length">
+The placement offsets for the `fab`, `snackbar` and `bottom_bar` slots —
+the `ScaffoldLayout` place calls upstream, including `FabSpacing` (16px)
+and the `fabOffsetFromBottom`/`snackbarOffsetFromBottom` stacking rules.
+</SlintProperty>

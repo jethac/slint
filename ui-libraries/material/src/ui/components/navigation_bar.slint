@@ -270,8 +270,10 @@ component ShortNavigationBarItemTemplate inherits BaseNavigationItemTemplate {
     }
 
     icon-img := Icon {
-        x: root.vertical-item ? (root.width - self.width) / 2 :
-            (root.width - root.start-item-content-w) / 2;
+        // Upstream places icon and label with `placeRelative` at Int px —
+        // the centering is Int division, so it floors.
+        x: root.vertical-item ? Math.floor((root.width - self.width) / 1phx / 2) * 1phx :
+            Math.floor((root.width - root.start-item-content-w) / 1phx / 2) * 1phx;
         y: root.vertical-item ?
             (root.has-label ? root.vertical-icon-y : (root.height - self.height) / 2) :
             (root.height - self.height) / 2;
@@ -282,7 +284,7 @@ component ShortNavigationBarItemTemplate inherits BaseNavigationItemTemplate {
     }
 
     label := MaterialText {
-        x: root.vertical-item ? (root.width - self.min-width) / 2 :
+        x: root.vertical-item ? Math.floor((root.width - self.min-width) / 1phx / 2) * 1phx :
             icon-img.x + icon-img.width + NavigationBarMetrics.start-icon-to-label-padding();
         y: root.vertical-item ? root.vertical-label-y : (root.height - self.min-height) / 2;
         visible: root.has-label;
@@ -462,7 +464,7 @@ export component NavigationItemTemplate inherits BaseNavigationItemTemplate {
     }
 
     icon-img := Icon {
-        x: (root.width - self.width) / 2;
+        x: Math.floor((root.width - self.width) / 1phx / 2) * 1phx;
         y: root.has-label ? root.icon-y : root.centered-icon-y;
         width: NavigationBarVerticalItemTokens.icon_size;
         height: self.width;
@@ -471,7 +473,8 @@ export component NavigationItemTemplate inherits BaseNavigationItemTemplate {
     }
 
     label := MaterialText {
-        x: (root.width - self.min-width) / 2;
+        // `placeRelative(labelX, …)` — Int px; Int division floors.
+        x: Math.floor((root.width - self.min-width) / 1phx / 2) * 1phx;
         y: root.label-y;
         visible: root.has-label;
         text: root.text;
