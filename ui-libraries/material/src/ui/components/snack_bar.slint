@@ -49,6 +49,8 @@ export component SnackBar inherits PopupWindow {
                 if root.action_text != "" : TextButton {
                     text: root.action_text;
                     inverse: true;
+                    // SnackBar.kt composes the stable `TextButton` overload.
+                    expressive: false;
 
                     clicked => {
                         root.raise_action();

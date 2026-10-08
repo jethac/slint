@@ -13,6 +13,11 @@ export component Elevation {
     /// outline follows the morph too.
     in property <MaterialCornerRadii> corners;
     in property <bool> shaped_corners;
+    // Forwarded to the caster (`clip` on the component itself would also
+    // cut the shadow, which lives outside its bounds) — clipping follows
+    // the rounded outline, which is what `Surface`'s shape clip does
+    // upstream.
+    in property <bool> clip_content;
     in property <int> level;
     /// Opt-in `animateElevation` tween specs (the private `ElevationDefaults`
     /// in upstream `internal/Elevation.kt`): the `in_*` spec animates toward
@@ -67,6 +72,7 @@ export component Elevation {
         border-bottom-left-radius: root.shaped_corners ? root.corners.bottom_left : root.border_radius;
         shape: root.shape;
         shape-fit: root.shape-fit;
+        clip: root.clip_content;
         background: root.background;
         elevation: root.shadow_height;
         ambient-shadow-color: MaterialPalette.shadow;

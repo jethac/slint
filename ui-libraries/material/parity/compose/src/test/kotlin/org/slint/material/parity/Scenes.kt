@@ -1289,6 +1289,7 @@ private fun emitStateInteractions(
     pressOffset: Offset,
     density: Float,
     onRelease: Runnable?,
+    pressViaSink: Boolean = false,
 ) {
     when (state) {
         "hovered" -> LaunchedEffect(Unit) {
@@ -1310,7 +1311,15 @@ private fun emitStateInteractions(
         // composition runs ahead of the pump during setup. Landing after
         // frame 0 also keeps the press off uptime 0, where a ripple's frame
         // callback would abort layoutlib.
-        "pressed" -> {
+        "pressed" -> if (pressViaSink) {
+            // `pressInkMarker` already queued the sink entry that turns on
+            // the painted state layer — nothing to emit. A `Modal`/`Popup`
+            // runs its own frame clock, so the frame-gated `emit()` below
+            // can resume after the last captured frame under post-draw
+            // pumping and lose the press entirely; the painted layer is
+            // wall-clock deterministic.
+            Unit
+        } else {
             // `emit()` suspends until every subscriber has the emission —
             // deterministic where a frame-sink `tryEmit` is not: under a
             // multi-density record the second pump's composition schedules
@@ -5314,27 +5323,41 @@ private fun DialogActionButton(
             Offset(20f * density, 20f * density),
             density,
             null,
+            pressViaSink = true,
         )
     }
+    val pressInk = pressInkMarker(item.state, emitPress)
     val style = MaterialTheme.typography.labelLarge
-    TextButton(
-        onClick = {},
-        enabled = !item.disabled,
-        interactionSource = interactionSource,
-        modifier = Modifier.track(tracer, tag),
-    ) {
-        Text(
-            label,
-            style = style,
-            modifier = Modifier.trackText(tracer, textId, density),
-            onTextLayout = recordTextLayout(
-                tracer,
-                textId,
-                LocalDensity.current,
-                androidx.compose.ui.platform.LocalFontFamilyResolver.current,
-                style.fontFamily,
-            ),
-        )
+    // The `matchParentSize` ink needs a layout parent — same reason the
+    // connected-button items wrap their `ToggleButton` in a `Box`.
+    Box(Modifier.track(tracer, tag)) {
+        TextButton(
+            onClick = {},
+            enabled = !item.disabled,
+            interactionSource = interactionSource,
+        ) {
+            Text(
+                label,
+                style = style,
+                modifier = Modifier.trackText(tracer, textId, density),
+                onTextLayout = recordTextLayout(
+                    tracer,
+                    textId,
+                    LocalDensity.current,
+                    androidx.compose.ui.platform.LocalFontFamilyResolver.current,
+                    style.fontFamily,
+                ),
+            )
+        }
+        if (pressInk.value) {
+            Box(
+                Modifier.matchParentSize()
+                    .clip(RoundedCornerShape(percent = 50))
+                    .background(
+                        MaterialTheme.colorScheme.primary.copy(alpha = PRESSED_STATE_LAYER_ALPHA)
+                    ),
+            )
+        }
     }
 }
 
