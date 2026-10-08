@@ -1,0 +1,120 @@
+---
+title: AssistChip
+description: AssistChip and ElevatedAssistChip API.
+---
+
+import CodeSnippetMD from '@slint/common-files/src/components/CodeSnippetMD.astro';
+import SlintProperty from '@slint/common-files/src/components/SlintProperty.astro';
+
+<CodeSnippetMD imagePath="/src/assets/generated/assistchip.png" scale="3" imageWidth="280" imageHeight="140" imageAlt="">
+```slint
+import { AssistChip } from "@material";
+export component Example inherits Window {
+    width: 260px;
+    height: 120px;
+    background: transparent;
+    AssistChip {
+        x: 70px;
+        y: 44px;
+        text: "Assist";
+        icon: @image-url("../icons/search.svg");
+    }
+}
+```
+</CodeSnippetMD>
+
+An `AssistChip` is a compact element that represents an action or choice. It can contain text, icons, and avatars, and is commonly used in forms, search interfaces, and other interactive areas. `ActionChip` is a deprecated alias kept for source compatibility.
+
+<CodeSnippetMD imagePath="/src/assets/generated/assistchip-elevated.png" scale="3" imageWidth="420" imageHeight="140" imageAlt="">
+```slint
+import { AssistChip, ElevatedAssistChip } from "@material";
+export component Example inherits Window {
+    width: 400px;
+    height: 120px;
+    background: transparent;
+    HorizontalLayout {
+        padding: 40px;
+        spacing: 20px;
+        alignment: center;
+        AssistChip {
+            text: "Flat";
+            icon: @image-url("../icons/search.svg");
+        }
+        ElevatedAssistChip {
+            text: "Elevated";
+            icon: @image-url("../icons/search.svg");
+        }
+    }
+}
+```
+</CodeSnippetMD>
+
+The `ElevatedAssistChip` variant rests at elevation level 1 and lifts to level 3 on drag, where the flat `AssistChip` draws an outline instead.
+
+## Properties
+
+### avatar
+<SlintProperty propName="avatar" typeName="image">
+An optional image displayed in the avatar slot, taking precedence over `avatar-icon` and `icon`.
+</SlintProperty>
+
+### avatar-icon
+<SlintProperty propName="avatar-icon" typeName="image">
+An optional glyph-style icon for the avatar slot, tinted with the chip's leading icon color.
+</SlintProperty>
+
+### avatar-background
+<SlintProperty propName="avatar-background" typeName="color" defaultValue="#00000000">
+The background color for the avatar.
+</SlintProperty>
+
+### container-shape
+<SlintProperty propName="container-shape" typeName="MaterialCornerShape" defaultValue="AssistChipTokens.container-shape">
+The corner shape of the chip container.
+</SlintProperty>
+
+### enabled
+<SlintProperty propName="enabled" typeName="bool" defaultValue="true">
+Whether the chip is enabled and can be interacted with.
+</SlintProperty>
+
+### has-focus
+<SlintProperty propName="has-focus" typeName="bool">
+Whether the component has focus.
+</SlintProperty>
+
+### icon
+<SlintProperty propName="icon" typeName="image">
+An optional icon displayed on the chip.
+</SlintProperty>
+
+### text
+<SlintProperty propName="text" typeName="string">
+The text label displayed on the chip.
+</SlintProperty>
+
+### tooltip
+<SlintProperty propName="tooltip" typeName="string">
+A tooltip text that appears when hovering over the chip.
+</SlintProperty>
+
+### trailing-icon
+<SlintProperty propName="trailing-icon" typeName="image">
+An optional icon displayed after the label, with its own click target.
+</SlintProperty>
+
+## Callbacks
+
+### clicked()
+Invoked when the chip is clicked.
+
+### trailing-icon-clicked()
+Invoked when the trailing icon is clicked.
+
+## functions
+
+### clear-focus()
+Clears the focus from the component.
+
+### focus()
+Focuses the component.

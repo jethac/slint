@@ -6,19 +6,19 @@ description: InputChip API.
 import CodeSnippetMD from '@slint/common-files/src/components/CodeSnippetMD.astro';
 import SlintProperty from '@slint/common-files/src/components/SlintProperty.astro';
 
-<CodeSnippetMD imagePath="/src/assets/generated/inputchip.png" scale="3" imageWidth="300" imageHeight="200" imageAlt="">
+<CodeSnippetMD imagePath="/src/assets/generated/inputchip.png" scale="3" imageWidth="320" imageHeight="140" imageAlt="">
 ```slint
 import { InputChip } from "@material";
 export component Example inherits Window {
-    width: 200px;
-    height: 100px;
+    width: 300px;
+    height: 120px;
     background: transparent;
     InputChip {
+        x: 80px;
+        y: 44px;
         text: "Input";
-        leading-icon: @image-url("../icons/edit.svg");
+        avatar-icon: @image-url("../icons/edit.svg");
         trailing-icon: @image-url("../icons/close.svg");
-        width: 120px;
-        height: 32px;
     }
 }
 ```
@@ -26,11 +26,42 @@ export component Example inherits Window {
 
 An `InputChip` is a compact element that represents user input or selections. It can contain text, leading icons, trailing icons, and avatars. Input chips are commonly used to display user-entered information like tags, contacts, or filter selections, and often include a trailing action like a close button.
 
+<CodeSnippetMD imagePath="/src/assets/generated/inputchip-states.png" scale="3" imageWidth="420" imageHeight="140" imageAlt="">
+```slint
+import { InputChip } from "@material";
+export component Example inherits Window {
+    width: 400px;
+    height: 120px;
+    background: transparent;
+    HorizontalLayout {
+        padding: 40px;
+        spacing: 20px;
+        alignment: center;
+        InputChip {
+            checked: true;
+            text: "Selected";
+            avatar-icon: @image-url("../icons/edit.svg");
+        }
+        InputChip {
+            enabled: false;
+            text: "Disabled";
+            trailing-icon: @image-url("../icons/close.svg");
+        }
+    }
+}
+```
+</CodeSnippetMD>
+
 ## Properties
 
 ### avatar
 <SlintProperty propName="avatar" typeName="image">
-An optional avatar image displayed on the chip.
+An optional image displayed in the avatar slot, taking precedence over `avatar-icon` and `leading-icon`.
+</SlintProperty>
+
+### avatar-icon
+<SlintProperty propName="avatar-icon" typeName="image">
+An optional glyph-style icon for the avatar slot, tinted with the chip's leading icon color.
 </SlintProperty>
 
 ### avatar-background
@@ -39,7 +70,7 @@ The background color for the avatar.
 </SlintProperty>
 
 ### checkable
-<SlintProperty propName="checkable" typeName="bool" defaultValue="false">
+<SlintProperty propName="checkable" typeName="bool" defaultValue="true">
 Whether the chip can be toggled between checked and unchecked states.
 </SlintProperty>
 
@@ -48,9 +79,24 @@ Whether the chip can be toggled between checked and unchecked states.
 Whether the chip is in the checked (selected) state. Only relevant when checkable is true.
 </SlintProperty>
 
+### chip-shapes
+<SlintProperty propName="chip-shapes" typeName="MaterialChipShapes" defaultValue="InputChipTokens shapes">
+The corner shapes the container morphs between when `expressive` is enabled: `shape` (rest), `selected-shape`, and `pressed-shape`.
+</SlintProperty>
+
+### container-shape
+<SlintProperty propName="container-shape" typeName="MaterialCornerShape" defaultValue="InputChipTokens.container-shape">
+The static corner shape of the chip container, used when `expressive` is disabled.
+</SlintProperty>
+
 ### enabled
 <SlintProperty propName="enabled" typeName="bool" defaultValue="true">
 Whether the chip is enabled and can be interacted with.
+</SlintProperty>
+
+### expressive
+<SlintProperty propName="expressive" typeName="bool" defaultValue="false">
+Whether the container corners morph between the `chip-shapes` on selection and press.
 </SlintProperty>
 
 ### has-focus
@@ -60,7 +106,7 @@ Whether the component has focus.
 
 ### leading-icon
 <SlintProperty propName="leading-icon" typeName="image">
-An optional icon displayed at the beginning of the chip.
+An optional icon displayed at the beginning of the chip, when no avatar is set.
 </SlintProperty>
 
 ### text
@@ -93,6 +139,3 @@ Clears the focus from the component.
 
 ### focus()
 Focuses the component.
-
-### toggle()
-Toggles the chip state between checked and unchecked. Only has an effect when checkable is true.

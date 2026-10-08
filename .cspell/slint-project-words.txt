@@ -1,8 +1,8 @@
 AAPI
 ABGR
-Interpolatable
 accentify
 accum
+acosf
 actionchip
 ACTUALS
 addrs
@@ -41,11 +41,14 @@ armhf
 arrayvec
 artboard
 ashpd
+asinf
 assetcatalog
+assistchip
 astar
 astrolib
 astrowind
 asyncio
+atan2f
 auri
 Aurindam
 autohint
@@ -66,7 +69,6 @@ beziers
 bezpath
 BGRA
 BGRX
-atan2f
 bindgen
 bindtextdomain
 bitmapfont
@@ -96,6 +98,7 @@ caplog
 casesensitive
 Casteljau
 cbrt
+cbrtf
 CDPATH
 celebi
 cfgs
@@ -149,10 +152,10 @@ corelib
 coro
 cortexa
 cosa
+cosf
 coterminal
 CPACK
 Cpolygon
-cosf
 cpos
 cppbuild
 cppdocs
@@ -256,6 +259,7 @@ EVENTLOOP
 eventresult
 EVKB
 excinfo
+expf
 expm
 expm1
 extendedfloatingactionbutton
@@ -385,6 +389,7 @@ Inconsolata
 incpath
 indexmap
 inputchip
+Interpolatable
 intprop
 intval
 invf
@@ -492,7 +497,6 @@ lpfn
 lpsz
 lstar
 Ltdc
-asinf
 ltdcsel
 lumino
 LVGL
@@ -536,7 +540,6 @@ multisample
 multiview
 Musterfrau
 Mustermann
-expf
 mycomponentlib
 myimage
 mylibrary
@@ -615,11 +618,11 @@ pkgs
 poly
 polygonalization
 popupwindow
+powf
 prec
 prediv
 Preedit
 PREMUL
-powf
 premultiplication
 premultiply
 PRIMASK
@@ -744,6 +747,7 @@ signalsafe
 signum
 SIGUSR
 simctl
+sinf
 singlefile
 singleshot
 skrifa
@@ -810,6 +814,7 @@ subelement
 subfolders
 submod
 subprinters
+suggestionchip
 supersample
 supersampling
 surfman
@@ -972,6 +977,7 @@ xcent
 xchg
 xcrun
 xfail
+xfails
 xfer
 xfixes
 Xiaolin

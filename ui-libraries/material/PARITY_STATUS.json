@@ -43,9 +43,9 @@
     "issues": [
       11
     ],
-    "needs": "shapes (#6)",
-    "notes": "slint component: Chip",
-    "status": "partial"
+    "needs": "springs (#5), shapes (#6)",
+    "notes": "slint component: AssistChip; tokens: generated component tokens; springs via active motion scheme",
+    "status": "done"
   },
   "Badge": {
     "issues": [
@@ -268,11 +268,11 @@
   },
   "ElevatedAssistChip": {
     "issues": [
-      9
+      11
     ],
-    "needs": "shapes (#6)",
-    "notes": "",
-    "status": "missing"
+    "needs": "springs (#5), shapes (#6)",
+    "notes": "slint component: ElevatedAssistChip; tokens: generated component tokens; springs via active motion scheme",
+    "status": "done"
   },
   "ElevatedButton": {
     "issues": [
@@ -292,19 +292,19 @@
   },
   "ElevatedFilterChip": {
     "issues": [
-      9
+      11
     ],
-    "needs": "shapes (#6)",
-    "notes": "",
-    "status": "missing"
+    "needs": "springs (#5), shapes (#6)",
+    "notes": "slint component: ElevatedFilterChip; tokens: generated component tokens; springs via active motion scheme",
+    "status": "done"
   },
   "ElevatedSuggestionChip": {
     "issues": [
-      9
+      11
     ],
-    "needs": "shapes (#6)",
-    "notes": "",
-    "status": "missing"
+    "needs": "springs (#5), shapes (#6)",
+    "notes": "slint component: ElevatedSuggestionChip; tokens: generated component tokens; springs via active motion scheme",
+    "status": "done"
   },
   "ElevatedToggleButton": {
     "issues": [
@@ -422,9 +422,9 @@
     "issues": [
       11
     ],
-    "needs": "shapes (#6)",
-    "notes": "slint component: Chip",
-    "status": "partial"
+    "needs": "springs (#5), shapes (#6)",
+    "notes": "slint component: FilterChip; tokens: generated component tokens; springs via active motion scheme",
+    "status": "done"
   },
   "FlexibleBottomAppBar": {
     "issues": [
@@ -527,9 +527,9 @@
     "issues": [
       11
     ],
-    "needs": "shapes (#6)",
-    "notes": "slint component: Chip",
-    "status": "partial"
+    "needs": "springs (#5), shapes (#6)",
+    "notes": "slint component: InputChip; tokens: generated component tokens; springs via active motion scheme",
+    "status": "done"
   },
   "LargeExtendedFloatingActionButton": {
     "issues": [
@@ -1002,9 +1002,9 @@
     "issues": [
       11
     ],
-    "needs": "shapes (#6)",
-    "notes": "slint component: Chip",
-    "status": "partial"
+    "needs": "springs (#5), shapes (#6)",
+    "notes": "slint component: SuggestionChip; tokens: generated component tokens; springs via active motion scheme",
+    "status": "done"
   },
   "Surface": {
     "issues": [

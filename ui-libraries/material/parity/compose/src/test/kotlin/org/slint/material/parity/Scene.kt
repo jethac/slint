@@ -123,7 +123,8 @@ class Widget(json: JSONObject) {
     val supporting: String? = (json.opt("supporting") as? String)?.takeIf { it.isNotEmpty() }
     /** The `isSupportingMultiline` heuristic input to `ListItemType`. */
     val supportingMultiline: Boolean = json.optBoolean("supporting_multiline", false)
-    /** 40px avatar circle with this label in the leading slot. */
+    /** 40px avatar circle in the leading slot: a label on `list-item`,
+     * an icon stem on `input-chip` (the upstream samples' `Icon` avatar). */
     val avatar: String? = (json.opt("avatar") as? String)?.takeIf { it.isNotEmpty() }
     /** Icon stem (`Icons.*`) in the trailing slot — `icon` fills leading
      * on a list item; on a `*-split-button` it's the trailing-half chevron

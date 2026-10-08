@@ -136,13 +136,13 @@ States: disabled, dragged, focused, hovered, pressed, selected, unselected
 
 | Component | Source | Status | Issues | Needs | Notes |
 |---|---|---|---|---|---|
-| AssistChip | Chip.kt | partial | #11 | shapes (#6) | slint component: Chip |
-| ElevatedAssistChip | Chip.kt | missing | #9 | shapes (#6) | - |
-| ElevatedFilterChip | Chip.kt | missing | #9 | shapes (#6) | - |
-| ElevatedSuggestionChip | Chip.kt | missing | #9 | shapes (#6) | - |
-| FilterChip | Chip.kt | partial | #11 | shapes (#6) | slint component: Chip |
-| InputChip | Chip.kt | partial | #11 | shapes (#6) | slint component: Chip |
-| SuggestionChip | Chip.kt | partial | #11 | shapes (#6) | slint component: Chip |
+| AssistChip | Chip.kt | done | #11 | springs (#5), shapes (#6) | slint component: AssistChip; tokens: generated component tokens; springs via active motion scheme |
+| ElevatedAssistChip | Chip.kt | done | #11 | springs (#5), shapes (#6) | slint component: ElevatedAssistChip; tokens: generated component tokens; springs via active motion scheme |
+| ElevatedFilterChip | Chip.kt | done | #11 | springs (#5), shapes (#6) | slint component: ElevatedFilterChip; tokens: generated component tokens; springs via active motion scheme |
+| ElevatedSuggestionChip | Chip.kt | done | #11 | springs (#5), shapes (#6) | slint component: ElevatedSuggestionChip; tokens: generated component tokens; springs via active motion scheme |
+| FilterChip | Chip.kt | done | #11 | springs (#5), shapes (#6) | slint component: FilterChip; tokens: generated component tokens; springs via active motion scheme |
+| InputChip | Chip.kt | done | #11 | springs (#5), shapes (#6) | slint component: InputChip; tokens: generated component tokens; springs via active motion scheme |
+| SuggestionChip | Chip.kt | done | #11 | springs (#5), shapes (#6) | slint component: SuggestionChip; tokens: generated component tokens; springs via active motion scheme |
 
 ### Date pickers
 

@@ -1,0 +1,41 @@
+// Copyright © SixtyFPS GmbH <info@slint.dev>
+// SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0
+
+// Scene: negative-chip-shape — generated from `ui-libraries/material/parity/scenes/negative-chip-shape.json`
+// (edit the scene, regenerate with `cargo run -p material-parity-generator`).
+//PARITY=negative: slint_overrides.chip_shapes renders the checked expressive filter chip's CornerFull selected outline as CornerNone — a chip shaped to the wrong token must fail
+//SIZE=160x96
+//TIMES=2000
+//TRACE_ELEMENTS=button0
+//MASK_INNER=button0@2000
+//DENSITIES=1,2
+import "../../fonts/Roboto-VariableFont.ttf";
+import { FilterChip, Icons, MaterialPalette, MaterialTheme, MaterialWindow } from "@material";
+
+export component TestCase inherits MaterialWindow {
+    init => {
+        // The scene pins seed #6750A4, tonal-spot, spec2025, light, contrast 0
+        // (all the library defaults; restated here so a default change can't
+        // silently move the parity baseline).
+        MaterialTheme.seed-color = #6750A4;
+        MaterialTheme.dark = false;
+        MaterialTheme.contrast-level = 0;
+        MaterialTheme.use-platform-color = false;
+        MaterialTheme.plain-family = "Roboto";
+        MaterialTheme.brand-family = "Roboto";
+        // Compose builds its scene scheme from the same seed — use the
+        // runtime-generated scheme, not the static expressive table.
+        MaterialPalette.dynamic = true;
+    }
+
+    button0 := FilterChip {
+        x: 32px;
+        y: 32px;
+        text: "Filter";
+        icon: self.checked ? Icons.check : @image-url("");
+        chip_shapes: { shape: { top_left: 0px, top_right: 0px, bottom_right: 0px, bottom_left: 0px, full: true }, selected_shape: { top_left: 0px, top_right: 0px, bottom_right: 0px, bottom_left: 0px, full: false }, pressed_shape: { top_left: 0px, top_right: 0px, bottom_right: 0px, bottom_left: 0px, full: true } };
+        checked: true;
+        expressive: true;
+    }
+
+}
