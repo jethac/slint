@@ -31,7 +31,9 @@ import androidx.compose.animation.core.TweenSpec
 import androidx.compose.animation.core.VectorConverter
 import androidx.compose.animation.core.updateTransition
 import androidx.compose.foundation.interaction.DragInteraction
+import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.foundation.layout.padding
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.requiredWidth
@@ -161,6 +163,10 @@ import androidx.compose.material3.VerticalFloatingToolbar
 import androidx.compose.material3.FloatingToolbarDefaults
 import androidx.compose.material3.FloatingToolbarHorizontalFabPosition
 import androidx.compose.material3.FloatingToolbarVerticalFabPosition
+import androidx.compose.material3.DropdownMenuGroup
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.MenuDefaults
 import androidx.compose.material3.SearchBar
 import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.AppBarWithSearch
@@ -614,6 +620,7 @@ private fun CanvasScene(
         var dividers = 0
         var badges = 0
         var badgedBoxes = 0
+        var menus = 0
         var nav_bars = 0
         var scaffolds = 0
         // `text:{n}` spans every text node in scene order — group items
@@ -713,6 +720,14 @@ private fun CanvasScene(
                     "button${buttons++}",
                     density,
                     emitPress,
+                )
+                widget.isMenu -> StateMenuWidget(
+                    widget,
+                    scene,
+                    tracer,
+                    "menu${menus++}",
+                    emitPress,
+                    density,
                 )
                 // `radio-button` ends in "-button" (isButton): dispatch
                 // ahead of the button-family branches.
@@ -4036,6 +4051,435 @@ private fun StateAppBar(widget: Widget, tracer: Tracer, tag: String) {
         else -> error("unknown app-bar kind ${widget.kind}")
     }
 }
+
+// ---- menu family --------------------------------------------------------
+
+/** `standard`/`selectable`/`checkable` → the upstream item composable. */
+private const val MENU_ITEM_STD = "standard"
+private const val MENU_ITEM_SEL = "selectable"
+private const val MENU_ITEM_CHK = "checkable"
+
+/** `standalone`/`leading`/`middle`/`trailing` → the (index, count) pair
+ * `MenuDefaults.itemShape`/`groupShape` takes. */
+private fun menuShapeIndex(position: String): Pair<Int, Int> = when (position) {
+    "standalone" -> 0 to 1
+    "leading" -> 0 to 3
+    "middle" -> 1 to 3
+    "trailing" -> 2 to 3
+    else -> error("unknown menu shape position $position")
+}
+
+/** Emits an item's authored `state` on its `InteractionSource` — the same
+ * hook `emitStateInteractions` gives whole widgets, minus the scene-action
+ * press hit-test (items inside a menu column can't be named targets on the
+ * Slint side; gestures there go through `//ACTION=` coordinates). */
+@Composable
+private fun EmitItemState(
+    state: String?,
+    interactionSource: ReplayableInteractionSource,
+    emitPress: java.util.concurrent.CopyOnWriteArrayList<Pair<Long, Runnable>>,
+    pressOffset: Offset,
+) {
+    when (state) {
+        "hovered" -> LaunchedEffect(Unit) {
+            interactionSource.emit(HoverInteraction.Enter())
+        }
+        "focused" -> LaunchedEffect(Unit) {
+            interactionSource.emit(FocusInteraction.Focus())
+        }
+        "pressed" -> {
+            val press = remember {
+                Runnable { interactionSource.tryEmit(PressInteraction.Press(pressOffset)) }
+            }
+            DisposableEffect(press) {
+                val entry = 0L to press
+                emitPress.add(entry)
+                onDispose { emitPress.remove(entry) }
+            }
+        }
+    }
+}
+
+/** One `DropdownMenuItemContent` — the item composable for the scene's
+ * `item_kind` with the item's slots, state hook, and `itemShape` for its
+ * position. `selected`/`checked` come from the item model; clicks toggle a
+ * checkable's local state so the morph animates like the real component. */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun SceneMenuItem(
+    item: MenuItem,
+    itemIndex: Int,
+    itemCount: Int,
+    kind: String,
+    variant: String,
+    emitPress: java.util.concurrent.CopyOnWriteArrayList<Pair<Long, Runnable>>,
+    density: Float,
+    checkedState: androidx.compose.runtime.MutableState<Boolean>? = null,
+    interactionSource: ReplayableInteractionSource? = null,
+) {
+    val interactionSource = interactionSource ?: remember { ReplayableInteractionSource() }
+    EmitItemState(item.state, interactionSource, emitPress, Offset(20f, 22f))
+
+    val itemShapes = MenuDefaults.itemShape(itemIndex, itemCount)
+    val text: @Composable () -> Unit = { Text(item.text) }
+    val leadingIcon: (@Composable () -> Unit)? = item.icon?.let {
+        { Icon(sceneIcon(it), contentDescription = null) }
+    }
+    val selectedLeadingIcon: (@Composable () -> Unit)? = item.selectedIcon?.let {
+        { Icon(sceneIcon(it), contentDescription = null) }
+    }
+    val trailingContent: (@Composable () -> Unit)? =
+        if (item.trailingIcon != null) {
+            { Icon(sceneIcon(item.trailingIcon), contentDescription = null) }
+        } else if (item.trailingText != null) {
+            { MenuDefaults.DropdownMenuItemTrailingLabel { Text(item.trailingText) } }
+        } else {
+            null
+        }
+    val supportingText: (@Composable () -> Unit)? = item.supportingText?.let { { Text(it) } }
+
+    when (kind) {
+        MENU_ITEM_CHK -> {
+            val cs = checkedState ?: remember { mutableStateOf(item.checked) }
+            DropdownMenuItem(
+                checked = cs.value,
+                onCheckedChange = { cs.value = it },
+                text = text,
+                shapes = itemShapes,
+                leadingIcon = leadingIcon,
+                checkedLeadingIcon = selectedLeadingIcon,
+                trailingIcon = trailingContent,
+                supportingText = supportingText,
+                enabled = item.enabled,
+                colors = if (variant == "vibrant") {
+                    MenuDefaults.selectableItemVibrantColors()
+                } else {
+                    MenuDefaults.selectableItemColors()
+                },
+                interactionSource = interactionSource,
+            )
+        }
+        MENU_ITEM_SEL -> {
+            val ss = checkedState ?: remember { mutableStateOf(item.selected) }
+            DropdownMenuItem(
+                selected = ss.value,
+                onClick = { ss.value = !ss.value },
+                text = text,
+                shapes = itemShapes,
+                leadingIcon = leadingIcon,
+                selectedLeadingIcon = selectedLeadingIcon,
+                trailingIcon = trailingContent,
+                supportingText = supportingText,
+                enabled = item.enabled,
+                colors = if (variant == "vibrant") {
+                    MenuDefaults.selectableItemVibrantColors()
+                } else {
+                    MenuDefaults.selectableItemColors()
+                },
+                interactionSource = interactionSource,
+            )
+        }
+        else -> DropdownMenuItem(
+            onClick = {},
+            text = text,
+            shape = itemShapes.shape,
+            leadingIcon = leadingIcon,
+            trailingIcon = trailingContent,
+            supportingText = supportingText,
+            enabled = item.enabled,
+            colors = if (variant == "vibrant") {
+                // `itemVibrantColors` postdates alpha18 — assemble the same
+                // VibrantMenuTokens mapping the pin's MenuDefaults uses.
+                val cs = androidx.compose.material3.MaterialTheme.colorScheme
+                MenuDefaults.itemColors().copy(
+                    textColor = cs.onTertiaryContainer,
+                    containerColor = cs.tertiaryContainer,
+                    leadingIconColor = cs.onTertiaryContainer,
+                    trailingIconColor = cs.onTertiaryContainer,
+                    disabledTextColor = cs.onTertiaryContainer.copy(alpha = 0.38f),
+                    disabledContainerColor = cs.tertiaryContainer,
+                    disabledLeadingIconColor = cs.onTertiaryContainer.copy(alpha = 0.38f),
+                    disabledTrailingIconColor = cs.onTertiaryContainer.copy(alpha = 0.38f),
+                )
+            } else {
+                MenuDefaults.itemColors()
+            },
+            interactionSource = interactionSource,
+        )
+    }
+}
+
+/** A group surface (`DropdownMenuGroup`) with its hover/inactive morph —
+ * `hoverable(interactionSource)` on the Surface plus the `hasBeenHovered`
+ * latch the upstream impl keeps inside the composable. */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun SceneMenuGroup(
+    group: MenuGroup,
+    groupIndex: Int,
+    groupCount: Int,
+    kind: String,
+    variant: String,
+    widget: Widget,
+    scene: Scene,
+    tracer: Tracer,
+    tag: String,
+    emitPress: java.util.concurrent.CopyOnWriteArrayList<Pair<Long, Runnable>>,
+    density: Float,
+) {
+    val interactionSource = remember { ReplayableInteractionSource() }
+    if (widget.kind == "menu-group" && widget.state == "hovered") {
+        LaunchedEffect(Unit) { interactionSource.emit(HoverInteraction.Enter()) }
+    }
+    // `move` actions inside/outside the group bounds emit hover enter/exit —
+    // the group-morph scene's gesture. `at` schedules it on the frame sink.
+    var lastEnter: HoverInteraction.Enter? = null
+    for (a in scene.actions) {
+        if (a.kind != "move") continue
+        val enter = remember {
+            Runnable {
+                val b = tracer.elementBounds[tag]
+                val inside = b == null ||
+                    (a.x * density >= b.left && a.x * density <= b.right &&
+                        a.y * density >= b.top && a.y * density <= b.bottom)
+                if (inside) {
+                    val e = HoverInteraction.Enter()
+                    lastEnter = e
+                    interactionSource.tryEmit(e)
+                } else {
+                    lastEnter?.let { interactionSource.tryEmit(HoverInteraction.Exit(it)) }
+                }
+            }
+        }
+        DisposableEffect(enter) {
+            val entry = a.at to enter
+            emitPress.add(entry)
+            onDispose { emitPress.remove(entry) }
+        }
+    }
+
+    val groupShapes = MenuDefaults.groupShape(groupIndex, groupCount)
+    // The `container_radius` trace: same animateFloatAsState mirror the
+    // button morph uses, driven by the hovered/hasBeenHovered latch.
+    val hovered by interactionSource.collectIsHoveredAsState()
+    var hasBeenHovered by remember { mutableStateOf(false) }
+    if (hovered) hasBeenHovered = true
+    val morphSpec = androidx.compose.material3.MaterialTheme.motionScheme.fastSpatialSpec<Float>()
+    val radius by animateFloatAsState(
+        targetValue = radiusOf(
+            if (hasBeenHovered && !hovered) groupShapes.inactiveShape else groupShapes.shape,
+            androidx.compose.ui.unit.Dp(24f),
+            density,
+        ),
+        animationSpec = morphSpec,
+        label = "container_radius",
+    )
+    if (widget.kind == "menu-group") {
+        tracer.propGetters["container_radius"] = { radius.toDouble() }
+    }
+
+    DropdownMenuGroup(
+        shapes = groupShapes,
+        containerColor = if (variant == "vibrant") {
+            MenuDefaults.groupVibrantContainerColor
+        } else {
+            MenuDefaults.groupStandardContainerColor
+        },
+        shadowElevation = 0.dp, // layoutlib deadlocks on platform shadows
+        interactionSource = interactionSource,
+    ) {
+        if (group.label.isNotEmpty()) {
+            MenuDefaults.Label { Text(group.label) }
+        }
+        group.items.forEachIndexed { i, item ->
+            SceneMenuItem(item, i, group.items.size, kind, variant, emitPress, density)
+        }
+    }
+}
+
+/** Menu-family widgets (`menu`, `menu-popup`, `menu-group`, `menu-item`,
+ * `menu-divider`, `menu-group-label`) — elements `menu{n}` in scene order.
+ * The container kinds render the same content the `DropdownMenu`/
+ * `DropdownMenuPopup` composables host, minus the `Popup` shell (popups
+ * can't render under Paparazzi): clip + container color, vertical padding,
+ * intrinsic max width, groups spaced by `SegmentedMenuTokens.SegmentedGap`. */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalMaterial3Api::class)
+@Composable
+private fun StateMenuWidget(
+    widget: Widget,
+    scene: Scene,
+    tracer: Tracer,
+    tag: String,
+    emitPress: java.util.concurrent.CopyOnWriteArrayList<Pair<Long, Runnable>>,
+    density: Float,
+) {
+    when (widget.kind) {
+        "menu" -> {
+            Box(
+                Modifier.offset(widget.x.dp, widget.y.dp)
+                    // A pinned scene width removes the text-driven intrinsic
+                    // drift (#28) from the strict layer — same pattern the
+                    // app-bar/search scenes use; without it the column is
+                    // `IntrinsicSize.Max` like upstream `DropdownMenuPopup`.
+                    .then(
+                        if (widget.width > 0f) Modifier.width(widget.width.dp)
+                        else Modifier.width(androidx.compose.foundation.layout.IntrinsicSize.Max)
+                    )
+                    .clip(MenuDefaults.shape)
+                    .background(MenuDefaults.containerColor)
+                    .track(tracer, tag),
+            ) {
+                // `DropdownMenuPopup` uses `IntrinsicSize.Max`; a pinned scene
+                // width stretches the column instead — the items' container
+                // edges stay deterministic for the strict layer.
+                androidx.compose.foundation.layout.Column(
+                    Modifier.then(
+                            if (widget.width > 0f) Modifier.width(widget.width.dp)
+                            else Modifier.width(androidx.compose.foundation.layout.IntrinsicSize.Max)
+                        )
+                        .padding(vertical = 8.dp),
+                ) {
+                    widget.menuItems.forEachIndexed { i, item ->
+                        if (i >= widget.firstIndex) {
+                            SceneMenuItem(
+                                item, i, widget.menuItems.size,
+                                widget.itemKind, widget.variant, emitPress, density,
+                            )
+                        }
+                    }
+                }
+            }
+        }
+        "menu-popup" -> {
+            androidx.compose.foundation.layout.Column(
+                Modifier.offset(widget.x.dp, widget.y.dp)
+                    .then(
+                        if (widget.width > 0f) Modifier.width(widget.width.dp)
+                        else Modifier.width(androidx.compose.foundation.layout.IntrinsicSize.Max)
+                    ),
+                verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(2.dp),
+            ) {
+                widget.groups.forEachIndexed { gi, group ->
+                    SceneMenuGroup(
+                        group, gi, widget.groups.size,
+                        widget.itemKind, widget.variant, widget, scene, tracer,
+                        if (gi == 0) tag else "$tag:g$gi", emitPress, density,
+                    )
+                }
+            }
+        }
+        "menu-group" -> {
+            val (gi, gc) = menuShapeIndex(widget.shapePosition)
+            // `DropdownMenuGroup` fills the incoming max width — bound the
+            // scene box to the group's intrinsic like a real menu column.
+            Box(Modifier.offset(widget.x.dp, widget.y.dp)
+                .then(
+                    if (widget.width > 0f) Modifier.width(widget.width.dp)
+                    else Modifier.width(androidx.compose.foundation.layout.IntrinsicSize.Max)
+                )
+                .track(tracer, tag)) {
+                SceneMenuGroup(
+                    MenuGroup(org.json.JSONObject().put("label", widget.label ?: "")
+                        .put("items", org.json.JSONArray(widget.menuItems.map { it.toJson() })),
+                        ), gi, gc,
+                    widget.itemKind, widget.variant, widget, scene, tracer, tag, emitPress, density,
+                )
+            }
+        }
+        "menu-item" -> {
+            val (ii, ic) = menuShapeIndex(widget.shapePosition)
+            val item = MenuItem(
+                org.json.JSONObject()
+                    .put("text", widget.text ?: "")
+                    .put("icon", widget.icon)
+                    .put("selected_icon", widget.selectedIcon)
+                    .put("trailing_icon", widget.trailingIcon)
+                    .put("trailing_text", widget.trailingText)
+                    .put("supporting_text", widget.supportingText)
+                    .put("selected", widget.selected)
+                    .put("checked", widget.checked)
+                    .put("enabled", widget.enabled)
+                    .put("state", widget.state),
+            )
+            // `container_radius` mirrors the select morph like the group does.
+            val itemState = remember { mutableStateOf(widget.checked || widget.selected) }
+            val shapes = MenuDefaults.itemShape(ii, ic)
+            val spec = androidx.compose.material3.MaterialTheme.motionScheme.fastSpatialSpec<Float>()
+            val radius by animateFloatAsState(
+                targetValue = radiusOf(
+                    if (itemState.value) shapes.selectedShape else shapes.shape,
+                    androidx.compose.ui.unit.Dp(24f), density,
+                ),
+                animationSpec = spec,
+                label = "container_radius",
+            )
+            tracer.propGetters["container_radius"] = { radius.toDouble() }
+            // A standalone item is a named target: the scene's press/release
+            // hit-tests its bounds like any other widget, lights the ripple,
+            // and on a selectable/checkable item the release click flips the
+            // state — the same `clickToggles` the button mirrors use.
+            val itemInteractionSource = remember { ReplayableInteractionSource() }
+            emitStateInteractions(
+                widget, scene, tracer, tag, itemInteractionSource, emitPress,
+                Offset(40f * density, 20f * density), density,
+            )
+            val clickToggles =
+                (widget.itemKind == MENU_ITEM_CHK || widget.itemKind == MENU_ITEM_SEL) &&
+                    sceneActionsClick(scene)
+            DisposableEffect(Unit) {
+                val flip = Runnable { itemState.value = !itemState.value }
+                val at = scene.actions.firstOrNull { it.kind == "release" }?.at ?: 0L
+                val entry = at to flip
+                if (clickToggles) {
+                    emitPress.add(entry)
+                }
+                onDispose { emitPress.remove(entry) }
+            }
+            Box(
+                Modifier.offset(widget.x.dp, widget.y.dp)
+                    .then(
+                        if (widget.width > 0f) Modifier.width(widget.width.dp)
+                        else Modifier.width(androidx.compose.foundation.layout.IntrinsicSize.Max),
+                    )
+                    .track(tracer, tag),
+            ) {
+                SceneMenuItem(
+                    item, ii, ic, widget.itemKind, widget.variant, emitPress, density,
+                    checkedState = itemState,
+                    interactionSource = itemInteractionSource,
+                )
+            }
+        }
+        "menu-divider" -> {
+            Box(Modifier.offset(widget.x.dp, widget.y.dp).track(tracer, tag)) {
+                androidx.compose.material3.HorizontalDivider(
+                    modifier = Modifier.width(widget.width.dp)
+                        .padding(horizontal = 12.dp, vertical = 2.dp),
+                )
+            }
+        }
+        "menu-group-label" -> {
+            Box(Modifier.offset(widget.x.dp, widget.y.dp).track(tracer, tag)) {
+                MenuDefaults.Label { Text(widget.text ?: "") }
+            }
+        }
+        else -> error("unknown menu widget kind ${widget.kind}")
+    }
+}
+
+/** Re-serialize an item for the `menu-group` widget's single-group model. */
+private fun MenuItem.toJson(): org.json.JSONObject =
+    org.json.JSONObject()
+        .put("text", text)
+        .put("icon", icon)
+        .put("selected_icon", selectedIcon)
+        .put("trailing_icon", trailingIcon)
+        .put("trailing_text", trailingText)
+        .put("supporting_text", supportingText)
+        .put("selected", selected)
+        .put("checked", checked)
+        .put("enabled", enabled)
+        .put("state", state)
 
 // ── Bottom sheets ──────────────────────────────────────────────────────────
 // Mirrors BottomSheet.kt, BottomSheetScaffold.kt, ModalBottomSheet.kt,

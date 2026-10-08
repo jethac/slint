@@ -208,8 +208,9 @@ struct Widget {
     /// `date-picker` selected day — ISO `YYYY-MM-DD` — and the `ListItem`
     /// `selected` visual state (`item_selected_*` colors + selected
     /// container shape; `checked` plays the same role for `checkable`
-    /// widgets). The Kotlin side reads the same key polymorphically per
-    /// widget kind, so the field stays a raw value here.
+    /// widgets) — also `menu-item`/`menu` item `selected`/`checked` flags.
+    /// The Kotlin side reads the same key polymorphically per widget kind,
+    /// so the field stays a raw value here.
     #[serde(default)]
     selected: Option<serde_json::Value>,
     /// `date-range-picker` selection bounds — ISO dates.
@@ -495,6 +496,41 @@ struct Widget {
     thumb: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     state2: Option<String>,
+    /// Menu item kind for `menu`/`menu-popup`/`menu-item`/`menu-group`
+    /// widgets: `standard` (default), `selectable`, or `checkable`.
+    #[serde(default)]
+    item_kind: Option<String>,
+    /// Item models for `menu`/`menu-popup`/`menu-group` widgets: objects with
+    /// `text`, `icon`, `selected_icon`, `trailing_icon`, `trailing_text`,
+    /// `supporting_text`, `selected`, `checked`, `enabled` and an optional
+    /// `state` (`hovered`/`pressed`/`focused` — the state hook reaches the
+    /// item's `simulate_*`/`focused` properties on the Slint side and its
+    /// `InteractionSource` on the Compose side).
+    #[serde(default)]
+    menu_items: Option<Vec<serde_json::Value>>,
+    /// Group models for `menu-popup`: `[{label, items:[…]}]` — each entry's
+    /// `items` uses the same fields as `menu_items`.
+    #[serde(default)]
+    groups: Option<Vec<serde_json::Value>>,
+    /// `menu-item`/`menu-group` shape position (`MenuDefaults.itemShape` /
+    /// `groupShape`): `standalone` (default), `leading`, `middle`, `trailing`.
+    #[serde(default)]
+    shape_position: Option<String>,
+    /// Icon stems for the standalone `menu-item` widget.
+    #[serde(default)]
+    selected_icon: Option<String>,
+    /// `menu-item`/`menu` item `trailingText` (the `trailingContent` text
+    /// slot) and `supportingText` are the `trailing_text`/`supporting_text`
+    /// fields declared above.
+    #[serde(default)]
+    supporting_text: Option<String>,
+    /// `menu-group`/`menu-group-label` label text (upstream
+    /// `MenuDefaults.DropdownMenuGroupLabel` content).
+    #[serde(default)]
+    label: Option<String>,
+    /// `menu` only: hide the leading `first-index` items (overflow menus).
+    #[serde(default)]
+    first_index: Option<i64>,
     /// Rail items (`navigation-rail`, `wide-navigation-rail`,
     /// `modal-navigation-rail`): `[{ "text": "Inbox", "icon": "inbox",
     /// "selected_icon": "inbox", "badge": "3", "enabled": false }]`.
@@ -745,7 +781,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         // Compose side rasterizes literally the same path the Slint
         // `Icons.<name>` image does.
         for w in &scene.widgets {
-            let item_icons = w.items.iter().filter_map(|it| it.icon.as_ref()).collect::<Vec<_>>();
+            let widget_item_icons = w.items.iter().filter_map(|it| it.icon.as_ref()).collect::<Vec<_>>();
             // The overflow indicator always uses the `more_vert` glyph on
             // both sides.
             let more_vert = String::from("more_vert");
@@ -757,7 +793,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 .chain(w.nav_icon.iter())
                 .chain(w.fab_icon.iter())
                 .chain(w.icons.iter())
-                .chain(item_icons)
+                .chain(w.selected_icon.iter())
+                .chain(widget_item_icons)
                 .chain(group_icon)
                 .chain(w.rail_items.iter().flat_map(|i| [i.icon.iter(), i.selected_icon.iter()].into_iter().flatten()))
                 .chain(w.trailing_icon.iter())
@@ -775,6 +812,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 .chain(w.leading_icons.iter())
                 .chain(w.trailing_icons.iter())
                 .map(String::as_str)
+                .chain(item_icons(&w.menu_items))
+                .chain(group_item_icons(&w.groups))
                 // `material-scaffold` hardcodes its FAB and bottom-bar
                 // icons — the scene carries no icon fields.
                 .chain(
@@ -1216,6 +1255,30 @@ fn slint_case(scene: &Scene) -> String {
             "circular-progress" => "CircularProgressIndicator",
             "linear-wavy-progress" => "LinearWavyProgressIndicator",
             "circular-wavy-progress" => "CircularWavyProgressIndicator",
+            "menu" => {
+                imports.push("MenuVariant");
+                imports.push("MenuItemKind");
+                "MenuInner"
+            }
+            "menu-popup" => {
+                imports.push("MenuVariant");
+                imports.push("MenuItemKind");
+                "MenuPopupContent"
+            }
+            "menu-group" => {
+                imports.push("MenuVariant");
+                imports.push("MenuItemKind");
+                imports.push("MenuShapePosition");
+                "MenuGroupContent"
+            }
+            "menu-item" => {
+                imports.push("MenuVariant");
+                imports.push("MenuItemKind");
+                imports.push("MenuShapePosition");
+                "MenuItemContent"
+            }
+            "menu-divider" => "MenuDivider",
+            "menu-group-label" => "MenuGroupLabel",
             "navigation-rail" => "NavigationRail",
             "wide-navigation-rail" => "WideNavigationRail",
             "modal-navigation-rail" => "ModalWideNavigationRail",
@@ -1312,8 +1375,12 @@ fn slint_case(scene: &Scene) -> String {
             || w.avatar.is_some()
             || w.fab_icon.is_some()
             || !w.icons.is_empty()
+            || w.selected_icon.is_some()
+            || w.trailing_icon.is_some()
             || w.rail_items.iter().any(|i| i.icon.is_some() || i.selected_icon.is_some())
             || w.kind.ends_with("split-button")
+            || item_icons(&w.menu_items).next().is_some()
+            || group_item_icons(&w.groups).next().is_some()
             || w.items.iter().any(|item| {
                 item.icon.is_some() || item.checked_icon.is_some() || item.selected_icon.is_some()
             })
@@ -1464,6 +1531,13 @@ fn widget_actions(scene: &Scene) -> Vec<Action> {
         // would just move focus off them again — but they still occupy a
         // focus ordinal for any later Tab target.
         if w.state.as_deref() == Some("focused") && !is_slider(w) {
+            // Menu widgets take focus through the `menu-focused` prop — the
+            // parallel of the Compose side's `FocusInteraction.Focus` on the
+            // interaction source — not through FocusScope Tab focus.
+            if w.kind.starts_with("menu") {
+                ordinal += 1;
+                continue;
+            }
             // Focused split halves: `leading` is the first of the pair.
             let target =
                 if w.kind.ends_with("split-button") && w.side.as_deref() == Some("trailing") {
@@ -1709,6 +1783,177 @@ fn slider_props(w: &Widget, timed: bool) -> String {
 
 fn widget_num(v: &serde_json::Value) -> f64 {
     v.as_f64().unwrap_or_else(|| panic!("expected number, got {v}"))
+}
+
+/// Icon stems referenced by a menu `items` list (`icon`, `selected_icon`,
+/// `trailing_icon`) — the generator copies the svgs for the Compose side.
+fn item_icons(items: &Option<Vec<serde_json::Value>>) -> impl Iterator<Item = &str> {
+    items
+        .iter()
+        .flatten()
+        .flat_map(|it| {
+            ["icon", "selected_icon", "trailing_icon"]
+                .iter()
+                .filter_map(|k| it.get(*k).and_then(|v| v.as_str()))
+        })
+}
+
+/// Icon stems referenced inside a `groups` list's item models.
+fn group_item_icons(groups: &Option<Vec<serde_json::Value>>) -> impl Iterator<Item = &str> {
+    groups
+        .iter()
+        .flatten()
+        .flat_map(|g| {
+            g.get("items")
+                .and_then(|v| v.as_array())
+                .into_iter()
+                .flatten()
+                .flat_map(|it| {
+                    ["icon", "selected_icon", "trailing_icon"]
+                        .iter()
+                        .filter_map(|k| it.get(*k).and_then(|v| v.as_str()))
+                })
+        })
+}
+
+/// `standard`/`selectable`/`checkable` → the `MenuItemKind` enum variant.
+fn menu_item_kind(kind: Option<&str>) -> &'static str {
+    match kind.unwrap_or("standard") {
+        "standard" => "MenuItemKind.standard",
+        "selectable" => "MenuItemKind.selectable",
+        "checkable" => "MenuItemKind.checkable",
+        other => panic!("unknown menu item kind {other:?}"),
+    }
+}
+
+/// `standard`/`vibrant` → the `MenuVariant` enum variant.
+fn menu_variant(variant: Option<&str>) -> &'static str {
+    match variant.unwrap_or("standard") {
+        "standard" => "MenuVariant.standard",
+        "vibrant" => "MenuVariant.vibrant",
+        other => panic!("unknown menu variant {other:?}"),
+    }
+}
+
+/// Shape position name → the `MenuShapePosition` enum variant.
+fn menu_position(position: Option<&str>) -> &'static str {
+    match position.unwrap_or("standalone") {
+        "standalone" => "MenuShapePosition.standalone",
+        "leading" => "MenuShapePosition.leading",
+        "middle" => "MenuShapePosition.middle",
+        "trailing" => "MenuShapePosition.trailing",
+        other => panic!("unknown menu shape position {other:?}"),
+    }
+}
+
+/// One menu item model → the `MenuItem` struct literal the `items`/`groups`
+/// bindings take.
+fn slint_menu_item(it: &serde_json::Value) -> String {
+    let mut p = String::from("{ ");
+    if let Some(t) = it.get("text").and_then(|v| v.as_str()) {
+        write!(p, "text: \"{}\", ", slint_str(t)).unwrap();
+    }
+    for (field, prop) in [
+        ("icon", "icon"),
+        ("selected_icon", "selected_icon"),
+        ("trailing_icon", "trailing_icon"),
+    ] {
+        if let Some(i) = it.get(field).and_then(|v| v.as_str()) {
+            write!(p, "{prop}: Icons.{i}, ").unwrap();
+        }
+    }
+    if let Some(t) = it.get("trailing_text").and_then(|v| v.as_str()) {
+        write!(p, "trailing_text: \"{}\", ", slint_str(t)).unwrap();
+    }
+    if let Some(t) = it.get("supporting_text").and_then(|v| v.as_str()) {
+        write!(p, "supporting_text: \"{}\", ", slint_str(t)).unwrap();
+    }
+    for (field, prop) in [("selected", "selected"), ("checked", "checked")] {
+        if let Some(b) = it.get(field).and_then(|v| v.as_bool()) {
+            write!(p, "{prop}: {b}, ").unwrap();
+        }
+    }
+    // The struct models `disabled` — upstream's `enabled = true` default is
+    // unexpressible as a Slint struct default.
+    if it.get("enabled").and_then(|v| v.as_bool()) == Some(false) {
+        p.push_str("disabled: true, ");
+    }
+    p.push('}');
+    p
+}
+
+/// `items` JSON → the `.slint` `[MenuItem]` literal.
+fn slint_menu_items(items: &Option<Vec<serde_json::Value>>) -> String {
+    format!(
+        "[{}]",
+        items
+            .iter()
+            .flatten()
+            .map(slint_menu_item)
+            .collect::<Vec<_>>()
+            .join(", ")
+    )
+}
+
+/// `groups` JSON → the `.slint` `[MenuGroup]` literal.
+fn slint_menu_groups(groups: &Option<Vec<serde_json::Value>>) -> String {
+    let parts: Vec<String> = groups
+        .iter()
+        .flatten()
+        .map(|g| {
+            let label = g.get("label").and_then(|v| v.as_str()).unwrap_or("");
+            let items = g.get("items").and_then(|v| v.as_array());
+            format!(
+                "{{ label: \"{}\", items: {} }}",
+                slint_str(label),
+                slint_menu_items(&items.cloned())
+            )
+        })
+        .collect();
+    format!("[{}]", parts.join(", "))
+}
+
+/// Per-item `state` entries → the container's `simulate-*`/focused index
+/// bindings. With `grouped` the emitted props carry the `-group` companion
+/// the `menu-popup` content takes. Timed scenes skip this — gestures come
+/// from `//ACTION=` instead.
+fn menu_item_states(s: &mut String, w: &Widget, grouped: bool) {
+    let mut collect = |items: &Option<Vec<serde_json::Value>>, group: Option<usize>| {
+        for (i, it) in items.iter().flatten().enumerate() {
+            let state = it.get("state").and_then(|v| v.as_str());
+            let prop = match state {
+                Some("hovered") => Some("simulate-hover"),
+                Some("pressed") => Some("simulate-press"),
+                Some("focused") => Some("focused"),
+                Some("enabled") | Some("disabled") | None => None,
+                Some(other) => panic!("unknown menu item state {other:?}"),
+            };
+            if let Some(prop) = prop {
+                if let Some(g) = group {
+                    if prop == "focused" {
+                        writeln!(s, "        focused-group: {g};").unwrap();
+                        writeln!(s, "        focused-item: {i};").unwrap();
+                    } else {
+                        writeln!(s, "        {prop}-group: {g};").unwrap();
+                        writeln!(s, "        {prop}-item: {i};").unwrap();
+                    }
+                } else {
+                    let name = if prop == "focused" { "focused-item" } else { &format!("{prop}-item") };
+                    writeln!(s, "        {name}: {i};").unwrap();
+                }
+            }
+        }
+    };
+    if grouped {
+        for (g, grp) in w.groups.iter().flatten().enumerate() {
+            collect(
+                &grp.get("items").and_then(|v| v.as_array()).cloned(),
+                Some(g),
+            );
+        }
+    } else {
+        collect(&w.menu_items, None);
+    }
 }
 
 /// `xs`/`s`/`m`/`l`/`xl` → the `MaterialButtonSize` enum variant.
@@ -2313,6 +2558,7 @@ fn slint_canvas(s: &mut String, scene: &Scene) {
     let mut dividers = 0;
     let mut badges = 0;
     let mut badged_boxes = 0;
+    let mut menus = 0;
     let mut nav_bars = 0;
     let mut scaffolds = 0;
     for w in scene.widgets.iter() {
@@ -2798,6 +3044,13 @@ fn slint_canvas(s: &mut String, scene: &Scene) {
                 let i = progresses;
                 progresses += 1;
                 progress_widget(s, w, i);
+                continue;
+            }
+            "menu" | "menu-popup" | "menu-group" | "menu-item" | "menu-divider"
+            | "menu-group-label" => {
+                let i = menus;
+                menus += 1;
+                menu_widget(s, w, i, scene);
                 continue;
             }
             "navigation-rail" | "wide-navigation-rail" | "modal-navigation-rail" => {
@@ -3565,6 +3818,207 @@ fn appbar_widget(s: &mut String, w: &Widget, i: usize) {
         w.x as i64, w.y as i64, p, children,
     )
     .unwrap();
+}
+
+/// One menu-family widget (`menu`, `menu-popup`, `menu-group`, `menu-item`,
+/// `menu-divider`, `menu-group-label`). Elements are named `menu{n}` in
+/// scene order; the standalone kinds (`menu-item`, `menu-group`,
+/// `menu-divider`, `menu-group-label`) render a single composable, the
+/// container kinds render a menu `items`/`groups` model.
+fn menu_widget(s: &mut String, w: &Widget, i: usize, scene: &Scene) {
+    let over = &w.slint_overrides;
+    let str_over = |k: &str, authored: Option<&str>| -> Option<String> {
+        over.get(k).and_then(|v| v.as_str()).map(str::to_string).or_else(|| authored.map(str::to_string))
+    };
+    let variant = menu_variant(str_over("variant", w.variant.as_deref()).as_deref());
+    let item_kind = menu_item_kind(str_over("item_kind", w.item_kind.as_deref()).as_deref());
+    let position = menu_position(str_over("shape_position", w.shape_position.as_deref()).as_deref());
+    let mut p = String::new();
+    let x = w.x as i64;
+    let y = w.y as i64;
+    match w.kind.as_str() {
+        "menu" => {
+            writeln!(
+                p,
+                "        items: {};\n        item-kind: {item_kind};\n        variant: {variant};\n        // The references cannot render platform shadows (layoutlib\n        // deadlocks on `Surface.shadowElevation`).\n        cast-shadow: false;",
+                slint_menu_items(&w.menu_items),
+            )
+            .unwrap();
+            if let Some(fi) = over.get("first_index").map(widget_num).map(|v| v as i64).or(w.first_index) {
+                writeln!(p, "        first-index: {fi};").unwrap();
+            }
+            if let Some(width) = w.width {
+                writeln!(p, "        width: {width}px;").unwrap();
+            }
+            menu_item_states(&mut p, w, false);
+            writeln!(
+                s,
+                "    menu{i} := MenuInner {{\n        x: {x}px;\n        y: {y}px;\n{p}    }}\n",
+            )
+            .unwrap();
+        }
+        "menu-popup" => {
+            writeln!(
+                p,
+                "        groups: {};\n        item-kind: {item_kind};\n        variant: {variant};\n        // The references cannot render platform shadows (layoutlib\n        // deadlocks on `Surface.shadowElevation`).\n        cast-shadow: false;",
+                slint_menu_groups(&w.groups),
+            )
+            .unwrap();
+            if let Some(width) = w.width {
+                writeln!(p, "        width: {width}px;").unwrap();
+            }
+            menu_item_states(&mut p, w, true);
+            writeln!(
+                s,
+                "    menu{i} := MenuPopupContent {{\n        x: {x}px;\n        y: {y}px;\n{p}    }}\n",
+            )
+            .unwrap();
+        }
+        "menu-group" => {
+            if let Some(label) = str_over("label", w.label.as_deref()) {
+                writeln!(p, "        label: \"{}\";", slint_str(&label)).unwrap();
+            }
+            if let Some(width) = w.width {
+                writeln!(p, "        width: {width}px;").unwrap();
+            }
+            writeln!(
+                p,
+                "        items: {};\n        item-kind: {item_kind};\n        variant: {variant};\n        shape-position: {position};\n        // The references cannot render platform shadows (layoutlib\n        // deadlocks on `Surface.shadowElevation`).\n        cast-shadow: false;",
+                slint_menu_items(&w.menu_items),
+            )
+            .unwrap();
+            if w.state.as_deref() == Some("hovered") {
+                p.push_str("        simulate-hover: true;\n");
+            }
+            menu_item_states(&mut p, w, false);
+            writeln!(
+                s,
+                "    menu{i} := MenuGroupContent {{\n        x: {x}px;\n        y: {y}px;\n{p}    }}\n",
+            )
+            .unwrap();
+        }
+        "menu-item" => {
+            if let Some(width) = w.width {
+                writeln!(p, "        width: {width}px;").unwrap();
+            }
+            let over_icon = |k: &str, authored: Option<&String>| -> Option<String> {
+                over.get(k).and_then(|v| v.as_str()).map(str::to_string).or_else(|| authored.cloned())
+            };
+            if let Some(t) = str_over("text", w.text.as_deref()) {
+                writeln!(p, "        text: \"{}\";", slint_str(&t)).unwrap();
+            }
+            if let Some(t) = str_over("supporting_text", w.supporting_text.as_deref()) {
+                writeln!(p, "        supporting-text: \"{}\";", slint_str(&t)).unwrap();
+            }
+            if let Some(t) = str_over("trailing_text", w.trailing_text.as_deref()) {
+                writeln!(p, "        trailing-text: \"{}\";", slint_str(&t)).unwrap();
+            }
+            if let Some(ic) = over_icon("icon", w.icon.as_ref()) {
+                writeln!(p, "        icon: Icons.{ic};").unwrap();
+            }
+            if let Some(ic) = over_icon("selected_icon", w.selected_icon.as_ref()) {
+                writeln!(p, "        selected-icon: Icons.{ic};").unwrap();
+            }
+            if let Some(ic) = over_icon("trailing_icon", w.trailing_icon.as_ref()) {
+                writeln!(p, "        trailing-icon: Icons.{ic};").unwrap();
+            }
+            let bool_of = |k: &str, authored: Option<bool>| -> bool {
+                over.get(k).and_then(|v| v.as_bool()).unwrap_or(authored.unwrap_or(false))
+            };
+            if bool_of("selected", w.selected.as_ref().and_then(|v| v.as_bool())) {
+                p.push_str("        selected: true;\n");
+            }
+            if bool_of("checked", w.checked) {
+                p.push_str("        checked: true;\n");
+            }
+            if !bool_of("enabled", w.enabled.or(Some(true))) {
+                p.push_str("        enabled: false;\n");
+            }
+            writeln!(
+                p,
+                "        item-kind: {item_kind};\n        variant: {variant};\n        shape-position: {position};",
+            )
+            .unwrap();
+            if !scene.times.is_empty() {
+                // Timed scenes drive the state through `//ACTION=` gestures.
+            } else {
+                match w.state.as_deref() {
+                    Some("hovered") => p.push_str("        simulate-hover: true;\n"),
+                    Some("pressed") => p.push_str("        simulate-press: true;\n"),
+                    Some("focused") => {
+                        if bool_of("menu_focused", Some(true)) {
+                            p.push_str("        menu-focused: true;\n")
+                        }
+                    }
+                    _ => {}
+                }
+            }
+            writeln!(
+                s,
+                "    menu{i} := MenuItemContent {{\n        x: {x}px;\n        y: {y}px;\n{p}    }}\n",
+            )
+            .unwrap();
+        }
+        "menu-divider" => {
+            if let Some(width) = w.width {
+                writeln!(p, "        width: {width}px;").unwrap();
+            }
+            writeln!(
+                s,
+                "    menu{i} := MenuDivider {{\n        x: {x}px;\n        y: {y}px;\n{p}    }}\n",
+            )
+            .unwrap();
+        }
+        "menu-group-label" => {
+            if let Some(t) = str_over("text", w.text.as_deref()) {
+                writeln!(p, "        text: \"{}\";", slint_str(&t)).unwrap();
+            }
+            writeln!(
+                s,
+                "    menu{i} := MenuGroupLabel {{\n        x: {x}px;\n        y: {y}px;\n{p}    }}\n",
+            )
+            .unwrap();
+        }
+        other => panic!("unknown menu widget kind {other:?}"),
+    }
+    // `container_radius` traces the shape morph — forwarded from the widget's
+    // top-left corner (uniform for the standalone positions the scenes use).
+    if scene.trace_props.iter().any(|p| p == "container_radius") && i == 0 {
+        match w.kind.as_str() {
+            "menu-item" | "menu-group" => writeln!(
+                s,
+                "    out property <length> container_radius: menu{i}.container-radius-top-left;\n",
+            )
+            .unwrap(),
+            _ => {}
+        }
+    }
+    // `slint_overrides.cover` paints a rectangle over the widget — the
+    // negative scenes' deliberate defect.
+    if let Some(cover) = w.slint_overrides.get("cover") {
+        let fill = cover["fill"].as_str().unwrap_or("primary");
+        let fill_expr = if fill.starts_with('#') {
+            fill.to_lowercase()
+        } else {
+            format!("MaterialPalette.{}", fill.replace('-', "_"))
+        };
+        let cover_radius = cover["radius"]
+            .as_f64()
+            .map(|r| format!("{r}px"))
+            .unwrap_or_else(|| "0px".to_string());
+        let xo = cover["x"].as_f64().unwrap_or(0.0) as i64;
+        let yo = cover["y"].as_f64().unwrap_or(0.0) as i64;
+        let cw = cover["width"].as_f64();
+        let ch = cover["height"].as_f64();
+        let w_expr = cw.map(|v| format!("{v}px")).unwrap_or_else(|| format!("menu{i}.width"));
+        let h_expr = ch.map(|v| format!("{v}px")).unwrap_or_else(|| format!("menu{i}.height"));
+        writeln!(
+            s,
+            "    // Deliberate defect (scene `slint_overrides.cover`).\n    Rectangle {{\n        x: menu{i}.x + {xo}px;\n        y: menu{i}.y + {yo}px;\n        width: {w_expr};\n        height: {h_expr};\n        border-radius: {cover_radius};\n        background: {fill_expr};\n        opacity: {};\n    }}\n",
+            cover["opacity"].as_f64().unwrap_or(1.0),
+        )
+        .unwrap();
+    }
 }
 
 /// Escapes a string for embedding in a generated `.slint` string literal.

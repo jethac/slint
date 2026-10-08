@@ -1,0 +1,30 @@
+{
+  "name": "negative-menu-shape",
+  "type": "canvas",
+  "parity": "negative",
+  "size": [260, 140],
+  "densities": [1, 2],
+  "theme": {
+    "seed": "6750A4",
+    "variant": "tonal-spot",
+    "spec": "spec2025",
+    "platform": "phone",
+    "dark": false,
+    "contrast": 0.0
+  },
+  "fonts": { "plain": "Roboto", "brand": "Roboto" },
+  "widgets": [
+    {
+      "kind": "menu-item",
+      "x": 20,
+      "y": 20,
+      "width": 200,
+      "item_kind": "checkable",
+      "text": "Checked",
+      "checked": true,
+      "selected_icon": "check",
+      "slint_overrides": { "checked": false }
+    }
+  ],
+  "trace_elements": ["menu0"]
+}

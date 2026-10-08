@@ -1,0 +1,28 @@
+{
+  "name": "negative-menu-focus",
+  "type": "canvas",
+  "parity": "negative",
+  "size": [260, 120],
+  "densities": [1, 2],
+  "theme": {
+    "seed": "6750A4",
+    "variant": "tonal-spot",
+    "spec": "spec2025",
+    "platform": "phone",
+    "dark": false,
+    "contrast": 0.0
+  },
+  "fonts": { "plain": "Roboto", "brand": "Roboto" },
+  "widgets": [
+    {
+      "kind": "menu-item",
+      "x": 20,
+      "y": 24,
+      "width": 200,
+      "text": "Focused",
+      "state": "focused",
+      "slint_overrides": { "menu_focused": false }
+    }
+  ],
+  "trace_elements": ["menu0"]
+}

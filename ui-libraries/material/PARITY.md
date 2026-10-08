@@ -263,15 +263,15 @@ States: focused, selected, active, hovered, pressed, inactive, disabled
 
 | Component | Source | Status | Issues | Needs | Notes |
 |---|---|---|---|---|---|
-| CheckableDropdownMenuItem | Menu.kt | missing | #11 | springs (#5), shapes (#6) | - |
-| DropdownMenu | Menu.kt | partial | #11 | springs (#5), shapes (#6) | slint component: DropDownMenu/PopupMenu |
-| DropdownMenuGroup | Menu.kt | missing | #11 | springs (#5), shapes (#6) | - |
-| DropdownMenuItem | Menu.kt | partial | #11 | springs (#5), shapes (#6) | slint component: MenuItem in DropDownMenu |
-| DropdownMenuItemLegacy | Menu.kt | missing | #11 | springs (#5), shapes (#6) | - |
-| DropdownMenuPopup | Menu.kt | missing | #11 | springs (#5), shapes (#6) | - |
-| ExposedDropdownMenuBox | ExposedDropdownMenu.kt | missing | #11 | springs (#5), shapes (#6) | - |
-| ExposedDropdownMenuBoxScope | ExposedDropdownMenu.kt | missing | #11 | springs (#5), shapes (#6) | - |
-| SelectableDropdownMenuItem | Menu.kt | missing | #11 | springs (#5), shapes (#6) | - |
+| CheckableDropdownMenuItem | Menu.kt | partial | #11 | springs (#5), shapes (#6) | slint component: MenuItemContent (item-kind: checkable) in MenuInner/PopupMenu; tokens: generated component tokens; springs via active motion scheme |
+| DropdownMenu | Menu.kt | partial | #11 | springs (#5), shapes (#6) | slint component: PopupMenu/MenuInner (flat items); tokens: generated component tokens; springs via active motion scheme |
+| DropdownMenuGroup | Menu.kt | partial | #11 | springs (#5), shapes (#6) | slint component: MenuGroupContent (MenuGroup model); tokens: generated component tokens; springs via active motion scheme |
+| DropdownMenuItem | Menu.kt | partial | #11 | springs (#5), shapes (#6) | slint component: MenuItemContent (MenuItem struct); tokens: generated component tokens; springs via active motion scheme |
+| DropdownMenuItemLegacy | Menu.kt | partial | #11 | springs (#5), shapes (#6) | deprecated at pin; covered by MenuItemContent (item-kind: standard); tokens: generated component tokens; springs via active motion scheme |
+| DropdownMenuPopup | Menu.kt | partial | #11 | springs (#5), shapes (#6) | slint component: MenuPopupContent (grouped items with gaps); tokens: generated component tokens; springs via active motion scheme |
+| ExposedDropdownMenuBox | ExposedDropdownMenu.kt | partial | #11 | springs (#5), shapes (#6) | slint component: DropDownMenu + PopupMenu exposed/match-anchor-width; tokens: generated component tokens; springs via active motion scheme |
+| ExposedDropdownMenuBoxScope | ExposedDropdownMenu.kt | partial | #11 | springs (#5), shapes (#6) | slint component: DropDownMenu (menuAnchor role folded into the component); tokens: generated component tokens; springs via active motion scheme |
+| SelectableDropdownMenuItem | Menu.kt | partial | #11 | springs (#5), shapes (#6) | slint component: MenuItemContent (item-kind: selectable); tokens: generated component tokens; springs via active motion scheme |
 
 ### Navigation bar
 

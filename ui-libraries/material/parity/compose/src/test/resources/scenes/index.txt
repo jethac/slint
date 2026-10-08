@@ -79,6 +79,10 @@ list-select-morph
 list-states
 loading-indicator-motion
 loading-indicator-states
+menu-group-morph
+menu-groups
+menu-items
+menu-select-morph
 modal-navigation-rail
 modal-scrim-dismiss
 navigation-bar-select-morph
@@ -122,6 +126,11 @@ negative-icon-button-morph
 negative-icon-offset
 negative-list-segmented
 negative-list-select
+negative-menu-focus
+negative-menu-gap
+negative-menu-kind
+negative-menu-shape
+negative-menu-variant
 negative-navigation-bar
 negative-navigation-rail
 negative-press-overlay

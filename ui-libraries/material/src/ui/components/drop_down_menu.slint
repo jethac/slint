@@ -2,39 +2,61 @@
 // SPDX-License-Identifier: MIT
 
 import { TextField } from "./text_field.slint";
-import { MenuItem } from "../items/menu_item.slint";
+import { MenuItem, MenuGroup } from "../items/menu_item.slint";
 import { Icons } from "../icons/icons.slint";
-import { MenuInner } from "./menu.slint";
+import { PopupMenu } from "./menu.slint";
+import { MenuVariant, MenuItemKind } from "./menu_metrics.slint";
 import { StateLayer } from "./state_layer.slint";
 import { MaterialPalette } from "../styling/material_palette.slint";
-import { MaterialStyleMetrics } from "../styling/material_style_metrics.slint";
-import { ScrollView } from "./scroll_view.slint";
+import { SegmentedMenuTokens } from "../styling/generated/material_component_tokens.slint";
 
+/// `ExposedDropdownMenuBox` — a read-only `TextField` anchor
+/// (`menuAnchor(PrimaryNotEditable)`) plus the exposed dropdown: the popup
+/// uses the `ExposedDropdownMenuPositionProvider` port (anchor-bottom
+/// candidates, `calculateMaxHeight` cap, `match-anchor-width` sizing) and the
+/// upstream trailing icon rotates 180deg while `expanded`.
 export component DropDownMenu {
     in property <string> label <=> text_field.label;
     in property <bool> enabled <=> text_field.enabled;
     in property <image> leading_icon <=> text_field.leading_icon;
     in property <[MenuItem]> items;
+    /// Segmented content: when set, the popup renders `DropdownMenuPopup`
+    /// groups instead of the flat item list.
+    in property <[MenuGroup]> groups;
+    in property <MenuVariant> variant: MenuVariant.standard;
+    in property <MenuItemKind> item-kind: MenuItemKind.standard;
     in_out property <int> current_index: -1;
+    /// `expanded` — toggled by the anchor; the menu dismisses itself on item
+    /// activation (and on outside clicks through `close-on-click-outside`).
+    in_out property <bool> expanded;
+    /// `exposedDropdownSize(matchAnchorWidth)` — upstream default `true`.
+    in property <bool> match-anchor-width: true;
 
     callback selected(index: int);
+    /// Activation inside `groups` content (group index, item index).
+    callback group-activated(group: int, index: int);
 
-    property <length> item_height: MaterialStyleMetrics.size_56;
-    property <int> max_displayed_items: 6;
     property <string> text <=> text_field.text;
 
     min_width: text_field.min_width;
     min_height: text_field.min_height;
-    forward_focus: text_field; accessible-role: combobox;
-    accessible_enabled: root.enabled;
-    accessible_expandable: true;
-    accessible_value <=> text_field.text;
-    accessible_action_expand => { menu.show(); }
+    forward_focus: text_field;
+    accessible-role: combobox;
+    accessible-enabled: root.enabled;
+    accessible-expandable: true;
+    accessible-expanded: root.expanded;
+    accessible-value <=> text_field.text;
+    accessible-action-expand => {
+        root.expanded = true;
+    }
 
     text_field := TextField {
         width: 100%;
         height: 100%;
         trailing_icon: Icons.arrow_drop_down;
+        // `ExposedDropdownMenuBoxScope.TrailingIcon`: ArrowDropDown rotated
+        // 180deg while expanded.
+        trailing-icon-rotation: root.expanded ? 180deg : 0deg;
         read_only: true;
     }
 
@@ -52,66 +74,61 @@ export component DropDownMenu {
         enabled: root.enabled;
 
         clicked => {
-            menu.show();
+            root.expanded = !root.expanded;
         }
     }
 
-    menu := PopupWindow {
+    // This element's bounds are the menu's anchor bounds.
+    menu := PopupMenu {
         x: 0;
-        width: root.width;
-        close_policy: close_on_click_outside;
-        forward_focus: inner_text_field;
+        y: 0;
+        width: 100%;
+        height: 100%;
+        exposed: true;
+        match-anchor-width: root.match-anchor-width;
+        items: root.items;
+        groups: root.groups;
+        variant: root.variant;
+        item-kind: root.item-kind;
+        // `ItemContentPadding` — items inside an exposed menu take the 16dp
+        // horizontal padding that aligns them with `TextField` content.
+        // `ItemContentPadding`: 16dp horizontal, 0dp vertical inside exposed menus.
+        item-content-padding-h: 16px;
+        item-content-padding-v: 0px;
+        selected-index: root.current_index;
 
-        VerticalLayout {
-            alignment: start;
-
-            inner_text_field := TextField {
-                width: root.width;
-                leading_icon: root.leading_icon;
-                trailing_icon: Icons.arrow_drop_up;
-                text: root.text;
-                label: root.label;
-                read_only: true;
-
-                leading_icon_clicked => {
-                    menu.close();
-                }
-
-                trailing_icon_clicked => {
-                    menu.close();
-                }
+        changed is-open => {
+            if !self.is-open {
+                root.expanded = false;
             }
+        }
 
-            Rectangle {
-                width: 100%;
-                height: min(max(root.item_height, items.length * root.item_height), root.max_displayed_items * root.item_height);
-                background: MaterialPalette.surface_container;
+        activated(index) => {
+            root.update_selection(index);
+        }
 
-                ScrollView {
-                    VerticalLayout {
-                        menu_inner := MenuInner {
-                            current_index: root.current_index;
-                            items: root.items;
+        group-activated(group, index) => {
+            root.group-activated(group, index);
+        }
+    }
 
-                            activated(index) => {
-                                root.update_selection(index);
-                            }
-                        }
-                    }
-                }
-            }
+    changed expanded => {
+        if root.expanded && !menu.is-open {
+            menu.show();
+        }
+        if !root.expanded && menu.is-open {
+            menu.dismiss();
         }
     }
 
     function update_selection(index: int) {
         root.update_text(index);
         root.current_index = index;
-        menu.close();
         root.selected(index);
     }
 
     function update_text(index: int) {
-        if index < 0 || root.current_index >= root.items.length {
+        if index < 0 || index >= root.items.length {
             text_field.text = "";
             return;
         }

@@ -1,9 +1,31 @@
 // Copyright © SixtyFPS GmbH <info@slint.dev>
 // SPDX-License-Identifier: MIT
 
+/// One entry in a menu's `items` model — the data form of the upstream
+/// `DropdownMenuItem`/`SelectableDropdownMenuItem`/`CheckableDropdownMenuItem`
+/// slots. `icon` fills the leading slot; `selected_icon` is the
+/// `selectedLeadingIcon`/`checkedLeadingIcon` shown while the item is
+/// selected or checked. `trailing_icon` and `trailing_text` share the
+/// trailing-content slot (`trailing_icon` wins when both are set).
 export struct MenuItem {
-    icon: image,
     text: string,
+    icon: image,
+    selected_icon: image,
+    trailing_icon: image,
     trailing_text: string,
-    enabled: bool
+    supporting_text: string,
+    selected: bool,
+    checked: bool,
+    /// Upstream items default to `enabled = true`, but Slint struct fields
+    /// can't carry a non-zero default — model the negated flag instead so an
+    /// unwritten entry stays enabled.
+    disabled: bool,
+}
+
+/// One `DropdownMenuGroup`: an optional `DropdownMenuGroupLabel` plus its
+/// items, drawn on the group's own container surface inside a
+/// `DropdownMenuPopup`-style menu.
+export struct MenuGroup {
+    label: string,
+    items: [MenuItem],
 }

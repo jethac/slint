@@ -1,0 +1,133 @@
+{
+  "name": "menu-groups",
+  "type": "canvas",
+  "parity": "static",
+  "size": [
+    620,
+    560
+  ],
+  "densities": [
+    1,
+    2
+  ],
+  "theme": {
+    "seed": "6750A4",
+    "variant": "tonal-spot",
+    "spec": "spec2025",
+    "platform": "phone",
+    "dark": false,
+    "contrast": 0.0
+  },
+  "fonts": {
+    "plain": "Roboto",
+    "brand": "Roboto"
+  },
+  "widgets": [
+    {
+      "kind": "menu-popup",
+      "x": 16,
+      "y": 8,
+      "item_kind": "selectable",
+      "groups": [
+        {
+          "label": "Section",
+          "items": [
+            {
+              "text": "First",
+              "selected": true,
+              "selected_icon": "check"
+            },
+            {
+              "text": "Second"
+            }
+          ]
+        },
+        {
+          "items": [
+            {
+              "text": "Third",
+              "icon": "edit"
+            },
+            {
+              "text": "Fourth",
+              "state": "hovered"
+            },
+            {
+              "text": "Fifth",
+              "supporting_text": "Detail"
+            }
+          ]
+        },
+        {
+          "label": "Tail",
+          "items": [
+            {
+              "text": "Sixth",
+              "trailing_icon": "arrow_right"
+            },
+            {
+              "text": "Disabled",
+              "enabled": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "menu-popup",
+      "x": 316,
+      "y": 8,
+      "item_kind": "checkable",
+      "variant": "vibrant",
+      "groups": [
+        {
+          "items": [
+            {
+              "text": "On",
+              "checked": true,
+              "selected_icon": "check"
+            },
+            {
+              "text": "Off"
+            }
+          ]
+        },
+        {
+          "label": "More",
+          "items": [
+            {
+              "text": "Also on",
+              "checked": true,
+              "icon": "remove",
+              "selected_icon": "check"
+            },
+            {
+              "text": "Last",
+              "trailing_text": "F4"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "trace_elements": [
+    "menu0",
+    "menu1"
+  ],
+  "mask_decor": {
+    "menu0": {
+      "times": [
+        0,
+        2000
+      ],
+      "margin": 16
+    },
+    "menu1": {
+      "times": [
+        0,
+        2000
+      ],
+      "margin": 16
+    }
+  }
+}
