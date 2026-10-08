@@ -1,0 +1,40 @@
+{
+    "name": "negative-snackbar-action-color",
+    "type": "canvas",
+    "parity": "negative",
+    "negative_note": "The Slint side draws the action label in secondary instead of SnackbarTokens.action_label_text_color (inverse-primary) — the label's text cells must flag the wrong ink.",
+    "size": [
+        340,
+        96
+    ],
+    "densities": [
+        1
+    ],
+    "theme": {
+        "seed": "6750A4",
+        "variant": "tonal-spot",
+        "spec": "spec2025",
+        "platform": "phone",
+        "dark": false,
+        "contrast": 0.0
+    },
+    "fonts": {
+        "plain": "Roboto",
+        "brand": "Roboto"
+    },
+    "widgets": [
+        {
+            "kind": "material-snackbar",
+            "x": 16,
+            "y": 24,
+            "width": 300,
+            "text": "Marked as read",
+            "action_text": "Undo",
+            "slint_overrides": {
+                "action_color": "secondary"
+            }
+        }
+    ],
+    "trace_elements": [],
+    "trace_props": []
+}

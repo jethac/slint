@@ -1,0 +1,40 @@
+// Copyright © SixtyFPS GmbH <info@slint.dev>
+// SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0
+
+// Scene: negative-snackbar-action-color — generated from `ui-libraries/material/parity/scenes/negative-snackbar-action-color.json`
+// (edit the scene, regenerate with `cargo run -p material-parity-generator`).
+//PARITY=negative: The Slint side draws the action label in secondary instead of SnackbarTokens.action_label_text_color (inverse-primary) — the label's text cells must flag the wrong ink.
+//SIZE=340x96
+//DENSITIES=1
+import "../../fonts/Roboto-VariableFont.ttf";
+import { MaterialPalette, MaterialTheme, MaterialWindow, SnackBar } from "@material";
+
+export component TestCase inherits MaterialWindow {
+    init => {
+        // The scene pins seed #6750A4, tonal-spot, spec2025, light, contrast 0
+        // (all the library defaults; restated here so a default change can't
+        // silently move the parity baseline).
+        MaterialTheme.seed-color = #6750A4;
+        MaterialTheme.dark = false;
+        MaterialTheme.contrast-level = 0;
+        MaterialTheme.use-platform-color = false;
+        MaterialTheme.plain-family = "Roboto";
+        MaterialTheme.brand-family = "Roboto";
+        // Compose builds its scene scheme from the same seed — use the
+        // runtime-generated scheme, not the static expressive table.
+        MaterialPalette.dynamic = true;
+    }
+
+    snackbar0 := SnackBar {
+        x: 16px;
+        y: 24px;
+        constraint-width: 300px;
+        text: "Marked as read";
+        action_text: "Undo";
+        has_close_button: false;
+        action_on_new_line: false;
+        action_color: MaterialPalette.secondary;
+        enforce_touch_target: false;
+    }
+
+}

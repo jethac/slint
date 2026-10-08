@@ -1,0 +1,129 @@
+// Copyright © SixtyFPS GmbH <info@slint.dev>
+// SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0
+
+// Scene: snackbars — generated from `ui-libraries/material/parity/scenes/snackbars.json`
+// (edit the scene, regenerate with `cargo run -p material-parity-generator`).
+//PARITY=static
+//SIZE=720x748
+//TRACE_ELEMENTS=snackbar0,snackbar1,snackbar2,snackbar3,snackbar4,snackbar5,snackbar6,snackbar7,snackbar8
+//XFAIL_TEXT=#28: the action label sits in a fixed 12dp-padded button, so its ceil-quantization slack (label 0.875px on Undo at d1) lands in the xfail window rather than the strict 0.5
+//DENSITIES=1,2
+import "../../fonts/Roboto-VariableFont.ttf";
+import { MaterialPalette, MaterialTheme, MaterialWindow, SnackBar } from "@material";
+
+export component TestCase inherits MaterialWindow {
+    init => {
+        // The scene pins seed #6750A4, tonal-spot, spec2025, light, contrast 0
+        // (all the library defaults; restated here so a default change can't
+        // silently move the parity baseline).
+        MaterialTheme.seed-color = #6750A4;
+        MaterialTheme.dark = false;
+        MaterialTheme.contrast-level = 0;
+        MaterialTheme.use-platform-color = false;
+        MaterialTheme.plain-family = "Roboto";
+        MaterialTheme.brand-family = "Roboto";
+        // Compose builds its scene scheme from the same seed — use the
+        // runtime-generated scheme, not the static expressive table.
+        MaterialPalette.dynamic = true;
+    }
+
+    snackbar0 := SnackBar {
+        x: 20px;
+        y: 16px;
+        constraint-width: 280px;
+        text: "Marked as read";
+        action_text: "";
+        has_close_button: false;
+        action_on_new_line: false;
+        enforce_touch_target: false;
+    }
+
+    snackbar1 := SnackBar {
+        x: 20px;
+        y: 80px;
+        constraint-width: 300px;
+        text: "Marked as read";
+        action_text: "Undo";
+        has_close_button: false;
+        action_on_new_line: false;
+        enforce_touch_target: false;
+    }
+
+    snackbar2 := SnackBar {
+        x: 20px;
+        y: 144px;
+        constraint-width: 360px;
+        text: "Marked as read";
+        action_text: "Undo";
+        has_close_button: true;
+        action_on_new_line: false;
+        enforce_touch_target: false;
+    }
+
+    snackbar3 := SnackBar {
+        x: 20px;
+        y: 208px;
+        constraint-width: 340px;
+        text: "Your draft has been saved and will publish at noon";
+        action_text: "Undo";
+        has_close_button: false;
+        action_on_new_line: false;
+        enforce_touch_target: false;
+    }
+
+    snackbar4 := SnackBar {
+        x: 20px;
+        y: 288px;
+        constraint-width: 360px;
+        text: "Your draft has been saved and will publish at noon";
+        action_text: "Undo";
+        has_close_button: true;
+        action_on_new_line: false;
+        enforce_touch_target: false;
+    }
+
+    snackbar5 := SnackBar {
+        x: 20px;
+        y: 368px;
+        constraint-width: 360px;
+        text: "Marked as read";
+        action_text: "Undo";
+        has_close_button: true;
+        action_on_new_line: true;
+        enforce_touch_target: false;
+    }
+
+    snackbar6 := SnackBar {
+        x: 20px;
+        y: 480px;
+        constraint-width: 320px;
+        text: "Your draft has been saved and will publish at noon";
+        action_text: "Undo";
+        has_close_button: false;
+        action_on_new_line: true;
+        enforce_touch_target: false;
+    }
+
+    snackbar7 := SnackBar {
+        x: 20px;
+        y: 592px;
+        constraint-width: 700px;
+        text: "Marked as read";
+        action_text: "Undo";
+        has_close_button: false;
+        action_on_new_line: false;
+        enforce_touch_target: false;
+    }
+
+    snackbar8 := SnackBar {
+        x: 20px;
+        y: 656px;
+        constraint-width: 660px;
+        text: "Marked as read";
+        action_text: "Undo";
+        has_close_button: false;
+        action_on_new_line: true;
+        enforce_touch_target: false;
+    }
+
+}

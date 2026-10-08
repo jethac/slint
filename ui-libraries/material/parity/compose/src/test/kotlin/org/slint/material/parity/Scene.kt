@@ -349,6 +349,18 @@ class Widget(json: JSONObject) {
     /** `material-text` alignment — `start` (default), `center`, or `end`. */
     val textAlign: String = (json.opt("text_align") as? String) ?: "start"
 
+    /** `material-snackbar` action label — absent/empty is upstream
+     * `action == null`. */
+    val actionText: String? = (json.opt("action_text") as? String)?.takeIf { it.isNotEmpty() }
+    /** `material-snackbar` `dismissAction != null` upstream. */
+    val hasCloseButton: Boolean = json.optBoolean("has_close_button", false)
+    /** `material-snackbar` `actionOnNewLine`. */
+    val actionOnNewLine: Boolean = json.optBoolean("action_on_new_line", false)
+    /** `material-snackbar` `actionContentColor` role name. */
+    val actionColor: String? = (json.opt("action_color") as? String)?.takeIf { it.isNotEmpty() }
+    /** `material-snackbar` `dismissActionContentColor` role name. */
+    val dismissColor: String? = (json.opt("dismiss_color") as? String)?.takeIf { it.isNotEmpty() }
+
     // --- navigation-rail kinds (`navigation-rail`, `wide-navigation-rail`,
     // `modal-navigation-rail`) ---
     /** Rail items: `[{ "text": "Inbox", "icon": "inbox",
@@ -435,8 +447,10 @@ class Widget(json: JSONObject) {
     val skipHidden: Boolean = json.optBoolean("skip_hidden", true)
     /** Sheet kinds: `gesturesEnabled`/`sheetSwipeEnabled` (default true). */
     val gestures: Boolean = json.optBoolean("gestures", true)
-    /** Sheet kinds: scheme role for the sheet content rect. */
-    val contentColor: String = (json.opt("content_color") as? String) ?: "tertiary-container"
+    /** `content_color` role name — sheets default it to `tertiary-container`
+     * at the use site; `material-snackbar` `contentColor` stays unset (the
+     * `SnackbarDefaults` default) when absent. */
+    val contentColor: String? = (json.opt("content_color") as? String)?.takeIf { it.isNotEmpty() }
     /** `bottom-sheet-scaffold` only: scheme role for the scaffold body. */
     val bodyColor: String = (json.opt("body_color") as? String) ?: "surface"
     /** Sheet kinds: the M3 elevation level for `sheet-elevation-level`/
