@@ -135,6 +135,9 @@ negative-shape-fit
 negative-shape-leak
 negative-sheet-color
 negative-sheet-partial
+negative-slider-corner
+negative-slider-gap
+negative-slider-steps
 negative-split-button-checked-overlay
 negative-split-button-inner-corner
 negative-split-button-outer-corner
@@ -168,6 +171,16 @@ sheet-fling-hide
 sheet-modal-show
 sheet-ops
 sheet-scaffold
+slider-basics
+slider-centered
+slider-press-morph
+slider-range-states
+slider-range
+slider-rtl
+slider-states
+slider-steps
+slider-track-corner
+slider-vertical
 split-button-check-morph
 split-button-check-rotate
 split-button-elevated

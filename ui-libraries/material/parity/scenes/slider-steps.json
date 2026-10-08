@@ -1,0 +1,75 @@
+{
+  "name": "slider-steps",
+  "type": "canvas",
+  "parity": "xfail:software",
+  "size": [
+    340,
+    330
+  ],
+  "densities": [
+    1,
+    2
+  ],
+  "theme": {
+    "seed": "6750A4",
+    "variant": "tonal-spot",
+    "spec": "spec2025",
+    "platform": "phone",
+    "dark": false,
+    "contrast": 0.0
+  },
+  "fonts": {
+    "plain": "Roboto",
+    "brand": "Roboto"
+  },
+  "widgets": [
+    {
+      "kind": "slider",
+      "x": 16,
+      "y": 20,
+      "width": 300,
+      "value": 0.0,
+      "steps": 4
+    },
+    {
+      "kind": "slider",
+      "x": 16,
+      "y": 80,
+      "width": 300,
+      "value": 0.4,
+      "steps": 4
+    },
+    {
+      "kind": "slider",
+      "x": 16,
+      "y": 140,
+      "width": 300,
+      "value": 0.5,
+      "steps": 4
+    },
+    {
+      "kind": "slider",
+      "x": 16,
+      "y": 200,
+      "width": 300,
+      "value": 1.0,
+      "steps": 4
+    },
+    {
+      "kind": "slider",
+      "x": 16,
+      "y": 260,
+      "width": 300,
+      "value": 0.6,
+      "steps": 9
+    }
+  ],
+  "trace_elements": [
+    "slider0",
+    "slider1",
+    "slider2",
+    "slider3",
+    "slider4"
+  ],
+  "negative_note": "issue #50 \u2014 the software renderer quantizes element geometry to integer device pixels; fractional track edges diverge up to ~1 device px"
+}

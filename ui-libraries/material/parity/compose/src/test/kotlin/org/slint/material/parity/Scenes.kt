@@ -13,6 +13,7 @@ import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.absoluteOffset
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
@@ -165,6 +166,14 @@ import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.AppBarWithSearch
 import androidx.compose.material3.rememberSearchBarState
 import androidx.compose.material3.FabPosition
+import androidx.compose.material3.Slider
+import androidx.compose.material3.VerticalSlider
+import androidx.compose.material3.RangeSlider
+import androidx.compose.material3.SliderDefaults
+import androidx.compose.material3.SliderState
+import androidx.compose.material3.RangeSliderState
+import androidx.compose.material3.rememberSliderState
+import androidx.compose.material3.rememberRangeSliderState
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationItemIconPosition
@@ -180,6 +189,7 @@ import androidx.compose.material3.SwipeToDismissBox
 import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.requiredHeight
 import androidx.compose.foundation.gestures.AnchoredDraggableDefaults
@@ -596,6 +606,7 @@ private fun CanvasScene(
         var sheets = 0
         var vhandles = 0
         var progresses = 0
+        var sliders = 0
         var groups = 0
         var dialogs = 0
         var pickers = 0
@@ -752,6 +763,14 @@ private fun CanvasScene(
                     // document order across the whole scene.
                     menuTexts += widget.fabItems.size
                 }
+                widget.isSlider -> StateSlider(
+                    widget,
+                    scene,
+                    tracer,
+                    "slider${sliders++}",
+                    density,
+                    emitPress,
+                )
                 widget.kind == "alert-dialog" || widget.kind == "basic-alert-dialog" ->
                     StateAlertDialog(
                         widget,
@@ -1318,8 +1337,9 @@ private fun emitStateInteractions(
     emitPress: java.util.concurrent.CopyOnWriteArrayList<Pair<Long, Runnable>>,
     pressOffset: Offset,
     density: Float,
+    stateOverride: String? = null,
 ) = emitStateInteractions(
-    widget.state,
+    stateOverride ?: widget.state,
     scene,
     tracer,
     elementId,
@@ -5229,6 +5249,212 @@ private fun StateChip(
             interactionSource = interactionSource,
         )
         else -> error("unknown chip kind ${widget.kind}")
+    }
+}
+
+/** The `state` emission for a range slider's second thumb — the same
+ * interactions `emitStateInteractions` writes, without the scene-action
+ * press plumbing (a pointer `press` hit-tests the whole widget once). */
+@Composable
+private fun emitThumbState(
+    state: String?,
+    interactionSource: ReplayableInteractionSource,
+    emitPress: java.util.concurrent.CopyOnWriteArrayList<Pair<Long, Runnable>>,
+    pressOffset: Offset,
+) {
+    when (state) {
+        "hovered" -> LaunchedEffect(Unit) {
+            interactionSource.emit(HoverInteraction.Enter())
+        }
+        "focused" -> LaunchedEffect(Unit) {
+            interactionSource.emit(FocusInteraction.Focus())
+        }
+        "pressed" -> {
+            val press = remember {
+                Runnable {
+                    interactionSource.tryEmit(PressInteraction.Press(pressOffset))
+                }
+            }
+            DisposableEffect(press) {
+                val entry = 0L to press
+                emitPress.add(entry)
+                onDispose { emitPress.remove(entry) }
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun StateSlider(
+    widget: Widget,
+    scene: Scene,
+    tracer: Tracer,
+    elementId: String,
+    density: Float,
+    emitPress: java.util.concurrent.CopyOnWriteArrayList<Pair<Long, Runnable>>,
+) {
+    val startSource = remember { ReplayableInteractionSource() }
+    val endSource = remember { ReplayableInteractionSource() }
+    // `thumb` picks which range thumb `state` describes; `state2` covers
+    // the other one. A single slider always reads `state`.
+    val startState =
+        if (widget.thumb == "end") widget.state2 else widget.state
+    val endState =
+        if (widget.thumb == "end") widget.state else widget.state2
+    emitStateInteractions(
+        widget,
+        scene,
+        tracer,
+        elementId,
+        startSource,
+        emitPress,
+        Offset(20f * density, 10f * density),
+        density,
+        stateOverride = startState,
+    )
+    emitThumbState(
+        endState,
+        endSource,
+        emitPress,
+        Offset(20f * density, 10f * density),
+    )
+
+    val colors = SliderDefaults.colors()
+    val trackRange = widget.min..widget.max
+    // `absoluteOffset`: `offset` resolves `x` in the layout direction, so
+    // under the RTL provider below it would shift the widget `2x` left —
+    // the scene coordinates are physical, only the slider's interior
+    // mirrors.
+    val modifier = Modifier.absoluteOffset(widget.x.dp, widget.y.dp)
+        .then(if (widget.width > 0f) Modifier.width(widget.width.dp) else Modifier)
+        .then(if (widget.height > 0f) Modifier.height(widget.height.dp) else Modifier)
+        .track(tracer, elementId)
+
+    val trackCorner: Dp =
+        if (widget.trackCorner >= 0f) widget.trackCorner.dp else Dp.Unspecified
+
+    val content: @Composable () -> Unit = {
+        when (widget.kind) {
+            "slider" -> {
+                // The artifact's state overload drops `onValueChange` — the
+                // slider updates `state` itself; `rememberSliderState`'s
+                // range/`onValueUpdate` parameters are passed positionally so
+                // a rename can't break the harness.
+                val state = rememberSliderState(
+                    widget.value,
+                    widget.steps,
+                    {},
+                    trackRange,
+                )
+                Slider(
+                    state = state,
+                    modifier = modifier,
+                    enabled = widget.enabled,
+                    colors = colors,
+                    interactionSource = startSource,
+                    track = { sliderState ->
+                        when {
+                            widget.centered -> SliderDefaults.CenteredTrack(
+                                sliderState,
+                                enabled = widget.enabled,
+                                colors = colors,
+                                trackCornerSize = trackCorner,
+                            )
+                            widget.trackCorner >= 0f -> SliderDefaults.Track(
+                                sliderState,
+                                widget.trackCorner.dp,
+                                enabled = widget.enabled,
+                                colors = colors,
+                            )
+                            else -> SliderDefaults.Track(
+                                sliderState,
+                                enabled = widget.enabled,
+                                colors = colors,
+                            )
+                        }
+                    },
+                )
+            }
+            "vertical-slider" -> {
+                val state = rememberSliderState(
+                    widget.value,
+                    widget.steps,
+                    {},
+                    trackRange,
+                )
+                VerticalSlider(
+                    state = state,
+                    modifier = modifier,
+                    enabled = widget.enabled,
+                    // The artifact's `reverseDirection` is the pin's
+                    // `!topToBottom` — `state.reverseVerticalDirection`.
+                    reverseDirection = !widget.topToBottom,
+                    colors = colors,
+                    interactionSource = startSource,
+                    track = { sliderState ->
+                        if (widget.trackCorner >= 0f) {
+                            SliderDefaults.Track(
+                                sliderState,
+                                widget.trackCorner.dp,
+                                enabled = widget.enabled,
+                                colors = colors,
+                            )
+                        } else {
+                            SliderDefaults.Track(
+                                sliderState,
+                                enabled = widget.enabled,
+                                colors = colors,
+                            )
+                        }
+                    },
+                )
+            }
+            "range-slider" -> {
+                val state = rememberRangeSliderState(
+                    widget.value,
+                    widget.value2,
+                    widget.steps,
+                    {},
+                    trackRange,
+                )
+                RangeSlider(
+                    state = state,
+                    modifier = modifier,
+                    enabled = widget.enabled,
+                    colors = colors,
+                    startInteractionSource = startSource,
+                    endInteractionSource = endSource,
+                    track = { rangeSliderState ->
+                        if (widget.trackCorner >= 0f) {
+                            SliderDefaults.Track(
+                                rangeSliderState,
+                                widget.trackCorner.dp,
+                                enabled = widget.enabled,
+                                colors = colors,
+                            )
+                        } else {
+                            SliderDefaults.Track(
+                                rangeSliderState,
+                                enabled = widget.enabled,
+                                colors = colors,
+                            )
+                        }
+                    },
+                )
+            }
+            else -> error("unknown slider kind ${widget.kind}")
+        }
+    }
+
+    if (widget.rtl) {
+        CompositionLocalProvider(
+            LocalLayoutDirection provides LayoutDirection.Rtl,
+        ) {
+            content()
+        }
+    } else {
+        content()
     }
 }
 
