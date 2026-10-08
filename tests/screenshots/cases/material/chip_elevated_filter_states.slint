@@ -1,0 +1,81 @@
+// Copyright © SixtyFPS GmbH <info@slint.dev>
+// SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0
+
+// Scene: chip-elevated-filter-states — generated from `ui-libraries/material/parity/scenes/chip-elevated-filter-states.json`
+// (edit the scene, regenerate with `cargo run -p material-parity-generator`).
+//PARITY=xfail:skia,femtovg: compose references never render a chip's held press (the emitted PressInteraction produces no ripple ink, corner morph, or Level3 shadow in the layoutlib refs — the same gap behind the chip-*-morph xfails) so the pressed chip's silhouette edge is unverifiable on GPU drivers; software keeps the pixel check with the silhouette findings waived under issue #6's axis-aligned clip
+// issue #6: the pressed elevated chip's graphicsLayer-softened edge and shadow penumbra land ~1px inside the strict band (residual <=14 channel diff); the silhouette boundary check stays strict (band 2.0)
+//PARITY_EPS=16
+//SIZE=712x96
+//TRACE_PROPS=shadow_elevation
+//TRACE_ELEMENTS=button0,button1,button2,button3,button4,button5
+//MASK_INNER=button3@2000
+//XFAIL_TEXT=software: issue #28: Slint ceils text layout widths where Compose keeps fractional advances — the chip label's ink lands ~2px right-shorter, one software cell over eps
+//XFAIL_SILHOUETTE=issue #6: the software driver can't clip the pressed chip's shadow to the rounded shape — silhouette edge unverifiable; the strict interior stays masked
+//DENSITIES=1,2
+import "../../fonts/Roboto-VariableFont.ttf";
+import { ElevatedFilterChip, Icons, MaterialPalette, MaterialTheme, MaterialWindow } from "@material";
+
+export component TestCase inherits MaterialWindow {
+    init => {
+        // The scene pins seed #6750A4, tonal-spot, spec2025, light, contrast 0
+        // (all the library defaults; restated here so a default change can't
+        // silently move the parity baseline).
+        MaterialTheme.seed-color = #6750A4;
+        MaterialTheme.dark = false;
+        MaterialTheme.contrast-level = 0;
+        MaterialTheme.use-platform-color = false;
+        MaterialTheme.plain-family = "Roboto";
+        MaterialTheme.brand-family = "Roboto";
+        // Compose builds its scene scheme from the same seed — use the
+        // runtime-generated scheme, not the static expressive table.
+        MaterialPalette.dynamic = true;
+    }
+
+    button0 := ElevatedFilterChip {
+        x: 16px;
+        y: 32px;
+        text: "Filter";
+    }
+
+    out property <length> shadow_elevation: button0.shadow_elevation;
+
+    button1 := ElevatedFilterChip {
+        x: 136px;
+        y: 32px;
+        text: "Filter";
+        icon: self.checked ? Icons.check : @image-url("");
+        checked: true;
+    }
+
+    button2 := ElevatedFilterChip {
+        x: 256px;
+        y: 32px;
+        text: "Filter";
+        simulate_hover: true;
+    }
+
+    button3 := ElevatedFilterChip {
+        x: 376px;
+        y: 32px;
+        text: "Filter";
+        simulate_press: true;
+    }
+
+    button4 := ElevatedFilterChip {
+        x: 496px;
+        y: 32px;
+        text: "Filter";
+        enabled: false;
+    }
+
+    button5 := ElevatedFilterChip {
+        x: 616px;
+        y: 32px;
+        text: "Filter";
+        icon: self.checked ? Icons.check : @image-url("");
+        checked: true;
+        enabled: false;
+    }
+
+}

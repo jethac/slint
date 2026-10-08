@@ -51,6 +51,16 @@ use std::io::Write;
 use std::path::{Path, PathBuf};
 use test_driver_lib::{ParityAction, ParityMarkers};
 
+/// A marker scope token is `driver` — matches on every platform — or
+/// `driver@platform`, which additionally requires the test host's OS
+/// (`std::env::consts::OS`): `skia@windows` scopes a marker to skia's
+/// Windows rasterization, whose font backend quantizes metrics
+/// differently than layoutlib's.
+fn scope_matches(token: &str, driver: &str) -> bool {
+    let (d, platform) = token.split_once('@').map_or((token, None), |(d, p)| (d, Some(p)));
+    d == driver && platform.is_none_or(|p| p == std::env::consts::OS)
+}
+
 /// `<container>item<i>` — the repeated-child convention `//TRACE_ITEMS=`
 /// emits (`group0item0`) and the Compose emitter's `track` tags share.
 fn parse_item_ref(id: &str) -> Option<(String, usize)> {
@@ -2126,10 +2136,11 @@ pub fn run_parity_case<C: i_slint_core::api::ComponentHandle>(
     let mut xfail_text_saw_drift = false;
     // `//XFAIL_TEXT=` may scope itself to the drivers whose rasterizer
     // differs from the expected frames' (layoutlib is skia) — elsewhere it
-    // stays inert so the marker never reads stale there.
+    // stays inert so the marker never reads stale there. A `driver@platform`
+    // token narrows the scope to one test-host OS.
     let xfail_text = spec.xfail_text.as_deref().filter(|_| {
         spec.xfail_text_renderers.is_empty()
-            || spec.xfail_text_renderers.iter().any(|d| d.as_str() == driver)
+            || spec.xfail_text_renderers.iter().any(|d| scope_matches(d, driver))
     });
     for (di, density) in spec.densities.iter().enumerate() {
         let component = make_instance(*density);
@@ -2570,9 +2581,11 @@ pub fn run_parity_case<C: i_slint_core::api::ComponentHandle>(
     }
 
     // `xfail:<driver>:` expects the divergence only on the named drivers;
-    // everywhere else the case is a positive and must pass clean.
+    // everywhere else the case is a positive and must pass clean. A
+    // `driver@platform` token narrows the scope to one test-host OS.
     let xfail_here = xfail
-        && (spec.xfail_renderers.is_empty() || spec.xfail_renderers.iter().any(|d| d == driver));
+        && (spec.xfail_renderers.is_empty()
+            || spec.xfail_renderers.iter().any(|d| scope_matches(d, driver)));
 
     if xfail_here {
         if references_missing {

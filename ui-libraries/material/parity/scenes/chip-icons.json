@@ -1,0 +1,75 @@
+{
+  "name": "chip-icons",
+  "type": "canvas",
+  "parity": "xfail:skia",
+  "size": [
+    720,
+    96
+  ],
+  "densities": [
+    1,
+    2
+  ],
+  "theme": {
+    "seed": "6750A4",
+    "variant": "tonal-spot",
+    "spec": "spec2025",
+    "platform": "phone",
+    "dark": false,
+    "contrast": 0.0
+  },
+  "fonts": {
+    "plain": "Roboto",
+    "brand": "Roboto"
+  },
+  "widgets": [
+    {
+      "kind": "assist-chip",
+      "x": 16,
+      "y": 32,
+      "text": "Assist",
+      "icon": "edit"
+    },
+    {
+      "kind": "elevated-assist-chip",
+      "x": 150,
+      "y": 32,
+      "text": "Assist",
+      "icon": "edit"
+    },
+    {
+      "kind": "suggestion-chip",
+      "x": 284,
+      "y": 32,
+      "text": "Suggest",
+      "icon": "edit"
+    },
+    {
+      "kind": "elevated-suggestion-chip",
+      "x": 432,
+      "y": 32,
+      "text": "Suggest",
+      "icon": "edit"
+    },
+    {
+      "kind": "filter-chip",
+      "x": 580,
+      "y": 32,
+      "text": "Filter",
+      "icon": "edit",
+      "trailing_icon": "keyboard_arrow_down"
+    }
+  ],
+  "trace_elements": [
+    "button0",
+    "button1",
+    "button2",
+    "button3",
+    "button4"
+  ],
+  "trace_props": [],
+  "xfail_text": "issue #28: Slint ceils text layout widths where Compose keeps fractional advances",
+  "parity_eps": 16,
+  "parity_eps_reason": "issue #6: the elevated chips' graphicsLayer-softened edge and drop-shadow penumbra land ~1px inside the strict band (residual <=13 channel diff); the silhouette boundary check stays strict (band 2.0)",
+  "negative_note": "issue #6: on skia the elevated chips' shadow penumbra inside the strict band diffs up to ~29 channel units while software/femtovg match within eps 16"
+}

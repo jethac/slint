@@ -41,8 +41,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.ui.Alignment
 import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.material3.Button
@@ -63,11 +61,25 @@ import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.FilledTonalIconToggleButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.TonalToggleButton
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.CircularWavyProgressIndicator
+import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.LinearWavyProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.IconButtonDefaults.IconButtonWidthOption
 import androidx.compose.material3.IconToggleButton
+import androidx.compose.material3.AssistChip
+import androidx.compose.material3.AssistChipDefaults
+import androidx.compose.material3.ElevatedAssistChip
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
+import androidx.compose.material3.ElevatedFilterChip
+import androidx.compose.material3.InputChip
+import androidx.compose.material3.InputChipDefaults
+import androidx.compose.material3.SuggestionChip
+import androidx.compose.material3.ElevatedSuggestionChip
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.SegmentedListItem
@@ -138,6 +150,7 @@ import androidx.compose.material3.SearchBar
 import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.AppBarWithSearch
 import androidx.compose.material3.rememberSearchBarState
+import androidx.compose.material3.FabPosition
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationItemIconPosition
@@ -554,6 +567,7 @@ private fun CanvasScene(
         var rails = 0
         var sheets = 0
         var vhandles = 0
+        var progresses = 0
         var groups = 0
         var dialogs = 0
         var pickers = 0
@@ -562,6 +576,7 @@ private fun CanvasScene(
         var badges = 0
         var badgedBoxes = 0
         var nav_bars = 0
+        var scaffolds = 0
         // `text:{n}` spans every text node in scene order — group items
         // interleave with the standalone widgets' labels. Bases are
         // precomputed per widget so recompositions can't renumber them.
@@ -575,7 +590,8 @@ private fun CanvasScene(
                     // `radio-button` renders no Text — the single text
                     // slot is only for button-family widgets.
                     w.kind == "connected-button" ||
-                        (w.isButton && w.kind != "radio-button") -> 1
+                        (w.isButton && w.kind != "radio-button") ||
+                        w.kind.endsWith("chip") -> 1
                     // The Slint side's Text elements in tree order:
                     // title, then the text slot, then each action label
                     // (emitted confirm-first by the flipped flow row).
@@ -612,6 +628,15 @@ private fun CanvasScene(
                         emitPress,
                         textBase,
                     )
+                widget.kind.endsWith("chip") -> StateChip(
+                    widget,
+                    scene,
+                    tracer,
+                    "text:$textBase",
+                    "button${buttons++}",
+                    density,
+                    emitPress,
+                )
                 widget.kind == "button-group" -> {
                     StateButtonGroup(
                         widget,
@@ -744,6 +769,8 @@ private fun CanvasScene(
                     widget.kind == "search-bar" ||
                     widget.kind == "app-bar-with-search" ->
                     StateAppBar(widget, tracer, "appbar${appbars++}")
+                widget.kind.endsWith("progress") ->
+                    StateProgress(widget, tracer, "progress${progresses++}")
                 widget.kind == "navigation-rail" ||
                     widget.kind == "wide-navigation-rail" ||
                     widget.kind == "modal-navigation-rail" ->
@@ -757,6 +784,12 @@ private fun CanvasScene(
                 widget.kind == "navigation-bar" ||
                     widget.kind == "short-navigation-bar" ->
                     StateNavBar(widget, scene, tracer, "navbar${nav_bars++}", emitPress)
+                widget.kind == "material-scaffold" ->
+                    StateScaffold(
+                        widget,
+                        tracer,
+                        scaffolds++,
+                    )
                 widget.kind == "rect" ->
                     Box(
                         Modifier.offset(widget.x.dp, widget.y.dp)
@@ -1058,6 +1091,44 @@ private fun CanvasScene(
     }
 }
 
+/** One progress-indicator family widget: `linear-progress`,
+ * `circular-progress`, `linear-wavy-progress` and `circular-wavy-progress`
+ * map to the same-named material3 composables with the library defaults.
+ * `Modifier.offset` places the component's own size — the pinned sources
+ * pin the container sizes themselves (`LinearIndicatorWidth`×`height`,
+ * `LinearContainerWidth`×`LinearContainerHeight`, `CircularIndicatorDiameter`,
+ * `CircularContainerSize`), which the Slint side fixes identically. */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun StateProgress(widget: Widget, tracer: Tracer, tag: String) {
+    val modifier = Modifier.offset(widget.x.dp, widget.y.dp).track(tracer, tag)
+    when (widget.kind) {
+        "linear-progress" ->
+            if (widget.indeterminate) {
+                LinearProgressIndicator(modifier = modifier)
+            } else {
+                LinearProgressIndicator(progress = { widget.progress }, modifier = modifier)
+            }
+        "linear-wavy-progress" ->
+            if (widget.indeterminate) {
+                LinearWavyProgressIndicator(modifier = modifier)
+            } else {
+                LinearWavyProgressIndicator(progress = { widget.progress }, modifier = modifier)
+            }
+        "circular-progress" ->
+            if (widget.indeterminate) {
+                CircularProgressIndicator(modifier = modifier)
+            } else {
+                CircularProgressIndicator(progress = { widget.progress }, modifier = modifier)
+            }
+        "circular-wavy-progress" ->
+            if (widget.indeterminate) {
+                CircularWavyProgressIndicator(modifier = modifier)
+            } else {
+                CircularWavyProgressIndicator(progress = { widget.progress }, modifier = modifier)
+            }
+    }
+}
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun StateRadioButton(
@@ -1229,6 +1300,7 @@ private fun emitStateInteractions(
     pressOffset: Offset,
     density: Float,
     onRelease: Runnable?,
+    pressViaSink: Boolean = false,
 ) {
     when (state) {
         "hovered" -> LaunchedEffect(Unit) {
@@ -1250,7 +1322,15 @@ private fun emitStateInteractions(
         // composition runs ahead of the pump during setup. Landing after
         // frame 0 also keeps the press off uptime 0, where a ripple's frame
         // callback would abort layoutlib.
-        "pressed" -> {
+        "pressed" -> if (pressViaSink) {
+            // `pressInkMarker` already queued the sink entry that turns on
+            // the painted state layer — nothing to emit. A `Modal`/`Popup`
+            // runs its own frame clock, so the frame-gated `emit()` below
+            // can resume after the last captured frame under post-draw
+            // pumping and lose the press entirely; the painted layer is
+            // wall-clock deterministic.
+            Unit
+        } else {
             // `emit()` suspends until every subscriber has the emission —
             // deterministic where a frame-sink `tryEmit` is not: under a
             // multi-density record the second pump's composition schedules
@@ -3502,10 +3582,102 @@ private fun StateListItem(
 }
 
 
-/** App-bar family widgets (`top-app-bar` variants, `bottom-app-bar`,
- * `search-bar`, `app-bar-with-search`): geometry plus the props the Slint
- * parity case sets. Elements are named `appbar{n}` in scene order. Window
+/** `material-scaffold`: the upstream `Scaffold` with the scene's slots.
+ * Elements are named `scaffold{n}`/`appbar{n}`/`navbar{n}`/`snackbar{n}`/
+ * `fab{n}`/`content{n}` — matching the Slint children's ids. Window
  * insets are zeroed — the Slint side has no inset concept. */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun StateScaffold(
+    widget: Widget,
+    tracer: Tracer,
+    i: Int,
+) {
+    // `contentWindowInsets` is zero — the Slint side has no inset
+    // concept, so `PaddingValues` carries only the bar heights.
+    val insets = WindowInsets(0, 0, 0, 0)
+    androidx.compose.material3.Scaffold(
+        modifier =
+            Modifier.offset(widget.x.dp, widget.y.dp)
+                .size(widget.width.dp, widget.height.dp)
+                .track(tracer, "scaffold$i"),
+        topBar = {
+            if (widget.topBar) {
+                TopAppBar(
+                    title = { Text(widget.title ?: "Scaffold") },
+                    modifier = Modifier.track(tracer, "appbar$i"),
+                    windowInsets = insets,
+                )
+            }
+        },
+        bottomBar = {
+            if (widget.bottomBar) {
+                NavigationBar(
+                    modifier = Modifier.track(tracer, "navbar$i"),
+                    windowInsets = insets,
+                ) {
+                    listOf("menu" to "Menu", "schedule" to "Later").forEachIndexed { index, item ->
+                        NavigationBarItem(
+                            selected = index == 0,
+                            onClick = {},
+                            icon = { Icon(sceneIcon(item.first), contentDescription = null) },
+                            label = { Text(item.second) },
+                        )
+                    }
+                }
+            }
+        },
+        snackbarHost = {
+            if (widget.snackbar) {
+                // The Slint snackbar slot is a fixed-size rect while
+                // `SnackBar` is still a popup on master — the mirror is
+                // a same-size Box so the scaffold's slot offsets are what
+                // get compared, not snackbar internals.
+                Box(
+                    Modifier.size(widget.snackWidth.dp, widget.snackHeight.dp)
+                        .clip(RoundedCornerShape(4.dp))
+                        .background(androidx.compose.material3.MaterialTheme.colorScheme.inverseSurface)
+                        .track(tracer, "snackbar$i"),
+                )
+            }
+        },
+        floatingActionButton = {
+            if (widget.fab) {
+                FloatingActionButton(
+                    onClick = {},
+                    modifier = Modifier.track(tracer, "fab$i"),
+                ) {
+                    Icon(sceneIcon("add"), contentDescription = null)
+                }
+            }
+        },
+        floatingActionButtonPosition =
+            when (widget.fabPosition) {
+                "start" -> FabPosition.Start
+                "center" -> FabPosition.Center
+                "end" -> FabPosition.End
+                "end-overlay" -> FabPosition.EndOverlay
+                else -> error("unknown fab_position ${widget.fabPosition}")
+            },
+        contentWindowInsets = insets,
+    ) { padding ->
+        // `track` sits on the full-size box (bounds match the Slint
+        // content rect); `padding` applies the `PaddingValues` inside.
+        Box(
+            Modifier.fillMaxSize().track(tracer, "content$i").padding(padding),
+        ) {
+            Text(
+                widget.text ?: "Content",
+                modifier = Modifier.offset(16.dp, 16.dp),
+            )
+        }
+    }
+}
+
+/** The app-bar widgets (`top-app-bar`, `bottom-app-bar`, `search-bar`,
+ * `app-bar-with-search`): geometry plus the props the Slint parity case
+ * sets. Elements are named `appbar{n}` in scene order. Window insets are
+ * zeroed — the Slint side has no inset concept. */
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun StateAppBar(widget: Widget, tracer: Tracer, tag: String) {
@@ -5351,6 +5523,229 @@ private fun TpDialogActions(
     }
 }
 
+/** `*-chip` widgets: the flat/elevated assist, filter, input and
+ * suggestion chips. `variant: "expressive"` selects the `shapes:` overload
+ * (corner morphing) on filter/input chips; `checked` is the composable's
+ * `selected`, flipped at a click's release like the toggle buttons. */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun StateChip(
+    widget: Widget,
+    scene: Scene,
+    tracer: Tracer,
+    textId: String,
+    elementId: String,
+    density: Float,
+    emitPress: java.util.concurrent.CopyOnWriteArrayList<Pair<Long, Runnable>>,
+) {
+    val interactionSource = remember { ReplayableInteractionSource() }
+    emitStateInteractions(widget, scene, tracer, elementId, interactionSource, emitPress, Offset(40f * density, 16f * density), density)
+
+    // Filter and input chips are `selected:` composables — intrinsically
+    // checkable; assist and suggestion chips are plain buttons.
+    val checkable =
+        widget.checkable ||
+            widget.kind == "filter-chip" ||
+            widget.kind == "elevated-filter-chip" ||
+            widget.kind == "input-chip"
+    var selected by remember { mutableStateOf(widget.checked) }
+    val clickToggles = checkable && sceneActionsClick(scene)
+    DisposableEffect(Unit) {
+        val flip = Runnable { selected = !selected }
+        val at = scene.actions.firstOrNull { it.kind == "release" }?.at ?: 0L
+        val entry = at to flip
+        if (clickToggles) {
+            emitPress.add(entry)
+        }
+        onDispose { emitPress.remove(entry) }
+    }
+
+    val modifier = Modifier.offset(widget.x.dp, widget.y.dp)
+        .then(if (widget.width > 0f) Modifier.width(widget.width.dp) else Modifier)
+        .track(tracer, elementId)
+
+    val labelStyle = androidx.compose.material3.MaterialTheme.typography.labelLarge
+    val label: @Composable () -> Unit = {
+        Text(
+            widget.text ?: "",
+            style = labelStyle,
+            modifier = Modifier.trackText(tracer, textId, density),
+            onTextLayout = recordTextLayout(
+                tracer,
+                textId,
+                LocalDensity.current,
+                androidx.compose.ui.platform.LocalFontFamilyResolver.current,
+                labelStyle.fontFamily,
+            ),
+        )
+    }
+    // `checkedIcon` swaps the leading slot while selected — the upstream
+    // samples' `leadingIcon = if (selected) { check } else { icon }`.
+    val leadingIconName = if (selected && widget.checkedIcon != null) widget.checkedIcon else widget.icon
+    val leadingIcon: (@Composable () -> Unit)? = leadingIconName?.let { name ->
+        { Icon(sceneIcon(name), contentDescription = null, modifier = Modifier.size(AssistChipDefaults.IconSize)) }
+    }
+    val trailingIcon: (@Composable () -> Unit)? = widget.trailingIcon?.let { name ->
+        { Icon(sceneIcon(name), contentDescription = null, modifier = Modifier.size(FilterChipDefaults.IconSize)) }
+    }
+    val avatar: (@Composable () -> Unit)? = widget.avatar?.let { name ->
+        { Icon(sceneIcon(name), contentDescription = null, modifier = Modifier.size(InputChipDefaults.AvatarSize)) }
+    }
+    val expressive = widget.variant == "expressive"
+
+    // `shadow_elevation`/`corner_top_left` probes — the same Elevation.kt /
+    // `shapeByInteraction` mechanics the FAB and toggle probes mirror.
+    // Flat chips sit at 0 (the flat filter chip's table uses the
+    // selected-hover token — 1dp — regardless of `selected`); elevated
+    // chips run 1/1/1/3; disabled chips snap to their disabled level (0 in
+    // these scenes). `propGetters` keys are flat, so only `button0`
+    // registers — the element the Slint side forwards.
+    val chipLevels = when {
+        !widget.enabled -> FabElevationLevels(0.dp, 0.dp, 0.dp, 0.dp)
+        widget.kind.startsWith("elevated-") -> FabElevationLevels(1.dp, 1.dp, 1.dp, 3.dp)
+        widget.kind == "filter-chip" -> FabElevationLevels(0.dp, 0.dp, 0.dp, 1.dp)
+        else -> FabElevationLevels(0.dp, 0.dp, 0.dp, 0.dp)
+    }
+    val chipShadow = fabShadowElevationProbe(interactionSource, chipLevels)
+    val chipPressed by interactionSource.collectIsPressedAsState()
+    val motionScheme = androidx.compose.material3.MaterialTheme.motionScheme
+    // Expressive `shapes:` morph: ChipsTokens UnselectedShape CornerMedium
+    // (8), SelectedShape CornerFull (half the 32dp height), PressedShape
+    // CornerSmall (4). The static `shape:` overloads' ContainerShape is
+    // CornerSmall on every chip kind.
+    val cornerTarget =
+        if (expressive && chipPressed) {
+            4.dp
+        } else if (expressive && selected) {
+            16.dp
+        } else if (expressive) {
+            8.dp
+        } else {
+            4.dp
+        }
+    val cornerAnim by animateDpAsState(
+        cornerTarget,
+        motionScheme.fastSpatialSpec(),
+        label = "chip_corner_top_left",
+    )
+    if (elementId == "button0") {
+        tracer.propGetters["shadow_elevation"] = { chipShadow.value.toDouble() }
+        tracer.propGetters["corner_top_left"] = { cornerAnim.value.toDouble() }
+    }
+
+    when (widget.kind) {
+        "assist-chip" -> AssistChip(
+            onClick = {},
+            label = label,
+            modifier = modifier,
+            enabled = widget.enabled,
+            leadingIcon = leadingIcon,
+            trailingIcon = trailingIcon,
+            interactionSource = interactionSource,
+        )
+        "elevated-assist-chip" -> ElevatedAssistChip(
+            onClick = {},
+            label = label,
+            modifier = modifier,
+            enabled = widget.enabled,
+            leadingIcon = leadingIcon,
+            trailingIcon = trailingIcon,
+            interactionSource = interactionSource,
+        )
+        "filter-chip" -> if (expressive) {
+            FilterChip(
+                selected = selected,
+                onClick = {},
+                label = label,
+                shapes = FilterChipDefaults.shapes(),
+                modifier = modifier,
+                enabled = widget.enabled,
+                leadingIcon = leadingIcon,
+                trailingIcon = trailingIcon,
+                interactionSource = interactionSource,
+            )
+        } else {
+            FilterChip(
+                selected = selected,
+                onClick = {},
+                label = label,
+                modifier = modifier,
+                enabled = widget.enabled,
+                leadingIcon = leadingIcon,
+                trailingIcon = trailingIcon,
+                interactionSource = interactionSource,
+            )
+        }
+        "elevated-filter-chip" -> if (expressive) {
+            ElevatedFilterChip(
+                selected = selected,
+                onClick = {},
+                label = label,
+                shapes = FilterChipDefaults.shapes(),
+                modifier = modifier,
+                enabled = widget.enabled,
+                leadingIcon = leadingIcon,
+                trailingIcon = trailingIcon,
+                interactionSource = interactionSource,
+            )
+        } else {
+            ElevatedFilterChip(
+                selected = selected,
+                onClick = {},
+                label = label,
+                modifier = modifier,
+                enabled = widget.enabled,
+                leadingIcon = leadingIcon,
+                trailingIcon = trailingIcon,
+                interactionSource = interactionSource,
+            )
+        }
+        "input-chip" -> if (expressive) {
+            InputChip(
+                selected = selected,
+                onClick = {},
+                label = label,
+                shapes = InputChipDefaults.shapes(),
+                modifier = modifier,
+                enabled = widget.enabled,
+                leadingIcon = leadingIcon,
+                avatar = avatar,
+                trailingIcon = trailingIcon,
+                interactionSource = interactionSource,
+            )
+        } else {
+            InputChip(
+                selected = selected,
+                onClick = {},
+                label = label,
+                modifier = modifier,
+                enabled = widget.enabled,
+                leadingIcon = leadingIcon,
+                avatar = avatar,
+                trailingIcon = trailingIcon,
+                interactionSource = interactionSource,
+            )
+        }
+        "suggestion-chip" -> SuggestionChip(
+            onClick = {},
+            label = label,
+            modifier = modifier,
+            enabled = widget.enabled,
+            icon = leadingIcon,
+            interactionSource = interactionSource,
+        )
+        "elevated-suggestion-chip" -> ElevatedSuggestionChip(
+            onClick = {},
+            label = label,
+            modifier = modifier,
+            enabled = widget.enabled,
+            icon = leadingIcon,
+            interactionSource = interactionSource,
+        )
+        else -> error("unknown chip kind ${widget.kind}")
+    }
+}
+
 /** One navigation-rail family widget (`navigation-rail`,
  * `wide-navigation-rail`, `modal-navigation-rail`). Elements are named
  * `rail{n}` in scene order.
@@ -5631,27 +6026,41 @@ private fun DialogActionButton(
             Offset(20f * density, 20f * density),
             density,
             null,
+            pressViaSink = true,
         )
     }
+    val pressInk = pressInkMarker(item.state, emitPress)
     val style = MaterialTheme.typography.labelLarge
-    TextButton(
-        onClick = {},
-        enabled = !item.disabled,
-        interactionSource = interactionSource,
-        modifier = Modifier.track(tracer, tag),
-    ) {
-        Text(
-            label,
-            style = style,
-            modifier = Modifier.trackText(tracer, textId, density),
-            onTextLayout = recordTextLayout(
-                tracer,
-                textId,
-                LocalDensity.current,
-                androidx.compose.ui.platform.LocalFontFamilyResolver.current,
-                style.fontFamily,
-            ),
-        )
+    // The `matchParentSize` ink needs a layout parent — same reason the
+    // connected-button items wrap their `ToggleButton` in a `Box`.
+    Box(Modifier.track(tracer, tag)) {
+        TextButton(
+            onClick = {},
+            enabled = !item.disabled,
+            interactionSource = interactionSource,
+        ) {
+            Text(
+                label,
+                style = style,
+                modifier = Modifier.trackText(tracer, textId, density),
+                onTextLayout = recordTextLayout(
+                    tracer,
+                    textId,
+                    LocalDensity.current,
+                    androidx.compose.ui.platform.LocalFontFamilyResolver.current,
+                    style.fontFamily,
+                ),
+            )
+        }
+        if (pressInk.value) {
+            Box(
+                Modifier.matchParentSize()
+                    .clip(RoundedCornerShape(percent = 50))
+                    .background(
+                        MaterialTheme.colorScheme.primary.copy(alpha = PRESSED_STATE_LAYER_ALPHA)
+                    ),
+            )
+        }
     }
 }
 
@@ -6207,3 +6616,4 @@ private fun NavItemIcon(item: GroupItem, i: Int, selectedIndex: Int) {
         Icon(sceneIcon(stem), contentDescription = null)
     }
 }
+

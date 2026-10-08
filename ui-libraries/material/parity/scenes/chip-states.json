@@ -1,0 +1,87 @@
+{
+  "name": "chip-states",
+  "type": "canvas",
+  "parity": "xfail:skia",
+  "size": [
+    712,
+    96
+  ],
+  "densities": [
+    1,
+    2
+  ],
+  "theme": {
+    "seed": "6750A4",
+    "variant": "tonal-spot",
+    "spec": "spec2025",
+    "platform": "phone",
+    "dark": false,
+    "contrast": 0.0
+  },
+  "fonts": {
+    "plain": "Roboto",
+    "brand": "Roboto"
+  },
+  "widgets": [
+    {
+      "kind": "assist-chip",
+      "x": 16,
+      "y": 32,
+      "text": "Assist",
+      "state": "enabled"
+    },
+    {
+      "kind": "assist-chip",
+      "x": 136,
+      "y": 32,
+      "text": "Assist",
+      "state": "hovered"
+    },
+    {
+      "kind": "assist-chip",
+      "x": 256,
+      "y": 32,
+      "text": "Assist",
+      "state": "pressed"
+    },
+    {
+      "kind": "assist-chip",
+      "x": 376,
+      "y": 32,
+      "text": "Assist",
+      "state": "focused"
+    },
+    {
+      "kind": "assist-chip",
+      "x": 496,
+      "y": 32,
+      "text": "Assist",
+      "enabled": false
+    },
+    {
+      "kind": "elevated-assist-chip",
+      "x": 616,
+      "y": 32,
+      "text": "Assist"
+    }
+  ],
+  "trace_elements": [
+    "button0",
+    "button1",
+    "button2",
+    "button3",
+    "button4",
+    "button5"
+  ],
+  "trace_props": [
+    "shadow_elevation"
+  ],
+  "parity_eps": 16,
+  "parity_eps_reason": "issue #6: the elevated assist chip's graphicsLayer-softened edge and drop-shadow penumbra land ~1px inside the strict band (residual <=14 channel diff); the silhouette boundary check stays strict (band 2.0)",
+  "negative_note": "issue #6: on skia the elevated chip's shadow penumbra inside the strict band diffs up to ~33 channel units while software/femtovg match within eps 16",
+  "mask_inner": {
+    "button2": [
+      2000
+    ]
+  }
+}
