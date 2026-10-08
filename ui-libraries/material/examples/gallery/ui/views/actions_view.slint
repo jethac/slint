@@ -61,6 +61,7 @@ import {
     BadgedBox,
     Icon,
     Dialog,
+    BasicAlertDialog,
     FullscreenDialog,
     MaterialAnimations,
     MaterialMotionScheme,
@@ -1187,6 +1188,14 @@ export component ActionsView {
                     }
 
                     TextButton {
+                        text: "Show basic dialog";
+
+                        clicked => {
+                            basic_dialog.show();
+                        }
+                    }
+
+                    TextButton {
                         text: "Show full-screen dialog";
 
                         clicked => {
@@ -1403,12 +1412,7 @@ export component ActionsView {
         title: "What is a dialog?";
         default_action_text: "Okay";
         actions: ["Dismiss"];
-
-        MaterialText {
-            max_width: 400px;
-            text: "A dialog is a type of modal window that appears in front of app content to provide critical information, or prompt for a decision to be made.";
-            wrap: word_wrap;
-        }
+        text: "A dialog is a type of modal window that appears in front of app content to provide critical information, or prompt for a decision to be made.";
 
         action_clicked(index) => {
             dialog.close();
@@ -1416,6 +1420,55 @@ export component ActionsView {
 
         default_action_clicked => {
             dialog.close();
+        }
+     }
+
+     basic_dialog := BasicAlertDialog {
+        x: -root.absolute_position.x;
+        y: -root.absolute_position.y;
+        width: MainWindowAdapter.width;
+        height: MainWindowAdapter.height;
+
+        dismissed => {
+            basic_dialog.close();
+        }
+
+        Rectangle {
+            border-radius: 28px;
+            background: MaterialPalette.surface_container_high;
+            clip: true;
+
+            VerticalLayout {
+                padding: 24px;
+                spacing: 24px;
+
+                MaterialText {
+                    text: "Custom content";
+                    style: MaterialTypography.headline_small;
+                    color: MaterialPalette.on_surface;
+                }
+
+                MaterialText {
+                    text: "A basic alert dialog centers arbitrary content — the caller supplies the surface, padding and actions.";
+                    style: MaterialTypography.body_medium;
+                    color: MaterialPalette.on_surface_variant;
+                    wrap: word_wrap;
+                    width: min(self.preferred-width, 232px);
+                }
+
+                HorizontalLayout {
+                    alignment: end;
+                    spacing: 8px;
+
+                    TextButton {
+                        text: "Dismiss";
+
+                        clicked => {
+                            basic_dialog.close();
+                        }
+                    }
+                }
+            }
         }
      }
 
