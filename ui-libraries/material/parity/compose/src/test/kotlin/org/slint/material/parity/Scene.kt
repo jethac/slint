@@ -133,10 +133,15 @@ class Widget(json: JSONObject) {
     /** Icon stem used as the 56x56 `leading_image` source — both sides
      * rasterize the identical svg path clipped to the image shape. */
     val leadingImage: String? = (json.opt("leading_image") as? String)?.takeIf { it.isNotEmpty() }
-    /** Loading-indicator mode: indeterminate (the continuous morph loop,
-     * default) or driven by [progress]. */
-    val indeterminate: Boolean = json.optBoolean("indeterminate", true)
-    /** Determinate loading-indicator progress, 0–1. */
+    /** Loading/progress-indicator mode: `indeterminate` renders the
+     * continuous morph loop / the no-progress overloads. The default
+     * differs per family — loading indicators default to indeterminate,
+     * progress indicators to determinate. */
+    val indeterminate: Boolean = json.optBoolean(
+        "indeterminate",
+        kind == "loading-indicator" || kind == "contained-loading-indicator",
+    )
+    /** Determinate progress, 0–1. Ignored when `indeterminate` is set. */
     val progress: Float = json.optDouble("progress", 0.0).toFloat()
     /** `top-app-bar` variant: `small` (default), `center`, `medium`,
      * `medium-flexible`, `large`, `large-flexible`, `two-rows`. */
