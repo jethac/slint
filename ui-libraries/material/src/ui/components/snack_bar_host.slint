@@ -1,0 +1,184 @@
+// Copyright © SixtyFPS GmbH <info@slint.dev>
+// SPDX-License-Identifier: MIT
+
+import { SnackBar, SnackBarDuration, SnackBarResult, SnackBarVisuals } from "./snack_bar.slint";
+import { MaterialPalette } from "../styling/material_palette.slint";
+import { MaterialAnimations } from "../styling/material_animations.slint";
+
+/// The queue-and-motion host — upstream `SnackbarHost` + `SnackbarHostState`
+/// (SnackbarHost.kt @ 23327507f7fc7d5b19d65fec4b090f60c970079b). Drop it in a
+/// view once; `show_snackbar` queues visuals, one shows at a time
+/// (upstream's fair Mutex becomes `queue`'s FIFO), and the current one
+/// auto-dismisses after its `SnackBarDuration` — 4s short / 10s long /
+/// forever indefinite (`SnackbarDuration.toMillis`). AccessibilityManager
+/// timeout scaling has no Slint counterpart.
+export component SnackBarHost inherits PopupWindow {
+    /// Upstream `actionOnNewLine` on the `Snackbar(SnackbarData, …)` overload
+    /// the host draws.
+    in property <bool> action_on_new_line;
+    /// The pending visuals FIFO — `queue[0]` is the one on screen
+    /// (`SnackbarHostState.currentSnackbarData`). Callers `push` visuals onto
+    /// their bound property — the state object upstream's
+    /// `SnackbarHostState` plays — and the host opens itself when the queue
+    /// goes non-empty. Removing the front entry externally dismisses it.
+    in-out property <[SnackBarVisuals]> queue;
+
+    /// The front visuals resolved through its action —
+    /// `SnackbarResult.ActionPerformed`.
+    callback action_performed(visuals: SnackBarVisuals);
+    /// The front visuals resolved without an action —
+    /// `SnackbarResult.Dismissed` (timeout, `dismiss()`, the close icon, or
+    /// an external `queue.remove(0)`).
+    callback dismissed(visuals: SnackBarVisuals);
+
+    close_policy: no_auto_close;
+
+    property <SnackBarVisuals> current: root.queue.length > 0 ? root.queue[0] :
+        { message: "", action-label: "", with-dismiss-action: false, duration: SnackBarDuration.short };
+    // The visuals the exit transition keeps on screen — the last front entry
+    // still identified before an external `queue.remove(0)` erased it.
+    property <SnackBarVisuals> last_current;
+    // Drives the `FadeInFadeOutWithScale` transition: opacity through the
+    // scheme's fast-effects spring, scale 0.8 → 1 through fast-spatial.
+    property <bool> entered;
+    property <bool> exiting;
+
+    changed current => {
+        if root.queue.length > 0 {
+            root.last_current = root.current;
+        }
+    }
+
+    layer := Rectangle {
+        width: 100%;
+        height: 100%;
+        background: transparent;
+
+        if root.queue.length > 0 || root.exiting : visuals_layer := Rectangle {
+            x: (parent.width - self.width) / 2;
+            y: parent.height - self.height;
+            // `Snackbar(snackbarData)` wraps the visuals in `padding(12.dp)`
+            // around a self-sizing surface — the layer hugs the snack plus
+            // that margin, bottom-centered in the window.
+            width: snack.width + 2 * 12px;
+            height: snack.height + 2 * 12px;
+            opacity: root.entered ? 1 : 0;
+            transform-scale-x: root.entered ? 1 : 0.8;
+            transform-scale-y: root.entered ? 1 : 0.8;
+            transform-origin: { x: self.width / 2, y: self.height / 2 };
+
+            // `Strings.SnackbarPaneTitle` + `liveRegion = Polite` + the
+            // `dismiss` semantics action from `FadeInFadeOutWithScale`.
+            accessible-live-region: AccessibleLiveness.polite;
+            accessible-role: groupbox;
+            accessible-label: "Snackbar";
+            accessible-action-default => { root.dismiss(); }
+
+            snack := SnackBar {
+                x: 12px;
+                y: 12px;
+                constraint-width: root.width - 2 * 12px;
+                text: root.exiting ? root.last_current.message : root.current.message;
+                action_text: root.exiting ? root.last_current.action_label : root.current.action_label;
+                has_close_button: root.exiting ? root.last_current.with_dismiss_action : root.current.with_dismiss_action;
+                action_on_new_line: root.action_on_new_line;
+
+                action_clicked => { root.perform_action(); }
+                dismiss_clicked => { root.dismiss(); }
+            }
+
+            animate opacity {
+                enabled: !MaterialPalette.reduced-motion;
+                easing: MaterialAnimations.fast_effects_spring;
+            }
+            animate transform-scale-x, transform-scale-y {
+                enabled: !MaterialPalette.reduced-motion;
+                easing: MaterialAnimations.fast_spatial_spring;
+            }
+        }
+    }
+
+    // The 50ms deferral lets the popup lay out `entered: false` first, so the
+    // enter springs play (the `ModalBottomSheet` pattern).
+    enter_timer := Timer {
+        interval: 50ms;
+        triggered => {
+            root.entered = true;
+            self.running = false;
+        }
+    }
+
+    // `SnackbarDuration.toMillis` — indefinite never fires.
+    duration_timer := Timer {
+        interval: root.current.duration == SnackBarDuration.short ? 4s :
+            root.current.duration == SnackBarDuration.long ? 10s : 1ms;
+        running: root.queue.length > 0 && root.entered && root.current.duration != SnackBarDuration.indefinite;
+        triggered => {
+            self.running = false;
+            root.resolve(SnackBarResult.dismissed);
+        }
+    }
+
+    // The out transition has no observable end signal; the fast springs
+    // settle well under this, then the next visuals enter.
+    exit_timer := Timer {
+        interval: MaterialPalette.reduced-motion ? 0ms : 700ms;
+        triggered => {
+            self.running = false;
+            root.exiting = false;
+            // The resolve() path still holds the front entry; the external
+            // `queue.remove(0)` path already dropped it.
+            if root.queue.length > 0 {
+                root.queue.remove(0);
+            }
+            if root.queue.length > 0 {
+                enter_timer.running = true;
+            } else {
+                root.close();
+            }
+        }
+    }
+
+    // `SnackbarHostState.showSnackbar(visuals)`: a pushed entry opens the
+    // popup when the queue transitions empty → non-empty; queue growth while
+    // the host is up just waits its turn. Dropping the front entry
+    // externally is `SnackbarData.dismiss()`/`currentSnackbarData = null` —
+    // the visuals still get the exit transition and the dismissed result.
+    changed queue => {
+        if root.queue.length == 0 && root.entered {
+            root.exiting = true;
+            root.dismissed(root.last_current);
+            root.entered = false;
+            exit_timer.running = true;
+        } else if root.queue.length > 0 && !root.entered && !exit_timer.running {
+            root.show();
+            enter_timer.running = true;
+        }
+    }
+
+    /// Upstream `SnackbarData.performAction()`.
+    function perform_action() {
+        root.resolve(SnackBarResult.action-performed);
+    }
+
+    /// Upstream `SnackbarData.dismiss()` — the current visuals resolves as
+    /// `SnackBarResult.dismissed` and the next queued one enters.
+    public function dismiss() {
+        root.resolve(SnackBarResult.dismissed);
+    }
+
+    function resolve(result: SnackBarResult) {
+        if root.queue.length == 0 || !root.entered {
+            return;
+        }
+        root.last_current = root.current;
+        if result == SnackBarResult.action-performed {
+            root.action_performed(root.last_current);
+        } else {
+            root.dismissed(root.last_current);
+        }
+        root.exiting = true;
+        root.entered = false;
+        exit_timer.running = true;
+    }
+}

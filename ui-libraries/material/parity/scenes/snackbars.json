@@ -1,0 +1,117 @@
+{
+    "name": "snackbars",
+    "type": "canvas",
+    "parity": "static",
+    "size": [
+        720,
+        748
+    ],
+    "densities": [
+        1,
+        2
+    ],
+    "theme": {
+        "seed": "6750A4",
+        "variant": "tonal-spot",
+        "spec": "spec2025",
+        "platform": "phone",
+        "dark": false,
+        "contrast": 0.0
+    },
+    "fonts": {
+        "plain": "Roboto",
+        "brand": "Roboto"
+    },
+    "widgets": [
+        {
+            "kind": "material-snackbar",
+            "x": 20,
+            "y": 16,
+            "width": 280,
+            "text": "Marked as read"
+        },
+        {
+            "kind": "material-snackbar",
+            "x": 20,
+            "y": 80,
+            "width": 300,
+            "text": "Marked as read",
+            "action_text": "Undo"
+        },
+        {
+            "kind": "material-snackbar",
+            "x": 20,
+            "y": 144,
+            "width": 360,
+            "text": "Marked as read",
+            "action_text": "Undo",
+            "has_close_button": true
+        },
+        {
+            "kind": "material-snackbar",
+            "x": 20,
+            "y": 208,
+            "width": 340,
+            "text": "Your draft has been saved and will publish at noon",
+            "action_text": "Undo"
+        },
+        {
+            "kind": "material-snackbar",
+            "x": 20,
+            "y": 288,
+            "width": 360,
+            "text": "Your draft has been saved and will publish at noon",
+            "action_text": "Undo",
+            "has_close_button": true
+        },
+        {
+            "kind": "material-snackbar",
+            "x": 20,
+            "y": 368,
+            "width": 360,
+            "text": "Marked as read",
+            "action_text": "Undo",
+            "action_on_new_line": true,
+            "has_close_button": true
+        },
+        {
+            "kind": "material-snackbar",
+            "x": 20,
+            "y": 480,
+            "width": 320,
+            "text": "Your draft has been saved and will publish at noon",
+            "action_text": "Undo",
+            "action_on_new_line": true
+        },
+        {
+            "kind": "material-snackbar",
+            "x": 20,
+            "y": 592,
+            "width": 700,
+            "text": "Marked as read",
+            "action_text": "Undo"
+        },
+        {
+            "kind": "material-snackbar",
+            "x": 20,
+            "y": 656,
+            "width": 660,
+            "text": "Marked as read",
+            "action_text": "Undo",
+            "action_on_new_line": true
+        }
+    ],
+    "trace_elements": [
+        "snackbar0",
+        "snackbar1",
+        "snackbar2",
+        "snackbar3",
+        "snackbar4",
+        "snackbar5",
+        "snackbar6",
+        "snackbar7",
+        "snackbar8"
+    ],
+    "trace_props": [],
+    "xfail_text": "#28: the action label sits in a fixed 12dp-padded button, so its ceil-quantization slack (label 0.875px on Undo at d1) lands in the xfail window rather than the strict 0.5"
+}

@@ -1619,25 +1619,33 @@ fn compare_text_metrics(
             // ~0.125dp of residual quantization on both sides. Compose's
             // hinted `w`/`frac_w` stay a few px wider by design and are not
             // re-checked here.
-            match m["unhint_w"].as_f64() {
+            let multi_line = m["lines"].as_u64().unwrap_or(1) > 1;
+            match (multi_line, m["unhint_w"].as_f64()) {
                 // A wrapped text's Compose `w` is the measured width under a
                 // width constraint, not the unhinted advance — Slint's
                 // element width compares against `w`/`frac_w` directly.
                 // (`lines > 1` marks the constrained measure; a one-line
                 // `w` below `unhint_w` is only hinting drift.)
-                Some(unhint_w)
-                    if unhint_w.is_finite()
-                        && cw < unhint_w - 1.0
-                        && m["lines"].as_f64().unwrap_or(1.0) > 1.0 =>
-                {
-                    if (sw - cw).abs() > GEOM_EPS {
+                (true, Some(unhint_w)) if unhint_w.is_finite() && cw < unhint_w - 1.0 => {
+                    // Slint snaps laid-out element widths to whole phx
+                    // (ceil), so the constrained measure can carry the same
+                    // +1px quantization the unhinted arm's slack window
+                    // covers; only a shortfall or a >1px overshoot diverges.
+                    let slack = sw - cw;
+                    if !(-GEOM_EPS..=1.0).contains(&slack) {
                         errors.push(format!(
-                            "t={}ms text:{n}.w: slint {sw} vs compose {cw} (eps {GEOM_EPS})",
+                            "t={}ms text:{n}.w: slint {sw} vs compose {cw} (bound -{GEOM_EPS}..1)",
                             frame.t_ms
                         ));
                     }
                 }
-                Some(unhint_w) if unhint_w.is_finite() => {
+                // Once the text wraps without a constraining measure, both
+                // `w`/`unhint_w` and the horizontal placement encode
+                // engine-specific line-break positions — the engines do not
+                // wrap to the same widest line. Skip the horizontal
+                // metrics; `x`, `y` and `h` still pin the block.
+                (true, _) => {}
+                (_, Some(unhint_w)) if unhint_w.is_finite() => {
                     let slack = sw - unhint_w;
                     let bound = if xfail_text.is_some() { 1.65 } else { 0.5 };
                     if !(-0.15..=bound).contains(&slack) {
@@ -1728,7 +1736,11 @@ fn compare_text_metrics(
                     (mx >= ex && mx <= ex + ew && my >= ey && my <= ey + eh).then(|| eid.clone())
                 })
             });
-            let (slint_off, compose_off) = if let Some(container) = item_container {
+            // Multi-line texts skip the offset check: their laid-out width
+            // diverges with the line-break positions the engines pick.
+            let (slint_off, compose_off) = if multi_line {
+                (None, None)
+            } else if let Some(container) = item_container {
                 (
                     frame.elements.get(&container).map(|g| sx - g[0]),
                     cf["elements"]
@@ -1782,6 +1794,7 @@ fn compare_text_metrics(
                 });
                 (slint_off, compose_off)
             };
+
             match (slint_off, compose_off) {
                 (Some(s_off), Some((c_off, cw2))) => {
                     // A centered label's offset within its container carries
@@ -1801,6 +1814,7 @@ fn compare_text_metrics(
                         saw_drift = true;
                     }
                 }
+                _ if multi_line => {}
                 _ => {
                     let matched = placed
                         .iter()
