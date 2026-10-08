@@ -361,6 +361,10 @@ class Widget(json: JSONObject) {
     /** `material-snackbar` `dismissActionContentColor` role name. */
     val dismissColor: String? = (json.opt("dismiss_color") as? String)?.takeIf { it.isNotEmpty() }
 
+    /** `*-card` kinds only: the hoisted `DragInteraction` — `true` emits a
+     * live `DragInteraction.Start` on the card's `interactionSource`. */
+    val dragged: Boolean = json.optBoolean("dragged", false)
+
     // --- navigation-rail kinds (`navigation-rail`, `wide-navigation-rail`,
     // `modal-navigation-rail`) ---
     /** Rail items: `[{ "text": "Inbox", "icon": "inbox",
@@ -385,6 +389,8 @@ class Widget(json: JSONObject) {
     val fabIcon: String? = (json.opt("fab_icon") as? String)?.takeIf { it.isNotEmpty() }
 
     val isFab: Boolean get() = kind == "fab" || kind == "extended-fab"
+    val isCard: Boolean get() =
+        kind == "elevated-card" || kind == "filled-card" || kind == "outlined-card"
     val isSplitButton: Boolean get() = kind.endsWith("split-button")
     // --- navigation-rail / navigation-bar kinds ---
     /** `NavigationRailItem.alwaysShowLabel` / `NavigationBarItem.alwaysShowLabel`
@@ -467,8 +473,10 @@ class Widget(json: JSONObject) {
      * (`outline` default). */
     val borderWidth: Float = json.optDouble("border_width", 0.0).toFloat()
     val borderColor: String? = (json.opt("border_color") as? String)?.takeIf { it.isNotEmpty() }
-    /** `material-surface` overloads: `clickable`/`toggleable` — `selectable`
-     * and `selected` are declared above with the list-item overloads. */
+    /** `material-surface` / `*-card` overloads: `clickable` picks the
+     * upstream `onClick` overload (the widget ripples and takes focus);
+     * `toggleable` pairs with `checked`. `selectable`/`selected` are
+     * declared above with the list-item overloads. */
     val clickable: Boolean = json.optBoolean("clickable", false)
     val toggleable: Boolean = json.optBoolean("toggleable", false)
 }

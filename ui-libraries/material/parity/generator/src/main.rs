@@ -329,9 +329,13 @@ struct Widget {
     /// `ListItem(selected, onClick)` overload — `selectable` on the Slint side.
     #[serde(default)]
     selectable: Option<bool>,
-    /// `DragInteraction` visual state on a list item (`ReorderListTokens`
-    /// colors, dragged shape, dragged elevation). Scenes should not use it:
-    /// the platform shadow it needs deadlocks layoutlib's renderer.
+    /// `DragInteraction` visual state. On a list item it drives the
+    /// `ReorderListTokens` colors, dragged shape and dragged elevation —
+    /// list scenes should not use it: the platform shadow it needs
+    /// deadlocks layoutlib's renderer. On `*-card` kinds it is the hoisted
+    /// `DragInteraction` — `true` emits a live `DragInteraction.Start` on
+    /// the Compose side and `dragged` on the Slint side, only meaningful on
+    /// a `clickable` card.
     #[serde(default)]
     dragged: Option<bool>,
     /// `segmentedShapes(index, count)` position — emitted as `index:`/`count:`
@@ -640,9 +644,10 @@ struct Widget {
     border_width: Option<f64>,
     #[serde(default)]
     border_color: Option<String>,
-    /// `material-surface` overloads: `clickable` (`onClick`) and
-    /// `toggleable` (`checked`, reuses the `checked` field) — `selectable`
-    /// and `selected` are declared above with the list-item overloads.
+    /// `material-surface` / `*-card` overloads: `clickable` picks the
+    /// upstream `onClick` overload (the widget ripples and takes focus)
+    /// and `toggleable` pairs with `checked` — `selectable` and
+    /// `selected` are declared above with the list-item overloads.
     #[serde(default)]
     clickable: Option<bool>,
     #[serde(default)]
@@ -1405,6 +1410,9 @@ fn slint_case(scene: &Scene) -> String {
             "outlined-text-field" => "OutlinedTextField",
             "secure-text-field" => "SecureTextField",
             "outlined-secure-text-field" => "OutlinedSecureTextField",
+            "elevated-card" => "ElevatedCard",
+            "filled-card" => "FilledCard",
+            "outlined-card" => "OutlinedCard",
             // The dialog emitters draw the scrim inline; only their
             // content uses components.
             "alert-dialog" => "AlertDialogContent",
@@ -1421,6 +1429,10 @@ fn slint_case(scene: &Scene) -> String {
         imports.push(component);
         if w.kind == "toggle-fab" || w.kind == "fab-menu" {
             imports.push("FabMenuSize");
+        }
+        if w.kind.ends_with("-card") && w.text.is_some() {
+            imports.push("MaterialText");
+            imports.push("MaterialTypography");
         }
         // `arrangement` is shared with `flexible-bottom-app-bar`
         // (`BottomAppBarArrangement`) — only the rail kinds read it as
@@ -1642,6 +1654,10 @@ fn widget_actions(scene: &Scene) -> Vec<Action> {
             // does not consume focus ordinals.
             continue;
         }
+        if w.clickable == Some(false) {
+            // A non-clickable card has no `interactionSource` — no Tab stop.
+            continue;
+        }
         // Sliders take `simulate-focus` in `slider_props` — real Tab walks
         // would just move focus off them again — but they still occupy a
         // focus ordinal for any later Tab target. `*-text-field` likewise
@@ -1723,6 +1739,11 @@ fn widget_actions(scene: &Scene) -> Vec<Action> {
             // component), not pointer gestures — one pointer can't hold
             // several handles at once.
             if w.kind == "vertical-drag-handle" {
+                continue;
+            }
+            if w.clickable == Some(false) {
+                // A non-clickable card has no `interactionSource` — no
+                // scripted gesture ever applies to it.
                 continue;
             }
             let kind = match w.state.as_deref() {
@@ -2783,6 +2804,7 @@ fn slint_canvas(s: &mut String, scene: &Scene) {
     let mut badges = 0;
     let mut badged_boxes = 0;
     let mut menus = 0;
+    let mut cards = 0;
     let mut nav_bars = 0;
     let mut scaffolds = 0;
     let mut tooltips = 0;
@@ -3331,6 +3353,12 @@ fn slint_canvas(s: &mut String, scene: &Scene) {
                 let i = groups;
                 groups += 1;
                 connected_group_widget(s, w, i, scene);
+                continue;
+            }
+            "elevated-card" | "filled-card" | "outlined-card" => {
+                let i = cards;
+                cards += 1;
+                card_widget(s, w, i, scene);
                 continue;
             }
 
@@ -3898,6 +3926,88 @@ fn connected_button_widget(s: &mut String, w: &Widget, i: usize, scene: &Scene) 
         }
     }
     emit_button_cover(s, w, i);
+}
+
+/// An `ElevatedCard`/`FilledCard`/`OutlinedCard` — named `card{n}`.
+/// `enabled`/`clickable`/`dragged` bind as authored; a static scene's
+/// `hovered`/`pressed` `state` comes through the `simulate_*` hooks (motion
+/// scenes drive the same pointer gesture the buttons get). A card's `text`
+/// renders as the `Text` in the upstream `Column` content slot — a
+/// `MaterialText` at the container's top-start, clipped by its shape.
+/// `slint_overrides` shadow `container_shape`/`container_color` for the
+/// negative cases.
+fn card_widget(s: &mut String, w: &Widget, i: usize, scene: &Scene) {
+    let component = match w.kind.as_str() {
+        "elevated-card" => "ElevatedCard",
+        "filled-card" => "FilledCard",
+        "outlined-card" => "OutlinedCard",
+        other => panic!("unknown card kind {other:?}"),
+    };
+    let over = &w.slint_overrides;
+    let mut p = String::new();
+    if let Some(v) = w.clickable {
+        writeln!(p, "        clickable: {v};").unwrap();
+    }
+    if let Some(v) = w.enabled {
+        writeln!(p, "        enabled: {v};").unwrap();
+    }
+    if let Some(v) = w.dragged {
+        writeln!(p, "        dragged: {v};").unwrap();
+    }
+    if scene.times.is_empty() {
+        match w.state.as_deref() {
+            Some("hovered") => writeln!(p, "        simulate_hover: true;").unwrap(),
+            Some("pressed") => writeln!(p, "        simulate_press: true;").unwrap(),
+            _ => {}
+        }
+    }
+    // The same `MaterialCornerShape` literal language the button group's
+    // `container_shape` override uses.
+    if let Some(shape) = over.get("container_shape").and_then(|v| v.as_str()) {
+        let lit = match shape {
+            "corner_full" => "{ top_left: 0px, top_right: 0px, bottom_right: 0px, bottom_left: 0px, full: true }",
+            "corner_none" => "{ top_left: 0px, top_right: 0px, bottom_right: 0px, bottom_left: 0px, full: false }",
+            other => panic!("slint_overrides.container_shape: unsupported shape {other:?}"),
+        };
+        writeln!(p, "        container_shape: {lit};").unwrap();
+    }
+    if let Some(c) = over.get("container_color").and_then(|v| v.as_str()) {
+        let color = if c.starts_with('#') {
+            c.to_lowercase()
+        } else {
+            format!("MaterialPalette.{}", c.replace('-', "_"))
+        };
+        writeln!(p, "        container_color: {color};").unwrap();
+    }
+    writeln!(
+        s,
+        "    card{i} := {component} {{\n        x: {}px;\n        y: {}px;\n        width: {}px;\n        height: {}px;\n{p}    }}\n",
+        w.x as i64,
+        w.y as i64,
+        w.width.unwrap_or(0.) as i64,
+        w.height.unwrap_or(0.) as i64,
+    )
+    .unwrap();
+    if let Some(text) = &w.text {
+        // `Text` inside the upstream `Card`'s `Column` sits at the
+        // container's top-start with its intrinsic size — emit a sibling
+        // so the trace reports the text bounds, not the stretched child.
+        writeln!(
+            s,
+            "    MaterialText {{\n        x: {}px;\n        y: {}px;\n        text: \"{text}\";\n        style: MaterialTypography.body_large;\n        color: card{i}.resolved_content_color;\n    }}\n",
+            w.x as i64,
+            w.y as i64,
+        )
+        .unwrap();
+    }
+    // `TRACE_PROPS` reads properties on the test-case root — forward the
+    // widget's live values through, same role as on `button0`.
+    if i == 0 {
+        for prop in &scene.trace_props {
+            let ty = trace_prop_type(prop);
+            writeln!(s, "    out property <{ty}> {prop}: card{i}.{prop};\n").unwrap();
+        }
+    }
 }
 
 /// A `ConnectedButtonGroup`/`VerticalConnectedButtonGroup` — named

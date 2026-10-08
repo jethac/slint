@@ -1,0 +1,43 @@
+{
+  "name": "negative-card-shape",
+  "type": "canvas",
+  "parity": "negative",
+  "negative_note": "slint_overrides.container_shape renders the filled card's CornerMedium container as CornerNone \u2014 a card shaped to the wrong token must fail",
+  "size": [
+    152,
+    112
+  ],
+  "densities": [
+    1,
+    2
+  ],
+  "theme": {
+    "seed": "6750A4",
+    "variant": "tonal-spot",
+    "spec": "spec2025",
+    "platform": "phone",
+    "dark": false,
+    "contrast": 0.0
+  },
+  "fonts": {
+    "plain": "Roboto",
+    "brand": "Roboto"
+  },
+  "widgets": [
+    {
+      "kind": "filled-card",
+      "x": 16,
+      "y": 16,
+      "width": 120,
+      "height": 80,
+      "slint_overrides": {
+        "container_shape": "corner_none"
+      }
+    }
+  ],
+  "mask_inner": {
+    "card0": [
+      2000
+    ]
+  }
+}

@@ -1,0 +1,90 @@
+{
+  "name": "card-variants",
+  "type": "canvas",
+  "parity": "static",
+  "size": [
+    832,
+    112
+  ],
+  "densities": [
+    1,
+    2
+  ],
+  "theme": {
+    "seed": "6750A4",
+    "variant": "tonal-spot",
+    "spec": "spec2025",
+    "platform": "phone",
+    "dark": false,
+    "contrast": 0.0
+  },
+  "fonts": {
+    "plain": "Roboto",
+    "brand": "Roboto"
+  },
+  "widgets": [
+    {
+      "kind": "elevated-card",
+      "x": 16,
+      "y": 16,
+      "width": 120,
+      "height": 80
+    },
+    {
+      "kind": "filled-card",
+      "x": 152,
+      "y": 16,
+      "width": 120,
+      "height": 80
+    },
+    {
+      "kind": "outlined-card",
+      "x": 288,
+      "y": 16,
+      "width": 120,
+      "height": 80
+    },
+    {
+      "kind": "elevated-card",
+      "x": 424,
+      "y": 16,
+      "width": 120,
+      "height": 80,
+      "clickable": true
+    },
+    {
+      "kind": "filled-card",
+      "x": 560,
+      "y": 16,
+      "width": 120,
+      "height": 80,
+      "clickable": true
+    },
+    {
+      "kind": "outlined-card",
+      "x": 696,
+      "y": 16,
+      "width": 120,
+      "height": 80,
+      "clickable": true
+    }
+  ],
+  "parity_eps": 16,
+  "parity_eps_reason": "the elevated card's graphicsLayer-softened shadow penumbra lands ~1px inside the strict band (residual <=15 channel diff); the strict interior and silhouette stay unchanged",
+  "trace_elements": [
+    "card0",
+    "card1",
+    "card2",
+    "card3",
+    "card4",
+    "card5"
+  ],
+  "mask_decor": {
+    "card0": [
+      2000
+    ],
+    "card3": [
+      2000
+    ]
+  }
+}
