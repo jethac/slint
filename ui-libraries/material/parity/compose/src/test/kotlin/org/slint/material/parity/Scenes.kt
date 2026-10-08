@@ -60,6 +60,10 @@ import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.FilledTonalIconToggleButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.TonalToggleButton
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.CircularWavyProgressIndicator
+import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.LinearWavyProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
@@ -558,6 +562,7 @@ private fun CanvasScene(
         var rails = 0
         var sheets = 0
         var vhandles = 0
+        var progresses = 0
         var groups = 0
         var dialogs = 0
         var pickers = 0
@@ -733,6 +738,8 @@ private fun CanvasScene(
                     widget.kind == "search-bar" ||
                     widget.kind == "app-bar-with-search" ->
                     StateAppBar(widget, tracer, "appbar${appbars++}")
+                widget.kind.endsWith("progress") ->
+                    StateProgress(widget, tracer, "progress${progresses++}")
                 widget.kind == "navigation-rail" ||
                     widget.kind == "wide-navigation-rail" ||
                     widget.kind == "modal-navigation-rail" ->
@@ -1053,6 +1060,44 @@ private fun CanvasScene(
     }
 }
 
+/** One progress-indicator family widget: `linear-progress`,
+ * `circular-progress`, `linear-wavy-progress` and `circular-wavy-progress`
+ * map to the same-named material3 composables with the library defaults.
+ * `Modifier.offset` places the component's own size — the pinned sources
+ * pin the container sizes themselves (`LinearIndicatorWidth`×`height`,
+ * `LinearContainerWidth`×`LinearContainerHeight`, `CircularIndicatorDiameter`,
+ * `CircularContainerSize`), which the Slint side fixes identically. */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun StateProgress(widget: Widget, tracer: Tracer, tag: String) {
+    val modifier = Modifier.offset(widget.x.dp, widget.y.dp).track(tracer, tag)
+    when (widget.kind) {
+        "linear-progress" ->
+            if (widget.indeterminate) {
+                LinearProgressIndicator(modifier = modifier)
+            } else {
+                LinearProgressIndicator(progress = { widget.progress }, modifier = modifier)
+            }
+        "linear-wavy-progress" ->
+            if (widget.indeterminate) {
+                LinearWavyProgressIndicator(modifier = modifier)
+            } else {
+                LinearWavyProgressIndicator(progress = { widget.progress }, modifier = modifier)
+            }
+        "circular-progress" ->
+            if (widget.indeterminate) {
+                CircularProgressIndicator(modifier = modifier)
+            } else {
+                CircularProgressIndicator(progress = { widget.progress }, modifier = modifier)
+            }
+        "circular-wavy-progress" ->
+            if (widget.indeterminate) {
+                CircularWavyProgressIndicator(modifier = modifier)
+            } else {
+                CircularWavyProgressIndicator(progress = { widget.progress }, modifier = modifier)
+            }
+    }
+}
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun StateRadioButton(

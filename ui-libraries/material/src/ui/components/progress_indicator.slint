@@ -1,115 +1,380 @@
 // Copyright © SixtyFPS GmbH <info@slint.dev>
 // SPDX-License-Identifier: MIT
 
-import { MaterialStyleMetrics } from "../styling/material_style_metrics.slint";
 import { MaterialPalette } from "../styling/material_palette.slint";
+import { MaterialAnimations } from "../styling/material_animations.slint";
+import {
+    CircularProgressIndicatorTokens,
+    LinearProgressIndicatorTokens,
+    ProgressIndicatorTokens,
+} from "../styling/generated/material_component_tokens.slint";
+import { MotionTokens } from "../styling/generated/material_motion_tokens.slint";
 
-export component LinearProgressIndicator {
-    in property <float> progress;
-    in property <bool> indeterminate;
-
-    accessible-role: progress-indicator;
-    accessible-value: !root.indeterminate ? root.progress : "";
-    accessible-value-minimum: 0.0;
-    accessible-value-maximum: 1.0;
-    height: MaterialStyleMetrics.size_4;
-
-    Rectangle {
-        width: 100%;
-        height: 100%;
-        clip: true;
-        background: MaterialPalette.primary_container;
-        border_radius: MaterialStyleMetrics.border_radius_2;
-
-        track := Rectangle {
-            x: 0;
-            y: 0;
-            width: parent.width * root.progress;
-            height: 100%;
-            border_radius: parent.border_radius;
-            background: MaterialPalette.primary;
+/// Constants and easing math of the pinned `ProgressIndicator.kt` and
+/// `WavyProgressIndicator.kt` (`androidx.compose.material3`,
+/// androidx/androidx 23327507f7fc7d5b19d65fec4b090f60c970079b).
+global ProgressIndicatorMetrics {
+    /// `LinearIndicatorWidth` — the spec width, deliberately not a token.
+    pure public function linear-width() -> length {
+        240px
+    }
+    /// `LinearIndicatorHeight` = `LinearProgressIndicatorTokens.height`.
+    pure public function linear-height() -> length {
+        LinearProgressIndicatorTokens.height
+    }
+    /// `StopIndicatorTrailingSpace` — the spec value, deliberately not a
+    /// token (the pinned source notes `TODO b/401511176`).
+    pure public function stop-trailing-space() -> length {
+        6px
+    }
+    /// `CircularIndicatorDiameter` = `CircularProgressIndicatorTokens.size`.
+    pure public function circular-size() -> length {
+        CircularProgressIndicatorTokens.size
+    }
+    /// `LinearAnimationDuration` — the indeterminate linear cycle.
+    pure public function linear-cycle() -> duration {
+        1750ms
+    }
+    /// `CircularAnimationProgressDuration` — the indeterminate circular cycle.
+    pure public function circular-cycle() -> duration {
+        6000ms
+    }
+    /// `indicatorAmplitude` — the default determinate amplitude lambda of
+    /// `WavyProgressIndicatorDefaults`: full wave between 10% and 95%.
+    pure public function indicator-amplitude(progress: float) -> float {
+        (progress <= 0.1 || progress >= 0.95) ? 0 : 1
+    }
+    /// One `keyframes` entry as it appears in the indeterminate specs:
+    /// `0 at delay using easing; 1 at delay + duration` — the value holds
+    /// before the delay and after the ramp, like Compose's `keyframes`.
+    public pure function linear-indeterminate-value(t: duration, delay: duration, dur: duration) -> float {
+        // `LinearIndeterminateProgressEasing` = `EasingEmphasizedAccelerateCubicBezier`.
+        MaterialAnimations.cubic-bezier-easing(0.3, 0, 0.8, 0.15, ((t - delay) / dur).clamp(0, 1))
+    }
+    /// `circularIndeterminateRotationAnimationSpec` — the stepped
+    /// 0→90→180→270→360° rotation inside the 6000ms cycle.
+    /// Note: the spec writes `90 at 300 using EasingEmphasizedDecelerate` and
+    /// `using` applies the easing to the interval *after* the keyframe — a
+    /// constant hold — so in the evaluated animation every 300ms ramp is
+    /// linear. The linear ramps are reproduced here (upstream quirk).
+    public pure function circular-additional-rotation(t: duration) -> angle {
+        let ms = t / 1ms;
+        let ramp = min(mod(ms, 1500) / 300, 1);
+        (floor(ms / 1500) * 90 + ramp * 90) * 1deg
+    }
+    /// `circularIndeterminateProgressAnimationSpec` — the sweep grows
+    /// 0.1→0.87 over 0..3000ms and shrinks back over 3000..6000ms. The spec's
+    /// `Max at 3000 using CircularProgressEasing` eases the shrink interval
+    /// only; the grow interval uses the implicit t=0 keyframe's `LinearEasing`.
+    public pure function circular-indeterminate-progress(t: duration) -> float {
+        let ms = t / 1ms;
+        if ms < 3000 {
+            return 0.1 + (ms / 3000) * 0.77;
         }
+        0.87 - MaterialAnimations.cubic-bezier-easing(0.2, 0, 0, 1, (ms - 3000) / 3000) * 0.77
     }
 }
 
-export component CircularProgressIndicator {
+/// A linear progress indicator following `ProgressIndicator.kt`
+/// (`LinearProgressIndicator`, determinate and indeterminate) at the pin.
+/// The default look is flat — see `LinearWavyProgressIndicator` for the
+/// expressive wavy variant.
+export component LinearProgressIndicator {
+    /// The determinate progress, coerced into 0..1 like the pinned source.
     in property <float> progress;
+    /// The indeterminate variant of `LinearProgressIndicator`.
     in property <bool> indeterminate;
-
-    property <length> bar_height: MaterialStyleMetrics.size_4;
+    /// `LinearProgressIndicator`'s `color` — the active indicator.
+    in property <brush> color: ProgressIndicatorTokens.active-indicator-color;
+    /// `trackColor`.
+    in property <brush> track-color: ProgressIndicatorTokens.track-color;
+    /// `strokeCap` — `round` draws the caps `LinearStrokeCap` uses.
+    in property <LineCap> stroke-cap: LineCap.round;
+    /// `gapSize` — `LinearIndicatorTrackGapSize`.
+    in property <length> gap-size: LinearProgressIndicatorTokens.track-active-space;
+    /// The stop indicator at the end of the track; `0` draws none.
+    in property <length> stop-size: LinearProgressIndicatorTokens.stop-size;
+    /// `ProgressIndicatorTokens.stop-color`.
+    in property <brush> stop-color: ProgressIndicatorTokens.stop-color;
 
     accessible-role: progress-indicator;
     accessible-value: !root.indeterminate ? root.progress : "";
     accessible-value-minimum: 0.0;
     accessible-value-maximum: 1.0;
-    width: self.height;
-    min_height: MaterialStyleMetrics.size_40;
+    width: ProgressIndicatorMetrics.linear-width();
+    height: ProgressIndicatorMetrics.linear-height();
 
-    background_layer := Rectangle {
+    property <float> p: progress.clamp(0, 1);
+    // `strokeWidth = size.height`, and `adjustedGapSize` adds the stroke width
+    // back for rounded caps (`height > width` can't happen here, but the
+    // pinned branch is reproduced for completeness).
+    property <length> adjusted-gap: (root.stroke-cap != LineCap.butt && root.height <= root.width)
+        ? root.gap-size + root.height : root.gap-size;
+    property <float> gap-fraction: root.adjusted-gap / root.width;
+    property <length> cap-inset: root.stroke-cap != LineCap.butt && root.height <= root.width
+        ? root.height / 2 : 0;
+    // Indeterminate cycle: `linearIndeterminate*AnimationSpec` keyframes.
+    // `InfiniteTransition` starts at composition time, so the cycle is
+    // anchored to a snapshot of `animation-tick()` rather than its global
+    // epoch — re-anchored whenever `indeterminate` turns on again.
+    property <duration> cycle-epoch;
+    init => {
+        cycle-epoch = animation-tick();
+    }
+    changed indeterminate => {
+        if indeterminate {
+            cycle-epoch = animation-tick();
+        }
+    }
+    property <duration> cycle-t: mod(animation-tick() - cycle-epoch, ProgressIndicatorMetrics.linear-cycle());
+    property <float> head1: ProgressIndicatorMetrics.linear-indeterminate-value(cycle-t, 0ms, 1000ms);
+    property <float> tail1: ProgressIndicatorMetrics.linear-indeterminate-value(cycle-t, 250ms, 1000ms);
+    property <float> head2: ProgressIndicatorMetrics.linear-indeterminate-value(cycle-t, 650ms, 850ms);
+    property <float> tail2: ProgressIndicatorMetrics.linear-indeterminate-value(cycle-t, 900ms, 850ms);
+
+    // A stroked segment of `drawLinearIndicator` is a stadium: the clamped
+    // endpoints plus `cap-inset` of round cap on either side.
+    pure function seg-x(fraction: float) -> length {
+        (fraction * root.width).clamp(root.cap-inset, root.width - root.cap-inset) - root.cap-inset
+    }
+    pure function seg-w(f0: float, f1: float) -> length {
+        max(0px, (f1 * root.width).clamp(root.cap-inset, root.width - root.cap-inset)
+            - (f0 * root.width).clamp(root.cap-inset, root.width - root.cap-inset)
+            + 2 * root.cap-inset)
+    }
+    pure function seg-radius(cap: LineCap, h: length) -> length {
+        cap == LineCap.butt ? 0px : h / 2
+    }
+
+    // `ProgressIndicatorDefaults.ProgressAnimationSpec`:
+    // `SpringSpec(DampingRatioNoBouncy, StiffnessVeryLow, 1/1000)` — the
+    // spring's threshold is not configurable in `.slint`. `progress` is an
+    // `in` property, so the animation hangs off its coerced value.
+    animate p {
+        easing: spring(1.0, 50.0);
+    }
+
+    // Track — determinate: `[p + min(p, gapFraction), 1]`; indeterminate: the
+    // three pieces around the two bars of `LinearProgressIndicator`.
+    Rectangle {
+        x: !root.indeterminate ? root.seg-x(root.p + min(root.p, root.gap-fraction))
+            : root.seg-x(root.head1 + (root.head1 > 0 ? root.gap-fraction : 0));
+        width: !root.indeterminate ? root.seg-w(root.p + min(root.p, root.gap-fraction), 1)
+            : root.seg-w(root.head1 + (root.head1 > 0 ? root.gap-fraction : 0), 1);
+        height: 100%;
+        border-radius: root.seg-radius(root.stroke-cap, self.height);
+        background: root.track-color;
+        // The pin's `trackStartFraction <= 1` is followed by
+        // `drawLinearIndicator`'s `abs(endFraction - startFraction) > 0`
+        // gate — strictly less than is the combined condition.
+        visible: root.indeterminate ? root.head1 < 1 - root.gap-fraction
+            : root.p + min(root.p, root.gap-fraction) < 1;
+    }
+    // The middle piece can transiently invert when the bars overlap;
+    // `drawLinearIndicator` still draws the segment (drawLine ignores
+    // endpoint order), so take the min/max of both ends.
+    property <float> seg2-start: root.head2 + (root.head2 > 0 ? root.gap-fraction : 0);
+    property <float> seg2-end: root.tail1 < 1 ? root.tail1 - root.gap-fraction : 1;
+    Rectangle {
+        visible: root.indeterminate && root.tail1 > root.gap-fraction &&
+            root.seg2-end != root.seg2-start;
+        x: root.seg-x(min(root.seg2-start, root.seg2-end));
+        width: root.seg-w(min(root.seg2-start, root.seg2-end), max(root.seg2-start, root.seg2-end));
+        height: 100%;
+        border-radius: root.seg-radius(root.stroke-cap, self.height);
+        background: root.track-color;
+    }
+    Rectangle {
+        visible: root.indeterminate && root.tail2 > root.gap-fraction;
+        x: root.seg-x(0);
+        width: root.seg-w(0, root.tail2 < 1 ? root.tail2 - root.gap-fraction : 1);
+        height: 100%;
+        border-radius: root.seg-radius(root.stroke-cap, self.height);
+        background: root.track-color;
+    }
+
+    // Bars.
+    Rectangle {
+        x: root.seg-x(!root.indeterminate ? 0 : root.tail1);
+        width: root.seg-w(!root.indeterminate ? 0 : root.tail1, !root.indeterminate ? root.p : root.head1);
+        height: 100%;
+        border-radius: root.seg-radius(root.stroke-cap, self.height);
+        background: root.color;
+        // `abs(endFraction - startFraction) > 0` — at p = 0 nothing draws,
+        // not even the round cap.
+        visible: !root.indeterminate ? root.p > 0 : root.head1 - root.tail1 > 0;
+    }
+    Rectangle {
+        visible: root.indeterminate && root.head2 - root.tail2 > 0;
+        x: root.seg-x(root.tail2);
+        width: root.seg-w(root.tail2, root.head2);
+        height: 100%;
+        border-radius: root.seg-radius(root.stroke-cap, self.height);
+        background: root.color;
+    }
+
+    // `ProgressIndicatorDefaults.drawStopIndicator` — `Round` cap → circle,
+    // trailing `min((h - size)/2, 6dp)` off the end; determinate only.
+    Rectangle {
+        visible: !root.indeterminate && root.stop-size > 0;
+        property <length> adj: min(root.stop-size, root.height);
+        property <length> off: min((root.height - adj) / 2, ProgressIndicatorMetrics.stop-trailing-space());
+        x: root.width - adj - off;
+        y: (root.height - adj) / 2;
+        width: adj;
+        height: adj;
+        border-radius: root.stroke-cap == LineCap.butt ? 0 : adj / 2;
+        background: root.stop-color;
+    }
+}
+
+/// A circular progress indicator following `ProgressIndicator.kt`
+/// (`CircularProgressIndicator`, determinate and indeterminate) at the pin.
+///
+/// Deprecated for the indeterminate use case: Material 3 Expressive replaces
+/// the indeterminate circular progress indicator with the loading indicator
+/// (`LoadingIndicator`/`ContainedLoadingIndicator`, issue #10). Keep it for
+/// determinate use and for compatibility.
+export component CircularProgressIndicator {
+    /// The determinate progress, coerced into 0..1.
+    in property <float> progress;
+    /// The indeterminate variant — deprecated in most uses; prefer the
+    /// loading indicator.
+    in property <bool> indeterminate;
+    /// `color` — the active indicator.
+    in property <brush> color: ProgressIndicatorTokens.active-indicator-color;
+    /// `trackColor` — `circularDeterminateTrackColor`; the indeterminate
+    /// track is transparent in the pinned source.
+    in property <brush> track-color: ProgressIndicatorTokens.track-color;
+    /// `strokeWidth` — `CircularStrokeWidth`.
+    in property <length> stroke-width: CircularProgressIndicatorTokens.track-thickness;
+    /// `strokeCap`.
+    in property <LineCap> stroke-cap: LineCap.round;
+    /// `gapSize` — `CircularIndicatorTrackGapSize`.
+    in property <length> gap-size: CircularProgressIndicatorTokens.track-active-space;
+
+    accessible-role: progress-indicator;
+    accessible-value: !root.indeterminate ? root.progress : "";
+    accessible-value-minimum: 0.0;
+    accessible-value-maximum: 1.0;
+    width: ProgressIndicatorMetrics.circular-size();
+    height: ProgressIndicatorMetrics.circular-size();
+
+    property <float> p: progress.clamp(0, 1);
+    // `gapSizeSweep = adjustedGapSize / (π·size.width) · 360°` — the pin
+    // divides by the *outer* circumference, not the arc centerline's.
+    property <angle> gap-sweep: (root.stroke-cap != LineCap.butt && root.height <= root.width
+        ? root.gap-size + root.stroke-width : root.gap-size)
+        / root.width * 360deg / 3.141592653589793;
+    property <angle> sweep: p * 360deg;
+    property <angle> start-angle: 270deg;
+    // Indeterminate: `circularIndeterminateGlobalRotationAnimationSpec`
+    // (1080°/6000ms linear) + `circularIndeterminateRotationAnimationSpec`
+    // (stepped +360°) + `circularIndeterminateProgressAnimationSpec`.
+    // Same epoch anchoring as the linear cycle (`InfiniteTransition` starts
+    // at composition time): the tick snapshot lands at the same instant the
+    // indeterminate animation would begin.
+    property <duration> cycle-epoch;
+    init => {
+        cycle-epoch = animation-tick();
+    }
+    changed indeterminate => {
+        if indeterminate {
+            cycle-epoch = animation-tick();
+        }
+    }
+    property <duration> cycle-t: mod(animation-tick() - cycle-epoch, ProgressIndicatorMetrics.circular-cycle());
+    property <angle> rotation: (cycle-t / ProgressIndicatorMetrics.circular-cycle()) * 1080deg
+        + ProgressIndicatorMetrics.circular-additional-rotation(cycle-t);
+    property <angle> ind-sweep: ProgressIndicatorMetrics.circular-indeterminate-progress(cycle-t) * 360deg;
+
+    animate p {
+        easing: spring(1.0, 50.0);
+    }
+
+
+    // Arc end points on the viewbox circle (radius 20 around 20,20); each
+    // drawn arc is emitted as two halves so a full 360° circle survives
+    // `ArcTo`'s identical-endpoint collapse. Each half spans at most 180°,
+    // so `large-arc` stays false on both.
+    pure function arc-x(a: angle) -> float {
+        20 + 20 * cos(a)
+    }
+    pure function arc-y(a: angle) -> float {
+        20 + 20 * sin(a)
+    }
+    // The viewbox circle has radius 20 in a 40×40 box; `fitted_path_events`
+    // insets the fit box by `stroke-width`, so the drawn centerline lands at
+    // radius `(size - stroke)/2` — the same arc radius `drawCircularIndicator`
+    // uses.
+    bar := Path {
+        viewbox-x: 0;
+        viewbox-y: 0;
+        viewbox-width: 40;
+        viewbox-height: 40;
         width: root.width;
         height: root.height;
-        border_width: root.bar_height;
-        border_color: root.progress == 1 ? MaterialPalette.primary : MaterialPalette.primary_container;
-        border_radius: max(self.width, self.height) / 2;
+        stroke: root.color;
+        stroke-width: root.stroke-width;
+        stroke-line-cap: root.stroke-cap;
+        // Indeterminate arc: `drawDeterminateCircularIndicator(startAngle = 0,
+        // sweep)` inside `rotate(global + additional)` — no cap offset and no
+        // minimum sweep on this overload (those live in the deprecated
+        // `drawIndeterminateCircularIndicator`).
+        property <angle> a0: !root.indeterminate ? root.start-angle : root.rotation;
+        property <angle> a1: self.a0 + (!root.indeterminate ? root.sweep : root.ind-sweep);
+        visible: !root.indeterminate ? root.sweep > 0 : true;
+        MoveTo { x: root.arc-x(bar.a0); y: root.arc-y(bar.a0); }
+        ArcTo {
+            radius-x: 20;
+            radius-y: 20;
+            x: root.arc-x(bar.a0 + (bar.a1 - bar.a0) / 2);
+            y: root.arc-y(bar.a0 + (bar.a1 - bar.a0) / 2);
+            large-arc: false;
+            sweep: true;
+        }
+        ArcTo {
+            radius-x: 20;
+            radius-y: 20;
+            x: root.arc-x(bar.a1);
+            y: root.arc-y(bar.a1);
+            large-arc: false;
+            sweep: true;
+        }
     }
 
+    // Track arc `[start+sweep+min(sweep,gap), 360-sweep-2·min(sweep,gap)]` —
+    // determinate only (the indeterminate track is transparent at the pin).
     track := Path {
-        property <float> radius: min(self.viewbox_width, self.viewbox_height) / 2;
-        property <float> start_x: self.viewbox_width / 2;
-        property <float> start_y: self.viewbox_height / 2;
-        property <float> inner_radius: self.radius - (root.bar_height * (self.viewbox_height / self.height));
-        property <float> start: !root.indeterminate ? 0 : 1 * mod(animation-tick(), 1.5s) / 1.5s;
-        property <float> progress: !root.indeterminate ? root.progress : 0.5;
-
-        x: background_layer.x;
-        y: background_layer.y;
-        viewbox_width: 100;
-        viewbox_height: 100;
-        width: background_layer.width;
-        height: background_layer.height;
-        fill: MaterialPalette.primary;
-        visible: self.progress > 0 && self.progress < 1;
-
-        MoveTo {
-            x: !root.indeterminate ? track.start_x : track.start_x - track.radius * sin(-track.start * 360deg);
-            y: !root.indeterminate ? 0 : track.start_y - track.radius * cos(-track.start * 360deg);
-        }
-
+        visible: !root.indeterminate && root.sweep < 360deg - 2 * min(root.sweep, root.gap-sweep);
+        viewbox-x: 0;
+        viewbox-y: 0;
+        viewbox-width: 40;
+        viewbox-height: 40;
+        width: root.width;
+        height: root.height;
+        stroke: root.track-color;
+        stroke-width: root.stroke-width;
+        stroke-line-cap: root.stroke-cap;
+        property <angle> a0: root.start-angle + root.sweep + min(root.sweep, root.gap-sweep);
+        property <angle> a1: root.start-angle + 360deg - min(root.sweep, root.gap-sweep);
+        MoveTo { x: root.arc-x(track.a0); y: root.arc-y(track.a0); }
         ArcTo {
-            radius_x: 1;
-            radius_y: 1;
-            x: !root.indeterminate ? track.start_x : track.start_x - track.inner-radius * sin(-track.start * 360deg);
-            y: !root.indeterminate ? root.bar_height * (track.viewbox_height / track.height) : track.start_y - track.inner_radius * cos(-track.start * 360deg);
+            radius-x: 20;
+            radius-y: 20;
+            x: root.arc-x(track.a0 + (track.a1 - track.a0) / 2);
+            y: root.arc-y(track.a0 + (track.a1 - track.a0) / 2);
+            large-arc: false;
+            sweep: true;
         }
-
         ArcTo {
-            radius_x: track.inner_radius;
-            radius_y: track.inner_radius;
-            x: start_x - track.inner_radius * sin(-(track.start + track.progress) * 360deg);
-            y: start_y - track.inner_radius * cos(-(track.start + track.progress) * 360deg);
-            sweep: track.progress > 0;
-            large-arc: track.progress > 0.5;
-        }
-
-        ArcTo {
-            radius_x: 1;
-            radius_y: 1;
-            x: start_x - radius * sin(-(track.start + track.progress) * 360deg);
-            y: start_y - radius * cos(-(track.start + track.progress) * 360deg);
-        }
-
-        ArcTo {
-            radius_x: radius;
-            radius_y: radius;
-            x: start_x - radius * sin(-track.start * 360deg);
-            y: start_y - radius * cos(-track.start * 360deg);
-            sweep: track.progress < 0;
-            large-arc: track.progress > 0.5;
-        }
-
-        LineTo {
-            x: start_x - radius * sin(-track.start * 360deg);
-            y: start_y - radius * cos(-track.start * 360deg);
+            radius-x: 20;
+            radius-y: 20;
+            x: root.arc-x(track.a1);
+            y: root.arc-y(track.a1);
+            large-arc: false;
+            sweep: true;
         }
     }
 }
+

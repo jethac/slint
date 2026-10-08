@@ -10,19 +10,20 @@ import SlintProperty from '@slint/common-files/src/components/SlintProperty.astr
 ```slint
 import { LinearProgressIndicator } from "@material";
 export component Example inherits Window {
-    width: 200px;
-    height: 40px;
+    width: 280px;
+    height: 60px;
     background: transparent;
     LinearProgressIndicator {
         progress: 0.5;
-        width: 180px;
-        height: 8px;
+        x: 20px;
+        y: 28px;
     }
 }
 ```
 </CodeSnippetMD>
 
 A `LinearProgressIndicator` displays progress along a line, typically used for loading or processing tasks.
+Its own size is fixed at the spec's 240dp × 4dp container; `width`/`height` resize it for custom layouts.
 
 ## Properties
 
@@ -34,4 +35,34 @@ Whether the indicator is in indeterminate mode (shows a looping animation instea
 ### progress
 <SlintProperty propName="progress" typeName="float">
 The progress value, between 0 and 1.
+</SlintProperty>
+
+### color
+<SlintProperty propName="color" typeName="brush">
+The active indicator color — `ProgressIndicatorTokens.activeIndicatorColor` (primary).
+</SlintProperty>
+
+### track-color
+<SlintProperty propName="track-color" typeName="brush">
+The track color — `ProgressIndicatorTokens.trackColor` (secondary container).
+</SlintProperty>
+
+### stroke-cap
+<SlintProperty propName="stroke-cap" typeName="enum" enumName="LineCap">
+`strokeCap` — the cap on the indicator and track ends (`LineCap.round` default).
+</SlintProperty>
+
+### gap-size
+<SlintProperty propName="gap-size" typeName="length">
+`gapSize` — the space between the indicator bar and the track (`LinearProgressIndicatorTokens.trackActiveSpace`, 4dp).
+</SlintProperty>
+
+### stop-size
+<SlintProperty propName="stop-size" typeName="length">
+The stop indicator's size (`LinearProgressIndicatorTokens.stopSize`, 4dp), drawn at the track's trailing end in determinate mode.
+</SlintProperty>
+
+### stop-color
+<SlintProperty propName="stop-color" typeName="brush">
+The stop indicator color — `ProgressIndicatorTokens.stopColor` (primary).
 </SlintProperty>
