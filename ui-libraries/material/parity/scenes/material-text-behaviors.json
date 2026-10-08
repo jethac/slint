@@ -1,0 +1,134 @@
+{
+    "name": "material-text-behaviors",
+    "type": "canvas",
+    "parity": "xfail",
+    "size": [
+        360,
+        400
+    ],
+    "densities": [
+        1,
+        2
+    ],
+    "theme": {
+        "seed": "6750A4",
+        "variant": "tonal-spot",
+        "spec": "spec2025",
+        "platform": "phone",
+        "dark": false,
+        "contrast": 0.0
+    },
+    "fonts": {
+        "plain": "Roboto",
+        "brand": "Roboto"
+    },
+    "trace_elements": [
+        "text0",
+        "text1",
+        "text2",
+        "text3",
+        "text4",
+        "text5",
+        "text6",
+        "text7",
+        "text8",
+        "text9",
+        "text10",
+        "text11"
+    ],
+    "widgets": [
+        {
+            "kind": "material-text",
+            "x": 16,
+            "y": 12,
+            "text": "Default body large"
+        },
+        {
+            "kind": "material-text",
+            "x": 16,
+            "y": 40,
+            "text": "Primary colored",
+            "color": "primary"
+        },
+        {
+            "kind": "material-text",
+            "x": 16,
+            "y": 68,
+            "text": "Error colored",
+            "color": "error"
+        },
+        {
+            "kind": "material-text",
+            "x": 16,
+            "y": 96,
+            "width": 328,
+            "text": "Centered text",
+            "text_align": "center"
+        },
+        {
+            "kind": "material-text",
+            "x": 16,
+            "y": 124,
+            "width": 328,
+            "text": "End aligned text",
+            "text_align": "end"
+        },
+        {
+            "kind": "material-text",
+            "x": 16,
+            "y": 152,
+            "width": 120,
+            "soft_wrap": false,
+            "text": "A long line that gets elided",
+            "overflow": "elide"
+        },
+        {
+            "kind": "material-text",
+            "x": 16,
+            "y": 180,
+            "width": 120,
+            "soft_wrap": false,
+            "text": "A long line that gets clipped",
+            "overflow": "clip"
+        },
+        {
+            "kind": "material-text",
+            "x": 16,
+            "y": 208,
+            "width": 120,
+            "soft_wrap": true,
+            "text": "Soft wrap makes this line break into two"
+        },
+        {
+            "kind": "material-text",
+            "x": 16,
+            "y": 254,
+            "width": 120,
+            "soft_wrap": true,
+            "max_lines": 1,
+            "text": "Clamped to one line even though it wraps"
+        },
+        {
+            "kind": "material-text",
+            "x": 16,
+            "y": 282,
+            "min_lines": 3,
+            "text": "Min"
+        },
+        {
+            "kind": "material-text",
+            "x": 16,
+            "y": 352,
+            "text": "Underlined",
+            "text_decoration": "underline"
+        },
+        {
+            "kind": "material-text",
+            "x": 160,
+            "y": 352,
+            "text": "Struck through",
+            "text_decoration": "line-through"
+        }
+    ],
+    "negative_note": "Compose keeps text at its natural font metrics while slint's `line-height` hard-sets the line box and parley splits the leading half above/half below, so glyph ink lands ~1-3px off vertically inside its cells and element h differs; width-constrained text reports the constraint width as its element w rather than the laid-out advance the w check compares against; parley also appends letter-spacing after the trailing cluster."
+}

@@ -1,0 +1,239 @@
+// Copyright © SixtyFPS GmbH <info@slint.dev>
+// SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0
+
+// Scene: material-text-styles — generated from `ui-libraries/material/parity/scenes/material-text-styles.json`
+// (edit the scene, regenerate with `cargo run -p material-parity-generator`).
+//PARITY=xfail: Compose keeps text at its natural font metrics — the node bounds stay asc+desc and the baseline sits at the natural ascent regardless of lineHeight — while slint's `line-height` hard-sets the line box and parley splits the leading half above/half below, so element h differs by the lineHeight-vs-natural gap and glyph ink lands ~1-3px off vertically inside its cells. Parley also appends letter-spacing after the trailing cluster (+up to one tracking unit of advance vs Compose).
+//SIZE=640x540
+//TRACE_ELEMENTS=text0,text1,text2,text3,text4,text5,text6,text7,text8,text9,text10,text11,text12,text13,text14,text15,text16,text17,text18,text19,text20,text21,text22,text23,text24,text25,text26,text27,text28,text29
+//DENSITIES=1,2
+import "../../fonts/Roboto-VariableFont.ttf";
+import { MaterialPalette, MaterialText, MaterialTheme, MaterialTypography, MaterialWindow } from "@material";
+
+export component TestCase inherits MaterialWindow {
+    init => {
+        // The scene pins seed #6750A4, tonal-spot, spec2025, light, contrast 0
+        // (all the library defaults; restated here so a default change can't
+        // silently move the parity baseline).
+        MaterialTheme.seed-color = #6750A4;
+        MaterialTheme.dark = false;
+        MaterialTheme.contrast-level = 0;
+        MaterialTheme.use-platform-color = false;
+        MaterialTheme.plain-family = "Roboto";
+        MaterialTheme.brand-family = "Roboto";
+        // Compose builds its scene scheme from the same seed — use the
+        // runtime-generated scheme, not the static expressive table.
+        MaterialPalette.dynamic = true;
+    }
+
+    text0 := MaterialText {
+        x: 16px;
+        y: 8px;
+        text: "Display large";
+        style: MaterialTypography.display_large;
+    }
+
+    text1 := MaterialText {
+        x: 340px;
+        y: 8px;
+        text: "Display large";
+        style: MaterialTypography.display_large_emphasized;
+    }
+
+    text2 := MaterialText {
+        x: 16px;
+        y: 86px;
+        text: "Display medium";
+        style: MaterialTypography.display_medium;
+    }
+
+    text3 := MaterialText {
+        x: 340px;
+        y: 86px;
+        text: "Display medium";
+        style: MaterialTypography.display_medium_emphasized;
+    }
+
+    text4 := MaterialText {
+        x: 16px;
+        y: 149px;
+        text: "Display small";
+        style: MaterialTypography.display_small;
+    }
+
+    text5 := MaterialText {
+        x: 340px;
+        y: 149px;
+        text: "Display small";
+        style: MaterialTypography.display_small_emphasized;
+    }
+
+    text6 := MaterialText {
+        x: 16px;
+        y: 200px;
+        text: "Headline large";
+        style: MaterialTypography.headline_large;
+    }
+
+    text7 := MaterialText {
+        x: 340px;
+        y: 200px;
+        text: "Headline large";
+        style: MaterialTypography.headline_large_emphasized;
+    }
+
+    text8 := MaterialText {
+        x: 16px;
+        y: 246px;
+        text: "Headline medium";
+        style: MaterialTypography.headline_medium;
+    }
+
+    text9 := MaterialText {
+        x: 340px;
+        y: 246px;
+        text: "Headline medium";
+        style: MaterialTypography.headline_medium_emphasized;
+    }
+
+    text10 := MaterialText {
+        x: 16px;
+        y: 286px;
+        text: "Headline small";
+        style: MaterialTypography.headline_small;
+    }
+
+    text11 := MaterialText {
+        x: 340px;
+        y: 286px;
+        text: "Headline small";
+        style: MaterialTypography.headline_small_emphasized;
+    }
+
+    text12 := MaterialText {
+        x: 16px;
+        y: 321px;
+        text: "Title large";
+        style: MaterialTypography.title_large;
+    }
+
+    text13 := MaterialText {
+        x: 340px;
+        y: 321px;
+        text: "Title large";
+        style: MaterialTypography.title_large_emphasized;
+    }
+
+    text14 := MaterialText {
+        x: 16px;
+        y: 354px;
+        text: "Title medium";
+        style: MaterialTypography.title_medium;
+    }
+
+    text15 := MaterialText {
+        x: 340px;
+        y: 354px;
+        text: "Title medium";
+        style: MaterialTypography.title_medium_emphasized;
+    }
+
+    text16 := MaterialText {
+        x: 16px;
+        y: 379px;
+        text: "Title small";
+        style: MaterialTypography.title_small;
+    }
+
+    text17 := MaterialText {
+        x: 340px;
+        y: 379px;
+        text: "Title small";
+        style: MaterialTypography.title_small_emphasized;
+    }
+
+    text18 := MaterialText {
+        x: 16px;
+        y: 401px;
+        text: "Body large";
+        style: MaterialTypography.body_large;
+    }
+
+    text19 := MaterialText {
+        x: 340px;
+        y: 401px;
+        text: "Body large";
+        style: MaterialTypography.body_large_emphasized;
+    }
+
+    text20 := MaterialText {
+        x: 16px;
+        y: 426px;
+        text: "Body medium";
+        style: MaterialTypography.body_medium;
+    }
+
+    text21 := MaterialText {
+        x: 340px;
+        y: 426px;
+        text: "Body medium";
+        style: MaterialTypography.body_medium_emphasized;
+    }
+
+    text22 := MaterialText {
+        x: 16px;
+        y: 448px;
+        text: "Body small";
+        style: MaterialTypography.body_small;
+    }
+
+    text23 := MaterialText {
+        x: 340px;
+        y: 448px;
+        text: "Body small";
+        style: MaterialTypography.body_small_emphasized;
+    }
+
+    text24 := MaterialText {
+        x: 16px;
+        y: 468px;
+        text: "Label large";
+        style: MaterialTypography.label_large;
+    }
+
+    text25 := MaterialText {
+        x: 340px;
+        y: 468px;
+        text: "Label large";
+        style: MaterialTypography.label_large_emphasized;
+    }
+
+    text26 := MaterialText {
+        x: 16px;
+        y: 490px;
+        text: "Label medium";
+        style: MaterialTypography.label_medium;
+    }
+
+    text27 := MaterialText {
+        x: 340px;
+        y: 490px;
+        text: "Label medium";
+        style: MaterialTypography.label_medium_emphasized;
+    }
+
+    text28 := MaterialText {
+        x: 16px;
+        y: 510px;
+        text: "Label small";
+        style: MaterialTypography.label_small;
+    }
+
+    text29 := MaterialText {
+        x: 340px;
+        y: 510px;
+        text: "Label small";
+        style: MaterialTypography.label_small_emphasized;
+    }
+
+}

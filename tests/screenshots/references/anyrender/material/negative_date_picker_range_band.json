@@ -352,6 +352,19 @@
   },
   "PopLayer",
   {
+    "PushClipLayer": {
+      "clip": "M0,0 L10,0 L10,24 L0,24 Z",
+      "transform": [
+        1.0,
+        0.0,
+        0.0,
+        1.0,
+        27.0,
+        -5.0
+      ]
+    }
+  },
+  {
     "GlyphRun": {
       "brush": {
         "Solid": {
@@ -396,6 +409,7 @@
       ]
     }
   },
+  "PopLayer",
   {
     "PushLayer": {
       "alpha": 0.0,
@@ -642,6 +656,19 @@
   },
   "PopLayer",
   {
+    "PushClipLayer": {
+      "clip": "M0,0 L19,0 L19,24 L0,24 Z",
+      "transform": [
+        1.0,
+        0.0,
+        0.0,
+        1.0,
+        22.5,
+        42.0
+      ]
+    }
+  },
+  {
     "GlyphRun": {
       "brush": {
         "Solid": {
@@ -691,6 +718,7 @@
       ]
     }
   },
+  "PopLayer",
   {
     "PushLayer": {
       "alpha": 0.0,

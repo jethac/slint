@@ -5,7 +5,9 @@ import { MaterialTypography, MaterialTypeStyle } from "../styling/material_typog
 import { MaterialPalette } from "../styling/material_palette.slint";
 
 export component MaterialText inherits Text {
-    in property <MaterialTypeStyle> style: MaterialTypography.body_medium;
+    // Compose provides `LocalTextStyle = MaterialTheme.typography.bodyLarge`
+    // from `MaterialTheme.kt`, so bare `MaterialText` uses `body_large`.
+    in property <MaterialTypeStyle> style: MaterialTypography.body_large;
 
     font_family: root.style.font_family;
     font_size: root.style.font_size;
@@ -17,5 +19,5 @@ export component MaterialText inherits Text {
     // size. Keep parity.
     font_optical_sizing: FontOpticalSizing.none;
     color: MaterialPalette.on_background;
-    overflow: elide;
+    // Compose `Text` defaults to `TextOverflow.Clip`; don't force `elide`.
 }

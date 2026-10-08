@@ -135,6 +135,10 @@ pub struct FontRequest {
     pub line_height: Option<LogicalLength>,
     /// Whether to select an italic face of the font family.
     pub italic: bool,
+    /// Whether to draw an underline decoration under the text.
+    pub underline: bool,
+    /// Whether to draw a strikethrough decoration through the text.
+    pub strikeout: bool,
     /// The font width as a CSS `font-stretch` percentage where 100 is the normal
     /// width. `None` means unset.
     pub stretch: Option<f32>,

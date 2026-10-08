@@ -260,6 +260,9 @@ import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.state.ToggleableState
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.foundation.interaction.Interaction
 import androidx.compose.ui.unit.LayoutDirection
@@ -634,6 +637,7 @@ private fun CanvasScene(
         var scaffolds = 0
         var tooltips = 0
         var fields = 0
+        var matTexts = 0
         // `text:{n}` spans every text node in scene order — group items
         // interleave with the standalone widgets' labels. Bases are
         // precomputed per widget so recompositions can't renumber them.
@@ -658,6 +662,8 @@ private fun CanvasScene(
                             w.items.size
                     w.kind == "basic-alert-dialog" ->
                         (if (w.title != null) 1 else 0) + w.items.size
+                    // A standalone MaterialText is one text node.
+                    w.kind == "material-text" -> 1
                     else -> 0
                 }
             }
@@ -1274,7 +1280,59 @@ private fun CanvasScene(
                             )
                         }
                     }
-                }                widget.kind == "loading-indicator" ||
+                }
+                widget.kind == "material-text" -> {
+                    // Standalone `Text` against `MaterialText`: the scene's
+                    // fields map onto the upstream `Text` parameters —
+                    // `style` picks a `MaterialTheme.typography` role (unset
+                    // = `LocalTextStyle`, `bodyLarge` under `MaterialTheme`).
+                    val tag = "text${matTexts++}"
+                    val textTag = "text:$textBase"
+                    val style = widget.style?.let { textStyle(it) }
+                        ?: androidx.compose.material3.LocalTextStyle.current
+                    Text(
+                        widget.text ?: "",
+                        modifier = Modifier
+                            .offset(widget.x.dp, widget.y.dp)
+                            .then(
+                                if (widget.width > 0f) {
+                                    Modifier.width(widget.width.dp)
+                                } else {
+                                    Modifier
+                                },
+                            )
+                            .track(tracer, tag)
+                            .trackText(tracer, textTag, density),
+                        color = widget.color?.let { schemeColor(it) }
+                            ?: Color.Unspecified,
+                        style = style,
+                        onTextLayout = recordTextLayout(
+                            tracer,
+                            textTag,
+                            LocalDensity.current,
+                            androidx.compose.ui.platform.LocalFontFamilyResolver.current,
+                            style.fontFamily,
+                        ),
+                        overflow = when (widget.overflow) {
+                            "elide" -> TextOverflow.Ellipsis
+                            else -> TextOverflow.Clip
+                        },
+                        softWrap = widget.softWrap,
+                        maxLines = widget.maxLines,
+                        minLines = widget.minLines,
+                        textDecoration = when (widget.textDecoration) {
+                            "underline" -> TextDecoration.Underline
+                            "line-through" -> TextDecoration.LineThrough
+                            else -> null
+                        },
+                        textAlign = when (widget.textAlign) {
+                            "center" -> TextAlign.Center
+                            "end" -> TextAlign.End
+                            else -> TextAlign.Start
+                        },
+                    )
+                }
+                widget.kind == "loading-indicator" ||
                     widget.kind == "contained-loading-indicator" -> {
                     // The 48dp indicator draws at the scene's declared
                     // coordinates on both sides.
@@ -1389,6 +1447,47 @@ private fun StateRadioButton(
         interactionSource = interactionSource,
     )
 }
+
+/** `material-text` style name (kebab case, `-emphasized` suffix) → the
+ * `MaterialTheme.typography` role token. */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun textStyle(name: String): androidx.compose.ui.text.TextStyle =
+    with(androidx.compose.material3.MaterialTheme.typography) {
+        when (name) {
+            "display-large" -> displayLarge
+            "display-medium" -> displayMedium
+            "display-small" -> displaySmall
+            "headline-large" -> headlineLarge
+            "headline-medium" -> headlineMedium
+            "headline-small" -> headlineSmall
+            "title-large" -> titleLarge
+            "title-medium" -> titleMedium
+            "title-small" -> titleSmall
+            "label-large" -> labelLarge
+            "label-medium" -> labelMedium
+            "label-small" -> labelSmall
+            "body-large" -> bodyLarge
+            "body-medium" -> bodyMedium
+            "body-small" -> bodySmall
+            "display-large-emphasized" -> displayLargeEmphasized
+            "display-medium-emphasized" -> displayMediumEmphasized
+            "display-small-emphasized" -> displaySmallEmphasized
+            "headline-large-emphasized" -> headlineLargeEmphasized
+            "headline-medium-emphasized" -> headlineMediumEmphasized
+            "headline-small-emphasized" -> headlineSmallEmphasized
+            "title-large-emphasized" -> titleLargeEmphasized
+            "title-medium-emphasized" -> titleMediumEmphasized
+            "title-small-emphasized" -> titleSmallEmphasized
+            "label-large-emphasized" -> labelLargeEmphasized
+            "label-medium-emphasized" -> labelMediumEmphasized
+            "label-small-emphasized" -> labelSmallEmphasized
+            "body-large-emphasized" -> bodyLargeEmphasized
+            "body-medium-emphasized" -> bodyMediumEmphasized
+            "body-small-emphasized" -> bodySmallEmphasized
+            else -> error("unknown material-text style $name")
+        }
+    }
 
 /** Container height per size bucket (dp) — `ButtonDefaults` `*ContainerHeight`. */
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
