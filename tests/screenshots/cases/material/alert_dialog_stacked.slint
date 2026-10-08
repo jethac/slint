@@ -1,0 +1,49 @@
+// Copyright © SixtyFPS GmbH <info@slint.dev>
+// SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0
+
+// Scene: alert-dialog-stacked — generated from `ui-libraries/material/parity/scenes/alert-dialog-stacked.json`
+// (edit the scene, regenerate with `cargo run -p material-parity-generator`).
+//PARITY=static
+//SIZE=460x400
+//TRACE_ELEMENTS=scrim0,dialog0
+//TRACE_ITEMS=dialog0:action
+//XFAIL_TEXT=issue #28: Slint ceils text layout widths where Compose keeps fractional advances
+//DENSITIES=1,2
+import "../../fonts/Roboto-VariableFont.ttf";
+import { AlertDialogContent, MaterialPalette, MaterialTheme, MaterialWindow } from "@material";
+
+export component TestCase inherits MaterialWindow {
+    init => {
+        // The scene pins seed #6750A4, tonal-spot, spec2025, light, contrast 0
+        // (all the library defaults; restated here so a default change can't
+        // silently move the parity baseline).
+        MaterialTheme.seed-color = #6750A4;
+        MaterialTheme.dark = false;
+        MaterialTheme.contrast-level = 0;
+        MaterialTheme.use-platform-color = false;
+        MaterialTheme.plain-family = "Roboto";
+        MaterialTheme.brand-family = "Roboto";
+        // Compose builds its scene scheme from the same seed — use the
+        // runtime-generated scheme, not the static expressive table.
+        MaterialPalette.dynamic = true;
+    }
+
+    scrim0 := Rectangle {
+        x: 0px;
+        y: 0px;
+        width: 100%;
+        height: 100%;
+        background: MaterialPalette.background_modal;
+    }
+
+    dialog0 := AlertDialogContent {
+        x: (parent.width - self.width) / 2;
+        y: (parent.height - self.height) / 2;
+        available_width: parent.width;
+        cast_shadow: false;
+        action_enforce_touch_target: false;
+        title: "Permanently delete this file and all of its synced backups?";
+        actions: ["Use web browser instead", "Pick from contacts list", "Confirm and continue"];
+    }
+
+}

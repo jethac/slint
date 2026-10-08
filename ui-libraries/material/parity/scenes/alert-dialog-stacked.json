@@ -1,0 +1,56 @@
+{
+  "name": "alert-dialog-stacked",
+  "type": "canvas",
+  "parity": "static",
+  "size": [
+    460,
+    400
+  ],
+  "densities": [
+    1,
+    2
+  ],
+  "theme": {
+    "seed": "6750A4",
+    "variant": "tonal-spot",
+    "spec": "spec2025",
+    "platform": "phone",
+    "dark": false,
+    "contrast": 0.0
+  },
+  "fonts": {
+    "plain": "Roboto",
+    "brand": "Roboto"
+  },
+  "widgets": [
+    {
+      "kind": "alert-dialog",
+      "title": "Permanently delete this file and all of its synced backups?",
+      "items": [
+        {
+          "text": "Use web browser instead"
+        },
+        {
+          "text": "Pick from contacts list"
+        },
+        {
+          "text": "Confirm and continue"
+        }
+      ]
+    }
+  ],
+  "trace_elements": [
+    "scrim0",
+    "dialog0",
+    "dialog0action0",
+    "dialog0action1",
+    "dialog0action2"
+  ],
+  "trace_items": {
+    "dialog0": [
+      "action"
+    ]
+  },
+  "trace_props": [],
+  "xfail_text": "issue #28: Slint ceils text layout widths where Compose keeps fractional advances"
+}
