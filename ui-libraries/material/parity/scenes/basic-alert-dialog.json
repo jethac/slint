@@ -1,0 +1,47 @@
+{
+  "name": "basic-alert-dialog",
+  "type": "canvas",
+  "parity": "static",
+  "size": [
+    500,
+    360
+  ],
+  "densities": [
+    1,
+    2
+  ],
+  "theme": {
+    "seed": "6750A4",
+    "variant": "tonal-spot",
+    "spec": "spec2025",
+    "platform": "phone",
+    "dark": false,
+    "contrast": 0.0
+  },
+  "fonts": {
+    "plain": "Roboto",
+    "brand": "Roboto"
+  },
+  "widgets": [
+    {
+      "kind": "basic-alert-dialog",
+      "title": "Custom content",
+      "items": [
+        {
+          "text": "Dismiss"
+        }
+      ]
+    }
+  ],
+  "trace_elements": [
+    "scrim0",
+    "basic0",
+    "basic0action0"
+  ],
+  "trace_items": {
+    "basic0": [
+      "action"
+    ]
+  },
+  "trace_props": []
+}

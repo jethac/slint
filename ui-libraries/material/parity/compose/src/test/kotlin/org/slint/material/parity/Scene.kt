@@ -125,7 +125,8 @@ class Widget(json: JSONObject) {
     val supporting: String? = (json.opt("supporting") as? String)?.takeIf { it.isNotEmpty() }
     /** The `isSupportingMultiline` heuristic input to `ListItemType`. */
     val supportingMultiline: Boolean = json.optBoolean("supporting_multiline", false)
-    /** 40px avatar circle with this label in the leading slot. */
+    /** 40px avatar circle in the leading slot: a label on `list-item`,
+     * an icon stem on `input-chip` (the upstream samples' `Icon` avatar). */
     val avatar: String? = (json.opt("avatar") as? String)?.takeIf { it.isNotEmpty() }
     /** Icon stem (`Icons.*`) in the trailing slot — `icon` fills leading
      * on a list item; on a `*-split-button` it's the trailing-half chevron
@@ -135,10 +136,15 @@ class Widget(json: JSONObject) {
     /** Icon stem used as the 56x56 `leading_image` source — both sides
      * rasterize the identical svg path clipped to the image shape. */
     val leadingImage: String? = (json.opt("leading_image") as? String)?.takeIf { it.isNotEmpty() }
-    /** Loading-indicator mode: indeterminate (the continuous morph loop,
-     * default) or driven by [progress]. */
-    val indeterminate: Boolean = json.optBoolean("indeterminate", true)
-    /** Determinate loading-indicator progress, 0–1. */
+    /** Loading/progress-indicator mode: `indeterminate` renders the
+     * continuous morph loop / the no-progress overloads. The default
+     * differs per family — loading indicators default to indeterminate,
+     * progress indicators to determinate. */
+    val indeterminate: Boolean = json.optBoolean(
+        "indeterminate",
+        kind == "loading-indicator" || kind == "contained-loading-indicator",
+    )
+    /** Determinate progress, 0–1. Ignored when `indeterminate` is set. */
     val progress: Float = json.optDouble("progress", 0.0).toFloat()
     /** `top-app-bar` variant: `small` (default), `center`, `medium`,
      * `medium-flexible`, `large`, `large-flexible`, `two-rows`. */

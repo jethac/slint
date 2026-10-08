@@ -1,0 +1,31 @@
+{
+  "name": "negative-alert-dialog-actions",
+  "type": "canvas",
+  "parity": "negative",
+  "negative_note": "the actions render unflipped — the confirm lands left of the dismiss like a plain end-aligned row",
+  "size": [500, 360],
+  "densities": [1, 2],
+  "theme": {
+    "seed": "6750A4",
+    "variant": "tonal-spot",
+    "spec": "spec2025",
+    "platform": "phone",
+    "dark": false,
+    "contrast": 0.0
+  },
+  "fonts": { "plain": "Roboto", "brand": "Roboto" },
+  "widgets": [
+    {
+      "kind": "alert-dialog",
+      "title": "Discard draft?",
+      "text": "A dialog is a type of modal window that appears in front of app content.",
+      "items": [
+        { "text": "Dismiss" },
+        { "text": "Delete" }
+      ],
+      "slint_overrides": { "actions_reversed": true }
+    }
+  ],
+  "trace_elements": ["scrim0", "dialog0"],
+  "trace_props": []
+}

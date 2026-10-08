@@ -4,8 +4,8 @@
       11
     ],
     "needs": "none",
-    "notes": "slint component: Dialog",
-    "status": "partial"
+    "notes": "slint components: Dialog, AlertDialogContent; parity cases: alert-dialog, alert-dialog-no-icon, alert-dialog-stacked, alert-dialog-dark, alert-dialog-action-hover, alert-dialog-action-press, alert-dialog-action-focus, negative-alert-dialog-{corner,container,padding,actions}",
+    "status": "done"
   },
   "AppBarColumn": {
     "issues": [
@@ -43,9 +43,9 @@
     "issues": [
       11
     ],
-    "needs": "shapes (#6)",
-    "notes": "slint component: Chip",
-    "status": "partial"
+    "needs": "springs (#5), shapes (#6)",
+    "notes": "slint component: AssistChip; tokens: generated component tokens; springs via active motion scheme",
+    "status": "done"
   },
   "Badge": {
     "issues": [
@@ -68,8 +68,8 @@
       11
     ],
     "needs": "none",
-    "notes": "",
-    "status": "missing"
+    "notes": "slint component: BasicAlertDialog; parity case: basic-alert-dialog",
+    "status": "done"
   },
   "BottomAppBar": {
     "issues": [
@@ -147,8 +147,8 @@
       11
     ],
     "needs": "springs (#5), shapes (#6)",
-    "notes": "slint component: CircularProgressIndicator",
-    "status": "partial"
+    "notes": "slint component: CircularProgressIndicator; indeterminate deprecated, replacement: LoadingIndicator",
+    "status": "done"
   },
   "CircularWavyProgressIndicator": {
     "issues": [
@@ -268,11 +268,11 @@
   },
   "ElevatedAssistChip": {
     "issues": [
-      9
+      11
     ],
-    "needs": "shapes (#6)",
-    "notes": "",
-    "status": "missing"
+    "needs": "springs (#5), shapes (#6)",
+    "notes": "slint component: ElevatedAssistChip; tokens: generated component tokens; springs via active motion scheme",
+    "status": "done"
   },
   "ElevatedButton": {
     "issues": [
@@ -292,19 +292,19 @@
   },
   "ElevatedFilterChip": {
     "issues": [
-      9
+      11
     ],
-    "needs": "shapes (#6)",
-    "notes": "",
-    "status": "missing"
+    "needs": "springs (#5), shapes (#6)",
+    "notes": "slint component: ElevatedFilterChip; tokens: generated component tokens; springs via active motion scheme",
+    "status": "done"
   },
   "ElevatedSuggestionChip": {
     "issues": [
-      9
+      11
     ],
-    "needs": "shapes (#6)",
-    "notes": "",
-    "status": "missing"
+    "needs": "springs (#5), shapes (#6)",
+    "notes": "slint component: ElevatedSuggestionChip; tokens: generated component tokens; springs via active motion scheme",
+    "status": "done"
   },
   "ElevatedToggleButton": {
     "issues": [
@@ -422,9 +422,9 @@
     "issues": [
       11
     ],
-    "needs": "shapes (#6)",
-    "notes": "slint component: Chip",
-    "status": "partial"
+    "needs": "springs (#5), shapes (#6)",
+    "notes": "slint component: FilterChip; tokens: generated component tokens; springs via active motion scheme",
+    "status": "done"
   },
   "FlexibleBottomAppBar": {
     "issues": [
@@ -527,9 +527,9 @@
     "issues": [
       11
     ],
-    "needs": "shapes (#6)",
-    "notes": "slint component: Chip",
-    "status": "partial"
+    "needs": "springs (#5), shapes (#6)",
+    "notes": "slint component: InputChip; tokens: generated component tokens; springs via active motion scheme",
+    "status": "done"
   },
   "LargeExtendedFloatingActionButton": {
     "issues": [
@@ -577,7 +577,7 @@
     ],
     "needs": "springs (#5), shapes (#6)",
     "notes": "slint component: LinearProgressIndicator",
-    "status": "partial"
+    "status": "done"
   },
   "LinearWavyProgressIndicator": {
     "issues": [
@@ -1002,9 +1002,9 @@
     "issues": [
       11
     ],
-    "needs": "shapes (#6)",
-    "notes": "slint component: Chip",
-    "status": "partial"
+    "needs": "springs (#5), shapes (#6)",
+    "notes": "slint component: SuggestionChip; tokens: generated component tokens; springs via active motion scheme",
+    "status": "done"
   },
   "Surface": {
     "issues": [
