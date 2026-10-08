@@ -1,0 +1,261 @@
+[
+  {
+    "PushClipLayer": {
+      "clip": "M0,0 L268,0 L268,56 L0,56 Z",
+      "transform": [
+        1.0,
+        0.0,
+        0.0,
+        1.0,
+        32.0,
+        16.0
+      ]
+    }
+  },
+  {
+    "PushLayer": {
+      "alpha": 0.0,
+      "backdrop_filter": null,
+      "blend": {
+        "compose": "SrcOver",
+        "mix": "Normal"
+      },
+      "clip": "M0,0 L1000000000,0 L1000000000,1000000000 L0,1000000000 Z",
+      "filter": null,
+      "transform": [
+        1.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0
+      ]
+    }
+  },
+  "PopLayer",
+  {
+    "PushLayer": {
+      "alpha": 0.0,
+      "backdrop_filter": null,
+      "blend": {
+        "compose": "SrcOver",
+        "mix": "Normal"
+      },
+      "clip": "M0,0 L1000000000,0 L1000000000,1000000000 L0,1000000000 Z",
+      "filter": null,
+      "transform": [
+        1.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0
+      ]
+    }
+  },
+  "PopLayer",
+  {
+    "PushClipLayer": {
+      "clip": "M0,0 L268,0 L268,24 L0,24 Z",
+      "transform": [
+        1.0,
+        0.0,
+        0.0,
+        1.0,
+        32.0,
+        32.0
+      ]
+    }
+  },
+  "PopLayer",
+  {
+    "PushLayer": {
+      "alpha": 0.0,
+      "backdrop_filter": null,
+      "blend": {
+        "compose": "SrcOver",
+        "mix": "Normal"
+      },
+      "clip": "M0,0 L1000000000,0 L1000000000,1000000000 L0,1000000000 Z",
+      "filter": null,
+      "transform": [
+        1.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0
+      ]
+    }
+  },
+  "PopLayer",
+  "PopLayer",
+  {
+    "PushClipLayer": {
+      "clip": "M0,0 L42,0 L42,24 L0,24 Z",
+      "transform": [
+        1.0,
+        0.0,
+        0.0,
+        1.0,
+        32.0,
+        32.0
+      ]
+    }
+  },
+  {
+    "GlyphRun": {
+      "brush": {
+        "Solid": {
+          "components": [
+            0.3804,
+            0.3647,
+            0.4078,
+            1.0
+          ]
+        }
+      },
+      "brush_alpha": 1.0,
+      "embolden": {
+        "x": 0.0,
+        "y": 0.0
+      },
+      "font_data": {
+        "index": 0,
+        "resource_id": 0
+      },
+      "font_size": 16.0,
+      "glyph_transform": null,
+      "glyphs": [
+        {
+          "id": 48,
+          "x": 0.0,
+          "y": 14.8438
+        },
+        {
+          "id": 69,
+          "x": 9.1172,
+          "y": 14.8438
+        },
+        {
+          "id": 70,
+          "x": 18.3203,
+          "y": 14.8438
+        },
+        {
+          "id": 73,
+          "x": 27.8047,
+          "y": 14.8438
+        },
+        {
+          "id": 80,
+          "x": 36.7891,
+          "y": 14.8438
+        }
+      ],
+      "hint": false,
+      "normalized_coords": [],
+      "style": {
+        "Fill": "NonZero"
+      },
+      "transform": [
+        1.0,
+        0.0,
+        0.0,
+        1.0,
+        32.0,
+        34.625
+      ]
+    }
+  },
+  "PopLayer",
+  {
+    "Stroke": {
+      "brush": {
+        "Solid": {
+          "components": [
+            0.4902,
+            0.4745,
+            0.5137,
+            1.0
+          ]
+        }
+      },
+      "brush_transform": null,
+      "shape": "M295.5,0 L3.5,0 Q2.5622,0 1.75,0.4689 Q0.9378,0.9378 0.4689,1.75 Q0,2.5622 0,3.5 L0,51.5 Q0,52.9497 1.0251,53.9749 Q2.0503,55 3.5,55 L295.5,55 Q296.9497,55 297.9749,53.9749 Q299,52.9497 299,51.5 L299,3.5 Q299,2.0503 297.9749,1.0251 Q296.9498,0 295.5,0 L295.5,0",
+      "style": {
+        "dash_offset": 0.0,
+        "dash_pattern": [],
+        "end_cap": "Butt",
+        "join": "Miter",
+        "miter_limit": 4.0,
+        "start_cap": "Butt",
+        "width": 1.0
+      },
+      "transform": [
+        1.0,
+        0.0,
+        0.0,
+        1.0,
+        16.5,
+        16.5
+      ]
+    }
+  },
+  {
+    "PushClipLayer": {
+      "clip": "M0,0 L268,0 L268,56 L0,56 Z",
+      "transform": [
+        1.0,
+        0.0,
+        0.0,
+        1.0,
+        32.0,
+        112.0
+      ]
+    }
+  },
+  "PopLayer",
+  {
+    "PushClipLayer": {
+      "clip": "M0,0 L268,0 L268,56 L0,56 Z",
+      "transform": [
+        1.0,
+        0.0,
+        0.0,
+        1.0,
+        32.0,
+        208.0
+      ]
+    }
+  },
+  "PopLayer",
+  {
+    "PushClipLayer": {
+      "clip": "M0,0 L268,0 L268,56 L0,56 Z",
+      "transform": [
+        1.0,
+        0.0,
+        0.0,
+        1.0,
+        32.0,
+        304.0
+      ]
+    }
+  },
+  "PopLayer",
+  {
+    "PushClipLayer": {
+      "clip": "M0,0 L268,0 L268,56 L0,56 Z",
+      "transform": [
+        1.0,
+        0.0,
+        0.0,
+        1.0,
+        32.0,
+        400.0
+      ]
+    }
+  },
+  "PopLayer"
+]
