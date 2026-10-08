@@ -24,6 +24,7 @@
     }
   },
   "mask_inner": {},
+  "mask_shadow": {},
   "name": "navigation-rails",
   "negative_note": "one strict pixel on the expanded rail's selected-item indicator edge (d1): the expanded item width comes out of the float measure policy, so the indicator edge lands between pixel centers — Skia and the software rasterizer resolve the coverage the same way the Compose reference does, FemtoVG one texel darker.",
   "params": {},
@@ -102,7 +103,6 @@
   "type": "canvas",
   "widgets": [
     {
-      "alignment": null,
       "always_show_label": true,
       "arrangement": null,
       "body_color": null,
@@ -125,7 +125,6 @@
       "dragged": null,
       "elevation": null,
       "enabled": null,
-      "expanded": null,
       "expanded_ratio": null,
       "fab": null,
       "fab_icon": "edit",
@@ -234,7 +233,6 @@
       "year_min": null
     },
     {
-      "alignment": null,
       "always_show_label": null,
       "arrangement": "top",
       "body_color": null,
@@ -366,7 +364,6 @@
       "year_min": null
     },
     {
-      "alignment": null,
       "always_show_label": null,
       "arrangement": "top",
       "body_color": null,
@@ -498,7 +495,6 @@
       "year_min": null
     },
     {
-      "alignment": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,

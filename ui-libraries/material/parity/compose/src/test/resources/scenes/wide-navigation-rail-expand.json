@@ -10,6 +10,7 @@
   },
   "mask_decor": {},
   "mask_inner": {},
+  "mask_shadow": {},
   "name": "wide-navigation-rail-expand",
   "negative_note": "issue #27: the rail events are synchronous Slint key dispatches while the Compose side launches `scope.launch { railState.expand() }`, so the spring starts ~3ms later on the Compose clock — identical-timestamp comparison reports a systematic lead and mid-animation frame pixels disagree. The t=0 `rail_width` prop is also a Compose capture artifact: its getter reads element bounds before the first layout and reports 0 where the Slint out property already reports 96dp.",
   "params": {
@@ -113,7 +114,6 @@
   "type": "canvas",
   "widgets": [
     {
-      "alignment": null,
       "always_show_label": null,
       "arrangement": "center",
       "body_color": null,

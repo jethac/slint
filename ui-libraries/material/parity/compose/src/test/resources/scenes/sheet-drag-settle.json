@@ -53,6 +53,7 @@
     ]
   },
   "mask_inner": {},
+  "mask_shadow": {},
   "name": "sheet-drag-settle",
   "params": {
     "note": "release at 200ms leaves the last move sample stale (>100ms) so the fling velocity is 0 — the settle picks the closest anchor (partially-expanded at 120) under the default spatial spring"
@@ -142,7 +143,6 @@
   "type": "canvas",
   "widgets": [
     {
-      "alignment": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,
@@ -165,7 +165,6 @@
       "dragged": null,
       "elevation": null,
       "enabled": null,
-      "expanded": null,
       "expanded_ratio": null,
       "fab": null,
       "fab_icon": null,

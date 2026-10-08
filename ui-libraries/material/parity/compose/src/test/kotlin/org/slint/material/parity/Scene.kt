@@ -82,7 +82,9 @@ class Widget(json: JSONObject) {
      * rasterizes. */
     val icon: String? = (json.opt("icon") as? String)?.takeIf { it.isNotEmpty() }
     /** `connected-button`/`GroupItem.checked_icon`: swaps `icon` while the
-     * item is checked (the upstream samples' filled/outlined swap). */
+     * item is checked (the upstream samples' filled/outlined swap); on a
+     * `fab-menu` toggle the icon drawn once `checkedProgress` passes 0.5 —
+     * the upstream sample's close icon. */
     val checkedIcon: String? = (json.opt("checked_icon") as? String)?.takeIf { it.isNotEmpty() }
     val enabled: Boolean = json.optBoolean("enabled", true)
     /** Interaction state the widget starts in: `enabled` (default),
@@ -109,6 +111,14 @@ class Widget(json: JSONObject) {
     val checked: Boolean = json.optBoolean("checked", false)
     /** Icon-button container width `narrow`/`uniform`/`wide`. */
     val widthOption: String = (json.opt("width_option") as? String) ?: "uniform"
+    /** FAB menu host size for `toggle-fab`/`fab-menu`: `baseline`
+     * (default), `medium`, or `large` — the upstream
+     * `containerSize{,Medium,Large}` overloads (no small exists). */
+    val fabSize: String = (json.opt("fab_size") as? String) ?: "baseline"
+    /** The `fab-menu` widget's `{icon, text, enabled}` entries. */
+    val fabItems: List<FabMenuItemSpec> =
+        json.optJSONArray("fab_items")?.let { a -> (0 until a.length()).map { FabMenuItemSpec(a.getJSONObject(it)) } }
+            ?: emptyList()
     /** `ListItem(onClick)` overload — `selectable`/`checkable` imply it. */
     val interactive: Boolean = json.optBoolean("interactive", false)
     /** `ListItem(selected, onClick)` overload. */
@@ -187,15 +197,21 @@ class Widget(json: JSONObject) {
     /** Single-select groups: the checked item (`-1` selects none); for
      * rails, the selected item index (`current-index` on the Slint side). */
     val selectedIndex: Int = json.optInt("selected_index", if (kind.contains("rail")) 0 else -1)
-    /** `extended-fab` expansion state (`expanded` upstream); for rails,
+    /** `extended-fab` expansion state (`expanded` upstream, default
+     * expanded); on `fab-menu`, `FloatingActionButtonMenu.expanded` —
+     * collapsed by default and driving the toggle's `checked`; for rails,
      * `WideNavigationRailValue` — expanded when true, collapsed when false. */
-    val expanded: Boolean = json.optBoolean("expanded", if (kind.contains("rail")) false else true)
+    val expanded: Boolean =
+        json.optBoolean("expanded", !(kind.contains("rail") || kind == "fab-menu"))
     /** `fab`/`extended-fab` visibility — `visible` on
      * `Modifier.animateFloatingActionButton` upstream. */
     val shown: Boolean = json.optBoolean("shown", true)
     /** `animateFloatingActionButton` scale pivot — `Alignment` member name
-     * in snake case (`bottom_end` default). */
-    val alignment: String = (json.opt("alignment") as? String) ?: "bottom_end"
+     * in snake case (`bottom_end` default); on `fab-menu`, the
+     * `horizontalAlignment` (`start`/`center`/`end`, upstream default
+     * `Alignment.End`). */
+    val alignment: String = (json.opt("alignment") as? String)
+        ?: (if (kind == "fab-menu") "end" else "bottom_end")
     /** `animateFloatingActionButton` `targetScale` (0.2 upstream). */
     val targetScale: Float = json.optDouble("target_scale", 0.2).toFloat()
     /** The prop a press+release click toggles — `expanded` or `shown`. */
@@ -322,6 +338,13 @@ class Widget(json: JSONObject) {
      * and `selected` are declared above with the list-item overloads. */
     val clickable: Boolean = json.optBoolean("clickable", false)
     val toggleable: Boolean = json.optBoolean("toggleable", false)
+}
+
+/** One `fab-menu` item — a `FloatingActionButtonMenuItem` upstream. */
+class FabMenuItemSpec(json: JSONObject) {
+    val icon: String? = (json.opt("icon") as? String)?.takeIf { it.isNotEmpty() }
+    val text: String? = (json.opt("text") as? String)?.takeIf { it.isNotEmpty() }
+    val enabled: Boolean = json.optBoolean("enabled", true)
 }
 
 /** One rail item (`NavigationItem` on the Slint side): `{ "text": "Inbox",

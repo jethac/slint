@@ -18,6 +18,7 @@
     }
   },
   "mask_inner": {},
+  "mask_shadow": {},
   "name": "date-picker-range-input",
   "params": {},
   "parity": "parity",
@@ -91,7 +92,6 @@
   "type": "canvas",
   "widgets": [
     {
-      "alignment": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,
@@ -114,7 +114,6 @@
       "dragged": null,
       "elevation": null,
       "enabled": null,
-      "expanded": null,
       "expanded_ratio": null,
       "fab": null,
       "fab_icon": null,

@@ -1,0 +1,176 @@
+{
+    "name": "fab-menu",
+    "type": "canvas",
+    "parity": "static",
+    "size": [
+        640,
+        300
+    ],
+    "densities": [
+        1,
+        2
+    ],
+    "theme": {
+        "seed": "6750A4",
+        "variant": "tonal-spot",
+        "spec": "spec2025",
+        "platform": "phone",
+        "dark": false,
+        "contrast": 0.0
+    },
+    "fonts": {
+        "plain": "Roboto",
+        "brand": "Roboto"
+    },
+    "widgets": [
+        {
+            "kind": "fab-menu",
+            "x": 440,
+            "y": 44,
+            "fab_size": "baseline",
+            "icon": "edit",
+            "checked_icon": "close",
+            "expanded": true,
+            "alignment": "end",
+            "fab_items": [
+                {
+                    "icon": "check",
+                    "text": "Compose"
+                },
+                {
+                    "icon": "schedule",
+                    "text": "Send"
+                },
+                {
+                    "icon": "arrow_right",
+                    "text": "Archive"
+                }
+            ]
+        },
+        {
+            "kind": "fab-menu",
+            "x": 220,
+            "y": 44,
+            "fab_size": "medium",
+            "icon": "edit",
+            "checked_icon": "close",
+            "expanded": true,
+            "alignment": "center",
+            "fab_items": [
+                {
+                    "icon": "check",
+                    "text": "Compose"
+                },
+                {
+                    "icon": "schedule",
+                    "text": "Send"
+                },
+                {
+                    "icon": "arrow_right",
+                    "text": "Archive"
+                }
+            ]
+        },
+        {
+            "kind": "fab-menu",
+            "x": 20,
+            "y": 44,
+            "fab_size": "large",
+            "icon": "edit",
+            "checked_icon": "close",
+            "expanded": true,
+            "alignment": "start",
+            "fab_items": [
+                {
+                    "icon": "check",
+                    "text": "Compose"
+                },
+                {
+                    "icon": "schedule",
+                    "text": "Send"
+                },
+                {
+                    "icon": "arrow_right",
+                    "text": "Archive"
+                }
+            ]
+        }
+    ],
+    "trace_elements": [
+        "menu0",
+        "menu0>toggle",
+        "menu0>container",
+        "menu1",
+        "menu1>toggle",
+        "menu1>container",
+        "menu2",
+        "menu2>toggle",
+        "menu2>container"
+    ],
+    "trace_props": [
+        "checked_progress"
+    ],
+    "xfail_text": "issue #28: Slint ceils text layout widths where Compose keeps fractional advances",
+    "mask_shadow": {
+        "menu0>toggle0": [
+            0,
+            2000
+        ],
+        "menu0>container0": [
+            0,
+            2000
+        ],
+        "menu0>container1": [
+            0,
+            2000
+        ],
+        "menu0>container2": [
+            0,
+            2000
+        ],
+        "menu1>toggle0": [
+            0,
+            2000
+        ],
+        "menu1>container0": [
+            0,
+            2000
+        ],
+        "menu1>container1": [
+            0,
+            2000
+        ],
+        "menu1>container2": [
+            0,
+            2000
+        ],
+        "menu2>toggle0": [
+            0,
+            2000
+        ],
+        "menu2>container0": [
+            0,
+            2000
+        ],
+        "menu2>container1": [
+            0,
+            2000
+        ],
+        "menu2>container2": [
+            0,
+            2000
+        ],
+        "menu0": [
+            0,
+            2000
+        ],
+        "menu1": [
+            0,
+            2000
+        ],
+        "menu2": [
+            0,
+            2000
+        ]
+    }
+}

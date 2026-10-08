@@ -204,9 +204,9 @@ Sizes: baseline
 
 | Component | Source | Status | Issues | Needs | Notes |
 |---|---|---|---|---|---|
-| FloatingActionButtonMenu | FloatingActionButtonMenu.kt | missing | #5, #10 | springs (#5), shapes (#6) | - |
-| FloatingActionButtonMenuScope | FloatingActionButtonMenu.kt | missing | #10 | springs (#5), shapes (#6) | - |
-| ToggleFloatingActionButton | FloatingActionButtonMenu.kt | missing | #10 | springs (#5), shapes (#6) | - |
+| FloatingActionButtonMenu | FloatingActionButtonMenu.kt | partial | #5, #10 | springs (#5), shapes (#6) | slint component: FloatingActionButtonMenu |
+| FloatingActionButtonMenuScope | FloatingActionButtonMenu.kt | partial | #10 | springs (#5), shapes (#6) | slint component: FloatingActionButtonMenuItem (scope members of FloatingActionButtonMenu) |
+| ToggleFloatingActionButton | FloatingActionButtonMenu.kt | partial | #10 | springs (#5), shapes (#6) | slint component: ToggleFloatingActionButton |
 
 ### Icon
 

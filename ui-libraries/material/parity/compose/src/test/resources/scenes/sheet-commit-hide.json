@@ -94,6 +94,7 @@
     ]
   },
   "mask_inner": {},
+  "mask_shadow": {},
   "name": "sheet-commit-hide",
   "params": {
     "note": "trailing 10px/125ms moves leave a sub-threshold 80px/s release; the offset at 202 sits 82px past the partial anchor toward hidden — ≥56dp PositionalThreshold commits the fling to hidden"
@@ -182,7 +183,6 @@
   "type": "canvas",
   "widgets": [
     {
-      "alignment": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,
@@ -205,7 +205,6 @@
       "dragged": null,
       "elevation": null,
       "enabled": null,
-      "expanded": null,
       "expanded_ratio": null,
       "fab": null,
       "fab_icon": null,

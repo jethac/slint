@@ -11,6 +11,7 @@
   },
   "mask_decor": {},
   "mask_inner": {},
+  "mask_shadow": {},
   "name": "modal-navigation-rail",
   "params": {},
   "parity": "static",
@@ -83,7 +84,6 @@
   "type": "canvas",
   "widgets": [
     {
-      "alignment": null,
       "always_show_label": null,
       "arrangement": "top",
       "body_color": null,

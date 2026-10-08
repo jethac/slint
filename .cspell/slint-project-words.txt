@@ -269,6 +269,7 @@ extendedfloatingactionbutton
 Exti
 EXTRAVERSION
 extversion
+fabmenu
 fabs
 fabstyle
 Farbfeld
@@ -508,6 +509,7 @@ Macronix
 mainwindow
 MALLOC
 manylinux
+maskdbg
 materialui
 matplot
 maturin
@@ -903,6 +905,7 @@ unfocusable
 unhinted
 unicodes
 uninit
+unioned
 unioning
 Unitless
 unittests

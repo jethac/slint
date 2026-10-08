@@ -11,6 +11,7 @@
   },
   "mask_decor": {},
   "mask_inner": {},
+  "mask_shadow": {},
   "name": "negative-pull-refresh-fraction",
   "negative_note": "the Slint side snaps to a different distance fraction — the indicator's travel and progress arc must not match",
   "params": {

@@ -10,6 +10,7 @@
   },
   "mask_decor": {},
   "mask_inner": {},
+  "mask_shadow": {},
   "name": "negative-navigation-rail",
   "negative_note": "the Slint rail keeps `expanded: false` while the reference expands — a rail that ignores its state must fail",
   "params": {},
@@ -83,7 +84,6 @@
   "type": "canvas",
   "widgets": [
     {
-      "alignment": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,

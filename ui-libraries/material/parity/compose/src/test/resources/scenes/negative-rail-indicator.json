@@ -10,6 +10,7 @@
   },
   "mask_decor": {},
   "mask_inner": {},
+  "mask_shadow": {},
   "name": "negative-rail-indicator",
   "negative_note": "the covering rectangle repaints the rail in a doubled secondary-container wash — an over-painted active indicator must fail",
   "params": {},
@@ -83,7 +84,6 @@
   "type": "canvas",
   "widgets": [
     {
-      "alignment": null,
       "always_show_label": true,
       "arrangement": null,
       "body_color": null,
@@ -106,7 +106,6 @@
       "dragged": null,
       "elevation": null,
       "enabled": null,
-      "expanded": null,
       "expanded_ratio": null,
       "fab": null,
       "fab_icon": null,
