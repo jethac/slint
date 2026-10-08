@@ -83,6 +83,8 @@ list-select-morph
 list-states
 loading-indicator-motion
 loading-indicator-states
+material-text-behaviors
+material-text-styles
 menu-group-morph
 menu-groups
 menu-items

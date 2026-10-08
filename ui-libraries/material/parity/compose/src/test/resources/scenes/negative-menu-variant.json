@@ -138,6 +138,7 @@
       "leading_icons": [],
       "leading_image": null,
       "level": null,
+      "max_lines": null,
       "menu_items": [
         {
           "icon": "edit",
@@ -148,11 +149,13 @@
           "trailing_icon": "check"
         }
       ],
+      "min_lines": null,
       "months_to_show": null,
       "multi_select": null,
       "nav_arrangement": null,
       "nav_icon": null,
       "obscure": null,
+      "overflow": null,
       "overline": null,
       "parent_elevation": null,
       "peek_height": null,
@@ -188,8 +191,10 @@
       "snack_height": null,
       "snack_width": null,
       "snackbar": null,
+      "soft_wrap": null,
       "spacing": null,
       "state": null,
+      "style": null,
       "subtitle": null,
       "suffix": null,
       "supporting": null,
@@ -197,6 +202,8 @@
       "supporting_text": null,
       "target_scale": null,
       "text": null,
+      "text_align": null,
+      "text_decoration": null,
       "thickness": null,
       "title": null,
       "toggle": null,
@@ -269,6 +276,7 @@
       "leading_icons": [],
       "leading_image": null,
       "level": null,
+      "max_lines": null,
       "menu_items": [
         {
           "selected": true,
@@ -279,11 +287,13 @@
           "text": "Other"
         }
       ],
+      "min_lines": null,
       "months_to_show": null,
       "multi_select": null,
       "nav_arrangement": null,
       "nav_icon": null,
       "obscure": null,
+      "overflow": null,
       "overline": null,
       "parent_elevation": null,
       "peek_height": null,
@@ -319,8 +329,10 @@
       "snack_height": null,
       "snack_width": null,
       "snackbar": null,
+      "soft_wrap": null,
       "spacing": null,
       "state": null,
+      "style": null,
       "subtitle": null,
       "suffix": null,
       "supporting": null,
@@ -328,6 +340,8 @@
       "supporting_text": null,
       "target_scale": null,
       "text": null,
+      "text_align": null,
+      "text_decoration": null,
       "thickness": null,
       "title": null,
       "toggle": null,
