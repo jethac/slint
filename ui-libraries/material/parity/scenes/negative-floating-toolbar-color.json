@@ -1,0 +1,69 @@
+{
+    "actions": [],
+    "densities": [
+        1,
+        2
+    ],
+    "fonts": {
+        "brand": "Roboto",
+        "plain": "Roboto"
+    },
+    "mask_decor": {
+        "appbar0": {
+            "margin": 8,
+            "times": [
+                2000
+            ]
+        },
+        "container": {
+            "margin": 12,
+            "times": [
+                2000
+            ]
+        },
+        "fab": {
+            "margin": 12,
+            "times": [
+                2000
+            ]
+        }
+    },
+    "name": "negative-floating-toolbar-color",
+    "negative_note": "slint_overrides paints the vibrant `primary_container` fill for an authored standard toolbar \u2014 the `surface_container` Compose reference must not match",
+    "params": {},
+    "parity": "negative",
+    "size": [
+        300,
+        140
+    ],
+    "theme": {
+        "contrast": 0.0,
+        "dark": false,
+        "platform": "phone",
+        "seed": "6750A4",
+        "spec": "spec2025",
+        "variant": "tonal-spot"
+    },
+    "trace_elements": [
+        "appbar0",
+        "container",
+        "fab"
+    ],
+    "type": "canvas",
+    "widgets": [
+        {
+            "fab_icon": "edit",
+            "icons": [
+                "check",
+                "menu",
+                "close"
+            ],
+            "kind": "horizontal-floating-toolbar",
+            "slint_overrides": {
+                "color_style": "vibrant"
+            },
+            "x": 50,
+            "y": 30
+        }
+    ]
+}

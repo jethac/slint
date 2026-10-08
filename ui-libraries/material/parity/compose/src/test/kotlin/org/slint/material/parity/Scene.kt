@@ -165,9 +165,27 @@ class Widget(json: JSONObject) {
      * overlapped, flipping the single-row bar to its scrolled color. */
     val contentOffset: Float = json.optDouble("content_offset", 0.0).toFloat()
     val navIcon: String? = (json.opt("nav_icon") as? String)?.takeIf { it.isNotEmpty() }
-    /** `top-app-bar` action / `bottom-app-bar` icon-button icon stems. */
+    /** `top-app-bar` action / `bottom-app-bar` icon-button icon stems; for
+     * the floating toolbars these are the center `content` icons. */
     val icons: List<String> =
         json.optJSONArray("icons")?.let { a -> (0 until a.length()).map(a::getString) } ?: emptyList()
+    /** `*FloatingToolbar` `leadingContent`/`trailingContent` icon stems. */
+    val leadingIcons: List<String> =
+        json.optJSONArray("leading_icons")?.let { a -> (0 until a.length()).map(a::getString) }
+            ?: emptyList()
+    val trailingIcons: List<String> =
+        json.optJSONArray("trailing_icons")?.let { a -> (0 until a.length()).map(a::getString) }
+            ?: emptyList()
+    /** FAB slot position on a `*FloatingToolbar`: `start`/`end` horizontal,
+     * `top`/`bottom` vertical. */
+    val fabPosition: String? =
+        (json.opt("fab_position") as? String)?.takeIf { it.isNotEmpty() }
+    /** `FloatingToolbarColorStyle` — `standard` (default) or `vibrant`. */
+    val colorStyle: String = (json.opt("color_style") as? String) ?: "standard"
+    /** `flexible-bottom-app-bar` item gap for the `spaced` arrangement. */
+    val spacing: Float = json.optDouble("spacing", 32.0).toFloat()
+    /** `flexible-bottom-app-bar` `expandedHeight` — `0` uses the default. */
+    val expandedHeight: Float = json.optDouble("expanded_height", 0.0).toFloat()
     val placeholder: String? = (json.opt("placeholder") as? String)?.takeIf { it.isNotEmpty() }
     /** `button-group` selection: `none` (clickable items, default),
      * `single`/`multiple` (toggle items). */
@@ -200,7 +218,8 @@ class Widget(json: JSONObject) {
     /** `extended-fab` expansion state (`expanded` upstream, default
      * expanded); on `fab-menu`, `FloatingActionButtonMenu.expanded` —
      * collapsed by default and driving the toggle's `checked`; for rails,
-     * `WideNavigationRailValue` — expanded when true, collapsed when false. */
+     * `WideNavigationRailValue` — expanded when true, collapsed when false.
+     * Also `*FloatingToolbar`'s `expanded` input (`false` starts collapsed). */
     val expanded: Boolean =
         json.optBoolean("expanded", !(kind.contains("rail") || kind == "fab-menu"))
     /** `fab`/`extended-fab` visibility — `visible` on
@@ -279,9 +298,14 @@ class Widget(json: JSONObject) {
      * sheet that slides in instead of keeping a persistent rail. */
     val hideOnCollapse: Boolean = json.optBoolean("hide_on_collapse", false)
     /** `Arrangement.Vertical` of the rail's item stack: `top` (default),
-     * `center`, `bottom`, `space-evenly`, `space-between`, `space-around`. */
-    val arrangement: String = (json.opt("arrangement") as? String) ?: "top"
-    /** FAB icon stem in the rail header. */
+     * `center`, `bottom`, `space-evenly`, `space-between`, `space-around`.
+     * On `flexible-bottom-app-bar`: `space-between` (default) or `spaced`
+     * (the `FlexibleFixedHorizontalArrangement` token spacing). */
+    val arrangement: String =
+        (json.opt("arrangement") as? String)
+            ?: if (kind == "flexible-bottom-app-bar") "space-between" else "top"
+    /** FAB icon stem in the rail header; on `*FloatingToolbar` the
+     * `floatingActionButton` slot. */
     val fabIcon: String? = (json.opt("fab_icon") as? String)?.takeIf { it.isNotEmpty() }
 
     val isFab: Boolean get() = kind == "fab" || kind == "extended-fab"

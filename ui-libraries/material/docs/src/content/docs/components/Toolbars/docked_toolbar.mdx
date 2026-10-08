@@ -1,0 +1,114 @@
+---
+title: Docked toolbars
+description: FlexibleBottomAppBar — the Material 3 Expressive docked toolbar.
+---
+
+import CodeSnippetMD from '@slint/common-files/src/components/CodeSnippetMD.astro';
+import SlintProperty from '@slint/common-files/src/components/SlintProperty.astro';
+
+<CodeSnippetMD imagePath="/src/assets/generated/docked_toolbar.png" scale="3" imageWidth="400" imageHeight="120" imageAlt="">
+```slint
+import { FlexibleBottomAppBar, BottomAppBarArrangement, Icons } from "@material";
+export component Example inherits Window {
+    width: 400px;
+    height: 120px;
+    background: transparent;
+    VerticalLayout {
+        Rectangle {}
+        FlexibleBottomAppBar {
+            width: parent.width;
+            arrangement: BottomAppBarArrangement.space-between;
+            items: [
+                { icon: Icons.edit, label: "Edit", enabled: true },
+                { icon: Icons.check, label: "Done", enabled: true },
+                { icon: Icons.remove, label: "Remove", enabled: true },
+            ];
+        }
+    }
+}
+```
+</CodeSnippetMD>
+
+`FlexibleBottomAppBar` is the Material 3 Expressive docked toolbar — a 64dp
+bar pinned to the bottom edge that replaces the deprecated `BottomAppBar`.
+Its `items` are `AppBarItem`s with an optional `label` (the label appears
+in the overflow menu); `toggleable` items show their `checked` state.
+
+`arrangement` picks the item layout: `space-between` (the
+`FlexibleHorizontalArrangement` spec default), `start`, or `spaced`
+(`DockedToolbarTokens.container-max-spacing` between items, 32dp).
+
+## Scroll behavior
+
+Set `exit-always` and bind `scroll-position` to `-flickable.content-y` to
+slide the bar away while scrolling down and back while scrolling up
+(`BottomAppBarDefaults.exitAlwaysScrollBehavior`); the bar itself is a drag
+area, so a vertical drag drives the same offset. Releasing a partial offset
+settles with the active motion scheme's fast-spatial spring
+(`BottomAppBarDefaults.snapAnimationSpec`), seeded by
+`release-velocity`.
+
+## Properties
+
+### items
+<SlintProperty propName="items" typeName="struct" structName="AppBarItem">
+`AppBarItem` entries — icon, overflow `label`, `enabled`, optional
+`toggleable`/`checked`.
+</SlintProperty>
+
+### arrangement
+<SlintProperty propName="arrangement" typeName="enum" enumName="BottomAppBarArrangement">
+`start`, `space-between` (the Expressive default), or `spaced`
+(`DockedToolbarTokens.container-max-spacing` between items).
+</SlintProperty>
+
+### spacing
+<SlintProperty propName="spacing" typeName="length">
+Item spacing when `arrangement` is `spaced`.
+</SlintProperty>
+
+### expanded-height
+<SlintProperty propName="expanded-height" typeName="length">
+Bar height when expanded — `DockedToolbarTokens.container-height` (64dp)
+unless overridden.
+</SlintProperty>
+
+### exit-always
+<SlintProperty propName="exit-always" typeName="bool">
+Enables the scroll-driven collapse.
+</SlintProperty>
+
+### scroll-position
+<SlintProperty propName="scroll-position" typeName="length">
+The scrolled amount of the content; bind `-flickable.content-y`.
+</SlintProperty>
+
+### container-color
+<SlintProperty propName="container-color" typeName="color">
+Bar background — `DockedToolbarTokens.container-color`
+(`surface_container`).
+</SlintProperty>
+
+### release-velocity
+<SlintProperty propName="release-velocity" typeName="float">
+`flickable.release-velocity.y` — seeds the settle animation.
+</SlintProperty>
+
+### height-offset / content-offset
+<SlintProperty propName="height-offset" typeName="length">
+Current exit offset and accumulated scroll offset (in-out; restore to
+preserve state).
+</SlintProperty>
+
+### collapsed-fraction
+<SlintProperty propName="collapsed-fraction" typeName="float">
+0–1 collapse progress.
+</SlintProperty>
+
+## Callbacks
+
+### item-clicked(index)
+Invoked when a bar item is clicked.
+
+### item-checked-changed(index, checked)
+Invoked when a toggleable item's state changes.

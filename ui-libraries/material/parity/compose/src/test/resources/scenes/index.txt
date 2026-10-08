@@ -46,6 +46,7 @@ date-picker-range-partial
 date-picker-range
 date-picker
 dividers
+docked-toolbars
 drag-handles
 elevation-shadow
 elevation-surfaces
@@ -60,6 +61,13 @@ fab-pressed
 fab-show-hide-morph
 fab-sizes
 fab-states
+floating-toolbar-fab-end
+floating-toolbar-fab-start-collapsed
+floating-toolbar-fab-vertical-collapsed
+floating-toolbar-fab-vertical
+floating-toolbar-fab-vibrant
+floating-toolbar-motion
+floating-toolbars
 icon-button-focus
 icon-button-press-morph
 icon-button-states
@@ -101,10 +109,13 @@ negative-date-picker-range-band
 negative-date-picker-selected-day
 negative-divider-color
 negative-divider-thickness
+negative-docked-toolbar-height
 negative-extended-fab-expanded
 negative-fab-color
 negative-fab-shadow
 negative-fab-size
+negative-floating-toolbar-collapsed
+negative-floating-toolbar-color
 negative-focus-layer
 negative-hover-layer
 negative-icon-button-morph

@@ -5,6 +5,9 @@
 #[cfg(test)]
 mod interpreter;
 
+#[cfg(test)]
+mod material_toolbar_scroll;
+
 include!(env!("TEST_FUNCTIONS"));
 
 // Run an example .slint file (path relative to the repo root) through the interpreter.

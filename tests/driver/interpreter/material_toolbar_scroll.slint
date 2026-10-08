@@ -1,0 +1,49 @@
+// Copyright © SixtyFPS GmbH <info@slint.dev>
+// SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0
+
+// Fixture for the `material_toolbar_scroll` test next to this file. It is not a
+// `tests/cases` case file: the scroll-behavior assertions need window events
+// and mocked time, which the case drivers can't express for the material
+// library.
+
+import {
+    HorizontalFloatingToolbar,
+    IconButton,
+    Icons,
+    MaterialWindow,
+} from "../../../ui-libraries/material/src/material.slint";
+
+export component TestCase inherits MaterialWindow {
+    width: 400phx;
+    height: 400phx;
+
+    flickable := Flickable {
+        width: 100%;
+        height: 100%;
+        content-width: root.width;
+        content-height: 4000phx;
+
+        Rectangle { width: root.width; height: 4000phx; }
+    }
+
+    toolbar := HorizontalFloatingToolbar {
+        x: (root.width - self.preferred-width) / 2;
+        y: root.height - self.height - 16phx;
+
+        expand-on-scroll: true;
+        exit-always: true;
+        scroll-position: -flickable.content-y;
+        scroll-release-velocity: flickable.release-velocity.y / 1px;
+        scroll-parent-extent: root.height;
+
+        IconButton { icon: Icons.check; }
+        IconButton { icon: Icons.menu; }
+        IconButton { icon: Icons.close; }
+    }
+
+    out property <bool> toolbar_expanded: toolbar.expanded;
+    out property <float> collapsed_fraction: toolbar.collapsed-fraction;
+    out property <length> toolbar_offset: toolbar.offset;
+    out property <length> offset_limit: toolbar.offset-limit;
+    out property <length> content_y: flickable.content-y;
+}

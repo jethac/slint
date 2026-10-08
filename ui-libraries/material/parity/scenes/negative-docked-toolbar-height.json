@@ -1,0 +1,48 @@
+{
+    "actions": [],
+    "densities": [
+        1,
+        2
+    ],
+    "fonts": {
+        "brand": "Roboto",
+        "plain": "Roboto"
+    },
+    "name": "negative-docked-toolbar-height",
+    "negative_note": "slint_overrides draws the bar at 104dp where the authored expandedHeight is the 112dp spec default \u2014 the shorter Slint bar must not match the Compose reference",
+    "params": {},
+    "parity": "negative",
+    "size": [
+        400,
+        150
+    ],
+    "theme": {
+        "contrast": 0.0,
+        "dark": false,
+        "platform": "phone",
+        "seed": "6750A4",
+        "spec": "spec2025",
+        "variant": "tonal-spot"
+    },
+    "trace_elements": [
+        "appbar0"
+    ],
+    "type": "canvas",
+    "widgets": [
+        {
+            "icons": [
+                "check",
+                "edit",
+                "menu",
+                "close"
+            ],
+            "kind": "flexible-bottom-app-bar",
+            "slint_overrides": {
+                "expanded_height": 104
+            },
+            "width": 360,
+            "x": 20,
+            "y": 20
+        }
+    ]
+}

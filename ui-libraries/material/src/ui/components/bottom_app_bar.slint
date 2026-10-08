@@ -186,10 +186,12 @@ export component AppBarColumn {
 /// Scroll-offset plumbing for the bottom app bars — the
 /// `ExitAlwaysScrollBehavior` of the pinned `AppBar.kt`: post-scroll deltas
 /// move the bar's height offset in both directions. `scroll-position` binds
-/// to `-content-y` of the scrolled content.
+/// to `-content-y` of the `Flickable` above the bar (positive while scrolling
+/// down) and `release-velocity` to its `release-velocity.y` in logical px/s.
 component BottomAppBarScrollState {
     in property <bool> scroll-enabled;
     in property <length> scroll-position;
+    in property <float> release-velocity;
     in-out property <length> height-offset;
     in-out property <length> content-offset;
     in property <length> collapsible-extent;
@@ -197,45 +199,124 @@ component BottomAppBarScrollState {
     out property <length> height-offset-limit: -root.collapsible-extent;
     out property <float> collapsed-fraction: root.collapsible-extent > 0 ?
         min(1, max(0, root.height-offset / root.height-offset-limit)) : 0;
-    out property <length> effective-offset: root.height-offset + settle-offset;
-    in-out property <length> settle-offset;
+    out property <length> effective-offset: root.height-offset + root.settle-offset;
+    property <length> settle-offset;
+    property <float> seed-velocity;
     property <length> last-scroll-position;
 
     changed scroll-position => {
         if !root.scroll-enabled {
+            root.last-scroll-position = root.scroll-position;
             return;
         }
         let delta = root.scroll-position - root.last-scroll-position;
         root.last-scroll-position = root.scroll-position;
-        root.content-offset = root.scroll-position;
-        root.height-offset = (root.height-offset - delta).clamp(root.height-offset-limit, 0px);
+        // `consumed.y` — the upstream forward-scroll delta — is the negative
+        // of `scroll-position`'s, which grows while scrolling down.
+        let consumed = -delta;
+        root.content-offset += consumed;
+        root.height-offset =
+            (root.height-offset + consumed).clamp(root.height-offset-limit, 0px);
         settle-timer.restart();
     }
 
-    /// `settleAppBarBottom` — snap to the nearer end with the
-    /// `BottomAppBarDefaults.snapAnimationSpec` fast-spatial spring.
-    public function settle() {
+    // Upstream's `onPostFling` clears the accumulator to cancel float drift
+    // once the bar sits at an extreme and the fling still pulls the content
+    // back (`available.y > 0` → positive `release-velocity` in Slint's sign
+    // convention, written once per release).
+    changed release-velocity => {
+        if root.scroll-enabled && root.release-velocity > 0 &&
+            (root.height-offset == 0px || root.height-offset == root.height-offset-limit) {
+            root.content-offset = 0px;
+        }
+    }
+
+    // Folds an in-flight settle back into `height-offset` before a new drag
+    // grabs it — otherwise the bar would jump to the settle target.
+    public function merge-settle() {
+        root.height-offset = root.effective-offset;
+        root.settle-offset = 0px;
+    }
+
+    /// `settleAppBarBottom` — upstream first decays the offset with the
+    /// release velocity and then snaps to the nearer end; Slint expresses
+    /// both as the `BottomAppBarDefaults.snapAnimationSpec` fast-spatial
+    /// spring on the remaining travel, seeded by `initial-velocity`.
+    public function settle(velocity: float) {
         if root.collapsed-fraction < 0.01 || root.collapsed-fraction == 1 {
             return;
         }
         let target = root.collapsed-fraction < 0.5 ? 0px : root.height-offset-limit;
         if target != root.height-offset {
-            settle-offset = root.height-offset - target;
+            root.seed-velocity = velocity;
+            root.settle-offset = root.height-offset - target;
             root.height-offset = target;
-            settle-offset = 0;
+            root.settle-offset = 0px;
         }
     }
     settle-timer := Timer {
         interval: 120ms;
         triggered => {
-            root.settle();
+            root.settle(root.release-velocity);
             self.running = false;
+        }
+    }
+
+    animate settle-offset {
+        enabled: !MaterialPalette.reduced-motion;
+        easing: MaterialAnimations.fast-spatial-spring;
+        initial-velocity: root.seed-velocity;
+    }
+}
+
+/// The `appBarDragModifier` of the pinned `AppBar.kt` — dragging the bar
+/// adjusts `height-offset`, releasing settles it with the measured drag
+/// velocity.
+component BottomAppBarDragArea inherits TouchArea {
+    in property <length> offset-limit;
+    in-out property <length> offset;
+    out property <float> offset-velocity;
+
+    callback drag-started();
+    callback drag-ended(velocity: float);
+
+    property <length> drag-start-offset;
+    property <length> last-position;
+    property <duration> last-tick;
+
+    moved => {
+        if self.pressed {
+            let now = animation-tick();
+            if root.last-tick > 0ms && now > root.last-tick {
+                root.offset-velocity =
+                    -((self.mouse-y - root.last-position) / 1px) /
+                    ((now - root.last-tick) / 1s);
+            }
+            root.last-position = self.mouse-y;
+            root.last-tick = now;
+            root.offset = (root.drag-start-offset - (self.mouse-y - self.pressed-y))
+                .clamp(root.offset-limit, 0px);
+        }
+    }
+
+    changed pressed => {
+        if self.pressed {
+            root.drag-started();
+            root.drag-start-offset = root.offset;
+            root.last-tick = 0ms;
+        } else {
+            root.drag-ended(root.offset-velocity);
         }
     }
 }
 
 /// `BottomAppBar` — a bar displaying navigation and key actions at the
 /// bottom of small screens, with an optional FAB at the end.
+///
+/// Deprecated: the Material 3 Expressive `FlexibleBottomAppBar` (the
+/// Compose `FlexibleBottomAppBar` on `DockedToolbarTokens`) replaces it —
+/// use that component for new code. This component still renders its own
+/// pinned spec faithfully.
 export component BottomAppBar inherits Rectangle {
     in property <[IconButtonItem]> icon-buttons;
     in property <image> fab-icon;
@@ -245,6 +326,8 @@ export component BottomAppBar inherits Rectangle {
     /// The scrolled amount of the content above the bar — bind
     /// `-flickable.content-y`.
     in property <length> scroll-position;
+    /// `flickable.release-velocity.y` — seeds the settle animation.
+    in property <float> release-velocity;
     in property <color> container-color: BottomAppBarTokens.container-color;
     in property <bool> touch-target: true;
 
@@ -261,6 +344,7 @@ export component BottomAppBar inherits Rectangle {
     scroll-state := BottomAppBarScrollState {
         scroll-enabled: root.exit-always;
         scroll-position: root.scroll-position;
+        release-velocity: root.release-velocity;
         collapsible-extent: BottomAppBarTokens.container-height;
     }
 
@@ -275,33 +359,17 @@ export component BottomAppBar inherits Rectangle {
         y: 0;
         width: 100%;
         height: BottomAppBarTokens.container-height;
-        property <length> settle-offset <=> scroll-state.settle-offset;
-        animate settle-offset {
-            enabled: !MaterialPalette.reduced-motion;
-            easing: MaterialAnimations.fast-spatial-spring;
-        }
         background: root.container-color;
 
         // `appBarDragModifier`: vertically dragging the bar adjusts the
-        // height offset; releasing settles it.
-        if root.exit-always : drag-area := TouchArea {
+        // height offset; releasing settles it with the drag velocity.
+        if root.exit-always : drag-area := BottomAppBarDragArea {
             width: 100%;
             height: 100%;
-            property <length> drag-start-offset;
-            moved => {
-                if self.pressed {
-                    root.height-offset =
-                        (self.drag-start-offset - (self.mouse-y - self.pressed-y))
-                            .clamp(scroll-state.height-offset-limit, 0px);
-                }
-            }
-            changed pressed => {
-                if self.pressed {
-                    self.drag-start-offset = root.height-offset;
-                } else {
-                    scroll-state.settle();
-                }
-            }
+            offset-limit: scroll-state.height-offset-limit;
+            offset <=> scroll-state.height-offset;
+            drag-started => { scroll-state.merge-settle(); }
+            drag-ended(velocity) => { scroll-state.settle(velocity); }
         }
 
         // `BottomAppBarDefaults.ContentPadding` = (4, 4, 4, 0): the actions
@@ -350,16 +418,23 @@ export component BottomAppBar inherits Rectangle {
     }
 }
 
-/// `FlexibleBottomAppBar` — the Expressive bottom app bar: a fixed-height
-/// row with a configurable arrangement of `AppBarItem`s.
+/// `FlexibleBottomAppBar` — the Material 3 Expressive docked toolbar: a
+/// fixed-height row with a configurable arrangement of `AppBarItem`s,
+/// pinned to the bottom edge. Replaces the deprecated `BottomAppBar`.
 export component FlexibleBottomAppBar inherits Rectangle {
     in property <[AppBarItem]> items;
     in property <BottomAppBarArrangement> arrangement: BottomAppBarArrangement.space-between;
     /// `DockedToolbarTokens.container-max-spacing` for `spaced`.
     in property <length> spacing: DockedToolbarTokens.container-max-spacing;
     in property <length> expanded-height: DockedToolbarTokens.container-height;
+    /// `ExitAlwaysScrollBehavior` — the bar slides away while scrolling down
+    /// and slides back while scrolling up.
     in property <bool> exit-always;
+    /// The scrolled amount of the content above the bar — bind
+    /// `-flickable.content-y`.
     in property <length> scroll-position;
+    /// `flickable.release-velocity.y` — seeds the settle animation.
+    in property <float> release-velocity;
     in property <color> container-color: DockedToolbarTokens.container-color;
     in property <string> overflow-tooltip;
     in property <bool> touch-target: true;
@@ -371,9 +446,16 @@ export component FlexibleBottomAppBar inherits Rectangle {
     in-out property <length> content-offset <=> scroll-state.content-offset;
     out property <float> collapsed-fraction <=> scroll-state.collapsed-fraction;
 
+    // The slot each item occupies — the 48dp touch-target box, or the 40dp
+    // `IconButton` container when `touch-target` is off (the upstream
+    // measurement with `LocalMinimumInteractiveComponentSize` disabled).
+    property <length> icon-slot-width: root.touch-target ? MaterialStyleMetrics.size-48 :
+        MaterialButtonMetrics.icon-container-width(MaterialButtonSize.small, IconButtonWidth.uniform);
+
     scroll-state := BottomAppBarScrollState {
         scroll-enabled: root.exit-always;
         scroll-position: root.scroll-position;
+        release-velocity: root.release-velocity;
         collapsible-extent: root.expanded-height;
     }
 
@@ -388,30 +470,16 @@ export component FlexibleBottomAppBar inherits Rectangle {
         width: 100%;
         height: root.expanded-height;
         background: root.container-color;
-        animate settle-offset {
-            enabled: !MaterialPalette.reduced-motion;
-            easing: MaterialAnimations.fast-spatial-spring;
-        }
-        property <length> settle-offset <=> scroll-state.settle-offset;
 
-        if root.exit-always : drag-area := TouchArea {
+        // `appBarDragModifier`: vertically dragging the bar adjusts the
+        // height offset; releasing settles it with the drag velocity.
+        if root.exit-always : drag-area := BottomAppBarDragArea {
             width: 100%;
             height: 100%;
-            property <length> drag-start-offset;
-            moved => {
-                if self.pressed {
-                    root.height-offset =
-                        (self.drag-start-offset - (self.mouse-y - self.pressed-y))
-                            .clamp(scroll-state.height-offset-limit, 0px);
-                }
-            }
-            changed pressed => {
-                if self.pressed {
-                    self.drag-start-offset = root.height-offset;
-                } else {
-                    scroll-state.settle();
-                }
-            }
+            offset-limit: scroll-state.height-offset-limit;
+            offset <=> scroll-state.height-offset;
+            drag-started => { scroll-state.merge-settle(); }
+            drag-ended(velocity) => { scroll-state.settle(velocity); }
         }
 
         content-row := Rectangle {
@@ -419,7 +487,7 @@ export component FlexibleBottomAppBar inherits Rectangle {
             y: (parent.height - self.height) / 2;
             width: parent.width - DockedToolbarTokens.container-leading-space -
                 DockedToolbarTokens.container-trailing-space;
-            height: MaterialStyleMetrics.size-48;
+            height: root.icon-slot-width;
 
             if root.arrangement == BottomAppBarArrangement.start : AppBarRow {
                 x: 0;
@@ -437,8 +505,8 @@ export component FlexibleBottomAppBar inherits Rectangle {
             if root.arrangement == BottomAppBarArrangement.space-between : spaced-between := Rectangle {
                 for item[index] in root.items : IconButton {
                     x: root.items.length <= 1 ? 0 :
-                        index * (parent.width - MaterialStyleMetrics.size-48) / (root.items.length - 1);
-                    width: MaterialStyleMetrics.size-48;
+                        index * (parent.width - root.icon-slot-width) / (root.items.length - 1);
+                    width: root.icon-slot-width;
                     height: 100%;
                     icon: item.icon;
                     enabled: item.enabled;
@@ -464,10 +532,10 @@ export component FlexibleBottomAppBar inherits Rectangle {
             if root.arrangement == BottomAppBarArrangement.spaced : spaced-row := Rectangle {
                 width: parent.width;
                 for item[index] in root.items : IconButton {
-                    x: (parent.width - root.items.length * MaterialStyleMetrics.size-48 -
+                    x: (parent.width - root.items.length * root.icon-slot-width -
                             (root.items.length - 1) * root.spacing) / 2 +
-                        index * (MaterialStyleMetrics.size-48 + root.spacing);
-                    width: MaterialStyleMetrics.size-48;
+                        index * (root.icon-slot-width + root.spacing);
+                    width: root.icon-slot-width;
                     height: 100%;
                     icon: item.icon;
                     enabled: item.enabled;

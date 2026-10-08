@@ -1,0 +1,97 @@
+{
+  "actions": [],
+  "densities": [
+    1,
+    2
+  ],
+  "fonts": {
+    "brand": "Roboto",
+    "plain": "Roboto"
+  },
+  "name": "floating-toolbars",
+  "params": {},
+  "parity": "static",
+  "size": [
+    700,
+    500
+  ],
+  "theme": {
+    "contrast": 0.0,
+    "dark": false,
+    "platform": "phone",
+    "seed": "6750A4",
+    "spec": "spec2025",
+    "variant": "tonal-spot"
+  },
+  "trace_elements": [
+    "appbar0",
+    "appbar1",
+    "appbar2",
+    "appbar3"
+  ],
+  "type": "canvas",
+  "widgets": [
+    {
+      "icons": [
+        "menu"
+      ],
+      "kind": "horizontal-floating-toolbar",
+      "leading_icons": [
+        "check",
+        "edit"
+      ],
+      "trailing_icons": [
+        "close",
+        "more_vert"
+      ],
+      "x": 242,
+      "y": 30
+    },
+    {
+      "expanded": false,
+      "icons": [
+        "menu"
+      ],
+      "kind": "horizontal-floating-toolbar",
+      "leading_icons": [
+        "check"
+      ],
+      "trailing_icons": [
+        "close"
+      ],
+      "x": 322,
+      "y": 130
+    },
+    {
+      "icons": [
+        "check",
+        "menu"
+      ],
+      "kind": "vertical-floating-toolbar",
+      "leading_icons": [
+        "edit"
+      ],
+      "trailing_icons": [
+        "close"
+      ],
+      "x": 610,
+      "y": 110
+    },
+    {
+      "expanded": false,
+      "icons": [
+        "menu",
+        "check"
+      ],
+      "kind": "vertical-floating-toolbar",
+      "leading_icons": [
+        "check"
+      ],
+      "trailing_icons": [
+        "close"
+      ],
+      "x": 613,
+      "y": 320
+    }
+  ]
+}
