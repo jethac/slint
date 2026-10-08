@@ -762,9 +762,20 @@ impl<'a, S: PaintScene> ItemRenderer for AnyrenderItemRenderer<'a, S> {
         }
         let outline = shadow_item.element_outline();
 
-        // `current_state.transform` already maps item space to device pixels.
+        // `current_state.transform` maps item space to device pixels, but its
+        // linear part carries no scale: this renderer applies `scale_factor`
+        // to each drawn geometry itself. Fold it into the linear part so the
+        // shadow outline rasterizes at device resolution like the rest.
         let [a, b, c, d, e, f] = self.current_state.transform.as_coeffs();
-        let ctm = shadow::Affine::new(a as f32, b as f32, c as f32, d as f32, e as f32, f as f32);
+        let (a, b, c, d, e, f) = (a as f32, b as f32, c as f32, d as f32, e as f32, f as f32);
+        let ctm = shadow::Affine::new(
+            a * scale_factor,
+            b * scale_factor,
+            c * scale_factor,
+            d * scale_factor,
+            e,
+            f,
+        );
 
         let adapter = i_slint_core::window::WindowInner::from_pub(self.window).window_adapter();
         let (light, light_radius) = shadow::elevation_light(

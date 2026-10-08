@@ -40,9 +40,13 @@ import {
     LargeFlexibleTopAppBar,
     CheckBoxTile,
     CheckState,
-    ActionChip,
+    AssistChip,
+    ElevatedAssistChip,
     FilterChip,
+    ElevatedFilterChip,
     InputChip,
+    SuggestionChip,
+    ElevatedSuggestionChip,
     TimePickerPopup,
     Switch,
     Slider,
@@ -714,7 +718,7 @@ export component NavigationView {
 
                 Vertical {
                     Horizontal {
-                        ActionChip {
+                        AssistChip {
                             text: "Assist";
                             icon: OutlinedIcons.calendar_month;
                         }
@@ -726,16 +730,34 @@ export component NavigationView {
 
                         InputChip {
                             text: "Input";
-                            trailing_icon: OutlinedIcons.delete;
+                            avatar_icon: OutlinedIcons.person;
+                            trailing_icon: OutlinedIcons.close;
                         }
 
-                        ActionChip {
+                        SuggestionChip {
                             text: "Suggestion";
                         }
                     }
 
                     Horizontal {
-                        ActionChip {
+                        ElevatedAssistChip {
+                            text: "Assist";
+                            icon: OutlinedIcons.calendar_month;
+                        }
+
+                        ElevatedFilterChip {
+                            checked: fc.checked;
+                            expressive: true;
+                            text: "Filter";
+                        }
+
+                        ElevatedSuggestionChip {
+                            text: "Suggestion";
+                        }
+                    }
+
+                    Horizontal {
+                        AssistChip {
                             text: "Assist";
                             icon: OutlinedIcons.calendar_month;
                             enabled: false;
@@ -749,10 +771,11 @@ export component NavigationView {
 
                         InputChip {
                             text: "Input";
+                            trailing_icon: OutlinedIcons.close;
                             enabled: false;
                         }
 
-                        ActionChip {
+                        ElevatedSuggestionChip {
                             text: "Suggestion";
                             enabled: false;
                         }

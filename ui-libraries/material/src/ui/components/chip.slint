@@ -1,205 +1,1009 @@
 // Copyright © SixtyFPS GmbH <info@slint.dev>
 // SPDX-License-Identifier: MIT
 
-import { BaseButton } from "./base_button.slint";
-import { MaterialTypography } from "../styling/material_typography.slint";
+// Reworked against compose/material3 `Chip.kt` at
+// androidx/androidx@23327507f7fc7d5b19d65fec4b090f60c970079b
+// (material3 1.5.0-alpha18): Surface container with animated elevation,
+// 32dp minimum height, `ChipArrangement` slot spacing, avatar-before-icon
+// leading slot, expressive corner morphing on the `shapes:` overloads of
+// FilterChip/InputChip, and `AnimatingChipContent` icon-slot transitions
+// on selectable chips.
+
+import { StateLayerArea, FocusRing } from "./state_layer.slint";
+import { Elevation } from "./elevation.slint";
 import { MaterialPalette } from "../styling/material_palette.slint";
-import { MaterialStyleMetrics } from "../styling/material_style_metrics.slint";
-import { Icons } from "../icons/icons.slint";
 import { MaterialAnimations } from "../styling/material_animations.slint";
-import { IconButton } from "icon_button.slint";
+import { MaterialText } from "./material_text.slint";
+import { Icon } from "./icon.slint";
+import { MaterialCornerShape } from "../styling/generated/material_shape_tokens.slint";
+import { ShapeTokens } from "../styling/generated/material_shape_tokens.slint";
+import { ChipsTokens } from "../styling/generated/material_component_tokens.slint";
+import { AssistChipTokens } from "../styling/generated/material_component_tokens.slint";
+import { FilterChipTokens } from "../styling/generated/material_component_tokens.slint";
+import { InputChipTokens } from "../styling/generated/material_component_tokens.slint";
+import { SuggestionChipTokens } from "../styling/generated/material_component_tokens.slint";
+import { MaterialButtonMetrics } from "./button_metrics.slint";
 
-export component ActionChip {
-    in property <image> icon <=> base.icon;
-    in property <string> text <=> base.text;
-    in property <bool> enabled <=> base.enabled;
-    in property <string> tooltip <=> base.tooltip;
-    in property <image> avatar_icon <=> base.avatar-icon;
-    in property <color> avatar_background <=> base.avatar_background;
-
-    callback clicked <=> base.clicked;
-
-    forward-focus: base;
-    accessible-role: button;
-    accessible-enabled: root.enabled;
-    accessible-label: root.text == "" ? root.tooltip : root.text;
-    accessible-action-default => { base.clicked(); }
-
-
-    border := Rectangle {
-        border_radius: base.border_radius;
-        border_width: 1px;
-        border_color: MaterialPalette.outline;
-
-        base := BaseButton {
-            min_layout_height: MaterialStyleMetrics.size_32;
-            border_radius: MaterialStyleMetrics.border_radius_8;
-            color: MaterialPalette.on_surface;
-            icon_color: MaterialPalette.primary;
-            spacing: MaterialStyleMetrics.spacing_8;
-            button_padding_left: self.has_icon ? MaterialStyleMetrics.padding_8 : MaterialStyleMetrics.padding_16;
-            button_padding_right:MaterialStyleMetrics.padding_16;
-            button_vertical_padding: MaterialStyleMetrics.padding_6;
-            avatar_size: MaterialStyleMetrics.size_18;
-        }
-    }
-
-    states [
-        disabled when !root.enabled : {
-            base.display_background: false;
-            base.icon_color: MaterialPalette.on_surface;
-        }
-    ]
+// The `ChipShapes` of the expressive `FilterChip`/`InputChip` `shapes:`
+// overloads (`defaultChipShapes()` = ChipsTokens.UnselectedShape /
+// SelectedShape / PressedShape).
+export struct MaterialChipShapes {
+    shape: MaterialCornerShape,
+    selected_shape: MaterialCornerShape,
+    pressed_shape: MaterialCornerShape,
 }
 
-export component FilterChip {
-    in property <image> icon <=> base.icon;
-    in property <string> text <=> base.text;
-    in property <bool> enabled <=> base.enabled;
-    in property <string> tooltip <=> base.tooltip;
-    in_out property <bool> checked;
+enum ChipInteraction { none, press, hover, focus, drag }
 
-    forward-focus: base;
-    accessible-role: button;
-    accessible-enabled: root.enabled;
-    accessible-label: root.text == "" ? root.tooltip : root.text;
-    accessible-checkable: true;
-    accessible-checked: root.checked;
-    accessible-action-default => { base.clicked(); }
-
-    border := Rectangle {
-        border_radius: base.border_radius;
-        border_width: 1px;
-        border_color: MaterialPalette.outline;
-
-
-        base := BaseButton {
-            min_layout_height: MaterialStyleMetrics.size_32;
-            border_radius: MaterialStyleMetrics.border_radius_8;
-            color: MaterialPalette.on_surface;
-            icon_color: MaterialPalette.primary;
-            spacing: MaterialStyleMetrics.spacing_8;
-            button_padding_left: self.has_icon ? MaterialStyleMetrics.padding_8 : MaterialStyleMetrics.padding_16;
-            button_padding_right:MaterialStyleMetrics.padding_16;
-            button_vertical_padding: MaterialStyleMetrics.padding_6;
-            avatar_size: MaterialStyleMetrics.size_18;
-
-            clicked => {
-                root.toggle();
-            }
-        }
-
-        states [
-            checked when root.checked : {
-                base.icon: Icons.check;
-                base.icon_color: MaterialPalette.on_secondary_container;
-                base.color: MaterialPalette.on_secondary_container;
-                border.border_width: 0;
-                border.background: MaterialPalette.secondary_container;
-            }
-        ]
-
-        animate width { enabled: !MaterialPalette.reduced-motion; duration: MaterialAnimations.standard_accelerate_duration; easing: MaterialAnimations.standard_easing; }
-    }
-
-    function toggle() {
-        root.checked = !root.checked;
-    }
-
-    states [
-        disabled when !root.enabled : {
-            base.display_background: false;
-            base.icon_color: MaterialPalette.on_surface;
-        }
-    ]
-}
-
-export component InputChip {
-    in property <image> leading_icon <=> base.icon;
+// Shared body of `Chip` and `SelectableChip` (Chip.kt). The public
+// components below resolve the token tables and pass them in; this base
+// only applies the state machine: winner-takes-all interaction tracking,
+// the pinned elevation timing, the corner morph and the slot animations.
+component ChipBase {
+    // content slots
+    in property <string> text;
+    in property <image> leading_icon;
     in property <image> trailing_icon;
-    in property <image> avatar <=> base.avatar-icon;
-    in property <color> avatar_background <=> base.avatar_background;
-    in property <string> text <=> base.text;
-    in property <bool> enabled <=> base.enabled;
-    in property <string> tooltip <=> base.tooltip;
-    in property <bool> checkable;
+    in property <image> avatar;
+    // glyph-style avatar (the upstream samples' `Icon` avatar — tinted
+    // like the label, rather than a raw image)
+    in property <image> avatar_icon;
+    in property <length> leading_icon_size: ChipsTokens.leading_icon_size;
+    in property <length> trailing_icon_size: ChipsTokens.trailing_icon_size;
+    in property <length> avatar_size: ChipsTokens.avatar_size;
+
+    // behavior/state
+    in property <bool> enabled: true;
+    in property <bool> selectable;
     in_out property <bool> checked;
+    in property <bool> dragged;
+    // parity-harness state hooks — see `StateLayerArea.simulate_*`
+    in property <bool> simulate_hover;
+    in property <bool> simulate_press;
 
-    property <bool> has_avatar: root.avatar.width > 0 && root.avatar.height > 0;
+    // colors, already resolved for every (enabled, selected) combination
+    in property <color> container_color;
+    in property <color> selected_container_color;
+    in property <color> disabled_container_color;
+    in property <color> disabled_selected_container_color;
+    in property <color> label_color;
+    in property <color> selected_label_color;
+    in property <color> disabled_label_color;
+    in property <color> leading_color;
+    in property <color> selected_leading_color;
+    in property <color> disabled_leading_color;
+    in property <color> trailing_color;
+    in property <color> selected_trailing_color;
+    in property <color> disabled_trailing_color;
+    // Surface contentColor — drives the state layer and the ripple.
+    in property <color> state_color: MaterialPalette.on_surface;
 
-    callback clicked();
-    callback trailing_icon_clicked();
+    // static border resolved for every (enabled, selected) combination —
+    // chip borders are not animated upstream (BorderStroke per state).
+    in property <color> unselected_border_color;
+    in property <length> unselected_border_width: 1px;
+    in property <color> selected_border_color;
+    in property <length> selected_border_width;
+    in property <color> disabled_unselected_border_color;
+    in property <length> disabled_unselected_border_width: 1px;
+    in property <color> disabled_selected_border_color;
+    in property <length> disabled_selected_border_width;
 
-    forward-focus: base;
-    accessible-role: button;
-    accessible-enabled: root.enabled;
-    accessible-label: root.text == "" ? root.tooltip : root.text;
-    accessible-checkable: root.checkable;
-    accessible-checked: root.checked;
-    accessible-action-default => { base.clicked(); }
+    // shape: static `shape` overload by default; `expressive` selects the
+    // `shapes:` overload — pressed/selected corner morphing on
+    // FastSpatial.
+    in property <MaterialCornerShape> container_shape: AssistChipTokens.container_shape;
+    in property <MaterialChipShapes> chip_shapes: {
+        shape: ChipsTokens.unselected_shape,
+        selected_shape: ChipsTokens.selected_shape,
+        pressed_shape: ChipsTokens.pressed_shape,
+    };
+    in property <bool> expressive;
 
-    border := Rectangle {
-        border_radius: base.border_radius;
-        border_width: 1px;
-        border_color: MaterialPalette.outline;
-        clip: true;
+    // ChipElevation/SelectableChipElevation slot, as level indices.
+    in property <int> elevation_default;
+    in property <int> elevation_pressed;
+    in property <int> elevation_focused;
+    in property <int> elevation_hovered;
+    in property <int> elevation_dragged;
+    in property <int> elevation_disabled;
 
-        base := BaseButton {
-            min_layout_height: MaterialStyleMetrics.size_32;
-            border_radius: root.has_avatar ? self.height / 2 : MaterialStyleMetrics.border_radius_8;
-            color: MaterialPalette.on_surface;
-            icon_color: MaterialPalette.primary;
-            spacing: MaterialStyleMetrics.spacing_8;
-            button_padding_left: root.has_avatar ? MaterialStyleMetrics.padding_4 : self.has_icon ? MaterialStyleMetrics.padding_8 : MaterialStyleMetrics.padding_12;
-            button_padding_right: root.trailing_icon.width > 0 && root.trailing_icon.height > 0 ? MaterialStyleMetrics.padding_8 : MaterialStyleMetrics.padding_12;
-            button_vertical_padding: MaterialStyleMetrics.padding_6;
-            avatar_size: MaterialStyleMetrics.size_18;
+    // layout knobs from the defaults objects
+    in property <length> padding_start: 8px;
+    in property <length> padding_end: 8px;
+    in property <length> leading_spacing: 8px;
+    in property <length> trailing_spacing: 8px;
 
-            if root.trailing_icon.width > 0 && root.trailing_icon.height > 0 : VerticalLayout {
-                alignment: center;
+    // AnimatingChipContent spec pair (selectable chips only): the
+    // `shape:` overload uses SlowEffects-in/FastEffects-out +
+    // FastSpatial-expand/DefaultEffects-shrink, the `shapes:` overload
+    // uses DefaultEffects fades + FastSpatial expand/shrink.
+    in property <bool> animate_slots;
+    in property <easing> fade_in_spec: MaterialAnimations.slow_effects_spring;
+    in property <easing> fade_out_spec: MaterialAnimations.fast_effects_spring;
+    in property <easing> expand_spec: MaterialAnimations.fast_spatial_spring;
+    in property <easing> shrink_spec: MaterialAnimations.default_effects_spring;
 
-                IconButton {
-                    icon: root.trailing_icon;
-                    inline: true;
-                    enabled: root.enabled;
+    out property <bool> has_focus <=> area.has_focus;
+    out property <bool> pressed <=> area.pressed;
+    out property <bool> has_hover <=> area.has_hover;
+    out property <length> shadow_elevation <=> container.shadow_height;
+    out property <length> corner_top_left: root.corner_tl;
+    out property <length> corner_top_right: root.corner_tr;
+    out property <length> corner_bottom_right: root.corner_br;
+    out property <length> corner_bottom_left: root.corner_bl;
+    out property <color> resolved_content_color: !root.enabled ? root.disabled_label_color
+        : (root.selectable && root.checked) ? root.selected_label_color : root.label_color;
 
-                    clicked => {
-                        root.trailing_icon_clicked();
+    callback clicked;
+    callback trailing_icon_clicked;
+    // optional background color behind the avatar slot
+    in property <color> avatar_background;
+
+    // interactionSource → elevation winner: the last interaction to
+    // engage wins until it disengages — the stamp clock from
+    // floating_action_button.slint, extended with drag.
+    property <int> clock;
+    property <int> press_stamp: -1;
+    property <int> hover_stamp: -1;
+    property <int> focus_stamp: -1;
+    property <int> drag_stamp: -1;
+    property <ChipInteraction> last_target: ChipInteraction.none;
+
+    property <bool> state_pressed: area.effective_pressed;
+    property <bool> state_hover: area.effective_hover;
+    property <bool> state_focus: area.has_focus;
+    // `changed` does not run for a state already engaged at init (the
+    // `simulate_*` scenes); seed those stamps so the winner and the
+    // elevation table apply as if the interaction landed at time zero.
+    init => {
+        if root.state_pressed {
+            root.clock += 1;
+            root.press_stamp = root.clock;
+        }
+        if root.state_hover {
+            root.clock += 1;
+            root.hover_stamp = root.clock;
+        }
+        if root.state_focus {
+            root.clock += 1;
+            root.focus_stamp = root.clock;
+        }
+        if root.dragged {
+            root.clock += 1;
+            root.drag_stamp = root.clock;
+        }
+    }
+    changed state_pressed => {
+        root.last_target = root.winner;
+        if root.state_pressed {
+            root.clock += 1;
+            root.press_stamp = root.clock;
+        } else {
+            root.press_stamp = -1;
+        }
+    }
+    changed state_hover => {
+        root.last_target = root.winner;
+        if root.state_hover {
+            root.clock += 1;
+            root.hover_stamp = root.clock;
+        } else {
+            root.hover_stamp = -1;
+        }
+    }
+    changed state_focus => {
+        root.last_target = root.winner;
+        if root.state_focus {
+            root.clock += 1;
+            root.focus_stamp = root.clock;
+        } else {
+            root.focus_stamp = -1;
+        }
+    }
+    changed dragged => {
+        root.last_target = root.winner;
+        if root.dragged {
+            root.clock += 1;
+            root.drag_stamp = root.clock;
+        } else {
+            root.drag_stamp = -1;
+        }
+    }
+
+    /// The winning interaction — `to != null` upstream picks the
+    /// incoming spec; a null winner picks the outgoing spec by
+    /// `last_target`.
+    property <ChipInteraction> winner:
+        root.press_stamp > root.drag_stamp && root.press_stamp > root.hover_stamp && root.press_stamp > root.focus_stamp ? ChipInteraction.press :
+        root.drag_stamp > root.hover_stamp && root.drag_stamp > root.focus_stamp ? ChipInteraction.drag :
+        root.hover_stamp > root.focus_stamp ? ChipInteraction.hover :
+        root.focus_stamp > -1 ? ChipInteraction.focus : ChipInteraction.none;
+
+    // Elevation.animateElevation: disabled snaps to the disabled level
+    // (snapTo), otherwise incoming 120ms emphasized-in / outgoing 150ms
+    // emphasized-out (120ms when the winner was hover).
+    property <int> current_level: !root.enabled ? root.elevation_disabled
+        : root.winner == ChipInteraction.drag ? root.elevation_dragged
+        : root.winner == ChipInteraction.press ? root.elevation_pressed
+        : root.winner == ChipInteraction.hover ? root.elevation_hovered
+        : root.winner == ChipInteraction.focus ? root.elevation_focused
+        : root.elevation_default;
+
+    // resolved per-state color/border values
+    property <color> container_color_r: !root.enabled
+        ? (root.selectable && root.checked ? root.disabled_selected_container_color : root.disabled_container_color)
+        : (root.selectable && root.checked ? root.selected_container_color : root.container_color);
+    property <color> label_color_r: !root.enabled ? root.disabled_label_color
+        : (root.selectable && root.checked ? root.selected_label_color : root.label_color);
+    property <color> leading_color_r: !root.enabled ? root.disabled_leading_color
+        : (root.selectable && root.checked ? root.selected_leading_color : root.leading_color);
+    property <color> trailing_color_r: !root.enabled ? root.disabled_trailing_color
+        : (root.selectable && root.checked ? root.selected_trailing_color : root.trailing_color);
+    property <color> border_color_r: !root.enabled
+        ? (root.selectable && root.checked ? root.disabled_selected_border_color : root.disabled_unselected_border_color)
+        : (root.selectable && root.checked ? root.selected_border_color : root.unselected_border_color);
+    property <length> border_width_r: !root.enabled
+        ? (root.selectable && root.checked ? root.disabled_selected_border_width : root.disabled_unselected_border_width)
+        : (root.selectable && root.checked ? root.selected_border_width : root.unselected_border_width);
+
+    // shapeByInteraction: pressed > selected > rest, animated on
+    // FastSpatial for the expressive overload only.
+    property <MaterialCornerShape> target_shape: root.expressive
+        ? (root.state_pressed ? root.chip_shapes.pressed_shape
+            : (root.selectable && root.checked ? root.chip_shapes.selected_shape : root.chip_shapes.shape))
+        : root.container_shape;
+    // CornerFull = half the smaller dimension — the chip height.
+    property <length> corner_tl: MaterialButtonMetrics.corner-radius(root.target_shape, min(root.width, root.height));
+    property <length> corner_tr: MaterialButtonMetrics.corner-radius(root.target_shape, min(root.width, root.height));
+    property <length> corner_br: MaterialButtonMetrics.corner-radius(root.target_shape, min(root.width, root.height));
+    property <length> corner_bl: MaterialButtonMetrics.corner-radius(root.target_shape, min(root.width, root.height));
+
+    // slot presence: the avatar takes precedence over the leading icon
+    out property <bool> has_avatar: (root.avatar.width > 0 && root.avatar.height > 0)
+        || (root.avatar_icon.width > 0 && root.avatar_icon.height > 0);
+    out property <bool> has_leading: root.has_avatar || (root.leading_icon.width > 0 && root.leading_icon.height > 0);
+    out property <bool> has_trailing: root.trailing_icon.width > 0 && root.trailing_icon.height > 0;
+    property <length> leading_natural: root.has_avatar ? root.avatar_size : root.leading_icon_size;
+
+    // rememberRetainedState keeps drawing the previous slot content
+    // while the exit transition shrinks the slot; pure bindings so the
+    // init-time state resolves too.
+    property <image> leading_drawn: root.has_avatar
+        ? (root.avatar_icon.width > 0 ? root.avatar_icon : root.avatar)
+        : root.leading_icon;
+    property <image> trailing_drawn: root.trailing_icon;
+    property <bool> drawn_is_avatar: root.has_avatar;
+
+    property <length> leading_w: root.has_leading ? root.leading_natural : 0;
+    property <length> trailing_w: root.has_trailing ? root.trailing_icon_size : 0;
+    property <float> leading_opacity: root.has_leading ? 1 : 0;
+    property <float> trailing_opacity: root.has_trailing ? 1 : 0;
+
+    animate leading_w { easing: root.has_leading ? root.expand_spec : root.shrink_spec; enabled: root.animate_slots && !MaterialPalette.reduced-motion; }
+    animate trailing_w { easing: root.has_trailing ? root.expand_spec : root.shrink_spec; enabled: root.animate_slots && !MaterialPalette.reduced-motion; }
+    animate leading_opacity { easing: root.has_leading ? root.fade_in_spec : root.fade_out_spec; enabled: root.animate_slots && !MaterialPalette.reduced-motion; }
+    animate trailing_opacity { easing: root.has_trailing ? root.fade_in_spec : root.fade_out_spec; enabled: root.animate_slots && !MaterialPalette.reduced-motion; }
+
+    // `morph_armed` keeps the corner springs off until an interaction has
+    // engaged (or the chip starts checked): the `expressive` in-prop lands
+    // after the first binding eval, and an enabled-from-the-start `animate`
+    // would spring `container_shape` → `chip_shapes.shape` through frame 0.
+    property <bool> morph_armed: root.clock > 0 || (root.selectable && root.checked);
+    animate corner_tl { easing: MaterialAnimations.fast_spatial_spring; enabled: root.expressive && root.morph_armed && !MaterialPalette.reduced-motion; }
+    animate corner_tr { easing: MaterialAnimations.fast_spatial_spring; enabled: root.expressive && root.morph_armed && !MaterialPalette.reduced-motion; }
+    animate corner_br { easing: MaterialAnimations.fast_spatial_spring; enabled: root.expressive && root.morph_armed && !MaterialPalette.reduced-motion; }
+    animate corner_bl { easing: MaterialAnimations.fast_spatial_spring; enabled: root.expressive && root.morph_armed && !MaterialPalette.reduced-motion; }
+
+    // ChipArrangement: slot 1 sits after the leading slot plus
+    // leadingSpacing when it has size, otherwise trailingSpacing; the
+    // trailing slot is placed at the end of the row.
+    property <length> content_width: root.leading_w + root.leading_spacing + root.trailing_spacing
+        + label_w + root.trailing_w;
+    property <length> label_w: min(label_natural_w, max(0px, 1000px - root.padding_start - root.padding_end
+        - root.leading_w - root.leading_spacing - root.trailing_spacing - root.trailing_w));
+    property <length> label_natural_w: label.preferred-width;
+    property <length> label_x: root.padding_start + (root.leading_w > 0 ? root.leading_w + root.leading_spacing : root.trailing_spacing);
+    property <length> trailing_x: root.width - root.padding_end - root.trailing_w;
+
+    min_height: ChipsTokens.height;
+    preferred_width: root.padding_start + root.content_width + root.padding_end;
+    preferred_height: ChipsTokens.height;
+    forward-focus: area;
+
+    container := Elevation {
+        width: 100%;
+        height: 100%;
+        level: root.current_level;
+        background: root.container_color_r;
+        interaction_active: root.enabled && root.winner != ChipInteraction.none;
+        in_duration: root.enabled ? 120ms : 0ms;
+        in_easing: cubic-bezier(0.4, 0, 0.2, 1);
+        out_duration: !root.enabled ? 0ms : (root.last_target == ChipInteraction.hover ? 120ms : 150ms);
+        out_easing: cubic-bezier(0.4, 0, 0.6, 1);
+        shaped_corners: true;
+        corners: { top_left: root.corner_tl, top_right: root.corner_tr,
+            bottom_right: root.corner_br, bottom_left: root.corner_bl };
+
+        area := StateLayerArea {
+            width: 100%;
+            height: 100%;
+            enabled: root.enabled;
+            focus_ring: true;
+            color: root.state_color;
+            shaped_corners: true;
+            corners: { top_left: root.corner_tl, top_right: root.corner_tr,
+                bottom_right: root.corner_br, bottom_left: root.corner_bl };
+            hit_corners: { top_left: MaterialButtonMetrics.corner-radius(root.target_shape, min(root.width, root.height)),
+                top_right: MaterialButtonMetrics.corner-radius(root.target_shape, min(root.width, root.height)),
+                bottom_right: MaterialButtonMetrics.corner-radius(root.target_shape, min(root.width, root.height)),
+                bottom_left: MaterialButtonMetrics.corner-radius(root.target_shape, min(root.width, root.height)) };
+            display_background: false;
+            simulate_hover: root.simulate_hover;
+            simulate_press: root.simulate_press;
+
+            // The container fill lives on `container.background` so the state
+            // layer and ripple draw over it; this rectangle only clips content
+            // (icons, label, trailing slot) to the chip shape.
+            background_clip := Rectangle {
+                width: 100%;
+                height: 100%;
+                clip: true;
+                border_top_left_radius: root.corner_tl;
+                border_top_right_radius: root.corner_tr;
+                border_bottom_right_radius: root.corner_br;
+                border_bottom_left_radius: root.corner_bl;
+
+                leading_box := Rectangle {
+                    x: root.padding_start;
+                    y: (parent.height - self.height) / 2;
+                    width: root.leading_w;
+                    height: root.leading_natural;
+                    clip: true;
+                    opacity: root.leading_opacity;
+
+                    if root.drawn_is_avatar : Rectangle {
+                        width: root.avatar_size;
+                        height: root.avatar_size;
+                        clip: true;
+                        border_radius: root.width / 2;
+                        background: root.avatar_background;
+                        opacity: root.enabled ? 1 : InputChipTokens.disabled_avatar_opacity;
+
+                        if root.avatar_icon.width > 0 : Icon {
+                            source: root.leading_drawn;
+                            width: 100%;
+                            height: 100%;
+                            colorize: root.label_color_r;
+                        }
+                        if root.avatar_icon.width == 0 : Image {
+                            source: root.leading_drawn;
+                            width: 100%;
+                            height: 100%;
+                            image-fit: cover;
+                        }
+                    }
+                    if !root.drawn_is_avatar : Icon {
+                        source: root.leading_drawn;
+                        width: root.leading_icon_size;
+                        height: root.leading_icon_size;
+                        colorize: root.leading_color_r;
+                    }
+                }
+
+                label := MaterialText {
+                    x: root.label_x;
+                    y: (parent.height - self.height) / 2;
+                    width: root.label_w;
+                    style: ChipsTokens.label_text;
+                    text: root.text;
+                    color: root.label_color_r;
+                }
+
+                trailing_box := Rectangle {
+                    x: root.trailing_x;
+                    y: (parent.height - self.height) / 2;
+                    width: root.trailing_w;
+                    height: root.trailing_icon_size;
+                    clip: true;
+                    opacity: root.trailing_opacity;
+
+                    Icon {
+                        source: root.trailing_drawn;
+                        width: root.trailing_icon_size;
+                        height: root.trailing_icon_size;
+                        colorize: root.trailing_color_r;
+                    }
+
+                    trailing_area := TouchArea {
+                        enabled: root.enabled && root.has_trailing;
+                        // The upstream `trailingIcon` slot sits inside the
+                        // clickable container — a tap both hits the slot and
+                        // activates the chip (the samples' dismiss IconButton
+                        // consumes it first; a raw `trailing_icon` doesn't).
+                        clicked => {
+                            root.trailing_icon_clicked();
+                            root.activate();
+                        }
                     }
                 }
             }
 
-            clicked => {
-                root.clicked();
-                root.toggle();
+            if root.border_width_r > 0 : Rectangle {
+                width: 100%;
+                height: 100%;
+                border_width: root.border_width_r;
+                border_color: root.border_color_r;
+                border_top_left_radius: root.corner_tl;
+                border_top_right_radius: root.corner_tr;
+                border_bottom_right_radius: root.corner_br;
+                border_bottom_left_radius: root.corner_bl;
             }
+
+            clicked => { root.activate(); }
         }
 
-        states [
-            checked when root.checked : {
-                base.icon_color: MaterialPalette.on_secondary_container;
-                base.color: MaterialPalette.on_secondary_container;
-                border.border_width: 0;
-                border.background: MaterialPalette.secondary_container;
-            }
-        ]
-
-        animate width { enabled: !MaterialPalette.reduced-motion; duration: MaterialAnimations.standard_accelerate_duration; easing: MaterialAnimations.standard_easing; }
+        if root.enabled && area.has_focus : FocusRing {
+            width: 100%;
+            height: 100%;
+            shaped_corners: true;
+            corners: { top_left: root.corner_tl, top_right: root.corner_tr,
+                bottom_right: root.corner_br, bottom_left: root.corner_bl };
+        }
     }
 
-    function toggle() {
-        if !root.checkable {
-            return;
+    /// The click path pointer and accessibility actions share: a
+    /// selectable chip toggles `checked` first, then notifies `clicked`.
+    public function activate() {
+        if root.selectable {
+            root.checked = !root.checked;
         }
-
-        root.checked = !root.checked;
+        root.clicked();
     }
-
-    states [
-        disabled when !root.enabled : {
-            base.display_background: false;
-            base.icon_color: MaterialPalette.on_surface;
-        }
-    ]
 }
 
+// `AssistChip` (flat). `ActionChip` is the old name, kept as a deprecated
+// alias.
+export component AssistChip {
+    in property <string> text <=> base.text;
+    in property <image> icon <=> base.leading_icon;
+    in property <image> avatar <=> base.avatar;
+    in property <image> avatar_icon <=> base.avatar_icon;
+    in property <image> trailing_icon <=> base.trailing_icon;
+    in property <bool> enabled <=> base.enabled;
+    in property <string> tooltip;
+    in property <MaterialCornerShape> container_shape <=> base.container_shape;
+    in property <bool> dragged <=> base.dragged;
+    in property <bool> simulate_hover <=> base.simulate_hover;
+    in property <bool> simulate_press <=> base.simulate_press;
+    in property <color> avatar_background <=> base.avatar_background;
+
+    callback trailing_icon_clicked <=> base.trailing_icon_clicked;
+    callback clicked <=> base.clicked;
+
+    out property <bool> has_focus <=> base.has_focus;
+    out property <bool> pressed <=> base.pressed;
+    out property <bool> has_hover <=> base.has_hover;
+    out property <length> shadow_elevation <=> base.shadow_elevation;
+    out property <length> corner_top_left <=> base.corner_top_left;
+    out property <length> corner_top_right <=> base.corner_top_right;
+    out property <length> corner_bottom_right <=> base.corner_bottom_right;
+    out property <length> corner_bottom_left <=> base.corner_bottom_left;
+    out property <color> resolved_content_color <=> base.resolved_content_color;
+
+    forward-focus: base;
+    accessible-role: button;
+    accessible-enabled: root.enabled;
+    accessible-label: root.text == "" ? root.tooltip : root.text;
+    accessible-action-default => { base.activate(); }
+
+    min_width: base.preferred_width;
+    min_height: base.min_height;
+    preferred_width: base.preferred_width;
+    preferred_height: base.preferred_height;
+
+    base := ChipBase {
+        width: 100%;
+        height: 100%;
+        elevation_default: 0;
+        elevation_pressed: 0;
+        elevation_focused: 0;
+        elevation_hovered: 0;
+        elevation_dragged: 4;  // AssistChipTokens.FlatDraggedContainerElevation 8px
+        elevation_disabled: 0;
+
+        container_color: transparent;
+        selected_container_color: transparent;
+        disabled_container_color: transparent;
+        disabled_selected_container_color: transparent;
+        label_color: AssistChipTokens.label_text_color;
+        selected_label_color: AssistChipTokens.label_text_color;
+        disabled_label_color: AssistChipTokens.disabled_label_text_color.with_alpha(AssistChipTokens.disabled_label_text_opacity);
+        leading_color: AssistChipTokens.icon_color;
+        selected_leading_color: AssistChipTokens.icon_color;
+        disabled_leading_color: AssistChipTokens.disabled_icon_color.with_alpha(AssistChipTokens.disabled_icon_opacity);
+        trailing_color: AssistChipTokens.icon_color;
+        selected_trailing_color: AssistChipTokens.icon_color;
+        disabled_trailing_color: AssistChipTokens.disabled_icon_color.with_alpha(AssistChipTokens.disabled_icon_opacity);
+
+        unselected_border_color: AssistChipTokens.flat_outline_color;
+        unselected_border_width: AssistChipTokens.flat_outline_width;
+        disabled_unselected_border_color: AssistChipTokens.flat_disabled_outline_color.with_alpha(AssistChipTokens.flat_disabled_outline_opacity);
+    }
+}
+
+export component ActionChip inherits AssistChip {
+    // deprecated alias kept for source compatibility
+}
+
+export component ElevatedAssistChip {
+    in property <string> text <=> base.text;
+    in property <image> icon <=> base.leading_icon;
+    in property <image> avatar <=> base.avatar;
+    in property <image> avatar_icon <=> base.avatar_icon;
+    in property <image> trailing_icon <=> base.trailing_icon;
+    in property <bool> enabled <=> base.enabled;
+    in property <string> tooltip;
+    in property <MaterialCornerShape> container_shape <=> base.container_shape;
+    in property <bool> dragged <=> base.dragged;
+    in property <bool> simulate_hover <=> base.simulate_hover;
+    in property <bool> simulate_press <=> base.simulate_press;
+    in property <color> avatar_background <=> base.avatar_background;
+
+    callback trailing_icon_clicked <=> base.trailing_icon_clicked;
+    callback clicked <=> base.clicked;
+
+    out property <bool> has_focus <=> base.has_focus;
+    out property <bool> pressed <=> base.pressed;
+    out property <bool> has_hover <=> base.has_hover;
+    out property <length> shadow_elevation <=> base.shadow_elevation;
+    out property <length> corner_top_left <=> base.corner_top_left;
+    out property <length> corner_top_right <=> base.corner_top_right;
+    out property <length> corner_bottom_right <=> base.corner_bottom_right;
+    out property <length> corner_bottom_left <=> base.corner_bottom_left;
+    out property <color> resolved_content_color <=> base.resolved_content_color;
+
+    forward-focus: base;
+    accessible-role: button;
+    accessible-enabled: root.enabled;
+    accessible-label: root.text == "" ? root.tooltip : root.text;
+    accessible-action-default => { base.activate(); }
+
+    min_width: base.preferred_width;
+    min_height: base.min_height;
+    preferred_width: base.preferred_width;
+    preferred_height: base.preferred_height;
+
+    base := ChipBase {
+        width: 100%;
+        height: 100%;
+        // AssistChipTokens.Elevated* elevation table 1/1/1/3/8px → levels 1/1/1/2/4
+        elevation_default: 1;
+        elevation_pressed: 1;
+        elevation_focused: 1;
+        elevation_hovered: 2;
+        elevation_dragged: 4;
+        elevation_disabled: 0;
+
+        container_color: AssistChipTokens.elevated_container_color;
+        selected_container_color: AssistChipTokens.elevated_container_color;
+        disabled_container_color: AssistChipTokens.elevated_disabled_container_color.with_alpha(AssistChipTokens.elevated_disabled_container_opacity);
+        disabled_selected_container_color: AssistChipTokens.elevated_disabled_container_color.with_alpha(AssistChipTokens.elevated_disabled_container_opacity);
+        label_color: AssistChipTokens.label_text_color;
+        selected_label_color: AssistChipTokens.label_text_color;
+        disabled_label_color: AssistChipTokens.disabled_label_text_color.with_alpha(AssistChipTokens.disabled_label_text_opacity);
+        leading_color: AssistChipTokens.icon_color;
+        selected_leading_color: AssistChipTokens.icon_color;
+        disabled_leading_color: AssistChipTokens.disabled_icon_color.with_alpha(AssistChipTokens.disabled_icon_opacity);
+        trailing_color: AssistChipTokens.icon_color;
+        selected_trailing_color: AssistChipTokens.icon_color;
+        disabled_trailing_color: AssistChipTokens.disabled_icon_color.with_alpha(AssistChipTokens.disabled_icon_opacity);
+        state_color: MaterialPalette.on_surface;
+    }
+}
+
+export component FilterChip {
+    in property <string> text <=> base.text;
+    in property <image> icon <=> base.leading_icon;
+    in property <image> trailing_icon <=> base.trailing_icon;
+    in property <bool> enabled <=> base.enabled;
+    in property <string> tooltip;
+    in property <MaterialCornerShape> container_shape <=> base.container_shape;
+    in property <MaterialChipShapes> chip_shapes <=> base.chip_shapes;
+    in property <bool> expressive <=> base.expressive;
+    in property <bool> dragged <=> base.dragged;
+    in property <bool> simulate_hover <=> base.simulate_hover;
+    in property <bool> simulate_press <=> base.simulate_press;
+    in property <color> avatar_background <=> base.avatar_background;
+    in_out property <bool> checked <=> base.checked;
+
+    callback trailing_icon_clicked <=> base.trailing_icon_clicked;
+    callback clicked <=> base.clicked;
+
+    out property <bool> has_focus <=> base.has_focus;
+    out property <bool> pressed <=> base.pressed;
+    out property <bool> has_hover <=> base.has_hover;
+    out property <length> shadow_elevation <=> base.shadow_elevation;
+    out property <length> corner_top_left <=> base.corner_top_left;
+    out property <length> corner_top_right <=> base.corner_top_right;
+    out property <length> corner_bottom_right <=> base.corner_bottom_right;
+    out property <length> corner_bottom_left <=> base.corner_bottom_left;
+    out property <color> resolved_content_color <=> base.resolved_content_color;
+
+    forward-focus: base;
+    accessible-role: checkbox;
+    accessible-enabled: root.enabled;
+    accessible-label: root.text == "" ? root.tooltip : root.text;
+    accessible-checkable: true;
+    accessible-checked: root.checked;
+    accessible-action-default => { base.activate(); }
+
+    min_width: base.preferred_width;
+    min_height: base.min_height;
+    preferred_width: base.preferred_width;
+    preferred_height: base.preferred_height;
+
+    base := ChipBase {
+        width: 100%;
+        height: 100%;
+        selectable: true;
+        animate_slots: true;
+
+        // FilterChipDefaults.filterChipElevation: flat table, the
+        // "selected" names apply to every interaction: pressed 0,
+        // focus 0, hover 1px (level 1), dragged 8px (level 4)
+        elevation_default: 0;
+        elevation_pressed: 0;
+        elevation_focused: 0;
+        elevation_hovered: 1;
+        elevation_dragged: 4;
+        elevation_disabled: 0;
+
+        container_color: transparent;
+        selected_container_color: FilterChipTokens.flat_selected_container_color;
+        disabled_container_color: transparent;
+        disabled_selected_container_color: FilterChipTokens.flat_disabled_selected_container_color.with_alpha(FilterChipTokens.flat_disabled_selected_container_opacity);
+
+        // `shape:` overload defaults to filterChipColors();
+        // `shapes:` (expressive) defaults to tonalFilterChipColors() =
+        // same table with the unselected leading icon on_surface_variant
+        label_color: FilterChipTokens.unselected_label_text_color;
+        selected_label_color: FilterChipTokens.selected_label_text_color;
+        disabled_label_color: FilterChipTokens.disabled_label_text_color.with_alpha(FilterChipTokens.disabled_label_text_opacity);
+        leading_color: root.expressive ? ChipsTokens.unselected_leading_icon_color : FilterChipTokens.unselected_leading_icon_color;
+        selected_leading_color: FilterChipTokens.selected_leading_icon_color;
+        disabled_leading_color: FilterChipTokens.disabled_leading_icon_color.with_alpha(FilterChipTokens.disabled_leading_icon_opacity);
+        trailing_color: FilterChipTokens.unselected_trailing_icon_color;
+        selected_trailing_color: FilterChipTokens.selected_trailing_icon_color;
+        disabled_trailing_color: FilterChipTokens.disabled_trailing_icon_color.with_alpha(FilterChipTokens.disabled_trailing_icon_opacity);
+
+        state_color: root.checked ? MaterialPalette.on_secondary_container : MaterialPalette.on_surface;
+
+        unselected_border_color: FilterChipTokens.flat_unselected_outline_color;
+        unselected_border_width: FilterChipTokens.flat_unselected_outline_width;
+        selected_border_color: transparent;
+        selected_border_width: FilterChipTokens.flat_selected_outline_width;
+        disabled_unselected_border_color: FilterChipTokens.flat_disabled_unselected_outline_color.with_alpha(FilterChipTokens.flat_disabled_unselected_outline_opacity);
+        disabled_unselected_border_width: FilterChipTokens.flat_unselected_outline_width;
+        disabled_selected_border_color: transparent;
+        disabled_selected_border_width: FilterChipTokens.flat_selected_outline_width;
+
+        container_shape: FilterChipTokens.container_shape;
+
+        // expressive overload: FilterChipDefaults.horizontalArrangement()
+        // picks ChipArrangement(4,8) when there is a leading slot,
+        // (8,4) trailing-only, (8,8) otherwise
+        padding_start: 8px;
+        padding_end: 8px;
+        leading_spacing: root.expressive ? (base.has_leading ? 4px : 8px) : 8px;
+        trailing_spacing: root.expressive ? (base.has_trailing ? 4px : 8px) : 8px;
+    }
+}
+
+export component ElevatedFilterChip {
+    in property <string> text <=> base.text;
+    in property <image> icon <=> base.leading_icon;
+    in property <image> trailing_icon <=> base.trailing_icon;
+    in property <bool> enabled <=> base.enabled;
+    in property <string> tooltip;
+    in property <MaterialCornerShape> container_shape <=> base.container_shape;
+    in property <MaterialChipShapes> chip_shapes <=> base.chip_shapes;
+    in property <bool> expressive <=> base.expressive;
+    in property <bool> dragged <=> base.dragged;
+    in property <bool> simulate_hover <=> base.simulate_hover;
+    in property <bool> simulate_press <=> base.simulate_press;
+    in property <color> avatar_background <=> base.avatar_background;
+    in_out property <bool> checked <=> base.checked;
+
+    callback trailing_icon_clicked <=> base.trailing_icon_clicked;
+    callback clicked <=> base.clicked;
+
+    out property <bool> has_focus <=> base.has_focus;
+    out property <bool> pressed <=> base.pressed;
+    out property <bool> has_hover <=> base.has_hover;
+    out property <length> shadow_elevation <=> base.shadow_elevation;
+    out property <length> corner_top_left <=> base.corner_top_left;
+    out property <length> corner_top_right <=> base.corner_top_right;
+    out property <length> corner_bottom_right <=> base.corner_bottom_right;
+    out property <length> corner_bottom_left <=> base.corner_bottom_left;
+    out property <color> resolved_content_color <=> base.resolved_content_color;
+
+    forward-focus: base;
+    accessible-role: checkbox;
+    accessible-enabled: root.enabled;
+    accessible-label: root.text == "" ? root.tooltip : root.text;
+    accessible-checkable: true;
+    accessible-checked: root.checked;
+    accessible-action-default => { base.activate(); }
+
+    min_width: base.preferred_width;
+    min_height: base.min_height;
+    preferred_width: base.preferred_width;
+    preferred_height: base.preferred_height;
+
+    base := ChipBase {
+        width: 100%;
+        height: 100%;
+        selectable: true;
+        animate_slots: true;
+
+        // FilterChipDefaults.elevatedFilterChipElevation: 1/1/1/3/8px
+        elevation_default: 1;
+        elevation_pressed: 1;
+        elevation_focused: 1;
+        elevation_hovered: 2;
+        elevation_dragged: 4;
+        elevation_disabled: 0;
+
+        container_color: FilterChipTokens.elevated_unselected_container_color;
+        selected_container_color: FilterChipTokens.elevated_selected_container_color;
+        disabled_container_color: FilterChipTokens.elevated_disabled_container_color.with_alpha(FilterChipTokens.elevated_disabled_container_opacity);
+        disabled_selected_container_color: FilterChipTokens.elevated_disabled_container_color.with_alpha(FilterChipTokens.elevated_disabled_container_opacity);
+
+        label_color: FilterChipTokens.unselected_label_text_color;
+        selected_label_color: FilterChipTokens.selected_label_text_color;
+        disabled_label_color: FilterChipTokens.disabled_label_text_color.with_alpha(FilterChipTokens.disabled_label_text_opacity);
+        leading_color: root.expressive ? ChipsTokens.unselected_leading_icon_color : FilterChipTokens.unselected_leading_icon_color;
+        selected_leading_color: FilterChipTokens.selected_leading_icon_color;
+        disabled_leading_color: FilterChipTokens.disabled_leading_icon_color.with_alpha(FilterChipTokens.disabled_leading_icon_opacity);
+        trailing_color: FilterChipTokens.unselected_trailing_icon_color;
+        selected_trailing_color: FilterChipTokens.selected_trailing_icon_color;
+        disabled_trailing_color: FilterChipTokens.disabled_trailing_icon_color.with_alpha(FilterChipTokens.disabled_trailing_icon_opacity);
+
+        state_color: root.checked ? MaterialPalette.on_secondary_container : MaterialPalette.on_surface;
+        container_shape: FilterChipTokens.container_shape;
+
+        padding_start: 8px;
+        padding_end: 8px;
+        leading_spacing: root.expressive ? (base.has_leading ? 4px : 8px) : 8px;
+        trailing_spacing: root.expressive ? (base.has_trailing ? 4px : 8px) : 8px;
+    }
+}
+
+export component InputChip {
+    in property <string> text <=> base.text;
+    in property <image> leading_icon <=> base.leading_icon;
+    in property <image> trailing_icon <=> base.trailing_icon;
+    in property <image> avatar <=> base.avatar;
+    in property <image> avatar_icon <=> base.avatar_icon;
+    in property <bool> enabled <=> base.enabled;
+    in property <string> tooltip;
+    in property <MaterialCornerShape> container_shape <=> base.container_shape;
+    in property <MaterialChipShapes> chip_shapes <=> base.chip_shapes;
+    in property <bool> expressive <=> base.expressive;
+    in property <bool> dragged <=> base.dragged;
+    in property <bool> simulate_hover <=> base.simulate_hover;
+    in property <bool> simulate_press <=> base.simulate_press;
+    in property <color> avatar_background <=> base.avatar_background;
+    in_out property <bool> checked <=> base.checked;
+    in property <bool> checkable: true;
+
+    callback clicked <=> base.clicked;
+    callback trailing_icon_clicked <=> base.trailing_icon_clicked;
+
+    out property <bool> has_focus <=> base.has_focus;
+    out property <bool> pressed <=> base.pressed;
+    out property <bool> has_hover <=> base.has_hover;
+    out property <length> shadow_elevation <=> base.shadow_elevation;
+    out property <length> corner_top_left <=> base.corner_top_left;
+    out property <length> corner_top_right <=> base.corner_top_right;
+    out property <length> corner_bottom_right <=> base.corner_bottom_right;
+    out property <length> corner_bottom_left <=> base.corner_bottom_left;
+    out property <color> resolved_content_color <=> base.resolved_content_color;
+
+    forward-focus: base;
+    accessible-role: checkbox;
+    accessible-enabled: root.enabled;
+    accessible-label: root.text == "" ? root.tooltip : root.text;
+    accessible-checkable: true;
+    accessible-checked: root.checked;
+    accessible-action-default => { base.activate(); }
+
+    min_width: base.preferred_width;
+    min_height: base.min_height;
+    preferred_width: base.preferred_width;
+    preferred_height: base.preferred_height;
+
+    base := ChipBase {
+        width: 100%;
+        height: 100%;
+        selectable: root.checkable;
+        animate_slots: true;
+
+        // InputChipDefaults.inputChipElevation: flat, dragged 8px
+        elevation_default: 0;
+        elevation_pressed: 0;
+        elevation_focused: 0;
+        elevation_hovered: 0;
+        elevation_dragged: 4;
+        elevation_disabled: 0;
+
+        container_color: transparent;
+        selected_container_color: InputChipTokens.selected_container_color;
+        disabled_container_color: transparent;
+        disabled_selected_container_color: InputChipTokens.disabled_selected_container_color.with_alpha(InputChipTokens.disabled_selected_container_opacity);
+
+        label_color: InputChipTokens.unselected_label_text_color;
+        selected_label_color: InputChipTokens.selected_label_text_color;
+        disabled_label_color: InputChipTokens.disabled_label_text_color.with_alpha(InputChipTokens.disabled_label_text_opacity);
+        leading_color: InputChipTokens.unselected_leading_icon_color;
+        selected_leading_color: InputChipTokens.selected_leading_icon_color;
+        disabled_leading_color: InputChipTokens.disabled_leading_icon_color.with_alpha(InputChipTokens.disabled_leading_icon_opacity);
+        trailing_color: InputChipTokens.unselected_trailing_icon_color;
+        selected_trailing_color: InputChipTokens.selected_trailing_icon_color;
+        disabled_trailing_color: InputChipTokens.disabled_trailing_icon_color.with_alpha(InputChipTokens.disabled_trailing_icon_opacity);
+
+        state_color: root.checked ? MaterialPalette.on_secondary_container : MaterialPalette.on_surface;
+
+        unselected_border_color: InputChipTokens.unselected_outline_color;
+        unselected_border_width: InputChipTokens.unselected_outline_width;
+        selected_border_color: transparent;
+        selected_border_width: InputChipTokens.selected_outline_width;
+        disabled_unselected_border_color: InputChipTokens.disabled_unselected_outline_color.with_alpha(InputChipTokens.disabled_unselected_outline_opacity);
+        disabled_unselected_border_width: InputChipTokens.unselected_outline_width;
+        disabled_selected_border_color: transparent;
+        disabled_selected_border_width: InputChipTokens.selected_outline_width;
+
+        container_shape: InputChipTokens.container_shape;
+
+        // InputChipDefaults.contentPadding(avatar, leading, trailing):
+        // start 4dp with avatar or without leading icon, 8dp otherwise;
+        // end 8dp with trailing icon, 4dp without
+        padding_start: base.has_avatar || !base.has_leading ? 4px : 8px;
+        padding_end: base.has_trailing ? 8px : 4px;
+        // `InputChipDefaults.horizontalArrangement(avatar, leading,
+        // trailing)` on the `shapes:` overload: (avatar||leading)&&trailing
+        // → (4,4), avatar/leading only → (4,8), trailing only → (8,4); the
+        // `shape:` overload uses the default (8,8).
+        leading_spacing: root.expressive ? (base.has_avatar || base.has_leading ? 4px : 8px) : 8px;
+        trailing_spacing: root.expressive ? (base.has_trailing ? 4px : 8px) : 8px;
+    }
+}
+
+export component SuggestionChip {
+    in property <string> text <=> base.text;
+    in property <image> icon <=> base.leading_icon;
+    in property <bool> enabled <=> base.enabled;
+    in property <string> tooltip;
+    in property <MaterialCornerShape> container_shape <=> base.container_shape;
+    in property <bool> dragged <=> base.dragged;
+    in property <bool> simulate_hover <=> base.simulate_hover;
+    in property <bool> simulate_press <=> base.simulate_press;
+    in property <color> avatar_background <=> base.avatar_background;
+
+    callback clicked <=> base.clicked;
+
+    out property <bool> has_focus <=> base.has_focus;
+    out property <bool> pressed <=> base.pressed;
+    out property <bool> has_hover <=> base.has_hover;
+    out property <length> shadow_elevation <=> base.shadow_elevation;
+    out property <length> corner_top_left <=> base.corner_top_left;
+    out property <length> corner_top_right <=> base.corner_top_right;
+    out property <length> corner_bottom_right <=> base.corner_bottom_right;
+    out property <length> corner_bottom_left <=> base.corner_bottom_left;
+    out property <color> resolved_content_color <=> base.resolved_content_color;
+
+    forward-focus: base;
+    accessible-role: button;
+    accessible-enabled: root.enabled;
+    accessible-label: root.text == "" ? root.tooltip : root.text;
+    accessible-action-default => { base.activate(); }
+
+    min_width: base.preferred_width;
+    min_height: base.min_height;
+    preferred_width: base.preferred_width;
+    preferred_height: base.preferred_height;
+
+    base := ChipBase {
+        width: 100%;
+        height: 100%;
+        elevation_default: 0;
+        elevation_pressed: 0;
+        elevation_focused: 0;
+        elevation_hovered: 0;
+        elevation_dragged: 4;
+        elevation_disabled: 0;
+
+        container_color: transparent;
+        selected_container_color: transparent;
+        disabled_container_color: transparent;
+        disabled_selected_container_color: transparent;
+        label_color: SuggestionChipTokens.label_text_color;
+        selected_label_color: SuggestionChipTokens.label_text_color;
+        disabled_label_color: SuggestionChipTokens.disabled_label_text_color.with_alpha(SuggestionChipTokens.disabled_label_text_opacity);
+        leading_color: SuggestionChipTokens.leading_icon_color;
+        selected_leading_color: SuggestionChipTokens.leading_icon_color;
+        disabled_leading_color: SuggestionChipTokens.disabled_leading_icon_color.with_alpha(SuggestionChipTokens.disabled_leading_icon_opacity);
+        trailing_color: SuggestionChipTokens.label_text_color;
+        selected_trailing_color: SuggestionChipTokens.label_text_color;
+        disabled_trailing_color: SuggestionChipTokens.disabled_leading_icon_color.with_alpha(SuggestionChipTokens.disabled_leading_icon_opacity);
+
+        unselected_border_color: SuggestionChipTokens.flat_outline_color;
+        unselected_border_width: SuggestionChipTokens.flat_outline_width;
+        disabled_unselected_border_color: SuggestionChipTokens.flat_disabled_outline_color.with_alpha(SuggestionChipTokens.flat_disabled_outline_opacity);
+
+        container_shape: SuggestionChipTokens.container_shape;
+    }
+}
+
+export component ElevatedSuggestionChip {
+    in property <string> text <=> base.text;
+    in property <image> icon <=> base.leading_icon;
+    in property <bool> enabled <=> base.enabled;
+    in property <string> tooltip;
+    in property <MaterialCornerShape> container_shape <=> base.container_shape;
+    in property <bool> dragged <=> base.dragged;
+    in property <bool> simulate_hover <=> base.simulate_hover;
+    in property <bool> simulate_press <=> base.simulate_press;
+    in property <color> avatar_background <=> base.avatar_background;
+
+    callback clicked <=> base.clicked;
+
+    out property <bool> has_focus <=> base.has_focus;
+    out property <bool> pressed <=> base.pressed;
+    out property <bool> has_hover <=> base.has_hover;
+    out property <length> shadow_elevation <=> base.shadow_elevation;
+    out property <length> corner_top_left <=> base.corner_top_left;
+    out property <length> corner_top_right <=> base.corner_top_right;
+    out property <length> corner_bottom_right <=> base.corner_bottom_right;
+    out property <length> corner_bottom_left <=> base.corner_bottom_left;
+    out property <color> resolved_content_color <=> base.resolved_content_color;
+
+    forward-focus: base;
+    accessible-role: button;
+    accessible-enabled: root.enabled;
+    accessible-label: root.text == "" ? root.tooltip : root.text;
+    accessible-action-default => { base.activate(); }
+
+    min_width: base.preferred_width;
+    min_height: base.min_height;
+    preferred_width: base.preferred_width;
+    preferred_height: base.preferred_height;
+
+    base := ChipBase {
+        width: 100%;
+        height: 100%;
+        elevation_default: 1;
+        elevation_pressed: 1;
+        elevation_focused: 1;
+        elevation_hovered: 2;
+        elevation_dragged: 4;
+        elevation_disabled: 0;
+
+        container_color: SuggestionChipTokens.elevated_container_color;
+        selected_container_color: SuggestionChipTokens.elevated_container_color;
+        disabled_container_color: SuggestionChipTokens.elevated_disabled_container_color.with_alpha(AssistChipTokens.elevated_disabled_container_opacity);
+        disabled_selected_container_color: SuggestionChipTokens.elevated_disabled_container_color.with_alpha(AssistChipTokens.elevated_disabled_container_opacity);
+        label_color: SuggestionChipTokens.label_text_color;
+        selected_label_color: SuggestionChipTokens.label_text_color;
+        disabled_label_color: SuggestionChipTokens.disabled_label_text_color.with_alpha(SuggestionChipTokens.disabled_label_text_opacity);
+        leading_color: SuggestionChipTokens.leading_icon_color;
+        selected_leading_color: SuggestionChipTokens.leading_icon_color;
+        disabled_leading_color: SuggestionChipTokens.disabled_leading_icon_color.with_alpha(SuggestionChipTokens.disabled_leading_icon_opacity);
+        trailing_color: SuggestionChipTokens.label_text_color;
+        selected_trailing_color: SuggestionChipTokens.label_text_color;
+        disabled_trailing_color: SuggestionChipTokens.disabled_leading_icon_color.with_alpha(SuggestionChipTokens.disabled_leading_icon_opacity);
+        state_color: MaterialPalette.on_surface;
+        container_shape: SuggestionChipTokens.container_shape;
+    }
+}

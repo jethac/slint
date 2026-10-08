@@ -1,0 +1,92 @@
+{
+  "name": "chip-filter-states",
+  "type": "canvas",
+  "parity": "xfail:skia",
+  "size": [
+    712,
+    96
+  ],
+  "densities": [
+    1,
+    2
+  ],
+  "theme": {
+    "seed": "6750A4",
+    "variant": "tonal-spot",
+    "spec": "spec2025",
+    "platform": "phone",
+    "dark": false,
+    "contrast": 0.0
+  },
+  "fonts": {
+    "plain": "Roboto",
+    "brand": "Roboto"
+  },
+  "widgets": [
+    {
+      "kind": "filter-chip",
+      "x": 16,
+      "y": 32,
+      "text": "Filter"
+    },
+    {
+      "kind": "filter-chip",
+      "x": 136,
+      "y": 32,
+      "text": "Filter",
+      "checked": true,
+      "checked_icon": "check"
+    },
+    {
+      "kind": "filter-chip",
+      "x": 256,
+      "y": 32,
+      "text": "Filter",
+      "state": "hovered"
+    },
+    {
+      "kind": "filter-chip",
+      "x": 376,
+      "y": 32,
+      "text": "Filter",
+      "state": "pressed"
+    },
+    {
+      "kind": "filter-chip",
+      "x": 496,
+      "y": 32,
+      "text": "Filter",
+      "enabled": false
+    },
+    {
+      "kind": "filter-chip",
+      "x": 616,
+      "y": 32,
+      "text": "Filter",
+      "checked": true,
+      "checked_icon": "check",
+      "enabled": false
+    }
+  ],
+  "trace_elements": [
+    "button0",
+    "button1",
+    "button2",
+    "button3",
+    "button4",
+    "button5"
+  ],
+  "trace_props": [
+    "shadow_elevation"
+  ],
+  "mask_inner": {
+    "button3": [
+      2000
+    ],
+    "button2": [
+      2000
+    ]
+  },
+  "xfail_text": "software,femtovg: issue #28: Slint ceils text layout widths where Compose keeps fractional advances — the chip label's ink lands ~2px right-shorter, one cell over eps on software and on Linux femtovg",
+  "negative_note": "issue #6: on skia the drop-shadow penumbra around an elevated/pressed chip's graphicsLayer-softened edge lands ~4px inside the Compose silhouette \u2014 the corner-band edge comparison reports slint ~3 vs compose ~7 while software/femtovg match"
+}
