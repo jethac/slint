@@ -1,0 +1,414 @@
+// Copyright © SixtyFPS GmbH <info@slint.dev>
+// SPDX-License-Identifier: MIT
+
+import { MaterialPalette } from "../styling/material_palette.slint";
+import {
+    ListTokens,
+    MenuTokens,
+    SegmentedMenuTokens,
+    StandardMenuTokens,
+    VibrantMenuTokens,
+} from "../styling/generated/material_component_tokens.slint";
+import { MaterialCornerShape, ShapeTokens } from "../styling/generated/material_shape_tokens.slint";
+
+/// The upstream `MenuDefaults` color variant: `standard` resolves against
+/// `StandardMenuTokens`/`ListTokens`, `vibrant` against `VibrantMenuTokens`.
+export enum MenuVariant {
+    standard,
+    vibrant,
+}
+
+/// Which upstream item composable a menu entry follows:
+/// `standard` → `DropdownMenuItem` (expressive, transparent container in the
+/// standard variant), `selectable` → `SelectableDropdownMenuItem`,
+/// `checkable` → `CheckableDropdownMenuItem` (`checked` state, checkbox
+/// semantics). The deprecated (HIDDEN) `DropdownMenuItem` legacy overload is
+/// not carried over.
+export enum MenuItemKind {
+    standard,
+    selectable,
+    checkable,
+}
+
+/// The upstream `MenuAnchorPosition` companion values. `start`/`end` follow
+/// the LTR mapping (`start` = left, `end` = right); Slint has no RTL layout
+/// direction, so the RTL mirror is unreachable.
+export enum MenuAnchorPosition {
+    above,
+    below,
+    left,
+    right,
+    start,
+    end,
+}
+
+/// Resolved position of one item or group inside its container — the index
+/// buckets `MenuDefaults.itemShape(index, count)`/`groupShape(index, count)`
+/// dispatch on.
+export enum MenuShapePosition {
+    standalone,
+    leading,
+    middle,
+    trailing,
+}
+
+/// Position resolution for a popup — the `IntOffset` plus the
+/// `TransformOrigin` fractions `DropdownMenuPositionProvider` reports through
+/// `onPositionCalculated`.
+export struct MenuPosition {
+    x: length,
+    y: length,
+    origin_x: float,
+    origin_y: float,
+}
+
+/// Mirrors `MenuDefaults` in the pinned androidx sources: resolves the token
+/// shape/color/padding tables and the `DropdownMenuPositionProvider`/
+/// `ExposedDropdownMenuPositionProvider` candidate logic into plain values.
+/// All values come from the generated token globals — no literals beyond the
+/// geometry constants pinned in `Menu.kt`/`internal/MenuPosition.kt`.
+export global MaterialMenuMetrics {
+    // --- geometry constants pinned in Menu.kt / internal/MenuPosition.kt ---
+    out property <length> menu_vertical_margin: 48px;        // MenuVerticalMargin
+    out property <length> menu_horizontal_margin: 8px;       // MenuHorizontalMargin
+    out property <length> item_min_width: 112px;             // DropdownMenuItemDefaultMinWidth
+    out property <length> item_max_width: 280px;             // DropdownMenuItemDefaultMaxWidth
+    out property <length> item_min_height: 44px;             // SegmentedMenuTokens.Item
+    out property <length> menu_vertical_padding: 8px;        // DropdownMenuVerticalPadding
+    out property <length> group_vertical_padding: 2px;       // DropdownMenuGroupVerticalPadding / DropdownMenuGroupContentPadding vertical
+    out property <length> group_spacing: SegmentedMenuTokens.segmented_gap; // MenuDefaults.GroupSpacing = SegmentedMenuTokens.SegmentedGap
+    out property <length> selectable_item_horizontal_padding: 4px;   // DropdownMenuSelectableItemPadding horizontal
+    out property <length> selectable_item_supporting_vertical_padding: 2px; // ...WithSupportTexPadding vertical
+    out property <length> item_horizontal_padding: 12px;     // DropdownMenuItemHorizontalPadding
+    out property <length> selectable_item_vertical_padding: 12px;    // SelectableItemVerticalPadding (non-precision DropdownMenuSelectableItemContentPadding)
+    out property <length> item_arrangement_spacing: 8px;     // MenuDefaults.itemHorizontalArrangement, non-precision sizing
+    out property <length> legacy_item_height: 48px;          // MenuListItemContainerHeight
+    out property <length> group_label_min_height: 32px;      // DropdownMenuGroupLabel sizeIn minHeight
+    out property <length> group_label_start_padding: 12px;   // DropdownMenuGroupLabelHorizontalPadding start
+    out property <length> group_label_end_padding: 4px;      // DropdownMenuGroupLabelHorizontalPadding end
+    out property <length> divider_horizontal_padding: 12px;  // MenuDefaults.HorizontalDividerPadding horizontal
+    out property <length> divider_vertical_padding: 2px;     // MenuDefaults.HorizontalDividerPadding vertical
+    out property <float> menu_closed_scale: 0.8;             // Menu.kt ClosedScaleTarget
+    out property <float> menu_open_scale: 1;                 // Menu.kt ExpandedScaleTarget
+
+    /// `MenuDefaults.itemShape(index, count)`/`groupShape(index, count)`:
+    /// index 0 alone stands alone, 0 leads, `count-1` trails, else middle.
+    public pure function shape-position(index: int, count: int) -> MenuShapePosition {
+        if count <= 1 || index < 0 {
+            return MenuShapePosition.standalone;
+        }
+        if index == 0 {
+            return MenuShapePosition.leading;
+        }
+        if index == count - 1 {
+            return MenuShapePosition.trailing;
+        }
+        return MenuShapePosition.middle;
+    }
+
+    /// `defaultMenu*ItemShapes.shape` per position. `full` stays `false` —
+    /// every menu shape is a `RoundedCornerShape` upstream.
+    public pure function item-shape(position: MenuShapePosition) -> MaterialCornerShape {
+        // standalone/middle: SegmentedMenuTokens.ItemShape; selected always ItemSelectedShape
+        if position == MenuShapePosition.leading {
+            return {
+                top_left: ShapeTokens.corner_medium.top_left,
+                top_right: ShapeTokens.corner_medium.top_right,
+                bottom_right: ShapeTokens.corner_extra_small.bottom_right,
+                bottom_left: ShapeTokens.corner_extra_small.bottom_left,
+            };
+        }
+        if position == MenuShapePosition.trailing {
+            return {
+                top_left: ShapeTokens.corner_extra_small.top_left,
+                top_right: ShapeTokens.corner_extra_small.top_right,
+                bottom_right: ShapeTokens.corner_medium.bottom_right,
+                bottom_left: ShapeTokens.corner_medium.bottom_left,
+            };
+        }
+        return SegmentedMenuTokens.item_shape;
+    }
+
+    /// `defaultMenu*ItemShapes.selectedShape` — `SegmentedMenuTokens.ItemSelectedShape`
+    /// (corner_medium) at every position.
+    public pure function item-selected-shape(position: MenuShapePosition) -> MaterialCornerShape {
+        return SegmentedMenuTokens.item_selected_shape;
+    }
+
+    /// `defaultMenu*GroupShapes.shape` per position.
+    public pure function group-shape(position: MenuShapePosition) -> MaterialCornerShape {
+        if position == MenuShapePosition.standalone {
+            return SegmentedMenuTokens.container_shape; // corner_large
+        }
+        if position == MenuShapePosition.leading {
+            return {
+                top_left: ShapeTokens.corner_large.top_left,
+                top_right: ShapeTokens.corner_large.top_right,
+                bottom_right: ShapeTokens.corner_small.bottom_right,
+                bottom_left: ShapeTokens.corner_small.bottom_left,
+            };
+        }
+        if position == MenuShapePosition.trailing {
+            return {
+                top_left: ShapeTokens.corner_small.top_left,
+                top_right: ShapeTokens.corner_small.top_right,
+                bottom_right: ShapeTokens.corner_large.bottom_right,
+                bottom_left: ShapeTokens.corner_large.bottom_left,
+            };
+        }
+        return SegmentedMenuTokens.group_shape; // corner_small
+    }
+
+    /// `defaultMenu*GroupShapes.inactiveShape` — `InactiveContainerShape`
+    /// (corner_small) at every position.
+    public pure function group-inactive-shape(position: MenuShapePosition) -> MaterialCornerShape {
+        return SegmentedMenuTokens.inactive_container_shape;
+    }
+
+    // --- colors ---
+
+    /// `MenuDefaults.groupStandardContainerColor`/`groupVibrantContainerColor`.
+    public pure function group-container-color(variant: MenuVariant) -> color {
+        return variant == MenuVariant.vibrant ? VibrantMenuTokens.container_color : StandardMenuTokens.container_color;
+    }
+
+    /// `SelectableMenuItemColors.containerColor(enabled, selected)` /
+    /// `MenuItemColors.containerColor(enabled)` by variant and item kind.
+    public pure function item-container-color(variant: MenuVariant, kind: MenuItemKind, enabled: bool, selected: bool) -> color {
+        if kind == MenuItemKind.standard {
+            // MenuItemColors: transparent container in standard, token container in vibrant.
+            if variant == MenuVariant.vibrant {
+                return VibrantMenuTokens.container_color;
+            }
+            return transparent;
+        }
+        if !enabled {
+            return variant == MenuVariant.vibrant ? VibrantMenuTokens.container_color : StandardMenuTokens.container_color;
+        }
+        if selected {
+            return variant == MenuVariant.vibrant ? VibrantMenuTokens.item_selected_container_color : StandardMenuTokens.item_selected_container_color;
+        }
+        return variant == MenuVariant.vibrant ? VibrantMenuTokens.container_color : StandardMenuTokens.container_color;
+    }
+
+    /// `SelectableMenuItemColors.textColor(enabled, selected)` /
+    /// `MenuItemColors.textColor(enabled)` — applies to the label and the
+    /// supporting text alike (upstream wraps both in one `LocalContentColor`).
+    public pure function item-text-color(variant: MenuVariant, kind: MenuItemKind, enabled: bool, selected: bool) -> color {
+        if !enabled {
+            if kind == MenuItemKind.standard {
+                return variant == MenuVariant.vibrant
+                    ? VibrantMenuTokens.item_disabled_label_text_color.with_alpha(VibrantMenuTokens.item_disabled_label_text_opacity)
+                    : ListTokens.item_disabled_label_text_color.with_alpha(ListTokens.item_disabled_label_text_opacity);
+            }
+            return variant == MenuVariant.vibrant
+                ? VibrantMenuTokens.item_disabled_label_text_color.with_alpha(VibrantMenuTokens.item_disabled_label_text_opacity)
+                : StandardMenuTokens.item_disabled_label_text_color.with_alpha(StandardMenuTokens.item_disabled_label_text_opacity);
+        }
+        if selected && kind != MenuItemKind.standard {
+            return variant == MenuVariant.vibrant ? VibrantMenuTokens.item_selected_label_text_color : StandardMenuTokens.item_selected_label_text_color;
+        }
+        if kind == MenuItemKind.standard && variant == MenuVariant.standard {
+            return ListTokens.item_label_text_color;
+        }
+        return variant == MenuVariant.vibrant ? VibrantMenuTokens.item_label_text_color : StandardMenuTokens.item_label_text_color;
+    }
+
+    /// `SelectableMenuItemColors.leadingIconColor`/`MenuItemColors.leadingIconColor`.
+    public pure function item-leading-icon-color(variant: MenuVariant, kind: MenuItemKind, enabled: bool, selected: bool) -> color {
+        if !enabled {
+            if kind == MenuItemKind.standard {
+                return variant == MenuVariant.vibrant
+                    ? VibrantMenuTokens.item_disabled_leading_icon_color.with_alpha(VibrantMenuTokens.item_disabled_leading_icon_opacity)
+                    : ListTokens.item_disabled_leading_icon_color.with_alpha(ListTokens.item_disabled_leading_icon_opacity);
+            }
+            return variant == MenuVariant.vibrant
+                ? VibrantMenuTokens.item_disabled_leading_icon_color.with_alpha(VibrantMenuTokens.item_disabled_leading_icon_opacity)
+                : StandardMenuTokens.item_disabled_leading_icon_color.with_alpha(StandardMenuTokens.item_disabled_leading_icon_opacity);
+        }
+        if selected && kind != MenuItemKind.standard {
+            return variant == MenuVariant.vibrant ? VibrantMenuTokens.item_selected_leading_icon_color : StandardMenuTokens.item_selected_leading_icon_color;
+        }
+        if kind == MenuItemKind.standard && variant == MenuVariant.standard {
+            return ListTokens.item_leading_icon_color;
+        }
+        return variant == MenuVariant.vibrant ? VibrantMenuTokens.item_leading_icon_color : StandardMenuTokens.item_leading_icon_color;
+    }
+
+    /// `SelectableMenuItemColors.trailingContentColor`/`MenuItemColors.trailingIconColor`.
+    public pure function item-trailing-color(variant: MenuVariant, kind: MenuItemKind, enabled: bool, selected: bool) -> color {
+        if !enabled {
+            if kind == MenuItemKind.standard {
+                return variant == MenuVariant.vibrant
+                    ? VibrantMenuTokens.item_disabled_trailing_icon_color.with_alpha(VibrantMenuTokens.item_disabled_trailing_icon_opacity)
+                    : ListTokens.item_disabled_trailing_icon_color.with_alpha(ListTokens.item_disabled_trailing_icon_opacity);
+            }
+            return variant == MenuVariant.vibrant
+                ? VibrantMenuTokens.item_disabled_trailing_icon_color.with_alpha(VibrantMenuTokens.item_disabled_trailing_icon_opacity)
+                : StandardMenuTokens.item_disabled_trailing_icon_color.with_alpha(StandardMenuTokens.item_disabled_trailing_icon_opacity);
+        }
+        if selected && kind != MenuItemKind.standard {
+            return variant == MenuVariant.vibrant ? VibrantMenuTokens.item_selected_trailing_icon_color : StandardMenuTokens.item_selected_trailing_icon_color;
+        }
+        if kind == MenuItemKind.standard && variant == MenuVariant.standard {
+            return ListTokens.item_trailing_icon_color;
+        }
+        return variant == MenuVariant.vibrant ? VibrantMenuTokens.item_trailing_icon_color : StandardMenuTokens.item_trailing_icon_color;
+    }
+
+    // --- popup position ---
+    // `internal/MenuPosition.kt` + `DropdownMenuPositionProvider.positioningLogic`.
+    // Candidates are evaluated against the window margins; the last candidate
+    // is always accepted — centered when the menu fills the window, otherwise
+    // coerced inside the margins. `contentOffset` shifts every candidate.
+    // Slint has no RTL direction: `start`/`end` resolve like LTR upstream.
+
+    /// `MenuPositionScope` x candidates for `position` (window coords).
+    public pure function menu-x(position: MenuAnchorPosition, anchor-x: length, anchor-w: length, menu-w: length, window-w: length, offset-x: length) -> length {
+        let edge = anchor-x + anchor-w / 2 < window-w / 2 ? 0px : window-w - menu-w;
+        let c0 = position == MenuAnchorPosition.above || position == MenuAnchorPosition.below
+            ? anchor-x
+            : position == MenuAnchorPosition.left || position == MenuAnchorPosition.start
+            ? anchor-x - menu-w
+            : anchor-x + anchor-w;
+        let c1 = position == MenuAnchorPosition.above || position == MenuAnchorPosition.below
+            ? anchor-x + anchor-w - menu-w
+            : position == MenuAnchorPosition.left || position == MenuAnchorPosition.start
+            ? anchor-x + anchor-w
+            : anchor-x - menu-w;
+        let x0 = c0 + offset-x;
+        if x0 >= root.menu-horizontal-margin && x0 + menu-w <= window-w - root.menu-horizontal-margin {
+            return x0;
+        }
+        let x1 = c1 + offset-x;
+        if x1 >= root.menu-horizontal-margin && x1 + menu-w <= window-w - root.menu-horizontal-margin {
+            return x1;
+        }
+        // Last candidate is taken raw, then centered or coerced.
+        let x = edge + offset-x;
+        if menu-w >= window-w - 2 * root.menu-horizontal-margin {
+            return (window-w - menu-w) / 2;
+        }
+        return Math.min(Math.max(x, root.menu-horizontal-margin), window-w - root.menu-horizontal-margin - menu-w);
+    }
+
+    /// `MenuPositionScope` y candidates for `position` (window coords).
+    public pure function menu-y(position: MenuAnchorPosition, anchor-y: length, anchor-h: length, menu-h: length, window-h: length, offset-y: length) -> length {
+        let edge = anchor-y + anchor-h / 2 < window-h / 2 ? 0px : window-h - menu-h;
+        let c0 = position == MenuAnchorPosition.above
+            ? anchor-y - menu-h
+            : position == MenuAnchorPosition.below
+            ? anchor-y + anchor-h
+            : anchor-y;
+        let c1 = position == MenuAnchorPosition.above
+            ? anchor-y + anchor-h
+            : position == MenuAnchorPosition.below
+            ? anchor-y - menu-h
+            : anchor-y + anchor-h - menu-h;
+        // `centerToAnchorTop`, only present for `Above`/`Below`.
+        let c2 = anchor-y - menu-h / 2;
+        let y0 = c0 + offset-y;
+        if y0 >= root.menu-vertical-margin && y0 + menu-h <= window-h - root.menu-vertical-margin {
+            return y0;
+        }
+        let y1 = c1 + offset-y;
+        if y1 >= root.menu-vertical-margin && y1 + menu-h <= window-h - root.menu-vertical-margin {
+            return y1;
+        }
+        if position == MenuAnchorPosition.above || position == MenuAnchorPosition.below {
+            let y2 = c2 + offset-y;
+            if y2 >= root.menu-vertical-margin && y2 + menu-h <= window-h - root.menu-vertical-margin {
+                return y2;
+            }
+        }
+        let y = edge + offset-y;
+        if menu-h >= window-h - 2 * root.menu-vertical-margin {
+            return (window-h - menu-h) / 2;
+        }
+        return Math.min(Math.max(y, root.menu-vertical-margin), window-h - root.menu-vertical-margin - menu-h);
+    }
+
+    /// `ExposedDropdownMenuPositionProvider` x: same candidates as `below`
+    /// but no margins — the last candidate is taken raw.
+    public pure function exposed-menu-x(anchor-x: length, anchor-w: length, menu-w: length, window-w: length) -> length {
+        let edge-pick = anchor-x + anchor-w / 2 < window-w / 2 ? 0px : window-w - menu-w;
+        let candidates = [anchor-x, anchor-x + anchor-w - menu-w, edge-pick];
+        if candidates[0] >= 0px && candidates[0] + menu-w <= window-w {
+            return candidates[0];
+        }
+        if candidates[1] >= 0px && candidates[1] + menu-w <= window-w {
+            return candidates[1];
+        }
+        return candidates[2];
+    }
+
+    /// `ExposedDropdownMenuPositionProvider` y: `[topToAnchorBottom,
+    /// bottomToAnchorTop, windowEdge]` with a 0-margin fit check, the last
+    /// candidate coerced inside `MenuVerticalMargin`.
+    public pure function exposed-menu-y(anchor-y: length, anchor-h: length, menu-h: length, window-h: length) -> length {
+        let edge-pick = anchor-y + anchor-h / 2 < window-h / 2 ? 0px : window-h - menu-h;
+        let candidates = [anchor-y + anchor-h, anchor-y - menu-h, edge-pick];
+        if candidates[0] >= 0px && candidates[0] + menu-h <= window-h {
+            return candidates[0];
+        }
+        if candidates[1] >= 0px && candidates[1] + menu-h <= window-h {
+            return candidates[1];
+        }
+        if menu-h >= window-h - 2 * root.menu-vertical-margin {
+            return (window-h - menu-h) / 2;
+        }
+        return Math.min(Math.max(candidates[2], root.menu-vertical-margin), window-h - root.menu-vertical-margin - menu-h);
+    }
+
+    /// `ExposedDropdownMenu` `calculateMaxHeight`: the larger of the space
+    /// above and below the anchor inside `MenuVerticalMargin`.
+    public pure function exposed-menu-max-height(anchor-y: length, anchor-h: length, window-h: length) -> length {
+        let margined-top = root.menu-vertical-margin;
+        let margined-bottom = window-h - root.menu-vertical-margin;
+        if anchor-y > window-h || anchor-y + anchor-h < 0px {
+            return Math.max(margined-bottom - margined-top, 0px);
+        }
+        return Math.max(Math.max(anchor-y - margined-top, margined-bottom - anchor-y - anchor-h), 0px);
+    }
+
+    /// `calculateTransformOrigin` — pivot 0/1 when the menu sits fully on one
+    /// side of the anchor, otherwise the intersection-center fraction.
+    public pure function transform-origin-x(anchor-x: length, anchor-w: length, menu-x: length, menu-w: length) -> float {
+        if menu-x >= anchor-x + anchor-w {
+            return 0;
+        }
+        if menu-x + menu-w <= anchor-x {
+            return 1;
+        }
+        if menu-w <= 0px {
+            return 0;
+        }
+        let intersection-center = (Math.max(anchor-x, menu-x) + Math.min(anchor-x + anchor-w, menu-x + menu-w)) / 2;
+        return (intersection-center - menu-x) / menu-w;
+    }
+
+    public pure function transform-origin-y(anchor-y: length, anchor-h: length, menu-y: length, menu-h: length) -> float {
+        if menu-y >= anchor-y + anchor-h {
+            return 0;
+        }
+        if menu-y + menu-h <= anchor-y {
+            return 1;
+        }
+        if menu-h <= 0px {
+            return 0;
+        }
+        let intersection-center = (Math.max(anchor-y, menu-y) + Math.min(anchor-y + anchor-h, menu-y + menu-h)) / 2;
+        return (intersection-center - menu-y) / menu-h;
+    }
+
+    /// `Shapes.rectangle` takes per-vertex roundings in bottom-right,
+    /// bottom-left, top-left, top-right order.
+    public pure function corner-roundings(shape: MaterialCornerShape) -> [CornerRounding] {
+        [
+            { radius: shape.bottom_right / 1px, smoothing: 0 },
+            { radius: shape.bottom_left / 1px, smoothing: 0 },
+            { radius: shape.top_left / 1px, smoothing: 0 },
+            { radius: shape.top_right / 1px, smoothing: 0 },
+        ]
+    }
+}

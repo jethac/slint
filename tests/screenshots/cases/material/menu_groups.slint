@@ -1,0 +1,55 @@
+// Copyright © SixtyFPS GmbH <info@slint.dev>
+// SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0
+
+// Scene: menu-groups — generated from `ui-libraries/material/parity/scenes/menu-groups.json`
+// (edit the scene, regenerate with `cargo run -p material-parity-generator`).
+//PARITY=static
+//SIZE=620x560
+//TRACE_ELEMENTS=menu0,menu1
+//MASK_DECOR=menu0+16@0,2000
+//MASK_DECOR=menu1+16@0,2000
+//DENSITIES=1,2
+import "../../fonts/Roboto-VariableFont.ttf";
+import { Icons, MaterialPalette, MaterialTheme, MaterialWindow, MenuItemKind, MenuPopupContent, MenuVariant } from "@material";
+
+export component TestCase inherits MaterialWindow {
+    init => {
+        // The scene pins seed #6750A4, tonal-spot, spec2025, light, contrast 0
+        // (all the library defaults; restated here so a default change can't
+        // silently move the parity baseline).
+        MaterialTheme.seed-color = #6750A4;
+        MaterialTheme.dark = false;
+        MaterialTheme.contrast-level = 0;
+        MaterialTheme.use-platform-color = false;
+        MaterialTheme.plain-family = "Roboto";
+        MaterialTheme.brand-family = "Roboto";
+        // Compose builds its scene scheme from the same seed — use the
+        // runtime-generated scheme, not the static expressive table.
+        MaterialPalette.dynamic = true;
+    }
+
+    menu0 := MenuPopupContent {
+        x: 16px;
+        y: 8px;
+        groups: [{ label: "Section", items: [{ text: "First", selected_icon: Icons.check, selected: true, }, { text: "Second", }] }, { label: "", items: [{ text: "Third", icon: Icons.edit, }, { text: "Fourth", }, { text: "Fifth", supporting_text: "Detail", }] }, { label: "Tail", items: [{ text: "Sixth", trailing_icon: Icons.arrow_right, }, { text: "Disabled", disabled: true, }] }];
+        item-kind: MenuItemKind.selectable;
+        variant: MenuVariant.standard;
+        // The references cannot render platform shadows (layoutlib
+        // deadlocks on `Surface.shadowElevation`).
+        cast-shadow: false;
+        simulate-hover-group: 1;
+        simulate-hover-item: 1;
+    }
+
+    menu1 := MenuPopupContent {
+        x: 316px;
+        y: 8px;
+        groups: [{ label: "", items: [{ text: "On", selected_icon: Icons.check, checked: true, }, { text: "Off", }] }, { label: "More", items: [{ text: "Also on", icon: Icons.remove, selected_icon: Icons.check, checked: true, }, { text: "Last", trailing_text: "F4", }] }];
+        item-kind: MenuItemKind.checkable;
+        variant: MenuVariant.vibrant;
+        // The references cannot render platform shadows (layoutlib
+        // deadlocks on `Surface.shadowElevation`).
+        cast-shadow: false;
+    }
+
+}

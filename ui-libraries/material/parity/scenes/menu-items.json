@@ -1,0 +1,201 @@
+{
+  "name": "menu-items",
+  "type": "canvas",
+  "parity": "static",
+  "size": [
+    520,
+    640
+  ],
+  "densities": [
+    1,
+    2
+  ],
+  "theme": {
+    "seed": "6750A4",
+    "variant": "tonal-spot",
+    "spec": "spec2025",
+    "platform": "phone",
+    "dark": false,
+    "contrast": 0.0
+  },
+  "fonts": {
+    "plain": "Roboto",
+    "brand": "Roboto"
+  },
+  "widgets": [
+    {
+      "kind": "menu",
+      "x": 16,
+      "y": 8,
+      "menu_items": [
+        {
+          "text": "Menu item"
+        },
+        {
+          "text": "Edit",
+          "icon": "edit"
+        },
+        {
+          "text": "Share",
+          "trailing_icon": "arrow_right"
+        },
+        {
+          "text": "Shortcut",
+          "trailing_text": "Ctrl+K"
+        },
+        {
+          "text": "Rich item",
+          "icon": "edit",
+          "trailing_icon": "check",
+          "supporting_text": "Secondary text"
+        },
+        {
+          "text": "Disabled",
+          "icon": "edit",
+          "enabled": false
+        },
+        {
+          "text": "Hovered",
+          "state": "hovered"
+        },
+        {
+          "text": "Focused",
+          "state": "focused"
+        }
+      ],
+      "width": 193
+    },
+    {
+      "kind": "menu",
+      "x": 272,
+      "y": 8,
+      "item_kind": "selectable",
+      "menu_items": [
+        {
+          "text": "Option A",
+          "selected": true,
+          "selected_icon": "check"
+        },
+        {
+          "text": "Option B"
+        },
+        {
+          "text": "With icon",
+          "icon": "menu",
+          "selected_icon": "check",
+          "selected": true
+        },
+        {
+          "text": "Hovered",
+          "state": "hovered"
+        },
+        {
+          "text": "Disabled",
+          "enabled": false
+        }
+      ],
+      "width": 125
+    },
+    {
+      "kind": "menu",
+      "x": 16,
+      "y": 330,
+      "item_kind": "checkable",
+      "variant": "vibrant",
+      "menu_items": [
+        {
+          "text": "Checked",
+          "checked": true,
+          "selected_icon": "check"
+        },
+        {
+          "text": "Swap",
+          "checked": true,
+          "icon": "remove",
+          "selected_icon": "check"
+        },
+        {
+          "text": "Unchecked",
+          "icon": "remove",
+          "selected_icon": "check"
+        },
+        {
+          "text": "Hovered",
+          "state": "hovered"
+        },
+        {
+          "text": "Disabled",
+          "checked": true,
+          "enabled": false,
+          "selected_icon": "check"
+        }
+      ],
+      "width": 136
+    },
+    {
+      "kind": "menu",
+      "x": 272,
+      "y": 330,
+      "variant": "vibrant",
+      "menu_items": [
+        {
+          "text": "Vibrant item"
+        },
+        {
+          "text": "Icons",
+          "icon": "edit",
+          "trailing_icon": "arrow_right"
+        },
+        {
+          "text": "Supporting",
+          "supporting_text": "Detail line",
+          "trailing_text": "F2"
+        },
+        {
+          "text": "Disabled",
+          "enabled": false
+        }
+      ],
+      "width": 133
+    }
+  ],
+  "trace_elements": [
+    "menu0",
+    "menu1",
+    "menu2",
+    "menu3"
+  ],
+  "mask_decor": {
+    "menu0": {
+      "times": [
+        0,
+        2000
+      ],
+      "margin": 16
+    },
+    "menu1": {
+      "times": [
+        0,
+        2000
+      ],
+      "margin": 16
+    },
+    "menu2": {
+      "times": [
+        0,
+        2000
+      ],
+      "margin": 16
+    },
+    "menu3": {
+      "times": [
+        0,
+        2000
+      ],
+      "margin": 16
+    }
+  },
+  "xfail_text": "issue #28: Slint ceils text layout widths where Compose keeps fractional advances",
+  "parity_eps": 10,
+  "parity_eps_note": "the hovered item container edge lands a fraction of a pixel differently between Skia and Paparazzi, above the per-channel eps on two AA pixels"
+}
