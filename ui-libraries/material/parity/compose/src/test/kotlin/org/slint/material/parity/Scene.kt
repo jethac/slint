@@ -74,7 +74,8 @@ class Widget(json: JSONObject) {
     val height: Float = json.optDouble("height", 0.0).toFloat()
     val radius: Float = json.optDouble("radius", 0.0).toFloat()
     val text: String? = (json.opt("text") as? String)?.takeIf { it.isNotEmpty() }
-    /** `alert-dialog`/`basic-alert-dialog` dialog title; `tooltip-rich` optional title slot. */
+    /** `alert-dialog`/`basic-alert-dialog` dialog title; `tooltip-rich`
+     * optional title slot; `material-scaffold` top-bar title text. */
     val title: String? = (json.opt("title") as? String)?.takeIf { it.isNotEmpty() }
     /** `tooltip-rich` optional action label slot. */
     val action: String? = (json.opt("action") as? String)?.takeIf { it.isNotEmpty() }
@@ -230,6 +231,20 @@ class Widget(json: JSONObject) {
     /** `*-divider` line thickness in dp — `DividerDefaults.Thickness` when
      * unset; `0` is the upstream `Dp.Hairline` (one physical pixel). */
     val thickness: Float = json.optDouble("thickness", 1.0).toFloat()
+    /** `material-scaffold` only: which slots are populated — each absent
+     * slot is upstream's empty-lambda default. */
+    val topBar: Boolean = json.optBoolean("top_bar", false)
+    val bottomBar: Boolean = json.optBoolean("bottom_bar", false)
+    /** The snackbar slot is a fixed-size `Box` for now — the slot
+     * mechanics, not the snackbar, are under test. */
+    val snackbar: Boolean = json.optBoolean("snackbar", false)
+    val fab: Boolean = json.optBoolean("fab", false)
+    /** `floatingActionButtonPosition`: `start`/`center`/`end` (default)/
+     * `end-overlay`. */
+    val fabPosition: String = (json.opt("fab_position") as? String) ?: "end"
+    /** Snackbar-slot placeholder size. */
+    val snackWidth: Float = json.optDouble("snack_width", 200.0).toFloat()
+    val snackHeight: Float = json.optDouble("snack_height", 48.0).toFloat()
 
     // --- navigation-rail kinds (`navigation-rail`, `wide-navigation-rail`,
     // `modal-navigation-rail`) ---

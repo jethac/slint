@@ -278,7 +278,8 @@ fn test_extract_library_paths() {
 ///   `(−0.15, 1.15]`. Without the marker the bound is 0.5 px —
 ///   `(−0.15, 0.65]`. A drift past a whole pixel fails either way. An
 ///   optional driver scope — `//XFAIL_TEXT=skia,software:<reason>` —
-///   applies the marker only on the listed drivers, like `PARITY=xfail`.
+///   applies the marker only on the listed drivers, like `PARITY=xfail`;
+///   a `driver@platform` token narrows one entry to the test host's OS.
 /// - `//XFAIL_SILHOUETTE=<reason>` — on the software driver the
 ///   `//MASK_INNER=` silhouette findings are an expected divergence (the
 ///   reason names the tracked gap, e.g. `issue #6` for the axis-aligned
@@ -300,13 +301,20 @@ pub struct ParityMarkers {
     pub xfail_note: Option<String>,
     /// Non-empty when `PARITY=xfail` was scoped to specific drivers —
     /// `xfail:software:<reason>` expects the divergence only on `software`.
+    /// A `driver@platform` token (`std::env::consts::OS` names:
+    /// `windows`, `macos`, `linux`) scopes one driver to a single test-host
+    /// OS for platform-specific rasterization drift.
     pub xfail_renderers: Vec<String>,
     /// `//XFAIL_TEXT=<reason>` marks the text-width layer's ceil-quantization
     /// window an expected divergence rather than a failure.
     pub xfail_text: Option<String>,
     /// Non-empty when `XFAIL_TEXT` was scoped to specific drivers —
     /// `//XFAIL_TEXT=skia,software:<reason>` relaxes the text layer only
-    /// there, keeping the others strict. An optional `*N` at the end of
+    /// there, keeping the others strict. A `driver@platform` token
+    /// (`//XFAIL_TEXT=skia@windows:<reason>`) narrows the scope to one
+    /// test-host OS (`std::env::consts::OS`: `windows`, `macos`, `linux`)
+    /// for platform-specific rasterizer drift such as per-OS font metric
+    /// quantization. An optional `*N` at the end of
     /// the scope — `//XFAIL_TEXT=*1.5: <reason>` or
     /// `//XFAIL_TEXT=skia,femtovg*1.5: <reason>` — multiplies the relaxed
     /// per-cell bound for cases whose ink displacement runs larger than
@@ -338,12 +346,27 @@ pub struct ParityMarkers {
 /// sequence can play out across the timed frames.
 #[derive(Debug, Clone, PartialEq)]
 pub enum ParityAction {
-    Move { x: f32, y: f32, at_ms: u64 },
-    Press { x: f32, y: f32, at_ms: u64 },
-    Release { x: f32, y: f32, at_ms: u64 },
+    Move {
+        x: f32,
+        y: f32,
+        at_ms: u64,
+    },
+    Press {
+        x: f32,
+        y: f32,
+        at_ms: u64,
+    },
+    Release {
+        x: f32,
+        y: f32,
+        at_ms: u64,
+    },
     /// A named key (`Tab`, `Backtab`, `Escape`, ...) dispatched as a
     /// press+release pair; anything else is dispatched as the literal text.
-    Key { name: String, at_ms: u64 },
+    Key {
+        name: String,
+        at_ms: u64,
+    },
 }
 
 impl ParityAction {
@@ -355,6 +378,16 @@ impl ParityAction {
             | Self::Key { at_ms, .. } => at_ms,
         }
     }
+}
+
+/// Whether a scope token names a driver — `driver` on every platform, or
+/// `driver@platform` only on the test host's `std::env::consts::OS`
+/// (`skia@windows`): a rasterizer can diverge per-platform when its font
+/// backend differs (DirectWrite-era skia on Windows vs freetype on Linux).
+fn scope_token_is_driver(token: &str, drivers: &[&str]) -> bool {
+    let (driver, platform) =
+        token.trim().split_once('@').map_or((token.trim(), None), |(d, p)| (d, Some(p)));
+    drivers.contains(&driver) && platform.is_none_or(|p| ["windows", "macos", "linux"].contains(&p))
 }
 
 /// Extract the parity markers listed on [`ParityMarkers`] from a case's source.
@@ -391,30 +424,24 @@ pub fn extract_parity(source: &str) -> ParityMarkers {
                 Vec::new(),
             ),
             Some(v) if v.starts_with("xfail") => {
-            // `xfail[:<driver>[,<driver>…]]: <reason>` — an optional scope of
-            // known driver names limits where the divergence is expected.
-            const DRIVERS: &[&str] = &["software", "skia", "femtovg", "interpreter"];
-            let note = v.split_once(':').map(|(_, n)| n.trim()).unwrap_or("");
-            let (renderers, reason) = match note.split_once(':') {
-                Some((scope, reason))
-                    if !scope.is_empty()
-                        && scope
-                            .split(',')
-                            .all(|d| DRIVERS.contains(&d.trim())) =>
-                {
-                    (
-                        scope.split(',').map(|d| d.trim().to_string()).collect(),
-                        reason.trim().to_string(),
-                    )
-                }
-                _ => (Vec::new(), note.to_string()),
-            };
-                (
-                    Some("xfail".to_string()),
-                    None,
-                    (!reason.is_empty()).then_some(reason),
-                    renderers,
-                )
+                // `xfail[:<driver>[,<driver>…]]: <reason>` — an optional scope of
+                // known driver names limits where the divergence is expected; a
+                // `driver@platform` token narrows further to one test-host OS.
+                const DRIVERS: &[&str] = &["software", "skia", "femtovg", "interpreter"];
+                let note = v.split_once(':').map(|(_, n)| n.trim()).unwrap_or("");
+                let (renderers, reason) = match note.split_once(':') {
+                    Some((scope, reason))
+                        if !scope.is_empty()
+                            && scope.split(',').all(|d| scope_token_is_driver(d, DRIVERS)) =>
+                    {
+                        (
+                            scope.split(',').map(|d| d.trim().to_string()).collect(),
+                            reason.trim().to_string(),
+                        )
+                    }
+                    _ => (Vec::new(), note.to_string()),
+                };
+                (Some("xfail".to_string()), None, (!reason.is_empty()).then_some(reason), renderers)
             }
             Some(v) => (Some(v.to_string()), None, None, Vec::new()),
             None => (None, None, None, Vec::new()),
@@ -454,14 +481,13 @@ pub fn extract_parity(source: &str) -> ParityMarkers {
     });
 
     let mut mask_inner = Vec::new();
-    static MASK_INNER_RX: LazyLock<Regex> =
-        LazyLock::new(|| Regex::new(r"//MASK_INNER=\s*([A-Za-z0-9_-]+)\s*@\s*([0-9,\s]+)").unwrap());
+    static MASK_INNER_RX: LazyLock<Regex> = LazyLock::new(|| {
+        Regex::new(r"//MASK_INNER=\s*([A-Za-z0-9_-]+)\s*@\s*([0-9,\s]+)").unwrap()
+    });
     for m in MASK_INNER_RX.captures_iter(source) {
         for t in m[2].split(',').map(str::trim).filter(|s| !s.is_empty()) {
-            mask_inner.push((
-                m[1].to_string(),
-                t.parse().expect("Cannot parse //MASK_INNER= timestamp"),
-            ));
+            mask_inner
+                .push((m[1].to_string(), t.parse().expect("Cannot parse //MASK_INNER= timestamp")));
         }
     }
 
@@ -471,9 +497,9 @@ pub fn extract_parity(source: &str) -> ParityMarkers {
             .unwrap()
     });
     for m in MASK_DECOR_RX.captures_iter(source) {
-        let margin = m.get(2).map(|g| {
-            g.as_str().parse().expect("Cannot parse //MASK_DECOR= margin override")
-        });
+        let margin = m
+            .get(2)
+            .map(|g| g.as_str().parse().expect("Cannot parse //MASK_DECOR= margin override"));
         for t in m[3].split(',').map(str::trim).filter(|s| !s.is_empty()) {
             mask_decor.push((
                 m[1].to_string(),
@@ -504,7 +530,8 @@ pub fn extract_parity(source: &str) -> ParityMarkers {
                 Some(v) => {
                     // `<driver>[,<driver>…]: <reason>` — same scoping as
                     // `PARITY=xfail`: a pre-colon run of known driver names
-                    // limits where the marker applies.
+                    // limits where the marker applies; `driver@platform`
+                    // narrows a token to one test-host OS.
                     const DRIVERS: &[&str] = &[
                         "software",
                         "skia",
@@ -524,7 +551,7 @@ pub fn extract_parity(source: &str) -> ParityMarkers {
                             let scoped = !drivers_part.is_empty()
                                 && drivers_part
                                     .split(',')
-                                    .all(|d| DRIVERS.contains(&d.trim()));
+                                    .all(|d| scope_token_is_driver(d, DRIVERS));
                             if scoped || (drivers_part.is_empty() && scale.is_ok()) {
                                 (
                                     if scoped {

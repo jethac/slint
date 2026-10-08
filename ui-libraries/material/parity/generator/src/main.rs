@@ -182,7 +182,8 @@ struct Widget {
     radius: Option<f64>,
     #[serde(default)]
     text: Option<String>,
-    /// `alert-dialog`/`basic-alert-dialog` dialog title; `tooltip-rich` optional title slot.
+    /// `alert-dialog`/`basic-alert-dialog` dialog title; `tooltip-rich`
+    /// optional title slot; `material-scaffold` top-bar title text.
     #[serde(default)]
     title: Option<String>,
     /// `tooltip-rich` optional action label (the upstream `action` slot).
@@ -532,6 +533,29 @@ struct Widget {
     /// `selected_index`.
     #[serde(default)]
     multi_select: Option<bool>,
+    /// `material-scaffold` only: which slots are populated — each absent
+    /// slot maps to upstream's empty-lambda default.
+    #[serde(default)]
+    top_bar: Option<bool>,
+    #[serde(default)]
+    bottom_bar: Option<bool>,
+    /// The snackbar slot is a fixed-size rect for now — the pre-rework
+    /// `SnackBar` on master is a `PopupWindow`; only the slot mechanics
+    /// are under test here.
+    #[serde(default)]
+    snackbar: Option<bool>,
+    #[serde(default)]
+    fab: Option<bool>,
+    /// `floatingActionButtonPosition` upstream — `start`, `center`, `end`
+    /// (default) or `end-overlay`.
+    #[serde(default)]
+    fab_position: Option<String>,
+    /// Snackbar-slot placeholder size — the Compose side measures a fixed
+    /// `Box` of the same size.
+    #[serde(default)]
+    snack_width: Option<f64>,
+    #[serde(default)]
+    snack_height: Option<f64>,
 }
 
 /// One group item — the arguments an upstream `clickableItem`/
@@ -639,6 +663,18 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                         .into_iter()
                         .flatten()
                 }))
+                .map(String::as_str)
+                // `material-scaffold` hardcodes its FAB and bottom-bar
+                // icons — the scene carries no icon fields.
+                .chain(
+                    if w.kind == "material-scaffold" {
+                        ["add", "menu", "schedule"].as_slice()
+                    } else {
+                        [].as_slice()
+                    }
+                    .iter()
+                    .copied(),
+                )
             {
                 let src = repo_root
                     .join("ui-libraries/material/src/ui/icons")
@@ -1052,6 +1088,7 @@ fn slint_case(scene: &Scene) -> String {
 
             "navigation-bar" => "NavigationBar",
             "short-navigation-bar" => "ShortNavigationBar",
+            "material-scaffold" => "Scaffold",
             other => panic!("unknown widget kind {other:?}"),
         };
         imports.push(component);
@@ -1096,6 +1133,7 @@ fn slint_case(scene: &Scene) -> String {
             || w.items.iter().any(|item| {
                 item.icon.is_some() || item.checked_icon.is_some() || item.selected_icon.is_some()
             })
+            || w.kind == "material-scaffold"
         {
             needs_icons = true;
         }
@@ -1115,6 +1153,21 @@ fn slint_case(scene: &Scene) -> String {
             imports.push("ExtendedFabSize");
             imports.push("FabElevation");
             imports.push("FabAlignment");
+        }
+        if w.kind == "material-scaffold" {
+            imports.push("FabPosition");
+            if w.top_bar.unwrap_or(false) {
+                imports.push("TopAppBar");
+            }
+            if w.bottom_bar.unwrap_or(false) {
+                imports.push("NavigationBar");
+            }
+            if w.fab.unwrap_or(false) {
+                imports.push("FloatingActionButton");
+            }
+            // The content slot's `MaterialText`.
+            imports.push("MaterialText");
+            imports.push("MaterialTypography");
         }
     }
     if needs_icons {
@@ -1815,6 +1868,7 @@ fn slint_canvas(s: &mut String, scene: &Scene) {
     let mut badged_boxes = 0;
     let mut nav_bars = 0;
     let mut tooltips = 0;
+    let mut scaffolds = 0;
     for w in scene.widgets.iter() {
         let component = match w.kind.as_str() {
             "button-group" => {
@@ -2199,6 +2253,12 @@ fn slint_canvas(s: &mut String, scene: &Scene) {
                 let i = sheets;
                 sheets += 1;
                 sheet_widget(s, w, i, scene);
+                continue;
+            }
+            "material-scaffold" => {
+                let i = scaffolds;
+                scaffolds += 1;
+                scaffold_widget(s, w, i);
                 continue;
             }
             "connected-button" => {
@@ -3785,3 +3845,91 @@ fn navbar_widget(s: &mut String, w: &Widget, i: usize) {
     )
     .unwrap();
 }
+
+/// A `material-scaffold` widget: the `Scaffold` and its slot children.
+/// Upstream z-order is content, top bar, snackbar, bottom bar, FAB —
+/// later children paint over earlier ones — and the slots report their
+/// measured size through the scaffold's `in-out` props (upstream
+/// measures each slot with loose constraints; `min_*` is the Slint
+/// counterpart).
+fn scaffold_widget(s: &mut String, w: &Widget, i: usize) {
+    let fab_pos = match w.fab_position.as_deref().unwrap_or("end") {
+        "start" => "start",
+        "center" => "center",
+        "end" => "end",
+        "end-overlay" => "end_overlay",
+        other => panic!("unknown fab_position {other:?}"),
+    };
+    writeln!(
+        s,
+        "    scaffold{i} := Scaffold {{\n        x: {}px;\n        y: {}px;\n        width: {}px;\n        height: {}px;\n        fab-position: FabPosition.{fab_pos};",
+        w.x as i64,
+        w.y as i64,
+        w.width.unwrap() as i64,
+        w.height.unwrap() as i64,
+    )
+    .unwrap();
+    writeln!(
+        s,
+        "        content{i} := Rectangle {{\n            width: 100%;\n            height: 100%;\n            MaterialText {{\n                text: {:?};\n                x: 16px;\n                y: scaffold{i}.content_padding_top + 16px;\n                style: MaterialTypography.body_large;\n                color: scaffold{i}.content_color;\n            }}\n        }}",
+        w.text.as_deref().unwrap_or("Content"),
+    )
+    .unwrap();
+    if w.top_bar.unwrap_or(false) {
+        // `y: 0` pins the bar to the top — an element with unset height
+        // centers in its parent otherwise.
+        writeln!(
+            s,
+            "        top-bar-height: appbar{i}.min_height;\n        appbar{i} := TopAppBar {{\n            y: 0px;\n            width: 100%;\n            title: {:?};\n        }}",
+            w.title.as_deref().unwrap_or("Scaffold"),
+        )
+        .unwrap();
+    }
+    if w.snackbar.unwrap_or(false) {
+        // `slint_overrides` shadow the scaffold-provided offsets — the
+        // negative scenes' deliberate defect.
+        let sx = w
+            .slint_overrides
+            .get("snackbar_x")
+            .map(|v| format!("{}px", widget_num(v)))
+            .unwrap_or_else(|| format!("scaffold{i}.snackbar_x"));
+        let sy = w
+            .slint_overrides
+            .get("snackbar_y")
+            .map(|v| format!("{}px", widget_num(v)))
+            .unwrap_or_else(|| format!("scaffold{i}.snackbar_y"));
+        writeln!(
+            s,
+            "        snackbar-width: snackbar{i}.width;\n        snackbar-height: snackbar{i}.height;\n        snackbar{i} := Rectangle {{\n            x: {sx};\n            y: {sy};\n            width: {}px;\n            height: {}px;\n            border-radius: 4px;\n            background: MaterialPalette.inverse_surface;\n        }}",
+            w.snack_width.unwrap_or(200.0) as i64,
+            w.snack_height.unwrap_or(48.0) as i64,
+        )
+        .unwrap();
+    }
+    if w.bottom_bar.unwrap_or(false) {
+        writeln!(
+            s,
+            "        bottom-bar-height: navbar{i}.min_height;\n        navbar{i} := NavigationBar {{\n            y: scaffold{i}.bottom_bar_y;\n            width: 100%;\n            items: [{{ icon: Icons.menu, selected_icon: Icons.menu, text: \"Menu\", show_badge: false, badge: \"\" }}, {{ icon: Icons.schedule, selected_icon: Icons.schedule, text: \"Later\", show_badge: false, badge: \"\" }}];\n            current-index: 0;\n        }}"
+        )
+        .unwrap();
+    }
+    if w.fab.unwrap_or(false) {
+        let fx = w
+            .slint_overrides
+            .get("fab_x")
+            .map(|v| format!("{}px", widget_num(v)))
+            .unwrap_or_else(|| format!("scaffold{i}.fab_x"));
+        let fy = w
+            .slint_overrides
+            .get("fab_y")
+            .map(|v| format!("{}px", widget_num(v)))
+            .unwrap_or_else(|| format!("scaffold{i}.fab_y"));
+        writeln!(
+            s,
+            "        fab-width: fab{i}.min_width;\n        fab-height: fab{i}.min_height;\n        fab{i} := FloatingActionButton {{\n            x: {fx};\n            y: {fy};\n            icon: Icons.add;\n            enforce_touch_target: false;\n        }}"
+        )
+        .unwrap();
+    }
+    writeln!(s, "    }}").unwrap();
+
+    }
