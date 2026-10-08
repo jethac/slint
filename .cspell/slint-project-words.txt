@@ -157,6 +157,9 @@ coterminal
 CPACK
 Cpolygon
 cpos
+crossfade
+Crossfade
+crossfading
 cppbuild
 cppdocs
 cppreference
@@ -508,6 +511,8 @@ manylinux
 materialui
 matplot
 maturin
+maxbh
+maxbw
 mcp
 mcus
 MCUX
@@ -596,6 +601,7 @@ othercomp
 outlinebutton
 outlineiconbutton
 outlinesplitbutton
+oversizing
 ovmf
 pagefind
 O_WRONLY
@@ -640,6 +646,7 @@ protox
 Pseudonymized
 psram
 pulltorefresh
+pulltorefreshbox
 punct
 purelib
 pyclass
@@ -675,6 +682,7 @@ rasterizing
 RBUTTONUP
 readback
 Recip
+reanchor
 recompiles
 recompositions
 rects
@@ -822,6 +830,7 @@ svgz
 Swapchain
 swapusage
 swipegesturehandler
+swipetodismissbox
 Sysclk
 sysexit
 sysinfo

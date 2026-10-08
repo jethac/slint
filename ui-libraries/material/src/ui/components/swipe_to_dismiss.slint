@@ -1,0 +1,361 @@
+// Copyright © SixtyFPS GmbH <info@slint.dev>
+// SPDX-License-Identifier: MIT
+
+import { MaterialPalette } from "../styling/material_palette.slint";
+import { MotionTokens } from "../styling/generated/material_motion_tokens.slint";
+
+// Port of `SwipeToDismissBox.kt` and the `AnchoredDraggable` machinery it runs
+// on (`DraggableAnchors`, `closestAnchor`, `computeTarget`, `updateBounds` and
+// the post-drag settle), at androidx/androidx
+// 23327507f7fc7d5b19d65fec4b090f60c970079b
+// (`compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/SwipeToDismissBox.kt`,
+//  `compose/foundation/foundation/src/commonMain/kotlin/androidx/compose/foundation/gestures/AnchoredDraggable.kt`).
+//
+// `backgroundContent` has no counterpart: a Slint component takes a single
+// `@children` slot, used here for `content`. Draw the revealed background as
+// a sibling *beneath* the `SwipeToDismissBox` — the box itself is transparent
+// and its content slides over whatever is under it. `progress`,
+// `dismiss-direction`, `current-value` and `target-value` expose the state
+// `backgroundContent` would have read from the box.
+
+/// `SwipeToDismissBoxValue` — the state of a `SwipeToDismissBox`.
+export enum SwipeToDismissBoxValue {
+    /// Content dismissed towards the start edge.
+    start-to-end,
+    /// Content dismissed towards the end edge.
+    end-to-start,
+    /// Content settled in place.
+    settled,
+}
+
+/// `SwipeToDismissBox` — horizontal drags translate the content; releasing
+/// settles to the nearest anchor (or, past `positional-threshold` or with a
+/// fling, to the matching dismiss anchor) and fires `on-dismiss`.
+export component SwipeToDismissBox {
+    /// `enableDismissFromStartToEnd`.
+    in property <bool> enable-dismiss-from-start-to-end: true;
+    /// `enableDismissFromEndToStart`.
+    in property <bool> enable-dismiss-from-end-to-start: true;
+    /// `gesturesEnabled` — when unset, or while the box isn't settled,
+    /// pointer drags pass through to the content.
+    in property <bool> gestures-enabled: true;
+    /// `positionalThreshold` — the pinned lambda is
+    /// `(totalDistance: Float) -> Float`, but `SwipeToDismissBoxDefaults.
+    /// positionalThreshold` is the constant `{ 56.dp.toPx() }`, which is what
+    /// this property holds.
+    in property <length> positional-threshold: 56px;
+    /// `initialValue`.
+    in property <SwipeToDismissBoxValue> initial-value: SwipeToDismissBoxValue.settled;
+
+    /// `currentValue` — the anchor the offset currently resolves to.
+    out property <SwipeToDismissBoxValue> current-value: SwipeToDismissBoxValue.settled;
+    /// `settledValue`.
+    out property <SwipeToDismissBoxValue> settled-value: SwipeToDismissBoxValue.settled;
+    /// `targetValue` — `dragTarget ?: calculateTargetValue(offset)`: while
+    /// any settle animation runs (release settle or `dismiss`/`reset`), its
+    /// anchor; otherwise the anchor closest to `offset` with `current-value`
+    /// priority when the offset sits exactly on it (the upstream `fix`).
+    out property <SwipeToDismissBoxValue> target-value:
+        root.animating ? root.animating-to :
+        root.offset == root.anchor-position(root.current-value) ? root.current-value :
+        root.closest-anchor(root.offset, false, false);
+    /// `dismissDirection` — derived from the offset's sign.
+    out property <SwipeToDismissBoxValue> dismiss-direction:
+        root.offset == 0px ? SwipeToDismissBoxValue.settled :
+        root.offset > 0px ? SwipeToDismissBoxValue.start-to-end :
+        SwipeToDismissBoxValue.end-to-start;
+    /// `requireOffset()` — the content's current horizontal translation.
+    /// `AnchoredDraggableState.offset` is anchor-derived, not imperative:
+    /// `updateAnchors` writes `offset = positionOf(currentValue)` at every
+    /// measure — which is what this binding does, resolving `initial-value`
+    /// the moment `content.width` exists and re-snapping whenever anchors
+    /// change (width or enable flags). `drag-offset` only drives the frames
+    /// a gesture or settle writes imperatively.
+    out property <length> offset:
+        sgr.swiping || root.animating ? root.drag-offset :
+        root.anchor-position(root.current-value);
+    /// `progress` — how far `offset` sits between the `settled-value` and
+    /// `target-value` anchors (`1` when both anchor at the same position,
+    /// matching upstream's NaN branch).
+    out property <float> progress:
+        root.progress-from-to(root.settled-value, root.target-value);
+    /// `isAnimationRunning` — a settle animation is in flight.
+    out property <bool> is-animating: root.animating;
+
+    /// `onDismiss(state.dismissDirection)` — `LaunchedEffect(settledValue)`
+    /// in the sources: fires whenever `settled-value` leaves `settled`.
+    callback on-dismiss(direction: SwipeToDismissBoxValue);
+
+    /// `AnchoredDraggableState.snapTo` — jump to an anchor with no
+    /// animation; a missing anchor still flips `current`/`settled` (the
+    /// upstream `positionOf(...).isNaN()` path skips only the offset write).
+    public function snap-to(v: SwipeToDismissBoxValue) {
+        root.animating = false;
+        // The `offset` binding re-resolves to `v`'s anchor on this write —
+        // no imperative offset update needed.
+        root.current-value = v;
+        root.settled-value = v;
+    }
+    /// `SwipeToDismissBoxState.reset` — settle back to `settled`.
+    public function reset() {
+        root.animate-to-anchor(SwipeToDismissBoxValue.settled);
+    }
+    /// `SwipeToDismissBoxState.dismiss` — settle to a dismiss anchor.
+    public function dismiss(direction: SwipeToDismissBoxValue) {
+        root.animate-to-anchor(direction);
+    }
+
+    // --- internal state ---
+
+    // The previous offset sample for `update-current-value`'s direction
+    // (`newOffset - previousOffset >= 0`).
+    property <length> last-offset;
+    // Last `current-position.x` seen in `moved` — tracks sub-claim moves so
+    // the first claimed delta matches upstream's post-slop `onDrag`.
+    property <length> last-drag-x;
+    // `isAnimationRunning` (`dragTarget != null`) + which anchor an
+    // in-flight settle heads for.
+    property <bool> animating;
+    property <SwipeToDismissBoxValue> animating-to;
+    // The imperatively-written half of `offset`: drag deltas and settle
+    // frames. Only read while `sgr.swiping` or `animating` holds — the
+    // binding falls back to `current-value`'s anchor otherwise.
+    property <length> drag-offset;
+    // Dedupes `on-dismiss` for the `init` + `changed settled-value` pair.
+    property <SwipeToDismissBoxValue> last-dismiss-fired: SwipeToDismissBoxValue.settled;
+
+    // `positionOf`/`hasPositionFor`.
+    pure function anchor-position(v: SwipeToDismissBoxValue) -> length {
+        v == SwipeToDismissBoxValue.start-to-end ? content.width :
+        v == SwipeToDismissBoxValue.end-to-start ? -content.width : 0px
+    }
+    pure function has-anchor(v: SwipeToDismissBoxValue) -> bool {
+        v == SwipeToDismissBoxValue.settled ||
+        (v == SwipeToDismissBoxValue.start-to-end && root.enable-dismiss-from-start-to-end) ||
+        (v == SwipeToDismissBoxValue.end-to-start && root.enable-dismiss-from-end-to-start)
+    }
+    // `anchors.minAnchor()`/`anchors.maxAnchor()`.
+    pure function min-anchor() -> length {
+        root.enable-dismiss-from-end-to-start ? -content.width : 0px
+    }
+    pure function max-anchor() -> length {
+        root.enable-dismiss-from-start-to-end ? content.width : 0px
+    }
+    // `progress(from, to)` — the `abs`-clamped fraction between anchors.
+    pure function progress-from-to(from: SwipeToDismissBoxValue, to: SwipeToDismissBoxValue) -> float {
+        let fp = root.anchor-position(from);
+        let tp = root.anchor-position(to);
+        if fp == tp {
+            return 1;
+        }
+        let cur = root.offset.clamp(min(fp, tp), max(fp, tp));
+        let fraction = (cur - fp) / (tp - fp);
+        fraction < 0.000001 ? 0 : fraction > 0.999999 ? 1 : abs(fraction)
+    }
+
+    // `DefaultDraggableAnchors.closestAnchor`: the anchor minimizing
+    // `|anchor - position|`; iterating in insertion order (settled,
+    // start-to-end, end-to-start) makes the *last* candidate win ties.
+    // `directional` restricts to anchors in the search direction
+    // (`anchor - position >= 0` upwards, `position - anchor >= 0`
+    // downwards); when every anchor is filtered out, the upstream call sites
+    // fall back to `currentValue`.
+    pure function anchor-dist(anchor: length, pos: length, upwards: bool, directional: bool) -> float {
+        directional && (upwards ? anchor - pos : pos - anchor) < 0px ? -1 : abs(anchor - pos) / 1px
+    }
+    pure function closest-anchor(pos: length, upwards: bool, directional: bool) -> SwipeToDismissBoxValue {
+        // Invalid candidates sit at a huge distance so the <= tie-break
+        // picks the last *valid* anchor, like the upstream iteration.
+        let d0 = root.anchor-dist(0px, pos, upwards, directional) >= 0 ?
+            root.anchor-dist(0px, pos, upwards, directional) : 1000000000;
+        let d1 = root.enable-dismiss-from-start-to-end ?
+            root.anchor-dist(content.width, pos, upwards, directional) : -1;
+        let b1 = d1 >= 0 ? d1 : 1000000000;
+        let d2 = root.enable-dismiss-from-end-to-start ?
+            root.anchor-dist(-content.width, pos, upwards, directional) : -1;
+        let b2 = d2 >= 0 ? d2 : 1000000000;
+        if d0 == 1000000000 && b1 == 1000000000 && b2 == 1000000000 {
+            return root.current-value;
+        }
+        if b2 <= (b1 <= d0 ? b1 : d0) {
+            return SwipeToDismissBoxValue.end-to-start;
+        }
+        b1 <= d0 ? SwipeToDismissBoxValue.start-to-end : SwipeToDismissBoxValue.settled
+    }
+    // `updateBounds` + the `distanceToCurrentAnchor >= distance / 2` crossing
+    // rule, run on every `dragTo` write — drag delta or settle frame alike.
+    function update-current-value(moving-forward: bool) {
+        let cur-pos = root.anchor-position(root.current-value);
+        let on-anchor = root.offset == cur-pos;
+        let search-start = root.offset + (moving-forward ? 1px : -1px);
+        let sibling = root.closest-anchor(search-start, moving-forward, true);
+        let left-bound = on-anchor ?
+            (moving-forward ? root.current-value : sibling) :
+            root.closest-anchor(root.offset, false, true);
+        let right-bound = on-anchor ?
+            (moving-forward ? sibling : root.current-value) :
+            root.closest-anchor(root.offset, true, true);
+        let distance = abs(root.anchor-position(left-bound) - root.anchor-position(right-bound));
+        if abs(root.offset - cur-pos) >= distance / 2 {
+            root.current-value = moving-forward ? right-bound : left-bound;
+        }
+    }
+    // `AnchoredDraggableDefaults.flingBehavior`'s `computeTarget`: a fling
+    // past `AnchoredDraggableMinFlingVelocity` (125dp/s, logical px/s here)
+    // picks the next anchor in the velocity direction; a slower release picks
+    // the anchor `positional-threshold` from the current one towards `pos`;
+    // a stationary release picks the closest anchor.
+    function compute-target(pos: length, velocity: float) -> SwipeToDismissBoxValue {
+        if abs(velocity) > 0 {
+            if abs(velocity) >= 125 {
+                return root.closest-anchor(pos, velocity > 0, true);
+            }
+            let left = root.closest-anchor(pos, false, true);
+            let right = root.closest-anchor(pos, true, true);
+            let closest-from-start = root.anchor-position(velocity > 0 ? left : right);
+            if abs(closest-from-start - pos) >= root.positional-threshold {
+                return velocity > 0 ? right : left;
+            }
+            return velocity > 0 ? left : right;
+        }
+        root.closest-anchor(pos, true, false)
+    }
+    // `anchoredDrag(targetValue = v)`: animates to `v`'s anchor, or — when
+    // the anchor doesn't exist (the matching enable flag is off) — flips
+    // `currentValue`/`settledValue` instantly, upstream's fallback branch.
+    function animate-to-anchor(v: SwipeToDismissBoxValue) {
+        if !root.has-anchor(v) {
+            root.animating = false;
+            root.current-value = v;
+            root.settled-value = v;
+            return;
+        }
+        root.animating = true;
+        root.animating-to = v;
+        root.drag-offset = root.anchor-position(v);
+    }
+    // `dragTo`'s write hook: `updateIfNeeded` on every write, then — once a
+    // settle animation lands within 0.5px of its target — the
+    // `settledValue = currentValue = target` block that ends `anchoredDrag`.
+    function offset-written() {
+        root.update-current-value(root.offset >= root.last-offset);
+        root.last-offset = root.offset;
+        if root.animating && abs(root.offset - root.anchor-position(root.animating-to)) < 0.5px {
+            root.animating = false;
+            root.current-value = root.animating-to;
+            root.settled-value = root.animating-to;
+        }
+    }
+    // `LaunchedEffect(settledValue, onDismiss)` — fires on dismissal
+    // anchors; `last-dismiss-fired` dedupes it for the `init` path, which
+    // upstream also runs once at composition for a non-`settled`
+    // `initialValue`. The argument is `dismissDirection` — the offset's
+    // sign, so an instant flip with a 0 offset reports `settled`.
+    function fire-dismiss(v: SwipeToDismissBoxValue) {
+        if v == SwipeToDismissBoxValue.settled {
+            root.last-dismiss-fired = SwipeToDismissBoxValue.settled;
+            return;
+        }
+        if v != root.last-dismiss-fired {
+            root.last-dismiss-fired = v;
+            root.on-dismiss(root.dismiss-direction);
+        }
+    }
+    // `updateAnchors` at measure time: `currentValue` falls back to
+    // `settled` when its anchor went away; the `offset` binding re-snaps the
+    // position itself since it resolves through `content.width`.
+    function reanchor() {
+        if !root.has-anchor(root.current-value) {
+            root.current-value = SwipeToDismissBoxValue.settled;
+            root.animating = false;
+        }
+    }
+
+    changed offset => {
+        root.offset-written();
+    }
+    changed settled-value => {
+        root.fire-dismiss(root.settled-value);
+    }
+    // `updateAnchors` — the enable flags feed the anchors too.
+    changed enable-dismiss-from-start-to-end => { root.reanchor(); }
+    changed enable-dismiss-from-end-to-start => { root.reanchor(); }
+    init => {
+        if root.initial-value != SwipeToDismissBoxValue.settled && root.has-anchor(root.initial-value) {
+            root.current-value = root.initial-value;
+            root.settled-value = root.initial-value;
+            root.fire-dismiss(root.initial-value);
+        }
+    }
+
+    // `Modifier.anchoredDraggable` — a horizontal swipe recognizer driving
+    // `offset`. The recognizer claims drags in both directions regardless of
+    // the enable flags; removing an anchor only clamps the offset
+    // (`newOffsetForDelta` coerces into `[minAnchor, maxAnchor]`).
+    sgr := SwipeGestureHandler {
+        width: 100%;
+        height: 100%;
+        enabled: root.gestures-enabled && root.settled-value == SwipeToDismissBoxValue.settled;
+        handle-swipe-left: true;
+        handle-swipe-right: true;
+
+        changed pressed-position => {
+            root.last-drag-x = self.pressed-position.x;
+            // A new grab resumes from wherever the content currently sits —
+            // the anchor position when idle, the mid-flight offset when a
+            // settle is preempted (`startDragImmediately` upstream).
+            root.drag-offset = root.offset;
+        }
+        moved => {
+            let cur = self.current-position.x;
+            let dx = cur - root.last-drag-x;
+            root.last-drag-x = cur;
+            if self.swiping {
+                // A new grab mid-settle preempts the settle — upstream's
+                // `startDragImmediately` when `isAnimationRunning`.
+                root.animating = false;
+                root.drag-offset = (root.drag-offset + dx).clamp(root.min-anchor(), root.max-anchor());
+            }
+        }
+        swiped => {
+            // `calculateSnapOffset` + `animateTo(target, velocity)`. The
+            // velocity is consumed by the spec upstream, but
+            // `SnapAnimationSpec` is a `tween()` which ignores it — the
+            // release velocity only picks the anchor. `drag-offset` is read
+            // here, not `offset`: `swiping` already cleared when `swiped`
+            // fires, so the binding would report the settled anchor.
+            let target = root.compute-target(root.drag-offset, self.release-velocity.x / 1px);
+            root.animating = true;
+            root.animating-to = target;
+            root.drag-offset = root.anchor-position(target);
+        }
+        cancelled => {
+            // `onDragCancel` ends the drag session like a velocity-0
+            // release: settle to `computeTarget(offset, 0)`.
+            let target = root.compute-target(root.drag-offset, 0);
+            root.animating = true;
+            root.animating-to = target;
+            root.drag-offset = root.anchor-position(target);
+        }
+        // `draggableAnchors` measures the content row — `content.width` is
+        // the anchor extent.
+        content := Rectangle {
+            x: root.offset;
+            width: 100%;
+            height: 100%;
+            changed width => {
+                root.reanchor();
+            }
+            @children
+        }
+    }
+
+    // `AnchoredDraggableDefaults.SnapAnimationSpec` = `tween()` = 300ms
+    // `FastOutSlowInEasing` (`MotionTokens.EasingLegacyCubicBezier`,
+    // 0.4/0/0.2/1). Writes land instantly while a swipe is claimed.
+    animate drag-offset {
+        enabled: !sgr.swiping && !MaterialPalette.reduced-motion;
+        duration: 300ms;
+        easing: MotionTokens.easing_legacy_cubic_bezier;
+    }
+}

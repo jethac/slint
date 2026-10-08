@@ -335,7 +335,7 @@ States: active, indeterminate
 
 | Component | Source | Status | Issues | Needs | Notes |
 |---|---|---|---|---|---|
-| PullToRefreshBox | pulltorefresh/PullToRefresh.kt | missing | #5 | springs (#5) | - |
+| PullToRefreshBox | pulltorefresh/PullToRefresh.kt | partial | #5, #11 | none | slint components: PullToRefreshBox, PullToRefreshIndicatorBox, PullToRefreshIndicator, PullToRefreshLoadingIndicator; constants in-code per the pin (no component tokens upstream); springs: spring(1, 1500) settle + default-effects crossfade; parity cases: pull-to-refresh-states/pull-refresh-refreshing (xfail on femtovg, #53-class edge-AA band vs coverage-integral drivers), pull-refresh-settle/pull-refresh-threshold-settle (xfail, #27-class spring settle), negative-pull-refresh-fraction; loading-indicator kind stays a private port of ContainedLoadingIndicator — upstream applies the -(progress-1)*180 overshoot as a drawWithContent wrapper Slint can't express around a component instance — and reuses the exported LoadingIndicatorShapes polygons |
 
 ### Radio button
 
@@ -432,7 +432,7 @@ States: hovered, pressed, selected
 
 | Component | Source | Status | Issues | Needs | Notes |
 |---|---|---|---|---|---|
-| SwipeToDismissBox | SwipeToDismissBox.kt | missing | #11 | springs (#5) | - |
+| SwipeToDismissBox | SwipeToDismissBox.kt | partial | #5, #11 | none | slint component: SwipeToDismissBox; constants in-code per the pin (no component tokens upstream); settle: tween 300ms FastOutSlowIn via MotionTokens.easing-legacy-cubic-bezier; parity cases: swipe-to-dismiss-states (xfail on femtovg, #53-class edge-AA band), swipe-to-dismiss-settle/swipe-to-dismiss-dismiss (xfail, #27-class spring settle), negative-swipe-dismiss-initial |
 
 ### Switch
 

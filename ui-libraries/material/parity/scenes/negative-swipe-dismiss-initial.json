@@ -1,0 +1,23 @@
+{
+    "name": "negative-swipe-dismiss-initial",
+    "type": "swipe-to-dismiss",
+    "parity": "negative",
+    "negative_note": "the Slint side starts dismissed the wrong way — the content sits off the opposite edge",
+    "size": [420, 200],
+    "densities": [1, 2],
+    "theme": {
+        "seed": "6750A4",
+        "variant": "tonal-spot",
+        "spec": "spec2025",
+        "platform": "phone",
+        "dark": false,
+        "contrast": 0.0
+    },
+    "fonts": { "plain": "Roboto", "brand": "Roboto" },
+    "slint_overrides": { "initial": "start-to-end" },
+    "params": {
+        "boxes": [
+            { "x": 60, "y": 60, "w": 300, "h": 72, "initial": "end-to-start", "bg": "error-container", "content": "surface-container-highest", "radius": 8 }
+        ]
+    }
+}

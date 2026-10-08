@@ -1,0 +1,116 @@
+---
+title: PullToRefreshBox
+description: PullToRefreshBox API.
+---
+
+import CodeSnippetMD from '@slint/common-files/src/components/CodeSnippetMD.astro';
+import SlintProperty from '@slint/common-files/src/components/SlintProperty.astro';
+
+<CodeSnippetMD imagePath="/src/assets/generated/pulltorefreshbox.png" scale="3" imageWidth="340" imageHeight="200" imageAlt="">
+```slint
+import { PullToRefreshBox } from "@material";
+export component Example inherits Window {
+    width: 320px;
+    height: 160px;
+    background: transparent;
+    PullToRefreshBox {
+        Rectangle { background: #E6E6E6; }
+    }
+}
+```
+</CodeSnippetMD>
+
+A `PullToRefreshBox` wraps content that can be pulled down from its top edge
+to request a refresh. The pull shows the selected indicator; releasing past
+`threshold` fires `on-refresh` and the indicator stays until `is-refreshing`
+returns to false.
+
+<CodeSnippetMD imagePath="/src/assets/generated/pulltorefreshbox-loading.png" scale="3" imageWidth="340" imageHeight="200" imageAlt="">
+```slint
+import { PullToRefreshBox, PullToRefreshIndicatorKind } from "@material";
+export component Example inherits Window {
+    width: 320px;
+    height: 160px;
+    background: transparent;
+    PullToRefreshBox {
+        is-refreshing: true;
+        indicator-kind: PullToRefreshIndicatorKind.loading-indicator;
+        Rectangle { background: #E6E6E6; }
+    }
+}
+```
+</CodeSnippetMD>
+
+## Properties
+
+### is-refreshing
+<SlintProperty propName="is-refreshing" typeName="bool">
+Whether a refresh is in progress. While set, the indicator holds at the
+threshold; when cleared, it settles back to hidden.
+</SlintProperty>
+
+### enabled
+<SlintProperty propName="enabled" typeName="bool" defaultValue="true">
+Whether the pull gesture is handled; when unset, drags pass to the content.
+</SlintProperty>
+
+### threshold
+<SlintProperty propName="threshold" typeName="length" defaultValue="80px">
+The pulled distance that triggers `on-refresh` on release.
+</SlintProperty>
+
+### indicator-kind
+<SlintProperty propName="indicator-kind" typeName="enum" enumName="PullToRefreshIndicatorKind" defaultValue="classic">
+`classic` draws the 40dp arrow/spinner box, `loading-indicator` the 48dp
+contained loading indicator, and `none` draws nothing for custom indicators.
+</SlintProperty>
+
+### content-at-top
+<SlintProperty propName="content-at-top" typeName="bool" defaultValue="true">
+Set from the scrollable's at-top state so down-drags only become pulls when
+the content cannot scroll further.
+</SlintProperty>
+
+### indicator-container-color
+<SlintProperty propName="indicator-container-color" typeName="color">
+Overrides the indicator box background; unset resolves to
+`surface-container-high` (classic) or `primary-container` (loading indicator).
+</SlintProperty>
+
+### indicator-color
+<SlintProperty propName="indicator-color" typeName="color">
+Overrides the indicator foreground; unset resolves to `on-surface-variant`
+(classic) or `on-primary-container` (loading indicator).
+</SlintProperty>
+
+### max-distance
+<SlintProperty propName="max-distance" typeName="length" defaultValue="80px">
+The maximum distance the indicator translates towards the content.
+</SlintProperty>
+
+### distance-fraction
+<SlintProperty propName="distance-fraction" typeName="float" propertyVisibility="out">
+The pulled fraction of `threshold` — `0` hidden, `1` at the threshold, above
+`1` in the non-linear overshoot zone.
+</SlintProperty>
+
+### is-animating
+<SlintProperty propName="is-animating" typeName="bool" propertyVisibility="out">
+Whether a settle animation towards the threshold or hidden offset is running.
+</SlintProperty>
+
+## Callbacks
+
+### on-refresh()
+Invoked when a released pull exceeded `threshold`.
+
+## Functions
+
+### snap-to(target: float)
+Sets `distance-fraction` instantly, without animation.
+
+### animate-to-threshold()
+Animates `distance-fraction` to `1`.
+
+### animate-to-hidden()
+Animates `distance-fraction` to `0`.

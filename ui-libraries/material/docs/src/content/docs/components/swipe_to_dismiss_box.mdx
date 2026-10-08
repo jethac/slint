@@ -1,0 +1,114 @@
+---
+title: SwipeToDismissBox
+description: SwipeToDismissBox API.
+---
+
+import CodeSnippetMD from '@slint/common-files/src/components/CodeSnippetMD.astro';
+import SlintProperty from '@slint/common-files/src/components/SlintProperty.astro';
+
+<CodeSnippetMD imagePath="/src/assets/generated/swipetodismissbox.png" scale="3" imageWidth="340" imageHeight="160" imageAlt="">
+```slint
+import { SwipeToDismissBox } from "@material";
+export component Example inherits Window {
+    width: 320px;
+    height: 120px;
+    background: transparent;
+    Rectangle { background: #B3261E; }
+    SwipeToDismissBox {
+        Rectangle { background: #E6E6E6; }
+    }
+}
+```
+</CodeSnippetMD>
+
+A `SwipeToDismissBox` slides its content horizontally with the pointer.
+Releasing settles the content to the nearest anchor — back in place, or past
+`positional-threshold`/a fling to a dismiss edge, which fires `on-dismiss`.
+Draw a background sibling beneath the box; it becomes visible as the content
+moves away. `progress`, `dismiss-direction`, `current-value` and
+`target-value` expose the state a background would read.
+
+## Properties
+
+### enable-dismiss-from-start-to-end
+<SlintProperty propName="enable-dismiss-from-start-to-end" typeName="bool" defaultValue="true">
+Whether a start-to-end drag can dismiss. When unset, drags clamp at the
+settled offset.
+</SlintProperty>
+
+### enable-dismiss-from-end-to-start
+<SlintProperty propName="enable-dismiss-from-end-to-start" typeName="bool" defaultValue="true">
+Whether an end-to-start drag can dismiss.
+</SlintProperty>
+
+### gestures-enabled
+<SlintProperty propName="gestures-enabled" typeName="bool" defaultValue="true">
+Whether pointer drags move the content. Also unset while the box isn't
+settled.
+</SlintProperty>
+
+### positional-threshold
+<SlintProperty propName="positional-threshold" typeName="length" defaultValue="56px">
+The drag distance that decides a dismiss on a slow release.
+</SlintProperty>
+
+### initial-value
+<SlintProperty propName="initial-value" typeName="enum" enumName="SwipeToDismissBoxValue" defaultValue="settled">
+The value the box starts at.
+</SlintProperty>
+
+### current-value
+<SlintProperty propName="current-value" typeName="enum" enumName="SwipeToDismissBoxValue" propertyVisibility="out">
+The anchor the offset currently resolves to.
+</SlintProperty>
+
+### settled-value
+<SlintProperty propName="settled-value" typeName="enum" enumName="SwipeToDismissBoxValue" propertyVisibility="out">
+The value the box last settled at.
+</SlintProperty>
+
+### target-value
+<SlintProperty propName="target-value" typeName="enum" enumName="SwipeToDismissBoxValue" propertyVisibility="out">
+While a settle animation runs, its target anchor; otherwise the anchor
+closest to the offset.
+</SlintProperty>
+
+### dismiss-direction
+<SlintProperty propName="dismiss-direction" typeName="enum" enumName="SwipeToDismissBoxValue" propertyVisibility="out">
+The direction the offset points in — `start-to-end` when positive,
+`end-to-start` when negative, `settled` at zero.
+</SlintProperty>
+
+### offset
+<SlintProperty propName="offset" typeName="length" propertyVisibility="out">
+The content's current horizontal translation.
+</SlintProperty>
+
+### progress
+<SlintProperty propName="progress" typeName="float" propertyVisibility="out">
+How far the offset sits between the `settled-value` and `target-value`
+anchors.
+</SlintProperty>
+
+### is-animating
+<SlintProperty propName="is-animating" typeName="bool" propertyVisibility="out">
+Whether a settle animation is running.
+</SlintProperty>
+
+## Callbacks
+
+### on-dismiss(direction: SwipeToDismissBoxValue)
+Fires whenever `settled-value` leaves `settled`, with `dismiss-direction` as
+the argument.
+
+## Functions
+
+### snap-to(value: SwipeToDismissBoxValue)
+Jumps to the value's anchor with no animation. A value whose anchor is
+disabled still flips `current-value`/`settled-value` without moving.
+
+### dismiss(direction: SwipeToDismissBoxValue)
+Animates to a dismiss anchor.
+
+### reset()
+Animates back to `settled`.

@@ -1,0 +1,103 @@
+// Copyright © SixtyFPS GmbH <info@slint.dev>
+// SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0
+
+// Scene: swipe-to-dismiss-states — generated from `ui-libraries/material/parity/scenes/swipe-to-dismiss-states.json`
+// (edit the scene, regenerate with `cargo run -p material-parity-generator`).
+//PARITY=xfail:femtovg: issue #53 class: femtovg's stencil+fringe AA band lands the dismiss card's corner edge slivers differently than coverage-integral drivers — a handful of symmetric card-edge pixels diverge ~25/255 past the default 8 (2 at d1, 4 at d2) while fills and geometry match; verified identical on software and skia — a silent pass would mean the harness went blind
+//SIZE=420x380
+//DENSITIES=1,2
+import "../../fonts/Roboto-VariableFont.ttf";
+import { MaterialPalette, MaterialTheme, MaterialWindow, SwipeToDismissBox, SwipeToDismissBoxValue } from "@material";
+
+export component TestCase inherits MaterialWindow {
+    init => {
+        // The scene pins seed #6750A4, tonal-spot, spec2025, light, contrast 0
+        // (all the library defaults; restated here so a default change can't
+        // silently move the parity baseline).
+        MaterialTheme.seed-color = #6750A4;
+        MaterialTheme.dark = false;
+        MaterialTheme.contrast-level = 0;
+        MaterialTheme.use-platform-color = false;
+        MaterialTheme.plain-family = "Roboto";
+        MaterialTheme.brand-family = "Roboto";
+        // Compose builds its scene scheme from the same seed — use the
+        // runtime-generated scheme, not the static expressive table.
+        MaterialPalette.dynamic = true;
+    }
+
+    sd_bg0 := Rectangle {
+        x: 60px;
+        y: 40px;
+        width: 300px;
+        height: 72px;
+        border-radius: 8px;
+        background: MaterialPalette.error_container;
+    }
+
+    box0 := SwipeToDismissBox {
+        x: 60px;
+        y: 40px;
+        width: 300px;
+        height: 72px;
+        initial-value: SwipeToDismissBoxValue.settled;
+        enable-dismiss-from-start-to-end: true;
+        enable-dismiss-from-end-to-start: true;
+        positional-threshold: 56px;
+
+        fg0 := Rectangle {
+            border-radius: 8px;
+            background: MaterialPalette.surface_container_highest;
+        }
+    }
+
+    sd_bg1 := Rectangle {
+        x: 60px;
+        y: 140px;
+        width: 300px;
+        height: 72px;
+        border-radius: 8px;
+        background: MaterialPalette.error_container;
+    }
+
+    box1 := SwipeToDismissBox {
+        x: 60px;
+        y: 140px;
+        width: 300px;
+        height: 72px;
+        initial-value: SwipeToDismissBoxValue.end-to-start;
+        enable-dismiss-from-start-to-end: true;
+        enable-dismiss-from-end-to-start: true;
+        positional-threshold: 56px;
+
+        fg1 := Rectangle {
+            border-radius: 8px;
+            background: MaterialPalette.surface_container_highest;
+        }
+    }
+
+    sd_bg2 := Rectangle {
+        x: 60px;
+        y: 240px;
+        width: 300px;
+        height: 72px;
+        border-radius: 8px;
+        background: MaterialPalette.error_container;
+    }
+
+    box2 := SwipeToDismissBox {
+        x: 60px;
+        y: 240px;
+        width: 300px;
+        height: 72px;
+        initial-value: SwipeToDismissBoxValue.start-to-end;
+        enable-dismiss-from-start-to-end: true;
+        enable-dismiss-from-end-to-start: true;
+        positional-threshold: 56px;
+
+        fg2 := Rectangle {
+            border-radius: 8px;
+            background: MaterialPalette.surface_container_highest;
+        }
+    }
+
+}

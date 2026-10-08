@@ -1,0 +1,760 @@
+// Copyright © SixtyFPS GmbH <info@slint.dev>
+// SPDX-License-Identifier: MIT
+
+import { MaterialPalette } from "../styling/material_palette.slint";
+import { MaterialAnimations } from "../styling/material_animations.slint";
+import { MaterialCornerShape } from "../styling/generated/material_shape_tokens.slint";
+import { LoadingIndicatorTokens } from "../styling/generated/material_component_tokens.slint";
+import { ElevationTokens } from "../styling/generated/material_elevation_tokens.slint";
+import { LoadingIndicatorShapes } from "./loading_indicator.slint";
+
+// Port of `PullToRefresh.kt` at androidx/androidx
+// 23327507f7fc7d5b19d65fec4b090f60c970079b
+// (`compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/pulltorefresh/PullToRefresh.kt`).
+//
+// Compose's pull gesture runs through a `NestedScrollConnection`: a
+// scrollable child consumes drags first and the connection sees the
+// leftovers (down-drags only when the child cannot scroll down further).
+// Slint has no nested-scroll arbitration, so a `SwipeGestureHandler` claims
+// down-drags above the content — `content-at-top` stands in for the child's
+// scroll position. Deltas are measured from `pressed-position`, so a drag
+// that first scrolls the child and then reaches the top accumulates only
+// the leftover distance, like `onPostScroll`'s `available`.
+//
+// The `indicator` slot becomes `indicator-kind`: `classic` and
+// `loading-indicator` are the two `PullToRefreshDefaults` indicators; `none`
+// draws nothing so callers can render their own from `distance-fraction`
+// and `is-refreshing`.
+
+// Private constants of PullToRefresh.kt.
+global PullToRefreshMetrics {
+    /// `SpinnerSize` = 16dp — `(ArcRadius + StrokeWidth) * 2`.
+    pure public function spinner-size() -> length { 16px }
+    /// `SpinnerContainerSize` = 40dp.
+    pure public function spinner-container-size() -> length { 40px }
+    /// `StrokeWidth` = 2.5dp.
+    pure public function stroke-width() -> length { 2.5px }
+    /// `ArcRadius` = 5.5dp; `arcRadius` = `ArcRadius + StrokeWidth / 2` =
+    /// 6.75dp is the actual arc bounds radius.
+    pure public function arc-radius() -> length { 6.75px }
+    /// `ArrowWidth` = 10dp.
+    pure public function arrow-width() -> length { 10px }
+    /// `ArrowHeight` = 5dp.
+    pure public function arrow-height() -> length { 5px }
+    /// `MinAlpha`/`MaxAlpha`.
+    pure public function min-alpha() -> float { 0.3 }
+    pure public function max-alpha() -> float { 1 }
+    /// `MaxProgressArc` = 0.8.
+    pure public function max-progress-arc() -> float { 0.8 }
+    /// `DragMultiplier` = 0.5.
+    pure public function drag-multiplier() -> float { 0.5 }
+    /// `LoaderIndicatorWidth`/`LoaderIndicatorHeight` =
+    /// `LoadingIndicatorDefaults.ContainerWidth/Height` (48dp).
+    pure public function loader-width() -> length { LoadingIndicatorTokens.container_width }
+    pure public function loader-height() -> length { LoadingIndicatorTokens.container_height }
+}
+
+/// Which indicator `PullToRefreshBox` draws — the `indicator` slot's two
+/// `PullToRefreshDefaults` presets.
+export enum PullToRefreshIndicatorKind {
+    /// `PullToRefreshDefaults.Indicator` — the arrow/spinner in a 40dp box.
+    classic,
+    /// `PullToRefreshDefaults.LoadingIndicator` — the contained loading
+    /// indicator in a 48dp box.
+    loading-indicator,
+    /// No built-in indicator; build a custom one from `distance-fraction`.
+    none,
+}
+
+// `ArrowValues(progress)` — the shared arc/arrow geometry.
+global PullToRefreshArrowValues {
+    /// `adjustedPercent` — the first 40% of progress discarded, the rest
+    /// rescaled to 0..1.
+    pure public function adjusted-percent(progress: float) -> float {
+        max(min(progress, 1) - 0.4, 0) * 5 / 3
+    }
+    /// `linearTension` — the clamped overshoot fraction.
+    pure public function linear-tension(progress: float) -> float {
+        clamp(abs(progress) - 1, 0, 2)
+    }
+    /// `tensionPercent` — non-linear overshoot tension.
+    pure public function tension-percent(progress: float) -> float {
+        linear-tension(progress) - linear-tension(progress) * linear-tension(progress) / 4
+    }
+    /// `rotation` (turns).
+    pure public function rotation(progress: float) -> float {
+        (-0.25 + 0.4 * adjusted-percent(progress) + tension-percent(progress)) * 0.5
+    }
+    /// `endTrim` = `adjustedPercent * MaxProgressArc`.
+    pure public function end-trim(progress: float) -> float {
+        adjusted-percent(progress) * PullToRefreshMetrics.max-progress-arc()
+    }
+    /// `startAngle`/`endAngle` (degrees).
+    pure public function start-angle(progress: float) -> float {
+        rotation(progress) * 360
+    }
+    pure public function end-angle(progress: float) -> float {
+        (rotation(progress) + end-trim(progress)) * 360
+    }
+    /// `scale` = `min(1f, adjustedPercent)`.
+    pure public function arrow-scale(progress: float) -> float {
+        min(adjusted-percent(progress), 1)
+    }
+
+    // Local copy of the `cubic-bezier-easing` evaluator the
+    // progress-indicators slice adds to `MaterialAnimations` (replace with
+    // it once that lands): Newton–Raphson inversion of the x component, six
+    // unrolled iterations, then the y component.
+    pure public function cubic-bezier-easing(x1: float, y1: float, x2: float, y2: float, x: float) -> float {
+        bezier-y(y1, y2, bezier-t-step(x1, x2, x, bezier-t-step(x1, x2, x, bezier-t-step(x1, x2, x,
+            bezier-t-step(x1, x2, x, bezier-t-step(x1, x2, x, bezier-t-step(x1, x2, x, x)))))))
+    }
+    pure function bezier-x(x1: float, x2: float, t: float) -> float {
+        3 * (1 - t) * (1 - t) * t * x1 + 3 * (1 - t) * t * t * x2 + t * t * t
+    }
+    pure function bezier-x-deriv(x1: float, x2: float, t: float) -> float {
+        3 * (1 - t) * (1 - t) * x1 + 6 * (1 - t) * t * (x2 - x1) + 3 * t * t * (1 - x2)
+    }
+    pure function bezier-y(y1: float, y2: float, t: float) -> float {
+        3 * (1 - t) * (1 - t) * t * y1 + 3 * (1 - t) * t * t * y2 + t * t * t
+    }
+    pure function bezier-t-step(x1: float, x2: float, x: float, t: float) -> float {
+        let error = bezier-x(x1, x2, t) - x;
+        let slope = bezier-x-deriv(x1, x2, t);
+        if slope.abs() < 0.0001 || error.abs() < 0.0001 {
+            return t;
+        }
+        (t - error / slope).clamp(0, 1)
+    }
+}
+
+// `CircularArrowProgressIndicator` — the classic pre-refresh indicator: a
+// 16dp canvas with the `SwipeRefreshLayout`-derived arc and arrow.
+component PullToRefreshArrowIndicator {
+    in property <float> progress;
+    in property <color> color;
+
+    // `clearAndSetSemantics { progressBarRangeInfo = RangeInfo(progress,
+    // 0f..1f, 0) }` when `progress > 0`.
+    accessible-role: progress-indicator;
+    accessible-value: root.progress > 0 ? root.progress : "";
+    accessible-value-minimum: 0;
+    accessible-value-maximum: 1;
+
+    width: PullToRefreshMetrics.spinner-size();
+    height: PullToRefreshMetrics.spinner-size();
+
+    property <float> ap: PullToRefreshArrowValues.adjusted-percent(root.progress);
+    property <float> start-deg: PullToRefreshArrowValues.start-angle(root.progress);
+    property <float> end-deg: PullToRefreshArrowValues.end-angle(root.progress);
+    // `rotate(degrees = values.rotation)` — the pinned source rotates the
+    // whole canvas by `values.rotation` *degrees* (a turns value reused as
+    // degrees). Reproduced verbatim: `deg-quirk` is that number in degrees.
+    property <float> deg-quirk: PullToRefreshArrowValues.rotation(root.progress);
+    property <float> sweep-deg: root.end-deg - root.start-deg;
+    property <float> r: PullToRefreshMetrics.arc-radius() / 1px;
+    property <float> scale: PullToRefreshArrowValues.arrow-scale(root.progress);
+    // Arrow path: (0,0) -> (5s,5s) -> (10s,0), translated to
+    // (radius + cx - 5s, cy - 2.5px-in-viewbox), then rotated
+    // `endAngle - strokeWidth.toPx()` *plus* the canvas `deg-quirk`, all
+    // about the canvas center (8,8). The three final vertices are baked
+    // into the path so renderers without transform support draw it
+    // identically.
+    property <float> tx: 14.75 - 5 * root.scale;
+    property <float> ty: 5.5;
+    property <float> arrow-deg: root.end-deg - (2.5px / 1phx) + root.deg-quirk;
+    property <float> ax0: 8 + (root.tx - 8) * cos(root.arrow-deg * 1deg) - (root.ty - 8) * sin(root.arrow-deg * 1deg);
+    property <float> ay0: 8 + (root.tx - 8) * sin(root.arrow-deg * 1deg) + (root.ty - 8) * cos(root.arrow-deg * 1deg);
+    property <float> ax1: 8 + (root.tx + 5 * root.scale - 8) * cos(root.arrow-deg * 1deg) - (root.ty + 5 * root.scale - 8) * sin(root.arrow-deg * 1deg);
+    property <float> ay1: 8 + (root.tx + 5 * root.scale - 8) * sin(root.arrow-deg * 1deg) + (root.ty + 5 * root.scale - 8) * cos(root.arrow-deg * 1deg);
+    property <float> ax2: 8 + (root.tx + 10 * root.scale - 8) * cos(root.arrow-deg * 1deg) - (root.ty - 8) * sin(root.arrow-deg * 1deg);
+    property <float> ay2: 8 + (root.tx + 10 * root.scale - 8) * sin(root.arrow-deg * 1deg) + (root.ty - 8) * cos(root.arrow-deg * 1deg);
+
+    // `drawCircularIndicator` — `drawArc(startAngle, sweep, Stroke(2.5dp,
+    // cap = Butt))` in `arcBounds`, inside the `deg-quirk` canvas rotation.
+    // The path element is oversized by `stroke-width` and offset by
+    // `-stroke-width / 2`: Slint maps the viewbox into the element's bounds
+    // minus the stroke so strokes stay inside, but Compose strokes onto the
+    // full canvas — oversizing restores the 1:1 mapping.
+    arc := Path {
+        x: -PullToRefreshMetrics.stroke-width() / 2;
+        y: -PullToRefreshMetrics.stroke-width() / 2;
+        width: PullToRefreshMetrics.spinner-size() + PullToRefreshMetrics.stroke-width();
+        height: PullToRefreshMetrics.spinner-size() + PullToRefreshMetrics.stroke-width();
+        viewbox-width: 16;
+        viewbox-height: 16;
+        stroke: root.color;
+        stroke-width: PullToRefreshMetrics.stroke-width();
+        stroke-line-cap: butt;
+        fill: transparent;
+        MoveTo { x: 8 + root.r * cos((root.start-deg + root.deg-quirk) * 1deg); y: 8 + root.r * sin((root.start-deg + root.deg-quirk) * 1deg); }
+        ArcTo {
+            x: 8 + root.r * cos((root.end-deg + root.deg-quirk) * 1deg);
+            y: 8 + root.r * sin((root.end-deg + root.deg-quirk) * 1deg);
+            radius-x: root.r;
+            radius-y: root.r;
+            sweep: true;
+            large-arc: root.sweep-deg > 180;
+        }
+    }
+    // `drawArrow` — an open, stroked triangle (`Stroke(strokeWidth)` —
+    // default butt cap, miter join). Same oversize as `arc`.
+    arrow := Path {
+        x: -PullToRefreshMetrics.stroke-width() / 2;
+        y: -PullToRefreshMetrics.stroke-width() / 2;
+        width: PullToRefreshMetrics.spinner-size() + PullToRefreshMetrics.stroke-width();
+        height: PullToRefreshMetrics.spinner-size() + PullToRefreshMetrics.stroke-width();
+        viewbox-width: 16;
+        viewbox-height: 16;
+        stroke: root.color;
+        stroke-width: PullToRefreshMetrics.stroke-width();
+        stroke-line-cap: butt;
+        fill: transparent;
+        MoveTo { x: root.ax0; y: root.ay0; }
+        LineTo { x: root.ax1; y: root.ay1; }
+        LineTo { x: root.ax2; y: root.ay2; }
+    }
+}
+
+// The pinned `CircularProgressIndicator` (indeterminate overload) at
+// `strokeWidth = 2.5dp`, `size = 16dp`, round cap. Private port until the
+// progress-indicators slice of #11 ships the public component; its
+// `CircularProgressIndicator { indeterminate, stroke-width, color }` swaps
+// in once #48 lands. Spec from the same pin's `ProgressIndicator.kt`:
+// `circularIndeterminate*AnimationSpec` — a 6000ms `InfiniteTransition`.
+component PullToRefreshSpinner {
+    in property <color> color;
+
+    // `progressSemantics` of the indeterminate `CircularProgressIndicator`.
+    accessible-role: progress-indicator;
+
+    width: PullToRefreshMetrics.spinner-size();
+    height: PullToRefreshMetrics.spinner-size();
+
+    property <duration> epoch;
+    // `infiniteRepeatable` starts at composition; reduced motion renders the
+    // spec's frame 0 (sweep 0.1, no rotation).
+    property <duration> elapsed: MaterialPalette.reduced-motion ? 0ms : animation-tick() - epoch;
+    init => {
+        epoch = animation-tick();
+    }
+    // `circularIndeterminateProgressAnimationSpec` — `x at T using E` attaches
+    // E to the segment *starting* at T (`getEasing(index)` in
+    // `VectorizedMonoSplineKeyframesSpec`), so the `0.87 at 3000 using
+    // CircularProgressEasing` keyframe eases the 3000→6000ms shrink with
+    // `MotionTokens.EasingStandardCubicBezier` (0.2/0/0/1) and the grow is
+    // linear.
+    property <float> ms: mod(root.elapsed, 6000ms) / 1ms;
+    property <float> p: root.ms < 3000 ?
+        0.1 + root.ms / 3000 * 0.77 :
+        0.87 - PullToRefreshArrowValues.cubic-bezier-easing(0.2, 0, 0, 1, (root.ms - 3000) / 3000) * 0.77;
+    // `circularIndeterminateRotationAnimationSpec` — 90° steps: the only
+    // `using` (`90 at 300 using EasingEmphasizedDecelerate`) lands on the
+    // constant 300→1500ms hold, so every 300ms ramp is linear.
+    property <float> stepped-deg:
+        root.ms < 300 ? root.ms / 300 * 90 :
+        root.ms < 1500 ? 90 :
+        root.ms < 1800 ? 90 + (root.ms - 1500) / 300 * 90 :
+        root.ms < 3000 ? 180 :
+        root.ms < 3300 ? 180 + (root.ms - 3000) / 300 * 90 :
+        root.ms < 4500 ? 270 :
+        root.ms < 4800 ? 270 + (root.ms - 4500) / 300 * 90 :
+        360;
+    // `circularIndeterminateGlobalRotationAnimationSpec` — linear
+    // 0→1080°/6000ms (`CircularGlobalRotationDegreesTarget`).
+    property <float> total-deg: root.stepped-deg + root.ms / 6000 * 1080;
+    property <float> sweep-deg: root.p * 360;
+    // `circularIndeterminateTrackColor` is `Color.Transparent` at the pin, so
+    // the `drawCircularIndicator(sweep + min(sweep, gapSizeSweep), 360 - sweep
+    // - min(sweep, gapSizeSweep) * 2, trackColor, stroke)` call draws nothing.
+    property <float> r: (16 - 2.5) / 2;  // bounds inset by half the stroke
+
+    // `drawDeterminateCircularIndicator(startAngle = 0, sweep)` in `color`.
+    // Oversized by `stroke-width` so the viewbox maps 1:1 (see
+    // `PullToRefreshArrowIndicator`).
+    Path {
+        x: -PullToRefreshMetrics.stroke-width() / 2;
+        y: -PullToRefreshMetrics.stroke-width() / 2;
+        width: PullToRefreshMetrics.spinner-size() + PullToRefreshMetrics.stroke-width();
+        height: PullToRefreshMetrics.spinner-size() + PullToRefreshMetrics.stroke-width();
+        viewbox-width: 16;
+        viewbox-height: 16;
+        stroke: root.color;
+        stroke-width: PullToRefreshMetrics.stroke-width();
+        stroke-line-cap: round;
+        fill: transparent;
+        MoveTo { x: 8 + root.r * cos(root.total-deg * 1deg); y: 8 + root.r * sin(root.total-deg * 1deg); }
+        ArcTo {
+            x: 8 + root.r * cos((root.total-deg + root.sweep-deg) * 1deg);
+            y: 8 + root.r * sin((root.total-deg + root.sweep-deg) * 1deg);
+            radius-x: root.r;
+            radius-y: root.r;
+            sweep: true;
+            large-arc: root.sweep-deg > 180;
+        }
+    }
+}
+
+// `LoadingIndicatorImpl` of the same pin's `LoadingIndicator.kt`, with
+// `polygons`/`active-scale` fixed to the `LoadingIndicatorDefaults`
+// sequences. Stays private rather than delegating to the exported
+// `ContainedLoadingIndicator`: upstream applies the `-(progress - 1) * 180`
+// overshoot rotation as a `drawWithContent`/`rotate` wrapper around the
+// whole element, which Slint cannot express around an instance — folding
+// it into the morph draw rotation here draws identically because the
+// container is a full-corner circle.
+component PullToRefreshContainedLoadingIndicator {
+    /// `false` selects the determinate `progress` overload.
+    in property <bool> indeterminate: true;
+    /// The determinate mode's progress; coerced into 0..1 like upstream.
+    in property <float> progress;
+    /// Extra rotation around the indicator's center — the pull-to-refresh
+    /// `-(progress - 1) * 180` overshoot rotation rides on top of the
+    /// determinate `-p * 180` (they compose to `-p * 180` for every p).
+    in property <angle> extra-rotation: 0deg;
+    in property <color> indicator-color: LoadingIndicatorTokens.contained_active_color;
+    in property <color> container-color: LoadingIndicatorTokens.contained_container_color;
+    in property <MaterialCornerShape> container-shape: LoadingIndicatorTokens.container_shape;
+
+    accessible-role: progress-indicator;
+    accessible-value: root.indeterminate ? "" : root.progress;
+    accessible-value-minimum: 0;
+    accessible-value-maximum: 1;
+
+    width: LoadingIndicatorTokens.container_width;
+    height: LoadingIndicatorTokens.container_height;
+
+    // `IndeterminateIndicatorPolygons` /
+    // `DeterminateIndicatorPolygons` and `calculateScaleFactor(polygons) *
+    // ActiveIndicatorScale` of `LoadingIndicatorDefaults`, fixed to the
+    // built-in sequences.
+    property <[shape]> polygons: root.indeterminate
+        ? LoadingIndicatorShapes.indeterminate
+        : LoadingIndicatorShapes.determinate;
+    // `calculateScaleFactor(indicatorPolygons) * ActiveIndicatorScale`:
+    // `min` over the polygons of `max(bw/maxbw, bh/maxbh)` — 0.86558414 for
+    // the indeterminate set (the oval), ~1.0 for the determinate pair —
+    // times `ActiveIndicatorScale` = `ActiveSize / min(ContainerWidth,
+    // ContainerHeight)` = `38dp / 48dp`.
+    property <float> active-scale: root.indeterminate ? 0.68525416 : 0.79166669;
+
+    container := Rectangle {
+        width: 100%;
+        height: 100%;
+        clip: true;
+        border-radius: root.container-shape.full ? min(self.width, self.height) / 2 : root.container-shape.top-left;
+        background: root.container-color;
+
+        if root.indeterminate: ind := Rectangle {
+            width: min(parent.width, parent.height);
+            height: self.width;
+            x: (parent.width - self.width) / 2;
+            y: (parent.height - self.height) / 2;
+
+            property <duration> epoch;
+            property <duration> elapsed: MaterialPalette.reduced-motion ? 0ms : animation-tick() - epoch;
+            property <int> count: max(root.polygons.length, 1);
+            // `morphProgress` cycles a `spring(dampingRatio = 0.6f,
+            // stiffness = 200f)` `animateTo(1f)` every `MorphIntervalMillis`
+            // (650ms), evaluated through the underdamped closed form — the
+            // value is uncapped: it overshoots past 1 mid-cycle like the
+            // upstream animatable, and `toPath` extrapolates the morph.
+            // `globalRotation` is a linear 360°/`GlobalRotationDurationMillis`
+            // (4666ms) ramp. `epoch` anchors both at creation.
+            property <float> phase: mod(elapsed, 650ms) / 1s;
+            property <int> cycle-index: floor(elapsed / 650ms);
+            property <float> spring-progress:
+                1 - exp(-8.4852814 * phase)
+                    * (cos(11.3137085 * phase * 1rad)
+                        + 0.75 * sin(11.3137085 * phase * 1rad));
+            init => {
+                epoch = animation-tick();
+            }
+
+            shape: Shapes.rotated(
+                Shapes.scaled(
+                    Shapes.morph(
+                        Shapes.normalized(root.polygons[mod(cycle-index, count)]),
+                        Shapes.normalized(root.polygons[mod(cycle-index + 1, count)]),
+                        spring-progress),
+                    root.active-scale, root.active-scale),
+                90deg
+                    + 90deg * (cycle-index + spring-progress)
+                    + mod(elapsed, 4666ms) / 4666ms * 360deg);
+            shape-fit: ShapeFit.normalized;
+            background: root.indicator-color;
+        }
+
+        if !root.indeterminate: det := Rectangle {
+            width: min(parent.width, parent.height);
+            height: self.width;
+            x: (parent.width - self.width) / 2;
+            y: (parent.height - self.height) / 2;
+
+            property <float> p: Math.min(Math.max(root.progress, 0), 1);
+            property <int> morphs: max(root.polygons.length - 1, 1);
+            property <int> active-morph-index: min(floor(morphs * p), morphs - 1);
+            property <float> adjusted-progress:
+                p == 1 && active-morph-index == morphs - 1 ? 1 : mod(p * morphs, 1);
+
+            shape: Shapes.rotated(
+                Shapes.scaled(
+                    Shapes.morph(
+                        Shapes.normalized(root.polygons[active-morph-index]),
+                        Shapes.normalized(root.polygons[min(active-morph-index + 1, root.polygons.length - 1)]),
+                        adjusted-progress),
+                    root.active-scale, root.active-scale),
+                -p * 180deg + root.extra-rotation);
+            shape-fit: ShapeFit.normalized;
+            background: root.indicator-color;
+        }
+    }
+}
+
+/// `PullToRefreshDefaults.IndicatorBox` — size, offset, clipping, shadow
+/// and background for a pull-to-refresh indicator. Places its content
+/// centered; custom indicators compose this box and bind `distance-fraction`.
+export component PullToRefreshIndicatorBox {
+    /// `state.distanceFraction`.
+    in property <float> distance-fraction;
+    in property <bool> is-refreshing;
+    /// `maxDistance` — `IndicatorMaxDistance` (= `PositionalThreshold`, 80dp).
+    in property <length> max-distance: 80px;
+    /// `shape` — `indicatorShape` (`CircleShape` = `RoundedCornerShape(50%)`,
+    /// a unit rounded rect at corner radius 0.5; `MaterialShapes.circle` is
+    /// its 10-gon `RoundedPolygon` cousin, not `CircleShape`).
+    in property <shape> indicator-shape: Shapes.rectangle(1, 1, [{radius: 0.5, smoothing: 0}]);
+    /// `containerColor`.
+    in property <color> container-color: transparent;
+    /// `elevation` — `PullToRefreshDefaults.Elevation` (Level2).
+    in property <length> indicator-elevation: ElevationTokens.level2;
+    in property <length> box-width: PullToRefreshMetrics.spinner-container-size();
+    in property <length> box-height: PullToRefreshMetrics.spinner-container-size();
+
+    width: root.box-width;
+    height: root.box-height;
+    // `translationY = distanceFraction * maxDistance - size.height`.
+    y: root.distance-fraction * root.max-distance - root.height;
+
+    box := Rectangle {
+        width: 100%;
+        height: 100%;
+        shape: root.indicator-shape;
+        shape-fit: ShapeFit.normalized;
+        clip: true;
+        background: root.container-color;
+        // `shadowElevation = if (showElevation) elevation else 0` — an
+        // instant toggle on the layer, not animated.
+        property <bool> show-elevation: root.distance-fraction > 0 || root.is-refreshing;
+        elevation: show-elevation ? root.indicator-elevation : 0px;
+        ambient-shadow-color: MaterialPalette.shadow;
+        spot-shadow-color: MaterialPalette.shadow;
+        @children
+    }
+}
+
+/// `PullToRefreshDefaults.Indicator` — `Crossfade(isRefreshing,
+/// DefaultEffects)` between `CircularArrowProgressIndicator` and the
+/// indeterminate `CircularProgressIndicator` (16dp, 2.5dp stroke).
+export component PullToRefreshIndicator {
+    /// `state.distanceFraction`.
+    in property <float> distance-fraction;
+    in property <bool> is-refreshing;
+    /// `containerColor` — `PullToRefreshDefaults.indicatorContainerColor`
+    /// (`surfaceContainerHigh`).
+    in property <color> container-color: MaterialPalette.surface_container_high;
+    /// `color` — `PullToRefreshDefaults.indicatorColor`
+    /// (`onSurfaceVariant`).
+    in property <color> color: MaterialPalette.on_surface_variant;
+    /// `maxDistance`.
+    in property <length> max-distance: 80px;
+
+    width: PullToRefreshMetrics.spinner-container-size();
+    height: PullToRefreshMetrics.spinner-container-size();
+
+    box := PullToRefreshIndicatorBox {
+        width: 100%;
+        height: 100%;
+        distance-fraction: root.distance-fraction;
+        is-refreshing: root.is-refreshing;
+        container-color: root.container-color;
+        max-distance: root.max-distance;
+        indicator-elevation: ElevationTokens.level2;
+
+        arrow := PullToRefreshArrowIndicator {
+            progress: root.distance-fraction;
+            color: root.color;
+            x: (parent.width - self.width) / 2;
+            y: (parent.height - self.height) / 2;
+            opacity: root.arrow-alpha * (1 - root.blend);
+            visible: root.blend < 1;
+        }
+        spinner := PullToRefreshSpinner {
+            color: root.color;
+            x: (parent.width - self.width) / 2;
+            y: (parent.height - self.height) / 2;
+            opacity: root.blend;
+            visible: root.blend > 0;
+        }
+    }
+
+    // `Crossfade(targetState = isRefreshing, animationSpec = DefaultEffects)`.
+    property <float> blend: root.is-refreshing ? 1 : 0;
+    animate blend {
+        enabled: !MaterialPalette.reduced-motion;
+        easing: MaterialAnimations.default-effects-spring;
+    }
+    // `animateFloatAsState(targetAlpha, DefaultEffects)` — `progress >= 1f`
+    // selects `MaxAlpha`, else `MinAlpha`.
+    property <float> arrow-alpha: root.distance-fraction >= 1 ?
+        PullToRefreshMetrics.max-alpha() : PullToRefreshMetrics.min-alpha();
+    animate arrow-alpha {
+        enabled: !MaterialPalette.reduced-motion;
+        easing: MaterialAnimations.default-effects-spring;
+    }
+}
+
+/// `PullToRefreshDefaults.LoadingIndicator` — the contained loading
+/// indicator in a 48x48 box, `Crossfade` between the progress-driven
+/// determinate form (plus the `-(progress - 1) * 180` overshoot rotation)
+/// and the indeterminate one.
+export component PullToRefreshLoadingIndicator {
+    /// `state.distanceFraction`.
+    in property <float> distance-fraction;
+    in property <bool> is-refreshing;
+    /// `containerColor` — `loadingIndicatorContainerColor`
+    /// (`LoadingIndicatorDefaults.containedContainerColor`,
+    /// primary-container).
+    in property <color> container-color: LoadingIndicatorTokens.contained_container_color;
+    /// `color` — `loadingIndicatorColor`
+    /// (`LoadingIndicatorDefaults.containedIndicatorColor`,
+    /// on-primary-container).
+    in property <color> color: LoadingIndicatorTokens.contained_active_color;
+    /// `maxDistance`.
+    in property <length> max-distance: 80px;
+
+    width: PullToRefreshMetrics.loader-width();
+    height: PullToRefreshMetrics.loader-height();
+
+    box := PullToRefreshIndicatorBox {
+        width: 100%;
+        height: 100%;
+        distance-fraction: root.distance-fraction;
+        is-refreshing: root.is-refreshing;
+        container-color: root.container-color;
+        max-distance: root.max-distance;
+        indicator-elevation: ElevationTokens.level0;
+
+        // `ContainedLoadingIndicator(progress)` — the determinate morph
+        // plus the overshoot rotation: `-p * 180` inside the indicator and
+        // `-(p - 1) * 180` around it when `p > 1`.
+        det := PullToRefreshContainedLoadingIndicator {
+            indeterminate: false;
+            progress: root.distance-fraction;
+            extra-rotation: -max(root.distance-fraction - 1, 0) * 180deg;
+            indicator-color: root.color;
+            container-color: root.container-color;
+            x: (parent.width - self.width) / 2;
+            y: (parent.height - self.height) / 2;
+            opacity: 1 - root.blend;
+            visible: root.blend < 1;
+        }
+        ind := PullToRefreshContainedLoadingIndicator {
+            indicator-color: root.color;
+            container-color: root.container-color;
+            x: (parent.width - self.width) / 2;
+            y: (parent.height - self.height) / 2;
+            opacity: root.blend;
+            visible: root.blend > 0;
+        }
+    }
+
+    // `Crossfade(targetState = isRefreshing, animationSpec = DefaultEffects)`.
+    property <float> blend: root.is-refreshing ? 1 : 0;
+    animate blend {
+        enabled: !MaterialPalette.reduced-motion;
+        easing: MaterialAnimations.default-effects-spring;
+    }
+}
+
+/// `PullToRefreshBox` — a container that adds the pull-to-refresh gesture
+/// to its content and draws the selected indicator on top.
+export component PullToRefreshBox {
+    /// `isRefreshing`.
+    in property <bool> is-refreshing;
+    /// `onRefresh` — invoked when a released pull exceeds `threshold`.
+    callback on-refresh;
+    /// `enabled` — when unset, drags pass through to the content untouched.
+    in property <bool> enabled: true;
+    /// `threshold` — `PullToRefreshDefaults.PositionalThreshold` (80dp).
+    in property <length> threshold: 80px;
+    /// The `indicator` slot's built-in choice; `none` hides it for custom
+    /// indicators.
+    in property <PullToRefreshIndicatorKind> indicator-kind: PullToRefreshIndicatorKind.classic;
+    /// Stands in for the nested-scroll child being at its top — bind to the
+    /// scrollable's at-top state (e.g. `viewport-y == 0`). Only down-drags
+    /// started while this holds become a pull.
+    in property <bool> content-at-top: true;
+    /// Indicator overrides — `Color.Unspecified` resolves per `indicator-kind`.
+    in property <color> indicator-container-color: transparent;
+    in property <color> indicator-color: transparent;
+    /// `maxDistance` passed to the built-in indicator.
+    in property <length> max-distance: 80px;
+
+    /// `state.distanceFraction` — `verticalOffset / thresholdPx`.
+    out property <float> distance-fraction;
+    /// `state.isAnimating` — a settle animation is in flight.
+    out property <bool> is-animating: root.settling;
+
+    /// `PullToRefreshState.snapTo` — set `distance-fraction` instantly.
+    public function snap-to(target: float) {
+        root.snapping = true;
+        root.settling = false;
+        root.distance-fraction = max(target, 0);
+        root.snapping = false;
+    }
+    /// `PullToRefreshState.animateToThreshold` — `anim.animateTo(1f)`.
+    public function animate-to-threshold() {
+        root.settle-to(1);
+    }
+    /// `PullToRefreshState.animateToHidden` — `anim.animateTo(0f)`.
+    public function animate-to-hidden() {
+        root.settle-to(0);
+    }
+
+    // `distancePulled`/`verticalOffset` of `PullToRefreshModifierNode`.
+    property <length> distance-pulled;
+    property <length> vertical-offset;
+    // `state.isAnimating` bookkeeping: which fraction the settle heads for.
+    property <bool> settling;
+    property <float> settle-target;
+    // `snapTo`-style instant writes during `init`.
+    property <bool> snapping;
+    property <length> last-drag-y;
+
+    // `calculateVerticalOffset` — `adjustedDistancePulled` (distancePulled *
+    // DragMultiplier) up to the threshold, then `threshold + threshold *
+    // tensionPercent` with `linearTension = (progress - 1) coerceIn (0, 2)`
+    // and `tensionPercent = linearTension - linearTension^2 / 4`.
+    pure function calculate-vertical-offset() -> length {
+        root.distance-pulled * PullToRefreshMetrics.drag-multiplier() <= root.threshold ?
+            root.distance-pulled * PullToRefreshMetrics.drag-multiplier() :
+            root.threshold + root.threshold * PullToRefreshArrowValues.tension-percent(
+                root.distance-pulled * PullToRefreshMetrics.drag-multiplier() / root.threshold)
+    }
+    // `animateToThreshold`/`animateToHidden` — `state.animateTo(target)`:
+    // `Animatable.animateTo`'s default `spring(dampingRatio = 1f,
+    // stiffness = 1500f)` runs through the `animate` block below; the
+    // `finally` blocks' bookkeeping (`distancePulled`/`verticalOffset` =
+    // `thresholdPx` or `0`) folds into the target here.
+    function settle-to(target: float) {
+        root.settling = true;
+        root.settle-target = target;
+        root.distance-fraction = target;
+        root.distance-pulled = target * root.threshold;
+        root.vertical-offset = target * root.threshold;
+    }
+    changed distance-fraction => {
+        if root.settling && abs(root.distance-fraction - root.settle-target) < 0.000001 {
+            root.settling = false;
+        }
+    }
+    changed is-refreshing => {
+        // `PullToRefreshElement.update` → `node.update()`.
+        root.settle-to(root.is-refreshing ? 1 : 0);
+    }
+    init => {
+        // `onAttach` — `snapTo(if (isRefreshing) 1f else 0f)`.
+        root.snapping = true;
+        root.distance-fraction = root.is-refreshing ? 1 : 0;
+        root.snapping = false;
+        root.vertical-offset = root.is-refreshing ? root.threshold : 0px;
+    }
+
+    sgr := SwipeGestureHandler {
+        width: 100%;
+        height: 100%;
+        enabled: root.enabled;
+        // `enabled && !isAnimating` gate `consumeAvailableOffset` upstream;
+        // `is-refreshing` early-returns 0 — passes to the child instead.
+        handle-swipe-down: root.enabled && root.content-at-top && !root.is-refreshing && !root.settling;
+
+        changed pressed-position => {
+            root.last-drag-y = self.pressed-position.y;
+        }
+        moved => {
+            let cur = self.current-position.y;
+            if self.swiping && !root.is-refreshing {
+                // `onPostScroll`'s `consumeAvailableOffset`; the first
+                // claimed move's delta spans `pressed-position` — the child
+                // consumed the rest, matching `available` leftovers.
+                let dy = cur - root.last-drag-y;
+                root.distance-pulled = max(root.distance-pulled + dy, 0px);
+                root.vertical-offset = root.calculate-vertical-offset();
+                // `state.snapTo(verticalOffset / thresholdPx)`.
+                root.distance-fraction = root.vertical-offset / root.threshold;
+            }
+            if self.swiping {
+                root.last-drag-y = cur;
+            }
+        }
+        swiped => {
+            // `onRelease(velocity.y)` — the velocity only feeds the
+            // `consumed` fling result upstream, which has no Slint-visible
+            // effect; the pull settles regardless.
+            if !root.is-refreshing &&
+                root.distance-pulled * PullToRefreshMetrics.drag-multiplier() > root.threshold {
+                root.on-refresh();
+            }
+            if root.is-refreshing {
+                // `animateToThreshold` wins the race when `on-refresh`
+                // flipped `is-refreshing`.
+                root.settle-to(1);
+            } else {
+                // `animateToHidden`.
+                root.settle-to(0);
+            }
+        }
+        cancelled => {
+            // Upstream leaves a cancelled gesture's pull frozen; settle to
+            // hidden instead of hanging a half-shown indicator.
+            root.settle-to(0);
+        }
+
+        @children
+
+        if root.indicator-kind == PullToRefreshIndicatorKind.classic: classic-ind := PullToRefreshIndicator {
+            distance-fraction: root.distance-fraction;
+            is-refreshing: root.is-refreshing;
+            // `Modifier.align(Alignment.TopCenter)` — the `y` must be stated:
+            // without it the default geometry pass centers the indicator.
+            x: (parent.width - self.width) / 2;
+            y: 0px;
+            max-distance: root.max-distance;
+            container-color: root.indicator-container-color == transparent ?
+                MaterialPalette.surface_container_high : root.indicator-container-color;
+            color: root.indicator-color == transparent ?
+                MaterialPalette.on_surface_variant : root.indicator-color;
+        }
+        if root.indicator-kind == PullToRefreshIndicatorKind.loading-indicator: load-ind := PullToRefreshLoadingIndicator {
+            distance-fraction: root.distance-fraction;
+            is-refreshing: root.is-refreshing;
+            x: (parent.width - self.width) / 2;
+            y: 0px;
+            max-distance: root.max-distance;
+            container-color: root.indicator-container-color == transparent ?
+                LoadingIndicatorTokens.contained_container_color : root.indicator-container-color;
+            color: root.indicator-color == transparent ?
+                LoadingIndicatorTokens.contained_active_color : root.indicator-color;
+        }
+    }
+
+    // `state.animateTo` — `Animatable.animateTo`'s default
+    // `spring(dampingRatio = DampingRatioNoBouncy = 1f, stiffness =
+    // StiffnessMedium = 1500f)` spec. Writes land instantly while a pull is
+    // claimed (upstream `snapTo` per scroll event) and during `init`.
+    animate distance-fraction {
+        enabled: !sgr.swiping && !root.snapping && !MaterialPalette.reduced-motion;
+        easing: spring(1, 1500);
+    }
+}
