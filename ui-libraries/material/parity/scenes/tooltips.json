@@ -1,0 +1,70 @@
+{
+    "name": "tooltips",
+    "type": "canvas",
+    "parity": "static",
+    "xfail_text": "tooltip label advance drift: the issue-#28 text-metric ceil moves glyphs inside otherwise identical container bounds (the traced tooltip boxes compare clean at both densities; the drift only shows inside text cells)",
+    "size": [
+        360,
+        500
+    ],
+    "densities": [
+        1,
+        2
+    ],
+    "theme": {
+        "seed": "6750A4",
+        "variant": "tonal-spot",
+        "spec": "spec2025",
+        "platform": "phone",
+        "dark": false,
+        "contrast": 0.0
+    },
+    "fonts": {
+        "plain": "Roboto",
+        "brand": "Roboto"
+    },
+    "widgets": [
+        {
+            "kind": "tooltip-plain",
+            "text": "Tooltip",
+            "x": 16,
+            "y": 16
+        },
+        {
+            "kind": "tooltip-plain",
+            "text": "Tooltips display informative text when users hover over an element.",
+            "x": 16,
+            "y": 56
+        },
+        {
+            "kind": "tooltip-plain",
+            "color": "primary",
+            "text": "Tooltip",
+            "x": 16,
+            "y": 132
+        },
+        {
+            "kind": "tooltip-rich",
+            "title": "Permissions",
+            "text": "Rich tooltips inform users.",
+            "x": 16,
+            "y": 176
+        },
+        {
+            "kind": "tooltip-rich",
+            "title": "Permissions",
+            "text": "Rich tooltips inform users.",
+            "action": "MANAGE",
+            "x": 16,
+            "y": 312
+        }
+    ],
+    "trace_elements": [
+        "tooltip0",
+        "tooltip1",
+        "tooltip2",
+        "tooltip3",
+        "tooltip4"
+    ],
+    "trace_props": []
+}

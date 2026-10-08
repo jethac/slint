@@ -1,0 +1,40 @@
+{
+    "name": "negative-tooltip-color",
+    "type": "canvas",
+    "parity": "negative",
+    "negative_note": "The Slint side fills the tooltip container in primary instead of the InverseSurface the scene asks for — the wrong-role ink must flag on strict compare.",
+    "size": [
+        240,
+        64
+    ],
+    "densities": [
+        1
+    ],
+    "theme": {
+        "seed": "6750A4",
+        "variant": "tonal-spot",
+        "spec": "spec2025",
+        "platform": "phone",
+        "dark": false,
+        "contrast": 0.0
+    },
+    "fonts": {
+        "plain": "Roboto",
+        "brand": "Roboto"
+    },
+    "widgets": [
+        {
+            "kind": "tooltip-plain",
+            "text": "Tooltip",
+            "x": 24,
+            "y": 16,
+            "slint_overrides": {
+                "color": "primary"
+            }
+        }
+    ],
+    "trace_elements": [
+        "tooltip0"
+    ],
+    "trace_props": []
+}

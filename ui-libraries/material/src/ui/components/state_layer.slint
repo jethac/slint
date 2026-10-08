@@ -5,19 +5,15 @@ import { MaterialAnimations } from "../styling/material_animations.slint";
 import { MaterialPalette } from "../styling/material_palette.slint";
 import { MaterialFocusIndicator, MaterialFocusRing } from "../styling/generated/material_state_tokens.slint";
 import { MaterialCornerShape } from "../styling/generated/material_shape_tokens.slint";
-import { ToolTip } from "./tooltip.slint";
+import { TooltipContent } from "./tooltip.slint";
 import { MaterialWindowAdapter } from "./material_window.slint";
 
-/// Resolved per-corner radii of one element, in top-left → bottom-left
-/// order like `RoundedCornerShape(topStart, topEnd, bottomEnd, bottomStart)`.
-/// `ShapedComponents.shaped_corners` switches the decorations below from the
-/// uniform `border_radius` to these four values.
-export struct MaterialCornerRadii {
-    top_left: length,
-    top_right: length,
-    bottom_right: length,
-    bottom_left: length,
-}
+/// `MaterialCornerRadii` lives in its own file: `elevation.slint` needs it and
+/// `state_layer.slint` imports `tooltip.slint` for `TooltipContent`, so keeping
+/// it here would import-cycle `tooltip → elevation → state_layer → tooltip`.
+/// Re-exported here to keep the existing import path working.
+import { MaterialCornerRadii } from "./material_corner_radii.slint";
+export { MaterialCornerRadii }
 
 export component Ripple {
     in property <length> border_radius;
@@ -251,6 +247,8 @@ export component FocusTouchArea inherits TouchArea {
     out property <bool> has_focus <=> focus_scope.has_focus;
     out property <bool> enter_pressed;
     in property <string> tooltip;
+    /// Deprecated: the upstream position provider places the tooltip — this
+    /// offset is no longer consumed.
     in property <length> tooltip_offset;
 
     callback key_pressed(KeyEvent) -> EventResult;
@@ -293,9 +291,15 @@ export component FocusTouchArea inherits TouchArea {
     @children
 
 
-    if root.tooltip != "" && root.has_hover && !MaterialWindowAdapter.disable_hover && !root.pressed : ToolTip {
-        y: root.tooltip_offset;
-        text: root.tooltip;
+    // `BasicTooltipBox` upstream: hover enter shows the tooltip, keyboard
+    // focus does too; the provider centers it above the anchor with a below
+    // fallback (Tooltip.kt / BasicTooltip.kt @23327507).
+    if root.tooltip != "" && (root.has_hover || root.has_focus) && !MaterialWindowAdapter.disable_hover && !root.pressed : TooltipContent {
+        anchor_abs_x: root.absolute-position.x;
+        anchor_abs_y: root.absolute-position.y;
+        anchor_width: root.width;
+        anchor_height: root.height;
+        plain_text: root.tooltip;
     }
 }
 

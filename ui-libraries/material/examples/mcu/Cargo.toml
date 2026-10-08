@@ -18,7 +18,7 @@ path = "src/lib.rs"
 crate-type = ["lib"]
 
 [dependencies]
-slint = { path = "../../../../api/rs/slint", default-features = false, features = ["compat-1-2", "renderer-software", "unsafe-single-threaded", "libm", "embedded-vector-fonts"] }
+slint = { path = "../../../../api/rs/slint", default-features = false, features = ["compat-1-2", "renderer-software", "software-renderer-path", "unsafe-single-threaded", "libm", "embedded-vector-fonts"] }
 
 [build-dependencies]
 slint-build = { path = "../../../../api/rs/build" }

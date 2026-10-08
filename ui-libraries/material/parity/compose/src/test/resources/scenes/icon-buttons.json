@@ -203,6 +203,7 @@
   "type": "canvas",
   "widgets": [
     {
+      "action": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,
@@ -317,6 +318,7 @@
       "year_min": null
     },
     {
+      "action": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,
@@ -431,6 +433,7 @@
       "year_min": null
     },
     {
+      "action": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,
@@ -545,6 +548,7 @@
       "year_min": null
     },
     {
+      "action": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,
@@ -659,6 +663,7 @@
       "year_min": null
     },
     {
+      "action": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,
@@ -773,6 +778,7 @@
       "year_min": null
     },
     {
+      "action": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,
@@ -887,6 +893,7 @@
       "year_min": null
     },
     {
+      "action": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,
@@ -1001,6 +1008,7 @@
       "year_min": null
     },
     {
+      "action": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,
@@ -1115,6 +1123,7 @@
       "year_min": null
     },
     {
+      "action": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,
@@ -1229,6 +1238,7 @@
       "year_min": null
     },
     {
+      "action": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,
@@ -1343,6 +1353,7 @@
       "year_min": null
     },
     {
+      "action": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,
@@ -1457,6 +1468,7 @@
       "year_min": null
     },
     {
+      "action": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,
@@ -1571,6 +1583,7 @@
       "year_min": null
     },
     {
+      "action": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,
@@ -1685,6 +1698,7 @@
       "year_min": null
     },
     {
+      "action": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,
@@ -1799,6 +1813,7 @@
       "year_min": null
     },
     {
+      "action": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,
@@ -1913,6 +1928,7 @@
       "year_min": null
     },
     {
+      "action": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,
@@ -2027,6 +2043,7 @@
       "year_min": null
     },
     {
+      "action": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,
@@ -2141,6 +2158,7 @@
       "year_min": null
     },
     {
+      "action": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,
@@ -2255,6 +2273,7 @@
       "year_min": null
     },
     {
+      "action": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,
@@ -2369,6 +2388,7 @@
       "year_min": null
     },
     {
+      "action": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,
@@ -2483,6 +2503,7 @@
       "year_min": null
     },
     {
+      "action": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,
@@ -2597,6 +2618,7 @@
       "year_min": null
     },
     {
+      "action": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,
@@ -2711,6 +2733,7 @@
       "year_min": null
     },
     {
+      "action": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,
@@ -2825,6 +2848,7 @@
       "year_min": null
     },
     {
+      "action": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,
@@ -2939,6 +2963,7 @@
       "year_min": null
     },
     {
+      "action": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,
@@ -3053,6 +3078,7 @@
       "year_min": null
     },
     {
+      "action": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,
@@ -3167,6 +3193,7 @@
       "year_min": null
     },
     {
+      "action": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,
@@ -3281,6 +3308,7 @@
       "year_min": null
     },
     {
+      "action": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,
@@ -3395,6 +3423,7 @@
       "year_min": null
     },
     {
+      "action": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,
@@ -3509,6 +3538,7 @@
       "year_min": null
     },
     {
+      "action": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,
@@ -3623,6 +3653,7 @@
       "year_min": null
     },
     {
+      "action": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,
@@ -3737,6 +3768,7 @@
       "year_min": null
     },
     {
+      "action": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,
@@ -3851,6 +3883,7 @@
       "year_min": null
     },
     {
+      "action": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,
@@ -3965,6 +3998,7 @@
       "year_min": null
     },
     {
+      "action": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,
@@ -4079,6 +4113,7 @@
       "year_min": null
     },
     {
+      "action": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,
@@ -4193,6 +4228,7 @@
       "year_min": null
     },
     {
+      "action": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,
@@ -4307,6 +4343,7 @@
       "year_min": null
     },
     {
+      "action": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,
@@ -4421,6 +4458,7 @@
       "year_min": null
     },
     {
+      "action": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,
@@ -4535,6 +4573,7 @@
       "year_min": null
     },
     {
+      "action": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,
@@ -4649,6 +4688,7 @@
       "year_min": null
     },
     {
+      "action": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,
@@ -4763,6 +4803,7 @@
       "year_min": null
     },
     {
+      "action": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,
@@ -4877,6 +4918,7 @@
       "year_min": null
     },
     {
+      "action": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,
@@ -4991,6 +5033,7 @@
       "year_min": null
     },
     {
+      "action": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,
@@ -5105,6 +5148,7 @@
       "year_min": null
     },
     {
+      "action": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,
@@ -5219,6 +5263,7 @@
       "year_min": null
     },
     {
+      "action": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,
@@ -5333,6 +5378,7 @@
       "year_min": null
     },
     {
+      "action": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,
@@ -5447,6 +5493,7 @@
       "year_min": null
     },
     {
+      "action": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,
@@ -5561,6 +5608,7 @@
       "year_min": null
     },
     {
+      "action": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,
@@ -5675,6 +5723,7 @@
       "year_min": null
     },
     {
+      "action": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,
@@ -5789,6 +5838,7 @@
       "year_min": null
     },
     {
+      "action": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,
@@ -5903,6 +5953,7 @@
       "year_min": null
     },
     {
+      "action": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,
@@ -6017,6 +6068,7 @@
       "year_min": null
     },
     {
+      "action": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,
@@ -6131,6 +6183,7 @@
       "year_min": null
     },
     {
+      "action": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,
@@ -6245,6 +6298,7 @@
       "year_min": null
     },
     {
+      "action": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,
@@ -6359,6 +6413,7 @@
       "year_min": null
     },
     {
+      "action": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,
@@ -6473,6 +6528,7 @@
       "year_min": null
     },
     {
+      "action": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,
@@ -6587,6 +6643,7 @@
       "year_min": null
     },
     {
+      "action": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,
@@ -6701,6 +6758,7 @@
       "year_min": null
     },
     {
+      "action": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,
@@ -6815,6 +6873,7 @@
       "year_min": null
     },
     {
+      "action": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,
@@ -6929,6 +6988,7 @@
       "year_min": null
     },
     {
+      "action": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,
@@ -7043,6 +7103,7 @@
       "year_min": null
     },
     {
+      "action": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,
@@ -7157,6 +7218,7 @@
       "year_min": null
     },
     {
+      "action": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,
@@ -7271,6 +7333,7 @@
       "year_min": null
     },
     {
+      "action": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,
@@ -7385,6 +7448,7 @@
       "year_min": null
     },
     {
+      "action": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,
@@ -7499,6 +7563,7 @@
       "year_min": null
     },
     {
+      "action": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,
@@ -7613,6 +7678,7 @@
       "year_min": null
     },
     {
+      "action": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,
@@ -7727,6 +7793,7 @@
       "year_min": null
     },
     {
+      "action": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,
@@ -7841,6 +7908,7 @@
       "year_min": null
     },
     {
+      "action": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,
@@ -7955,6 +8023,7 @@
       "year_min": null
     },
     {
+      "action": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,
@@ -8069,6 +8138,7 @@
       "year_min": null
     },
     {
+      "action": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,
@@ -8183,6 +8253,7 @@
       "year_min": null
     },
     {
+      "action": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,
@@ -8297,6 +8368,7 @@
       "year_min": null
     },
     {
+      "action": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,
@@ -8411,6 +8483,7 @@
       "year_min": null
     },
     {
+      "action": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,
@@ -8525,6 +8598,7 @@
       "year_min": null
     },
     {
+      "action": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,
@@ -8639,6 +8713,7 @@
       "year_min": null
     },
     {
+      "action": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,
@@ -8753,6 +8828,7 @@
       "year_min": null
     },
     {
+      "action": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,
@@ -8867,6 +8943,7 @@
       "year_min": null
     },
     {
+      "action": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,
@@ -8981,6 +9058,7 @@
       "year_min": null
     },
     {
+      "action": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,
@@ -9095,6 +9173,7 @@
       "year_min": null
     },
     {
+      "action": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,
@@ -9209,6 +9288,7 @@
       "year_min": null
     },
     {
+      "action": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,
@@ -9323,6 +9403,7 @@
       "year_min": null
     },
     {
+      "action": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,
@@ -9437,6 +9518,7 @@
       "year_min": null
     },
     {
+      "action": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,
@@ -9551,6 +9633,7 @@
       "year_min": null
     },
     {
+      "action": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,
@@ -9665,6 +9748,7 @@
       "year_min": null
     },
     {
+      "action": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,
@@ -9779,6 +9863,7 @@
       "year_min": null
     },
     {
+      "action": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,
@@ -9893,6 +9978,7 @@
       "year_min": null
     },
     {
+      "action": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,
@@ -10007,6 +10093,7 @@
       "year_min": null
     },
     {
+      "action": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,
@@ -10121,6 +10208,7 @@
       "year_min": null
     },
     {
+      "action": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,
@@ -10235,6 +10323,7 @@
       "year_min": null
     },
     {
+      "action": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,
@@ -10349,6 +10438,7 @@
       "year_min": null
     },
     {
+      "action": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,
@@ -10463,6 +10553,7 @@
       "year_min": null
     },
     {
+      "action": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,
@@ -10577,6 +10668,7 @@
       "year_min": null
     },
     {
+      "action": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,
@@ -10691,6 +10783,7 @@
       "year_min": null
     },
     {
+      "action": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,
@@ -10805,6 +10898,7 @@
       "year_min": null
     },
     {
+      "action": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,
@@ -10919,6 +11013,7 @@
       "year_min": null
     },
     {
+      "action": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,
@@ -11033,6 +11128,7 @@
       "year_min": null
     },
     {
+      "action": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,
@@ -11147,6 +11243,7 @@
       "year_min": null
     },
     {
+      "action": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,
@@ -11261,6 +11358,7 @@
       "year_min": null
     },
     {
+      "action": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,
@@ -11375,6 +11473,7 @@
       "year_min": null
     },
     {
+      "action": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,
@@ -11489,6 +11588,7 @@
       "year_min": null
     },
     {
+      "action": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,
@@ -11603,6 +11703,7 @@
       "year_min": null
     },
     {
+      "action": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,
@@ -11717,6 +11818,7 @@
       "year_min": null
     },
     {
+      "action": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,
@@ -11831,6 +11933,7 @@
       "year_min": null
     },
     {
+      "action": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,
@@ -11945,6 +12048,7 @@
       "year_min": null
     },
     {
+      "action": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,
@@ -12059,6 +12163,7 @@
       "year_min": null
     },
     {
+      "action": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,
@@ -12173,6 +12278,7 @@
       "year_min": null
     },
     {
+      "action": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,
@@ -12287,6 +12393,7 @@
       "year_min": null
     },
     {
+      "action": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,
@@ -12401,6 +12508,7 @@
       "year_min": null
     },
     {
+      "action": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,
@@ -12515,6 +12623,7 @@
       "year_min": null
     },
     {
+      "action": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,
@@ -12629,6 +12738,7 @@
       "year_min": null
     },
     {
+      "action": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,
@@ -12743,6 +12853,7 @@
       "year_min": null
     },
     {
+      "action": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,
@@ -12857,6 +12968,7 @@
       "year_min": null
     },
     {
+      "action": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,
@@ -12971,6 +13083,7 @@
       "year_min": null
     },
     {
+      "action": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,
@@ -13085,6 +13198,7 @@
       "year_min": null
     },
     {
+      "action": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,
@@ -13199,6 +13313,7 @@
       "year_min": null
     },
     {
+      "action": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,
@@ -13313,6 +13428,7 @@
       "year_min": null
     },
     {
+      "action": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,
@@ -13427,6 +13543,7 @@
       "year_min": null
     },
     {
+      "action": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,
@@ -13541,6 +13658,7 @@
       "year_min": null
     },
     {
+      "action": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,
@@ -13655,6 +13773,7 @@
       "year_min": null
     },
     {
+      "action": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,
@@ -13769,6 +13888,7 @@
       "year_min": null
     },
     {
+      "action": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,
