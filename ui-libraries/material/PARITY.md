@@ -125,8 +125,8 @@ States: focused, selected, disabled, error, hovered, pressed, unselected
 
 | Component | Source | Status | Issues | Needs | Notes |
 |---|---|---|---|---|---|
-| Checkbox | Checkbox.kt | partial | #11 | shapes (#6) | slint component: CheckBox |
-| TriStateCheckbox | Checkbox.kt | missing | #11 | shapes (#6) | - |
+| Checkbox | Checkbox.kt | done | #11 | shapes (#6) | slint component: CheckBox; tokens: generated component tokens; flag-off CheckboxImpl geometry and check-path morph (androidx/androidx@23327507f7fc, material3 1.5.0-alpha18); springs via active motion scheme |
+| TriStateCheckbox | Checkbox.kt | done | #11 | shapes (#6) | slint component: TriStateCheckbox; tokens: generated component tokens; flag-off CheckboxImpl geometry and check-path morph (androidx/androidx@23327507f7fc, material3 1.5.0-alpha18); springs via active motion scheme |
 
 ### Chips
 

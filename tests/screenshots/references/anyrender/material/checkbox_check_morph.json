@@ -1,0 +1,35 @@
+[
+  {
+    "Stroke": {
+      "brush": {
+        "Solid": {
+          "components": [
+            0.3804,
+            0.3647,
+            0.4078,
+            1.0
+          ]
+        }
+      },
+      "brush_transform": null,
+      "shape": "M1,2 C1,1.4477 1.4477,1 2,1 L18,1 C18.5523,1 19,1.4477 19,2 L19,18 C19,18.5523 18.5523,19 18,19 L2,19 C1.4477,19 1,18.5523 1,18 Z",
+      "style": {
+        "dash_offset": 0.0,
+        "dash_pattern": [],
+        "end_cap": "Round",
+        "join": "Miter",
+        "miter_limit": 4.0,
+        "start_cap": "Round",
+        "width": 2.0
+      },
+      "transform": [
+        1.0,
+        0.0,
+        0.0,
+        1.0,
+        38.0,
+        38.0
+      ]
+    }
+  }
+]

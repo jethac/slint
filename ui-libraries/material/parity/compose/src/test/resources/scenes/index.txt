@@ -25,6 +25,10 @@ button-release-morph
 button-sizes
 button-states
 button-styles
+checkbox-check-morph
+checkbox-hover
+checkbox-states
+checkbox-uncheck-morph
 chip-elevated-filter-states
 chip-elevated-states
 chip-filter-states
@@ -211,5 +215,8 @@ toggle-fab-morph
 toggle-fab-states
 toggle-select-morph
 top-app-bars
+tri-checkbox-indeterminate-morph
+tri-checkbox-off-morph
+tri-checkbox-states
 wide-navigation-rail-arrangements
 wide-navigation-rail-expand
