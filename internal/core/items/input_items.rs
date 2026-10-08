@@ -973,6 +973,17 @@ impl Item for SwipeGestureHandler {
                 } else if self.is_over_threshold(position) {
                     InputEventFilterResult::Intercept
                 } else {
+                    // This move is forwarded to the children and never reaches
+                    // `input_event`, but it still belongs in the velocity ring
+                    // buffer: a flick that crosses the threshold in a single
+                    // jump needs the pre-threshold samples to measure a
+                    // release velocity.
+                    let window_position = self_rc.map_to_window(*position);
+                    self.velocity_rb.borrow_mut().push(
+                        crate::animations::current_tick(),
+                        window_position - self.last_position.get(),
+                    );
+                    self.last_position.set(window_position);
                     InputEventFilterResult::ForwardAndInterceptGrab
                 }
             }

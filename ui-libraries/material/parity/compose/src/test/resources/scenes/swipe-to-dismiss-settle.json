@@ -1,0 +1,145 @@
+{
+  "actions": [
+    {
+      "at": 400.0,
+      "kind": "press",
+      "velocity": 0.0,
+      "x": 8.0,
+      "y": 8.0
+    },
+    {
+      "at": 400.0,
+      "kind": "release",
+      "velocity": 0.0,
+      "x": 8.0,
+      "y": 8.0
+    }
+  ],
+  "case_rel": "material/swipe_to_dismiss_settle",
+  "densities": [
+    1,
+    2
+  ],
+  "fonts": {
+    "brand": "Roboto",
+    "plain": "Roboto"
+  },
+  "mask_decor": {},
+  "mask_inner": {},
+  "name": "swipe-to-dismiss-settle",
+  "negative_note": "issue #27: the Compose frame clock starts the animation ~2ms after the Slint dispatch, so identical-timestamp comparison reports a systematic lead — a silent pass would mean the harness went blind",
+  "params": {
+    "boxes": [
+      {
+        "bg": "error-container",
+        "content": "surface-container-highest",
+        "h": 72,
+        "initial": "start-to-end",
+        "radius": 8,
+        "w": 300,
+        "x": 60,
+        "y": 50
+      },
+      {
+        "bg": "error-container",
+        "content": "surface-container-highest",
+        "h": 72,
+        "initial": "settled",
+        "radius": 8,
+        "w": 300,
+        "x": 60,
+        "y": 170
+      }
+    ],
+    "settle": {
+      "box": 0,
+      "op": "reset"
+    }
+  },
+  "parity": "xfail",
+  "scheme": {
+    "background": "FFFDF7FE",
+    "error": "FFA8364B",
+    "errorContainer": "FFF97386",
+    "inverseOnSurface": "FFA09BA1",
+    "inversePrimary": "FFD4C3FD",
+    "inverseSurface": "FF0F0D12",
+    "onBackground": "FF34313A",
+    "onError": "FFFFF7F7",
+    "onErrorContainer": "FF6E0523",
+    "onPrimary": "FFFDF7FF",
+    "onPrimaryContainer": "FF493C6C",
+    "onPrimaryFixed": "FF352857",
+    "onPrimaryFixedVariant": "FF524576",
+    "onSecondary": "FFFDF7FF",
+    "onSecondaryContainer": "FF554F63",
+    "onSecondaryFixed": "FF423C50",
+    "onSecondaryFixedVariant": "FF5F586E",
+    "onSurface": "FF34313A",
+    "onTertiary": "FFFFF7F9",
+    "onTertiaryContainer": "FF5F3956",
+    "onTertiaryFixed": "FF4A2642",
+    "onTertiaryFixedVariant": "FF694260",
+    "outline": "FF7D7983",
+    "outlineVariant": "FFB5B0BB",
+    "primary": "FF655789",
+    "primaryContainer": "FFD4C3FD",
+    "primaryFixed": "FFD4C3FD",
+    "primaryFixedDim": "FFC6B6EE",
+    "scrim": "FF000000",
+    "secondary": "FF625C71",
+    "secondaryContainer": "FFE8DEF8",
+    "secondaryFixed": "FFE8DEF8",
+    "secondaryFixedDim": "FFDAD0EA",
+    "surface": "FFFDF7FE",
+    "surfaceBright": "FFFDF7FE",
+    "surfaceContainer": "FFF2ECF5",
+    "surfaceContainerHigh": "FFECE6F0",
+    "surfaceContainerHighest": "FFE7E0EC",
+    "surfaceContainerLow": "FFF8F1FA",
+    "surfaceContainerLowest": "FFFFFFFF",
+    "surfaceDim": "FFDED8E4",
+    "surfaceTint": "FF655789",
+    "surfaceVariant": "FFE7E0EC",
+    "tertiary": "FF7B5270",
+    "tertiaryContainer": "FFF4BFE3",
+    "tertiaryFixed": "FFF4BFE3",
+    "tertiaryFixedDim": "FFE5B2D5"
+  },
+  "size": [
+    420,
+    300
+  ],
+  "theme": {
+    "contrast": 0.0,
+    "dark": false,
+    "platform": "phone",
+    "seed": "6750A4",
+    "spec": "spec2025",
+    "variant": "tonal-spot"
+  },
+  "times": [
+    0,
+    400,
+    450,
+    500,
+    550,
+    600,
+    650,
+    700,
+    750,
+    900
+  ],
+  "trace_elements": [
+    "fg0",
+    "fg1"
+  ],
+  "trace_props": [
+    "offset0",
+    "progress0",
+    "offset1",
+    "progress1"
+  ],
+  "type": "swipe-to-dismiss",
+  "widgets": []
+}
