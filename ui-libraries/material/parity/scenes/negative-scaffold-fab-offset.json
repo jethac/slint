@@ -1,0 +1,88 @@
+{
+  "name": "negative-scaffold-fab-offset",
+  "type": "canvas",
+  "parity": "negative",
+  "negative_note": "The FAB pins itself 32dp too far left (fab_x override) \u2014 the trace must flag the x offset.",
+  "size": [
+    320,
+    260
+  ],
+  "densities": [
+    1
+  ],
+  "theme": {
+    "seed": "6750A4",
+    "variant": "tonal-spot",
+    "spec": "spec2025",
+    "platform": "phone",
+    "contrast": 0.0,
+    "dark": false
+  },
+  "fonts": {
+    "brand": "Roboto",
+    "plain": "Roboto"
+  },
+  "widgets": [
+    {
+      "kind": "material-scaffold",
+      "x": 0,
+      "y": 0,
+      "width": 320,
+      "height": 260,
+      "fab_position": "end",
+      "top_bar": true,
+      "bottom_bar": true,
+      "snackbar": false,
+      "fab": true,
+      "title": "Home",
+      "text": "Content",
+      "slint_overrides": {
+        "fab_x": 216
+      }
+    }
+  ],
+  "trace_elements": [],
+  "trace_props": [],
+  "times": [],
+  "actions": [],
+  "params": {},
+  "xfail_text": "issue #28: Slint ceils text layout widths where Compose keeps fractional advances",
+  "mask_decor": {
+    "fab0": {"times": [0, 2000], "margin": 12},
+    "fab1": {"times": [0, 2000], "margin": 12},
+    "fab2": {"times": [0, 2000], "margin": 12},
+    "fab3": {"times": [0, 2000], "margin": 12},
+    "scaffold0": [
+      0,
+      2000
+    ],
+    "scaffold1": [
+      0,
+      2000
+    ],
+    "scaffold2": [
+      0,
+      2000
+    ],
+    "scaffold3": [
+      0,
+      2000
+    ],
+    "content0": [
+      0,
+      2000
+    ],
+    "content1": [
+      0,
+      2000
+    ],
+    "content2": [
+      0,
+      2000
+    ],
+    "content3": [
+      0,
+      2000
+    ]
+  }
+}

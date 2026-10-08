@@ -1,0 +1,156 @@
+// Copyright © SixtyFPS GmbH <info@slint.dev>
+// SPDX-License-Identifier: MIT
+
+import { MaterialPalette } from "../styling/material_palette.slint";
+
+/// Where the `floatingActionButton` slot lands — upstream `FabPosition`
+/// (Scaffold.kt @ 23327507f7fc7d5b19d65fec4b090f60c970079b). Start/end
+/// follow the reading direction; Slint layouts are left-to-right, so
+/// `start` is the left edge and `end`/`end-overlay` the right one.
+export enum FabPosition { start, center, end, end-overlay }
+
+/// `Scaffold` — the Material layout structure (Scaffold.kt @ the pin).
+/// Upstream wraps the slots in a `Surface` and lays them out in
+/// `ScaffoldLayout`; Compose's slot lambdas have no Slint counterpart,
+/// so the slots are regular children that report their measured size
+/// through `in-out` props and position themselves on the exported
+/// offsets:
+///
+/// ```slint
+/// scaffold := Scaffold {
+///     content := Rectangle {
+///         width: parent.width;
+///         height: parent.height;
+///         // `content` is placed at (0, 0) full-size upstream; the
+///         // `PaddingValues` are applied inside it.
+///         MaterialText { y: scaffold.content_padding_top; ... }
+///     }
+///
+///     top_bar := TopAppBar {
+///         y: 0;
+///         width: parent.width;
+///         height <=> scaffold.top_bar_height;
+///     }
+///
+///     snack := SnackBar {
+///         x: scaffold.snackbar_x;
+///         y: scaffold.snackbar_y;
+///         width <=> scaffold.snackbar_width;
+///         height <=> scaffold.snackbar_height;
+///     }
+///
+///     bottom_bar := NavigationBar {
+///         y: scaffold.bottom_bar_y;
+///         width: parent.width;
+///         height <=> scaffold.bottom_bar_height;
+///     }
+///
+///     fab := FloatingActionButton {
+///         x: scaffold.fab_x;
+///         y: scaffold.fab_y;
+///         width <=> scaffold.fab_width;
+///         height <=> scaffold.fab_height;
+///     }
+/// }
+/// ```
+///
+/// Children run in the caller's scope, so they can bind `scaffold.*`;
+/// declare them in upstream z-order — content, top bar, snackbar,
+/// bottom bar, FAB — so later children paint on top (`ContentZIndex` <
+/// `TopBarZIndex` < `SnackbarZIndex` < `BottomBarZIndex` < `FabZIndex`).
+/// `contentWindowInsets` has no Slint counterpart: every inset reads `0`.
+export component Scaffold {
+    /// `floatingActionButtonPosition` upstream.
+    in property <FabPosition> fab_position: FabPosition.end;
+    /// `containerColor` — `MaterialTheme.colorScheme.background` upstream.
+    in property <color> container_color: MaterialPalette.background;
+    /// `contentColor` — `contentColorFor(containerColor)` upstream; the
+    /// `LocalContentColor` fallback is `on_surface`. Slint has no ambient
+    /// content color — apply it to content children explicitly.
+    in property <color> content_color: root.content_color_for(root.container_color);
+
+    // The measurements `ScaffoldLayout` collects from the slots — `<=>`
+    // each slot's `height`/`width` to these at the use site.
+    in-out property <length> top_bar_height;
+    in-out property <length> bottom_bar_height;
+    in-out property <length> snackbar_width;
+    in-out property <length> snackbar_height;
+    in-out property <length> fab_width;
+    in-out property <length> fab_height;
+
+    /// The `PaddingValues` handed to `content` — `topBarHeight` and
+    /// `bottomBarHeight` with the `contentWindowInsets` fallbacks, which
+    /// are `0` without insets.
+    out property <length> content_padding_top: root.top_bar_height;
+    out property <length> content_padding_bottom: root.bottom_bar_height;
+    out property <length> content_padding_start: 0px;
+    out property <length> content_padding_end: 0px;
+
+    property <bool> has_fab: root.fab_width > 0px && root.fab_height > 0px;
+    property <bool> has_bottom_bar: root.bottom_bar_height > 0px;
+    property <bool> has_snackbar: root.snackbar_height > 0px;
+
+    /// `fabOffsetFromBottom` — `bottomBarHeight + fabHeight + FabSpacing`
+    /// with a bottom bar, or `fabHeight + FabSpacing + bottomInset` with
+    /// none or under `end-overlay` (the inset is `0`).
+    out property <length> fab_offset_from_bottom: root.has_fab ?
+        (!root.has_bottom_bar || root.fab_position == FabPosition.end-overlay ?
+            root.fab_height + root.fab_spacing :
+            root.bottom_bar_height + root.fab_height + root.fab_spacing) : 0px;
+    /// `snackbarOffsetFromBottom` — above the FAB, else above the bottom
+    /// bar, else the bottom inset (`0`).
+    out property <length> snackbar_offset_from_bottom: root.has_snackbar ?
+        root.snackbar_height + (root.has_fab ? root.fab_offset_from_bottom : root.bottom_bar_height) : 0px;
+
+    /// `FabPlacement.left` — `FabSpacing` on the positioned edge, centered
+    /// for `center` (all in LTR — `leftInset`/`rightInset` are `0`).
+    out property <length> fab_x:
+        root.fab_position == FabPosition.start ? root.fab_spacing :
+        root.fab_position == FabPosition.center ? (root.width - root.fab_width) / 2 :
+        root.width - root.fab_spacing - root.fab_width;
+    /// `(layoutWidth - snackbarWidth + leftInset - rightInset) / 2`.
+    out property <length> snackbar_x: (root.width - root.snackbar_width) / 2;
+    /// `bottomBarPlaceable` places at `layoutHeight - bottomBarHeight`.
+    out property <length> bottom_bar_y: root.height - root.bottom_bar_height;
+    /// `it.place(placement.left, layoutHeight - fabOffsetFromBottom)`.
+    out property <length> fab_y: root.height - root.fab_offset_from_bottom;
+    /// `it.place(x, layoutHeight - snackbarOffsetFromBottom)`.
+    out property <length> snackbar_y: root.height - root.snackbar_offset_from_bottom;
+
+    // `FabSpacing` (Scaffold.kt private constant).
+    property <length> fab_spacing: 16px;
+
+    background_rect := Rectangle {
+        width: 100%;
+        height: 100%;
+        background: root.container_color;
+    }
+
+    @children
+
+    /// `ColorScheme.contentColorFor` (ColorScheme.kt @ the pin): the
+    /// scheme's on-color for a background role; the `Unspecified` case
+    /// falls back to `on_surface`, the root `LocalContentColor`.
+    function content_color_for(c: color) -> color {
+        if c == MaterialPalette.primary { return MaterialPalette.on_primary; }
+        if c == MaterialPalette.secondary { return MaterialPalette.on_secondary; }
+        if c == MaterialPalette.tertiary { return MaterialPalette.on_tertiary; }
+        if c == MaterialPalette.background { return MaterialPalette.on_background; }
+        if c == MaterialPalette.error { return MaterialPalette.on_error; }
+        if c == MaterialPalette.primary_container { return MaterialPalette.on_primary_container; }
+        if c == MaterialPalette.secondary_container { return MaterialPalette.on_secondary_container; }
+        if c == MaterialPalette.tertiary_container { return MaterialPalette.on_tertiary_container; }
+        if c == MaterialPalette.error_container { return MaterialPalette.on_error_container; }
+        if c == MaterialPalette.inverse_surface { return MaterialPalette.inverse_on_surface; }
+        if c == MaterialPalette.surface_variant { return MaterialPalette.on_surface_variant; }
+        if c == MaterialPalette.primary_fixed { return MaterialPalette.on_primary_fixed; }
+        if c == MaterialPalette.primary_fixed_dim { return MaterialPalette.on_primary_fixed; }
+        if c == MaterialPalette.secondary_fixed { return MaterialPalette.on_secondary_fixed; }
+        if c == MaterialPalette.secondary_fixed_dim { return MaterialPalette.on_secondary_fixed; }
+        if c == MaterialPalette.tertiary_fixed { return MaterialPalette.on_tertiary_fixed; }
+        if c == MaterialPalette.tertiary_fixed_dim { return MaterialPalette.on_tertiary_fixed; }
+        // surface and every surface* tint slot resolve to on_surface
+        // upstream, as does the `else` LocalContentColor fallback.
+        MaterialPalette.on_surface
+    }
+}
