@@ -1,0 +1,89 @@
+---
+title: SuggestionChip
+description: SuggestionChip and ElevatedSuggestionChip API.
+---
+
+import CodeSnippetMD from '@slint/common-files/src/components/CodeSnippetMD.astro';
+import SlintProperty from '@slint/common-files/src/components/SlintProperty.astro';
+
+<CodeSnippetMD imagePath="/src/assets/generated/suggestionchip.png" scale="3" imageWidth="320" imageHeight="140" imageAlt="">
+```slint
+import { SuggestionChip } from "@material";
+export component Example inherits Window {
+    width: 300px;
+    height: 120px;
+    background: transparent;
+    SuggestionChip {
+        x: 90px;
+        y: 44px;
+        text: "Suggestion";
+    }
+}
+```
+</CodeSnippetMD>
+
+A `SuggestionChip` offers a dynamically generated suggestion, such as a predicted response or a search completion. Unlike an `AssistChip` it carries no leading icon by default.
+
+<CodeSnippetMD imagePath="/src/assets/generated/suggestionchip-elevated.png" scale="3" imageWidth="460" imageHeight="140" imageAlt="">
+```slint
+import { SuggestionChip, ElevatedSuggestionChip } from "@material";
+export component Example inherits Window {
+    width: 440px;
+    height: 120px;
+    background: transparent;
+    HorizontalLayout {
+        padding: 40px;
+        spacing: 20px;
+        alignment: center;
+        SuggestionChip {
+            text: "Flat";
+        }
+        ElevatedSuggestionChip {
+            text: "Elevated";
+        }
+    }
+}
+```
+</CodeSnippetMD>
+
+The `ElevatedSuggestionChip` variant rests at elevation level 1 and lifts to level 3 on drag, where the flat `SuggestionChip` draws an outline instead.
+
+## Properties
+
+### enabled
+<SlintProperty propName="enabled" typeName="bool" defaultValue="true">
+Whether the chip is enabled and can be interacted with.
+</SlintProperty>
+
+### has-focus
+<SlintProperty propName="has-focus" typeName="bool">
+Whether the component has focus.
+</SlintProperty>
+
+### icon
+<SlintProperty propName="icon" typeName="image">
+An optional icon displayed on the chip.
+</SlintProperty>
+
+### text
+<SlintProperty propName="text" typeName="string">
+The text label displayed on the chip.
+</SlintProperty>
+
+### tooltip
+<SlintProperty propName="tooltip" typeName="string">
+A tooltip text that appears when hovering over the chip.
+</SlintProperty>
+
+## Callbacks
+
+### clicked()
+Invoked when the chip is clicked.
+
+## Functions
+
+### clear-focus()
+Clears the focus from the component.
+
+### focus()
+Focuses the component.

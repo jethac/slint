@@ -1,0 +1,93 @@
+{
+  "name": "chip-input-states",
+  "type": "canvas",
+  "parity": "static",
+  "size": [
+    592,
+    96
+  ],
+  "densities": [
+    1,
+    2
+  ],
+  "theme": {
+    "seed": "6750A4",
+    "variant": "tonal-spot",
+    "spec": "spec2025",
+    "platform": "phone",
+    "dark": false,
+    "contrast": 0.0
+  },
+  "fonts": {
+    "plain": "Roboto",
+    "brand": "Roboto"
+  },
+  "widgets": [
+    {
+      "kind": "input-chip",
+      "x": 16,
+      "y": 32,
+      "text": "Input"
+    },
+    {
+      "kind": "input-chip",
+      "x": 136,
+      "y": 32,
+      "text": "Input",
+      "avatar": "person"
+    },
+    {
+      "kind": "input-chip",
+      "x": 256,
+      "y": 32,
+      "text": "Input",
+      "avatar": "person",
+      "trailing_icon": "close"
+    },
+    {
+      "kind": "input-chip",
+      "x": 376,
+      "y": 32,
+      "text": "Input",
+      "avatar": "person",
+      "trailing_icon": "close",
+      "checked": true
+    },
+    {
+      "kind": "input-chip",
+      "x": 496,
+      "y": 32,
+      "text": "Input",
+      "avatar": "person",
+      "trailing_icon": "close",
+      "enabled": false
+    }
+  ],
+  "trace_elements": [
+    "button0",
+    "button1",
+    "button2",
+    "button3",
+    "button4"
+  ],
+  "trace_props": [
+    "shadow_elevation"
+  ],
+  "mask_inner": {
+    "button0": [
+      2000
+    ],
+    "button1": [
+      2000
+    ],
+    "button2": [
+      2000
+    ],
+    "button3": [
+      2000
+    ],
+    "button4": [
+      2000
+    ]
+  }
+}

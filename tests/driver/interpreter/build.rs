@@ -11,8 +11,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Example .slint files that are also run through the interpreter. Unlike the
     // test cases collected below, these live outside tests/cases, so we list them
-    // here and honor SLINT_TEST_FILTER as a substring of their repo-root-relative
-    // path (e.g. SLINT_TEST_FILTER=examples runs the examples/ entries).
+    // here and honor SLINT_TEST_FILTER as a comma-separated list of substrings
+    // of their repo-root-relative path (e.g. SLINT_TEST_FILTER=examples runs
+    // the examples/ entries).
     const EXAMPLES: &[(&str, &str)] = &[
         ("example_printerdemo", "demos/printerdemo/ui/printerdemo.slint"),
         ("example_usecases", "demos/usecases/ui/app.slint"),
@@ -40,9 +41,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let filter = std::env::var("SLINT_TEST_FILTER").ok();
     for (test_function_name, path) in EXAMPLES {
-        if let Some(filter) = &filter
-            && !path.contains(filter.as_str())
-        {
+        if !test_driver_lib::test_filter_matches(filter.as_deref(), path) {
             continue;
         }
         write!(

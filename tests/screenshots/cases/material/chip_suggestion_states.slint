@@ -1,0 +1,75 @@
+// Copyright © SixtyFPS GmbH <info@slint.dev>
+// SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0
+
+// Scene: chip-suggestion-states — generated from `ui-libraries/material/parity/scenes/chip-suggestion-states.json`
+// (edit the scene, regenerate with `cargo run -p material-parity-generator`).
+//PARITY=xfail:skia: issue #6: on skia the elevated chips' shadow penumbra inside the strict band diffs up to ~29 channel units while software/femtovg match within eps 16
+// issue #6: the elevated chips' graphicsLayer-softened edge and drop-shadow penumbra land ~1px inside the strict band (residual <=13 channel diff); the silhouette boundary check stays strict (band 2.0)
+//PARITY_EPS=16
+//SIZE=820x96
+//TRACE_PROPS=shadow_elevation
+//TRACE_ELEMENTS=button0,button1,button2,button3,button4,button5
+//XFAIL_TEXT=issue #28: Slint ceils text layout widths where Compose keeps fractional advances
+//DENSITIES=1,2
+import "../../fonts/Roboto-VariableFont.ttf";
+import { ElevatedSuggestionChip, MaterialPalette, MaterialTheme, MaterialWindow, SuggestionChip } from "@material";
+
+export component TestCase inherits MaterialWindow {
+    init => {
+        // The scene pins seed #6750A4, tonal-spot, spec2025, light, contrast 0
+        // (all the library defaults; restated here so a default change can't
+        // silently move the parity baseline).
+        MaterialTheme.seed-color = #6750A4;
+        MaterialTheme.dark = false;
+        MaterialTheme.contrast-level = 0;
+        MaterialTheme.use-platform-color = false;
+        MaterialTheme.plain-family = "Roboto";
+        MaterialTheme.brand-family = "Roboto";
+        // Compose builds its scene scheme from the same seed — use the
+        // runtime-generated scheme, not the static expressive table.
+        MaterialPalette.dynamic = true;
+    }
+
+    button0 := SuggestionChip {
+        x: 16px;
+        y: 32px;
+        text: "Suggest";
+    }
+
+    out property <length> shadow_elevation: button0.shadow_elevation;
+
+    button1 := SuggestionChip {
+        x: 150px;
+        y: 32px;
+        text: "Suggest";
+        simulate_hover: true;
+    }
+
+    button2 := SuggestionChip {
+        x: 284px;
+        y: 32px;
+        text: "Suggest";
+        enabled: false;
+    }
+
+    button3 := ElevatedSuggestionChip {
+        x: 418px;
+        y: 32px;
+        text: "Suggest";
+    }
+
+    button4 := ElevatedSuggestionChip {
+        x: 552px;
+        y: 32px;
+        text: "Suggest";
+        simulate_hover: true;
+    }
+
+    button5 := ElevatedSuggestionChip {
+        x: 686px;
+        y: 32px;
+        text: "Suggest";
+        enabled: false;
+    }
+
+}
