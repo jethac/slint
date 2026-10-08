@@ -6,7 +6,7 @@ description: ElevatedCard API.
 import CodeSnippetMD from '@slint/common-files/src/components/CodeSnippetMD.astro';
 import SlintProperty from '@slint/common-files/src/components/SlintProperty.astro';
 
-<CodeSnippetMD imagePath="" noScreenShot scale="3" imageWidth="300" imageHeight="200" imageAlt="">
+<CodeSnippetMD imagePath="/src/assets/generated/elevatedcard.png" scale="3" imageWidth="300" imageHeight="200" imageAlt="">
 ```slint
 import { ElevatedCard } from "@material";
 export component Example inherits Window {
@@ -25,6 +25,11 @@ export component Example inherits Window {
 An `ElevatedCard` is a card component with elevation that appears to float above the surface. It's used to group related content and actions together.
 
 ## Properties
+
+### enabled
+<SlintProperty propName="enabled" typeName="bool" defaultValue="true">
+Whether the card is enabled and can be interacted with.
+</SlintProperty>
 
 ### clickable
 <SlintProperty propName="clickable" typeName="bool">

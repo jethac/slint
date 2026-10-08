@@ -1,0 +1,103 @@
+{
+  "type": "canvas",
+  "parity": "static",
+  "densities": [
+    1,
+    2
+  ],
+  "theme": {
+    "seed": "6750A4",
+    "variant": "tonal-spot",
+    "spec": "spec2025",
+    "platform": "phone",
+    "dark": false,
+    "contrast": 0.0
+  },
+  "fonts": {
+    "plain": "Roboto",
+    "brand": "Roboto"
+  },
+  "name": "card-states-filled",
+  "size": [
+    856,
+    112
+  ],
+  "widgets": [
+    {
+      "kind": "filled-card",
+      "x": 16,
+      "y": 16,
+      "width": 120,
+      "height": 80,
+      "clickable": true
+    },
+    {
+      "kind": "filled-card",
+      "x": 156,
+      "y": 16,
+      "width": 120,
+      "height": 80,
+      "clickable": true,
+      "state": "hovered"
+    },
+    {
+      "kind": "filled-card",
+      "x": 296,
+      "y": 16,
+      "width": 120,
+      "height": 80,
+      "clickable": true,
+      "state": "focused"
+    },
+    {
+      "kind": "filled-card",
+      "x": 436,
+      "y": 16,
+      "width": 120,
+      "height": 80,
+      "clickable": true,
+      "enabled": false
+    },
+    {
+      "kind": "filled-card",
+      "x": 576,
+      "y": 16,
+      "width": 120,
+      "height": 80,
+      "clickable": true,
+      "dragged": true
+    }
+  ],
+  "trace_elements": [
+    "card0",
+    "card1",
+    "card2",
+    "card3",
+    "card4"
+  ],
+  "mask_decor": {
+    "card0": [
+      2000
+    ],
+    "card1": [
+      2000
+    ],
+    "card2": [
+      2000
+    ],
+    "card3": [
+      2000
+    ],
+    "card4": {
+      "times": [
+        2000
+      ],
+      "margin": 10
+    }
+  },
+  "mask_inner": {
+    "card2": [
+      2000
+    ]
+  }
+}

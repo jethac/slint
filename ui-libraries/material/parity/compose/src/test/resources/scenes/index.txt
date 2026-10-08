@@ -25,6 +25,11 @@ button-release-morph
 button-sizes
 button-states
 button-styles
+card-elevation-motion
+card-states-elevated
+card-states-filled
+card-states-outlined
+card-variants
 checkbox-check-morph
 checkbox-hover
 checkbox-states
@@ -108,6 +113,8 @@ negative-button-group-weight
 negative-button-press-morph
 negative-button-ripple-clip
 negative-button-role
+negative-card-color
+negative-card-shape
 negative-chip-color
 negative-chip-shape
 negative-connected-button-group
