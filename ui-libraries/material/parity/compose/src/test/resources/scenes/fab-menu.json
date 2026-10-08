@@ -155,6 +155,7 @@
   "type": "canvas",
   "widgets": [
     {
+      "action": null,
       "alignment": "end",
       "always_show_label": null,
       "arrangement": null,
@@ -289,6 +290,7 @@
       "year_min": null
     },
     {
+      "action": null,
       "alignment": "center",
       "always_show_label": null,
       "arrangement": null,
@@ -423,6 +425,7 @@
       "year_min": null
     },
     {
+      "action": null,
       "alignment": "start",
       "always_show_label": null,
       "arrangement": null,

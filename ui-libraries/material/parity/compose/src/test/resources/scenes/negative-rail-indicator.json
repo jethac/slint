@@ -84,6 +84,7 @@
   "type": "canvas",
   "widgets": [
     {
+      "action": null,
       "always_show_label": true,
       "arrangement": null,
       "body_color": null,

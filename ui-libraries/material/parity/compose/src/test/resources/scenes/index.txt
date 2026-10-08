@@ -161,6 +161,8 @@ negative-surface-tonal
 negative-swipe-dismiss-initial
 negative-thumb-offset
 negative-toggle-select
+negative-tooltip-color
+negative-tooltip-offset
 negative-wrong-shadow
 progress-indeterminate
 progress-indicators
@@ -214,6 +216,7 @@ toggle-buttons
 toggle-fab-morph
 toggle-fab-states
 toggle-select-morph
+tooltips
 top-app-bars
 tri-checkbox-indeterminate-morph
 tri-checkbox-off-morph

@@ -4,30 +4,431 @@
 import { MaterialText } from "./material_text.slint";
 import { MaterialPalette } from "../styling/material_palette.slint";
 import { MaterialTypography } from "../styling/material_typography.slint";
+import { MaterialAnimations } from "../styling/material_animations.slint";
+import { MaterialWindowAdapter } from "./material_window.slint";
+import { Elevation } from "./elevation.slint";
+import { PlainTooltipTokens, RichTooltipTokens } from "../styling/generated/material_component_tokens.slint";
+import { MaterialCornerShape } from "../styling/generated/material_shape_tokens.slint";
 
-export component ToolTip {
+/// Where the tooltip prefers to sit relative to its anchor — upstream
+/// `TooltipAnchorPosition` (Tooltip.kt @23327507). The provider falls back to
+/// the opposite edge when the preferred side would leave the window.
+export enum TooltipAnchorPosition { above, below }
+
+/// The edge of the tooltip container that carries the caret — the edge facing
+/// the anchor. `top` points up (tooltip below its anchor), `bottom` points
+/// down (tooltip above its anchor).
+export enum TooltipCaretEdge { top, bottom }
+
+/// `TooltipDefaults.caretSize` / `DefaultTooltipCaretShape`
+/// (Tooltip.kt @23327507): a 16 x 8 isosceles triangle whose tip sits on the
+/// edge facing the anchor.
+component TooltipCaret inherits Path {
+    in property <TooltipCaretEdge> edge;
+    in property <color> caret_color;
+
+    width: 16px;
+    height: 8px;
+    viewbox_width: 16;
+    viewbox_height: 8;
+    fill: root.caret_color;
+
+    // Conditional `Path` elements can't be emitted (`if`/`for` unsupported
+    // in path markup — slint#754) so the two triangle orientations switch on
+    // the `commands` string: edge `top` = tip up, `bottom` = tip down.
+    commands: root.edge == TooltipCaretEdge.bottom ? "M 0 0 L 16 0 L 8 8 Z" : "M 0 8 L 16 8 L 8 0 Z";
+}
+
+/// Uniform radius for a `MaterialCornerShape` (`full` is `CircleShape`:
+/// half the shorter side).
+global TooltipShape {
+    public pure function corner-radius(shape: MaterialCornerShape, w: length, h: length) -> length {
+        shape.full ? min(w, h) / 2 : shape.top_left
+    }
+}
+
+/// `TooltipScope.PlainTooltip` (Tooltip.kt @23327507): descriptive message in
+/// the inverse-surface container.
+export component PlainTooltip {
     in property <string> text;
+    /// `caretShape != null` upstream — a caret on the edge facing the anchor.
+    in property <bool> caret;
+    in property <TooltipCaretEdge> caret_edge: TooltipCaretEdge.top;
+    /// Caret center along the tooltip edge — `caretX(tooltipWidth, screenWidth,
+    /// anchorBounds)`: centered on the anchor mid, offset when the provider
+    /// clamps the tooltip to a screen edge.
+    in property <length> caret_x: root.width / 2;
+    in property <color> container_color: PlainTooltipTokens.container_color;
+    in property <color> content_color: PlainTooltipTokens.supporting_text_color;
+    /// `TooltipDefaults.plainTooltipMaxWidth` = 200dp.
+    in property <length> content_max_width: 200px;
+    in property <MaterialCornerShape> container_shape: PlainTooltipTokens.container_shape;
 
+    // `sizeIn(minWidth = TooltipMinWidth, maxWidth = 200dp, minHeight =
+    // TooltipMinHeight)` — 40dp / 200dp / 24dp (Tooltip.kt @23327507).
+    width: min(root.content_max_width, max(40px, layout.preferred-width));
+    height: max(24px, layout.preferred-height);
     z: 10000;
 
     background_layer := Rectangle {
-        border_radius: 4px;
-        background: MaterialPalette.inverse_surface;
+        width: 100%;
+        height: 100%;
+        border_radius: TooltipShape.corner-radius(root.container_shape, self.width, self.height);
+        background: root.container_color;
+    }
 
-        layout := HorizontalLayout {
-            max_width: 200px;
-            padding_top: 4px;
-            padding_bottom: 4px;
-            padding_left: 8px;
-            padding_right: 8px;
+    // `PlainTooltipContentPadding` — 8dp horizontal / 4dp vertical.
+    layout := HorizontalLayout {
+        x: 0;
+        y: 0;
+        width: 100%;
+        height: 100%;
+        padding_left: 8px;
+        padding_right: 8px;
+        padding_top: 4px;
+        padding_bottom: 4px;
 
-            MaterialText {
-                text: root.text;
-                vertical_alignment: center;
-                color: MaterialPalette.inverse_on_surface;
-                style: MaterialTypography.body_small;
+        MaterialText {
+            text: root.text;
+            vertical_alignment: center;
+            color: root.content_color;
+            style: PlainTooltipTokens.supporting_text_font;
+            wrap: word-wrap;
+        }
+    }
+
+    if root.caret : TooltipCaret {
+        edge: root.caret_edge;
+        caret_color: root.container_color;
+        x: root.caret_x - self.width / 2;
+        y: root.caret_edge == TooltipCaretEdge.top ? -self.height : parent.height;
+    }
+}
+
+/// `TooltipScope.RichTooltip` (Tooltip.kt @23327507): supporting text with an
+/// optional title and action in the surface-container container.
+export component RichTooltip {
+    /// `title` slot — `SubheadFont` / `SubheadColor`.
+    in property <string> title;
+    /// `text` slot — `SupportingTextFont` / `SupportingTextColor`.
+    in property <string> text;
+    /// `action` slot — an action label (`LabelLarge` /
+    /// `ActionLabelTextColor`); the composable `action` slot maps to this
+    /// label string.
+    in property <string> action_text;
+    in property <bool> caret;
+    in property <TooltipCaretEdge> caret_edge: TooltipCaretEdge.top;
+    in property <length> caret_x: root.width / 2;
+    in property <color> container_color: RichTooltipTokens.container_color;
+    in property <color> content_color: RichTooltipTokens.supporting_text_color;
+    in property <color> title_color: RichTooltipTokens.subhead_color;
+    in property <color> action_color: RichTooltipTokens.action_label_text_color;
+    /// `TooltipDefaults.richTooltipMaxWidth` = 320dp.
+    in property <length> content_max_width: 320px;
+    in property <MaterialCornerShape> container_shape: RichTooltipTokens.container_shape;
+
+    // `sizeIn(minWidth = TooltipMinWidth, maxWidth = 320dp, minHeight =
+    // TooltipMinHeight)` — 40dp / 320dp / 24dp (Tooltip.kt @23327507).
+    width: min(root.content_max_width, max(40px, layout.preferred-width));
+    height: max(24px, layout.preferred-height);
+    z: 10000;
+
+    // `Surface(color = containerColor, tonalElevation = Level0,
+    // shadowElevation = ContainerElevation)` — ElevationTokens.Level2.
+    elevation := Elevation {
+        width: 100%;
+        height: 100%;
+        level: 2;
+        border_radius: TooltipShape.corner-radius(root.container_shape, self.width, self.height);
+        background: root.container_color;
+    }
+
+    // `Modifier.padding(horizontal = RichTooltipHorizontalPadding)` — 16dp.
+    layout := VerticalLayout {
+        x: 0;
+        y: 0;
+        width: 100%;
+        height: 100%;
+        padding_left: 16px;
+        padding_right: 16px;
+        spacing: 0;
+
+        // `paddingFromBaseline(top = HeightToSubheadFirstLine)` — the
+        // subhead's first baseline sits 28dp below the content top.
+        if root.title != "" : HorizontalLayout {
+            padding_top: max(0px, 28px - title_text.font-metrics.ascent);
+            title_text := MaterialText {
+                text: root.title;
+                color: root.title_color;
+                style: RichTooltipTokens.subhead_font;
                 wrap: word-wrap;
             }
         }
+
+        // `textVerticalPadding(title != null, action != null)`:
+        // `padding(vertical = 4)` when neither exists, else
+        // `paddingFromBaseline(top = 24) .padding(bottom = 16)`.
+        HorizontalLayout {
+            padding_top: root.title == "" && root.action_text == ""
+                ? 4px
+                : max(0px, 24px - supporting_text.font-metrics.ascent);
+            padding_bottom: root.title == "" && root.action_text == "" ? 4px : 16px;
+            supporting_text := MaterialText {
+                text: root.text;
+                color: root.content_color;
+                style: RichTooltipTokens.supporting_text_font;
+                wrap: word-wrap;
+            }
+        }
+
+        // `requiredHeightIn(min = ActionLabelMinHeight).padding(bottom =
+        // ActionLabelBottomPadding)` — the 36dp bound covers the 8dp bottom
+        // padding, so the row is 36dp tall, not 44 (Tooltip.kt @23327507).
+        if root.action_text != "" : HorizontalLayout {
+            min_height: 36px;
+            padding_bottom: 8px;
+            MaterialText {
+                text: root.action_text;
+                vertical_alignment: top;
+                color: root.action_color;
+                style: RichTooltipTokens.action_label_text_font;
+            }
+        }
     }
+
+    if root.caret : TooltipCaret {
+        edge: root.caret_edge;
+        caret_color: root.container_color;
+        x: root.caret_x - self.width / 2;
+        y: root.caret_edge == TooltipCaretEdge.top ? -self.height : parent.height;
+    }
+}
+
+/// The tooltip surface `TooltipBox` positions over its anchor. Bundles the
+/// plain/rich choice and the position-provider math of
+/// `rememberTooltipPositionProvider` (Tooltip.kt @23327507).
+export component TooltipContent {
+    /// Anchor geometry in window coordinates and local size.
+    in property <length> anchor_abs_x;
+    in property <length> anchor_abs_y;
+    in property <length> anchor_width;
+    in property <length> anchor_height;
+    in property <TooltipAnchorPosition> preferred_position: TooltipAnchorPosition.above;
+
+    in property <bool> rich;
+    in property <string> plain_text;
+    in property <string> rich_title;
+    in property <string> rich_text;
+    in property <string> rich_action;
+    in property <bool> caret;
+
+    /// Whether the tooltip resolved below the anchor.
+    out property <bool> shown_below;
+    /// The tooltip surface (0 = no content).
+    out property <length> tooltip_width;
+    out property <length> tooltip_height;
+
+    property <length> viewport_w: MaterialWindowAdapter.window-width;
+    property <length> viewport_h: MaterialWindowAdapter.window-height;
+    /// `SpacingBetweenTooltipAndAnchor` — 4dp (Tooltip.kt @23327507).
+    property <length> spacing: 4px;
+
+    width: root.tooltip_width;
+    height: root.tooltip_height;
+
+    // Horizontal: `middle -> start -> end` for the plain provider
+    // (`rememberTooltipPositionProvider`), `start -> end -> middle` for the
+    // rich provider (`rememberRichTooltipPositionProvider`).
+    property <length> center_x: (root.anchor_width - root.tooltip_width) / 2;
+    property <length> end_x: root.anchor_width - root.tooltip_width;
+    property <length> right_edge: root.viewport_w - root.anchor_abs_x; // allowed width before the right window edge (no viewport info => unclamped)
+    x: root.rich
+        ? (root.viewport_w > 0 && root.anchor_abs_x + root.tooltip_width > root.viewport_w
+            ? (root.anchor_abs_x + root.end_x < 0px ? root.center_x : root.end_x)
+            : 0px)
+        : (root.anchor_abs_x + root.center_x < 0px
+            ? -root.anchor_abs_x
+            : (root.viewport_w > 0 && root.center_x + root.tooltip_width > root.right_edge
+                ? root.right_edge - root.tooltip_width
+                : root.center_x));
+
+    // Vertical: `above -> below` for `TooltipAnchorPosition.above` (and the
+    // inverse for `below`).
+    property <length> above_y: -root.tooltip_height - root.spacing;
+    property <length> below_y: root.anchor_height + root.spacing;
+    shown_below: root.preferred_position == TooltipAnchorPosition.below
+        ? !(root.viewport_h > 0 && root.anchor_abs_y + root.below_y + root.tooltip_height > root.viewport_h)
+        : root.anchor_abs_y + root.above_y < 0px;
+    y: root.shown_below ? root.below_y : root.above_y;
+
+    // `TooltipScope.drawCaret`: edge facing the anchor, centered on the
+    // anchor mid (`caretX`).
+    property <TooltipCaretEdge> caret_edge: root.shown_below ? TooltipCaretEdge.top : TooltipCaretEdge.bottom;
+    property <length> caret_x: root.anchor_width / 2 - root.x;
+
+    tooltip_width: rich_tip.visible ? rich_tip.width : plain_tip.width;
+    tooltip_height: rich_tip.visible ? rich_tip.height : plain_tip.height;
+    plain_tip := PlainTooltip {
+        x: 0;
+        y: 0;
+        text: root.plain_text;
+        caret: root.caret;
+        caret_edge: root.caret_edge;
+        caret_x: root.caret_x;
+        visible: !root.rich;
+    }
+    rich_tip := RichTooltip {
+        x: 0;
+        y: 0;
+        title: root.rich_title;
+        text: root.rich_text;
+        action_text: root.rich_action;
+        caret: root.caret;
+        caret_edge: root.caret_edge;
+        caret_x: root.caret_x;
+        visible: root.rich;
+    }
+}
+
+/// `TooltipBox` / `BasicTooltipBox` (Tooltip.kt, internal/BasicTooltip.kt
+/// @23327507): wraps anchor content and shows the tooltip on hover, keyboard
+/// focus, and touch long-press.
+///
+/// Upstream renders through a `Popup` driven by a `TooltipState`; here the
+/// tooltip is an in-tree overlay at the provider's position — visuals and
+/// geometry are identical inside the window bounds.
+export component TooltipBox {
+    /// `tooltip` slot — plain text.
+    in property <string> tooltip;
+    /// Rich variant (`TooltipScope.RichTooltip`) instead of the plain one.
+    in property <bool> rich_tooltip;
+    in property <string> rich_title;
+    in property <string> rich_text;
+    in property <string> rich_action;
+    /// `caretShape` — draw the 16 x 8 caret toward the anchor.
+    in property <bool> caret;
+    in property <TooltipAnchorPosition> preferred_position: TooltipAnchorPosition.above;
+    /// `enableUserInput` upstream — gates hover / long-press / focus triggers.
+    in property <bool> enable_user_input: true;
+    /// `hasAction` upstream — a persistent tooltip hosts an action.
+    in property <bool> has_action;
+    /// `TooltipState.isPersistent`: stays up until dismissed instead of
+    /// auto-hiding after `TooltipDuration`.
+    in property <bool> persistent: root.has_action;
+    /// `rememberTooltipState(initialIsVisible = true)` — force the tooltip
+    /// visible for static content (docs, parity scenes).
+    in property <bool> show_tooltip;
+    out property <bool> tooltip_visible;
+
+    forward_focus: focus_scope;
+
+    width: anchor_layout.min-width;
+    height: anchor_layout.min-height;
+
+    property <bool> dismissed;
+    property <bool> shown_once;
+    property <bool> long_press_shown;
+    property <bool> trigger_active: area.has-hover || focus_scope.has-focus || root.long_press_shown;
+    property <bool> want_visible: root.enable_user_input && root.trigger_active;
+
+    tooltip_visible: root.show_tooltip || (root.want_visible && !root.dismissed)
+        || (root.persistent && root.shown_once && !root.dismissed);
+
+    changed want_visible => {
+        if root.want_visible {
+            root.dismissed = false;
+            root.shown_once = true;
+        } else if !root.persistent {
+            root.shown_once = false;
+            root.long_press_shown = false;
+        }
+    }
+
+    focus_scope := FocusScope {
+        width: 100%;
+        height: 100%;
+
+        key_pressed(event) => {
+            // `onPreviewKeyEvent`: Escape dismisses the tooltip.
+            if event.text == Key.Escape {
+                root.dismissed = true;
+                return accept;
+            }
+            reject
+        }
+
+        // `handleGestures` upstream: hover enters/exits show and dismiss,
+        // long-press (touch) shows while pressed. A parent `TouchArea`
+        // observes the same pointer events as the anchor's own input.
+        area := TouchArea {
+            width: 100%;
+            height: 100%;
+
+            anchor_layout := VerticalLayout {
+                alignment: start;
+                padding: 0;
+                spacing: 0;
+                @children
+            }
+        }
+    }
+
+    // `longPressTimeoutMillis` — 500ms.
+    long_press_timer := Timer {
+        interval: 500ms;
+        running: root.enable_user_input && area.pressed && MaterialWindowAdapter.disable_hover;
+        triggered => {
+            root.long_press_shown = true;
+            self.running = false;
+        }
+    }
+
+    // `BasicTooltipDefaults.TooltipDuration` — 1500ms auto-dismiss for
+    // non-persistent tooltips.
+    dismiss_timer := Timer {
+        interval: 1500ms;
+        running: root.tooltip_visible && !root.persistent && !root.show_tooltip;
+        triggered => {
+            root.dismissed = true;
+            self.running = false;
+        }
+    }
+
+    // Enter transition — `MotionSchemeKeyTokens.FastSpatial` (scale 0.8 -> 1)
+    // and `FastEffects` (alpha 0 -> 1), as in `TooltipBox`.
+    property <float> scale_t: root.tooltip_visible ? 1 : 0;
+    property <float> alpha_t: root.tooltip_visible ? 1 : 0;
+    animate scale_t {
+        easing: MaterialAnimations.fast-spatial-spring;
+        enabled: !MaterialPalette.reduced-motion;
+    }
+    animate alpha_t {
+        easing: MaterialAnimations.fast-effects-spring;
+        enabled: !MaterialPalette.reduced-motion;
+    }
+
+    tip := TooltipContent {
+        visible: root.tooltip_visible || root.alpha_t > 0;
+        opacity: Math.clamp(root.alpha_t, 0, 1);
+        transform-scale-x: 0.8 + 0.2 * root.scale_t;
+        transform-scale-y: self.transform-scale-x;
+        transform-origin: { x: self.width / 2, y: self.height / 2 };
+
+        anchor_abs_x: root.absolute-position.x;
+        anchor_abs_y: root.absolute-position.y;
+        anchor_width: root.width;
+        anchor_height: root.height;
+        preferred_position: root.preferred_position;
+
+        rich: root.rich_tooltip;
+        plain_text: root.tooltip;
+        rich_title: root.rich_title;
+        rich_text: root.rich_text;
+        rich_action: root.rich_action;
+        caret: root.caret;
+    }
+}
+
+/// `ToolTip` (pre-M3E name) — deprecated alias for `PlainTooltip`.
+export component ToolTip inherits PlainTooltip {
 }
