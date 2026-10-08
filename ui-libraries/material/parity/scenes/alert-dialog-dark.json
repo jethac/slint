@@ -1,0 +1,54 @@
+{
+  "name": "alert-dialog-dark",
+  "type": "canvas",
+  "parity": "static",
+  "size": [
+    500,
+    360
+  ],
+  "densities": [
+    1,
+    2
+  ],
+  "theme": {
+    "seed": "6750A4",
+    "variant": "tonal-spot",
+    "spec": "spec2025",
+    "platform": "phone",
+    "dark": true,
+    "contrast": 0.0
+  },
+  "fonts": {
+    "plain": "Roboto",
+    "brand": "Roboto"
+  },
+  "widgets": [
+    {
+      "kind": "alert-dialog",
+      "icon": "edit",
+      "title": "Discard draft?",
+      "text": "A dialog is a type of modal window that appears in front of app content to provide critical information or ask for a decision.",
+      "items": [
+        {
+          "text": "Dismiss"
+        },
+        {
+          "text": "Delete"
+        }
+      ]
+    }
+  ],
+  "trace_elements": [
+    "scrim0",
+    "dialog0",
+    "dialog0action0",
+    "dialog0action1"
+  ],
+  "trace_items": {
+    "dialog0": [
+      "action"
+    ]
+  },
+  "trace_props": [],
+  "xfail_text": "issue #28: Slint ceils text layout widths where Compose keeps fractional advances"
+}

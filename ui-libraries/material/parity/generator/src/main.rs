@@ -934,17 +934,26 @@ fn slint_case(scene: &Scene) -> String {
     // `<container>item<i>` ids name a container's repeated children — one
     // shared qualified id per instance on the Slint side, so they go to
     // `//TRACE_ITEMS=` (enumerated in tree order) instead of
-    // `//TRACE_ELEMENTS=` (a literal-id lookup). The Compose side reads the
-    // same scene JSON and records them verbatim.
+    // `//TRACE_ELEMENTS=` (a literal-id lookup). Dialog action buttons use
+    // the same scheme with an `action` stem (`dialog0action0`). The Compose
+    // side reads the same scene JSON and records them verbatim.
     let (item_containers, elements): (BTreeSet<String>, Vec<&String>) = {
         let mut containers = BTreeSet::new();
         let mut plain = Vec::new();
         for id in &scene.trace_elements {
             let stem = id.trim_end_matches(|c: char| c.is_ascii_digit());
-            if stem.len() > "item".len() && stem.ends_with("item") && stem.len() < id.len() {
-                containers.insert(stem[..stem.len() - "item".len()].to_string());
-            } else {
-                plain.push(id);
+            let container = ["item", "action"]
+                .iter()
+                .find(|suffix| {
+                    stem.len() > suffix.len() && stem.ends_with(*suffix)
+                        && stem.len() < id.len()
+                })
+                .map(|suffix| &stem[..stem.len() - suffix.len()]);
+            match container {
+                Some(container) => {
+                    containers.insert(container.to_string());
+                }
+                None => plain.push(id),
             }
         }
         (containers, plain)

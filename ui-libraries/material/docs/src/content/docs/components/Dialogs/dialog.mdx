@@ -6,15 +6,17 @@ description: Dialog API.
 import CodeSnippetMD from '@slint/common-files/src/components/CodeSnippetMD.astro';
 import SlintProperty from '@slint/common-files/src/components/SlintProperty.astro';
 
-<CodeSnippetMD imagePath="" noScreenShot scale="3" imageWidth="300" imageHeight="200" imageAlt="">
+<CodeSnippetMD imagePath="/src/assets/generated/dialog.png" scale="3" imageWidth="360" imageHeight="220" imageAlt="">
 ```slint
-import { Dialog } from "@material";
+import { AlertDialogContent } from "@material";
 export component Example inherits Window {
-    width: 400px;
-    height: 300px;
-    background: transparent;
-    Dialog {
-        title: "Confirm Action";
+    width: 360px;
+    height: 220px;
+    AlertDialogContent {
+        x: 20px;
+        y: 15px;
+        title: "Confirm action";
+        text: "This action cannot be undone.";
         default-action-text: "OK";
         actions: ["Cancel"];
     }
@@ -22,13 +24,53 @@ export component Example inherits Window {
 ```
 </CodeSnippetMD>
 
-A `Dialog` is a modal overlay that appears on top of the main content to present important information or request user input. It can contain various content and action buttons.
+A `Dialog` is a modal overlay that appears on top of the main content to present important information or request user input.
+It corresponds to the upstream `AlertDialog` composable: an optional icon, a headline, supporting text, and a row of
+action buttons — the confirm action rightmost — inside a surface-container-high container. Clicking the scrim or pressing
+Escape closes it, Enter activates the default action. The screenshot shows the exported `AlertDialogContent` surface,
+which picker dialogs embed directly.
+
+```slint playground
+import { Dialog, FilledButton } from "@material";
+export component Example inherits Window {
+    width: 400px;
+    height: 300px;
+
+    button := FilledButton {
+        text: "Show dialog";
+
+        clicked => {
+            dialog.show();
+        }
+    }
+
+    dialog := Dialog {
+        title: "Confirm action";
+        text: "This action cannot be undone.";
+        default-action-text: "OK";
+        actions: ["Cancel"];
+
+        action-clicked(index) => {
+            dialog.close();
+        }
+        default-action-clicked => {
+            dialog.close();
+        }
+    }
+}
+```
 
 ## Properties
 
+### action-button-icons
+<SlintProperty propName="action-button-icons" typeName="[image]">
+Optional leading icon buttons rendered at the start of the actions row, before the text actions — the
+display-mode toggle the upstream picker dialogs place there.
+</SlintProperty>
+
 ### actions
 <SlintProperty propName="actions" typeName="[string]">
-An array of text labels for secondary action buttons.
+An array of text labels for secondary action buttons, in display order (the dismiss action first).
 </SlintProperty>
 
 ### default-action-text
@@ -38,7 +80,12 @@ The text for the primary action button (typically "OK" or "Confirm").
 
 ### icon
 <SlintProperty propName="icon" typeName="image">
-An optional icon displayed at the top of the dialog.
+An optional icon displayed centered above the title.
+</SlintProperty>
+
+### text
+<SlintProperty propName="text" typeName="string">
+The supporting body text displayed under the title.
 </SlintProperty>
 
 ### title
@@ -48,9 +95,11 @@ The title text displayed at the top of the dialog.
 
 ## Callbacks
 
+### action-button-clicked(index: int)
+Invoked when a secondary action button is clicked while `action-button-icons` is set.
+
 ### action-clicked(index: int)
 Invoked when a secondary action button is clicked.
 
 ### default-action-clicked()
 Invoked when the default action button is clicked or when Enter is pressed.
-

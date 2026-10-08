@@ -4,8 +4,8 @@
       11
     ],
     "needs": "none",
-    "notes": "slint component: Dialog",
-    "status": "partial"
+    "notes": "slint components: Dialog, AlertDialogContent; parity cases: alert-dialog, alert-dialog-no-icon, alert-dialog-stacked, alert-dialog-dark, alert-dialog-action-hover, alert-dialog-action-press, alert-dialog-action-focus, negative-alert-dialog-{corner,container,padding,actions}",
+    "status": "done"
   },
   "AppBarColumn": {
     "issues": [
@@ -68,8 +68,8 @@
       11
     ],
     "needs": "none",
-    "notes": "",
-    "status": "missing"
+    "notes": "slint component: BasicAlertDialog; parity case: basic-alert-dialog",
+    "status": "done"
   },
   "BottomAppBar": {
     "issues": [

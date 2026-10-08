@@ -1,0 +1,428 @@
+[
+  {
+    "Fill": {
+      "brush": {
+        "Solid": {
+          "components": [
+            0.0,
+            0.0,
+            0.0,
+            0.3216
+          ]
+        }
+      },
+      "brush_transform": null,
+      "fill": "NonZero",
+      "shape": "M0,0 L64,0 L64,64 L0,64 Z",
+      "transform": [
+        1.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0
+      ]
+    }
+  },
+  {
+    "Fill": {
+      "brush": {
+        "Solid": {
+          "components": [
+            0.9255,
+            0.902,
+            0.9412,
+            1.0
+          ]
+        }
+      },
+      "brush_transform": null,
+      "fill": "NonZero",
+      "shape": "M0,28 C0,12.536 12.536,0 28,0 L36,0 C51.464,0 64,12.536 64,28 L64,876 C64,891.464 51.464,904 36,904 L28,904 C12.536,904 0,891.464 0,876 Z",
+      "transform": [
+        1.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        -420.0
+      ]
+    }
+  },
+  {
+    "PushClipLayer": {
+      "clip": "M0,28 C0,12.536 12.536,0 28,0 L36,0 C51.464,0 64,12.536 64,28 L64,876 C64,891.464 51.464,904 36,904 L28,904 C12.536,904 0,891.464 0,876 Z",
+      "transform": [
+        1.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        -420.0
+      ]
+    }
+  },
+  {
+    "PushClipLayer": {
+      "clip": "M0,0 L0,0 L0,0 L0,0 Z",
+      "transform": [
+        1.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        -420.0
+      ]
+    }
+  },
+  "PopLayer",
+  {
+    "PushClipLayer": {
+      "clip": "M0,0 L0,0 L0,0 L0,0 Z",
+      "transform": [
+        1.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        -420.0
+      ]
+    }
+  },
+  "PopLayer",
+  {
+    "PushClipLayer": {
+      "clip": "M0,0 L0,0 L0,0 L0,0 Z",
+      "transform": [
+        1.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        -420.0
+      ]
+    }
+  },
+  "PopLayer",
+  {
+    "GlyphRun": {
+      "brush": {
+        "Solid": {
+          "components": [
+            0.3804,
+            0.3647,
+            0.4078,
+            1.0
+          ]
+        }
+      },
+      "brush_alpha": 1.0,
+      "embolden": {
+        "x": 0.0,
+        "y": 0.0
+      },
+      "font_data": {
+        "index": 0,
+        "resource_id": 0
+      },
+      "font_size": 14.0,
+      "glyph_transform": null,
+      "glyphs": [
+        {
+          "id": 73,
+          "x": 0.0,
+          "y": 114.7852
+        },
+        {
+          "id": 4,
+          "x": 7.6238,
+          "y": 114.7852
+        }
+      ],
+      "hint": false,
+      "normalized_coords": [],
+      "style": {
+        "Fill": "NonZero"
+      },
+      "transform": [
+        1.0,
+        0.0,
+        0.0,
+        1.0,
+        20.0,
+        -128.0
+      ]
+    }
+  },
+  {
+    "GlyphRun": {
+      "brush": {
+        "Solid": {
+          "components": [
+            0.3804,
+            0.3647,
+            0.4078,
+            1.0
+          ]
+        }
+      },
+      "brush_alpha": 1.0,
+      "embolden": {
+        "x": 0.0,
+        "y": 0.0
+      },
+      "font_data": {
+        "index": 0,
+        "resource_id": 0
+      },
+      "font_size": 14.0,
+      "glyph_transform": null,
+      "glyphs": [
+        {
+          "id": 83,
+          "x": 0.0,
+          "y": 134.7852
+        },
+        {
+          "id": 74,
+          "x": 8.1844,
+          "y": 134.7852
+        },
+        {
+          "id": 4,
+          "x": 13.2516,
+          "y": 134.7852
+        }
+      ],
+      "hint": false,
+      "normalized_coords": [],
+      "style": {
+        "Fill": "NonZero"
+      },
+      "transform": [
+        1.0,
+        0.0,
+        0.0,
+        1.0,
+        20.0,
+        -128.0
+      ]
+    }
+  },
+  {
+    "GlyphRun": {
+      "brush": {
+        "Solid": {
+          "components": [
+            0.3804,
+            0.3647,
+            0.4078,
+            1.0
+          ]
+        }
+      },
+      "brush_alpha": 1.0,
+      "embolden": {
+        "x": 0.0,
+        "y": 0.0
+      },
+      "font_data": {
+        "index": 0,
+        "resource_id": 0
+      },
+      "font_size": 14.0,
+      "glyph_transform": null,
+      "glyphs": [
+        {
+          "id": 81,
+          "x": 0.0,
+          "y": 154.7852
+        },
+        {
+          "id": 83,
+          "x": 12.4773,
+          "y": 154.7852
+        }
+      ],
+      "hint": false,
+      "normalized_coords": [],
+      "style": {
+        "Fill": "NonZero"
+      },
+      "transform": [
+        1.0,
+        0.0,
+        0.0,
+        1.0,
+        20.0,
+        -128.0
+      ]
+    }
+  },
+  {
+    "GlyphRun": {
+      "brush": {
+        "Solid": {
+          "components": [
+            0.3804,
+            0.3647,
+            0.4078,
+            1.0
+          ]
+        }
+      },
+      "brush_alpha": 1.0,
+      "embolden": {
+        "x": 0.0,
+        "y": 0.0
+      },
+      "font_data": {
+        "index": 0,
+        "resource_id": 0
+      },
+      "font_size": 14.0,
+      "glyph_transform": null,
+      "glyphs": [
+        {
+          "id": 72,
+          "x": 0.0,
+          "y": 174.7852
+        },
+        {
+          "id": 69,
+          "x": 8.0955,
+          "y": 174.7852
+        },
+        {
+          "id": 80,
+          "x": 15.9107,
+          "y": 174.7852
+        },
+        {
+          "id": 4,
+          "x": 19.515,
+          "y": 174.7852
+        }
+      ],
+      "hint": false,
+      "normalized_coords": [],
+      "style": {
+        "Fill": "NonZero"
+      },
+      "transform": [
+        1.0,
+        0.0,
+        0.0,
+        1.0,
+        20.0,
+        -128.0
+      ]
+    }
+  },
+  {
+    "GlyphRun": {
+      "brush": {
+        "Solid": {
+          "components": [
+            0.3804,
+            0.3647,
+            0.4078,
+            1.0
+          ]
+        }
+      },
+      "brush_alpha": 1.0,
+      "embolden": {
+        "x": 0.0,
+        "y": 0.0
+      },
+      "font_data": {
+        "index": 0,
+        "resource_id": 0
+      },
+      "font_size": 14.0,
+      "glyph_transform": null,
+      "glyphs": [
+        {
+          "id": 91,
+          "x": 0.0,
+          "y": 194.7852
+        },
+        {
+          "id": 77,
+          "x": 10.7205,
+          "y": 194.7852
+        },
+        {
+          "id": 82,
+          "x": 14.3248,
+          "y": 194.7852
+        }
+      ],
+      "hint": false,
+      "normalized_coords": [],
+      "style": {
+        "Fill": "NonZero"
+      },
+      "transform": [
+        1.0,
+        0.0,
+        0.0,
+        1.0,
+        20.0,
+        -128.0
+      ]
+    }
+  },
+  {
+    "GlyphRun": {
+      "brush": {
+        "Solid": {
+          "components": [
+            0.3804,
+            0.3647,
+            0.4078,
+            1.0
+          ]
+        }
+      },
+      "brush_alpha": 1.0,
+      "embolden": {
+        "x": 0.0,
+        "y": 0.0
+      },
+      "font_data": {
+        "index": 0,
+        "resource_id": 0
+      },
+      "font_size": 14.0,
+      "glyph_transform": null,
+      "glyphs": [
+        {
+          "id": 72,
+          "x": 0.0,
+          "y": 214.7852
+        },
+        {
+          "id": 83,
+          "x": 8.0955,
+          "y": 214.7852
+        }
+      ],
+      "hint": false,
+      "normalized_coords": [],
+      "style": {
+        "Fill": "NonZero"
+      },
+      "transform": [
+        1.0,
+        0.0,
+        0.0,
+        1.0,
+        20.0,
+        -128.0
+      ]
+    }
+  },
+  "PopLayer"
+]
