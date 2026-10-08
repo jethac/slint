@@ -315,6 +315,20 @@ class Widget(json: JSONObject) {
     val thumb: String = (json.opt("thumb") as? String) ?: "start"
     val state2: String? = json.opt("state2") as? String
 
+    /** `*-text-field` kinds: the floating label (`label` slot). */
+    val label: String? = (json.opt("label") as? String)?.takeIf { it.isNotEmpty() }
+    /** `*-text-field`: `isError` upstream / `has_error` on the Slint side. */
+    val error: Boolean = json.optBoolean("error", false)
+    /** `*-text-field`: `prefix`/`suffix` affix slots. */
+    val prefix: String? = (json.opt("prefix") as? String)?.takeIf { it.isNotEmpty() }
+    val suffix: String? = (json.opt("suffix") as? String)?.takeIf { it.isNotEmpty() }
+    /** `*-text-field`: `TextFieldLabelPosition.Above` upstream /
+     * `label_above` on the Slint side. */
+    val labelAbove: Boolean = json.optBoolean("label_above", false)
+    /** `*-secure-text-field`: `TextObfuscationMode` upstream / `obscure`
+     * on the Slint side — `false` reveals the text. */
+    val obscure: Boolean = json.optBoolean("obscure", true)
+
     // --- navigation-rail kinds (`navigation-rail`, `wide-navigation-rail`,
     // `modal-navigation-rail`) ---
     /** Rail items: `[{ "text": "Inbox", "icon": "inbox",

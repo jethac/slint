@@ -164,6 +164,7 @@ negative-toggle-select
 negative-tooltip-color
 negative-tooltip-offset
 negative-wrong-shadow
+outlined-text-field-states
 progress-indeterminate
 progress-indicators
 pull-refresh-refreshing
@@ -178,6 +179,7 @@ scaffold-drag
 scaffold-ops
 scaffolds
 search-bars
+secure-text-fields
 segmented-list
 sheet-commit-hide
 sheet-drag-expand
@@ -212,6 +214,8 @@ switch-hover
 switch-off-morph
 switch-on-morph
 switch-states
+text-field-adornments
+text-field-states
 toggle-buttons
 toggle-fab-morph
 toggle-fab-states

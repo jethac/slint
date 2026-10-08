@@ -2441,6 +2441,10 @@ fn build(l: &mut Loader) {
         ///  Use this to configure `TextInput` for editing special input, such as password fields.
         /// \default text
         in property <InputType> input-type;
+        /// The character substituted for every character of the text while `input-type` is `password`.
+        /// Only the first character of the string is used.
+        /// \default "●"  (`'\u{25CF}'`)
+        in property <string> password-character;
         /// Hints for the platform's input method (such as a soft keyboard), for example to configure auto-capitalization.
         /// The input method may take these hints into account, but might also ignore them.
         in property <InputMethodHints> input-method-hints;

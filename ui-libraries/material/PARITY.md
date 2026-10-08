@@ -474,10 +474,10 @@ States: active, disabled, error, focused, hovered
 
 | Component | Source | Status | Issues | Needs | Notes |
 |---|---|---|---|---|---|
-| OutlinedSecureTextField | SecureTextField.kt | missing | #11 | shapes (#6), variable fonts (#7) | - |
-| OutlinedTextField | OutlinedTextField.kt | partial | #11 | shapes (#6), variable fonts (#7) | slint component: TextField |
-| SecureTextField | SecureTextField.kt | missing | #11 | shapes (#6), variable fonts (#7) | - |
-| TextField | TextField.kt | partial | #11 | shapes (#6), variable fonts (#7) | slint component: TextField |
+| OutlinedSecureTextField | SecureTextField.kt | done | #11 | springs (#5), shapes (#6) | slint component: OutlinedSecureTextField; same obfuscation + notch provenance as SecureTextField/OutlinedTextField; gap: RevealLastTyped timing not implemented (all-masked settled state only); parity case: secure-text-fields |
+| OutlinedTextField | OutlinedTextField.kt | done | #11 | springs (#5), shapes (#6) | slint component: OutlinedTextField; tokens: OutlinedTextFieldTokens (generated); outline notch tracks labelWidth x progress + 4dp OutlinedTextFieldInnerPadding (OutlinedTextField.kt); parity case: outlined-text-field-states (//TEXT_DILATE=6 masks the notch edge, which follows the measured label width) |
+| SecureTextField | SecureTextField.kt | done | #11 | springs (#5), shapes (#6) | slint component: SecureTextField; obfuscation via new TextInput password-character builtin (all renderers via shared layout); gap: obscure is the all-masked settled state — upstream default TextObfuscationMode.RevealLastTyped briefly reveals the last typed char; parity case: secure-text-fields |
+| TextField | TextField.kt | done | #11 | springs (#5), shapes (#6) | slint component: TextField; tokens: FilledTextFieldTokens (generated); label morph + placeholder opacity via motion-scheme springs; parity case: text-field-states |
 
 ### Time pickers
 
