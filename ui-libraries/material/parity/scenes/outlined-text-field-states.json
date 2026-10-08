@@ -1,0 +1,81 @@
+{
+  "name": "outlined-text-field-states",
+  "type": "canvas",
+  "parity": "static",
+  "size": [
+    340,
+    476
+  ],
+  "densities": [
+    1,
+    2
+  ],
+  "theme": {
+    "seed": "6750A4",
+    "variant": "tonal-spot",
+    "spec": "spec2025",
+    "platform": "phone",
+    "dark": false,
+    "contrast": 0.0
+  },
+  "fonts": {
+    "plain": "Roboto",
+    "brand": "Roboto"
+  },
+  "widgets": [
+    {
+      "kind": "outlined-text-field",
+      "x": 16,
+      "y": 8,
+      "width": 300,
+      "label": "Label",
+      "placeholder": "Hint"
+    },
+    {
+      "kind": "outlined-text-field",
+      "x": 16,
+      "y": 104,
+      "width": 300,
+      "label": "Label",
+      "placeholder": "Hint",
+      "state": "focused"
+    },
+    {
+      "kind": "outlined-text-field",
+      "x": 16,
+      "y": 200,
+      "width": 300,
+      "label": "Label",
+      "text": "Value"
+    },
+    {
+      "kind": "outlined-text-field",
+      "x": 16,
+      "y": 296,
+      "width": 300,
+      "label": "Label",
+      "text": "Bad",
+      "subtitle": "Error text",
+      "error": true
+    },
+    {
+      "kind": "outlined-text-field",
+      "x": 16,
+      "y": 392,
+      "width": 300,
+      "label": "Label",
+      "subtitle": "Disabled",
+      "enabled": false
+    }
+  ],
+  "trace_elements": [
+    "field0",
+    "field1",
+    "field2",
+    "field3",
+    "field4"
+  ],
+  "trace_props": [],
+  "text_dilate": 6,
+  "text_dilate_reason": "the outlined label-notch edge sits at label bounds + 4dp of OutlinedTextFieldInnerPadding, so its device-px position tracks the measured label width — past the built-in 2px mask dilation when the engines glyph metrics disagree"
+}

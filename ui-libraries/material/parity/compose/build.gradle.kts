@@ -53,7 +53,12 @@ dependencies {
     // Paparazzi 2.x can't consume. 1.5.0-alpha18 carries all the Expressive
     // APIs (MaterialExpressiveTheme, MotionScheme.expressive()) on Compose
     // 1.11.0-beta02.
-    testImplementation("androidx.compose.material3:material3:1.5.0-alpha18")
+    // `implementation`, not `testImplementation`: Paparazzi's
+    // `aarExplodedDirs` comes from the variant's runtime configuration, so
+    // a testImplementation dep's resources (e.g. `default_error_message`,
+    // resolved eagerly by every TextField) would be absent from the merged
+    // resource table and crash composition with a NotFoundException.
+    implementation("androidx.compose.material3:material3:1.5.0-alpha18")
     testImplementation("app.cash.paparazzi:paparazzi:2.0.0-alpha05")
 
     // Annotation-only deps of the vendored material-color-utilities

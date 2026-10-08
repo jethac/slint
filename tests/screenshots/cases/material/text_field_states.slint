@@ -1,0 +1,73 @@
+// Copyright © SixtyFPS GmbH <info@slint.dev>
+// SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0
+
+// Scene: text-field-states — generated from `ui-libraries/material/parity/scenes/text-field-states.json`
+// (edit the scene, regenerate with `cargo run -p material-parity-generator`).
+//PARITY=static
+//SIZE=340x476
+//TRACE_ELEMENTS=field0,field1,field2,field3,field4
+//DENSITIES=1,2
+import "../../fonts/Roboto-VariableFont.ttf";
+import { MaterialPalette, MaterialTheme, MaterialWindow, TextField } from "@material";
+
+export component TestCase inherits MaterialWindow {
+    init => {
+        // The scene pins seed #6750A4, tonal-spot, spec2025, light, contrast 0
+        // (all the library defaults; restated here so a default change can't
+        // silently move the parity baseline).
+        MaterialTheme.seed-color = #6750A4;
+        MaterialTheme.dark = false;
+        MaterialTheme.contrast-level = 0;
+        MaterialTheme.use-platform-color = false;
+        MaterialTheme.plain-family = "Roboto";
+        MaterialTheme.brand-family = "Roboto";
+        // Compose builds its scene scheme from the same seed — use the
+        // runtime-generated scheme, not the static expressive table.
+        MaterialPalette.dynamic = true;
+    }
+
+    field0 := TextField {
+        x: 16px;
+        y: 8px;
+        label: "Label";
+        placeholder: "Hint";
+        width: 300px;
+    }
+
+    field1 := TextField {
+        x: 16px;
+        y: 104px;
+        label: "Label";
+        placeholder: "Hint";
+        width: 300px;
+        simulate_focus: true;
+    }
+
+    field2 := TextField {
+        x: 16px;
+        y: 200px;
+        text: "Value";
+        label: "Label";
+        width: 300px;
+    }
+
+    field3 := TextField {
+        x: 16px;
+        y: 296px;
+        text: "Bad";
+        label: "Label";
+        supporting_text: "Error text";
+        width: 300px;
+        has_error: true;
+    }
+
+    field4 := TextField {
+        x: 16px;
+        y: 392px;
+        label: "Label";
+        supporting_text: "Disabled";
+        width: 300px;
+        enabled: false;
+    }
+
+}

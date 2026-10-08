@@ -26,6 +26,29 @@ export component Example inherits Window {
 
 A widget used to enter a single line of text with additional features like icons and supporting text.
 
+The text-field family has four variants sharing one API:
+
+- `TextField` — the filled variant.
+- `OutlinedTextField` — the outlined variant: the label cuts into the border when minimized.
+- `SecureTextField` — a filled field for password input; the text is masked while `obscure` is set.
+- `OutlinedSecureTextField` — the outlined variant of `SecureTextField`.
+
+```slint
+import { OutlinedTextField, SecureTextField } from "@material";
+export component Example inherits Window {
+    width: 200px;
+    height: 140px;
+    Vertical {
+        OutlinedTextField {
+            label: "Email";
+        }
+        SecureTextField {
+            label: "Password";
+        }
+    }
+}
+```
+
 ## Properties
 
 ### enabled
@@ -43,14 +66,54 @@ Indicates whether the text field should display an error state.
 Set to true when the text field currently has the focus.
 </SlintProperty>
 
+### input-type
+<SlintProperty propName="input-type" typeName="enum" enumName="InputType" defaultValue="text">
+Use this to configure the input for editing special input, such as number fields. Ignored on the secure variants, which manage their own input type.
+</SlintProperty>
+
 ### label
 <SlintProperty propName="label" typeName="string">
 The label text displayed above the text input.
 </SlintProperty>
 
+### label-above
+<SlintProperty propName="label-above" typeName="bool">
+Puts the label above the container (`TextFieldLabelPosition.Above` upstream): it stays minimized and the placeholder remains visible while the field is empty.
+</SlintProperty>
+
 ### leading-icon
 <SlintProperty propName="leading-icon" typeName="image">
 An icon displayed at the beginning of the text input.
+</SlintProperty>
+
+### obfuscation-character
+<SlintProperty propName="obfuscation-character" typeName="string" defaultValue='"•"'>
+The character substituted for every character of the text while `obscure` is set (the `textObfuscationCharacter` of `SecureTextField` upstream). Only the first character of the string is used.
+</SlintProperty>
+
+### obscure
+<SlintProperty propName="obscure" typeName="bool" propertyVisibility="in-out" defaultValue="true">
+Only on the secure variants: whether the entered text is masked with `obfuscation-character`. Set to false to reveal the text.
+</SlintProperty>
+
+### placeholder
+<SlintProperty propName="placeholder" typeName="string">
+Hint text shown inside the field while it is empty.
+</SlintProperty>
+
+### prefix
+<SlintProperty propName="prefix" typeName="string">
+A text run displayed before the editable text, e.g. a currency symbol or a URL scheme.
+</SlintProperty>
+
+### read-only
+<SlintProperty propName="read-only" typeName="bool" propertyVisibility="in-out">
+When true, editing via keyboard and mouse is disabled; selecting text and editing it programmatically still work.
+</SlintProperty>
+
+### suffix
+<SlintProperty propName="suffix" typeName="string">
+A text run displayed after the editable text, e.g. a unit like `kg`.
 </SlintProperty>
 
 ### supporting-text
@@ -66,11 +129,6 @@ The text being edited.
 ### trailing-icon
 <SlintProperty propName="trailing-icon" typeName="image">
 An icon displayed at the end of the text input.
-</SlintProperty>
-
-### input-type
-<SlintProperty propName="input-type" typeName="enum" enumName="InputType" defaultValue="text">
- Use this to configure `TextInput` for editing special input, such as password fields.
 </SlintProperty>
 
 ## Functions

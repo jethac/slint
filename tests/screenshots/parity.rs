@@ -2770,12 +2770,14 @@ pub fn run_parity_case<C: i_slint_core::api::ComponentHandle>(
                 actual.height(),
                 // `//XFAIL_TEXT=*N` widens the ink mask with the same scale
                 // it grants the per-cell mean — the accumulated drift it
-                // names moves ink past the default apron.
-                if xfail_text.is_some() {
+                // names moves ink past the default apron. `//TEXT_DILATE=`
+                // adds case-declared room on top for structure that tracks
+                // a measured text width.
+                (if xfail_text.is_some() {
                     (2.0 + 4.0 * *density as f64) * spec.xfail_text_scale
                 } else {
                     2.0
-                },
+                }) + spec.text_dilate.unwrap_or(0.0) * *density as f64,
             );
             if std::env::var_os("PARITY_DUMP_MASK").is_some() {
                 let dir = artifacts_dir(driver, case_rel);
