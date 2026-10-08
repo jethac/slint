@@ -162,6 +162,9 @@
   "type": "canvas",
   "widgets": [
     {
+      "action_color": null,
+      "action_on_new_line": null,
+      "action_text": null,
       "alignment": null,
       "always_show_label": null,
       "arrangement": null,
@@ -181,6 +184,7 @@
       "corner": null,
       "count": null,
       "current_index": null,
+      "dismiss_color": null,
       "display_mode": null,
       "displayed": null,
       "dragged": null,
@@ -192,6 +196,7 @@
       "fab_icon": null,
       "fab_position": "end",
       "gestures": null,
+      "has_close_button": null,
       "height": 260.0,
       "height_offset": null,
       "hide_on_collapse": null,
@@ -266,6 +271,9 @@
       "year_min": null
     },
     {
+      "action_color": null,
+      "action_on_new_line": null,
+      "action_text": null,
       "alignment": null,
       "always_show_label": null,
       "arrangement": null,
@@ -285,6 +293,7 @@
       "corner": null,
       "count": null,
       "current_index": null,
+      "dismiss_color": null,
       "display_mode": null,
       "displayed": null,
       "dragged": null,
@@ -296,6 +305,7 @@
       "fab_icon": null,
       "fab_position": "center",
       "gestures": null,
+      "has_close_button": null,
       "height": 260.0,
       "height_offset": null,
       "hide_on_collapse": null,
@@ -370,6 +380,9 @@
       "year_min": null
     },
     {
+      "action_color": null,
+      "action_on_new_line": null,
+      "action_text": null,
       "alignment": null,
       "always_show_label": null,
       "arrangement": null,
@@ -389,6 +402,7 @@
       "corner": null,
       "count": null,
       "current_index": null,
+      "dismiss_color": null,
       "display_mode": null,
       "displayed": null,
       "dragged": null,
@@ -400,6 +414,7 @@
       "fab_icon": null,
       "fab_position": "start",
       "gestures": null,
+      "has_close_button": null,
       "height": 260.0,
       "height_offset": null,
       "hide_on_collapse": null,
@@ -474,6 +489,9 @@
       "year_min": null
     },
     {
+      "action_color": null,
+      "action_on_new_line": null,
+      "action_text": null,
       "alignment": null,
       "always_show_label": null,
       "arrangement": null,
@@ -493,6 +511,7 @@
       "corner": null,
       "count": null,
       "current_index": null,
+      "dismiss_color": null,
       "display_mode": null,
       "displayed": null,
       "dragged": null,
@@ -504,6 +523,7 @@
       "fab_icon": null,
       "fab_position": "end-overlay",
       "gestures": null,
+      "has_close_button": null,
       "height": 260.0,
       "height_offset": null,
       "hide_on_collapse": null,
