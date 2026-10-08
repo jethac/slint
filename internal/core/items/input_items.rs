@@ -947,7 +947,7 @@ impl Item for SwipeGestureHandler {
                     // jump needs the pre-threshold samples to measure a
                     // release velocity.
                     let window_position = self_rc.map_to_window(*position);
-                    self.velocity_rb.borrow_mut().push(
+                    self.velocity_rb().borrow_mut().push(
                         crate::animations::current_tick(),
                         window_position - self.last_position.get(),
                     );

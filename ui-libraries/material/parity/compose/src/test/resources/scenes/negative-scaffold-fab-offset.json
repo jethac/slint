@@ -149,6 +149,7 @@
       "border_color": null,
       "border_width": null,
       "bottom_bar": true,
+      "check_state": null,
       "checkable": null,
       "checked": null,
       "checked_icon": null,

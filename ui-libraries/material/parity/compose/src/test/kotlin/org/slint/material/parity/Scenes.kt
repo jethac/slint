@@ -29,6 +29,7 @@ import androidx.compose.animation.core.CubicBezierEasing
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.TweenSpec
 import androidx.compose.animation.core.VectorConverter
+import androidx.compose.animation.core.snap
 import androidx.compose.animation.core.updateTransition
 import androidx.compose.foundation.interaction.DragInteraction
 import androidx.compose.foundation.interaction.collectIsHoveredAsState
@@ -48,6 +49,7 @@ import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ButtonGroup
 import androidx.compose.material3.ButtonGroupDefaults
 import androidx.compose.material3.DropdownMenuItem
@@ -123,6 +125,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.ToggleButton
 import androidx.compose.material3.ToggleButtonDefaults
+import androidx.compose.material3.TriStateCheckbox
 import androidx.compose.material3.Typography
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.material3.Badge
@@ -250,6 +253,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.state.ToggleableState
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.Dp
 import androidx.compose.foundation.interaction.Interaction
@@ -683,6 +687,15 @@ private fun CanvasScene(
                     density,
                     emitPress,
                 )
+                widget.kind == "checkbox" || widget.kind == "tri-state-checkbox" ->
+                    StateCheckbox(
+                        widget,
+                        scene,
+                        tracer,
+                        "button${buttons++}",
+                        density,
+                        emitPress,
+                    )
                 widget.kind == "button-group" -> {
                     StateButtonGroup(
                         widget,
@@ -1547,6 +1560,114 @@ private fun sceneIcon(name: String): androidx.compose.ui.graphics.vector.ImageVe
         builder.clearGroup()
     }
     return builder.build()
+}
+
+/** A `Checkbox`/`TriStateCheckbox` in the scene's pinned
+ * `ToggleableState`, wired like `StateButton`: the interaction source
+ * drives the authored `state`, and a scripted press+release flips the
+ * state on release — the same `clicked` the Slint `toggle()` sees. */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun StateCheckbox(
+    widget: Widget,
+    scene: Scene,
+    tracer: Tracer,
+    elementId: String,
+    density: Float,
+    emitPress: java.util.concurrent.CopyOnWriteArrayList<Pair<Long, Runnable>>,
+) {
+    val interactionSource = remember { ReplayableInteractionSource() }
+    // `state` is the hoisted `ToggleableState`/`checked` — a scene click
+    // cycles it at release, `CheckBox.toggle()`'s cycle: `Checkbox` swaps
+    // On/Off, `TriStateCheckbox` runs On -> Indeterminate -> Off -> On.
+    var state by remember {
+        mutableStateOf(
+            when (widget.checkState) {
+                "checked" -> ToggleableState.On
+                "partially_checked" -> ToggleableState.Indeterminate
+                else -> ToggleableState.Off
+            },
+        )
+    }
+    // `checkDrawFraction`/`checkCenterGravitationShiftFraction` live inside
+    // `CheckboxImpl`'s private transition — mirror the pinned
+    // `transitionSpec` with scene-side animatables so `//TRACE_PROPS=` can
+    // read the same values the Slint states animate.
+    val spatialSpec = androidx.compose.material3.MaterialTheme.motionScheme.defaultSpatialSpec<Float>()
+    val checkFraction =
+        remember { Animatable(if (state == ToggleableState.Off) 0f else 1f) }
+    val gravitation =
+        remember { Animatable(if (state == ToggleableState.Indeterminate) 1f else 0f) }
+    var previousState by remember { mutableStateOf(state) }
+    LaunchedEffect(state) {
+        val from = previousState
+        previousState = state
+        if (from != state) {
+            launch {
+                checkFraction.animateTo(
+                    if (state == ToggleableState.Off) 0f else 1f,
+                    when {
+                        from == ToggleableState.Off -> spatialSpec
+                        state == ToggleableState.Off -> snap(delayMillis = 100)
+                        else -> spatialSpec
+                    },
+                )
+            }
+            launch {
+                gravitation.animateTo(
+                    if (state == ToggleableState.Indeterminate) 1f else 0f,
+                    when {
+                        from == ToggleableState.Off -> snap()
+                        state == ToggleableState.Off -> snap(delayMillis = 100)
+                        else -> spatialSpec
+                    },
+                )
+            }
+        }
+    }
+    tracer.propGetters["check_fraction"] = { checkFraction.value.toDouble() }
+    tracer.propGetters["gravitation"] = { gravitation.value.toDouble() }
+    emitStateInteractions(
+        widget.state,
+        scene,
+        tracer,
+        elementId,
+        interactionSource,
+        emitPress,
+        Offset(12f * density, 12f * density),
+        density,
+        Runnable {
+            state = when (state) {
+                ToggleableState.On ->
+                    if (widget.kind == "checkbox") {
+                        ToggleableState.Off
+                    } else {
+                        ToggleableState.Indeterminate
+                    }
+                ToggleableState.Indeterminate -> ToggleableState.Off
+                ToggleableState.Off -> ToggleableState.On
+            }
+        },
+    )
+
+    val modifier = Modifier.offset(widget.x.dp, widget.y.dp).track(tracer, elementId)
+    if (widget.kind == "checkbox") {
+        Checkbox(
+            checked = state == ToggleableState.On,
+            onCheckedChange = { state = if (it) ToggleableState.On else ToggleableState.Off },
+            modifier = modifier,
+            enabled = widget.enabled,
+            interactionSource = interactionSource,
+        )
+    } else {
+        TriStateCheckbox(
+            state = state,
+            onClick = {},
+            modifier = modifier,
+            enabled = widget.enabled,
+            interactionSource = interactionSource,
+        )
+    }
 }
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)

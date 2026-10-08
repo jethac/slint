@@ -1,0 +1,60 @@
+[
+  {
+    "Fill": {
+      "brush": {
+        "Solid": {
+          "components": [
+            0.3961,
+            0.3412,
+            0.5373,
+            1.0
+          ]
+        }
+      },
+      "brush_transform": null,
+      "fill": "NonZero",
+      "shape": "M0,2 C0,0.8954 0.8954,0 2,0 L18,0 C19.1046,0 20,0.8954 20,2 L20,18 C20,19.1046 19.1046,20 18,20 L2,20 C0.8954,20 0,19.1046 0,18 Z",
+      "transform": [
+        1.0,
+        0.0,
+        0.0,
+        1.0,
+        38.0,
+        38.0
+      ]
+    }
+  },
+  {
+    "Stroke": {
+      "brush": {
+        "Solid": {
+          "components": [
+            0.9922,
+            0.9686,
+            1.0,
+            1.0
+          ]
+        }
+      },
+      "brush_transform": null,
+      "shape": "M4,10 L10,10 L16,10",
+      "style": {
+        "dash_offset": 0.0,
+        "dash_pattern": [],
+        "end_cap": "Square",
+        "join": "Miter",
+        "miter_limit": 4.0,
+        "start_cap": "Square",
+        "width": 2.0
+      },
+      "transform": [
+        1.0,
+        0.0,
+        0.0,
+        1.0,
+        38.0,
+        38.0
+      ]
+    }
+  }
+]
