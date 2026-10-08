@@ -6,22 +6,18 @@ description: SnackBar API.
 import CodeSnippetMD from '@slint/common-files/src/components/CodeSnippetMD.astro';
 import SlintProperty from '@slint/common-files/src/components/SlintProperty.astro';
 
-<CodeSnippetMD imagePath="" noScreenShot scale="3" imageWidth="300" imageHeight="200" imageAlt="">
+<CodeSnippetMD imagePath="/src/assets/generated/snack_bar.png" scale="3" imageWidth="380" imageHeight="120" imageAlt="">
 ```slint
-import { FilledButton, SnackBar } from "@material";
+import { SnackBar } from "@material";
 export component Example inherits Window {
-    width: 400px;
-    height: 200px;
+    width: 380px;
+    height: 120px;
     background: transparent;
 
-    show-snack-bar := FilledButton {
-        text: @tr("Show Snack Bar");
-        clicked => {
-            sb.show();
-        }
-    }
-
-    sb := SnackBar {
+    SnackBar {
+        x: 16px;
+        y: 40px;
+        constraint-width: parent.width - 32px;
         text: "Message sent";
         action-text: "Undo";
         has-close-button: true;
@@ -30,26 +26,116 @@ export component Example inherits Window {
 ```
 </CodeSnippetMD>
 
-A `SnackBar` provides brief messages about app processes at the bottom of the screen. It can include an action and a close button.
+A `SnackBar` provides brief messages about app processes at the bottom of the screen. It mirrors upstream `Snackbar` (Snackbar.kt): a surface with the message text, an optional action button and an optional dismiss icon. `SnackBarHost` adds the queue, timing and enter/exit motion upstream puts in `SnackbarHost` + `SnackbarHostState`.
 
 ## Properties
 
+### text
+<SlintProperty propName="text" typeName="string">
+The message text — `SnackbarVisuals.message` upstream.
+</SlintProperty>
+
 ### action-text
 <SlintProperty propName="action-text" typeName="string">
-The label for the action button.
+The label for the action button — empty draws no action (`actionLabel: String? = null` upstream).
 </SlintProperty>
 
 ### has-close-button
 <SlintProperty propName="has-close-button" typeName="bool">
-Whether to show a close button on the snackbar.
+Whether to show the dismiss icon — `dismissAction != null` upstream.
 </SlintProperty>
 
-### text
-<SlintProperty propName="text" typeName="string">
-The message text displayed in the snackbar.
+### action-on-new-line
+<SlintProperty propName="action-on-new-line" typeName="bool" defaultValue="false">
+Moves the action + dismiss row under the text (`actionOnNewLine` upstream). Applies only while `action-text` is set.
+</SlintProperty>
+
+### constraint-width
+<SlintProperty propName="constraint-width" typeName="length" defaultValue="624px">
+The incoming width cap — upstream's `Modifier.widthIn(max = …)`. The surface self-sizes to `min(constraint, 600 + horizontal padding)` (upstream `ContainerMaxWidth`).
+</SlintProperty>
+
+### border-radius
+<SlintProperty propName="border-radius" typeName="length" defaultValue="SnackbarTokens.container-shape">
+The `shape` as a uniform corner radius — `SnackbarDefaults.shape` = `SnackbarTokens.ContainerShape` (CornerExtraSmall) upstream. `corners`/`shaped-corners` carry per-corner radii.
+</SlintProperty>
+
+### container-color / content-color / action-color / dismiss-action-color
+<SlintProperty propName="container-color" typeName="color" defaultValue="SnackbarTokens.container-color">
+`containerColor`, `contentColor`, `actionContentColor` and `dismissActionContentColor` — the token roles `ContainerColor`, `SupportingTextColor`, `ActionLabelTextColor` and `IconColor`.
+</SlintProperty>
+
+### enforce-touch-target
+<SlintProperty propName="enforce-touch-target" typeName="bool" defaultValue="true">
+Reserves a 48x48 touch target around each inner button — `LocalMinimumInteractiveComponentEnforcement` upstream.
+</SlintProperty>
+
+### enabled
+<SlintProperty propName="enabled" typeName="bool" defaultValue="true">
+Drives `enabled` on the action and dismiss buttons.
 </SlintProperty>
 
 ## Callbacks
 
-### action-clicked()
-Invoked when the action button is clicked.
+### action-clicked
+Fired when the action button is clicked — `SnackbarData.performAction()` upstream.
+
+### dismiss-clicked
+Fired when the dismiss icon is clicked — `SnackbarData.dismiss()` upstream.
+
+# SnackBarHost
+
+`SnackBarHost` is a `PopupWindow` that plays the upstream `SnackbarHost` + `SnackbarHostState` pair: drop one at the bottom of the window, push `SnackBarVisuals` onto its `queue`, and it shows one snackbar at a time — entering on the fast-spatial spring, leaving after the visuals' `duration` (4s short / 10s long / indefinite) or when dismissed.
+
+```slint
+import { SnackBarHost, SnackBarDuration } from "@material";
+
+host := SnackBarHost {
+    queue: snackbar_queue;
+
+    action_performed(visuals) => { /* ... */ }
+    dismissed(visuals) => { /* ... */ }
+}
+
+// Somewhere a button does:
+snackbar_queue.push({
+    message: "Message sent",
+    action-label: "Undo",
+    with-dismiss-action: true,
+    duration: SnackBarDuration.short,
+});
+```
+
+## Properties
+
+### queue
+<SlintProperty propName="queue" typeName="[SnackBarVisuals]">
+The pending visuals FIFO — `queue[0]` is on screen (`SnackbarHostState.currentSnackbarData`). Pushing to an empty queue opens the host; removing the front entry externally is `SnackbarData.dismiss()`.
+</SlintProperty>
+
+### action-on-new-line
+<SlintProperty propName="action-on-new-line" typeName="bool" defaultValue="false">
+`actionOnNewLine` on the host's `Snackbar` overload — forwarded to the shown `SnackBar`.
+</SlintProperty>
+
+## Callbacks
+
+### action-performed(visuals)
+The front visuals resolved through its action — `SnackbarResult.ActionPerformed`.
+
+### dismissed(visuals)
+The front visuals resolved without an action — `SnackbarResult.Dismissed` (timeout, `dismiss()`, the close icon, or an external `queue.remove(0)`).
+
+## Functions
+
+### dismiss()
+`SnackbarData.dismiss()` — resolves the current visuals as dismissed and shows the next queued one.
+
+# SnackBarVisuals
+
+One queued snackbar — upstream `SnackbarVisuals`.
+
+- `message: string` — the text shown.
+- `action-label: string` — the action label; empty draws no action.
+- `with-dismiss-action: bool` — shows the close icon.
+- `duration: SnackBarDuration` — `short` (4s), `long` (10s) or `indefinite`.

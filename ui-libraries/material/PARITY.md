@@ -407,8 +407,8 @@ States: focused, hovered, pressed
 
 | Component | Source | Status | Issues | Needs | Notes |
 |---|---|---|---|---|---|
-| Snackbar | Snackbar.kt | partial | #11 | none | slint component: SnackBar |
-| SnackbarHost | SnackbarHost.kt | missing | #11 | none | - |
+| Snackbar | Snackbar.kt | done | #11 | none | slint component: SnackBar (legacy layouts - isSnackbarStylingFixEnabled=false at the pin) |
+| SnackbarHost | SnackbarHost.kt | done | #11 | none | slint component: SnackBarHost + SnackBarVisuals/SnackBarDuration |
 
 ### Split buttons
 

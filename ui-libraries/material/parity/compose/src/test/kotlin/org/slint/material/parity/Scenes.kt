@@ -638,6 +638,7 @@ private fun CanvasScene(
         var tooltips = 0
         var fields = 0
         var matTexts = 0
+        var snackbars = 0
         // `text:{n}` spans every text node in scene order — group items
         // interleave with the standalone widgets' labels. Bases are
         // precomputed per widget so recompositions can't renumber them.
@@ -664,6 +665,9 @@ private fun CanvasScene(
                         (if (w.title != null) 1 else 0) + w.items.size
                     // A standalone MaterialText is one text node.
                     w.kind == "material-text" -> 1
+                    // The message plus — when present — the action label:
+                    // both are `Text` elements on the Slint side too.
+                    w.kind == "material-snackbar" -> if (w.actionText != null) 2 else 1
                     else -> 0
                 }
             }
@@ -903,6 +907,88 @@ private fun CanvasScene(
                     density,
                     emitPress,
                 )
+                widget.kind == "material-snackbar" -> {
+                    // The upstream `Snackbar` is a Surface + Layout —
+                    // Paparazzi renders it directly (the 12dp margin belongs
+                    // to the host's `Snackbar(snackbarData)` overload, not
+                    // the bare composable, so it isn't mirrored here).
+                    val tag = "snackbar${snackbars++}"
+                    androidx.compose.material3.Snackbar(
+                        // Upstream snackbars are self-sizing — `widthIn`,
+                        // never a fixed `width` (a hard pin would force the
+                        // action's measure constraints).
+                        modifier = Modifier.offset(widget.x.dp, widget.y.dp)
+                            .widthIn(max = widget.width.dp)
+                            .track(tracer, tag),
+                        actionOnNewLine = widget.actionOnNewLine,
+                        action = widget.actionText?.let { label ->
+                            {
+                                // `Snackbar(snackbarData)`'s built-in action:
+                                // a TextButton tinted `actionContentColor`.
+                                androidx.compose.material3.TextButton(
+                                    onClick = {},
+                                    colors = ButtonDefaults.textButtonColors(
+                                        contentColor = widget.actionColor?.let { schemeColor(it) }
+                                            ?: androidx.compose.material3.SnackbarDefaults.actionColor,
+                                    ),
+                                ) {
+                                    Text(
+                                        label,
+                                        modifier = Modifier.trackText(
+                                            tracer,
+                                            "text:${textBase + 1}",
+                                            density,
+                                        ),
+                                        onTextLayout = recordTextLayout(
+                                            tracer,
+                                            "text:${textBase + 1}",
+                                            LocalDensity.current,
+                                            androidx.compose.ui.platform.LocalFontFamilyResolver.current,
+                                            null,
+                                        ),
+                                    )
+                                }
+                            }
+                        },
+                        dismissAction = if (widget.hasCloseButton) {
+                            {
+                                // Upstream wraps the close IconButton in a
+                                // "Dismiss" TooltipBox — the tooltip doesn't
+                                // render until the gesture, so the plain
+                                // button is what's compared.
+                                androidx.compose.material3.IconButton(onClick = {}) {
+                                    Icon(
+                                        // `Icons.Filled.Close` is the same
+                                        // path data as the Slint side's
+                                        // `Icons.close` (`close.svg`).
+                                        sceneIcon("close"),
+                                        contentDescription = "Dismiss",
+                                        tint = widget.dismissColor?.let { schemeColor(it) }
+                                            ?: androidx.compose.material3.SnackbarDefaults.dismissActionContentColor,
+                                    )
+                                }
+                            }
+                        } else {
+                            null
+                        },
+                        containerColor = widget.color?.let { schemeColor(it) }
+                            ?: androidx.compose.material3.SnackbarDefaults.color,
+                        contentColor = widget.contentColor?.let { schemeColor(it) }
+                            ?: androidx.compose.material3.SnackbarDefaults.contentColor,
+                    ) {
+                        Text(
+                            widget.text ?: "",
+                            modifier = Modifier.trackText(tracer, "text:$textBase", density),
+                            onTextLayout = recordTextLayout(
+                                tracer,
+                                "text:$textBase",
+                                LocalDensity.current,
+                                androidx.compose.ui.platform.LocalFontFamilyResolver.current,
+                                null,
+                            ),
+                        )
+                    }
+                }
                 widget.kind == "rect" ->
                     Box(
                         Modifier.offset(widget.x.dp, widget.y.dp)
@@ -5075,7 +5161,7 @@ private fun SheetWidget(
                     Box(
                         Modifier.fillMaxWidth()
                             .height(widget.sheetHeight.dp)
-                            .background(schemeColor(widget.contentColor)),
+                            .background(schemeColor(widget.contentColor ?: "tertiary-container")),
                     )
                 }
             }
@@ -5121,7 +5207,7 @@ private fun SheetWidget(
                         Box(
                             Modifier.fillMaxWidth()
                                 .height(widget.sheetHeight.dp)
-                                .background(schemeColor(widget.contentColor)),
+                                .background(schemeColor(widget.contentColor ?: "tertiary-container")),
                         )
                     },
                     modifier = Modifier.trackSheet(tracer, tag, uiDensity),
@@ -5183,7 +5269,7 @@ private fun SheetWidget(
                         Box(
                             Modifier.fillMaxWidth()
                                 .height(widget.sheetHeight.dp)
-                                .background(schemeColor(widget.contentColor)),
+                                .background(schemeColor(widget.contentColor ?: "tertiary-container")),
                         )
                     }
                 }
@@ -5464,7 +5550,7 @@ private fun ParitySheet(
             Box(
                 Modifier.fillMaxWidth()
                     .height(widget.sheetHeight.dp)
-                    .background(schemeColor(widget.contentColor)),
+                    .background(schemeColor(widget.contentColor ?: "tertiary-container")),
             )
         }
     }

@@ -101,6 +101,9 @@
   "widgets": [
     {
       "action": null,
+      "action_color": null,
+      "action_on_new_line": null,
+      "action_text": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,
@@ -120,6 +123,7 @@
       "corner": null,
       "count": null,
       "current_index": null,
+      "dismiss_color": null,
       "display_mode": null,
       "displayed": null,
       "dragged": null,
@@ -177,6 +181,7 @@
           "label": "Tail"
         }
       ],
+      "has_close_button": null,
       "height": null,
       "height_offset": null,
       "hide_on_collapse": null,
@@ -271,6 +276,9 @@
     },
     {
       "action": null,
+      "action_color": null,
+      "action_on_new_line": null,
+      "action_text": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,
@@ -290,6 +298,7 @@
       "corner": null,
       "count": null,
       "current_index": null,
+      "dismiss_color": null,
       "display_mode": null,
       "displayed": null,
       "dragged": null,
@@ -332,6 +341,7 @@
           "label": "More"
         }
       ],
+      "has_close_button": null,
       "height": null,
       "height_offset": null,
       "hide_on_collapse": null,

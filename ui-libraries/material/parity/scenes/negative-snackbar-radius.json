@@ -1,0 +1,39 @@
+{
+    "name": "negative-snackbar-radius",
+    "type": "canvas",
+    "parity": "negative",
+    "negative_note": "The Slint side squares the container corners instead of SnackbarTokens.container_shape (CornerExtraSmall, 4px) — the comparator must flag the silhouette corners.",
+    "size": [
+        320,
+        96
+    ],
+    "densities": [
+        1
+    ],
+    "theme": {
+        "seed": "6750A4",
+        "variant": "tonal-spot",
+        "spec": "spec2025",
+        "platform": "phone",
+        "dark": false,
+        "contrast": 0.0
+    },
+    "fonts": {
+        "plain": "Roboto",
+        "brand": "Roboto"
+    },
+    "widgets": [
+        {
+            "kind": "material-snackbar",
+            "x": 16,
+            "y": 24,
+            "width": 288,
+            "text": "Marked as read",
+            "slint_overrides": {
+                "radius": 0
+            }
+        }
+    ],
+    "trace_elements": [],
+    "trace_props": []
+}
