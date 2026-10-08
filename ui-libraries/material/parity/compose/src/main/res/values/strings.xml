@@ -1,15 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Copyright © SixtyFPS GmbH <info@slint.dev> -->
-<!-- SPDX-License-Identifier: MIT -->
-<!-- Paparazzi does not load aar resources for unit-test renders (resources.json
-     lists no aarExplodedDirs), so the internal getString() lookups of the
-     SearchBarDefaults.InputField, BottomSheetImpl, DragHandleWithTooltip and
-     ModalBottomSheetScrim paths fail. Declaring the strings they resolve here
-     gives them the same merged ids with their official default values
-     (androidx.compose.material3:material3:1.5.0-alpha18, values.xml;
-     androidx.compose.ui:ui's close_sheet; androidx.compose.foundation:foundation's
-     tooltip_*). -->
+<!--
+Copyright © SixtyFPS GmbH <info@slint.dev>
+SPDX-License-Identifier: MIT
+-->
 <resources>
+    <!-- Paparazzi does not load aar resources for unit-test renders
+         (resources.json lists no aarExplodedDirs), so the internal getString()
+         lookups of the SearchBarDefaults.InputField, BottomSheetImpl,
+         DragHandleWithTooltip and ModalBottomSheetScrim paths fail. Declaring
+         the strings they resolve here gives them the same merged ids with
+         their official default values
+         (androidx.compose.material3:material3:1.5.0-alpha18, values.xml;
+         androidx.compose.ui:ui's close_sheet;
+         androidx.compose.foundation:foundation's tooltip_*). -->
     <string name="m3c_search_bar_search">Search</string>
     <string name="m3c_suggestions_available">Suggestions below</string>
     <string name="m3c_bottom_sheet_pane_title">Bottom Sheet</string>

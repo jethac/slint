@@ -114,6 +114,9 @@ export component ScrollView {
     in_out property <length> content_height <=> flickable.content_height;
     in_out property <length> content_x <=> flickable.content_x;
     in_out property <length> content_y <=> flickable.content_y;
+    /// The `Flickable`'s pointer-release velocity in logical px/s — feed
+    /// `.y` to a scrollable toolbar's `release-velocity` input.
+    out property <Point> release_velocity <=> flickable.release_velocity;
     // Compatibility aliases for the former names of the content_* properties.
     @deprecated("Please use 'content-width' instead") in_out property <length> viewport_width <=> content_width;
     @deprecated("Please use 'content-height' instead") in_out property <length> viewport_height <=> content_height;
