@@ -74,7 +74,8 @@ class Widget(json: JSONObject) {
     val height: Float = json.optDouble("height", 0.0).toFloat()
     val radius: Float = json.optDouble("radius", 0.0).toFloat()
     val text: String? = (json.opt("text") as? String)?.takeIf { it.isNotEmpty() }
-    /** `alert-dialog`/`basic-alert-dialog`: the dialog title. */
+    /** `alert-dialog`/`basic-alert-dialog` dialog title; `material-scaffold`
+     * top-bar title text. */
     val title: String? = (json.opt("title") as? String)?.takeIf { it.isNotEmpty() }
     /** Stem of an svg under `src/ui/icons/` (`check` → `icons/check.svg`),
      * loaded as an [ImageVector] — the same path the Slint `Icons` image
@@ -239,6 +240,20 @@ class Widget(json: JSONObject) {
     val actionColor: String? = (json.opt("action_color") as? String)?.takeIf { it.isNotEmpty() }
     /** `material-snackbar` `dismissActionContentColor` role name. */
     val dismissColor: String? = (json.opt("dismiss_color") as? String)?.takeIf { it.isNotEmpty() }
+    /** `material-scaffold` only: which slots are populated — each absent
+     * slot is upstream's empty-lambda default. */
+    val topBar: Boolean = json.optBoolean("top_bar", false)
+    val bottomBar: Boolean = json.optBoolean("bottom_bar", false)
+    /** The snackbar slot is a fixed-size `Box` for now — the slot
+     * mechanics, not the snackbar, are under test. */
+    val snackbar: Boolean = json.optBoolean("snackbar", false)
+    val fab: Boolean = json.optBoolean("fab", false)
+    /** `floatingActionButtonPosition`: `start`/`center`/`end` (default)/
+     * `end-overlay`. */
+    val fabPosition: String = (json.opt("fab_position") as? String) ?: "end"
+    /** Snackbar-slot placeholder size. */
+    val snackWidth: Float = json.optDouble("snack_width", 200.0).toFloat()
+    val snackHeight: Float = json.optDouble("snack_height", 48.0).toFloat()
 
     // --- navigation-rail kinds (`navigation-rail`, `wide-navigation-rail`,
     // `modal-navigation-rail`) ---

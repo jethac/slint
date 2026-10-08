@@ -38,8 +38,6 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.material3.Button
@@ -118,10 +116,6 @@ import androidx.compose.material3.WideNavigationRailValue
 import androidx.compose.material3.WideNavigationRailDefaults
 import androidx.compose.material3.rememberWideNavigationRailState
 import androidx.compose.material3.ModalWideNavigationRail
-import androidx.compose.material3.Surface
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.rememberCoroutineScope
 import kotlinx.coroutines.launch
@@ -139,6 +133,7 @@ import androidx.compose.material3.SearchBar
 import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.AppBarWithSearch
 import androidx.compose.material3.rememberSearchBarState
+import androidx.compose.material3.FabPosition
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationItemIconPosition
@@ -566,6 +561,7 @@ private fun CanvasScene(
         var badgedBoxes = 0
         var nav_bars = 0
         var snackbars = 0
+        var scaffolds = 0
         // `text:{n}` spans every text node in scene order — group items
         // interleave with the standalone widgets' labels. Bases are
         // precomputed per widget so recompositions can't renumber them.
@@ -748,6 +744,12 @@ private fun CanvasScene(
                 widget.kind == "navigation-bar" ||
                     widget.kind == "short-navigation-bar" ->
                     StateNavBar(widget, scene, tracer, "navbar${nav_bars++}", emitPress)
+                widget.kind == "material-scaffold" ->
+                    StateScaffold(
+                        widget,
+                        tracer,
+                        scaffolds++,
+                    )
                 widget.kind == "material-snackbar" -> {
                     // The upstream `Snackbar` is a Surface + Layout —
                     // Paparazzi renders it directly (the 12dp margin belongs
@@ -3575,10 +3577,102 @@ private fun StateListItem(
 }
 
 
-/** App-bar family widgets (`top-app-bar` variants, `bottom-app-bar`,
- * `search-bar`, `app-bar-with-search`): geometry plus the props the Slint
- * parity case sets. Elements are named `appbar{n}` in scene order. Window
+/** `material-scaffold`: the upstream `Scaffold` with the scene's slots.
+ * Elements are named `scaffold{n}`/`appbar{n}`/`navbar{n}`/`snackbar{n}`/
+ * `fab{n}`/`content{n}` — matching the Slint children's ids. Window
  * insets are zeroed — the Slint side has no inset concept. */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun StateScaffold(
+    widget: Widget,
+    tracer: Tracer,
+    i: Int,
+) {
+    // `contentWindowInsets` is zero — the Slint side has no inset
+    // concept, so `PaddingValues` carries only the bar heights.
+    val insets = WindowInsets(0, 0, 0, 0)
+    androidx.compose.material3.Scaffold(
+        modifier =
+            Modifier.offset(widget.x.dp, widget.y.dp)
+                .size(widget.width.dp, widget.height.dp)
+                .track(tracer, "scaffold$i"),
+        topBar = {
+            if (widget.topBar) {
+                TopAppBar(
+                    title = { Text(widget.title ?: "Scaffold") },
+                    modifier = Modifier.track(tracer, "appbar$i"),
+                    windowInsets = insets,
+                )
+            }
+        },
+        bottomBar = {
+            if (widget.bottomBar) {
+                NavigationBar(
+                    modifier = Modifier.track(tracer, "navbar$i"),
+                    windowInsets = insets,
+                ) {
+                    listOf("menu" to "Menu", "schedule" to "Later").forEachIndexed { index, item ->
+                        NavigationBarItem(
+                            selected = index == 0,
+                            onClick = {},
+                            icon = { Icon(sceneIcon(item.first), contentDescription = null) },
+                            label = { Text(item.second) },
+                        )
+                    }
+                }
+            }
+        },
+        snackbarHost = {
+            if (widget.snackbar) {
+                // The Slint snackbar slot is a fixed-size rect while
+                // `SnackBar` is still a popup on master — the mirror is
+                // a same-size Box so the scaffold's slot offsets are what
+                // get compared, not snackbar internals.
+                Box(
+                    Modifier.size(widget.snackWidth.dp, widget.snackHeight.dp)
+                        .clip(RoundedCornerShape(4.dp))
+                        .background(androidx.compose.material3.MaterialTheme.colorScheme.inverseSurface)
+                        .track(tracer, "snackbar$i"),
+                )
+            }
+        },
+        floatingActionButton = {
+            if (widget.fab) {
+                FloatingActionButton(
+                    onClick = {},
+                    modifier = Modifier.track(tracer, "fab$i"),
+                ) {
+                    Icon(sceneIcon("add"), contentDescription = null)
+                }
+            }
+        },
+        floatingActionButtonPosition =
+            when (widget.fabPosition) {
+                "start" -> FabPosition.Start
+                "center" -> FabPosition.Center
+                "end" -> FabPosition.End
+                "end-overlay" -> FabPosition.EndOverlay
+                else -> error("unknown fab_position ${widget.fabPosition}")
+            },
+        contentWindowInsets = insets,
+    ) { padding ->
+        // `track` sits on the full-size box (bounds match the Slint
+        // content rect); `padding` applies the `PaddingValues` inside.
+        Box(
+            Modifier.fillMaxSize().track(tracer, "content$i").padding(padding),
+        ) {
+            Text(
+                widget.text ?: "Content",
+                modifier = Modifier.offset(16.dp, 16.dp),
+            )
+        }
+    }
+}
+
+/** The app-bar widgets (`top-app-bar`, `bottom-app-bar`, `search-bar`,
+ * `app-bar-with-search`): geometry plus the props the Slint parity case
+ * sets. Elements are named `appbar{n}` in scene order. Window insets are
+ * zeroed — the Slint side has no inset concept. */
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun StateAppBar(widget: Widget, tracer: Tracer, tag: String) {

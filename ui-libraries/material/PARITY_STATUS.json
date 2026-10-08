@@ -862,11 +862,11 @@
   },
   "Scaffold": {
     "issues": [
-      12
+      11
     ],
-    "needs": "adaptive (#12)",
-    "notes": "",
-    "status": "missing"
+    "needs": "none",
+    "notes": "slint component: Scaffold",
+    "status": "done"
   },
   "SearchBar": {
     "issues": [

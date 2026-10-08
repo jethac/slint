@@ -92,6 +92,7 @@ negative-press-overlay
 negative-radius
 negative-rail-indicator
 negative-recolor
+negative-scaffold-fab-offset
 negative-shape-fit
 negative-shape-leak
 negative-sheet-color
@@ -115,6 +116,7 @@ radio-states
 radio-uncheck-morph
 scaffold-drag
 scaffold-ops
+scaffolds
 search-bars
 segmented-list
 sheet-commit-hide

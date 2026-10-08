@@ -1,0 +1,80 @@
+// Copyright © SixtyFPS GmbH <info@slint.dev>
+// SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0
+
+// Scene: negative-scaffold-fab-offset — generated from `ui-libraries/material/parity/scenes/negative-scaffold-fab-offset.json`
+// (edit the scene, regenerate with `cargo run -p material-parity-generator`).
+//PARITY=negative: The FAB pins itself 32dp too far left (fab_x override) — the trace must flag the x offset.
+//SIZE=320x260
+//MASK_DECOR=content0@0,2000
+//MASK_DECOR=content1@0,2000
+//MASK_DECOR=content2@0,2000
+//MASK_DECOR=content3@0,2000
+//MASK_DECOR=fab0+12@0,2000
+//MASK_DECOR=fab1+12@0,2000
+//MASK_DECOR=fab2+12@0,2000
+//MASK_DECOR=fab3+12@0,2000
+//MASK_DECOR=scaffold0@0,2000
+//MASK_DECOR=scaffold1@0,2000
+//MASK_DECOR=scaffold2@0,2000
+//MASK_DECOR=scaffold3@0,2000
+//XFAIL_TEXT=issue #28: Slint ceils text layout widths where Compose keeps fractional advances
+//DENSITIES=1
+import "../../fonts/Roboto-VariableFont.ttf";
+import { FabPosition, FloatingActionButton, Icons, MaterialPalette, MaterialText, MaterialTheme, MaterialTypography, MaterialWindow, NavigationBar, Scaffold, TopAppBar } from "@material";
+
+export component TestCase inherits MaterialWindow {
+    init => {
+        // The scene pins seed #6750A4, tonal-spot, spec2025, light, contrast 0
+        // (all the library defaults; restated here so a default change can't
+        // silently move the parity baseline).
+        MaterialTheme.seed-color = #6750A4;
+        MaterialTheme.dark = false;
+        MaterialTheme.contrast-level = 0;
+        MaterialTheme.use-platform-color = false;
+        MaterialTheme.plain-family = "Roboto";
+        MaterialTheme.brand-family = "Roboto";
+        // Compose builds its scene scheme from the same seed — use the
+        // runtime-generated scheme, not the static expressive table.
+        MaterialPalette.dynamic = true;
+    }
+
+    scaffold0 := Scaffold {
+        x: 0px;
+        y: 0px;
+        width: 320px;
+        height: 260px;
+        fab-position: FabPosition.end;
+        content0 := Rectangle {
+            width: 100%;
+            height: 100%;
+            MaterialText {
+                text: "Content";
+                x: 16px;
+                y: scaffold0.content_padding_top + 16px;
+                style: MaterialTypography.body_large;
+                color: scaffold0.content_color;
+            }
+        }
+        top-bar-height: appbar0.min_height;
+        appbar0 := TopAppBar {
+            y: 0px;
+            width: 100%;
+            title: "Home";
+        }
+        bottom-bar-height: navbar0.min_height;
+        navbar0 := NavigationBar {
+            y: scaffold0.bottom_bar_y;
+            width: 100%;
+            items: [{ icon: Icons.menu, selected_icon: Icons.menu, text: "Menu", show_badge: false, badge: "" }, { icon: Icons.schedule, selected_icon: Icons.schedule, text: "Later", show_badge: false, badge: "" }];
+            current-index: 0;
+        }
+        fab-width: fab0.min_width;
+        fab-height: fab0.min_height;
+        fab0 := FloatingActionButton {
+            x: 216px;
+            y: scaffold0.fab_y;
+            icon: Icons.add;
+            enforce_touch_target: false;
+        }
+    }
+}
