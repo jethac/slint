@@ -1,0 +1,65 @@
+{
+    "name": "progress-indicators",
+    "type": "canvas",
+    "parity": "xfail:femtovg",
+    "size": [
+        280,
+        200
+    ],
+    "densities": [
+        1,
+        2
+    ],
+    "theme": {
+        "seed": "6750A4",
+        "variant": "tonal-spot",
+        "spec": "spec2025",
+        "platform": "phone",
+        "dark": false,
+        "contrast": 0.0
+    },
+    "fonts": {
+        "plain": "Roboto",
+        "brand": "Roboto"
+    },
+    "widgets": [
+        {
+            "kind": "linear-progress",
+            "x": 20,
+            "y": 16,
+            "progress": 0
+        },
+        {
+            "kind": "linear-progress",
+            "x": 20,
+            "y": 28,
+            "progress": 0.35
+        },
+        {
+            "kind": "linear-progress",
+            "x": 20,
+            "y": 40,
+            "progress": 0.7
+        },
+        {
+            "kind": "linear-progress",
+            "x": 20,
+            "y": 52,
+            "progress": 1
+        },
+        {
+            "kind": "circular-progress",
+            "x": 30,
+            "y": 140,
+            "progress": 0.2
+        },
+        {
+            "kind": "circular-progress",
+            "x": 100,
+            "y": 140,
+            "progress": 0.75
+        }
+    ],
+    "parity_eps": 16,
+    "negative_note": "femtovg tessellates stroked arcs and small round caps with a slightly different AA coverage ramp than layoutlib \u2014 a handful of isolated edge pixels diverge ~90/255 at d2 while geometry is verified identical on software and skia; a silent pass would mean the harness went blind"
+}

@@ -89,6 +89,7 @@ negative-list-select
 negative-navigation-bar
 negative-navigation-rail
 negative-press-overlay
+negative-progress-gap
 negative-radius
 negative-rail-indicator
 negative-recolor
@@ -107,6 +108,8 @@ negative-surface-tonal
 negative-thumb-offset
 negative-toggle-select
 negative-wrong-shadow
+progress-indeterminate
+progress-indicators
 radio-check-morph
 radio-hover
 radio-states
