@@ -136,13 +136,13 @@ States: disabled, dragged, focused, hovered, pressed, selected, unselected
 
 | Component | Source | Status | Issues | Needs | Notes |
 |---|---|---|---|---|---|
-| AssistChip | Chip.kt | partial | #11 | shapes (#6) | slint component: Chip |
-| ElevatedAssistChip | Chip.kt | missing | #9 | shapes (#6) | - |
-| ElevatedFilterChip | Chip.kt | missing | #9 | shapes (#6) | - |
-| ElevatedSuggestionChip | Chip.kt | missing | #9 | shapes (#6) | - |
-| FilterChip | Chip.kt | partial | #11 | shapes (#6) | slint component: Chip |
-| InputChip | Chip.kt | partial | #11 | shapes (#6) | slint component: Chip |
-| SuggestionChip | Chip.kt | partial | #11 | shapes (#6) | slint component: Chip |
+| AssistChip | Chip.kt | done | #11 | springs (#5), shapes (#6) | slint component: AssistChip; tokens: generated component tokens; springs via active motion scheme |
+| ElevatedAssistChip | Chip.kt | done | #11 | springs (#5), shapes (#6) | slint component: ElevatedAssistChip; tokens: generated component tokens; springs via active motion scheme |
+| ElevatedFilterChip | Chip.kt | done | #11 | springs (#5), shapes (#6) | slint component: ElevatedFilterChip; tokens: generated component tokens; springs via active motion scheme |
+| ElevatedSuggestionChip | Chip.kt | done | #11 | springs (#5), shapes (#6) | slint component: ElevatedSuggestionChip; tokens: generated component tokens; springs via active motion scheme |
+| FilterChip | Chip.kt | done | #11 | springs (#5), shapes (#6) | slint component: FilterChip; tokens: generated component tokens; springs via active motion scheme |
+| InputChip | Chip.kt | done | #11 | springs (#5), shapes (#6) | slint component: InputChip; tokens: generated component tokens; springs via active motion scheme |
+| SuggestionChip | Chip.kt | done | #11 | springs (#5), shapes (#6) | slint component: SuggestionChip; tokens: generated component tokens; springs via active motion scheme |
 
 ### Date pickers
 
@@ -163,8 +163,8 @@ States: focused, hovered, pressed
 
 | Component | Source | Status | Issues | Needs | Notes |
 |---|---|---|---|---|---|
-| AlertDialog | AlertDialog.kt | partial | #11 | none | slint component: Dialog |
-| BasicAlertDialog | AlertDialog.kt | missing | #11 | none | - |
+| AlertDialog | AlertDialog.kt | done | #11 | none | slint components: Dialog, AlertDialogContent; parity cases: alert-dialog, alert-dialog-no-icon, alert-dialog-stacked, alert-dialog-dark, alert-dialog-action-hover, alert-dialog-action-press, alert-dialog-action-focus, negative-alert-dialog-{corner,container,padding,actions} |
+| BasicAlertDialog | AlertDialog.kt | done | #11 | none | slint component: BasicAlertDialog; parity case: basic-alert-dialog |
 | DatePickerDialog | DatePickerDialog.kt | done | #11 | none | slint components: DatePickerDialog, DatePickerDialogContent; host of the date_picker* parity cases |
 
 ### Divider
@@ -326,9 +326,9 @@ States: active, indeterminate
 
 | Component | Source | Status | Issues | Needs | Notes |
 |---|---|---|---|---|---|
-| CircularProgressIndicator | ProgressIndicator.kt | partial | #11 | springs (#5), shapes (#6) | slint component: CircularProgressIndicator |
+| CircularProgressIndicator | ProgressIndicator.kt | done | #11 | springs (#5), shapes (#6) | slint component: CircularProgressIndicator; indeterminate deprecated, replacement: LoadingIndicator |
 | CircularWavyProgressIndicator | WavyProgressIndicator.kt | missing | #6, #11 | springs (#5), shapes (#6) | - |
-| LinearProgressIndicator | ProgressIndicator.kt | partial | #11 | springs (#5), shapes (#6) | slint component: LinearProgressIndicator |
+| LinearProgressIndicator | ProgressIndicator.kt | done | #11 | springs (#5), shapes (#6) | slint component: LinearProgressIndicator |
 | LinearWavyProgressIndicator | WavyProgressIndicator.kt | missing | #6, #11 | springs (#5), shapes (#6) | - |
 
 ### Pull to refresh
@@ -351,7 +351,7 @@ States: selected, disabled, unselected, focused, hovered, pressed
 
 | Component | Source | Status | Issues | Needs | Notes |
 |---|---|---|---|---|---|
-| Scaffold | Scaffold.kt | missing | #12 | adaptive (#12) | - |
+| Scaffold | Scaffold.kt | done | #11 | none | slint component: Scaffold |
 
 ### Scrim
 

@@ -1,0 +1,55 @@
+{
+  "name": "negative-chip-shape",
+  "type": "canvas",
+  "parity": "negative",
+  "negative_note": "slint_overrides.chip_shapes renders the checked expressive filter chip's CornerFull selected outline as CornerNone \u2014 a chip shaped to the wrong token must fail",
+  "size": [
+    160,
+    96
+  ],
+  "densities": [
+    1,
+    2
+  ],
+  "theme": {
+    "seed": "6750A4",
+    "variant": "tonal-spot",
+    "spec": "spec2025",
+    "platform": "phone",
+    "dark": false,
+    "contrast": 0.0
+  },
+  "fonts": {
+    "plain": "Roboto",
+    "brand": "Roboto"
+  },
+  "times": [
+    2000
+  ],
+  "widgets": [
+    {
+      "kind": "filter-chip",
+      "x": 32,
+      "y": 32,
+      "text": "Filter",
+      "checked": true,
+      "checked_icon": "check",
+      "slint_overrides": {
+        "chip_shapes": {
+          "shape": "corner_full",
+          "selected_shape": "corner_none",
+          "pressed_shape": "corner_full"
+        }
+      },
+      "variant": "expressive"
+    }
+  ],
+  "trace_elements": [
+    "button0"
+  ],
+  "mask_inner": {
+    "button0": [
+      2000
+    ]
+  }
+}

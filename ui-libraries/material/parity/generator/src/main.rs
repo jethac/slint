@@ -21,7 +21,9 @@ use std::collections::BTreeSet;
 use std::fmt::Write as _;
 use std::path::{Path, PathBuf};
 
-use material_color_utils::dynamiccolor::{DynamicScheme, MaterialDynamicColors, Platform, SpecVersion};
+use material_color_utils::dynamiccolor::{
+    DynamicScheme, MaterialDynamicColors, Platform, SpecVersion,
+};
 use material_color_utils::hct::Hct;
 use material_color_utils::scheme;
 
@@ -182,7 +184,8 @@ struct Widget {
     radius: Option<f64>,
     #[serde(default)]
     text: Option<String>,
-    /// `alert-dialog`/`basic-alert-dialog`: the dialog title.
+    /// `alert-dialog`/`basic-alert-dialog` dialog title; `material-scaffold`
+    /// top-bar title text.
     #[serde(default)]
     title: Option<String>,
     /// `date-picker`/`date-range-picker` initial `DisplayMode` — `picker`
@@ -296,9 +299,10 @@ struct Widget {
     /// `isSupportingMultiline` heuristic input to `ListItemType`.
     #[serde(default)]
     supporting_multiline: Option<bool>,
-    /// 40px avatar circle with this label in the leading slot
-    /// (`avatar_text` on the Slint side, `ItemLeadingAvatar*` upstream).
-    #[serde(default)]
+    /// 40px avatar circle in the leading slot: a label on `list-item`
+    /// (`avatar_text` on the Slint side, `ItemLeadingAvatar*` upstream), an
+    /// icon stem on `input-chip` (the upstream samples' `Icon` avatar).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     avatar: Option<String>,
     /// Icon stem (`Icons.*`) in the trailing slot; `icon` fills the leading
     /// slot. `trailing_text` adds the label-small meta text. On a
@@ -378,10 +382,13 @@ struct Widget {
     #[serde(default)]
     shape: Option<String>,
     /// Loading-indicator mode: indeterminate (default — the continuous
-    /// morph loop) or driven by `progress`.
+    /// morph loop) or driven by `progress`; the progress-indicator family
+    /// renders the indeterminate variant (the no-progress
+    /// `*ProgressIndicator()` overloads on the Compose side).
     #[serde(default)]
     indeterminate: Option<bool>,
-    /// Determinate loading-indicator progress, 0–1.
+    /// Determinate loading-indicator progress, 0–1; the progress-indicator
+    /// family's determinate fraction. Ignored when `indeterminate` is set.
     #[serde(default)]
     progress: Option<f64>,
     /// `elevated-rect` only: the elevation in dp of the Android ambient+spot
@@ -534,6 +541,29 @@ struct Widget {
     /// `selected_index`.
     #[serde(default)]
     multi_select: Option<bool>,
+    /// `material-scaffold` only: which slots are populated — each absent
+    /// slot maps to upstream's empty-lambda default.
+    #[serde(default)]
+    top_bar: Option<bool>,
+    #[serde(default)]
+    bottom_bar: Option<bool>,
+    /// The snackbar slot is a fixed-size rect for now — the pre-rework
+    /// `SnackBar` on master is a `PopupWindow`; only the slot mechanics
+    /// are under test here.
+    #[serde(default)]
+    snackbar: Option<bool>,
+    #[serde(default)]
+    fab: Option<bool>,
+    /// `floatingActionButtonPosition` upstream — `start`, `center`, `end`
+    /// (default) or `end-overlay`.
+    #[serde(default)]
+    fab_position: Option<String>,
+    /// Snackbar-slot placeholder size — the Compose side measures a fixed
+    /// `Box` of the same size.
+    #[serde(default)]
+    snack_width: Option<f64>,
+    #[serde(default)]
+    snack_height: Option<f64>,
 }
 
 /// One group item — the arguments an upstream `clickableItem`/
@@ -609,7 +639,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             .map_err(|e| format!("{}: {e}", path.display()))?;
         let case_rel = format!("material/{}", scene.name.replace('-', "_"));
 
-        emit_or_check(&cases_dir.join(format!("{}.slint", scene.name.replace('-', "_"))), &slint_case(&scene), check)?;
+        emit_or_check(
+            &cases_dir.join(format!("{}.slint", scene.name.replace('-', "_"))),
+            &slint_case(&scene),
+            check,
+        )?;
         emit_or_check(
             &resources_dir.join(format!("{}.json", scene.name)),
             &serde_json::to_string_pretty(&resolved_scene(&scene, &case_rel))?,
@@ -635,23 +669,34 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 .chain(group_icon)
                 .chain(w.rail_items.iter().flat_map(|i| [i.icon.iter(), i.selected_icon.iter()].into_iter().flatten()))
                 .chain(w.trailing_icon.iter())
+                // `avatar` is an icon stem on `input-chip` only — on
+                // `list-item` it is the avatar circle's label text.
+                .chain(w.avatar.iter().filter(|_| w.kind == "input-chip"))
                 .chain(w.leading_image.iter())
                 .chain(w.items.iter().flat_map(|item| {
                     [item.icon.iter(), item.checked_icon.iter(), item.selected_icon.iter()]
                         .into_iter()
                         .flatten()
                 }))
+                .map(String::as_str)
+                // `material-scaffold` hardcodes its FAB and bottom-bar
+                // icons — the scene carries no icon fields.
+                .chain(
+                    if w.kind == "material-scaffold" {
+                        ["add", "menu", "schedule"].as_slice()
+                    } else {
+                        [].as_slice()
+                    }
+                    .iter()
+                    .copied(),
+                )
             {
                 let src = repo_root
                     .join("ui-libraries/material/src/ui/icons")
                     .join(format!("{icon}.svg"));
-                let dst = resources_dir
-                    .parent()
-                    .unwrap()
-                    .join("icons")
-                    .join(format!("{icon}.svg"));
-                let svg = std::fs::read_to_string(&src)
-                    .map_err(|e| format!("{}: {e}", src.display()))?;
+                let dst = resources_dir.parent().unwrap().join("icons").join(format!("{icon}.svg"));
+                let svg =
+                    std::fs::read_to_string(&src).map_err(|e| format!("{}: {e}", src.display()))?;
                 emit_or_check(&dst, &svg, check)?;
             }
         }
@@ -661,11 +706,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // The Compose harness renders text in the same font the Slint driver
     // registers (the variable Roboto in `tests/screenshots/fonts/`).
-    let font_src =
-        repo_root.join("tests/screenshots/fonts/Roboto-VariableFont.ttf");
+    let font_src = repo_root.join("tests/screenshots/fonts/Roboto-VariableFont.ttf");
     let font_dst = parity_dir.join("compose/src/test/resources/fonts/roboto.ttf");
-    let font = std::fs::read(&font_src)
-        .map_err(|e| format!("{}: {e}", font_src.display()))?;
+    let font = std::fs::read(&font_src).map_err(|e| format!("{}: {e}", font_src.display()))?;
     if check {
         let on_disk = std::fs::read(&font_dst)
             .map_err(|e| format!("{}: {e} (regenerate)", font_dst.display()))?;
@@ -682,10 +725,18 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 /// Writes `content` at `path`, or — in `--check` mode — fails when `path`
 /// doesn't hold exactly `content`.
-fn emit_or_check(path: &Path, content: &str, check: bool) -> Result<(), Box<dyn std::error::Error>> {
+fn emit_or_check(
+    path: &Path,
+    content: &str,
+    check: bool,
+) -> Result<(), Box<dyn std::error::Error>> {
     if check {
-        let on_disk = std::fs::read_to_string(path)
-            .map_err(|e| format!("{}: {e} (regenerate with `cargo run -p material-parity-generator`)", path.display()))?;
+        let on_disk = std::fs::read_to_string(path).map_err(|e| {
+            format!(
+                "{}: {e} (regenerate with `cargo run -p material-parity-generator`)",
+                path.display()
+            )
+        })?;
         if on_disk != content {
             return Err(format!(
                 "{} is stale — regenerate with `cargo run -p material-parity-generator`",
@@ -817,10 +868,7 @@ fn scheme_argbs(theme: &Theme) -> serde_json::Map<String, serde_json::Value> {
     roles
         .into_iter()
         .map(|(name, color)| {
-            (
-                name.to_string(),
-                format!("{:08X}", dynamic.get_argb(&color) as u64 as u32).into(),
-            )
+            (name.to_string(), format!("{:08X}", dynamic.get_argb(&color) as u64 as u32).into())
         })
         .collect()
 }
@@ -891,17 +939,26 @@ fn slint_case(scene: &Scene) -> String {
     // `<container>item<i>` ids name a container's repeated children — one
     // shared qualified id per instance on the Slint side, so they go to
     // `//TRACE_ITEMS=` (enumerated in tree order) instead of
-    // `//TRACE_ELEMENTS=` (a literal-id lookup). The Compose side reads the
-    // same scene JSON and records them verbatim.
+    // `//TRACE_ELEMENTS=` (a literal-id lookup). Dialog action buttons use
+    // the same scheme with an `action` stem (`dialog0action0`). The Compose
+    // side reads the same scene JSON and records them verbatim.
     let (item_containers, elements): (BTreeSet<String>, Vec<&String>) = {
         let mut containers = BTreeSet::new();
         let mut plain = Vec::new();
         for id in &scene.trace_elements {
             let stem = id.trim_end_matches(|c: char| c.is_ascii_digit());
-            if stem.len() > "item".len() && stem.ends_with("item") && stem.len() < id.len() {
-                containers.insert(stem[..stem.len() - "item".len()].to_string());
-            } else {
-                plain.push(id);
+            let container = ["item", "action"]
+                .iter()
+                .find(|suffix| {
+                    stem.len() > suffix.len() && stem.ends_with(*suffix)
+                        && stem.len() < id.len()
+                })
+                .map(|suffix| &stem[..stem.len() - suffix.len()]);
+            match container {
+                Some(container) => {
+                    containers.insert(container.to_string());
+                }
+                None => plain.push(id),
             }
         }
         (containers, plain)
@@ -1031,6 +1088,10 @@ fn slint_case(scene: &Scene) -> String {
             "bottom-app-bar" => "BottomAppBar",
             "search-bar" => "SearchBar",
             "app-bar-with-search" => "AppBarWithSearch",
+            "linear-progress" => "LinearProgressIndicator",
+            "circular-progress" => "CircularProgressIndicator",
+            "linear-wavy-progress" => "LinearWavyProgressIndicator",
+            "circular-wavy-progress" => "CircularWavyProgressIndicator",
             "navigation-rail" => "NavigationRail",
             "wide-navigation-rail" => "WideNavigationRail",
             "modal-navigation-rail" => "ModalWideNavigationRail",
@@ -1043,6 +1104,13 @@ fn slint_case(scene: &Scene) -> String {
             "connected-button" => "ConnectedButton",
             "connected-button-group" => "ConnectedButtonGroup",
             "vertical-connected-button-group" => "VerticalConnectedButtonGroup",
+            "assist-chip" => "AssistChip",
+            "elevated-assist-chip" => "ElevatedAssistChip",
+            "filter-chip" => "FilterChip",
+            "elevated-filter-chip" => "ElevatedFilterChip",
+            "input-chip" => "InputChip",
+            "suggestion-chip" => "SuggestionChip",
+            "elevated-suggestion-chip" => "ElevatedSuggestionChip",
             "elevated-card" => "ElevatedCard",
             "filled-card" => "FilledCard",
             "outlined-card" => "OutlinedCard",
@@ -1055,6 +1123,7 @@ fn slint_case(scene: &Scene) -> String {
 
             "navigation-bar" => "NavigationBar",
             "short-navigation-bar" => "ShortNavigationBar",
+            "material-scaffold" => "Scaffold",
             other => panic!("unknown widget kind {other:?}"),
         };
         imports.push(component);
@@ -1096,6 +1165,7 @@ fn slint_case(scene: &Scene) -> String {
             || w.leading_image.is_some()
             || w.checked_icon.is_some()
             || w.nav_icon.is_some()
+            || w.avatar.is_some()
             || w.fab_icon.is_some()
             || !w.icons.is_empty()
             || w.rail_items.iter().any(|i| i.icon.is_some() || i.selected_icon.is_some())
@@ -1103,6 +1173,7 @@ fn slint_case(scene: &Scene) -> String {
             || w.items.iter().any(|item| {
                 item.icon.is_some() || item.checked_icon.is_some() || item.selected_icon.is_some()
             })
+            || w.kind == "material-scaffold"
         {
             needs_icons = true;
         }
@@ -1123,17 +1194,28 @@ fn slint_case(scene: &Scene) -> String {
             imports.push("FabElevation");
             imports.push("FabAlignment");
         }
+        if w.kind == "material-scaffold" {
+            imports.push("FabPosition");
+            if w.top_bar.unwrap_or(false) {
+                imports.push("TopAppBar");
+            }
+            if w.bottom_bar.unwrap_or(false) {
+                imports.push("NavigationBar");
+            }
+            if w.fab.unwrap_or(false) {
+                imports.push("FloatingActionButton");
+            }
+            // The content slot's `MaterialText`.
+            imports.push("MaterialText");
+            imports.push("MaterialTypography");
+        }
     }
     if needs_icons {
         imports.push("Icons");
     }
     if scene.widgets.iter().any(|w| w.kind == "surface") {
         imports.push("Elevation");
-        if scene
-            .widgets
-            .iter()
-            .any(|w| w.shape.as_deref().is_some_and(|sh| sh != "rect"))
-        {
+        if scene.widgets.iter().any(|w| w.shape.as_deref().is_some_and(|sh| sh != "rect")) {
             imports.push("MaterialShapes");
         }
     }
@@ -1373,11 +1455,8 @@ fn button_props(w: &Widget, timed: bool) -> String {
     if let Some(text) = &w.text {
         writeln!(p, "        text: \"{text}\";").unwrap();
     }
-    let size = over
-        .get("size")
-        .and_then(|v| v.as_str())
-        .map(str::to_string)
-        .or_else(|| w.size.clone());
+    let size =
+        over.get("size").and_then(|v| v.as_str()).map(str::to_string).or_else(|| w.size.clone());
     if let Some(size) = size {
         writeln!(p, "        size: MaterialButtonSize.{};", size_variant(&size)).unwrap();
     }
@@ -1406,11 +1485,8 @@ fn button_props(w: &Widget, timed: bool) -> String {
     if let Some(width) = width {
         writeln!(p, "        width_option: IconButtonWidth.{width};").unwrap();
     }
-    let icon = over
-        .get("icon")
-        .and_then(|v| v.as_str())
-        .map(str::to_string)
-        .or_else(|| w.icon.clone());
+    let icon =
+        over.get("icon").and_then(|v| v.as_str()).map(str::to_string).or_else(|| w.icon.clone());
     if let Some(icon) = icon {
         writeln!(p, "        icon: Icons.{icon};").unwrap();
     }
@@ -1713,6 +1789,117 @@ fn switch_props(w: &Widget, timed: bool) -> String {
     p
 }
 
+
+/// `*-chip` props — text, the leading icon/avatar and trailing icon
+/// slots, `checked`, `expressive` (the `shapes:` overload), the width pin
+/// and the `simulate_*` state hooks.
+fn chip_props(w: &Widget, timed: bool) -> String {
+    let mut p = String::new();
+    let over = &w.slint_overrides;
+    let bool_over = |k: &str, authored: Option<bool>| -> bool {
+        over.get(k).and_then(|v| v.as_bool()).unwrap_or(authored.unwrap_or(false))
+    };
+    if let Some(text) = &w.text {
+        writeln!(p, "        text: \"{text}\";").unwrap();
+    }
+    // `icon` fills the leading slot; `input-chip`'s is `leading_icon`.
+    let icon = over
+        .get("icon")
+        .and_then(|v| v.as_str())
+        .map(str::to_string)
+        .or_else(|| w.icon.clone());
+    let checked_icon = over
+        .get("checked_icon")
+        .and_then(|v| v.as_str())
+        .map(str::to_string)
+        .or_else(|| w.checked_icon.clone());
+    // A `checked_icon` swaps the leading slot while checked — the upstream
+    // samples' `leadingIcon = if (selected) { check } else { icon }`.
+    let icon_expr = match (icon, checked_icon) {
+        (Some(icon), Some(checked_icon)) => {
+            Some(format!("self.checked ? Icons.{checked_icon} : Icons.{icon}"))
+        }
+        (None, Some(checked_icon)) => {
+            Some(format!("self.checked ? Icons.{checked_icon} : @image-url(\"\")"))
+        }
+        (Some(icon), None) => Some(format!("Icons.{icon}")),
+        (None, None) => None,
+    };
+    if let Some(icon_expr) = icon_expr {
+        let prop = if w.kind == "input-chip" { "leading_icon" } else { "icon" };
+        writeln!(p, "        {prop}: {icon_expr};").unwrap();
+    }
+    // `container_shape` overrides the `shape:` token (negative cases only).
+    if let Some(shape) = over.get("container_shape").and_then(|v| v.as_str()) {
+        let lit = match shape {
+            // MaterialCornerShape literal — CornerFull ignores the per-corner
+            // values and uses min(w,h)/2.
+            "corner_full" => "{ top_left: 0px, top_right: 0px, bottom_right: 0px, bottom_left: 0px, full: true }",
+            "corner_none" => "{ top_left: 0px, top_right: 0px, bottom_right: 0px, bottom_left: 0px, full: false }",
+            other => panic!("slint_overrides.container_shape: unsupported shape {other:?}"),
+        };
+        writeln!(p, "        container_shape: {lit};").unwrap();
+    }
+    // `chip_shapes` overrides the `shapes:` table wholesale (negative cases
+    // only) — same literal language as `container_shape`, one key per slot.
+    if let Some(shapes) = over.get("chip_shapes").and_then(|v| v.as_object()) {
+        let lit = |key: &str| match shapes.get(key).and_then(|v| v.as_str()) {
+            Some("corner_full") => "{ top_left: 0px, top_right: 0px, bottom_right: 0px, bottom_left: 0px, full: true }",
+            Some("corner_none") => "{ top_left: 0px, top_right: 0px, bottom_right: 0px, bottom_left: 0px, full: false }",
+            Some(other) => panic!("slint_overrides.chip_shapes.{key}: unsupported shape {other:?}"),
+            None => panic!("slint_overrides.chip_shapes: missing {key}"),
+        };
+        writeln!(
+            p,
+            "        chip_shapes: {{ shape: {}, selected_shape: {}, pressed_shape: {} }};",
+            lit("shape"),
+            lit("selected_shape"),
+            lit("pressed_shape")
+        )
+        .unwrap();
+    }
+    let avatar = over
+        .get("avatar")
+        .and_then(|v| v.as_str())
+        .map(str::to_string)
+        .or_else(|| w.avatar.clone());
+    if let Some(avatar) = avatar {
+        writeln!(p, "        avatar_icon: Icons.{avatar};").unwrap();
+    }
+    let trailing_icon = over
+        .get("trailing_icon")
+        .and_then(|v| v.as_str())
+        .map(str::to_string)
+        .or_else(|| w.trailing_icon.clone());
+    if let Some(trailing_icon) = trailing_icon {
+        writeln!(p, "        trailing_icon: Icons.{trailing_icon};").unwrap();
+    }
+    if bool_over("checked", w.checked) {
+        p.push_str("        checked: true;\n");
+    }
+    // `variant: "expressive"` selects the `shapes:` overload (corner
+    // morphing); every other chip draws its static `shape`.
+    if w.variant.as_deref() == Some("expressive") {
+        p.push_str("        expressive: true;\n");
+    }
+    if !bool_over("enabled", w.enabled.or(Some(true))) {
+        p.push_str("        enabled: false;\n");
+    }
+    if let Some(width) = w.width {
+        writeln!(p, "        width: {width}px;").unwrap();
+    }
+    if !timed {
+        match w.state.as_deref() {
+            Some("hovered") => p.push_str("        simulate_hover: true;\n"),
+            Some("pressed") => p.push_str("        simulate_press: true;\n"),
+            _ => {}
+        }
+    }
+    p
+}
+
+
+
 /// The property lines every list-item widget takes — the `ListTile` /
 /// `SegmentedListItem` slot contents plus the interaction-state inputs.
 /// `slint_overrides` entries shadow the authored values for the negative
@@ -1822,6 +2009,7 @@ fn slint_canvas(s: &mut String, scene: &Scene) {
     // `vertical-drag-handle`s — the Compose mirror numbers each kind alone.
     let mut vhandles = 0usize;
     let mut drags = 0usize;
+    let mut progresses = 0;
     let mut groups = 0;
     let mut dialogs = 0;
     let mut pickers = 0;
@@ -1831,6 +2019,7 @@ fn slint_canvas(s: &mut String, scene: &Scene) {
     let mut badged_boxes = 0;
     let mut cards = 0;
     let mut nav_bars = 0;
+    let mut scaffolds = 0;
     for w in scene.widgets.iter() {
         let component = match w.kind.as_str() {
             "button-group" => {
@@ -2192,6 +2381,15 @@ fn slint_canvas(s: &mut String, scene: &Scene) {
                 appbar_widget(s, w, i);
                 continue;
             }
+            "linear-progress"
+            | "circular-progress"
+            | "linear-wavy-progress"
+            | "circular-wavy-progress" => {
+                let i = progresses;
+                progresses += 1;
+                progress_widget(s, w, i);
+                continue;
+            }
             "navigation-rail" | "wide-navigation-rail" | "modal-navigation-rail" => {
                 let i = rails;
                 rails += 1;
@@ -2217,12 +2415,25 @@ fn slint_canvas(s: &mut String, scene: &Scene) {
                 sheet_widget(s, w, i, scene);
                 continue;
             }
+            "material-scaffold" => {
+                let i = scaffolds;
+                scaffolds += 1;
+                scaffold_widget(s, w, i);
+                continue;
+            }
             "connected-button" => {
                 let i = buttons;
                 buttons += 1;
                 connected_button_widget(s, w, i, scene);
                 continue;
             }
+            "assist-chip" => "AssistChip",
+            "elevated-assist-chip" => "ElevatedAssistChip",
+            "filter-chip" => "FilterChip",
+            "elevated-filter-chip" => "ElevatedFilterChip",
+            "input-chip" => "InputChip",
+            "suggestion-chip" => "SuggestionChip",
+            "elevated-suggestion-chip" => "ElevatedSuggestionChip",
             "connected-button-group" | "vertical-connected-button-group" => {
                 let i = groups;
                 groups += 1;
@@ -2407,12 +2618,8 @@ fn slint_canvas(s: &mut String, scene: &Scene) {
                 continue;
             }
             "rect" => {
-                let radius = w
-                    .slint_overrides
-                    .get("radius")
-                    .map(widget_num)
-                    .or(w.radius)
-                    .unwrap_or(0.0);
+                let radius =
+                    w.slint_overrides.get("radius").map(widget_num).or(w.radius).unwrap_or(0.0);
                 writeln!(
                     s,
                     "    Rectangle {{\n        x: {}px;\n        y: {}px;\n        width: {}px;\n        height: {}px;\n        border-radius: {}px;\n        background: MaterialPalette.{};\n    }}\n",
@@ -2439,6 +2646,8 @@ fn slint_canvas(s: &mut String, scene: &Scene) {
                 split_button_props(w, !scene.times.is_empty())
             } else if w.kind == "fab" || w.kind == "extended-fab" {
                 fab_props(w, !scene.times.is_empty())
+            } else if w.kind.ends_with("chip") {
+                chip_props(w, !scene.times.is_empty())
             } else if w.kind == "radio-button" {
                 radio_props(w, !scene.times.is_empty())
             } else if w.kind == "switch" {
@@ -2510,6 +2719,7 @@ fn trace_prop_type(prop: &str) -> &'static str {
         | "shadow_elevation"
         | "dot_radius" => "length",
         "trailing_icon_rotation" => "angle",
+        "resolved_content_color" => "color",
         "label_alpha" | "show_scale" | "show_alpha" | "expand_progress" => "float",
         other => panic!("no forwarding type known for trace prop {other:?}"),
     }
@@ -2886,16 +3096,9 @@ fn appbar_widget(s: &mut String, w: &Widget, i: usize) {
         match w.kind.as_str() {
             "bottom-app-bar" => writeln!(p, "        fab-icon: Icons.{icon};").unwrap(),
             "search-bar" => writeln!(p, "        leading-icon: Icons.{icon};").unwrap(),
-            "app-bar-with-search" => {
-                writeln!(p, "        leading-icon: Icons.{icon};").unwrap()
-            }
-            _ => {
-                writeln!(
-                    p,
-                    "        leading-button: {{ icon: Icons.{icon}, enabled: true }};"
-                )
-                .unwrap()
-            }
+            "app-bar-with-search" => writeln!(p, "        leading-icon: Icons.{icon};").unwrap(),
+            _ => writeln!(p, "        leading-button: {{ icon: Icons.{icon}, enabled: true }};")
+                .unwrap(),
         }
     }
     if !w.icons.is_empty() {
@@ -3219,6 +3422,51 @@ fn date_picker_widget(s: &mut String, w: &Widget, i: usize) {
 writeln!(
         s,
         "    picker{i} := DatePickerDialogContent {{\n        x: Math.round((parent.width - self.width) / 1phx / 2) * 1phx;\n        y: Math.round((parent.height - self.height) / 1phx / 2) * 1phx;\n{p}\n        {component} {{\n{inner}        }}\n    }}\n",
+    )
+    .unwrap();
+}
+
+/// One progress-indicator family widget (`linear-progress`,
+/// `circular-progress`, `linear-wavy-progress`, `circular-wavy-progress`):
+/// `progress` and `indeterminate` mirror the `Widget` fields; explicit
+/// `width`/`height` pin the drawn size like the Compose `Modifier.size`.
+/// Elements are named `progress{n}` in scene order.
+fn progress_widget(s: &mut String, w: &Widget, i: usize) {
+    let component = match w.kind.as_str() {
+        "linear-progress" => "LinearProgressIndicator",
+        "circular-progress" => "CircularProgressIndicator",
+        "linear-wavy-progress" => "LinearWavyProgressIndicator",
+        "circular-wavy-progress" => "CircularWavyProgressIndicator",
+        other => panic!("unknown progress kind {other:?}"),
+    };
+    let mut p = String::new();
+    let over = &w.slint_overrides;
+    if w.indeterminate == Some(true) {
+        p.push_str("        indeterminate: true;\n");
+    } else if let Some(progress) = w.progress {
+        writeln!(p, "        progress: {progress};").unwrap();
+    }
+    // `slint_overrides` — the negative scenes' deliberate defects: a wrong
+    // `gap-size`, `wavelength` or a flat `amplitude` only the Slint side
+    // renders.
+    for (key, prop) in [("gap_size", "gap-size"), ("wavelength", "wavelength")] {
+        if let Some(v) = over.get(key) {
+            writeln!(p, "        {prop}: {}px;", widget_num(v)).unwrap();
+        }
+    }
+    if let Some(v) = over.get("amplitude") {
+        writeln!(p, "        amplitude: {};", widget_num(v)).unwrap();
+    }
+    if let Some(width) = w.width {
+        writeln!(p, "        width: {width}px;").unwrap();
+    }
+    if let Some(height) = w.height {
+        writeln!(p, "        height: {height}px;").unwrap();
+    }
+    writeln!(
+        s,
+        "    progress{i} := {component} {{\n        x: {}px;\n        y: {}px;\n{}    }}\n",
+        w.x as i64, w.y as i64, p,
     )
     .unwrap();
 }
@@ -3847,3 +4095,91 @@ fn navbar_widget(s: &mut String, w: &Widget, i: usize) {
     )
     .unwrap();
 }
+
+/// A `material-scaffold` widget: the `Scaffold` and its slot children.
+/// Upstream z-order is content, top bar, snackbar, bottom bar, FAB —
+/// later children paint over earlier ones — and the slots report their
+/// measured size through the scaffold's `in-out` props (upstream
+/// measures each slot with loose constraints; `min_*` is the Slint
+/// counterpart).
+fn scaffold_widget(s: &mut String, w: &Widget, i: usize) {
+    let fab_pos = match w.fab_position.as_deref().unwrap_or("end") {
+        "start" => "start",
+        "center" => "center",
+        "end" => "end",
+        "end-overlay" => "end_overlay",
+        other => panic!("unknown fab_position {other:?}"),
+    };
+    writeln!(
+        s,
+        "    scaffold{i} := Scaffold {{\n        x: {}px;\n        y: {}px;\n        width: {}px;\n        height: {}px;\n        fab-position: FabPosition.{fab_pos};",
+        w.x as i64,
+        w.y as i64,
+        w.width.unwrap() as i64,
+        w.height.unwrap() as i64,
+    )
+    .unwrap();
+    writeln!(
+        s,
+        "        content{i} := Rectangle {{\n            width: 100%;\n            height: 100%;\n            MaterialText {{\n                text: {:?};\n                x: 16px;\n                y: scaffold{i}.content_padding_top + 16px;\n                style: MaterialTypography.body_large;\n                color: scaffold{i}.content_color;\n            }}\n        }}",
+        w.text.as_deref().unwrap_or("Content"),
+    )
+    .unwrap();
+    if w.top_bar.unwrap_or(false) {
+        // `y: 0` pins the bar to the top — an element with unset height
+        // centers in its parent otherwise.
+        writeln!(
+            s,
+            "        top-bar-height: appbar{i}.min_height;\n        appbar{i} := TopAppBar {{\n            y: 0px;\n            width: 100%;\n            title: {:?};\n        }}",
+            w.title.as_deref().unwrap_or("Scaffold"),
+        )
+        .unwrap();
+    }
+    if w.snackbar.unwrap_or(false) {
+        // `slint_overrides` shadow the scaffold-provided offsets — the
+        // negative scenes' deliberate defect.
+        let sx = w
+            .slint_overrides
+            .get("snackbar_x")
+            .map(|v| format!("{}px", widget_num(v)))
+            .unwrap_or_else(|| format!("scaffold{i}.snackbar_x"));
+        let sy = w
+            .slint_overrides
+            .get("snackbar_y")
+            .map(|v| format!("{}px", widget_num(v)))
+            .unwrap_or_else(|| format!("scaffold{i}.snackbar_y"));
+        writeln!(
+            s,
+            "        snackbar-width: snackbar{i}.width;\n        snackbar-height: snackbar{i}.height;\n        snackbar{i} := Rectangle {{\n            x: {sx};\n            y: {sy};\n            width: {}px;\n            height: {}px;\n            border-radius: 4px;\n            background: MaterialPalette.inverse_surface;\n        }}",
+            w.snack_width.unwrap_or(200.0) as i64,
+            w.snack_height.unwrap_or(48.0) as i64,
+        )
+        .unwrap();
+    }
+    if w.bottom_bar.unwrap_or(false) {
+        writeln!(
+            s,
+            "        bottom-bar-height: navbar{i}.min_height;\n        navbar{i} := NavigationBar {{\n            y: scaffold{i}.bottom_bar_y;\n            width: 100%;\n            items: [{{ icon: Icons.menu, selected_icon: Icons.menu, text: \"Menu\", show_badge: false, badge: \"\" }}, {{ icon: Icons.schedule, selected_icon: Icons.schedule, text: \"Later\", show_badge: false, badge: \"\" }}];\n            current-index: 0;\n        }}"
+        )
+        .unwrap();
+    }
+    if w.fab.unwrap_or(false) {
+        let fx = w
+            .slint_overrides
+            .get("fab_x")
+            .map(|v| format!("{}px", widget_num(v)))
+            .unwrap_or_else(|| format!("scaffold{i}.fab_x"));
+        let fy = w
+            .slint_overrides
+            .get("fab_y")
+            .map(|v| format!("{}px", widget_num(v)))
+            .unwrap_or_else(|| format!("scaffold{i}.fab_y"));
+        writeln!(
+            s,
+            "        fab-width: fab{i}.min_width;\n        fab-height: fab{i}.min_height;\n        fab{i} := FloatingActionButton {{\n            x: {fx};\n            y: {fy};\n            icon: Icons.add;\n            enforce_touch_target: false;\n        }}"
+        )
+        .unwrap();
+    }
+    writeln!(s, "    }}").unwrap();
+
+    }

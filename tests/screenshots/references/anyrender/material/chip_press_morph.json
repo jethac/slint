@@ -1,0 +1,91 @@
+[
+  {
+    "PushClipLayer": {
+      "clip": "M0,12 C0,5.3726 5.3726,0 12,0 L108,0 C114.6274,0 120,5.3726 120,12 L120,20 C120,26.6274 114.6274,32 108,32 L12,32 C5.3726,32 0,26.6274 0,20 Z",
+      "transform": [
+        1.0,
+        0.0,
+        0.0,
+        1.0,
+        60.0,
+        32.0
+      ]
+    }
+  },
+  {
+    "PushLayer": {
+      "alpha": 0.0,
+      "backdrop_filter": null,
+      "blend": {
+        "compose": "SrcOver",
+        "mix": "Normal"
+      },
+      "clip": "M0,0 L1000000000,0 L1000000000,1000000000 L0,1000000000 Z",
+      "filter": null,
+      "transform": [
+        1.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0
+      ]
+    }
+  },
+  "PopLayer",
+  {
+    "PushLayer": {
+      "alpha": 0.0,
+      "backdrop_filter": null,
+      "blend": {
+        "compose": "SrcOver",
+        "mix": "Normal"
+      },
+      "clip": "M0,0 L1000000000,0 L1000000000,1000000000 L0,1000000000 Z",
+      "filter": null,
+      "transform": [
+        1.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0
+      ]
+    }
+  },
+  "PopLayer",
+  "PopLayer",
+  {
+    "Stroke": {
+      "brush": {
+        "Solid": {
+          "components": [
+            0.7098,
+            0.6902,
+            0.7333,
+            1.0
+          ]
+        }
+      },
+      "brush_transform": null,
+      "shape": "M0.5,12 C0.5,5.6487 5.6487,0.5 12,0.5 L108,0.5 C114.3513,0.5 119.5,5.6487 119.5,12 L119.5,20 C119.5,26.3513 114.3513,31.5 108,31.5 L12,31.5 C5.6487,31.5 0.5,26.3513 0.5,20 Z",
+      "style": {
+        "dash_offset": 0.0,
+        "dash_pattern": [],
+        "end_cap": "Round",
+        "join": "Miter",
+        "miter_limit": 4.0,
+        "start_cap": "Round",
+        "width": 1.0
+      },
+      "transform": [
+        1.0,
+        0.0,
+        0.0,
+        1.0,
+        60.0,
+        32.0
+      ]
+    }
+  }
+]
