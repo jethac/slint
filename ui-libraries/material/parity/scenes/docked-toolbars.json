@@ -1,0 +1,72 @@
+{
+  "actions": [],
+  "densities": [
+    1,
+    2
+  ],
+  "fonts": {
+    "brand": "Roboto",
+    "plain": "Roboto"
+  },
+  "name": "docked-toolbars",
+  "params": {},
+  "parity": "static",
+  "size": [
+    400,
+    270
+  ],
+  "theme": {
+    "contrast": 0.0,
+    "dark": false,
+    "platform": "phone",
+    "seed": "6750A4",
+    "spec": "spec2025",
+    "variant": "tonal-spot"
+  },
+  "trace_elements": [
+    "appbar0",
+    "appbar1",
+    "appbar2"
+  ],
+  "type": "canvas",
+  "widgets": [
+    {
+      "icons": [
+        "check",
+        "edit",
+        "menu",
+        "close"
+      ],
+      "kind": "flexible-bottom-app-bar",
+      "width": 360,
+      "x": 20,
+      "y": 20
+    },
+    {
+      "arrangement": "spaced",
+      "icons": [
+        "check",
+        "menu",
+        "close"
+      ],
+      "kind": "flexible-bottom-app-bar",
+      "spacing": 32,
+      "width": 360,
+      "x": 20,
+      "y": 104
+    },
+    {
+      "height_offset": -30,
+      "icons": [
+        "check",
+        "menu",
+        "close",
+        "edit"
+      ],
+      "kind": "flexible-bottom-app-bar",
+      "width": 360,
+      "x": 20,
+      "y": 188
+    }
+  ]
+}

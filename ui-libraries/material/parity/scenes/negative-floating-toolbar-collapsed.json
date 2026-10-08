@@ -1,0 +1,70 @@
+{
+    "actions": [],
+    "densities": [
+        1,
+        2
+    ],
+    "fonts": {
+        "brand": "Roboto",
+        "plain": "Roboto"
+    },
+    "mask_decor": {
+        "appbar0": {
+            "margin": 8,
+            "times": [
+                2000
+            ]
+        },
+        "container": {
+            "margin": 12,
+            "times": [
+                2000
+            ]
+        },
+        "fab": {
+            "margin": 12,
+            "times": [
+                2000
+            ]
+        }
+    },
+    "name": "negative-floating-toolbar-collapsed",
+    "negative_note": "slint_overrides collapses an expanded toolbar \u2014 the clip collapses to its fab-adjacent pin while the Compose reference stays at full width, so bounds and pixels must not match",
+    "params": {},
+    "parity": "negative",
+    "size": [
+        300,
+        140
+    ],
+    "theme": {
+        "contrast": 0.0,
+        "dark": false,
+        "platform": "phone",
+        "seed": "6750A4",
+        "spec": "spec2025",
+        "variant": "tonal-spot"
+    },
+    "trace_elements": [
+        "appbar0",
+        "container",
+        "fab"
+    ],
+    "type": "canvas",
+    "widgets": [
+        {
+            "expanded": true,
+            "fab_icon": "edit",
+            "icons": [
+                "check",
+                "menu",
+                "close"
+            ],
+            "kind": "horizontal-floating-toolbar",
+            "slint_overrides": {
+                "expanded": false
+            },
+            "x": 50,
+            "y": 30
+        }
+    ]
+}

@@ -1,0 +1,171 @@
+---
+title: Floating toolbars
+description: HorizontalFloatingToolbar and VerticalFloatingToolbar API.
+---
+
+import CodeSnippetMD from '@slint/common-files/src/components/CodeSnippetMD.astro';
+import SlintProperty from '@slint/common-files/src/components/SlintProperty.astro';
+
+<CodeSnippetMD imagePath="/src/assets/generated/floating_toolbar.png" scale="3" imageWidth="400" imageHeight="120" imageAlt="">
+```slint
+import { HorizontalFloatingToolbar, IconButton, Icons } from "@material";
+export component Example inherits Window {
+    width: 400px;
+    height: 120px;
+    background: transparent;
+    HorizontalFloatingToolbar {
+        x: (parent.width - self.preferred-width) / 2;
+        y: (parent.height - self.preferred-height) / 2;
+        fab-icon: Icons.edit;
+        IconButton {
+            icon: Icons.check;
+        }
+        IconButton {
+            icon: Icons.menu;
+        }
+        IconButton {
+            icon: Icons.close;
+        }
+    }
+}
+```
+</CodeSnippetMD>
+
+`HorizontalFloatingToolbar` and `VerticalFloatingToolbar` are the Material 3
+Expressive floating toolbars — a 64dp stadium of icon actions that floats
+over content, optionally paired with a floating action button. Set
+`fab-icon` for the with-FAB variant: the toolbar clips toward the FAB as it
+collapses, and the FAB grows from 56dp to 80dp
+(`FloatingToolbarTokens`/`FabBaselineTokens`/`FabMediumTokens`).
+
+`color-style` selects the `standard` (`surface_container`) or `vibrant`
+(`primary_container` toolbar, `tertiary_container` FAB) color pair.
+`fab-position` places the FAB at `start`/`end` (horizontal) or
+`top`/`bottom` (vertical).
+
+Center content is arbitrary children — `IconButton`s in the example — or
+use the `leading-items`/`trailing-items` `AppBarItem` slots.
+
+<CodeSnippetMD imagePath="/src/assets/generated/floating_toolbar_variants.png" scale="3" imageWidth="400" imageHeight="200" imageAlt="">
+```slint
+import { HorizontalFloatingToolbar, VerticalFloatingToolbar, FloatingToolbarColorStyle, FloatingToolbarVerticalFabPosition, IconButton, Icons } from "@material";
+export component Example inherits Window {
+    width: 400px;
+    height: 200px;
+    background: transparent;
+    HorizontalFloatingToolbar {
+        x: 24px;
+        y: 24px;
+        color-style: FloatingToolbarColorStyle.vibrant;
+        fab-icon: Icons.edit;
+        IconButton { icon: Icons.check; }
+        IconButton { icon: Icons.edit; }
+    }
+    VerticalFloatingToolbar {
+        x: parent.width - self.preferred-width - 24px;
+        y: 24px;
+        fab-icon: Icons.edit;
+        fab-position: FloatingToolbarVerticalFabPosition.bottom;
+        IconButton { icon: Icons.check; }
+        IconButton { icon: Icons.more_vert; }
+    }
+}
+```
+</CodeSnippetMD>
+
+## Scroll behavior
+
+Two independent behaviors mirror
+`FloatingToolbarDefaults.floatingToolbarVerticalNestedScroll` and
+`exitAlwaysScrollBehavior`:
+
+- `expand-on-scroll`: collapse after `collapse-scroll-distance-threshold`
+  (40dp) of forward scroll, expand again after
+  `expand-scroll-distance-threshold` (40dp) back.
+- `exit-always`: slide the whole toolbar off its `exit-direction` edge with
+  the scroll position.
+
+Bind `scroll-position` to `-flickable.content-y` (plus
+`scroll-release-velocity` to `flickable.release-velocity.y` and
+`scroll-parent-extent` to the parent's `height`/`width` for `bottom`/`end`
+exits); releasing a partial offset settles with the motion scheme's
+fast-spatial spring. When `exit-always` is set, the bar itself is a drag
+area: dragging it vertically drives the same offset and settles on release.
+`collapsed-fraction` reports the current 0–1 collapse for chained effects.
+
+## Properties
+
+### leading-items / trailing-items
+<SlintProperty propName="leading-items" typeName="struct" structName="AppBarItem">
+`AppBarItem` slots around the center content (leading items first).
+</SlintProperty>
+
+### fab-icon
+<SlintProperty propName="fab-icon" typeName="image">
+FAB icon; when set the toolbar renders the with-FAB layout.
+</SlintProperty>
+
+### fab-position
+<SlintProperty propName="fab-position" typeName="enum" enumName="FloatingToolbarHorizontalFabPosition">
+FAB placement — `start`/`end` on `HorizontalFloatingToolbar`,
+`FloatingToolbarVerticalFabPosition.top`/`bottom` on the vertical variant.
+</SlintProperty>
+
+### expanded
+<SlintProperty propName="expanded" typeName="bool">
+The toolbar's expanded state — the `expand-on-scroll` hysteresis writes it
+back, so bind it `<=>` when the caller tracks it.
+</SlintProperty>
+
+### color-style
+<SlintProperty propName="color-style" typeName="enum" enumName="FloatingToolbarColorStyle">
+`standard` or `vibrant` container/FAB color pair.
+</SlintProperty>
+
+### expand-on-scroll
+<SlintProperty propName="expand-on-scroll" typeName="bool">
+Enables the scroll-distance expand/collapse hysteresis.
+</SlintProperty>
+
+### exit-always
+<SlintProperty propName="exit-always" type="bool">
+Enables the scroll-driven exit in `exit-direction`.
+</SlintProperty>
+
+### exit-direction
+<SlintProperty propName="exit-direction" typeName="enum" enumName="FloatingToolbarExitDirection">
+Edge the bar exits toward — `bottom`, `top`, `start`, or `end`.
+</SlintProperty>
+
+### scroll-position
+<SlintProperty propName="scroll-position" typeName="length">
+The scrolled amount of the content — bind `-flickable.content-y`.
+</SlintProperty>
+
+### scroll-release-velocity
+<SlintProperty propName="scroll-release-velocity" typeName="float">
+`flickable.release-velocity` on the scroll axis — seeds the settle
+animation.
+</SlintProperty>
+
+### offset / content-offset
+<SlintProperty propName="offset" typeName="length">
+Current exit offset and accumulated scroll offset (in-out; restore to
+preserve state).
+</SlintProperty>
+
+### collapsed-fraction
+<SlintProperty propName="collapsed-fraction" typeName="float">
+0–1 collapse progress combining the exit offset and the clip collapse.
+</SlintProperty>
+
+## Callbacks
+
+### fab-clicked()
+Invoked when the floating action button is clicked.
+
+### leading-item-clicked(index) / trailing-item-clicked(index)
+Invoked when a slot item is clicked.
+
+### leading-item-checked-changed(index, checked) / trailing-item-checked-changed(index, checked)
+Invoked when a toggleable slot item's state changes.

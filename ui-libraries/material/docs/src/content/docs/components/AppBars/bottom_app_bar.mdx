@@ -30,8 +30,11 @@ export component Example inherits Window {
 
 `BottomAppBar` displays navigation and key actions in an 80dp bar at the
 bottom of the screen, with an optional floating action button at the end.
-`FlexibleBottomAppBar` is the Expressive variant — a 64dp row of
-`AppBarItem`s with a configurable arrangement.
+
+**Deprecated:** the Material 3 Expressive `FlexibleBottomAppBar` — the
+[docked toolbar](../Toolbars/docked_toolbar/) — replaces it; use that
+component for new code. `BottomAppBar` still renders its own pinned spec
+faithfully.
 
 Set `exit-always` and bind `scroll-position` to `-flickable.content-y` to
 slide the bar away while scrolling down and back while scrolling up

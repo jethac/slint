@@ -26,9 +26,9 @@ Sizes: large, medium, small
 | AppBarColumn | AppBarColumn.kt | partial | #11 | springs (#5), shapes (#6) | slint component: AppBarColumn; tokens: generated component tokens; springs via active motion scheme |
 | AppBarOverflowIndicator | AppBarDsl.kt | partial | #11 | springs (#5), shapes (#6) | slint component: AppBarOverflowIndicator (via AppBarRow/AppBarColumn overflow); tokens: generated component tokens; springs via active motion scheme |
 | AppBarRow | AppBarRow.kt | partial | #11 | springs (#5), shapes (#6) | slint component: AppBarRow; tokens: generated component tokens; springs via active motion scheme |
-| BottomAppBar | AppBar.kt | partial | #11 | springs (#5), shapes (#6) | slint component: BottomAppBar; tokens: generated component tokens; springs via active motion scheme |
+| BottomAppBar | AppBar.kt | partial | #10, #11 | none | slint component: BottomAppBar; deprecated per #11 — replaced by FlexibleBottomAppBar (the docked toolbar); scroll-state plumbing (release-velocity settle, accumulated contentOffset) updated to the pinned ExitAlwaysScrollBehavior |
 | CenterAlignedTopAppBar | AppBar.kt | partial | #11 | springs (#5), shapes (#6) | slint component: CenterAlignedTopAppBar; tokens: generated component tokens; springs via active motion scheme |
-| FlexibleBottomAppBar | AppBar.kt | partial | #11 | springs (#5), shapes (#6) | slint component: FlexibleBottomAppBar; tokens: generated component tokens; springs via active motion scheme |
+| FlexibleBottomAppBar | AppBar.kt | partial | #10, #11 | none | slint component: FlexibleBottomAppBar — the docked toolbar; tokens: DockedToolbarTokens; drag area + BottomAppBarScrollState (release-velocity settle, accumulated contentOffset); `minimumInteractiveBalancedPadding` has no Slint mechanism — touch-target expansion controlled by `touch-target` |
 | LargeFlexibleTopAppBar | AppBar.kt | partial | #11 | springs (#5), shapes (#6) | slint component: LargeFlexibleTopAppBar; tokens: generated component tokens; springs via active motion scheme |
 | LargeTopAppBar | AppBar.kt | partial | #11 | springs (#5), shapes (#6) | slint component: LargeTopAppBar; tokens: generated component tokens; springs via active motion scheme |
 | MediumFlexibleTopAppBar | AppBar.kt | partial | #11 | springs (#5), shapes (#6) | slint component: MediumFlexibleTopAppBar; tokens: generated component tokens; springs via active motion scheme |
@@ -510,8 +510,8 @@ States: selected, unselected
 
 | Component | Source | Status | Issues | Needs | Notes |
 |---|---|---|---|---|---|
-| HorizontalFloatingToolbar | FloatingToolbar.kt | missing | #10 | springs (#5), adaptive (#12) | - |
-| VerticalFloatingToolbar | FloatingToolbar.kt | missing | #10 | springs (#5), adaptive (#12) | - |
+| HorizontalFloatingToolbar | FloatingToolbar.kt | partial | #10 | adaptive (#12) | slint component: HorizontalFloatingToolbar; tokens: FloatingToolbarTokens; plain + with-FAB variants, standard/vibrant, fast-spatial expand/collapse spring + exit-always scroll behavior with drag area; with-FAB content does not scroll (upstream .horizontalScroll); no RTL — start/end are LTR-true |
+| VerticalFloatingToolbar | FloatingToolbar.kt | partial | #10 | adaptive (#12) | slint component: VerticalFloatingToolbar; same notes as HorizontalFloatingToolbar |
 
 ### Tooltips
 

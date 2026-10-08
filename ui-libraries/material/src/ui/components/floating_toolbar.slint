@@ -1,0 +1,796 @@
+// Copyright © SixtyFPS GmbH <info@slint.dev>
+// SPDX-License-Identifier: MIT
+
+import { IconButton } from "./icon_button.slint";
+import { BaseButton } from "./base_button.slint";
+import { Elevation } from "./elevation.slint";
+import { MaterialButtonMetrics } from "./button_metrics.slint";
+import { AppBarItem } from "./bottom_app_bar.slint";
+import { MaterialPalette } from "../styling/material_palette.slint";
+import { MaterialAnimations } from "../styling/material_animations.slint";
+import { MaterialCornerShape } from "../styling/generated/material_shape_tokens.slint";
+import { ElevationTokens } from "../styling/generated/material_elevation_tokens.slint";
+import {
+    FabBaselineTokens,
+    FabMediumTokens,
+    FloatingToolbarTokens,
+} from "../styling/generated/material_component_tokens.slint";
+
+// The `FloatingToolbarColors.standard|vibrant` bundles of the pinned
+// `FloatingToolbar.kt` — which pair of toolbar and FAB colors the component
+// resolves.
+export enum FloatingToolbarColorStyle { standard, vibrant }
+
+// `FloatingToolbarExitDirection` — the screen edge a toolbar under
+// `exit-always` leaves toward. Slint has no layout-direction concept, so
+// `start`/`end` always mean left/right (upstream mirrors them for RTL).
+export enum FloatingToolbarExitDirection { bottom, top, start, end }
+
+// `FloatingToolbarHorizontalFabPosition` — the FAB sits at the `start` or the
+// `end` of a horizontal toolbar.
+export enum FloatingToolbarHorizontalFabPosition { start, end }
+
+// `FloatingToolbarVerticalFabPosition` — the FAB sits at the `top` or the
+// `bottom` of a vertical toolbar.
+export enum FloatingToolbarVerticalFabPosition { top, bottom }
+
+// The FAB slot of the `*FloatingToolbar` components — the
+// `StandardFloatingActionButton`/`VibrantFloatingActionButton` helpers of the
+// pinned `FloatingToolbar.kt`: a `FloatingActionButton` applied with
+// `Modifier.fillMaxSize()`, so it morphs between `FabBaselineTokens` (56) and
+// `FabMediumTokens` (80) with the toolbar's expand progress while its 24dp
+// icon stays centered.
+component FloatingToolbarFab {
+    in property <image> icon;
+    in property <color> color;
+    in property <color> icon-color;
+    in property <string> tooltip;
+    in property <MaterialCornerShape> container-shape: FabBaselineTokens.container-shape;
+
+    callback clicked <=> base.clicked;
+
+    // `corner-radius` resolves the token shape to the uniform radius of
+    // `corner_large` — the FAB keeps the same corners at every progress.
+    out property <length> container-radius:
+        MaterialButtonMetrics.corner-radius(root.container-shape, min(root.width, root.height));
+
+    accessible-role: button;
+    accessible-label: root.tooltip;
+    accessible-action-default => { base.clicked(); }
+
+    elevation := Elevation {
+        width: 100%;
+        height: 100%;
+        border_radius: root.container-radius;
+        background: root.color;
+        level: 2;
+    }
+
+    base := BaseButton {
+        width: 100%;
+        height: 100%;
+        border_radius: root.container-radius;
+        color: root.icon-color;
+        icon: root.icon;
+        icon_size: FabBaselineTokens.icon-size;
+        button_horizontal_padding: FabBaselineTokens.container-width / 2 - self.icon_size / 2;
+        button_vertical_padding: self.button_horizontal_padding;
+        min_layout_width: 0px;
+        min_layout_height: 0px;
+        tooltip: root.tooltip;
+    }
+
+    states [
+        hover when base.has-hover : {
+            elevation.level: 3;
+        }
+    ]
+}
+
+// Shared scroll plumbing for the floating toolbars — the
+// `ExitAlwaysFloatingToolbarScrollBehavior` plus the
+// `floatingToolbarVerticalNestedScroll` expansion connection of the pinned
+// `FloatingToolbar.kt`. `scroll-position` binds to `-content-y` of the
+// `Flickable` below the toolbar (positive while scrolling down) and
+// `scroll-release-velocity` to its `release-velocity` component in logical
+// px/s. The deltas drive both the whole-bar `exit-always` translation and the
+// `expand-on-scroll` hysteresis.
+component FloatingToolbarScrollState {
+    in-out property <bool> expanded;
+    in property <bool> exit-always;
+    in property <bool> expand-on-scroll;
+    in property <length> scroll-position;
+    in property <float> scroll-release-velocity;
+    in property <FloatingToolbarExitDirection> exit-direction;
+    in property <length> expand-scroll-distance-threshold: 40px;
+    in property <length> collapse-scroll-distance-threshold: 40px;
+    // The extent of the toolbar's parent in the exit axis — only `bottom` and
+    // `end` exits need it (`top`/`start` limits come from the component's own
+    // geometry).
+    in property <length> parent-extent;
+    // The toolbar's rest position and extent in its parent — `x`/`y` and
+    // `width`/`height` of the component along the exit axis.
+    in property <length> position;
+    in property <length> extent;
+
+    in-out property <length> offset;
+    in-out property <length> content-offset;
+    out property <length> effective-offset: root.offset + root.settle-offset;
+    out property <float> collapsed-fraction:
+        root.offset-limit != 0px ? root.offset / root.offset-limit : 0;
+    property <float> seed-velocity;
+
+    // `offsetLimit` — how far the toolbar may travel before it has left the
+    // parent bounds entirely. Upstream recomputes `-(limit - offset)` on every
+    // layout where `limit` is the exit distance measured from the translated
+    // position; the offset terms cancel, so the limit is the exit distance at
+    // the toolbar's rest position.
+    out property <length> offset-limit:
+        root.exit-direction == FloatingToolbarExitDirection.top ?
+            -(root.position + root.extent) :
+        root.exit-direction == FloatingToolbarExitDirection.start ?
+            -(root.position + root.extent) :
+        -(root.parent-extent - root.position);
+
+    property <length> last-scroll-position;
+    property <length> settle-offset;
+    property <length> nested-content-offset;
+    property <length> nested-threshold: -root.collapse-scroll-distance-threshold;
+
+    changed scroll-position => {
+        if !root.exit-always && !root.expand-on-scroll {
+            root.last-scroll-position = root.scroll-position;
+            return;
+        }
+        let delta = root.scroll-position - root.last-scroll-position;
+        if delta == 0px {
+            return;
+        }
+        root.last-scroll-position = root.scroll-position;
+        // `consumed.y` — the upstream forward-scroll delta — is the negative
+        // of `scroll-position`'s, which grows while scrolling down.
+        let consumed = -delta;
+        if root.exit-always {
+            root.content-offset += consumed;
+            root.offset = (root.offset + consumed).clamp(root.offset-limit, 0px);
+            settle-timer.restart();
+        }
+        if root.expand-on-scroll {
+            root.nested-content-offset += consumed;
+            if consumed < 0px && root.nested-content-offset <= root.nested-threshold {
+                root.nested-threshold =
+                    root.nested-content-offset + root.expand-scroll-distance-threshold;
+                root.expanded = false;
+            } else if consumed > 0px && root.nested-content-offset >= root.nested-threshold {
+                root.nested-threshold =
+                    root.nested-content-offset - root.collapse-scroll-distance-threshold;
+                root.expanded = true;
+            }
+        }
+    }
+
+    // Upstream's `onPostFling` clears the accumulator to cancel float drift
+    // once the bar sits at an extreme and the fling still pulls the content
+    // back (`available.y > 0` → positive `scroll-release-velocity` in Slint's
+    // sign convention, written once per release).
+    changed scroll-release-velocity => {
+        if root.exit-always && root.scroll-release-velocity > 0 &&
+            (root.offset == 0px || root.offset == root.offset-limit) {
+            root.content-offset = 0px;
+        }
+    }
+
+    // `updateThreshold` of the expansion node — an `expanded` flip re-bases
+    // the hysteresis threshold off the accumulated offset.
+    public function merge-settle() {
+        root.offset = root.effective-offset;
+        root.settle-offset = 0px;
+    }
+
+    changed expanded => {
+        root.nested-threshold = root.expanded ?
+            root.nested-content-offset - root.collapse-scroll-distance-threshold :
+            root.nested-content-offset + root.expand-scroll-distance-threshold;
+    }
+
+    // Upstream settles in `onPostFling` — a spline-based decay seeded with the
+    // release velocity, then a snap to the nearest end. Slint expresses both
+    // as one spring: the offset's remaining travel animates with
+    // `default-effects` (the snap spec) seeded by `initial-velocity`.
+    public function settle(velocity: float) {
+        if root.collapsed-fraction < 0.01 || root.collapsed-fraction == 1 {
+            return;
+        }
+        let target = root.collapsed-fraction < 0.5 ? 0px : root.offset-limit;
+        if target != root.offset {
+            root.seed-velocity = velocity;
+            root.settle-offset = root.offset - target;
+            root.offset = target;
+            root.settle-offset = 0px;
+        }
+    }
+
+    // A pointer released mid-fling keeps feeding `scroll-position` until the
+    // `Flickable` coasts to a stop — the timer fires once the deltas stop.
+    settle-timer := Timer {
+        interval: 120ms;
+        triggered => { root.settle(root.scroll-release-velocity); }
+    }
+
+    animate settle-offset {
+        easing: MaterialAnimations.default-effects-spring;
+        initial-velocity: root.seed-velocity;
+        enabled: !MaterialPalette.reduced-motion;
+    }
+}
+
+// The `.draggable` part of `floatingScrollBehaviorModifier` — dragging the
+// bar itself moves `offset` toward `offset-limit`, and releasing settles with
+// the release velocity measured over the drag.
+component FloatingToolbarDragArea inherits TouchArea {
+    in property <FloatingToolbarExitDirection> exit-direction;
+    in property <length> offset-limit;
+    in-out property <length> offset;
+    out property <float> offset-velocity;
+
+    callback drag-ended();
+
+    property <length> drag-start-offset;
+    property <length> last-position;
+    property <duration> last-tick;
+
+    moved => {
+        if self.pressed {
+            let vertical = root.exit-direction == FloatingToolbarExitDirection.top ||
+                root.exit-direction == FloatingToolbarExitDirection.bottom;
+            let pos = vertical ? self.mouse-y : self.mouse-x;
+            let press = vertical ? self.pressed-y : self.pressed-x;
+            // `Start`/`Top` grow `offset` with the drag, `End`/`Bottom` shrink
+            // it — the sign switch upstream performs per direction.
+            let sign = root.exit-direction == FloatingToolbarExitDirection.top ||
+                root.exit-direction == FloatingToolbarExitDirection.start ? 1 : -1;
+            let now = animation-tick();
+            if root.last-tick > 0ms && now > root.last-tick {
+                root.offset-velocity =
+                    sign * ((pos - root.last-position) / 1px) / ((now - root.last-tick) / 1s);
+            }
+            root.last-position = pos;
+            root.last-tick = now;
+            root.offset =
+                (root.drag-start-offset + sign * (pos - press)).clamp(root.offset-limit, 0px);
+        }
+    }
+
+    callback drag-started();
+
+    changed pressed => {
+        if self.pressed {
+            // Fold any in-flight settle into `offset` before grabbing the
+            // drag start — otherwise the bar jumps to the settle target.
+            root.drag-started();
+            root.drag-start-offset = root.offset;
+            root.last-tick = 0ms;
+        } else {
+            root.drag-ended();
+        }
+    }
+}
+
+// A collapsing side slot of the plain `*FloatingToolbar` variants — the
+// `AnimatedVisibility`-wrapped `Row`/`Column` of `leadingContent` and
+// `trailingContent`. The clip box animates its extent with `expand-progress`
+// while the inner row keeps its own size pinned to the anchor edge, so items
+// slide under the clip like the upstream enter/shrink transitions
+// (`expandFrom = start` / `shrinkTowards = end` for `leading`, mirrored for
+// `trailing`; the vertical slots pin `bottom`/`top` in both directions).
+component FloatingToolbarSlot inherits Rectangle {
+    in property <[AppBarItem]> items;
+    in property <color> content-color;
+    in property <bool> touch-target;
+    in property <bool> vertical;
+    in property <bool> leading;
+    in property <float> expand-progress;
+    in property <bool> expanded;
+    in property <bool> interactive;
+
+    callback item-clicked(index: int);
+    callback item-checked-changed(index: int, checked: bool);
+
+    clip: true;
+    visible: root.expand-progress > 0;
+    width: root.vertical ? items-layout.preferred-width :
+        items-layout.preferred-width * root.expand-progress;
+    height: root.vertical ?
+        items-layout.preferred-height * root.expand-progress :
+        items-layout.preferred-height;
+
+    items-layout := FlexboxLayout {
+        // `flex-direction`/`cross-axis-alignment` reproduce the upstream
+        // `Row`/`Column` `*Alignment.Center`: items keep their own size and
+        // pack centered rather than stretching to the slot.
+        flex-direction: root.vertical ? column : row;
+        flex-wrap: no-wrap;
+        alignment: center;
+        cross-axis-alignment: center;
+        width: root.vertical ? parent.width : self.preferred-width;
+        height: root.vertical ? self.preferred-height : parent.height;
+        x: root.vertical ? 0px :
+            root.leading ? (root.expanded ? 0px : parent.width - self.preferred-width) :
+            (root.expanded ? parent.width - self.preferred-width : 0px);
+        y: !root.vertical ? 0px :
+            root.leading ? parent.height - self.preferred-height : 0px;
+
+        for item[index] in root.items : IconButton {
+            icon: item.icon;
+            tooltip: item.label;
+            enabled: item.enabled && root.interactive;
+            content-color: root.content-color;
+            checkable: item.toggleable;
+            checked: item.checked;
+            enforce-touch-target: root.touch-target;
+
+            clicked => {
+                if item.toggleable {
+                    self.checked = !self.checked;
+                    root.item-checked-changed(index, self.checked);
+                } else {
+                    root.item-clicked(index);
+                }
+            }
+        }
+    }
+}
+
+// The upstream `HorizontalFloatingToolbar` — a 64dp stadium floating over the
+// content that keeps its center `content` visible while `leading-items` and
+// `trailing-items` collapse. With `fab-icon` set it becomes the with-FAB
+// variant whose whole content collapses into the FAB.
+export component HorizontalFloatingToolbar {
+    in property <[AppBarItem]> leading-items;
+    in property <[AppBarItem]> trailing-items;
+    in property <image> fab-icon;
+    in property <FloatingToolbarHorizontalFabPosition> fab-position:
+        FloatingToolbarHorizontalFabPosition.end;
+    in property <string> fab-tooltip;
+
+    // `expanded` is the composable's state input — bind it `<=>` so the
+    // `expand-on-scroll` hysteresis can write it back.
+    in-out property <bool> expanded: true;
+    // `floatingToolbarVerticalNestedScroll` — collapse on 40dp of forward
+    // scroll, expand again after 40dp back.
+    in property <bool> expand-on-scroll;
+    in property <length> expand-scroll-distance-threshold: 40px;
+    in property <length> collapse-scroll-distance-threshold: 40px;
+    // `FloatingToolbarDefaults.exitAlwaysScrollBehavior`.
+    in property <bool> exit-always;
+    in property <FloatingToolbarExitDirection> exit-direction:
+        FloatingToolbarExitDirection.bottom;
+    in property <length> scroll-position;
+    in property <float> scroll-release-velocity;
+    // Only `bottom`/`end` exits need the parent's extent — bind the parent's
+    // `height`/`width` in the exit axis. `top`/`start` derive the limit from
+    // the component's own position.
+    in property <length> scroll-parent-extent;
+    in-out property <length> offset;
+    in-out property <length> content-offset;
+    out property <length> offset-limit: scroll-state.offset-limit;
+    out property <float> collapsed-fraction: scroll-state.collapsed-fraction;
+
+    in property <FloatingToolbarColorStyle> color-style: FloatingToolbarColorStyle.standard;
+    in property <color> toolbar-container-color;
+    in property <color> toolbar-content-color;
+    in property <color> fab-container-color;
+    in property <color> fab-content-color;
+    in property <MaterialCornerShape> toolbar-shape: FloatingToolbarTokens.container-shape;
+    in property <length> expanded-shadow-elevation:
+        root.has-fab ? ElevationTokens.level1 : ElevationTokens.level0;
+    in property <length> collapsed-shadow-elevation: ElevationTokens.level0;
+    in property <bool> touch-target: true;
+
+    callback fab-clicked();
+    callback leading-item-clicked(index: int);
+    callback leading-item-checked-changed(index: int, checked: bool);
+    callback trailing-item-clicked(index: int);
+    callback trailing-item-checked-changed(index: int, checked: bool);
+
+    out property <bool> has-fab: root.fab-icon.width > 0 && root.fab-icon.height > 0;
+    out property <bool> interactive: root.expand-progress > 0;
+
+    // The resolved `FloatingToolbarColors`: an override wins over the style's
+    // pair, which `contentColorFor` completes from `ColorScheme.kt`'s table —
+    // `surface_container` pairs `on_surface`, `primary_container` pairs
+    // `on_primary_container`, `tertiary_container` pairs `on_tertiary_container`.
+    out property <color> resolved-toolbar-container-color:
+        root.toolbar-container-color.alpha > 0 ? root.toolbar-container-color :
+        root.color-style == FloatingToolbarColorStyle.vibrant ?
+            FloatingToolbarTokens.vibrant-container-color :
+            FloatingToolbarTokens.standard-container-color;
+    out property <color> resolved-toolbar-content-color:
+        root.toolbar-content-color.alpha > 0 ? root.toolbar-content-color :
+        root.color-style == FloatingToolbarColorStyle.vibrant ?
+            MaterialPalette.on_primary_container : MaterialPalette.on_surface;
+    out property <color> resolved-fab-container-color:
+        root.fab-container-color.alpha > 0 ? root.fab-container-color :
+        root.color-style == FloatingToolbarColorStyle.vibrant ?
+            MaterialPalette.tertiary_container : MaterialPalette.primary_container;
+    out property <color> resolved-fab-content-color:
+        root.fab-content-color.alpha > 0 ? root.fab-content-color :
+        root.color-style == FloatingToolbarColorStyle.vibrant ?
+            MaterialPalette.on_tertiary_container : MaterialPalette.on_primary_container;
+
+    // `updateTransition(expanded).animateFloat(animationSpec())` — the
+    // fast-spatial spring.
+    out property <float> expand-progress: root.expanded ? 1 : 0;
+    animate expand-progress {
+        easing: MaterialAnimations.fast-spatial-spring;
+        enabled: !MaterialPalette.reduced-motion;
+    }
+
+    scroll-state := FloatingToolbarScrollState {
+        expanded <=> root.expanded;
+        exit-always: root.exit-always;
+        expand-on-scroll: root.expand-on-scroll;
+        scroll-position: root.scroll-position;
+        scroll-release-velocity: root.scroll-release-velocity;
+        exit-direction: root.exit-direction;
+        expand-scroll-distance-threshold: root.expand-scroll-distance-threshold;
+        collapse-scroll-distance-threshold: root.collapse-scroll-distance-threshold;
+        parent-extent: root.scroll-parent-extent;
+        position: root.exit-direction == FloatingToolbarExitDirection.start ||
+            root.exit-direction == FloatingToolbarExitDirection.end ? root.x : root.y;
+        extent: root.exit-direction == FloatingToolbarExitDirection.start ||
+            root.exit-direction == FloatingToolbarExitDirection.end ? root.width : root.height;
+        offset <=> root.offset;
+        content-offset <=> root.content-offset;
+    }
+
+    accessible-role: groupbox;
+    accessible-expandable: true;
+    accessible-expanded: root.expanded;
+    accessible-action-expand => { root.expanded = !root.expanded; }
+
+    // `ToolbarToFabGap` (8) + `FabSizeRange.start` (56) — the space the FAB
+    // occupies next to the toolbar at full expansion.
+    property <length> fab-slot: FabBaselineTokens.container-width + 8px;
+    property <length> toolbar-intrinsic-width: content-lay.preferred-width;
+    property <length> fab-size:
+        FabBaselineTokens.container-width +
+        (FabMediumTokens.container-width - FabBaselineTokens.container-width) *
+        (1 - root.expand-progress);
+
+    preferred_width: root.has-fab ? root.toolbar-intrinsic-width + root.fab-slot :
+        max(FloatingToolbarTokens.container-height, content-lay.preferred-width);
+    preferred_height: root.has-fab ? FabMediumTokens.container-width :
+        max(FloatingToolbarTokens.container-height, content-lay.preferred-height);
+    min_width: root.has-fab ?
+        root.preferred_width : FloatingToolbarTokens.container-height;
+    min_height: root.has-fab ?
+        FabMediumTokens.container-width : FloatingToolbarTokens.container-height;
+
+    move-box := Rectangle {
+        x: root.exit-direction == FloatingToolbarExitDirection.start ?
+            scroll-state.effective-offset :
+            root.exit-direction == FloatingToolbarExitDirection.end ?
+            -scroll-state.effective-offset : 0px;
+        y: root.exit-direction == FloatingToolbarExitDirection.top ?
+            scroll-state.effective-offset :
+            root.exit-direction == FloatingToolbarExitDirection.bottom ?
+            -scroll-state.effective-offset : 0px;
+        width: root.width;
+        height: root.height;
+
+        if root.exit-always : drag-area := FloatingToolbarDragArea {
+            width: 100%;
+            height: 100%;
+            exit-direction: root.exit-direction;
+            offset-limit: root.offset-limit;
+            offset <=> scroll-state.offset;
+            drag-started => { scroll-state.merge-settle(); }
+            drag-ended => { scroll-state.settle(self.offset-velocity); }
+        }
+
+        // The toolbar surface — the `.background(color, shape).clip` Row of the
+        // plain variant and the clipped stadium of `*WithFabLayout`. In the FAB
+        // variant the slot geometry pins the surface against the FAB while its
+        // width collapses to zero.
+        container := Rectangle {
+            x: root.has-fab ?
+                (root.fab-position == FloatingToolbarHorizontalFabPosition.end ?
+                    root.toolbar-intrinsic-width * (1 - root.expand-progress) :
+                    root.fab-slot) :
+                0px;
+            y: root.has-fab ? (parent.height - self.height) / 2 : 0px;
+            width: root.has-fab ?
+                root.toolbar-intrinsic-width * root.expand-progress :
+                content-lay.preferred-width;
+            height: root.has-fab ?
+                FloatingToolbarTokens.container-height : parent.height;
+            clip: true;
+            border-radius: MaterialButtonMetrics.corner-radius(
+                root.toolbar-shape, min(self.width, self.height));
+            background: root.resolved-toolbar-container-color;
+            elevation: root.collapsed-shadow-elevation +
+                (root.expanded-shadow-elevation - root.collapsed-shadow-elevation) *
+                min(root.expand-progress, 1);
+            ambient-shadow-color: MaterialPalette.shadow;
+            spot-shadow-color: MaterialPalette.shadow;
+
+            content-lay := FlexboxLayout {
+                // `FloatingToolbarDefaults.ContentPadding` — 8 on every side.
+                flex-direction: row;
+                flex-wrap: no-wrap;
+                alignment: root.has-fab ? start : center;
+                cross-axis-alignment: center;
+                padding-left: FloatingToolbarTokens.container-leading-space;
+                padding-right: FloatingToolbarTokens.container-trailing-space;
+                padding-top: FloatingToolbarTokens.container-leading-space;
+                padding-bottom: FloatingToolbarTokens.container-trailing-space;
+                // In the FAB variant the clip animates around the content —
+                // the row keeps its intrinsic width so the pinned end slides
+                // under the clip instead of shrinking.
+                width: self.preferred-width;
+                height: parent.height;
+
+                FloatingToolbarSlot {
+                    items: root.leading-items;
+                    leading: true;
+                    content-color: root.resolved-toolbar-content-color;
+                    touch-target: root.touch-target;
+                    // The with-FAB layout's `content` is one plain Row — the
+                    // slots stay full size and the container clip does the
+                    // collapsing.
+                    expand-progress: root.has-fab ? 1 : root.expand-progress;
+                    expanded: root.expanded;
+                    interactive: root.interactive;
+                    item-clicked(index) => { root.leading-item-clicked(index); }
+                    item-checked-changed(index, checked) => {
+                        root.leading-item-checked-changed(index, checked);
+                    }
+                }
+
+                @children
+
+                FloatingToolbarSlot {
+                    items: root.trailing-items;
+                    leading: false;
+                    content-color: root.resolved-toolbar-content-color;
+                    touch-target: root.touch-target;
+                    expand-progress: root.has-fab ? 1 : root.expand-progress;
+                    expanded: root.expanded;
+                    interactive: root.interactive;
+                    item-clicked(index) => { root.trailing-item-clicked(index); }
+                    item-checked-changed(index, checked) => {
+                        root.trailing-item-checked-changed(index, checked);
+                    }
+                }
+            }
+        }
+
+        if root.has-fab : fab := FloatingToolbarFab {
+            x: root.fab-position == FloatingToolbarHorizontalFabPosition.end ?
+                parent.width - self.width : 0px;
+            y: (parent.height - self.height) / 2;
+            width: root.fab-size;
+            height: self.width;
+            icon: root.fab-icon;
+            color: root.resolved-fab-container-color;
+            icon-color: root.resolved-fab-content-color;
+            tooltip: root.fab-tooltip;
+
+            clicked => { root.fab-clicked(); }
+        }
+    }
+}
+
+// The upstream `VerticalFloatingToolbar` — the same API on the vertical axis.
+export component VerticalFloatingToolbar {
+    in property <[AppBarItem]> leading-items;
+    in property <[AppBarItem]> trailing-items;
+    in property <image> fab-icon;
+    in property <FloatingToolbarVerticalFabPosition> fab-position:
+        FloatingToolbarVerticalFabPosition.bottom;
+    in property <string> fab-tooltip;
+
+    in-out property <bool> expanded: true;
+    in property <bool> expand-on-scroll;
+    in property <length> expand-scroll-distance-threshold: 40px;
+    in property <length> collapse-scroll-distance-threshold: 40px;
+    in property <bool> exit-always;
+    in property <FloatingToolbarExitDirection> exit-direction:
+        FloatingToolbarExitDirection.bottom;
+    in property <length> scroll-position;
+    in property <float> scroll-release-velocity;
+    in property <length> scroll-parent-extent;
+    in-out property <length> offset;
+    in-out property <length> content-offset;
+    out property <length> offset-limit: scroll-state.offset-limit;
+    out property <float> collapsed-fraction: scroll-state.collapsed-fraction;
+
+    in property <FloatingToolbarColorStyle> color-style: FloatingToolbarColorStyle.standard;
+    in property <color> toolbar-container-color;
+    in property <color> toolbar-content-color;
+    in property <color> fab-container-color;
+    in property <color> fab-content-color;
+    in property <MaterialCornerShape> toolbar-shape: FloatingToolbarTokens.container-shape;
+    in property <length> expanded-shadow-elevation:
+        root.has-fab ? ElevationTokens.level1 : ElevationTokens.level0;
+    in property <length> collapsed-shadow-elevation: ElevationTokens.level0;
+    in property <bool> touch-target: true;
+
+    callback fab-clicked();
+    callback leading-item-clicked(index: int);
+    callback leading-item-checked-changed(index: int, checked: bool);
+    callback trailing-item-clicked(index: int);
+    callback trailing-item-checked-changed(index: int, checked: bool);
+
+    out property <bool> has-fab: root.fab-icon.width > 0 && root.fab-icon.height > 0;
+    out property <bool> interactive: root.expand-progress > 0;
+
+    out property <color> resolved-toolbar-container-color:
+        root.toolbar-container-color.alpha > 0 ? root.toolbar-container-color :
+        root.color-style == FloatingToolbarColorStyle.vibrant ?
+            FloatingToolbarTokens.vibrant-container-color :
+            FloatingToolbarTokens.standard-container-color;
+    out property <color> resolved-toolbar-content-color:
+        root.toolbar-content-color.alpha > 0 ? root.toolbar-content-color :
+        root.color-style == FloatingToolbarColorStyle.vibrant ?
+            MaterialPalette.on_primary_container : MaterialPalette.on_surface;
+    out property <color> resolved-fab-container-color:
+        root.fab-container-color.alpha > 0 ? root.fab-container-color :
+        root.color-style == FloatingToolbarColorStyle.vibrant ?
+            MaterialPalette.tertiary_container : MaterialPalette.primary_container;
+    out property <color> resolved-fab-content-color:
+        root.fab-content-color.alpha > 0 ? root.fab-content-color :
+        root.color-style == FloatingToolbarColorStyle.vibrant ?
+            MaterialPalette.on_tertiary_container : MaterialPalette.on_primary_container;
+
+    out property <float> expand-progress: root.expanded ? 1 : 0;
+    animate expand-progress {
+        easing: MaterialAnimations.fast-spatial-spring;
+        enabled: !MaterialPalette.reduced-motion;
+    }
+
+    scroll-state := FloatingToolbarScrollState {
+        expanded <=> root.expanded;
+        exit-always: root.exit-always;
+        expand-on-scroll: root.expand-on-scroll;
+        scroll-position: root.scroll-position;
+        scroll-release-velocity: root.scroll-release-velocity;
+        exit-direction: root.exit-direction;
+        expand-scroll-distance-threshold: root.expand-scroll-distance-threshold;
+        collapse-scroll-distance-threshold: root.collapse-scroll-distance-threshold;
+        parent-extent: root.scroll-parent-extent;
+        position: root.exit-direction == FloatingToolbarExitDirection.start ||
+            root.exit-direction == FloatingToolbarExitDirection.end ? root.x : root.y;
+        extent: root.exit-direction == FloatingToolbarExitDirection.start ||
+            root.exit-direction == FloatingToolbarExitDirection.end ? root.width : root.height;
+        offset <=> root.offset;
+        content-offset <=> root.content-offset;
+    }
+
+    accessible-role: groupbox;
+    accessible-expandable: true;
+    accessible-expanded: root.expanded;
+    accessible-action-expand => { root.expanded = !root.expanded; }
+
+    property <length> fab-slot: FabBaselineTokens.container-width + 8px;
+    property <length> toolbar-intrinsic-height: content-lay.preferred-height;
+    property <length> fab-size:
+        FabBaselineTokens.container-width +
+        (FabMediumTokens.container-width - FabBaselineTokens.container-width) *
+        (1 - root.expand-progress);
+
+    preferred_height: root.has-fab ?
+        root.toolbar-intrinsic-height + root.fab-slot :
+        max(FloatingToolbarTokens.container-height, content-lay.preferred-height);
+    preferred_width: root.has-fab ? FabMediumTokens.container-width :
+        max(FloatingToolbarTokens.container-height, content-lay.preferred-width);
+    min_width: root.has-fab ?
+        FabMediumTokens.container-width : FloatingToolbarTokens.container-height;
+    min_height: FloatingToolbarTokens.container-height;
+
+    move-box := Rectangle {
+        x: root.exit-direction == FloatingToolbarExitDirection.start ?
+            scroll-state.effective-offset :
+            root.exit-direction == FloatingToolbarExitDirection.end ?
+            -scroll-state.effective-offset : 0px;
+        y: root.exit-direction == FloatingToolbarExitDirection.top ?
+            scroll-state.effective-offset :
+            root.exit-direction == FloatingToolbarExitDirection.bottom ?
+            -scroll-state.effective-offset : 0px;
+        width: root.width;
+        height: root.height;
+
+        if root.exit-always : drag-area := FloatingToolbarDragArea {
+            width: 100%;
+            height: 100%;
+            exit-direction: root.exit-direction;
+            offset-limit: root.offset-limit;
+            offset <=> scroll-state.offset;
+            drag-started => { scroll-state.merge-settle(); }
+            drag-ended => { scroll-state.settle(self.offset-velocity); }
+        }
+
+        container := Rectangle {
+            x: root.has-fab ? (parent.width - self.width) / 2 : 0px;
+            y: root.has-fab ?
+                (root.fab-position == FloatingToolbarVerticalFabPosition.bottom ?
+                    root.toolbar-intrinsic-height * (1 - root.expand-progress) :
+                    root.fab-slot) :
+                0px;
+            width: root.has-fab ?
+                FloatingToolbarTokens.container-height : parent.width;
+            height: root.has-fab ?
+                root.toolbar-intrinsic-height * root.expand-progress :
+                content-lay.preferred-height;
+            clip: true;
+            border-radius: MaterialButtonMetrics.corner-radius(
+                root.toolbar-shape, min(self.width, self.height));
+            background: root.resolved-toolbar-container-color;
+            elevation: root.collapsed-shadow-elevation +
+                (root.expanded-shadow-elevation - root.collapsed-shadow-elevation) *
+                min(root.expand-progress, 1);
+            ambient-shadow-color: MaterialPalette.shadow;
+            spot-shadow-color: MaterialPalette.shadow;
+
+            content-lay := FlexboxLayout {
+                flex-direction: column;
+                flex-wrap: no-wrap;
+                alignment: root.has-fab ? start : center;
+                cross-axis-alignment: center;
+                padding-left: FloatingToolbarTokens.container-leading-space;
+                padding-right: FloatingToolbarTokens.container-trailing-space;
+                padding-top: FloatingToolbarTokens.container-leading-space;
+                padding-bottom: FloatingToolbarTokens.container-trailing-space;
+                width: parent.width;
+                height: self.preferred-height;
+
+                FloatingToolbarSlot {
+                    items: root.leading-items;
+                    leading: true;
+                    vertical: true;
+                    content-color: root.resolved-toolbar-content-color;
+                    touch-target: root.touch-target;
+                    expand-progress: root.has-fab ? 1 : root.expand-progress;
+                    expanded: root.expanded;
+                    interactive: root.interactive;
+                    item-clicked(index) => { root.leading-item-clicked(index); }
+                    item-checked-changed(index, checked) => {
+                        root.leading-item-checked-changed(index, checked);
+                    }
+                }
+
+                @children
+
+                FloatingToolbarSlot {
+                    items: root.trailing-items;
+                    leading: false;
+                    vertical: true;
+                    content-color: root.resolved-toolbar-content-color;
+                    touch-target: root.touch-target;
+                    expand-progress: root.has-fab ? 1 : root.expand-progress;
+                    expanded: root.expanded;
+                    interactive: root.interactive;
+                    item-clicked(index) => { root.trailing-item-clicked(index); }
+                    item-checked-changed(index, checked) => {
+                        root.trailing-item-checked-changed(index, checked);
+                    }
+                }
+            }
+        }
+
+        if root.has-fab : fab := FloatingToolbarFab {
+            x: (parent.width - self.width) / 2;
+            y: root.fab-position == FloatingToolbarVerticalFabPosition.bottom ?
+                parent.height - self.height : 0px;
+            width: root.fab-size;
+            height: self.width;
+            icon: root.fab-icon;
+            color: root.resolved-fab-container-color;
+            icon-color: root.resolved-fab-content-color;
+            tooltip: root.fab-tooltip;
+
+            clicked => { root.fab-clicked(); }
+        }
+    }
+}

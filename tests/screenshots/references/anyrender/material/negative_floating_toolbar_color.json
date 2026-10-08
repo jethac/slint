@@ -1,0 +1,121 @@
+[
+  {
+    "Fill": {
+      "brush": {
+        "Image": {
+          "image": 0,
+          "sampler": {
+            "alpha": 1.0,
+            "quality": "Medium",
+            "x_extend": "Pad",
+            "y_extend": "Pad"
+          }
+        }
+      },
+      "brush_transform": null,
+      "fill": "NonZero",
+      "shape": "M0,0 L138,0 L138,66 L0,66 Z",
+      "transform": [
+        1.0,
+        0.0,
+        0.0,
+        1.0,
+        49.0,
+        37.0
+      ]
+    }
+  },
+  {
+    "Fill": {
+      "brush": {
+        "Image": {
+          "image": 1,
+          "sampler": {
+            "alpha": 1.0,
+            "quality": "Medium",
+            "x_extend": "Pad",
+            "y_extend": "Pad"
+          }
+        }
+      },
+      "brush_transform": null,
+      "fill": "NonZero",
+      "shape": "M0,0 L143,0 L143,71 L0,71 Z",
+      "transform": [
+        1.0,
+        0.0,
+        0.0,
+        1.0,
+        47.0,
+        35.0
+      ]
+    }
+  },
+  {
+    "Fill": {
+      "brush": {
+        "Solid": {
+          "components": [
+            0.8314,
+            0.7647,
+            0.9922,
+            1.0
+          ]
+        }
+      },
+      "brush_transform": null,
+      "fill": "NonZero",
+      "shape": "M0,32 C0,14.3269 14.3269,0 32,0 L104,0 C121.6731,0 136,14.3269 136,32 L136,32 C136,49.6731 121.6731,64 104,64 L32,64 C14.3269,64 0,49.6731 0,32 Z",
+      "transform": [
+        1.0,
+        0.0,
+        0.0,
+        1.0,
+        50.0,
+        38.0
+      ]
+    }
+  },
+  {
+    "PushClipLayer": {
+      "clip": "M0,32 C0,14.3269 14.3269,0 32,0 L104,0 C121.6731,0 136,14.3269 136,32 L136,32 C136,49.6731 121.6731,64 104,64 L32,64 C14.3269,64 0,49.6731 0,32 Z",
+      "transform": [
+        1.0,
+        0.0,
+        0.0,
+        1.0,
+        50.0,
+        38.0
+      ]
+    }
+  },
+  {
+    "PushClipLayer": {
+      "clip": "M0,0 L0,0 L0,0 L0,0 Z",
+      "transform": [
+        1.0,
+        0.0,
+        0.0,
+        1.0,
+        58.0,
+        70.0
+      ]
+    }
+  },
+  "PopLayer",
+  {
+    "PushClipLayer": {
+      "clip": "M0,0 L0,0 L0,0 L0,0 Z",
+      "transform": [
+        1.0,
+        0.0,
+        0.0,
+        1.0,
+        178.0,
+        70.0
+      ]
+    }
+  },
+  "PopLayer",
+  "PopLayer"
+]
