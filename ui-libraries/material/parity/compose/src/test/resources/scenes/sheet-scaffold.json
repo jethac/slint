@@ -85,6 +85,7 @@
   "type": "canvas",
   "widgets": [
     {
+      "action": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": "surface",
@@ -199,6 +200,7 @@
       "year_min": null
     },
     {
+      "action": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": "surface-container-low",
@@ -313,6 +315,7 @@
       "year_min": null
     },
     {
+      "action": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": "surface",
