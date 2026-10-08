@@ -11,6 +11,7 @@
   },
   "mask_decor": {},
   "mask_inner": {},
+  "mask_shadow": {},
   "name": "negative-sheet-color",
   "negative_note": "the Slint sheet paints the docked container in surface-container-highest instead of the SheetBottomTokens.docked_container_color (surface-container-low) — a wrong container token must fail the strict-pixel check",
   "params": {},
@@ -84,7 +85,6 @@
   "type": "canvas",
   "widgets": [
     {
-      "alignment": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,
@@ -107,7 +107,6 @@
       "dragged": null,
       "elevation": null,
       "enabled": null,
-      "expanded": null,
       "expanded_ratio": null,
       "fab": null,
       "fab_icon": null,

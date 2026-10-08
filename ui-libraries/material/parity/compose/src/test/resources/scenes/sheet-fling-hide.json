@@ -53,6 +53,7 @@
     ]
   },
   "mask_inner": {},
+  "mask_shadow": {},
   "name": "sheet-fling-hide",
   "params": {
     "note": "release at offset 132 — 108px above the hidden anchor, inside the 125dp BoundaryDampeningZone: velocity damps 1000 → ~746px/s (factor²), still ≥125 so the fling commits to hidden"
@@ -142,7 +143,6 @@
   "type": "canvas",
   "widgets": [
     {
-      "alignment": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,
@@ -165,7 +165,6 @@
       "dragged": null,
       "elevation": null,
       "enabled": null,
-      "expanded": null,
       "expanded_ratio": null,
       "fab": null,
       "fab_icon": null,

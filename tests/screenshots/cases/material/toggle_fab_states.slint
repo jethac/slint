@@ -1,0 +1,194 @@
+// Copyright © SixtyFPS GmbH <info@slint.dev>
+// SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0
+
+// Scene: toggle-fab-states — generated from `ui-libraries/material/parity/scenes/toggle-fab-states.json`
+// (edit the scene, regenerate with `cargo run -p material-parity-generator`).
+//PARITY=static
+//SIZE=640x690
+//TRACE_ELEMENTS=button0,button1,button2,button3,button4,button5,button6,button7,button8,button9,button10,button11,button12,button13,button14,button0>button-bg,button1>button-bg,button2>button-bg,button3>button-bg,button4>button-bg,button5>button-bg,button6>button-bg,button7>button-bg,button8>button-bg,button9>button-bg,button10>button-bg,button11>button-bg,button12>button-bg,button13>button-bg,button14>button-bg
+//MASK_SHADOW=button0@0,2000
+//MASK_SHADOW=button0>button-bg0@0,2000
+//MASK_SHADOW=button1@0,2000
+//MASK_SHADOW=button10@0,2000
+//MASK_SHADOW=button10>button-bg0@0,2000
+//MASK_SHADOW=button11@0,2000
+//MASK_SHADOW=button11>button-bg0@0,2000
+//MASK_SHADOW=button12@0,2000
+//MASK_SHADOW=button12>button-bg0@0,2000
+//MASK_SHADOW=button13@0,2000
+//MASK_SHADOW=button13>button-bg0@0,2000
+//MASK_SHADOW=button14@0,2000
+//MASK_SHADOW=button14>button-bg0@0,2000
+//MASK_SHADOW=button1>button-bg0@0,2000
+//MASK_SHADOW=button2@0,2000
+//MASK_SHADOW=button2>button-bg0@0,2000
+//MASK_SHADOW=button3@0,2000
+//MASK_SHADOW=button3>button-bg0@0,2000
+//MASK_SHADOW=button4@0,2000
+//MASK_SHADOW=button4>button-bg0@0,2000
+//MASK_SHADOW=button5@0,2000
+//MASK_SHADOW=button5>button-bg0@0,2000
+//MASK_SHADOW=button6@0,2000
+//MASK_SHADOW=button6>button-bg0@0,2000
+//MASK_SHADOW=button7@0,2000
+//MASK_SHADOW=button7>button-bg0@0,2000
+//MASK_SHADOW=button8@0,2000
+//MASK_SHADOW=button8>button-bg0@0,2000
+//MASK_SHADOW=button9@0,2000
+//MASK_SHADOW=button9>button-bg0@0,2000
+//DENSITIES=1,2
+import "../../fonts/Roboto-VariableFont.ttf";
+import { FabMenuSize, Icons, MaterialPalette, MaterialTheme, MaterialWindow, ToggleFloatingActionButton } from "@material";
+
+export component TestCase inherits MaterialWindow {
+    init => {
+        // The scene pins seed #6750A4, tonal-spot, spec2025, light, contrast 0
+        // (all the library defaults; restated here so a default change can't
+        // silently move the parity baseline).
+        MaterialTheme.seed-color = #6750A4;
+        MaterialTheme.dark = false;
+        MaterialTheme.contrast-level = 0;
+        MaterialTheme.use-platform-color = false;
+        MaterialTheme.plain-family = "Roboto";
+        MaterialTheme.brand-family = "Roboto";
+        // Compose builds its scene scheme from the same seed — use the
+        // runtime-generated scheme, not the static expressive table.
+        MaterialPalette.dynamic = true;
+    }
+
+    button0 := ToggleFloatingActionButton {
+        x: 30px;
+        y: 15px;
+        size: FabMenuSize.baseline;
+        icon: Icons.edit;
+        checked-icon: Icons.close;
+    }
+
+    button1 := ToggleFloatingActionButton {
+        x: 240px;
+        y: 15px;
+        size: FabMenuSize.medium;
+        icon: Icons.edit;
+        checked-icon: Icons.close;
+    }
+
+    button2 := ToggleFloatingActionButton {
+        x: 460px;
+        y: 15px;
+        size: FabMenuSize.large;
+        icon: Icons.edit;
+        checked-icon: Icons.close;
+    }
+
+    button3 := ToggleFloatingActionButton {
+        x: 30px;
+        y: 145px;
+        size: FabMenuSize.baseline;
+        icon: Icons.edit;
+        checked-icon: Icons.close;
+        simulate-hover: true;
+    }
+
+    button4 := ToggleFloatingActionButton {
+        x: 240px;
+        y: 145px;
+        size: FabMenuSize.medium;
+        icon: Icons.edit;
+        checked-icon: Icons.close;
+        simulate-hover: true;
+    }
+
+    button5 := ToggleFloatingActionButton {
+        x: 460px;
+        y: 145px;
+        size: FabMenuSize.large;
+        icon: Icons.edit;
+        checked-icon: Icons.close;
+        simulate-hover: true;
+    }
+
+    button6 := ToggleFloatingActionButton {
+        x: 30px;
+        y: 275px;
+        size: FabMenuSize.baseline;
+        icon: Icons.edit;
+        checked-icon: Icons.close;
+        simulate-press: true;
+    }
+
+    button7 := ToggleFloatingActionButton {
+        x: 240px;
+        y: 275px;
+        size: FabMenuSize.medium;
+        icon: Icons.edit;
+        checked-icon: Icons.close;
+        simulate-press: true;
+    }
+
+    button8 := ToggleFloatingActionButton {
+        x: 460px;
+        y: 275px;
+        size: FabMenuSize.large;
+        icon: Icons.edit;
+        checked-icon: Icons.close;
+        simulate-press: true;
+    }
+
+    button9 := ToggleFloatingActionButton {
+        x: 30px;
+        y: 405px;
+        size: FabMenuSize.baseline;
+        icon: Icons.edit;
+        checked-icon: Icons.close;
+        checked: true;
+    }
+
+    button10 := ToggleFloatingActionButton {
+        x: 240px;
+        y: 405px;
+        size: FabMenuSize.medium;
+        icon: Icons.edit;
+        checked-icon: Icons.close;
+        checked: true;
+    }
+
+    button11 := ToggleFloatingActionButton {
+        x: 460px;
+        y: 405px;
+        size: FabMenuSize.large;
+        icon: Icons.edit;
+        checked-icon: Icons.close;
+        checked: true;
+    }
+
+    button12 := ToggleFloatingActionButton {
+        x: 30px;
+        y: 535px;
+        size: FabMenuSize.baseline;
+        icon: Icons.edit;
+        checked-icon: Icons.close;
+        checked: true;
+        simulate-hover: true;
+    }
+
+    button13 := ToggleFloatingActionButton {
+        x: 240px;
+        y: 535px;
+        size: FabMenuSize.medium;
+        icon: Icons.edit;
+        checked-icon: Icons.close;
+        checked: true;
+        simulate-hover: true;
+    }
+
+    button14 := ToggleFloatingActionButton {
+        x: 460px;
+        y: 535px;
+        size: FabMenuSize.large;
+        icon: Icons.edit;
+        checked-icon: Icons.close;
+        checked: true;
+        simulate-hover: true;
+    }
+
+}

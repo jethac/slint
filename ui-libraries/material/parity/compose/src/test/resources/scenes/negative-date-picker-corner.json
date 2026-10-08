@@ -11,6 +11,7 @@
   },
   "mask_decor": {},
   "mask_inner": {},
+  "mask_shadow": {},
   "name": "negative-date-picker-corner",
   "negative_note": "the dialog pane rounds to 4dp instead of CornerExtraLarge's 28dp",
   "params": {},
@@ -82,7 +83,6 @@
   "type": "canvas",
   "widgets": [
     {
-      "alignment": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,
@@ -105,7 +105,6 @@
       "dragged": null,
       "elevation": null,
       "enabled": null,
-      "expanded": null,
       "expanded_ratio": null,
       "fab": null,
       "fab_icon": null,

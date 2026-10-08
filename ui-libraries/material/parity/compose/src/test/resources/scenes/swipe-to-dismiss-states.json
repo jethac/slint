@@ -11,6 +11,7 @@
   },
   "mask_decor": {},
   "mask_inner": {},
+  "mask_shadow": {},
   "name": "swipe-to-dismiss-states",
   "negative_note": "issue #53 class: femtovg's stencil+fringe AA band lands the dismiss card's corner edge slivers differently than coverage-integral drivers — a handful of symmetric card-edge pixels diverge ~25/255 past the default 8 (2 at d1, 4 at d2) while fills and geometry match; verified identical on software and skia — a silent pass would mean the harness went blind",
   "params": {

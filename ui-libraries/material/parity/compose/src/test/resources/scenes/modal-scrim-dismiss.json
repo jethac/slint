@@ -26,6 +26,7 @@
   },
   "mask_decor": {},
   "mask_inner": {},
+  "mask_shadow": {},
   "name": "modal-scrim-dismiss",
   "params": {
     "note": "the modal opens via show() to partially-expanded at offset 200; the press at y=50 lands above the sheet top — the scrim consumes the tap and runs animateToDismiss → hide() with the fast-effects spring"
@@ -113,7 +114,6 @@
   "type": "canvas",
   "widgets": [
     {
-      "alignment": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,
@@ -136,7 +136,6 @@
       "dragged": null,
       "elevation": null,
       "enabled": null,
-      "expanded": null,
       "expanded_ratio": null,
       "fab": null,
       "fab_icon": null,

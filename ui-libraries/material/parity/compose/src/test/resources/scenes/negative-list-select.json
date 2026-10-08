@@ -11,6 +11,7 @@
   },
   "mask_decor": {},
   "mask_inner": {},
+  "mask_shadow": {},
   "name": "negative-list-select",
   "negative_note": "slint_overrides drops `selectable`/`selected`, so the Slint item renders the unselected resting shape while Compose draws `selected` — a selection that does not recolor or morph must fail",
   "params": {},
@@ -84,7 +85,6 @@
   "type": "canvas",
   "widgets": [
     {
-      "alignment": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,
@@ -107,7 +107,6 @@
       "dragged": null,
       "elevation": null,
       "enabled": null,
-      "expanded": null,
       "expanded_ratio": null,
       "fab": null,
       "fab_icon": null,

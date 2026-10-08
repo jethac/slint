@@ -15,6 +15,7 @@
       2000
     ]
   },
+  "mask_shadow": {},
   "name": "negative-chip-shape",
   "negative_note": "slint_overrides.chip_shapes renders the checked expressive filter chip's CornerFull selected outline as CornerNone — a chip shaped to the wrong token must fail",
   "params": {},
@@ -90,7 +91,6 @@
   "type": "canvas",
   "widgets": [
     {
-      "alignment": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,
@@ -113,7 +113,6 @@
       "dragged": null,
       "elevation": null,
       "enabled": null,
-      "expanded": null,
       "expanded_ratio": null,
       "fab": null,
       "fab_icon": null,

@@ -41,6 +41,7 @@
       200
     ]
   },
+  "mask_shadow": {},
   "name": "chip-select-morph",
   "negative_note": "issue #27: the Compose frame clock starts the press/select morph ~2ms after the Slint dispatch, so identical-timestamp frames report a systematic lead in the corner morph and slot expand — a silent pass would mean the harness went blind",
   "params": {},
@@ -127,7 +128,6 @@
   "type": "canvas",
   "widgets": [
     {
-      "alignment": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,
@@ -150,7 +150,6 @@
       "dragged": null,
       "elevation": null,
       "enabled": null,
-      "expanded": null,
       "expanded_ratio": null,
       "fab": null,
       "fab_icon": null,

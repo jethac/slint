@@ -1,0 +1,523 @@
+// Copyright © SixtyFPS GmbH <info@slint.dev>
+// SPDX-License-Identifier: MIT
+
+import { Elevation } from "./elevation.slint";
+import { FocusRing, StateLayerArea } from "./state_layer.slint";
+import { Icon } from "./icon.slint";
+import { MaterialText } from "./material_text.slint";
+import { MaterialButtonMetrics } from "./button_metrics.slint";
+import { MaterialAnimations } from "../styling/material_animations.slint";
+import { MaterialPalette } from "../styling/material_palette.slint";
+import { MaterialTypography } from "../styling/material_typography.slint";
+import {
+    FabBaselineTokens,
+    FabMediumTokens,
+    FabLargeTokens,
+    FabMenuBaselineTokens,
+} from "../styling/generated/material_component_tokens.slint";
+import { FabMenuItem } from "../items/fab_menu_item.slint";
+
+/// The FAB sizes that can host a menu — the upstream
+/// `ToggleFloatingActionButtonDefaults.containerSize{,Medium,Large}`
+/// overloads in the pinned `FloatingActionButtonMenu.kt`. There is no
+/// small variant: `containerSizeSmall` does not exist upstream.
+export enum FabMenuSize {
+    /// `containerSize()` — the baseline 56x56 FAB.
+    baseline,
+    /// `containerSizeMedium()` — 80x80.
+    medium,
+    /// `containerSizeLarge()` — 96x96.
+    large,
+}
+
+/// The per-size values the toggle FAB morphs *from* — the private
+/// `Fab{,Medium,Large}Initial{Size,CornerRadius,IconSize}` getters in the
+/// pinned `FloatingActionButtonMenu.kt`.
+export global FabMenuMetrics {
+    /// `FabBaselineTokens.ContainerHeight` / `FabMediumTokens` /
+    /// `FabLargeTokens.ContainerHeight`.
+    public pure function initial-size(size: FabMenuSize) -> length {
+        size == FabMenuSize.medium ? FabMediumTokens.container_height :
+        size == FabMenuSize.large ? FabLargeTokens.container_height :
+        FabBaselineTokens.container_height
+    }
+
+    /// Not a token: upstream hard-codes 16/20/28 for the resting radius.
+    public pure function initial-radius(size: FabMenuSize) -> length {
+        size == FabMenuSize.medium ? 20px :
+        size == FabMenuSize.large ? 28px :
+        16px
+    }
+
+    public pure function initial-icon-size(size: FabMenuSize) -> length {
+        size == FabMenuSize.medium ? FabMediumTokens.icon_size :
+        // `FabLargeInitialIconSize = 36.dp` hard-coded in the pinned source
+        // (`FabLargeTokens.IconSize` is marked incorrect there).
+        size == FabMenuSize.large ? 36px :
+        FabBaselineTokens.icon_size
+    }
+}
+
+/// The FAB that morphs into the menu's close button: upstream
+/// `ToggleFloatingActionButton`. The container's size, corner radius and
+/// color, and the icon's size, color and source, all follow
+/// `checked-progress` — a single progress animated with the scheme's fast
+/// spatial spec, exactly like upstream's `animateFloatAsState(
+/// MotionSchemeKeyTokens.FastSpatial)`.
+///
+/// The outer box keeps the unchecked footprint (`containerSize(0f)`) so the
+/// layout slot never moves; the morphing container is anchored at its top
+/// end (`contentAlignment = Alignment.TopEnd`).
+export component ToggleFloatingActionButton {
+    /// The resting icon.
+    in property <image> icon;
+    /// The icon drawn once `checked-progress` passes 0.5 — the upstream
+    /// sample's `if (checkedProgress > 0.5f) Close else Add` content.
+    in property <image> checked-icon;
+    in property <FabMenuSize> size: FabMenuSize.baseline;
+    /// `containerColor()` — lerped to `checked-container-color`.
+    in property <color> container-color: MaterialPalette.primary_container;
+    in property <color> checked-container-color: MaterialPalette.primary;
+    /// `iconColor()` — lerped to `checked-content-color`.
+    in property <color> content-color: MaterialPalette.on_primary_container;
+    in property <color> checked-content-color: MaterialPalette.on_primary;
+    in property <bool> enabled: true;
+    in property <string> tooltip;
+    /// Forwarded from the internal focus scope so the enclosing
+    /// `FloatingActionButtonMenu` can implement its keyboard jump —
+    /// upstream's `Box.onKeyEvent` around the `button` slot.
+    callback key-pressed(KeyEvent) -> EventResult;
+    in-out property <bool> checked;
+    callback clicked;
+    /// See `StateLayerArea.simulate_hover` / `simulate_press`.
+    in property <bool> simulate-hover;
+    in property <bool> simulate-press;
+
+    /// The live 0..1 morph progress — the `ToggleFloatingActionButtonScope`'s
+    /// `checkedProgress`, for custom content.
+    out property <float> checked-progress: root.checked ? 1 : 0;
+    animate checked-progress {
+        easing: MaterialAnimations.fast-spatial-spring;
+        enabled: !MaterialPalette.reduced-motion;
+    }
+    out property <bool> has-focus <=> area.has_focus;
+    out property <bool> pressed <=> area.effective_pressed;
+    out property <bool> has-hover <=> area.effective_hover;
+    /// The live morph values, exposed for the parity harness's motion trace.
+    out property <length> container-radius: root.radius-now;
+    out property <length> container-size: root.size-now;
+
+    property <length> initial-size: FabMenuMetrics.initial-size(root.size);
+    property <length> initial-radius: FabMenuMetrics.initial-radius(root.size);
+    property <length> initial-icon-size: FabMenuMetrics.initial-icon-size(root.size);
+
+    property <length> size-now: root.initial-size +
+        (FabMenuBaselineTokens.close_button_container_height - root.initial-size) * root.checked-progress;
+    // `FabFinalCornerRadius = FabFinalSize / 2`.
+    property <length> radius-now: root.initial-radius +
+        (FabMenuBaselineTokens.close_button_container_height / 2 - root.initial-radius) * root.checked-progress;
+    property <length> icon-size-now: root.initial-icon-size +
+        (FabMenuBaselineTokens.close_button_icon_size - root.initial-icon-size) * root.checked-progress;
+    // `mix` weights the receiver by the factor — `lerp(initial, final, p)`
+    // is `initial.mix(final, 1 - p)`.
+    property <color> container-color-now: root.container-color.mix(root.checked-container-color, 1 - root.checked-progress);
+    property <color> content-color-now: root.content-color.mix(root.checked-content-color, 1 - root.checked-progress);
+
+    // `Box(Modifier.size(initialSize))` — the outer bounds never shrink.
+    min_width: root.initial-size;
+    min_height: root.initial-size;
+    preferred_width: self.min_width;
+    preferred_height: self.min_height;
+
+    accessible-role: button;
+    accessible-enabled: root.enabled;
+    accessible-checkable: true;
+    accessible-checked <=> root.checked;
+    accessible-label: root.tooltip;
+    accessible-action-default => { area.clicked(); }
+
+    // `button-bg` rather than `container`: the parity harness indexes
+    // `menu > container` descendants for the menu *items* — a second
+    // `container` here would join that list.
+    button-bg := Elevation {
+        x: root.width - root.size-now;
+        y: 0;
+        width: root.size-now;
+        height: root.size-now;
+        border-radius: root.radius-now;
+        background: root.container-color-now;
+        // `FabShadowElevation` — `FabPrimaryContainerTokens.ContainerElevation` (6px, level 3).
+        level: 3;
+    }
+
+    area := StateLayerArea {
+        x: button-bg.x;
+        y: button-bg.y;
+        width: button-bg.width;
+        height: button-bg.height;
+        enabled: root.enabled;
+        color: root.content-color-now;
+        border-radius: root.radius-now;
+        hit_radius: root.radius-now;
+        tooltip: root.tooltip;
+        display_background: false;
+        focus_ring: true;
+        clip_ripple: true;
+        simulate_hover: root.simulate-hover;
+        simulate_press: root.simulate-press;
+
+        clicked() => {
+            if !area.pointer_inside && !area.enter_pressed {
+                return;
+            }
+            root.checked = !root.checked;
+            root.clicked();
+        }
+
+        key_pressed(event) => {
+            return root.key-pressed(event);
+        }
+
+        Icon {
+            x: (parent.width - self.width) / 2;
+            y: (parent.height - self.width) / 2;
+            width: root.icon-size-now;
+            height: self.width;
+            source: root.checked-progress > 0.5 && root.checked-icon.width > 0 ? root.checked-icon : root.icon;
+            colorize: root.content-color-now;
+        }
+
+        @children
+    }
+
+    if area.has_focus && root.enabled : FocusRing {
+        x: button-bg.x;
+        y: button-bg.y;
+        width: button-bg.width;
+        height: button-bg.height;
+        border-radius: root.radius-now;
+    }
+}
+
+/// One pill inside a `FloatingActionButtonMenu` — upstream
+/// `FloatingActionButtonMenuScope.FloatingActionButtonMenuItem`. The reveal
+/// is driven by the menu: when `revealed` flips, `width-progress` springs
+/// with the fast spatial spec and `alpha-progress` with the fast effects
+/// spec (upstream's `widthAnim`/`alphaAnim`), shrinking the stadium pill
+/// from its trailing edge and fading it in.
+export component FloatingActionButtonMenuItem {
+    in property <image> icon;
+    in property <string> text;
+    in property <bool> enabled: true;
+    /// `containerColor` — upstream `primaryContainer`.
+    in property <color> container-color: MaterialPalette.primary_container;
+    /// `contentColor` — upstream `contentColorFor(containerColor)`, which is
+    /// `onPrimaryContainer` for the default container color.
+    in property <color> content-color: MaterialPalette.on_primary_container;
+    /// The column's `horizontalAlignment` — from `FloatingActionButtonMenuScope`.
+    in property <LayoutAlignment> horizontal-alignment: LayoutAlignment.end;
+    /// Whether the stagger has revealed this item — upstream's
+    /// `MenuItemRuler.current <= 0`.
+    in property <bool> revealed;
+    /// Focus wiring for the menu's keyboard jump: the menu broadcasts the
+    /// requested index and the matching item focuses itself (repeater
+    /// children cannot be named from outside).
+    in-out property <int> focus-request: -1;
+    in property <int> item-index: -1;
+    in property <int> item-count;
+    in property <string> tooltip;
+    /// See `StateLayerArea.simulate_hover` / `simulate_press`.
+    in property <bool> simulate-hover;
+    in property <bool> simulate-press;
+
+    callback clicked;
+
+    out property <float> width-progress: root.revealed ? 1 : 0;
+    animate width-progress {
+        easing: MaterialAnimations.fast-spatial-spring;
+        enabled: !MaterialPalette.reduced-motion;
+    }
+    out property <float> alpha-progress: root.revealed ? 1 : 0;
+    animate alpha-progress {
+        easing: MaterialAnimations.fast-effects-spring;
+        enabled: !MaterialPalette.reduced-motion;
+    }
+    out property <bool> has-focus <=> area.has_focus;
+    out property <bool> pressed <=> area.effective_pressed;
+    out property <bool> has-hover <=> area.effective_hover;
+    /// The live pill width — for the parity harness's motion trace.
+    out property <length> container-width: root.pill-width;
+
+    changed focus-request => {
+        if root.focus-request == root.item-index {
+            area.focus();
+            root.focus-request = -1;
+        }
+    }
+
+    property <length> natural-width: max(FabMenuBaselineTokens.list_item_container_height, row.min-width);
+    property <length> pill-width: root.natural-width * max(root.width-progress, 0);
+    // The shrunk item cell is aligned within the column, then the content
+    // row is aligned within the cell — `horizontalAlignment.align` applied
+    // twice upstream. Mid-animation the row overflows the pill's leading
+    // edge; the upstream `Surface` clips it to the pill's shape.
+    property <length> pill-x:
+        root.horizontal-alignment == LayoutAlignment.start ? 0px :
+        root.horizontal-alignment == LayoutAlignment.center ? (root.width - root.pill-width) / 2 :
+        root.width - root.pill-width;
+    property <length> content-x:
+        root.horizontal-alignment == LayoutAlignment.start ? 0px :
+        root.horizontal-alignment == LayoutAlignment.center ? (root.pill-width - root.natural-width) / 2 :
+        root.pill-width - root.natural-width;
+
+    // The item reports the *animated* pill width — upstream's Row `layout`
+    // reports `placeable.width * widthAnim`, which is what makes the menu's
+    // own bounds grow while the reveal runs.
+    min_width: root.pill-width;
+    min_height: FabMenuBaselineTokens.list_item_container_height;
+    preferred_height: self.min_height;
+
+    // upstream `isVisible = alphaAnim.value != 0f` plus
+    // `shouldClearDescendantSemantics` — hidden items stay laid out but draw
+    // nothing, take no input, and leave the accessibility tree.
+    visible: root.alpha-progress > 0;
+
+    accessible-role: button;
+    accessible-enabled: root.enabled;
+    accessible-label: root.text;
+    accessible-item-index: root.item-index;
+    accessible-item-count: root.item-count;
+    accessible-action-default => { area.clicked(); }
+
+    // Everything the item draws goes through `placeWithLayer { alpha = .. }`
+    // upstream — a single layer fading pill, state layer, and content
+    // together (`opacity` cannot be applied on a component's own root).
+    layer := Rectangle {
+        x: 0;
+        y: 0;
+        width: 100%;
+        height: 100%;
+        opacity: root.alpha-progress;
+
+    container := Elevation {
+        x: root.pill-x;
+        y: 0;
+        width: root.pill-width;
+        height: 100%;
+        border-radius: MaterialButtonMetrics.corner-radius(FabMenuBaselineTokens.list_item_container_shape, self.height);
+        background: root.container-color;
+        // The upstream `Surface` leaves `shadowElevation` at its 0dp
+        // default — the pills are flat.
+        level: 0;
+    }
+
+    area := StateLayerArea {
+        x: container.x;
+        y: container.y;
+        width: container.width;
+        height: container.height;
+        enabled: root.enabled && root.alpha-progress > 0;
+        color: root.content-color;
+        border-radius: container.border-radius;
+        hit_radius: container.border-radius;
+        display_background: false;
+        focus_ring: true;
+        tooltip: root.tooltip;
+        simulate_hover: root.simulate-hover;
+        simulate_press: root.simulate-press;
+
+        clicked() => {
+            if !area.pointer_inside && !area.enter_pressed {
+                return;
+            }
+            root.clicked();
+        }
+    }
+
+    clipper := Rectangle {
+        x: container.x;
+        y: container.y;
+        width: container.width;
+        height: container.height;
+        // `Surface` clips its content to the container shape.
+        clip: true;
+        border-radius: container.border-radius;
+
+        wrapper := Rectangle {
+            // The content row is aligned within the *pill*, not the cell —
+            // upstream's inner `horizontalAlignment.align(placeable.width,
+            // width)` inside the item's `layout`.
+            x: root.content-x;
+            width: root.natural-width;
+            height: 100%;
+
+            row := HorizontalLayout {
+                padding-left: FabMenuBaselineTokens.list_item_leading_space;
+                padding-right: FabMenuBaselineTokens.list_item_trailing_space;
+                spacing: FabMenuBaselineTokens.list_item_icon_label_space;
+                // `Arrangement.spacedBy(8, CenterHorizontally)`.
+                alignment: center;
+                cross_axis_alignment: center;
+
+                if root.icon.width > 0 && root.icon.height > 0 : Icon {
+                    width: FabMenuBaselineTokens.list_item_icon_size;
+                    height: self.width;
+                    source: root.icon;
+                    colorize: root.content-color;
+                }
+
+                if root.text != "" : MaterialText {
+                    text: root.text;
+                    style: MaterialTypography.title_medium;
+                    color: root.content-color;
+                    overflow: clip;
+                    max_height: MaterialTypography.title_medium.line_height;
+                    vertical_alignment: center;
+                }
+            }
+        }
+    }
+
+    if area.has_focus && root.enabled : FocusRing {
+        x: container.x;
+        y: container.y;
+        width: container.width;
+        height: container.height;
+        border-radius: container.border-radius;
+    }
+    }
+}
+
+/// The expanding FAB menu — upstream `FloatingActionButtonMenu`: the items
+/// column stacked above a `ToggleFloatingActionButton`, revealed bottom-up
+/// by an integer stagger animated with the slow effects spec.
+///
+/// The toggle button is built in rather than slotted like upstream —
+/// `button-icon`/`button-checked-icon`/`button-size` configure it and its
+/// `checked` drives `expanded`. Items come from `items`; clicking one emits
+/// `item-clicked` (upstream leaves closing the menu to `onClick` — set
+/// `expanded: false` there).
+export component FloatingActionButtonMenu {
+    /// The menu's entries — rendered as `FloatingActionButtonMenuItem`s.
+    in property <[FabMenuItem]> items;
+    in-out property <bool> expanded;
+    /// `horizontalAlignment` for the items column *and* the button —
+    /// upstream `Alignment.Horizontal.End` by default.
+    in property <LayoutAlignment> horizontal-alignment: LayoutAlignment.end;
+    in property <FabMenuSize> button-size: FabMenuSize.baseline;
+    in property <image> button-icon;
+    in property <image> button-checked-icon;
+    in property <string> button-tooltip;
+    /// Color overrides forwarded to the toggle button.
+    in property <color> button-container-color: MaterialPalette.primary_container;
+    in property <color> button-checked-container-color: MaterialPalette.primary;
+    in property <color> button-content-color: MaterialPalette.on_primary_container;
+    in property <color> button-checked-content-color: MaterialPalette.on_primary;
+    /// See `StateLayerArea.simulate_hover` / `simulate_press`.
+    in property <bool> simulate-button-hover;
+    in property <bool> simulate-button-press;
+
+    callback item-clicked(index: int);
+
+    out property <float> checked-progress <=> toggle.checked-progress;
+    out property <bool> button-has-focus <=> toggle.has-focus;
+
+    /// The stagger counter — upstream `Animatable<Int>`: an integer-typed
+    /// property, so the spring rounds per frame and settles at the integer
+    /// `visibilityThreshold` (1), the same spec upstream applies.
+    /// `out` so the parity harness can trace it.
+    out property <int> stagger: root.expanded ? root.items.length : 0;
+    animate stagger {
+        easing: MaterialAnimations.slow-effects-spring;
+        enabled: !MaterialPalette.reduced-motion;
+    }
+
+    property <int> focus-request: -1;
+    // `FabMenuButtonPaddingBottom`(16) + `FabMenuPaddingBottom`(8).
+    property <length> bottom-padding: root.button-height + 16px + FabMenuBaselineTokens.close_button_between_space;
+    property <length> button-height: toggle.height;
+    property <length> content-width: layout.min-width;
+    property <length> content-height: layout.min-height;
+
+    pure function align-offset(align: LayoutAlignment, w: length, avail: length) -> length {
+        align == LayoutAlignment.start ? 0px :
+        align == LayoutAlignment.center ? (avail - w) / 2 :
+        avail - w
+    }
+
+    // The outer Layout reports `max(button.width, items.width)` plus
+    // `FabMenuPaddingHorizontal`(16) on both sides, and
+    // `max(button.height + 16, items.height)` — the column height is 0
+    // while nothing is visible.
+    min_width: 32px + max(root.content-width, toggle.width);
+    // `finalHeight` is binary: full once the first item's alpha leaves 0
+    // (the bottom item reveals at `stagger >= 1`), 0 when collapsed.
+    min_height: max(root.button-height + 16px, root.stagger >= 1 ? root.content-height : 0px);
+    preferred_width: self.min_width;
+    preferred_height: self.min_height;
+
+    // Declared before the button so the focus chain visits the items first —
+    // upstream's `isTraversalGroup` + `traversalIndex = -0.9`.
+    flick := Flickable {
+        x: 16px + root.align-offset(root.horizontal-alignment, self.width, root.width - 32px);
+        y: 0;
+        width: root.content-width;
+        // `finalHeight`: full content while the stagger has opened, 0 when
+        // collapsed; capped by what the caller gave the menu so the content
+        // scrolls when it overflows (`verticalScroll`, enabled = expanded).
+        height: root.stagger >= 1 ? min(root.content-height, root.height) : 0px;
+        interactive: root.expanded && root.content-height > self.height;
+
+        layout := VerticalLayout {
+            spacing: FabMenuBaselineTokens.list_item_between_space;
+            alignment: start;
+
+            for item[index] in root.items : FloatingActionButtonMenuItem {
+                icon: item.icon;
+                text: item.text;
+                enabled: item.enabled;
+                horizontal-alignment: root.horizontal-alignment;
+                revealed: index >= root.items.length - root.stagger;
+                focus-request <=> root.focus-request;
+                item-index: index;
+                item-count: root.items.length;
+
+                clicked => {
+                    root.item-clicked(index);
+                }
+            }
+
+            // The column's bottom padding — the layout's `spacing` already
+            // contributes one gap before it when items exist.
+            Rectangle {
+                height: root.bottom-padding - (root.items.length > 0 ? FabMenuBaselineTokens.list_item_between_space : 0px);
+            }
+        }
+    }
+
+    toggle := ToggleFloatingActionButton {
+        x: 16px + root.align-offset(root.horizontal-alignment, self.width, root.width - 32px);
+        y: root.height - self.height - 16px;
+        size: root.button-size;
+        icon: root.button-icon;
+        checked-icon: root.button-checked-icon;
+        tooltip: root.button-tooltip;
+        container-color: root.button-container-color;
+        checked-container-color: root.button-checked-container-color;
+        content-color: root.button-content-color;
+        checked-content-color: root.button-checked-content-color;
+        checked <=> root.expanded;
+        simulate-hover: root.simulate-button-hover;
+        simulate-press: root.simulate-button-press;
+
+        // `Box.onKeyEvent`: while expanded, Tab/Down from the button moves
+        // focus back to the first item.
+        key-pressed(event) => {
+            if root.expanded && ((event.text == Key.Tab && !event.modifiers.shift) || event.text == Key.DownArrow) {
+                root.focus-request = 0;
+                return accept;
+            }
+            reject
+        }
+    }
+}

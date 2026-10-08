@@ -1,0 +1,107 @@
+---
+title: FloatingActionButtonMenu (FAB menu)
+description: FloatingActionButtonMenu and ToggleFloatingActionButton API.
+---
+
+import CodeSnippetMD from '@slint/common-files/src/components/CodeSnippetMD.astro';
+import SlintProperty from '@slint/common-files/src/components/SlintProperty.astro';
+
+<CodeSnippetMD imagePath="/src/assets/generated/fabmenu.png" scale="3" imageWidth="300" imageHeight="200" imageAlt="">
+```slint
+import { FloatingActionButtonMenu } from "@material";
+export component Example inherits Window {
+    width: 240px;
+    height: 260px;
+    background: transparent;
+    FloatingActionButtonMenu {
+        x: parent.width - self.width - 16px;
+        y: parent.height - self.height - 16px;
+        expanded: true;
+        button-icon: @image-url("../icons/add.svg");
+        button-checked-icon: @image-url("../icons/close.svg");
+        button-tooltip: "Menu";
+        items: [
+            { icon: @image-url("../icons/edit.svg"), text: "Compose", enabled: true },
+            { icon: @image-url("../icons/settings.svg"), text: "Send", enabled: true },
+        ];
+        item-clicked(index) => {
+            self.expanded = false;
+        }
+    }
+}
+```
+</CodeSnippetMD>
+
+A `FloatingActionButtonMenu` stacks action items above a `ToggleFloatingActionButton`. Pressing the button morphs it into a close button and reveals the items bottom-up with a staggered spring animation; pressing it again (or an item) collapses the menu.
+
+## FloatingActionButtonMenu
+
+### items
+<SlintProperty propName="items" typeName="FabMenuItem">
+The menu entries, each a `{ icon: image, text: string, enabled: bool }` struct, rendered as `FloatingActionButtonMenuItem`s.
+</SlintProperty>
+
+### expanded
+<SlintProperty propName="expanded" typeName="bool">
+Whether the menu is open. Two-way bound to the toggle button's `checked` state.
+</SlintProperty>
+
+### horizontal-alignment
+<SlintProperty propName="horizontal-alignment" typeName="enum" enumName="LayoutAlignment">
+Horizontal alignment of the items column and the button inside the component's width: `start`, `center`, or `end` (default).
+</SlintProperty>
+
+### button-size
+<SlintProperty propName="button-size" typeName="enum" enumName="FabMenuSize">
+The resting size of the toggle button: `baseline` (56px, default), `medium` (80px), or `large` (96px).
+</SlintProperty>
+
+### button-icon / button-checked-icon
+<SlintProperty propName="button-icon" typeName="image">
+The icon shown while collapsed (`button-icon`) and while expanded (`button-checked-icon`, typically a close icon).
+</SlintProperty>
+
+### button-tooltip
+<SlintProperty propName="button-tooltip" typeName="string">
+Tooltip and accessibility label for the toggle button.
+</SlintProperty>
+
+### button-container-color / button-checked-container-color / button-content-color / button-checked-content-color
+<SlintProperty propName="button-container-color" typeName="color">
+Color overrides for the toggle button's resting and checked container and content colors.
+</SlintProperty>
+
+### item-clicked(index)
+Callback emitted when a menu item is activated. Set `expanded: false` inside to collapse the menu after selection.
+
+## ToggleFloatingActionButton
+
+The morphing button can also be used standalone for custom menu composition.
+
+### icon / checked-icon
+<SlintProperty propName="icon" typeName="image">
+The resting icon and the icon shown once `checked-progress` passes 0.5.
+</SlintProperty>
+
+### checked
+<SlintProperty propName="checked" typeName="bool">
+Whether the button is in its checked (close) state. Toggling it animates the container's size, corner radius, and colors with the expressive fast spatial spec.
+</SlintProperty>
+
+### size
+<SlintProperty propName="size" typeName="enum" enumName="FabMenuSize">
+The resting container size: `baseline` (default), `medium`, or `large`.
+</SlintProperty>
+
+### container-color / checked-container-color / content-color / checked-content-color
+<SlintProperty propName="container-color" typeName="color">
+Resting and checked container and icon colors, lerped with `checked-progress`.
+</SlintProperty>
+
+### checked-progress
+<SlintProperty propName="checked-progress" typeName="float">
+The live 0..1 morph progress, for custom content drawn inside the button.
+</SlintProperty>
+
+### clicked()
+Invoked when the button is clicked.

@@ -18,6 +18,7 @@
       2000
     ]
   },
+  "mask_shadow": {},
   "name": "chip-filter-states",
   "negative_note": "issue #6: on skia the drop-shadow penumbra around an elevated/pressed chip's graphicsLayer-softened edge lands ~4px inside the Compose silhouette — the corner-band edge comparison reports slint ~3 vs compose ~7 while software/femtovg match",
   "params": {},
@@ -98,7 +99,6 @@
   "type": "canvas",
   "widgets": [
     {
-      "alignment": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,
@@ -121,7 +121,6 @@
       "dragged": null,
       "elevation": null,
       "enabled": null,
-      "expanded": null,
       "expanded_ratio": null,
       "fab": null,
       "fab_icon": null,
@@ -201,7 +200,6 @@
       "year_min": null
     },
     {
-      "alignment": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,
@@ -224,7 +222,6 @@
       "dragged": null,
       "elevation": null,
       "enabled": null,
-      "expanded": null,
       "expanded_ratio": null,
       "fab": null,
       "fab_icon": null,
@@ -304,7 +301,6 @@
       "year_min": null
     },
     {
-      "alignment": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,
@@ -327,7 +323,6 @@
       "dragged": null,
       "elevation": null,
       "enabled": null,
-      "expanded": null,
       "expanded_ratio": null,
       "fab": null,
       "fab_icon": null,
@@ -407,7 +402,6 @@
       "year_min": null
     },
     {
-      "alignment": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,
@@ -430,7 +424,6 @@
       "dragged": null,
       "elevation": null,
       "enabled": null,
-      "expanded": null,
       "expanded_ratio": null,
       "fab": null,
       "fab_icon": null,
@@ -510,7 +503,6 @@
       "year_min": null
     },
     {
-      "alignment": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,
@@ -533,7 +525,6 @@
       "dragged": null,
       "elevation": null,
       "enabled": false,
-      "expanded": null,
       "expanded_ratio": null,
       "fab": null,
       "fab_icon": null,
@@ -613,7 +604,6 @@
       "year_min": null
     },
     {
-      "alignment": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,
@@ -636,7 +626,6 @@
       "dragged": null,
       "elevation": null,
       "enabled": false,
-      "expanded": null,
       "expanded_ratio": null,
       "fab": null,
       "fab_icon": null,

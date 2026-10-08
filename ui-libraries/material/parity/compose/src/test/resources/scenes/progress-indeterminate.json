@@ -11,6 +11,7 @@
   },
   "mask_decor": {},
   "mask_inner": {},
+  "mask_shadow": {},
   "name": "progress-indeterminate",
   "negative_note": "femtovg tessellates stroked arcs and small round caps with a slightly different AA coverage ramp than layoutlib — a handful of isolated edge pixels diverge ~90/255 at d2 while geometry is verified identical on software and skia; a silent pass would mean the harness went blind",
   "params": {},
@@ -86,7 +87,6 @@
   "type": "canvas",
   "widgets": [
     {
-      "alignment": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,
@@ -109,7 +109,6 @@
       "dragged": null,
       "elevation": null,
       "enabled": null,
-      "expanded": null,
       "expanded_ratio": null,
       "fab": null,
       "fab_icon": null,
@@ -189,7 +188,6 @@
       "year_min": null
     },
     {
-      "alignment": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,
@@ -212,7 +210,6 @@
       "dragged": null,
       "elevation": null,
       "enabled": null,
-      "expanded": null,
       "expanded_ratio": null,
       "fab": null,
       "fab_icon": null,

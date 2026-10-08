@@ -45,6 +45,7 @@
     ]
   },
   "mask_inner": {},
+  "mask_shadow": {},
   "name": "scaffold-drag",
   "params": {
     "note": "scaffold partial at 184 — a 40px upward drag to 144 then a -1000px/s fling lands on the expanded anchor at 92; no BoundaryDampeningZone on the scaffold path"
@@ -133,7 +134,6 @@
   "type": "canvas",
   "widgets": [
     {
-      "alignment": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": "surface",
@@ -156,7 +156,6 @@
       "dragged": null,
       "elevation": null,
       "enabled": null,
-      "expanded": null,
       "expanded_ratio": null,
       "fab": null,
       "fab_icon": null,
