@@ -1,0 +1,145 @@
+{
+  "name": "scaffolds",
+  "type": "canvas",
+  "parity": "static",
+  "size": [
+    320,
+    1040
+  ],
+  "densities": [
+    1,
+    2
+  ],
+  "xfail_text": "skia@windows: issue #28: Windows skia's font backend positions the appbar title's ink 1px lower than layoutlib; Linux skia and the other rasterizers keep the cell inside eps",
+  "theme": {
+    "seed": "6750A4",
+    "variant": "tonal-spot",
+    "spec": "spec2025",
+    "platform": "phone",
+    "contrast": 0.0,
+    "dark": false
+  },
+  "fonts": {
+    "brand": "Roboto",
+    "plain": "Roboto"
+  },
+  "widgets": [
+    {
+      "kind": "material-scaffold",
+      "x": 0,
+      "y": 0,
+      "width": 320,
+      "height": 260,
+      "fab_position": "end",
+      "top_bar": true,
+      "bottom_bar": true,
+      "snackbar": true,
+      "fab": true,
+      "title": "Home",
+      "text": "Content"
+    },
+    {
+      "kind": "material-scaffold",
+      "x": 0,
+      "y": 260,
+      "width": 320,
+      "height": 260,
+      "fab_position": "center",
+      "top_bar": true,
+      "bottom_bar": false,
+      "snackbar": false,
+      "fab": true,
+      "title": "Center",
+      "text": "Content"
+    },
+    {
+      "kind": "material-scaffold",
+      "x": 0,
+      "y": 520,
+      "width": 320,
+      "height": 260,
+      "fab_position": "start",
+      "top_bar": false,
+      "bottom_bar": true,
+      "snackbar": false,
+      "fab": true,
+      "text": "Content"
+    },
+    {
+      "kind": "material-scaffold",
+      "x": 0,
+      "y": 780,
+      "width": 320,
+      "height": 260,
+      "fab_position": "end-overlay",
+      "top_bar": false,
+      "bottom_bar": true,
+      "snackbar": true,
+      "fab": true,
+      "text": "Content"
+    }
+  ],
+  "trace_elements": [
+    "scaffold0",
+    "content0",
+    "appbar0",
+    "snackbar0",
+    "navbar0",
+    "fab0",
+    "scaffold1",
+    "content1",
+    "appbar1",
+    "fab1",
+    "scaffold2",
+    "content2",
+    "navbar2",
+    "fab2",
+    "scaffold3",
+    "content3",
+    "snackbar3",
+    "navbar3",
+    "fab3"
+  ],
+  "trace_props": [],
+  "times": [],
+  "actions": [],
+  "params": {},
+  "mask_decor": {
+    "fab0": {"times": [0, 2000], "margin": 12},
+    "fab1": {"times": [0, 2000], "margin": 12},
+    "fab2": {"times": [0, 2000], "margin": 12},
+    "fab3": {"times": [0, 2000], "margin": 12},
+    "scaffold0": [
+      0,
+      2000
+    ],
+    "scaffold1": [
+      0,
+      2000
+    ],
+    "scaffold2": [
+      0,
+      2000
+    ],
+    "scaffold3": [
+      0,
+      2000
+    ],
+    "content0": [
+      0,
+      2000
+    ],
+    "content1": [
+      0,
+      2000
+    ],
+    "content2": [
+      0,
+      2000
+    ],
+    "content3": [
+      0,
+      2000
+    ]
+  }
+}

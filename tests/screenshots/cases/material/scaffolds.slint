@@ -1,0 +1,199 @@
+// Copyright © SixtyFPS GmbH <info@slint.dev>
+// SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0
+
+// Scene: scaffolds — generated from `ui-libraries/material/parity/scenes/scaffolds.json`
+// (edit the scene, regenerate with `cargo run -p material-parity-generator`).
+//PARITY=static
+//SIZE=320x1040
+//TRACE_ELEMENTS=scaffold0,content0,appbar0,snackbar0,navbar0,fab0,scaffold1,content1,appbar1,fab1,scaffold2,content2,navbar2,fab2,scaffold3,content3,snackbar3,navbar3,fab3
+//MASK_DECOR=content0@0,2000
+//MASK_DECOR=content1@0,2000
+//MASK_DECOR=content2@0,2000
+//MASK_DECOR=content3@0,2000
+//MASK_DECOR=fab0+12@0,2000
+//MASK_DECOR=fab1+12@0,2000
+//MASK_DECOR=fab2+12@0,2000
+//MASK_DECOR=fab3+12@0,2000
+//MASK_DECOR=scaffold0@0,2000
+//MASK_DECOR=scaffold1@0,2000
+//MASK_DECOR=scaffold2@0,2000
+//MASK_DECOR=scaffold3@0,2000
+//XFAIL_TEXT=skia@windows: issue #28: Windows skia's font backend positions the appbar title's ink 1px lower than layoutlib; Linux skia and the other rasterizers keep the cell inside eps
+//DENSITIES=1,2
+import "../../fonts/Roboto-VariableFont.ttf";
+import { FabPosition, FloatingActionButton, Icons, MaterialPalette, MaterialText, MaterialTheme, MaterialTypography, MaterialWindow, NavigationBar, Scaffold, TopAppBar } from "@material";
+
+export component TestCase inherits MaterialWindow {
+    init => {
+        // The scene pins seed #6750A4, tonal-spot, spec2025, light, contrast 0
+        // (all the library defaults; restated here so a default change can't
+        // silently move the parity baseline).
+        MaterialTheme.seed-color = #6750A4;
+        MaterialTheme.dark = false;
+        MaterialTheme.contrast-level = 0;
+        MaterialTheme.use-platform-color = false;
+        MaterialTheme.plain-family = "Roboto";
+        MaterialTheme.brand-family = "Roboto";
+        // Compose builds its scene scheme from the same seed — use the
+        // runtime-generated scheme, not the static expressive table.
+        MaterialPalette.dynamic = true;
+    }
+
+    scaffold0 := Scaffold {
+        x: 0px;
+        y: 0px;
+        width: 320px;
+        height: 260px;
+        fab-position: FabPosition.end;
+        content0 := Rectangle {
+            width: 100%;
+            height: 100%;
+            MaterialText {
+                text: "Content";
+                x: 16px;
+                y: scaffold0.content_padding_top + 16px;
+                style: MaterialTypography.body_large;
+                color: scaffold0.content_color;
+            }
+        }
+        top-bar-height: appbar0.min_height;
+        appbar0 := TopAppBar {
+            y: 0px;
+            width: 100%;
+            title: "Home";
+        }
+        snackbar-width: snackbar0.width;
+        snackbar-height: snackbar0.height;
+        snackbar0 := Rectangle {
+            x: scaffold0.snackbar_x;
+            y: scaffold0.snackbar_y;
+            width: 200px;
+            height: 48px;
+            border-radius: 4px;
+            background: MaterialPalette.inverse_surface;
+        }
+        bottom-bar-height: navbar0.min_height;
+        navbar0 := NavigationBar {
+            y: scaffold0.bottom_bar_y;
+            width: 100%;
+            items: [{ icon: Icons.menu, selected_icon: Icons.menu, text: "Menu", show_badge: false, badge: "" }, { icon: Icons.schedule, selected_icon: Icons.schedule, text: "Later", show_badge: false, badge: "" }];
+            current-index: 0;
+        }
+        fab-width: fab0.min_width;
+        fab-height: fab0.min_height;
+        fab0 := FloatingActionButton {
+            x: scaffold0.fab_x;
+            y: scaffold0.fab_y;
+            icon: Icons.add;
+            enforce_touch_target: false;
+        }
+    }
+    scaffold1 := Scaffold {
+        x: 0px;
+        y: 260px;
+        width: 320px;
+        height: 260px;
+        fab-position: FabPosition.center;
+        content1 := Rectangle {
+            width: 100%;
+            height: 100%;
+            MaterialText {
+                text: "Content";
+                x: 16px;
+                y: scaffold1.content_padding_top + 16px;
+                style: MaterialTypography.body_large;
+                color: scaffold1.content_color;
+            }
+        }
+        top-bar-height: appbar1.min_height;
+        appbar1 := TopAppBar {
+            y: 0px;
+            width: 100%;
+            title: "Center";
+        }
+        fab-width: fab1.min_width;
+        fab-height: fab1.min_height;
+        fab1 := FloatingActionButton {
+            x: scaffold1.fab_x;
+            y: scaffold1.fab_y;
+            icon: Icons.add;
+            enforce_touch_target: false;
+        }
+    }
+    scaffold2 := Scaffold {
+        x: 0px;
+        y: 520px;
+        width: 320px;
+        height: 260px;
+        fab-position: FabPosition.start;
+        content2 := Rectangle {
+            width: 100%;
+            height: 100%;
+            MaterialText {
+                text: "Content";
+                x: 16px;
+                y: scaffold2.content_padding_top + 16px;
+                style: MaterialTypography.body_large;
+                color: scaffold2.content_color;
+            }
+        }
+        bottom-bar-height: navbar2.min_height;
+        navbar2 := NavigationBar {
+            y: scaffold2.bottom_bar_y;
+            width: 100%;
+            items: [{ icon: Icons.menu, selected_icon: Icons.menu, text: "Menu", show_badge: false, badge: "" }, { icon: Icons.schedule, selected_icon: Icons.schedule, text: "Later", show_badge: false, badge: "" }];
+            current-index: 0;
+        }
+        fab-width: fab2.min_width;
+        fab-height: fab2.min_height;
+        fab2 := FloatingActionButton {
+            x: scaffold2.fab_x;
+            y: scaffold2.fab_y;
+            icon: Icons.add;
+            enforce_touch_target: false;
+        }
+    }
+    scaffold3 := Scaffold {
+        x: 0px;
+        y: 780px;
+        width: 320px;
+        height: 260px;
+        fab-position: FabPosition.end_overlay;
+        content3 := Rectangle {
+            width: 100%;
+            height: 100%;
+            MaterialText {
+                text: "Content";
+                x: 16px;
+                y: scaffold3.content_padding_top + 16px;
+                style: MaterialTypography.body_large;
+                color: scaffold3.content_color;
+            }
+        }
+        snackbar-width: snackbar3.width;
+        snackbar-height: snackbar3.height;
+        snackbar3 := Rectangle {
+            x: scaffold3.snackbar_x;
+            y: scaffold3.snackbar_y;
+            width: 200px;
+            height: 48px;
+            border-radius: 4px;
+            background: MaterialPalette.inverse_surface;
+        }
+        bottom-bar-height: navbar3.min_height;
+        navbar3 := NavigationBar {
+            y: scaffold3.bottom_bar_y;
+            width: 100%;
+            items: [{ icon: Icons.menu, selected_icon: Icons.menu, text: "Menu", show_badge: false, badge: "" }, { icon: Icons.schedule, selected_icon: Icons.schedule, text: "Later", show_badge: false, badge: "" }];
+            current-index: 0;
+        }
+        fab-width: fab3.min_width;
+        fab-height: fab3.min_height;
+        fab3 := FloatingActionButton {
+            x: scaffold3.fab_x;
+            y: scaffold3.fab_y;
+            icon: Icons.add;
+            enforce_touch_target: false;
+        }
+    }
+}

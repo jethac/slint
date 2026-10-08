@@ -351,7 +351,7 @@ States: selected, disabled, unselected, focused, hovered, pressed
 
 | Component | Source | Status | Issues | Needs | Notes |
 |---|---|---|---|---|---|
-| Scaffold | Scaffold.kt | missing | #12 | adaptive (#12) | - |
+| Scaffold | Scaffold.kt | done | #11 | none | slint component: Scaffold |
 
 ### Scrim
 
