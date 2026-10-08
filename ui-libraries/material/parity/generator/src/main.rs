@@ -459,6 +459,42 @@ struct Widget {
     /// Compose side `Modifier.shadow`'s dp.
     #[serde(default)]
     elevation: Option<f64>,
+    /// Slider value in `trackRange` units — `SliderState(value)` /
+    /// `RangeSliderState(startValue)`; `value2` is the range slider's end.
+    /// Both default to the range endpoints.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    value: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    value2: Option<f64>,
+    /// `SliderState.trackRange`/`RangeSliderState.trackRange` bounds,
+    /// default `0..1`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    min: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    max: Option<f64>,
+    /// Discrete `steps` between the endpoints.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    steps: Option<i64>,
+    /// `SliderDefaults.CenteredTrack` instead of the default `Track`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    centered: Option<bool>,
+    /// `VerticalSlider(topToBottom)`; default `false` (bottom to top).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    top_to_bottom: Option<bool>,
+    /// `LocalLayoutDirection.Rtl` on the Compose side, `mirror` on Slint.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    rtl: Option<bool>,
+    /// `Track(sliderState, trackCornerSize)`/`Track(rangeSliderState, …)`
+    /// in dp — for the single slider that overload also enables corner
+    /// shrinking; `-1`/absent leaves `Dp.Unspecified`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    track_corner: Option<f64>,
+    /// Which range thumb `state` applies to: `start` (default) or `end`.
+    /// `state2` covers the other thumb.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    thumb: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    state2: Option<String>,
     /// Rail items (`navigation-rail`, `wide-navigation-rail`,
     /// `modal-navigation-rail`): `[{ "text": "Inbox", "icon": "inbox",
     /// "selected_icon": "inbox", "badge": "3", "enabled": false }]`.
@@ -1139,6 +1175,21 @@ fn slint_case(scene: &Scene) -> String {
             // `surface` imports `Elevation`/`MaterialShapes` below instead;
             // `rect`/`elevated-rect` are plain `Rectangle`s — no import.
             "rect" | "surface" | "elevated-rect" => continue,
+            "slider" => {
+                imports.push("Slider");
+                imports.push("MaterialSliderLabelBehavior");
+                continue;
+            }
+            "vertical-slider" => {
+                imports.push("VerticalSlider");
+                imports.push("MaterialSliderLabelBehavior");
+                continue;
+            }
+            "range-slider" => {
+                imports.push("RangeSlider");
+                imports.push("MaterialSliderLabelBehavior");
+                continue;
+            }
             "icon" => "Icon",
             // `divider` is the deprecated `HorizontalDivider` alias upstream.
             "divider" | "horizontal-divider" => "HorizontalDivider",
@@ -1409,7 +1460,10 @@ fn widget_actions(scene: &Scene) -> Vec<Action> {
             // does not consume focus ordinals.
             continue;
         }
-        if w.state.as_deref() == Some("focused") {
+        // Sliders take `simulate-focus` in `slider_props` — real Tab walks
+        // would just move focus off them again — but they still occupy a
+        // focus ordinal for any later Tab target.
+        if w.state.as_deref() == Some("focused") && !is_slider(w) {
             // Focused split halves: `leading` is the first of the pair.
             let target =
                 if w.kind.ends_with("split-button") && w.side.as_deref() == Some("trailing") {
@@ -1481,22 +1535,60 @@ fn widget_actions(scene: &Scene) -> Vec<Action> {
                 Some("hovered") => "move",
                 _ => continue,
             };
-            // Split buttons aim the gesture at the authored half: the
-            // trailing half hugs the right edge (`w.width` pins the total —
-            // the trailing keeps its intrinsic width, so a point near the
-            // right edge lands inside it).
-            let x = if w.kind.ends_with("split-button")
-                && w.side.as_deref() == Some("trailing")
-                && w.width.is_some()
-            {
-                w.x + w.width.unwrap() - 16.0
-            } else if w.kind == "switch" {
-                // A switch's gesture lands on the thumb's resting center:
-                // 16px in when unchecked (offset 8 + radius 8), 36px when
-                // checked (offset 24 + radius 12).
-                w.x + if w.checked == Some(true) { 36.0 } else { 16.0 }
+            // A slider press must land on the thumb — anywhere else
+            // tap-seeks the value instead of collecting a press on the
+            // handle. The thumb center is `handle_width / 2` in plus
+            // `f * (extent - handle_width)` along the axis (`f` the
+            // active thumb's clamped fraction), mirrored for `rtl` and
+            // bottom-to-top verticals.
+            let (x, y) = if is_slider(w) {
+                let value = if w.thumb.as_deref() == Some("end") {
+                    w.value2.unwrap_or(1.0)
+                } else {
+                    w.value.unwrap_or(0.5)
+                };
+                let (min, max) = (w.min.unwrap_or(0.0), w.max.unwrap_or(1.0));
+                let f = if max > min {
+                    ((value - min) / (max - min)).clamp(0.0, 1.0)
+                } else {
+                    0.0
+                };
+                // `SliderTokens.handle_width` — the fixed 4dp box axis.
+                const THUMB: f64 = 4.0;
+                if w.kind == "vertical-slider" {
+                    let h = w.height.unwrap_or(0.0);
+                    let from_top = w.top_to_bottom.unwrap_or(false);
+                    let along =
+                        if from_top { 2.0 + f * (h - THUMB) } else { h - 2.0 - f * (h - THUMB) };
+                    (w.x + w.width.unwrap_or(48.0) / 2.0, w.y + along)
+                } else {
+                    let wd = w.width.unwrap_or(0.0);
+                    let along = if w.rtl.unwrap_or(false) {
+                        wd - 2.0 - f * (wd - THUMB)
+                    } else {
+                        2.0 + f * (wd - THUMB)
+                    };
+                    (w.x + along, w.y + w.height.unwrap_or(48.0) / 2.0)
+                }
             } else {
-                w.x + 20.0
+                // Split buttons aim the gesture at the authored half: the
+                // trailing half hugs the right edge (`w.width` pins the
+                // total — the trailing keeps its intrinsic width, so a
+                // point near the right edge lands inside it).
+                let x = if w.kind.ends_with("split-button")
+                    && w.side.as_deref() == Some("trailing")
+                    && w.width.is_some()
+                {
+                    w.x + w.width.unwrap() - 16.0
+                } else if w.kind == "switch" {
+                    // A switch's gesture lands on the thumb's resting center:
+                    // 16px in when unchecked (offset 8 + radius 8), 36px when
+                    // checked (offset 24 + radius 12).
+                    w.x + if w.checked == Some(true) { 36.0 } else { 16.0 }
+                } else {
+                    w.x + 20.0
+                };
+                (x, w.y + 16.0)
             };
             // A `radio-button`'s drawn control is a 24dp slot — aim at its
             // center, not the button-bucket point.
@@ -1506,16 +1598,113 @@ fn widget_actions(scene: &Scene) -> Vec<Action> {
         }
     }
     for w in &scene.widgets {
-        match w.state.as_deref().unwrap_or(if w.enabled == Some(false) {
-            "disabled"
-        } else {
-            "enabled"
-        }) {
-            "hovered" | "pressed" | "enabled" | "disabled" | "focused" | "dragged" => {}
-            other => panic!("unknown widget state {other:?}"),
+        for s in
+            [w.state.as_deref(), w.state2.as_deref().filter(|_| is_slider(w))].into_iter().flatten()
+        {
+            match s {
+                "hovered" | "pressed" | "enabled" | "disabled" | "focused" | "dragged" => {}
+                other => panic!("unknown widget state {other:?}"),
+            }
         }
     }
     actions
+}
+
+/// `slider`/`vertical-slider`/`range-slider` widget kinds.
+fn is_slider(w: &Widget) -> bool {
+    matches!(w.kind.as_str(), "slider" | "vertical-slider" | "range-slider")
+}
+
+/// Number formatting that drops the trailing `.0` so values emit as `62`
+/// not `62.0` — Slint accepts either, but the trimmed form reads cleaner.
+fn fmt_num(v: f64) -> String {
+    if v == v.trunc() && v.abs() < 1e15 {
+        format!("{}", v as i64)
+    } else {
+        format!("{v}")
+    }
+}
+
+/// The property lines for `slider`/`vertical-slider`/`range-slider`
+/// widgets. Values come in `trackRange` units (default `0..1`) — the same
+/// numbers the Compose `SliderState`/`RangeSliderState` take.
+fn slider_props(w: &Widget, timed: bool) -> String {
+    let mut p = String::new();
+    let over = &w.slint_overrides;
+    let num_over = |k: &str, authored: Option<f64>| -> Option<f64> {
+        over.get(k).and_then(|v| v.as_f64()).or(authored)
+    };
+    let bool_over = |k: &str, authored: Option<bool>| -> bool {
+        over.get(k).and_then(|v| v.as_bool()).unwrap_or(authored.unwrap_or(false))
+    };
+    writeln!(p, "        minimum: {};", fmt_num(num_over("min", w.min).unwrap_or(0.0))).unwrap();
+    writeln!(p, "        maximum: {};", fmt_num(num_over("max", w.max).unwrap_or(1.0))).unwrap();
+    if w.kind == "range-slider" {
+        writeln!(p, "        start-value: {};", fmt_num(num_over("value", w.value).unwrap_or(0.0))).unwrap();
+        writeln!(p, "        end-value: {};", fmt_num(num_over("value2", w.value2).unwrap_or(1.0))).unwrap();
+    } else {
+        writeln!(p, "        value: {};", fmt_num(num_over("value", w.value).unwrap_or(0.5))).unwrap();
+    }
+    if let Some(steps) = num_over("steps", w.steps.map(|s| s as f64)) {
+        writeln!(p, "        steps: {};", steps as i64).unwrap();
+    }
+    if bool_over("centered", w.centered) {
+        p.push_str("        centered: true;\n");
+    }
+    if w.kind == "vertical-slider" {
+        writeln!(p, "        top-to-bottom: {};", bool_over("top_to_bottom", w.top_to_bottom)).unwrap();
+    }
+    if bool_over("rtl", w.rtl) {
+        p.push_str("        mirror: true;\n");
+    }
+    if let Some(c) = num_over("track_corner", w.track_corner) {
+        if c >= 0.0 {
+            writeln!(p, "        track-corner-override: {}px;", fmt_num(c)).unwrap();
+        }
+    }
+    if let Some(g) = num_over("thumb_track_gap", None) {
+        writeln!(p, "        thumb-track-gap: {}px;", fmt_num(g)).unwrap();
+    }
+    // `state` lands on the thumb `thumb` selects (range sliders only — a
+    // single slider is all start); `state2` on the other thumb. The Compose
+    // side starts the start source with `state2` and falls back to `state`
+    // when it is absent (`stateOverride ?: widget.state`), so a focused
+    // `end` alone puts focus on both thumbs.
+    if !timed {
+        let end_first = w.thumb.as_deref() == Some("end");
+        let (start_state, end_state) = if end_first {
+            (w.state2.as_deref().or(w.state.as_deref()), w.state.as_deref())
+        } else {
+            (w.state.as_deref(), w.state2.as_deref())
+        };
+        for (state, end) in [(start_state, false), (end_state, true)] {
+            let suffix = if end && w.kind == "range-slider" { "-end" } else { "" };
+            match state {
+                Some("pressed") => {
+                    writeln!(p, "        simulate-press{suffix}: true;").unwrap()
+                }
+                Some("focused") => {
+                    writeln!(p, "        simulate-focus{suffix}: true;").unwrap()
+                }
+                _ => {}
+            }
+        }
+    }
+    if !bool_over("enabled", w.enabled.or(Some(true))) {
+        p.push_str("        enabled: false;\n");
+    }
+    if let Some(width) = w.width {
+        writeln!(p, "        width: {}px;", fmt_num(width)).unwrap();
+    }
+    if let Some(height) = w.height {
+        writeln!(p, "        height: {}px;", fmt_num(height)).unwrap();
+    }
+    // `LocalMinimumInteractiveComponentSize` is 0 on the Compose side, and
+    // the pinned `Slider` draws no value indicator — labels are a Views
+    // feature the parity scenes leave off.
+    p.push_str("        enforce-touch-target: false;\n");
+    p.push_str("        label-behavior: MaterialSliderLabelBehavior.gone;\n");
+    p
 }
 
 fn widget_num(v: &serde_json::Value) -> f64 {
@@ -2116,6 +2305,7 @@ fn slint_canvas(s: &mut String, scene: &Scene) {
     let mut vhandles = 0usize;
     let mut drags = 0usize;
     let mut progresses = 0;
+    let mut sliders = 0;
     let mut groups = 0;
     let mut dialogs = 0;
     let mut pickers = 0;
@@ -2566,6 +2756,25 @@ fn slint_canvas(s: &mut String, scene: &Scene) {
                     w.radius.unwrap_or(0.0) as i64,
                     w.color.as_deref().unwrap_or("primary").replace('-', "_"),
                     w.elevation.unwrap_or(0.0) as i64,
+                )
+                .unwrap();
+                continue;
+            }
+            "slider" | "vertical-slider" | "range-slider" => {
+                let i = sliders;
+                sliders += 1;
+                let component = match w.kind.as_str() {
+                    "slider" => "Slider",
+                    "vertical-slider" => "VerticalSlider",
+                    "range-slider" => "RangeSlider",
+                    _ => unreachable!(),
+                };
+                writeln!(
+                    s,
+                    "    slider{i} := {component} {{\n        x: {}px;\n        y: {}px;\n{}    }}\n",
+                    w.x as i64,
+                    w.y as i64,
+                    slider_props(w, !scene.times.is_empty()),
                 )
                 .unwrap();
                 continue;

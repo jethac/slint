@@ -1,0 +1,42 @@
+{
+  "name": "negative-slider-corner",
+  "type": "canvas",
+  "parity": "negative",
+  "size": [
+    340,
+    80
+  ],
+  "densities": [
+    1,
+    2
+  ],
+  "theme": {
+    "seed": "6750A4",
+    "variant": "tonal-spot",
+    "spec": "spec2025",
+    "platform": "phone",
+    "dark": false,
+    "contrast": 0.0
+  },
+  "fonts": {
+    "plain": "Roboto",
+    "brand": "Roboto"
+  },
+  "widgets": [
+    {
+      "kind": "slider",
+      "x": 16,
+      "y": 20,
+      "width": 300,
+      "value": 0.5,
+      "track_corner": 12,
+      "slint_overrides": {
+        "track_corner": 2
+      }
+    }
+  ],
+  "trace_elements": [
+    "slider0"
+  ],
+  "negative_note": "trackCornerSize 12dp requested but the Slint side renders 2dp end corners"
+}

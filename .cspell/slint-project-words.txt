@@ -374,6 +374,7 @@ iconbuttonitem
 iconfont
 IDXGI
 idxgiadapter
+iend
 Ilya
 imac
 imafc
@@ -400,6 +401,7 @@ Irqs
 isinstance
 isize
 Ista
+istart
 itemDatas
 itemrenderer
 itertools
@@ -538,6 +540,8 @@ multisample
 multiview
 Musterfrau
 Mustermann
+expf
+mtrl
 mycomponentlib
 myimage
 mylibrary
@@ -974,6 +978,7 @@ xfails
 xfer
 xfixes
 Xiaolin
+xlarge
 xlib
 xmark
 XOPQ

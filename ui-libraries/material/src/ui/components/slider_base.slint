@@ -1,0 +1,506 @@
+// Copyright © SixtyFPS GmbH <info@slint.dev>
+// SPDX-License-Identifier: MIT
+//
+// Shared machinery for the Material slider family (`Slider`, `VerticalSlider`,
+// `RangeSlider`): the expressive `SliderDefaults.Thumb` handle, the
+// `drawTrack` sectioned track, the inset focus ring and the value indicator
+// label. This is a port of `Slider.kt` and `SliderTokens.kt` at the #3 pin
+// (`androidx/androidx@23327507f7fc7d5b19d65fec4b090f60c970079b`).
+// The size presets, inset track icons and the value indicator take their
+// values from `material-components-android` `slider/res/values/tokens.xml`,
+// `styles.xml` and `BaseSlider.java` (`m3_comp_slider_*`), because the pin
+// has no size presets, track icons or value indicator.
+
+import { MaterialAnimations } from "../styling/material_animations.slint";
+import { MaterialPalette } from "../styling/material_palette.slint";
+import { MaterialTypography } from "../styling/material_typography.slint";
+import { SliderTokens } from "../styling/generated/material_component_tokens.slint";
+import { FocusRing } from "./state_layer.slint";
+import { Icon } from "./icon.slint";
+import { MaterialText } from "./material_text.slint";
+
+/// The five track sizes of the M3 Expressive slider — the
+/// `Widget.Material3Expressive.Slider.*` styles upstream. `extra-small`
+/// reproduces the pinned `Slider` (16dp track, stadium corners, 44dp
+/// handle); `medium` and up have an inset icon size.
+export enum MaterialSliderSize {
+    extra_small,
+    small,
+    medium,
+    large,
+    extra_large,
+}
+
+/// How the value indicator label is presented — `Slider_labelBehavior`
+/// upstream: `floating` and `within-bounds` show it while the handle is
+/// pressed or dragged (`within-bounds` clamps it inside the track),
+/// `visible` keeps it shown, `gone` never shows it.
+export enum MaterialSliderLabelBehavior {
+    floating,
+    within_bounds,
+    gone,
+    visible,
+}
+
+/// `BaseSlider` animates the value indicator in over
+/// `motionDurationMedium4` (83ms) and out over `motionDurationShort3`
+/// (117ms); the pin has no value indicator, so the label fades with the
+/// same durations.
+global MaterialSliderLabelMetrics {
+    out property <duration> in-duration: 83ms;
+    out property <duration> out-duration: 117ms;
+}
+
+/// Resolves the size presets and the pinned `Slider.kt` constants to plain
+/// values so each slider component stays a thin style binding.
+export global MaterialSliderMetrics {
+    /// `m3_comp_slider_*_active_track_height`.
+    public pure function track-height(size: MaterialSliderSize) -> length {
+        size == MaterialSliderSize.extra_small ? 16px :
+        size == MaterialSliderSize.small ? 24px :
+        size == MaterialSliderSize.medium ? 40px :
+        size == MaterialSliderSize.large ? 56px : 96px
+    }
+
+    /// `m3_comp_slider_*_active_track_shape_leading` — the resolved
+    /// `trackCornerSize` passed to `SliderDefaults.Track`. Sizes set an
+    /// explicit corner, so they take the pin's `enableCornerShrinking`
+    /// path; `extra-small` equals `track-height / 2`, the `Dp.Unspecified`
+    /// (fully rounded) default of the pinned `Slider`.
+    public pure function track-corner(size: MaterialSliderSize) -> length {
+        size == MaterialSliderSize.extra_small ? 8px :
+        size == MaterialSliderSize.small ? 8px :
+        size == MaterialSliderSize.medium ? 12px :
+        size == MaterialSliderSize.large ? 16px : 28px
+    }
+
+    /// `m3_comp_slider_*_active_handle_height`.
+    public pure function handle-height(size: MaterialSliderSize) -> length {
+        size == MaterialSliderSize.extra_small ? 44px :
+        size == MaterialSliderSize.small ? 44px :
+        size == MaterialSliderSize.medium ? 44px :
+        size == MaterialSliderSize.large ? 68px : 108px
+    }
+
+    /// `m3_comp_slider_{medium,large,xlarge}_icon_size`; the smaller
+    /// presets have no icon size and draw no inset icons.
+    public pure function icon-size(size: MaterialSliderSize) -> length {
+        size == MaterialSliderSize.medium ? 24px :
+        size == MaterialSliderSize.large ? 24px :
+        size == MaterialSliderSize.extra_large ? 32px : 0px
+    }
+
+    /// `TrackInsideCornerSize` — hard-coded `2.dp` in the pin.
+    out property <length> inside-corner: 2px;
+    /// `m3_slider_track_icon_padding` (Views).
+    out property <length> icon-padding: 10px;
+    /// `insetFocusRingPadding` — hard-coded `8.dp` in the pinned
+    /// `Slider.kt`; the reference build applies it unconditionally.
+    out property <length> focus-inset: 8px;
+    /// `mtrl_slider_label_padding` (Views) — the gap between the handle
+    /// edge and the value indicator.
+    out property <length> label-padding: 4px;
+
+}
+
+/// One track section as drawn by `drawTrack`/`drawTrackPath` in the pin:
+/// a filled rounded rect with an independent radius at each end of the
+/// track axis — the outer `trackCornerSize` on the track end and the
+/// `trackInsideCornerSize` where a section meets a gap.
+export component SliderTrackSection {
+    in property <bool> vertical;
+    // Section span in track coordinates (u = 0..track length, top to
+    // bottom for vertical); `u-start <= u-end` is required.
+    in property <length> u-start;
+    in property <length> u-end;
+    in property <length> corner-start;
+    in property <length> corner-end;
+    in property <color> color;
+    // When the axis is flipped (a bottom-to-top vertical track or a
+    // mirrored/RTL horizontal one), u grows the other way on screen: a
+    // section [a,b] occupies [L-b, L-a] and its start corner ends up at
+    // the far edge — which is exactly what `isRtlHorizontal` produces in
+    // the pin.
+    in property <bool> flipped;
+
+    Rectangle {
+        property <length> L: root.vertical ? parent.height : parent.width;
+        x: root.vertical ? 0px : (root.flipped ? L - root.u-end : root.u-start);
+        y: root.vertical ? (root.flipped ? L - root.u-end : root.u-start) : 0px;
+        width: root.vertical ? parent.width : root.u-end - root.u-start;
+        height: root.vertical ? root.u-end - root.u-start : parent.height;
+        background: root.color;
+        border-top-left-radius: root.flipped ? root.corner-end : root.corner-start;
+        border-top-right-radius: root.vertical
+            ? (root.flipped ? root.corner-end : root.corner-start)
+            : (root.flipped ? root.corner-start : root.corner-end);
+        border-bottom-right-radius: root.flipped ? root.corner-start : root.corner-end;
+        border-bottom-left-radius: root.vertical
+            ? (root.flipped ? root.corner-start : root.corner-end)
+            : (root.flipped ? root.corner-end : root.corner-start);
+    }
+}
+
+/// The pin's `drawTrack` (Slider.kt): up to three rounded-rect sections —
+/// the inactive track split around the handle gap(s), the active track
+/// between the range start and the handle — plus the end stop indicators,
+/// step ticks and the inset track icons. All inputs are the resolved
+/// per-instance values the pin passes through `SliderState`; the caller
+/// keeps the element the size of the track itself and positions it like
+/// `SliderImpl` places the track placeable.
+export component MaterialSliderTrack {
+    /// `state.orientation == Vertical`.
+    in property <bool> vertical;
+    /// `state.reverseVerticalDirection` — `!topToBottom` upstream.
+    in property <bool> flipped;
+    /// `sliderPositions.activeRange` as `value.coerceIn(min, max)`
+    /// fractions.
+    in property <float> active-start;
+    in property <float> active-end;
+    /// `isCentered` (`SliderDefaults.CenteredTrack`).
+    in property <bool> centered;
+    /// `isRangeSlider`.
+    in property <bool> range-slider;
+    /// `steps`; `tickFractions` is empty when 0.
+    in property <int> steps;
+    /// `enableCornerShrinking` — true when `trackCornerSize` was specified
+    /// (every size preset and `CenteredTrack`); the pinned `Slider` track
+    /// is `Dp.Unspecified` (fully rounded ends, no shrinking).
+    in property <bool> shrink-corners;
+    /// Resolved `trackCornerSize` (px). For `Dp.Unspecified` the pin
+    /// uses `track-height / 2`, which is what callers must pass here.
+    in property <length> corner-size;
+    /// `startThumbTrackGapSize`/`endThumbTrackGapSize` — the constant
+    /// gap on each side of a thumb (the focus ring lives outside the
+    /// gap).
+    in property <length> start-gap;
+    in property <length> end-gap;
+    /// `startThumbWidth`/`endThumbWidth` along the track axis — the
+    /// handle's axis extent (4dp; the pin's `thumbWidth` is the box width
+    /// minus focus padding). A centered thumb contributes its width on
+    /// only the side it sits on, so the two are separate inputs.
+    in property <length> start-thumb-axis: SliderTokens.handle_width;
+    in property <length> end-thumb-axis: SliderTokens.handle_width;
+    /// Resolved colors (`SliderColors`).
+    in property <color> active-track-color;
+    in property <color> inactive-track-color;
+    in property <color> active-tick-color;
+    in property <color> inactive-tick-color;
+    /// `drawStopIndicator` color — `colors.trackColor(enabled, true)`.
+    in property <color> stop-color;
+    /// `drawStopIndicator != null`.
+    in property <bool> stop-indicator: true;
+    /// `trackIcon{Active,Inactive}{Start,End}` and their tints — the
+    /// inset icons are a Views feature unsupported with two thumbs; the
+    /// caller only feeds this for non-centered, non-range sliders.
+    in property <image> icon-active-start;
+    in property <image> icon-active-end;
+    in property <image> icon-inactive-start;
+    in property <image> icon-inactive-end;
+    in property <color> icon-active-color;
+    in property <color> icon-inactive-color;
+    in property <length> icon-size;
+    /// Track length along the axis (px) — the element's extent.
+    out property <length> axis-len: root.vertical ? root.height : root.width;
+
+    property <length> L: root.axis-len;
+    property <length> c: root.corner-size;
+    property <length> ic: MaterialSliderMetrics.inside-corner;
+    property <bool> has-ticks: root.steps > 0;
+    property <bool> start-at-end: root.active-start <= 0 || root.active-start >= 1;
+    property <bool> end-at-end: root.active-end <= 0 || root.active-end >= 1;
+    property <length> center: L / 2;
+    // `sliderValueStart`/`sliderValueEnd`: the active-range edges in
+    // track coordinates, inset by one corner off the endpoints while
+    // stepping (the pin's ticks are laid out between the end caps).
+    property <length> value-start:
+        has-ticks && !start-at-end ? (L - 2 * c) * active-start + c : L * active-start;
+    property <length> value-end:
+        has-ticks && !end-at-end ? (L - 2 * c) * active-end + c : L * active-end;
+    // `startGap`/`endGap`: the gap reserved for the handle — half the
+    // handle axis extent plus the configured gap, present only when a
+    // gap size was configured.
+    property <length> start-gap-px: start-gap > 0px ? start-thumb-axis / 2 + start-gap : 0px;
+    property <length> end-gap-px: end-gap > 0px ? end-thumb-axis / 2 + end-gap : 0px;
+    property <length> extra-c: !shrink-corners || has-ticks ? c : 0px;
+    // Leading inactive section (centered or range slider only).
+    property <length> lead-threshold: start-gap-px + extra-c;
+    property <length> adjusted-end: centered ? min(value-end, center) : value-start;
+    property <bool> lead-drawn: (centered || range-slider) && adjusted-end > lead-threshold;
+    property <length> lead-end: adjusted-end - start-gap-px;
+    // Trailing inactive section.
+    property <length> trail-threshold: L - end-gap-px - extra-c;
+    property <length> adjusted-start: centered ? max(value-end, center) : value-end;
+    property <bool> trail-drawn: adjusted-start < trail-threshold;
+    property <length> trail-start: adjusted-start + end-gap-px;
+    // Active section.
+    property <length> active-start-px:
+        centered ? adjusted-end + (adjusted-end < center ? start-gap-px : 0px) :
+        range-slider ? value-start + start-gap-px : 0px;
+    property <length> active-end-px:
+        centered ? adjusted-start - (adjusted-start > center ? end-gap-px : 0px) :
+        value-end - end-gap-px;
+    property <length> active-corner-start: centered || range-slider ? ic : c;
+    property <length> active-corner-end: ic;
+    property <length> active-threshold: !shrink-corners || has-ticks ? active-corner-start : 0px;
+    property <length> active-len: active-end-px - active-start-px;
+    property <bool> active-drawn: active-len > active-threshold;
+    // `tickCenterGap`/`tickEndGap` both use `endGap` in the pin — no
+    // side swap even for centered tracks.
+    property <length> tick-end-gap: end-gap-px;
+    /// `centerTick` position of tick `i` in track coordinates.
+    public pure function tick-pos(i: int) -> length {
+        c + (L - 2 * c) * (i * 1.0 / (steps + 1))
+    }
+    /// Whether tick `i` is drawn — the pin skips the endpoint ticks when
+    /// stop indicators are drawn and any tick inside a gap.
+    public pure function tick-drawn(i: int) -> bool {
+        if root.steps <= 0 {
+            return false;
+        }
+        if stop-indicator && (((centered || range-slider) && i == 0) || i == steps + 1) {
+            return false;
+        }
+        let p = tick-pos(i);
+        if centered && p >= center - end-gap-px && p <= center + end-gap-px {
+            return false;
+        }
+        if range-slider && p >= value-start - start-gap-px && p <= value-start + start-gap-px {
+            return false;
+        }
+        if p >= value-end - tick-end-gap && p <= value-end + tick-end-gap {
+            return false;
+        }
+        true
+    }
+    public pure function tick-active(i: int) -> bool {
+        let p = tick-pos(i);
+        p >= active-start-px && p <= active-end-px
+    }
+    /// An inset icon is drawn when the painted region is at least
+    /// `icon-size + 2 * icon-padding` long (Views
+    /// `calculateTrackIconBounds`).
+    public pure function icon-fits(region-len: length) -> bool {
+        icon-size > 0px && region-len >= icon-size + 2 * MaterialSliderMetrics.icon-padding
+    }
+
+    if root.lead-drawn : SliderTrackSection {
+        width: 100%;
+        height: 100%;
+        vertical: root.vertical;
+        flipped: root.flipped;
+        u-start: 0px;
+        u-end: root.lead-end;
+        corner-start: c;
+        corner-end: ic;
+        color: root.inactive-track-color;
+    }
+
+    if root.lead-drawn && root.stop-indicator : Rectangle {
+        width: SliderTokens.stop_indicator_size;
+        height: self.width;
+        border-radius: self.width / 2;
+        background: root.stop-color;
+        x: root.vertical ? (parent.width - self.width) / 2 : (root.flipped ? L - c - self.width / 2 : c - self.width / 2);
+        y: root.vertical ? (root.flipped ? L - c - self.width / 2 : c - self.width / 2) : (parent.height - self.height) / 2;
+    }
+
+    if root.trail-drawn : SliderTrackSection {
+        width: 100%;
+        height: 100%;
+        vertical: root.vertical;
+        flipped: root.flipped;
+        u-start: root.trail-start;
+        u-end: L;
+        corner-start: ic;
+        corner-end: c;
+        color: root.inactive-track-color;
+    }
+
+    if root.trail-drawn && root.stop-indicator : Rectangle {
+        width: SliderTokens.stop_indicator_size;
+        height: self.width;
+        border-radius: self.width / 2;
+        background: root.stop-color;
+        x: root.vertical ? (parent.width - self.width) / 2 : (root.flipped ? c - self.width / 2 : L - c - self.width / 2);
+        y: root.vertical ? (root.flipped ? c - self.width / 2 : L - c - self.width / 2) : (parent.height - self.height) / 2;
+    }
+
+    if root.active-drawn : SliderTrackSection {
+        width: 100%;
+        height: 100%;
+        vertical: root.vertical;
+        flipped: root.flipped;
+        u-start: root.active-start-px;
+        u-end: root.active-end-px;
+        corner-start: root.active-corner-start;
+        corner-end: root.active-corner-end;
+        color: root.active-track-color;
+    }
+
+    for i in root.steps + 2 : Rectangle {
+        visible: root.tick-drawn(i);
+        property <length> p: root.tick-pos(i);
+        width: SliderTokens.stop_indicator_size;
+        height: self.width;
+        border-radius: self.width / 2;
+        background: root.tick-active(i) ? root.active-tick-color : root.inactive-tick-color;
+        x: root.vertical ? (parent.width - self.width) / 2 : (root.flipped ? L - p - self.width / 2 : p - self.width / 2);
+        y: root.vertical ? (root.flipped ? L - p - self.width / 2 : p - self.width / 2) : (parent.height - self.height) / 2;
+    }
+
+    // Inset track icons (Views): `icon-padding` inside the painted region
+    // edges; a region shorter than `icon-size + 2 * icon-padding` draws
+    // nothing.
+    if root.icon-fits(root.active-len) && icon-active-start.width > 0 : Icon {
+        source: root.icon-active-start;
+        colorize: root.icon-active-color;
+        width: root.icon-size;
+        height: self.width;
+        property <length> ip-start: root.active-start-px + MaterialSliderMetrics.icon-padding;
+        x: root.vertical ? (parent.width - self.width) / 2 : (root.flipped ? L - ip-start - self.width : ip-start);
+        y: root.vertical ? (root.flipped ? L - ip-start - self.height : ip-start) : (parent.height - self.height) / 2;
+    }
+
+    if root.icon-fits(root.active-len) && icon-active-end.width > 0 : Icon {
+        source: root.icon-active-end;
+        colorize: root.icon-active-color;
+        width: root.icon-size;
+        height: self.width;
+        property <length> ip-end: root.active-end-px - MaterialSliderMetrics.icon-padding - self.width;
+        x: root.vertical ? (parent.width - self.width) / 2 : (root.flipped ? L - ip-end - self.width : ip-end);
+        y: root.vertical ? (root.flipped ? L - ip-end - self.height : ip-end) : (parent.height - self.height) / 2;
+    }
+
+    if root.trail-drawn && root.icon-fits(L - root.trail-start) && icon-inactive-start.width > 0 : Icon {
+        source: root.icon-inactive-start;
+        colorize: root.icon-inactive-color;
+        width: root.icon-size;
+        height: self.width;
+        property <length> ip-istart: root.trail-start + MaterialSliderMetrics.icon-padding;
+        x: root.vertical ? (parent.width - self.width) / 2 : (root.flipped ? L - ip-istart - self.width : ip-istart);
+        y: root.vertical ? (root.flipped ? L - ip-istart - self.height : ip-istart) : (parent.height - self.height) / 2;
+    }
+
+    if root.trail-drawn && root.icon-fits(L - root.trail-start) && icon-inactive-end.width > 0 : Icon {
+        source: root.icon-inactive-end;
+        colorize: root.icon-inactive-color;
+        width: root.icon-size;
+        height: self.width;
+        property <length> ip-iend: L - MaterialSliderMetrics.icon-padding - self.width;
+        x: root.vertical ? (parent.width - self.width) / 2 : (root.flipped ? L - ip-iend - self.width : ip-iend);
+        y: root.vertical ? (root.flipped ? L - ip-iend - self.height : ip-iend) : (parent.height - self.height) / 2;
+    }
+}
+
+/// The expressive handle — `SliderDefaults.Thumb`/`ThumbContent` in the
+/// pin: a `SliderTokens.HandleShape` (CornerFull) pill filling the handle
+/// box's cross axis, `SliderTokens.handle_width` along the axis, that
+/// narrows to `pressed_handle_width`/`focus_handle_width` while any
+/// interaction (press, drag, focus — not hover) is collected. The pin
+/// snaps the width; this port animates it with the fast spatial spring,
+/// which the reduced-motion preference restores to the pin's instant
+/// snap.
+export component MaterialSliderThumb {
+    /// The handle's cross-axis extent (`SliderTokens.active_handle_height`,
+    /// or the size preset's height).
+    in property <length> handle-height: SliderTokens.active_handle_height;
+    /// Press, drag or focus collected on this thumb's interaction source.
+    in property <bool> interacting;
+    in property <bool> focused;
+    in property <bool> enabled: true;
+
+    /// The pin's `thumbOffsetX`/`thumbOffsetY` and layout offsets are
+    /// `roundToInt` device pixels or `Int / 2` truncations of the
+    /// measured placeable extents, while `drawTrack` paths keep float
+    /// coordinates. `snap` rounds a `length` against `1phx` — one
+    /// physical pixel — reproducing the placeable snap at any scale
+    /// factor. The conversions need a window's scale factor, so they
+    /// hang off a component the caller always instantiates.
+    public pure function snap(v: length) -> length {
+        Math.round(v / 1phx) * 1phx
+    }
+    /// Kotlin's `Int / 2` truncation on measured placeable extents.
+    public pure function half(v: length) -> length {
+        Math.floor(v / 1phx / 2) * 1phx
+    }
+    /// Vertical thumbs transpose the box and the pill.
+    in property <bool> vertical;
+    /// The handle's box extent along the track axis — the measured
+    /// `thumbPlaceable` in the pin. The `SliderImpl` Box pads the live
+    /// pill by `insetFocusRingPadding` on both sides, so the box — and
+    /// with it the track inset and the slider's height — follows the
+    /// press animation.
+    out property <length> box-axis: pill-axis + 2 * MaterialSliderMetrics.focus-inset;
+    /// The handle's box extent across the track.
+    out property <length> box-cross: handle-height + 2 * MaterialSliderMetrics.focus-inset;
+
+    /// The pill's live extent along the track axis — the width the
+    /// pin measures into `sliderState.thumbWidth`/`thumbHeight`, so the
+    /// track gap hugs the animating pill (`thumbTrackGapSize` on top).
+    out property <length> pill-axis: interacting
+        ? (focused ? SliderTokens.focus_handle_width : SliderTokens.pressed_handle_width)
+        : SliderTokens.handle_width;
+    animate pill-axis {
+        enabled: !MaterialPalette.reduced-motion;
+        easing: MaterialAnimations.fast-spatial-spring;
+    }
+
+    // The pin centers the pill inside the handle box (`Spacer` in a
+    // centered Box) and draws the focus indication around the padded
+    // box — `SliderTokens.HandleShape` (CornerFull → a stadium at the
+    // box size).
+    Rectangle {
+        x: root.vertical ? (parent.width - self.width) / 2 : (parent.width - pill-axis) / 2;
+        y: root.vertical ? (parent.height - pill-axis) / 2 : (parent.height - self.height) / 2;
+        width: root.vertical ? root.handle-height : pill-axis;
+        height: root.vertical ? pill-axis : root.handle-height;
+        border-radius: min(self.width, self.height) / 2;
+        background: root.enabled ? SliderTokens.handle_color
+            : SliderTokens.disabled_handle_color.with_alpha(SliderTokens.disabled_handle_opacity);
+    }
+
+    if root.focused : FocusRing {
+        width: 100%;
+        height: 100%;
+        border-radius: min(self.width, self.height) / 2;
+    }
+}
+
+/// The value indicator label — Views `Widget.Material3.Slider.Label`: a
+/// `Corner.Full` pill (no marker) in `InverseSurface` carrying the value
+/// in `LabelLarge`/`InverseOnSurface`, padded 10dp horizontally and
+/// `m3_comp_slider_value_indicator_active_bottom_space` (12dp)
+/// vertically with a 32dp minimum height. The caller positions its
+/// bottom edge `label-padding` above the handle and centers it on the
+/// handle position (`within-bounds` clamps the center inside the track).
+export component MaterialSliderLabel {
+    in property <string> text;
+    in property <bool> shown;
+
+    property <float> fade: shown ? 1 : 0;
+    animate fade {
+        enabled: !MaterialPalette.reduced-motion;
+        duration: shown ? MaterialSliderLabelMetrics.in-duration : MaterialSliderLabelMetrics.out-duration;
+    }
+
+    opacity: fade;
+
+    pill := Rectangle {
+        border-radius: self.height / 2;
+        background: SliderTokens.value_indicator_container_color;
+        height: max(32px, label-text.height + 2 * SliderTokens.value_indicator_active_bottom_space);
+        width: label-text.width + 20px;
+
+        label-text := MaterialText {
+            x: 10px;
+            y: (parent.height - self.height) / 2;
+            text: root.text;
+            style: SliderTokens.value_indicator_label_text_font;
+            color: SliderTokens.value_indicator_label_text_color;
+        }
+    }
+
+    width: pill.width;
+    height: pill.height;
+}

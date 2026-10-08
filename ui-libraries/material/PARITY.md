@@ -395,9 +395,9 @@ States: active, disabled, inactive, focused, hovered, pressed, selected
 
 | Component | Source | Status | Issues | Needs | Notes |
 |---|---|---|---|---|---|
-| RangeSlider | Slider.kt | missing | #11 | shapes (#6) | - |
-| Slider | Slider.kt | partial | #11 | shapes (#6) | slint component: Slider |
-| VerticalSlider | Slider.kt | missing | #11 | shapes (#6) | - |
+| RangeSlider | Slider.kt | done | #11 | none | slint component: RangeSlider; same Slider.kt pin |
+| Slider | Slider.kt | done | #11 | none | slint component: Slider; tokens: SliderTokens (generated); layout/track/thumb: Slider.kt at the #3 pin |
+| VerticalSlider | Slider.kt | done | #11 | none | slint component: VerticalSlider; same Slider.kt pin |
 
 ### Snackbar
 

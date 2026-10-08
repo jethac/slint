@@ -1,155 +1,432 @@
 // Copyright © SixtyFPS GmbH <info@slint.dev>
 // SPDX-License-Identifier: MIT
 //
-import { MaterialStyleMetrics } from "../styling/material_style_metrics.slint";
+// The Material slider — a port of `Slider`/`VerticalSlider` in
+// `compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/Slider.kt`
+// at the #3 pin (`androidx/androidx@23327507f7fc7d5b19d65fec4b090f60c970079b`).
+// `slider_base.slint` documents where each value comes from; every number
+// is a `SliderTokens` token, a pinned `Slider.kt` constant or a
+// `m3_comp_slider_*` token from `material-components-android`.
+
 import { MaterialPalette } from "../styling/material_palette.slint";
-import { StateLayer } from "./state_layer.slint";
+import { SliderTokens } from "../styling/generated/material_component_tokens.slint";
+import {
+    MaterialSliderLabel,
+    MaterialSliderLabelBehavior,
+    MaterialSliderMetrics,
+    MaterialSliderSize,
+    MaterialSliderThumb,
+    MaterialSliderTrack,
+} from "./slider_base.slint";
 
-export component Slider {
-    in property <bool> enabled;
-    in_out property <float> value;
-    in property <float> minimum;
-    in property <int> stop_count: 0;
-    in property <float> maximum: 100;
+/// `SliderImpl`: track, a single `Thumb`, tap/drag input, keyboard and
+/// semantics. `vertical` transposes the layout like
+/// `SliderOrientation.Vertical` with `reverseVerticalDirection =
+/// !top-to-bottom`; `mirror` is `state.isRtl` — Slint has no
+/// per-component layout direction, so callers set it themselves.
+component MaterialSliderImpl {
+    /// `SliderState.value` — the user value in `minimum..maximum`.
+    in-out property <float> value;
+    /// `SliderState.valueRange`.
+    in property <float> minimum: 0;
+    in property <float> maximum: 1;
+    /// `steps` — that many discrete stops between `minimum` and
+    /// `maximum`; `tickFractions` is `steps + 2` ticks and the track
+    /// draws them outside the end caps.
+    in property <int> steps: 0;
+    /// The size preset — `MaterialSliderMetrics`. `extra-small` is the
+    /// pinned `Slider` default.
+    in property <MaterialSliderSize> size: MaterialSliderSize.extra_small;
+    /// `SliderDefaults.CenteredTrack`: the active track starts at the
+    /// track center instead of the leading edge.
+    in property <bool> centered;
+    in property <bool> enabled: true;
+    /// Enforce the 48dp minimum interactive component size —
+    /// `Modifier.minimumInteractiveComponentSize()` upstream.
+    in property <bool> enforce-touch-target: true;
+    /// Vertical layout: the track runs top to bottom when `top-to-bottom`,
+    /// bottom to top otherwise (`VerticalSlider(topToBottom)`).
+    in property <bool> vertical;
+    in property <bool> top-to-bottom;
+    /// `state.isRtl` in the pin: mirrors the track axis.
+    in property <bool> mirror;
+    /// Inset track icons (`trackIcon{Active,Inactive}{Start,End}` —
+    /// Views). Tinted by `icon-active-color`/`icon-inactive-color` like
+    /// `trackIconActiveColor`/`trackIconInactiveColor` — Views ships no
+    /// default tint; these defaults match the suggested colors (the
+    /// icons sit on the active track and the inactive container).
+    in property <image> icon-active-start;
+    in property <image> icon-active-end;
+    in property <image> icon-inactive-start;
+    in property <image> icon-inactive-end;
+    in property <color> icon-active-color: MaterialPalette.on_primary;
+    in property <color> icon-inactive-color: MaterialPalette.on_secondary_container;
+    /// The value indicator — `Slider_labelBehavior` (Views).
+    in property <MaterialSliderLabelBehavior> label-behavior: MaterialSliderLabelBehavior.floating;
+    /// Test hooks: drive the press/focus visuals without real input —
+    /// `state == "pressed"`/`"focused"` in the parity scenes, where a
+    /// single pointer cannot hold the state.
+    in property <bool> simulate-press;
+    in property <bool> simulate-focus;
+    /// `thumbTrackGapSize` — `SliderTokens.ActiveHandleLeadingSpace`.
+    in property <length> thumb-track-gap: SliderTokens.active_handle_leading_space;
+    /// `trackCornerSize`: `-1px` resolves to
+    /// `MaterialSliderMetrics.track-corner(size)`. The pinned `Slider`
+    /// track is `Dp.Unspecified` — `extra-small` numerically reproduces
+    /// it; every explicit value takes the pin's `enableCornerShrinking`
+    /// path.
+    in property <length> track-corner-override: -1px;
 
+    /// `onValueChangeFinished` — on pointer release and on key-up of a
+    /// navigation key.
     callback released(value: float);
-    callback value_changed(value: float);
+    /// `onValueChange` — the value the interaction set.
+    callback value-changed(value: float);
 
-    property <int> steps: root.stop_count > 0 ? (root.maximum - root.minimum) / root.stop_count : 1;
+    out property <bool> has-focus <=> focus-scope.has-focus;
+    out property <bool> pressed: touch.pressed || root.simulate-press;
+    out property <bool> focused: focus-scope.has-focus || root.simulate-focus;
+    /// `interactions.isNotEmpty()` on the thumb's interaction source —
+    /// press, drag and focus, not hover.
+    out property <bool> interacting: pressed || focused;
 
-    min_height: 20px;
+    property <length> track-h: MaterialSliderMetrics.track-height(size);
+    property <length> handle-h: MaterialSliderMetrics.handle-height(size);
+    /// `trackCornerSize` — the drawn track corner (the `drawTrack`
+    /// argument), resolved from the override or the size preset.
+    property <length> c: track-corner-override >= 0px ? track-corner-override
+        : MaterialSliderMetrics.track-corner(size);
+    /// The `CornerSizeAlignmentLine` the track placeable reports:
+    /// `placeable.height / 2` — always `track-h / 2`, never the drawn
+    /// corner. `thumbOffsetX`'s interior-step inset uses this.
+    property <length> align-c: thumb.half(track-h);
+    /// `enableCornerShrinking` — the pin's `Dp.Unspecified` track does not
+    /// shrink corners; every explicit `trackCornerSize` (the size presets
+    /// beyond `extra-small`) does.
+    // `enableCornerShrinking`: every explicit `trackCornerSize` (the size
+    // presets) and `CenteredTrack`; the pinned default `Track` leaves it
+    // off (its corner is always the stadium `height / 2`).
+    property <bool> shrink-corners: track-corner-override >= 0px
+        || size != MaterialSliderSize.extra_small || centered;
+    /// `thumbCoreWidth`/`thumbCoreHeight`: the handle box minus the focus
+    /// padding — `SliderTokens.handle_width`/`handle-height(size)`.
+    property <length> thumb-core-axis: SliderTokens.handle_width;
+    property <length> thumb-core-cross: handle-h;
+    /// The slider's extent along the track axis and across it.
+    property <length> axis-extent: vertical ? root.height : root.width;
+    /// `sliderHeight`/`sliderWidth` — the pin reports its own height as
+    /// the max of the track and the padded thumb box.
+    property <length> cross-extent: max(track-h, thumb.box-cross);
+    /// Track placeable: `axis-extent - thumbPlaceable` long, `track-h`
+    /// thick, `thumbPlaceable / 2` from the start edge and centered
+    /// across — the padded box means the track never reaches either end.
+    /// The offsets are the pin's `Int / 2` truncations of the measured
+    /// placeable extents.
+    property <length> track-len: axis-extent - thumb.box-axis;
+    property <length> track-off-axis: thumb.half(thumb.box-axis);
+    property <length> track-off-cross: thumb.half(cross-extent - track-h);
+    /// `thumbOffsetX`/`thumbOffsetY` across the axis:
+    /// `(sliderHeight - thumbPlaceable.height) / 2`.
+    property <length> thumb-off-cross: thumb.half(cross-extent - thumb.box-cross);
+    /// `coercedValueAsFraction`.
+    property <float> value-fraction:
+        maximum <= minimum ? 0 : clamp((value - minimum) / (maximum - minimum), 0, 1);
+    /// `isEndOnFirstOrLastStep` — `tickFractions` includes the
+    /// endpoints (`steps + 2` ticks), so first/last is 0 or 1.
+    property <bool> on-first-or-last-step: value-fraction <= 0 || value-fraction >= 1;
+    /// `fractionOffset` — the thumb box's left edge in track
+    /// coordinates. `thumbOffsetX` is `(… * fraction).roundToInt()` +
+    /// the alignment corner in the pin: `snap-phx` reproduces the
+    /// device-pixel `roundToInt` at any density.
+    property <length> fraction-offset:
+        steps > 0 && !on-first-or-last-step
+            ? thumb.snap((track-len - 2 * align-c) * value-fraction) + align-c
+            : thumb.snap(track-len * value-fraction);
+    /// Thumb center in element coordinates along the axis.
+    property <length> thumb-center: track-off-axis + fraction-offset;
+    /// `endThumbTrackGapSize`/`startThumbTrackGapSize` — `start` stays
+    /// 0 for a plain single slider; `centered` gaps on both sides like
+    /// `CenteredTrack`. The focus ring draws outside the handle and does
+    /// not widen the gap.
+    property <length> end-gap: thumb-track-gap;
+    property <length> start-gap: centered ? thumb-track-gap : 0px;
+    /// Resolved colors — `SliderColors` in the pin.
+    property <color> col-thumb: enabled ? SliderTokens.handle_color
+        : SliderTokens.disabled_handle_color.with_alpha(SliderTokens.disabled_handle_opacity);
+    property <color> col-active: enabled ? SliderTokens.active_track_color
+        : SliderTokens.disabled_active_track_color.with_alpha(SliderTokens.disabled_active_track_opacity);
+    property <color> col-inactive: enabled ? SliderTokens.inactive_track_color
+        : SliderTokens.disabled_inactive_track_color.with_alpha(SliderTokens.disabled_inactive_track_opacity);
+    /// `activeTickColor = InactiveTrackColor`, `inactiveTickColor =
+    /// ActiveTrackColor` — the pin's `defaultSliderColors` cross-wires
+    /// them.
+    property <color> col-tick-active: enabled ? SliderTokens.inactive_track_color
+        : SliderTokens.disabled_inactive_track_color.with_alpha(SliderTokens.disabled_inactive_track_opacity);
+    property <color> col-tick-inactive: enabled ? SliderTokens.active_track_color
+        : SliderTokens.disabled_active_track_color.with_alpha(SliderTokens.disabled_active_track_opacity);
+    property <color> col-stop: enabled ? SliderTokens.active_track_color
+        : SliderTokens.disabled_active_track_color.with_alpha(SliderTokens.disabled_active_track_opacity);
+    // Icon slots are only defined for the single-thumb, non-centered
+    // track (Views warns icons are unsupported with two thumbs, and the
+    // centered track has two inactive regions).
+    property <bool> icons: !centered;
+    /// `interactions` collected while pressing — the label floats.
+    property <bool> label-shown: enabled && (label-behavior == MaterialSliderLabelBehavior.visible
+        || ((label-behavior == MaterialSliderLabelBehavior.floating
+            || label-behavior == MaterialSliderLabelBehavior.within_bounds) && pressed));
+
+    /// `scaleToUserValue(minPx, maxPx, offset)` — a pointer axis
+    /// coordinate back to a user value, followed by the tick snap.
+    /// `minPx`/`maxPx` use the live `thumbWidth` — the measured pill,
+    /// not the padded box.
+    pure function axis-value(a: length) -> float {
+        let f = clamp((a - thumb.pill-axis / 2) / (root.axis-extent - thumb.pill-axis), 0, 1);
+        let snapped = root.steps > 0 ? round(f * (root.steps + 1)) / (root.steps + 1) : f;
+        root.minimum + snapped * (root.maximum - root.minimum)
+    }
+    /// The track-axis coordinate of a pointer position in the value's
+    /// frame: `onPress`/`onDrag` flip the axis for RTL and
+    /// `reverseVerticalDirection`.
+    pure function pointer-axis(x: length, y: length) -> length {
+        root.vertical
+            ? (root.top-to-bottom ? y : root.axis-extent - y)
+            : (root.mirror ? root.axis-extent - x : x)
+    }
+    /// The keyboard step — `rangeLength / (steps + 1)`, `rangeLength /
+    /// 100` when continuous, per `slideOnKeyEvents`.
+    pure function key-delta() -> float {
+        (root.maximum - root.minimum) / (root.steps > 0 ? root.steps + 1 : 100)
+    }
+    /// Sets `value` clamped to `minimum..maximum` — `set_value` in the
+    /// previous component.
+    public function set-value(v: float) {
+        root.value = clamp(v, root.minimum, root.maximum);
+    }
+    public function increment-value() {
+        root.set-value(root.value + root.key-delta());
+    }
+    public function decrement-value() {
+        root.set-value(root.value - root.key-delta());
+    }
+    function finish() {
+        root.released(root.value);
+    }
+
+    forward-focus: focus-scope;
+
     accessible-role: slider;
     accessible-enabled: root.enabled;
+    accessible-orientation: vertical ? Orientation.vertical : Orientation.horizontal;
     accessible-value: root.value;
     accessible-value-minimum: root.minimum;
     accessible-value-maximum: root.maximum;
-    accessible-value-step: min(steps, (root.maximum - root.minimum) / 100);
+    accessible-value-step: (maximum - minimum) / (steps > 0 ? steps + 1 : 100);
     accessible-action-set-value(v) => {
         if v.is-float() {
-            root.set_value(v.to-float());
+            root.set-value(v.to-float());
         }
     }
-    accessible-action-increment => { root.increment_value(); }
-    accessible-action-decrement => { root.decrement_value(); }
-    forward-focus: focus_scope;
+    accessible-action-increment => { root.increment-value(); }
+    accessible-action-decrement => { root.decrement-value(); }
 
-    focus_scope := FocusScope {
-        touch_area := TouchArea {
-            track := Rectangle {
-                x: 0;
-                height: MaterialStyleMetrics.size_16;
-                background: MaterialPalette.surface_container_highest;
-                border_radius: self.height / 2;
+    focus-scope := FocusScope {
+        width: 100%;
+        height: 100%;
+        enabled: root.enabled;
 
-                Rectangle {
-                    x: 0;
-                    width: state_layer.x - MaterialStyleMetrics.size_6;
-                    border-top-left-radius: track.border_radius;
-                    border-bottom-left-radius: track.border_radius;
-                    border-top-right-radius: MaterialStyleMetrics.size_1;
-                    border-bottom-right-radius: MaterialStyleMetrics.size_1;
-                    background: thumb.background;
-                }
-
-                if root.stop_count > 1: Rectangle {
-                    width: 100%;
-                    height: 100%;
-
-                    for i in (root.maximum - root.minimum) / root.steps - 1: Rectangle {
-                        x: root.value_to_length(track.width, (i + 1) * root.steps) - self.width / 2;
-                        height: MaterialStyleMetrics.size_4;
-                        width: self.height;
-                        border_radius: self.height / 2;
-                        background: MaterialPalette.outline;
-                    }
-                }
-            }
-
-            state_layer := Rectangle {
-                x: root.value_to_length(track.width, root.value);
-                width: 0;
-                height: track.height + (MaterialStyleMetrics.size_14 * 2);
-                StateLayer {
-                    height: track.height + (MaterialStyleMetrics.size_16 * 2);
-                    width: thumb.width + (MaterialStyleMetrics.size_2 * 2);
-                    border_radius: self.width / 2;
-                    pressed: touch_area.pressed;
-                    has_hover: touch_area.has_hover;
-                    has_focus: focus_scope.has_focus;
-                    enabled: root.enabled;
-                    background: thumb.background;
-                    display_background: thumb_area.pressed || thumb_area.has_hover || focus_scope.has_focus;
-
-                    thumb_area := TouchArea {
-                        height: track.height + (MaterialStyleMetrics.size_14 * 2);
-                        width: self.height;
-                        thumb := Rectangle {
-                            width: MaterialStyleMetrics.size_4;
-                            border_radius: self.width / 2;
-                            background: MaterialPalette.primary;
-                        }
-
-                        moved => {
-                            root.set_value(root.length_to_value(state_layer.x + (self.mouse_x - self.pressed_x), track.width));
-                        }
-
-                        pointer_event(event) => {
-                            if event.kind == PointerEventKind.up {
-                                root.released(root.value);
-                            }
-                        }
-                    }
-                }
-            }
-
-            pointer_event(event) => {
-                if event.kind == PointerEventKind.down && event.button == PointerEventButton.left {
-                    root.set_value(root.length_to_value(self.mouse_x, track.width));
-                }
-                if event.kind == PointerEventKind.up {
-                    root.released(root.value);
-                }
-            }
-        }
-
-        key_pressed(event) => {
-            if event.text == Key.LeftArrow {
-                root.decrement_value();
+        key-pressed(event) => {
+            if event.text == Key.Home {
+                root.set-value(root.minimum);
                 return accept;
             }
-            if event.text == Key.RightArrow {
-                root.increment_value();
+            if event.text == Key.End {
+                root.set-value(root.maximum);
+                return accept;
+            }
+            let page = Math.clamp(floor((root.steps > 0 ? root.steps + 1 : 100) / 10), 1, 10) * root.key-delta();
+            let sign = root.vertical && !root.top-to-bottom ? -1 : 1;
+            if !root.vertical {
+                if event.text == Key.RightArrow {
+                    root.set-value(root.value + (root.mirror ? -1 : 1) * root.key-delta());
+                    return accept;
+                }
+                if event.text == Key.LeftArrow {
+                    root.set-value(root.value - (root.mirror ? -1 : 1) * root.key-delta());
+                    return accept;
+                }
+                if event.text == Key.PageUp {
+                    root.set-value(root.value + page);
+                    return accept;
+                }
+                if event.text == Key.PageDown {
+                    root.set-value(root.value - page);
+                    return accept;
+                }
+            } else {
+                if event.text == Key.UpArrow {
+                    root.set-value(root.value - sign * root.key-delta());
+                    return accept;
+                }
+                if event.text == Key.DownArrow {
+                    root.set-value(root.value + sign * root.key-delta());
+                    return accept;
+                }
+                if event.text == Key.PageUp {
+                    root.set-value(root.value - sign * page);
+                    return accept;
+                }
+                if event.text == Key.PageDown {
+                    root.set-value(root.value + sign * page);
+                    return accept;
+                }
+            }
+            reject
+        }
+
+        key-released(event) => {
+            if event.text == Key.RightArrow || event.text == Key.LeftArrow
+                || event.text == Key.UpArrow || event.text == Key.DownArrow
+                || event.text == Key.PageUp || event.text == Key.PageDown
+                || event.text == Key.Home || event.text == Key.End {
+                root.finish();
                 return accept;
             }
             reject
         }
     }
 
-    changed value => {
-        root.value_changed(root.value);
-    }
+    touch := TouchArea {
+        width: 100%;
+        height: 100%;
+        enabled: root.enabled;
+        // A tap jumps to the touched position and drags keep the value at
+        // the pointer — `dispatchRawDelta(0)` after `onPress`, then the
+        // absolute `rawOffset + delta + pressOffset` follow in the pin.
+        property <length> down-axis;
+        property <bool> dragged;
 
-    pure function value_to_length(width: length, value: float) -> length {
-        clamp(width * (value - root.minimum) / (root.maximum - root.minimum), 0, width)
-    }
+        pointer-event(event) => {
+            if event.kind == PointerEventKind.down && event.button == PointerEventButton.left {
+                down-axis = pointer-axis(self.mouse-x, self.mouse-y);
+                dragged = false;
+                // `onPress` + `dispatchRawDelta(0)` — a tap (or a grab
+                // off the thumb's rawOffset) seeks on pointer down.
+                root.set-value(axis-value(down-axis));
+            }
+            if event.kind == PointerEventKind.up {
+                dragged = false;
+                root.finish();
+            }
+        }
 
-    pure function length_to_value(x: length, width: length) -> float {
-        x * (root.maximum - root.minimum) / width
-    }
-
-    function set_value(value: float) {
-        if root.steps > 1 {
-            root.value = clamp(round(value / root.steps) * root.steps, root.minimum, root.maximum)
-        } else {
-            root.value = clamp(value, root.minimum, root.maximum)
+        moved => {
+            dragged = true;
+            root.set-value(axis-value(pointer-axis(self.mouse-x, self.mouse-y)));
         }
     }
 
-    function increment_value() {
-        root.set_value(root.value + root.steps);
+    track := MaterialSliderTrack {
+        vertical: root.vertical;
+        flipped: vertical ? !top-to-bottom : root.mirror;
+        x: vertical ? track-off-cross : track-off-axis;
+        y: vertical ? track-off-axis : track-off-cross;
+        width: vertical ? track-h : track-len;
+        height: vertical ? track-len : track-h;
+        active-start: 0;
+        active-end: root.value-fraction;
+        centered: root.centered;
+        range-slider: false;
+        steps: root.steps;
+        shrink-corners: root.shrink-corners;
+        corner-size: c;
+        start-gap: root.start-gap;
+        end-gap: root.end-gap;
+        // The single-slider track hardcodes `startThumbWidth = 0` — the
+        // centered start gap is `thumbTrackGapSize` alone — and measures
+        // the live pill into `endThumbWidth` on either side.
+        start-thumb-axis: 0px;
+        end-thumb-axis: thumb.pill-axis;
+        active-track-color: root.col-active;
+        inactive-track-color: root.col-inactive;
+        active-tick-color: root.col-tick-active;
+        inactive-tick-color: root.col-tick-inactive;
+        stop-color: root.col-stop;
+        icon-size: icons ? MaterialSliderMetrics.icon-size(size) : 0px;
+        icon-active-start: root.icon-active-start;
+        icon-active-end: root.icon-active-end;
+        icon-inactive-start: root.icon-inactive-start;
+        icon-inactive-end: root.icon-inactive-end;
+        icon-active-color: root.icon-active-color;
+        icon-inactive-color: root.icon-inactive-color;
     }
 
-    function decrement_value() {
-        root.set_value(root.value - root.steps);
+    thumb := MaterialSliderThumb {
+        vertical: root.vertical;
+        handle-height: handle-h;
+        interacting: root.interacting;
+        focused: root.focused;
+        enabled: root.enabled;
+        x: vertical ? thumb-off-cross
+            : (mirror ? axis-extent - thumb-center - self.box-axis / 2 : thumb-center - self.box-axis / 2);
+        y: vertical
+            ? (top-to-bottom ? thumb-center - self.box-axis / 2 : axis-extent - thumb-center - self.box-axis / 2)
+            : thumb-off-cross;
+        width: vertical ? self.box-cross : self.box-axis;
+        height: vertical ? self.box-axis : self.box-cross;
     }
+
+    // The label floats `label-padding` above the handle, centered on the
+    // thumb position (`calculateLabelBounds` in `BaseSlider`); for the
+    // vertical slider it docks `label-padding` off the trailing side of
+    // the handle like Views' rotated bounds. The pin has no value
+    // indicator.
+    label := MaterialSliderLabel {
+        shown: root.label-shown;
+        text: round(root.value);
+        property <length> center-axis: vertical
+            ? (top-to-bottom ? thumb-center : axis-extent - thumb-center)
+            : (mirror ? axis-extent - thumb-center : thumb-center);
+        property <length> clamped-center:
+            label-behavior == MaterialSliderLabelBehavior.within_bounds
+                ? Math.clamp(center-axis,
+                    track-off-axis + (vertical ? self.height : self.width) / 2,
+                    track-off-axis + track-len - (vertical ? self.height : self.width) / 2)
+                : center-axis;
+        x: vertical
+            ? track-off-cross + track-h / 2 + thumb-core-cross / 2 + MaterialSliderMetrics.label-padding
+            : clamped-center - self.width / 2;
+        y: vertical
+            ? clamped-center - self.height / 2
+            : track-off-cross + track-h / 2 - thumb-core-cross / 2
+                - MaterialSliderMetrics.label-padding - self.height;
+    }
+
+    changed value => {
+        root.value-changed(root.value);
+    }
+
+    // `requiredSizeIn(minWidth = ThumbWidth, minHeight = TrackHeight)`
+    // transposed for the vertical slider, plus the 48dp
+    // `minimumInteractiveComponentSize` when enforcing.
+    min-width: vertical ? max(cross-extent, enforce-touch-target ? 48px : 0px)
+        : (enforce-touch-target ? 48px : SliderTokens.handle_width);
+    min-height: vertical ? (enforce-touch-target ? 48px : SliderTokens.handle_width)
+        : max(cross-extent, enforce-touch-target ? 48px : 0px);
+    preferred-width: root.min-width;
+    preferred-height: root.min-height;
+}
+
+/// A Material slider to select a value from a continuous or stepped
+/// range — the M3 Expressive `Slider` with the expressive handle, the
+/// gapped track and the optional size presets, inset icons and value
+/// indicator.
+export component Slider inherits MaterialSliderImpl {
+}
+
+/// A vertically oriented `Slider` — `VerticalSlider` in the pin, which
+/// defaults `topToBottom = true` so values grow top to bottom; set
+/// `top-to-bottom: false` for a bottom-to-top direction.
+export component VerticalSlider inherits MaterialSliderImpl {
+    vertical: true;
+    top-to-bottom: true;
 }

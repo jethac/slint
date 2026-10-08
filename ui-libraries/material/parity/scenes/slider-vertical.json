@@ -1,0 +1,80 @@
+{
+  "name": "slider-vertical",
+  "type": "canvas",
+  "parity": "xfail:software",
+  "size": [
+    400,
+    260
+  ],
+  "densities": [
+    1,
+    2
+  ],
+  "theme": {
+    "seed": "6750A4",
+    "variant": "tonal-spot",
+    "spec": "spec2025",
+    "platform": "phone",
+    "dark": false,
+    "contrast": 0.0
+  },
+  "fonts": {
+    "plain": "Roboto",
+    "brand": "Roboto"
+  },
+  "widgets": [
+    {
+      "kind": "vertical-slider",
+      "x": 20,
+      "y": 16,
+      "width": 60,
+      "value": 0.25,
+      "height": 220
+    },
+    {
+      "kind": "vertical-slider",
+      "x": 90,
+      "y": 16,
+      "width": 60,
+      "value": 0.75,
+      "height": 220,
+      "top_to_bottom": true
+    },
+    {
+      "kind": "vertical-slider",
+      "x": 160,
+      "y": 16,
+      "width": 60,
+      "value": 0.5,
+      "height": 220,
+      "steps": 3
+    },
+    {
+      "kind": "vertical-slider",
+      "x": 230,
+      "y": 16,
+      "width": 60,
+      "value": 0.6,
+      "height": 220,
+      "steps": 2,
+      "top_to_bottom": true
+    },
+    {
+      "kind": "vertical-slider",
+      "x": 300,
+      "y": 16,
+      "width": 60,
+      "value": 0.4,
+      "height": 220,
+      "enabled": false
+    }
+  ],
+  "trace_elements": [
+    "slider0",
+    "slider1",
+    "slider2",
+    "slider3",
+    "slider4"
+  ],
+  "negative_note": "issue #50 \u2014 the software renderer quantizes element geometry to integer device pixels; fractional track edges diverge up to ~1 device px"
+}

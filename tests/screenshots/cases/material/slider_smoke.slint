@@ -1,0 +1,92 @@
+// Copyright © SixtyFPS GmbH <info@slint.dev>
+// SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0
+
+//SIZE=760x520
+
+import "../../fonts/Roboto-VariableFont.ttf";
+import { Slider, VerticalSlider, RangeSlider, MaterialSliderSize, MaterialSliderLabelBehavior, MaterialPalette, MaterialWindow } from "@material";
+
+component TestCase inherits MaterialWindow {
+    width: 760px;
+    height: 520px;
+
+    // Column 1: basics.
+    Slider {
+        x: 20px; y: 20px; width: 300px;
+        value: 50; maximum: 100;
+    }
+    Slider {
+        x: 20px; y: 80px; width: 300px;
+        value: 0; maximum: 100;
+    }
+    Slider {
+        x: 20px; y: 140px; width: 300px;
+        value: 100; maximum: 100;
+    }
+    Slider {
+        x: 20px; y: 200px; width: 300px;
+        value: 62; maximum: 100; steps: 5;
+    }
+    Slider {
+        x: 20px; y: 260px; width: 300px;
+        value: 40; maximum: 100; enabled: false;
+    }
+    Slider {
+        x: 20px; y: 320px; width: 300px;
+        value: 65; maximum: 100; simulate-press: true;
+    }
+    Slider {
+        x: 20px; y: 390px; width: 300px;
+        value: 35; maximum: 100; simulate-focus: true; steps: 4;
+    }
+    RangeSlider {
+        x: 640px; y: 390px; width: 100px;
+        start-value: 10; end-value: 60; maximum: 100; enabled: false;
+    }
+
+    // Column 2: centered, states, sizes.
+    Slider {
+        x: 340px; y: 20px; width: 280px;
+        value: 65; maximum: 100; centered: true;
+    }
+    Slider {
+        x: 340px; y: 80px; width: 280px;
+        value: 30; maximum: 100; centered: true;
+    }
+    Slider {
+        x: 340px; y: 140px; width: 280px;
+        value: 50; maximum: 100; size: MaterialSliderSize.small;
+    }
+    Slider {
+        x: 340px; y: 190px; width: 280px;
+        value: 60; maximum: 100; size: MaterialSliderSize.medium;
+    }
+    Slider {
+        x: 340px; y: 260px; width: 280px;
+        value: 40; maximum: 100; size: MaterialSliderSize.large;
+    }
+    Slider {
+        x: 340px; y: 340px; width: 280px;
+        value: 30; maximum: 100; size: MaterialSliderSize.extra-large;
+    }
+
+    // Column 3: label + verticals.
+    Slider {
+        x: 640px; y: 20px; width: 100px;
+        value: 72; maximum: 100; label-behavior: MaterialSliderLabelBehavior.visible;
+    }
+    VerticalSlider {
+        x: 640px; y: 100px; width: 40px; height: 220px;
+        value: 25; maximum: 100; steps: 3;
+    }
+    VerticalSlider {
+        x: 700px; y: 100px; width: 40px; height: 220px;
+        value: 75; maximum: 100; steps: 3; top-to-bottom: true;
+    }
+    RangeSlider {
+        x: 20px; y: 450px; width: 300px;
+        start-value: 25; end-value: 75; maximum: 100; steps: 4;
+    }
+}
+
+export { TestCase }

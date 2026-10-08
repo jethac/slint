@@ -1,0 +1,68 @@
+{
+  "name": "slider-track-corner",
+  "type": "canvas",
+  "parity": "xfail:software,skia,femtovg",
+  "size": [
+    340,
+    260
+  ],
+  "densities": [
+    1,
+    2
+  ],
+  "theme": {
+    "seed": "6750A4",
+    "variant": "tonal-spot",
+    "spec": "spec2025",
+    "platform": "phone",
+    "dark": false,
+    "contrast": 0.0
+  },
+  "fonts": {
+    "plain": "Roboto",
+    "brand": "Roboto"
+  },
+  "widgets": [
+    {
+      "kind": "slider",
+      "x": 16,
+      "y": 20,
+      "width": 300,
+      "value": 0.5,
+      "track_corner": 2
+    },
+    {
+      "kind": "slider",
+      "x": 16,
+      "y": 80,
+      "width": 300,
+      "value": 0.5,
+      "track_corner": 20
+    },
+    {
+      "kind": "slider",
+      "x": 16,
+      "y": 140,
+      "width": 300,
+      "value": 0.5,
+      "centered": true,
+      "track_corner": 4
+    },
+    {
+      "kind": "range-slider",
+      "x": 16,
+      "y": 200,
+      "width": 300,
+      "value": 0.3,
+      "value2": 0.7,
+      "track_corner": 3
+    }
+  ],
+  "trace_elements": [
+    "slider0",
+    "slider1",
+    "slider2",
+    "slider3"
+  ],
+  "negative_note": "issue #50 \u2014 the software renderer quantizes element geometry to integer device pixels; fractional track edges diverge up to ~1 device px. skia/femtovg at 2x additionally diverge on the 20px corner-override slider: Slint's cross-renderer model clamps each corner independently to half the shorter side (#47 connected-button semantics), while the Android RoundRect the Compose reference draws through scales all radii proportionally — the gap-side cap edge shifts ~1 device px on the overflow corner"
+}

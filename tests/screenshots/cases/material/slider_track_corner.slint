@@ -1,0 +1,79 @@
+// Copyright © SixtyFPS GmbH <info@slint.dev>
+// SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0
+
+// Scene: slider-track-corner — generated from `ui-libraries/material/parity/scenes/slider-track-corner.json`
+// (edit the scene, regenerate with `cargo run -p material-parity-generator`).
+//PARITY=xfail:software,skia,femtovg: issue #50 — the software renderer quantizes element geometry to integer device pixels; fractional track edges diverge up to ~1 device px. skia/femtovg at 2x additionally diverge on the 20px corner-override slider: Slint's cross-renderer model clamps each corner independently to half the shorter side (#47 connected-button semantics), while the Android RoundRect the Compose reference draws through scales all radii proportionally — the gap-side cap edge shifts ~1 device px on the overflow corner
+//SIZE=340x260
+//TRACE_ELEMENTS=slider0,slider1,slider2,slider3
+//DENSITIES=1,2
+import "../../fonts/Roboto-VariableFont.ttf";
+import { MaterialPalette, MaterialSliderLabelBehavior, MaterialTheme, MaterialWindow, RangeSlider, Slider } from "@material";
+
+export component TestCase inherits MaterialWindow {
+    init => {
+        // The scene pins seed #6750A4, tonal-spot, spec2025, light, contrast 0
+        // (all the library defaults; restated here so a default change can't
+        // silently move the parity baseline).
+        MaterialTheme.seed-color = #6750A4;
+        MaterialTheme.dark = false;
+        MaterialTheme.contrast-level = 0;
+        MaterialTheme.use-platform-color = false;
+        MaterialTheme.plain-family = "Roboto";
+        MaterialTheme.brand-family = "Roboto";
+        // Compose builds its scene scheme from the same seed — use the
+        // runtime-generated scheme, not the static expressive table.
+        MaterialPalette.dynamic = true;
+    }
+
+    slider0 := Slider {
+        x: 16px;
+        y: 20px;
+        minimum: 0;
+        maximum: 1;
+        value: 0.5;
+        track-corner-override: 2px;
+        width: 300px;
+        enforce-touch-target: false;
+        label-behavior: MaterialSliderLabelBehavior.gone;
+    }
+
+    slider1 := Slider {
+        x: 16px;
+        y: 80px;
+        minimum: 0;
+        maximum: 1;
+        value: 0.5;
+        track-corner-override: 20px;
+        width: 300px;
+        enforce-touch-target: false;
+        label-behavior: MaterialSliderLabelBehavior.gone;
+    }
+
+    slider2 := Slider {
+        x: 16px;
+        y: 140px;
+        minimum: 0;
+        maximum: 1;
+        value: 0.5;
+        centered: true;
+        track-corner-override: 4px;
+        width: 300px;
+        enforce-touch-target: false;
+        label-behavior: MaterialSliderLabelBehavior.gone;
+    }
+
+    slider3 := RangeSlider {
+        x: 16px;
+        y: 200px;
+        minimum: 0;
+        maximum: 1;
+        start-value: 0.3;
+        end-value: 0.7;
+        track-corner-override: 3px;
+        width: 300px;
+        enforce-touch-target: false;
+        label-behavior: MaterialSliderLabelBehavior.gone;
+    }
+
+}
