@@ -41,8 +41,11 @@ import {
     MediumFlexibleTopAppBar,
     LargeTopAppBar,
     LargeFlexibleTopAppBar,
+    CheckBox,
     CheckBoxTile,
     CheckState,
+    TriStateCheckbox,
+    ActionChip,
     AssistChip,
     ElevatedAssistChip,
     FilterChip,
@@ -582,6 +585,21 @@ export component NavigationView {
                 title: "Checkboxes";
 
                 Vertical {
+                    Horizontal {
+                        spacing: 8px;
+                        alignment: center;
+
+                        CheckBox {}
+
+                        CheckBox {
+                            check_state: CheckState.checked;
+                        }
+
+                        TriStateCheckbox {
+                            check_state: CheckState.partially_checked;
+                        }
+                    }
+
                     CheckBoxTile {
                         text: "Option 1";
                         tristate: true;
