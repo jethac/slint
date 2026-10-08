@@ -175,5 +175,33 @@
     }
   },
   "PopLayer",
+  "PopLayer",
+  {
+    "PushClipLayer": {
+      "clip": "M0,0 L0,0 L0,0 L0,0 Z",
+      "transform": [
+        1.0,
+        0.0,
+        0.0,
+        1.0,
+        16.0,
+        68.0
+      ]
+    }
+  },
+  "PopLayer",
+  {
+    "PushClipLayer": {
+      "clip": "M0,0 L0,0 L0,0 L0,0 Z",
+      "transform": [
+        1.0,
+        0.0,
+        0.0,
+        1.0,
+        16.0,
+        68.0
+      ]
+    }
+  },
   "PopLayer"
 ]

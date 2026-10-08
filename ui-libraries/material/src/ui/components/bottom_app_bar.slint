@@ -8,6 +8,7 @@ import { MaterialPalette } from "../styling/material_palette.slint";
 import { MaterialStyleMetrics } from "../styling/material_style_metrics.slint";
 import { MaterialAnimations } from "../styling/material_animations.slint";
 import { PopupMenu } from "./menu.slint";
+import { MenuAnchorPosition } from "./menu_metrics.slint";
 import { MenuItem } from "../items/menu_item.slint";
 import { Icons } from "../icons/icons.slint";
 import {
@@ -46,7 +47,7 @@ export component AppBarOverflowIndicator {
 
     callback activated(index: int);
 
-    IconButton {
+    button := IconButton {
         icon: Icons.more_vert;
         tooltip: root.tooltip;
         enabled: root.enabled;
@@ -54,9 +55,14 @@ export component AppBarOverflowIndicator {
         clicked => { menu.show(); }
     }
 
+    // `MenuAnchorPosition.Above` + `End`: the overflow menu opens above the
+    // indicator, end-aligned to the button.
     menu := PopupMenu {
-        x: 0;
-        y: -self.preferred-height;
+        x: button.x;
+        y: button.y;
+        width: button.width;
+        height: button.height;
+        anchor-position: MenuAnchorPosition.above;
         items: root.menu-items;
         first-index: root.first-index;
 

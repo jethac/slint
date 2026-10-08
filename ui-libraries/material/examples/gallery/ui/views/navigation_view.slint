@@ -59,8 +59,12 @@ import {
     PopupMenu,
     DropDownMenu,
     MenuItem,
+    MenuGroup,
+    MenuItemKind,
+    MenuVariant,
     DatePicker,
     DatePickerDialog,
+    DatePickerPopup,
     DateRangePicker,
     Icons
 } from "../../../../src/material.slint";
@@ -174,10 +178,10 @@ export component NavigationView {
                     width: 100%;
                     arrangement: BottomAppBarArrangement.space-between;
                     items: [
-                        { icon: OutlinedIcons.search, label: "Search", enabled: true },
-                        { icon: OutlinedIcons.favorite, label: "Favorite", enabled: true },
-                        { icon: OutlinedIcons.add, label: "Add", enabled: true },
-                        { icon: OutlinedIcons.more_vert, label: "More", enabled: true },
+                        { icon: OutlinedIcons.search, label: "Search" },
+                        { icon: OutlinedIcons.favorite, label: "Favorite" },
+                        { icon: OutlinedIcons.add, label: "Add" },
+                        { icon: OutlinedIcons.more_vert, label: "More" },
                     ];
                 }
             }
@@ -514,57 +518,57 @@ export component NavigationView {
 
                 Vertical {
                     CenterAlignedTopAppBar {
-                        leading-button: { icon: FilledIcons.menu, enabled: true };
+                        leading-button: { icon: FilledIcons.menu };
                         trailing-buttons: [
-                            { icon: FilledIcons.account_circle, enabled: true },
+                            { icon: FilledIcons.account_circle },
                         ];
                         title: "Product";
                     }
 
                     TopAppBar {
-                        leading-button: { icon: FilledIcons.menu, enabled: true };
+                        leading-button: { icon: FilledIcons.menu };
                         title: "Small";
                         trailing-buttons: [
-                            { icon: FilledIcons.calendar_month, enabled: true },
-                            { icon: FilledIcons.more_vert, enabled: true },
+                            { icon: FilledIcons.calendar_month },
+                            { icon: FilledIcons.more_vert },
                         ];
                     }
 
                     MediumTopAppBar {
-                        leading-button: { icon: FilledIcons.menu, enabled: true };
+                        leading-button: { icon: FilledIcons.menu };
                         title: "Medium";
                         trailing-buttons: [
-                            { icon: FilledIcons.calendar_month, enabled: true },
-                            { icon: FilledIcons.more_vert, enabled: true },
+                            { icon: FilledIcons.calendar_month },
+                            { icon: FilledIcons.more_vert },
                         ];
                     }
 
                     MediumFlexibleTopAppBar {
-                        leading-button: { icon: FilledIcons.menu, enabled: true };
+                        leading-button: { icon: FilledIcons.menu };
                         title: "Medium flexible";
                         subtitle: "With subtitle";
                         trailing-buttons: [
-                            { icon: FilledIcons.calendar_month, enabled: true },
-                            { icon: FilledIcons.more_vert, enabled: true },
+                            { icon: FilledIcons.calendar_month },
+                            { icon: FilledIcons.more_vert },
                         ];
                     }
 
                     LargeTopAppBar {
-                        leading-button: { icon: FilledIcons.menu, enabled: true };
+                        leading-button: { icon: FilledIcons.menu };
                         title: "Large";
                         trailing-buttons: [
-                            { icon: FilledIcons.calendar_month, enabled: true },
-                            { icon: FilledIcons.more_vert, enabled: true },
+                            { icon: FilledIcons.calendar_month },
+                            { icon: FilledIcons.more_vert },
                         ];
                     }
 
                     LargeFlexibleTopAppBar {
-                        leading-button: { icon: FilledIcons.menu, enabled: true };
+                        leading-button: { icon: FilledIcons.menu };
                         title: "Large flexible";
                         subtitle: "With subtitle";
                         trailing-buttons: [
-                            { icon: FilledIcons.calendar_month, enabled: true },
-                            { icon: FilledIcons.more_vert, enabled: true },
+                            { icon: FilledIcons.calendar_month },
+                            { icon: FilledIcons.more_vert },
                         ];
                     }
                 }
@@ -724,26 +728,117 @@ export component NavigationView {
                 title: "Menus";
 
                 Horizontal {
-                    alignment: center;
+                    alignment: space_around;
+                    spacing: 12px;
 
-                    menu_button := TextButton {
-                        text: "Show menu";
+                    Rectangle {
+                        width: menu_button.preferred-width;
+                        height: menu_button.preferred-height;
 
-                        clicked => {
-                            menu.show();
+                        menu_button := TextButton {
+                            width: 100%;
+                            height: 100%;
+                            text: "Menu";
+
+                            clicked => {
+                                menu.show();
+                            }
+                        }
+
+                        menu := PopupMenu {
+                            width: 100%;
+                            height: 100%;
+                            items: [
+                                { icon: OutlinedIcons.account_box, text: "Inbox" },
+                                { icon: OutlinedIcons.outbox, text: "Outbox", trailing_text: "Ctrl C" },
+                                { icon: OutlinedIcons.favorite, text: "Favorites" },
+                                { icon: OutlinedIcons.delete, text: "Trash", disabled: true },
+                            ];
                         }
                     }
 
+                    Rectangle {
+                        width: select_menu_button.preferred-width;
+                        height: select_menu_button.preferred-height;
 
-                    menu := PopupMenu {
-                        x: menu_button.x + menu_button.width / 2;
-                        y: menu_button.y + menu_button.height / 2;
-                        items: [
-                            { icon: OutlinedIcons.account_box, text: "Inbox", enabled: true },
-                            { icon: OutlinedIcons.outbox, text: "Outbox", enabled: true, trailing_text: "Ctrl C" },
-                            { icon: OutlinedIcons.favorite, text: "Favorites", enabled: true },
-                            { icon: OutlinedIcons.delete, text: "Trash", enabled: false },
-                        ];
+                        select_menu_button := TextButton {
+                            width: 100%;
+                            height: 100%;
+                            text: "Selectable";
+
+                            clicked => {
+                                select_menu.show();
+                            }
+                        }
+
+                        select_menu := PopupMenu {
+                            width: 100%;
+                            height: 100%;
+                            item-kind: MenuItemKind.selectable;
+                            items: [
+                                { icon: OutlinedIcons.account_box, text: "Inbox", selected: true, selected_icon: OutlinedIcons.check },
+                                { icon: OutlinedIcons.outbox, text: "Outbox" },
+                                { icon: OutlinedIcons.favorite, text: "Favorites" },
+                            ];
+                        }
+                    }
+
+                    Rectangle {
+                        width: vibrant_menu_button.preferred-width;
+                        height: vibrant_menu_button.preferred-height;
+
+                        vibrant_menu_button := TextButton {
+                            width: 100%;
+                            height: 100%;
+                            text: "Vibrant";
+
+                            clicked => {
+                                vibrant_menu.show();
+                            }
+                        }
+
+                        vibrant_menu := PopupMenu {
+                            width: 100%;
+                            height: 100%;
+                            variant: MenuVariant.vibrant;
+                            item-kind: MenuItemKind.checkable;
+                            items: [
+                                { text: "Checked", checked: true, selected_icon: OutlinedIcons.check },
+                                { icon: OutlinedIcons.favorite, text: "Unchecked", selected_icon: OutlinedIcons.check },
+                            ];
+                        }
+                    }
+                }
+            }
+
+            ComponentCard {
+                title: "Menu groups";
+
+                Horizontal {
+                    alignment: center;
+
+                    Rectangle {
+                        width: groups_menu_button.preferred-width;
+                        height: groups_menu_button.preferred-height;
+
+                        groups_menu_button := TextButton {
+                            width: 100%;
+                            height: 100%;
+                            text: "Show groups";
+
+                            clicked => {
+                                groups_menu.show();
+                            }
+                        }
+
+                        groups_menu := PopupMenu {
+                            width: 100%;
+                            height: 100%;
+                            groups: [
+                                { label: "File", items: [{ icon: OutlinedIcons.bookmark, text: "New" }, { text: "Open" }] },
+                                { label: "Edit", items: [{ text: "Copy" }, { text: "Paste" }] },
+                            ];
+                        }
                     }
                 }
             }
@@ -808,10 +903,10 @@ export component NavigationView {
                         leading_icon: OutlinedIcons.search;
                         items:
                         [
-                            { icon: OutlinedIcons.bookmark, text: "Bookmark", enabled: true },
-                            { icon: OutlinedIcons.explore, text: "Explore", enabled: true },
-                            { icon: OutlinedIcons.chat_bubble, text: "Chat", enabled: true },
-                            { icon: OutlinedIcons.favorite, text: "Favorite", enabled: true },
+                            { icon: OutlinedIcons.bookmark, text: "Bookmark" },
+                            { icon: OutlinedIcons.explore, text: "Explore" },
+                            { icon: OutlinedIcons.chat_bubble, text: "Chat" },
+                            { icon: OutlinedIcons.favorite, text: "Favorite" },
                         ];
                     }
                 }

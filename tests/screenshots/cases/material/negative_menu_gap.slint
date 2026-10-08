@@ -1,0 +1,52 @@
+// Copyright © SixtyFPS GmbH <info@slint.dev>
+// SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0
+
+// Scene: negative-menu-gap — generated from `ui-libraries/material/parity/scenes/negative-menu-gap.json`
+// (edit the scene, regenerate with `cargo run -p material-parity-generator`).
+//PARITY=negative: (undocumented)
+//SIZE=320x380
+//TRACE_ELEMENTS=menu0
+//MASK_DECOR=menu0+16@0,2000
+//DENSITIES=1,2
+import "../../fonts/Roboto-VariableFont.ttf";
+import { MaterialPalette, MaterialTheme, MaterialWindow, MenuItemKind, MenuPopupContent, MenuVariant } from "@material";
+
+export component TestCase inherits MaterialWindow {
+    init => {
+        // The scene pins seed #6750A4, tonal-spot, spec2025, light, contrast 0
+        // (all the library defaults; restated here so a default change can't
+        // silently move the parity baseline).
+        MaterialTheme.seed-color = #6750A4;
+        MaterialTheme.dark = false;
+        MaterialTheme.contrast-level = 0;
+        MaterialTheme.use-platform-color = false;
+        MaterialTheme.plain-family = "Roboto";
+        MaterialTheme.brand-family = "Roboto";
+        // Compose builds its scene scheme from the same seed — use the
+        // runtime-generated scheme, not the static expressive table.
+        MaterialPalette.dynamic = true;
+    }
+
+    menu0 := MenuPopupContent {
+        x: 16px;
+        y: 8px;
+        groups: [{ label: "Section", items: [{ text: "First", }, { text: "Second", }] }, { label: "", items: [{ text: "Third", }, { text: "Fourth", }] }];
+        item-kind: MenuItemKind.standard;
+        variant: MenuVariant.standard;
+        // The references cannot render platform shadows (layoutlib
+        // deadlocks on `Surface.shadowElevation`).
+        cast-shadow: false;
+    }
+
+    // Deliberate defect (scene `slint_overrides.cover`).
+    Rectangle {
+        x: menu0.x + 0px;
+        y: menu0.y + 96px;
+        width: menu0.width;
+        height: 10px;
+        border-radius: 0px;
+        background: MaterialPalette.primary;
+        opacity: 1;
+    }
+
+}

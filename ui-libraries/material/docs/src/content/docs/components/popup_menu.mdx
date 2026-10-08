@@ -26,16 +26,179 @@ export component Example inherits Window {
 ```
 </CodeSnippetMD>
 
-A `PopupMenu` to display a list of choices on a temporary surface.
+A `PopupMenu` displays a list of choices on a temporary surface anchored to
+its element bounds — the upstream `DropdownMenu`/`DropdownMenuPopup`. Each
+item is a `MenuItem`: a text label with optional leading icon, trailing icon
+or text, and a supporting line.
+
+The menu renders upstream's expressive item containers: every item carries a
+per-position corner shape (`MenuDefaults.itemShape`), a state layer for
+hover/press/focus, and the inset focus ring. Items animate to their selected
+shape and container color with the fast spatial spring; reduced motion
+settles them instantly.
+
+<CodeSnippetMD imagePath="/src/assets/generated/menu_selectable.png" scale="3" imageWidth="300" imageHeight="200" imageAlt="">
+```slint
+import { PopupMenu, MenuItemKind, Icons } from "@material";
+export component Example inherits Window {
+    width: 400px;
+    height: 300px;
+    background: transparent;
+    PopupMenu {
+        width: 280px;
+        height: parent.height;
+        item-kind: MenuItemKind.selectable;
+        items: [
+          { text: "Option A", selected: true, selected_icon: Icons.check },
+          { text: "Option B" },
+          { text: "With icon", icon: Icons.menu, selected: true, selected_icon: Icons.check },
+        ];
+    }
+}
+```
+</CodeSnippetMD>
+
+`item-kind` picks the item composable: `standard` (`DropdownMenuItem`),
+`selectable` (`SelectableDropdownMenuItem`) or `checkable`
+(`CheckableDropdownMenuItem`). Selected and checked items tint their
+container and can swap the leading icon for `selected_icon`
+(`selectedLeadingIcon`/`checkedLeadingIcon`).
+
+<CodeSnippetMD imagePath="/src/assets/generated/menu_vibrant.png" scale="3" imageWidth="300" imageHeight="200" imageAlt="">
+```slint
+import { PopupMenu, MenuVariant, MenuItemKind, Icons } from "@material";
+export component Example inherits Window {
+    width: 400px;
+    height: 300px;
+    background: transparent;
+    PopupMenu {
+        width: 280px;
+        height: parent.height;
+        variant: MenuVariant.vibrant;
+        item-kind: MenuItemKind.checkable;
+        items: [
+          { text: "Checked", checked: true, selected_icon: Icons.check },
+          { text: "Unchecked", icon: Icons.remove, selected_icon: Icons.check },
+        ];
+    }
+}
+```
+</CodeSnippetMD>
+
+`variant` picks the token set: `standard` (`StandardMenuTokens`/`MenuTokens`)
+or `vibrant` (`VibrantMenuTokens`), covering container, item text and icon
+colors, and the selected container.
+
+<CodeSnippetMD imagePath="/src/assets/generated/menu_groups.png" scale="3" imageWidth="300" imageHeight="200" imageAlt="">
+```slint
+import { PopupMenu } from "@material";
+export component Example inherits Window {
+    width: 400px;
+    height: 300px;
+    background: transparent;
+    PopupMenu {
+        width: 280px;
+        height: parent.height;
+        groups: [
+          { label: "File", items: [{ text: "New" }, { text: "Open" }] },
+          { label: "Edit", items: [{ text: "Copy" }, { text: "Paste" }] },
+        ];
+    }
+}
+```
+</CodeSnippetMD>
+
+Set `groups` instead of `items` for segmented content: each `MenuGroup`
+draws its own elevated surface (`DropdownMenuGroup`) separated by the group
+gap (`SegmentedMenuTokens.SegmentedGap`), with an optional group label
+(`DropdownMenuGroupLabel`).
 
 ## Properties
 
 ### items
 <SlintProperty propName="items" typeName="[struct]" structName="MenuItem">
-An array of menu items, each containing an icon, a text, and a trailing text.
+Flat item list (`DropdownMenu` content). Mutually exclusive with `groups`.
+</SlintProperty>
+
+### groups
+<SlintProperty propName="groups" typeName="[struct]" structName="MenuGroup">
+Grouped content (`DropdownMenuPopup` content): one surface per group.
+</SlintProperty>
+
+### item-kind
+<SlintProperty propName="item-kind" typeName="enum" enumName="MenuItemKind">
+`standard`, `selectable`, or `checkable` item composable.
+</SlintProperty>
+
+### variant
+<SlintProperty propName="variant" typeName="enum" enumName="MenuVariant">
+`standard` or `vibrant` token set.
+</SlintProperty>
+
+### anchor-position
+<SlintProperty propName="anchor-position" typeName="enum" enumName="MenuAnchorPosition">
+Where the menu prefers to open relative to the anchor (`below`, `above`,
+`left`, `right` — upstream default `Below`).
+</SlintProperty>
+
+### offset
+<SlintProperty propName="offset" typeName="Point">
+`contentOffset` (`DpOffset`) applied to every placement candidate.
+</SlintProperty>
+
+### exposed
+<SlintProperty propName="exposed" typeName="bool">
+Uses the `ExposedDropdownMenuPositionProvider` placement (anchor-bottom
+candidates, `calculateMaxHeight` cap, center transform origin).
+</SlintProperty>
+
+### match-anchor-width
+<SlintProperty propName="match-anchor-width" typeName="bool" defaultValue="true">
+`exposedDropdownSize(matchAnchorWidth)` — the menu takes the anchor's width.
+Only consulted when `exposed`.
+</SlintProperty>
+
+### selected-index
+<SlintProperty propName="selected-index" typeName="int">
+`selected` marker applied on top of the item's model flag (drop-down
+selection highlight).
+</SlintProperty>
+
+### first-index
+<SlintProperty propName="first-index" typeName="int">
+Entries before this index are hidden (flat content only) — for overflow
+menus whose leading entries are already visible elsewhere.
+</SlintProperty>
+
+### cap-height
+<SlintProperty propName="cap-height" typeName="length">
+Overrides the computed max height when positive; otherwise the menu is
+capped at `window − 2 * MenuVerticalMargin`.
+</SlintProperty>
+
+### item-content-padding-h / item-content-padding-v
+<SlintProperty propName="item-content-padding-h" typeName="length">
+`contentPadding` override for the items (`< 0` = the per-kind default,
+`16px`/`0px` = `ItemContentPadding` for items inside exposed menus).
 </SlintProperty>
 
 ## Callbacks
 
 ### activated(index: int)
-Invoked when a menu item is clicked
+Invoked when a flat-content menu item is clicked.
+
+### group-activated(group: int, index: int)
+Invoked when an item inside `groups` content is clicked.
+
+## Functions
+
+### show()
+Opens the menu (`expanded = true`) with the fast spatial scale and effects
+alpha springs.
+
+### dismiss()
+Closes the menu (`expanded = false`): it shrinks and fades, then unmounts
+once the springs settle.
+
+### close()
+Immediate close, skipping the collapse animation.

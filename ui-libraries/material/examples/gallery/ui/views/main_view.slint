@@ -28,15 +28,15 @@ export enum Views {
 
 export global MainViewAdapter {
     in_out property <[MenuItem]> palettes: [
-        { text: "Slint", enabled: true },
-        { text: "Purple", enabled: true },
-        { text: "Red", enabled: true },
-        { text: "Green", enabled: true },
-        { text: "Dynamic accent", enabled: true },
-        { text: "Dynamic slint", enabled: true },
-        { text: "Dynamic purple", enabled: true },
-        { text: "Dynamic red", enabled: true },
-        { text: "Dynamic green", enabled: true },
+        { text: "Slint" },
+        { text: "Purple" },
+        { text: "Red" },
+        { text: "Green" },
+        { text: "Dynamic accent" },
+        { text: "Dynamic slint" },
+        { text: "Dynamic purple" },
+        { text: "Dynamic red" },
+        { text: "Dynamic green" },
     ];
 
     // Index of the first entry in `palettes` that selects a runtime-generated
@@ -60,9 +60,9 @@ export component MainView {
         app_bar := TopAppBar {
             title: "Material 3";
             trailing-buttons: [
-                { icon: OutlinedIcons.palette, enabled: true },
-                { icon: OutlinedIcons.settings, enabled: true },
-                { icon: Palette.color_scheme == ColorScheme.light ? OutlinedIcons.dark_mode : OutlinedIcons.light_mode, enabled: true }
+                { icon: OutlinedIcons.palette },
+                { icon: OutlinedIcons.settings },
+                { icon: Palette.color_scheme == ColorScheme.light ? OutlinedIcons.dark_mode : OutlinedIcons.light_mode }
             ];
 
             trailing-button-clicked(index) => {
@@ -96,41 +96,6 @@ export component MainView {
             height: MainWindowAdapter.height;
         }
 
-        color_menu := PopupMenu {
-            x: root.width - MaterialStyleMetrics.size_200 - MaterialStyleMetrics.padding_16;
-            y: app_bar.height / 2;
-            items: MainViewAdapter.palettes;
-
-            activated(index) => {
-                if index < MainViewAdapter.first_dynamic_palette {
-                    MaterialPalette.dynamic = false;
-                    MaterialTheme.use-platform-color = false;
-                    MainViewAdapter.load_palette(index);
-                } else {
-                    MaterialPalette.dynamic = true;
-                    // The seeds match the seed fields of the Theme Builder
-                    // JSON files, so a dynamic scheme can be compared with
-                    // its static counterpart.
-                    if index == MainViewAdapter.first_dynamic_palette {
-                        MaterialTheme.use-platform-color = true;
-                    } else if index == MainViewAdapter.first_dynamic_palette + 1 {
-                        MaterialTheme.use-platform-color = false;
-                        MaterialTheme.seed-color = #2379f4;
-                    } else if index == MainViewAdapter.first_dynamic_palette + 2 {
-                        MaterialTheme.use-platform-color = false;
-                        MaterialTheme.seed-color = #6750a4;
-                    } else if index == MainViewAdapter.first_dynamic_palette + 3 {
-                        MaterialTheme.use-platform-color = false;
-                        MaterialTheme.seed-color = #b33b15;
-                    } else {
-                        MaterialTheme.use-platform-color = false;
-                        MaterialTheme.seed-color = #63a002;
-                    }
-                }
-                color_menu.close();
-            }
-        }
-
         Rectangle {
             background: MaterialPalette.background;
 
@@ -146,6 +111,41 @@ export component MainView {
                     horizontal_stretch: 1;
                 }
             }
+        }
+    }
+
+    color_menu := PopupMenu {
+        x: root.width - MaterialStyleMetrics.size_200 - MaterialStyleMetrics.padding_16;
+        y: app_bar.height / 2;
+        items: MainViewAdapter.palettes;
+
+        activated(index) => {
+            if index < MainViewAdapter.first_dynamic_palette {
+                MaterialPalette.dynamic = false;
+                MaterialTheme.use-platform-color = false;
+                MainViewAdapter.load_palette(index);
+            } else {
+                MaterialPalette.dynamic = true;
+                // The seeds match the seed fields of the Theme Builder
+                // JSON files, so a dynamic scheme can be compared with
+                // its static counterpart.
+                if index == MainViewAdapter.first_dynamic_palette {
+                    MaterialTheme.use-platform-color = true;
+                } else if index == MainViewAdapter.first_dynamic_palette + 1 {
+                    MaterialTheme.use-platform-color = false;
+                    MaterialTheme.seed-color = #2379f4;
+                } else if index == MainViewAdapter.first_dynamic_palette + 2 {
+                    MaterialTheme.use-platform-color = false;
+                    MaterialTheme.seed-color = #6750a4;
+                } else if index == MainViewAdapter.first_dynamic_palette + 3 {
+                    MaterialTheme.use-platform-color = false;
+                    MaterialTheme.seed-color = #b33b15;
+                } else {
+                    MaterialTheme.use-platform-color = false;
+                    MaterialTheme.seed-color = #63a002;
+                }
+            }
+            color_menu.close();
         }
     }
 }

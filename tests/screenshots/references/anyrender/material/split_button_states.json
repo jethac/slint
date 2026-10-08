@@ -125,6 +125,34 @@
   "PopLayer",
   "PopLayer",
   {
+    "PushClipLayer": {
+      "clip": "M0,0 L0,0 L0,0 L0,0 Z",
+      "transform": [
+        1.0,
+        0.0,
+        0.0,
+        1.0,
+        16.0,
+        68.0
+      ]
+    }
+  },
+  "PopLayer",
+  {
+    "PushClipLayer": {
+      "clip": "M0,0 L0,0 L0,0 L0,0 Z",
+      "transform": [
+        1.0,
+        0.0,
+        0.0,
+        1.0,
+        16.0,
+        68.0
+      ]
+    }
+  },
+  "PopLayer",
+  {
     "PushLayer": {
       "alpha": 0.08,
       "backdrop_filter": null,
@@ -160,6 +188,34 @@
   },
   "PopLayer",
   {
+    "PushClipLayer": {
+      "clip": "M0,0 L0,0 L0,0 L0,0 Z",
+      "transform": [
+        1.0,
+        0.0,
+        0.0,
+        1.0,
+        202.0,
+        68.0
+      ]
+    }
+  },
+  "PopLayer",
+  {
+    "PushClipLayer": {
+      "clip": "M0,0 L0,0 L0,0 L0,0 Z",
+      "transform": [
+        1.0,
+        0.0,
+        0.0,
+        1.0,
+        202.0,
+        68.0
+      ]
+    }
+  },
+  "PopLayer",
+  {
     "PushLayer": {
       "alpha": 0.08,
       "backdrop_filter": null,
@@ -190,6 +246,62 @@
         1.0,
         470.0,
         12.0
+      ]
+    }
+  },
+  "PopLayer",
+  {
+    "PushClipLayer": {
+      "clip": "M0,0 L0,0 L0,0 L0,0 Z",
+      "transform": [
+        1.0,
+        0.0,
+        0.0,
+        1.0,
+        388.0,
+        68.0
+      ]
+    }
+  },
+  "PopLayer",
+  {
+    "PushClipLayer": {
+      "clip": "M0,0 L0,0 L0,0 L0,0 Z",
+      "transform": [
+        1.0,
+        0.0,
+        0.0,
+        1.0,
+        388.0,
+        68.0
+      ]
+    }
+  },
+  "PopLayer",
+  {
+    "PushClipLayer": {
+      "clip": "M0,0 L0,0 L0,0 L0,0 Z",
+      "transform": [
+        1.0,
+        0.0,
+        0.0,
+        1.0,
+        574.0,
+        68.0
+      ]
+    }
+  },
+  "PopLayer",
+  {
+    "PushClipLayer": {
+      "clip": "M0,0 L0,0 L0,0 L0,0 Z",
+      "transform": [
+        1.0,
+        0.0,
+        0.0,
+        1.0,
+        574.0,
+        68.0
       ]
     }
   },
@@ -260,6 +372,62 @@
         1.0,
         284.0,
         80.0
+      ]
+    }
+  },
+  "PopLayer",
+  {
+    "PushClipLayer": {
+      "clip": "M0,0 L0,0 L0,0 L0,0 Z",
+      "transform": [
+        1.0,
+        0.0,
+        0.0,
+        1.0,
+        202.0,
+        136.0
+      ]
+    }
+  },
+  "PopLayer",
+  {
+    "PushClipLayer": {
+      "clip": "M0,0 L0,0 L0,0 L0,0 Z",
+      "transform": [
+        1.0,
+        0.0,
+        0.0,
+        1.0,
+        202.0,
+        136.0
+      ]
+    }
+  },
+  "PopLayer",
+  {
+    "PushClipLayer": {
+      "clip": "M0,0 L0,0 L0,0 L0,0 Z",
+      "transform": [
+        1.0,
+        0.0,
+        0.0,
+        1.0,
+        16.0,
+        136.0
+      ]
+    }
+  },
+  "PopLayer",
+  {
+    "PushClipLayer": {
+      "clip": "M0,0 L0,0 L0,0 L0,0 Z",
+      "transform": [
+        1.0,
+        0.0,
+        0.0,
+        1.0,
+        16.0,
+        136.0
       ]
     }
   },

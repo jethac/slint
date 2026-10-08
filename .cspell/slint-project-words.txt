@@ -358,6 +358,7 @@ hmenu
 horizontalbox
 horizontallayout
 hotplug
+hoverable
 hpad
 hspace
 HSPI
@@ -669,6 +670,7 @@ rasterizes
 rasterizing
 RBUTTONUP
 Recip
+readback
 reanchor
 recompiles
 recompositions
@@ -807,6 +809,7 @@ suggestionchip
 supersample
 supersampling
 surfman
+svgs
 svgz
 Swapchain
 swapusage
@@ -874,6 +877,7 @@ unauthored
 unclipped
 uncoerced
 Uncontained
+unexpressible
 UNDISPATCHED
 unfocus
 unfocusable
