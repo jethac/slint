@@ -10,6 +10,7 @@
   },
   "mask_decor": {},
   "mask_inner": {},
+  "mask_shadow": {},
   "name": "wide-navigation-rail-arrangements",
   "params": {},
   "parity": "static",
@@ -84,7 +85,6 @@
   "type": "canvas",
   "widgets": [
     {
-      "alignment": null,
       "always_show_label": null,
       "arrangement": "center",
       "body_color": null,
@@ -216,7 +216,6 @@
       "year_min": null
     },
     {
-      "alignment": null,
       "always_show_label": null,
       "arrangement": "bottom",
       "body_color": null,
@@ -348,7 +347,6 @@
       "year_min": null
     },
     {
-      "alignment": null,
       "always_show_label": null,
       "arrangement": "space-between",
       "body_color": null,

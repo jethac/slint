@@ -45,6 +45,7 @@
     ]
   },
   "mask_inner": {},
+  "mask_shadow": {},
   "name": "sheet-drag-expand",
   "params": {
     "note": "upward fling from offset 100: |v|≥125 takes the directional branch — the closest anchor at-or-below is expanded at 72"
@@ -133,7 +134,6 @@
   "type": "canvas",
   "widgets": [
     {
-      "alignment": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,
@@ -156,7 +156,6 @@
       "dragged": null,
       "elevation": null,
       "enabled": null,
-      "expanded": null,
       "expanded_ratio": null,
       "fab": null,
       "fab_icon": null,

@@ -45,6 +45,7 @@
       1500
     ]
   },
+  "mask_shadow": {},
   "name": "connected-button-morph",
   "params": {},
   "parity": "motion",
@@ -133,7 +134,6 @@
   "type": "canvas",
   "widgets": [
     {
-      "alignment": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,
@@ -156,7 +156,6 @@
       "dragged": null,
       "elevation": null,
       "enabled": null,
-      "expanded": null,
       "expanded_ratio": null,
       "fab": null,
       "fab_icon": null,

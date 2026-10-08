@@ -11,6 +11,7 @@
   },
   "mask_decor": {},
   "mask_inner": {},
+  "mask_shadow": {},
   "name": "negative-swipe-dismiss-initial",
   "negative_note": "the Slint side starts dismissed the wrong way — the content sits off the opposite edge",
   "params": {

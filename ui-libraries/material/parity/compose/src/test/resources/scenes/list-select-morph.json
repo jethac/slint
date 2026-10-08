@@ -45,6 +45,7 @@
       1500
     ]
   },
+  "mask_shadow": {},
   "name": "list-select-morph",
   "negative_note": "the click-select morph and ripple ink run through identical-timestamp frames on different engine clocks: mid-flight spring radii lead each other by a few px and the bounded ink circle reads as a silhouette edge where the container fill is within the scan epsilon of the outside color — a silent pass would mean the harness went blind",
   "params": {},
@@ -131,7 +132,6 @@
   "type": "canvas",
   "widgets": [
     {
-      "alignment": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,
@@ -154,7 +154,6 @@
       "dragged": null,
       "elevation": null,
       "enabled": null,
-      "expanded": null,
       "expanded_ratio": null,
       "fab": null,
       "fab_icon": null,

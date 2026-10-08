@@ -1,0 +1,179 @@
+[
+  {
+    "Fill": {
+      "brush": {
+        "Image": {
+          "image": 0,
+          "sampler": {
+            "alpha": 1.0,
+            "quality": "Medium",
+            "x_extend": "Pad",
+            "y_extend": "Pad"
+          }
+        }
+      },
+      "brush_transform": null,
+      "fill": "NonZero",
+      "shape": "M0,0 L86,0 L86,86 L0,86 Z",
+      "transform": [
+        1.0,
+        0.0,
+        0.0,
+        1.0,
+        27.0,
+        27.0
+      ]
+    }
+  },
+  {
+    "Fill": {
+      "brush": {
+        "Image": {
+          "image": 1,
+          "sampler": {
+            "alpha": 1.0,
+            "quality": "Medium",
+            "x_extend": "Pad",
+            "y_extend": "Pad"
+          }
+        }
+      },
+      "brush_transform": null,
+      "fill": "NonZero",
+      "shape": "M0,0 L111,0 L111,111 L0,111 Z",
+      "transform": [
+        1.0,
+        0.0,
+        0.0,
+        1.0,
+        15.0,
+        16.0
+      ]
+    }
+  },
+  {
+    "Fill": {
+      "brush": {
+        "Solid": {
+          "components": [
+            0.8314,
+            0.7647,
+            0.9922,
+            1.0
+          ]
+        }
+      },
+      "brush_transform": null,
+      "fill": "NonZero",
+      "shape": "M0,20 C0,8.9543 8.9543,0 20,0 L60,0 C71.0457,0 80,8.9543 80,20 L80,60 C80,71.0457 71.0457,80 60,80 L20,80 C8.9543,80 0,71.0457 0,60 Z",
+      "transform": [
+        1.0,
+        0.0,
+        0.0,
+        1.0,
+        30.0,
+        30.0
+      ]
+    }
+  },
+  {
+    "PushLayer": {
+      "alpha": 1.0,
+      "backdrop_filter": null,
+      "blend": {
+        "compose": "SrcOver",
+        "mix": "Normal"
+      },
+      "clip": "M0,0 L28,0 L28,28 L0,28 Z",
+      "filter": null,
+      "transform": [
+        1.0,
+        0.0,
+        0.0,
+        1.0,
+        56.0,
+        56.0
+      ]
+    }
+  },
+  {
+    "Fill": {
+      "brush": {
+        "Image": {
+          "image": 2,
+          "sampler": {
+            "alpha": 1.0,
+            "quality": "Medium",
+            "x_extend": "Pad",
+            "y_extend": "Pad"
+          }
+        }
+      },
+      "brush_transform": [
+        1.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0
+      ],
+      "fill": "NonZero",
+      "shape": "M0,0 L28,0 L28,28 L0,28 Z",
+      "transform": [
+        1.0,
+        0.0,
+        0.0,
+        1.0,
+        56.0,
+        56.0
+      ]
+    }
+  },
+  {
+    "PushLayer": {
+      "alpha": 1.0,
+      "backdrop_filter": null,
+      "blend": {
+        "compose": "SrcIn",
+        "mix": "Normal"
+      },
+      "clip": "M0,0 L28,0 L28,28 L0,28 Z",
+      "filter": null,
+      "transform": [
+        1.0,
+        0.0,
+        0.0,
+        1.0,
+        56.0,
+        56.0
+      ]
+    }
+  },
+  {
+    "Fill": {
+      "brush": {
+        "Solid": {
+          "components": [
+            0.2863,
+            0.2353,
+            0.4235,
+            1.0
+          ]
+        }
+      },
+      "brush_transform": null,
+      "fill": "NonZero",
+      "shape": "M0,0 L28,0 L28,28 L0,28 Z",
+      "transform": [
+        1.0,
+        0.0,
+        0.0,
+        1.0,
+        56.0,
+        56.0
+      ]
+    }
+  },
+  "PopLayer",
+  "PopLayer"
+]

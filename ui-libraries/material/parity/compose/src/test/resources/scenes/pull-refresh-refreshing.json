@@ -17,6 +17,7 @@
       2500
     ]
   },
+  "mask_shadow": {},
   "name": "pull-refresh-refreshing",
   "negative_note": "the refreshing indicators run infinite animations; Compose launches their LaunchedEffect coroutines ~40ms of frame time after t=0 inside Paparazzi, so identical-timestamp frames sit at different phases of the morph+rotation cycle — the loading indicator's blob interior is masked as mid-flight ink while its static circular container stays strict; femtovg additionally tessellates the spinner's stroked arc with a different AA coverage ramp than layoutlib — isolated edge pixels diverge ~90/255 at d2 while geometry is verified identical on software and skia; a silent pass would mean the harness went blind",
   "params": {

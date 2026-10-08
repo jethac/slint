@@ -20,6 +20,7 @@
     ]
   },
   "mask_inner": {},
+  "mask_shadow": {},
   "name": "switch-hover",
   "negative_note": "issue #53 class: femtovg rasterizes edges via stencil+fringe with the AA band running -0.5px inside to +1.5px outside, so a border edge landing at a fractional device position covers a device-px sliver differently than coverage-integral drivers (software, skia, vello, Compose) — every switch track outline ring-diffs ~0.5-1px at d2 with a few strict pixels left in the edge slivers while track fill, thumb and geometry match; a silent pass on femtovg would mean the harness went blind",
   "params": {},
@@ -94,7 +95,6 @@
   "type": "canvas",
   "widgets": [
     {
-      "alignment": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,
@@ -117,7 +117,6 @@
       "dragged": null,
       "elevation": null,
       "enabled": null,
-      "expanded": null,
       "expanded_ratio": null,
       "fab": null,
       "fab_icon": null,
@@ -197,7 +196,6 @@
       "year_min": null
     },
     {
-      "alignment": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,
@@ -220,7 +218,6 @@
       "dragged": null,
       "elevation": null,
       "enabled": null,
-      "expanded": null,
       "expanded_ratio": null,
       "fab": null,
       "fab_icon": null,

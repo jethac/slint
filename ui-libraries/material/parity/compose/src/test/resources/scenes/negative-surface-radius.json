@@ -10,6 +10,7 @@
   },
   "mask_decor": {},
   "mask_inner": {},
+  "mask_shadow": {},
   "name": "negative-surface-radius",
   "negative_note": "The Slint side draws 4px corners where the scene asks for 24px — the comparator must flag the untinted corners against the tinted rect.",
   "params": {},
@@ -81,7 +82,6 @@
   "type": "canvas",
   "widgets": [
     {
-      "alignment": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,
@@ -104,7 +104,6 @@
       "dragged": null,
       "elevation": null,
       "enabled": null,
-      "expanded": null,
       "expanded_ratio": null,
       "fab": null,
       "fab_icon": null,

@@ -44,6 +44,7 @@
       2000
     ]
   },
+  "mask_shadow": {},
   "name": "chip-states",
   "negative_note": "issue #6: on skia the elevated chip's shadow penumbra inside the strict band diffs up to ~33 channel units while software/femtovg match within eps 16",
   "params": {},
@@ -124,7 +125,6 @@
   "type": "canvas",
   "widgets": [
     {
-      "alignment": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,
@@ -147,7 +147,6 @@
       "dragged": null,
       "elevation": null,
       "enabled": null,
-      "expanded": null,
       "expanded_ratio": null,
       "fab": null,
       "fab_icon": null,
@@ -227,7 +226,6 @@
       "year_min": null
     },
     {
-      "alignment": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,
@@ -250,7 +248,6 @@
       "dragged": null,
       "elevation": null,
       "enabled": null,
-      "expanded": null,
       "expanded_ratio": null,
       "fab": null,
       "fab_icon": null,
@@ -330,7 +327,6 @@
       "year_min": null
     },
     {
-      "alignment": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,
@@ -353,7 +349,6 @@
       "dragged": null,
       "elevation": null,
       "enabled": null,
-      "expanded": null,
       "expanded_ratio": null,
       "fab": null,
       "fab_icon": null,
@@ -433,7 +428,6 @@
       "year_min": null
     },
     {
-      "alignment": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,
@@ -456,7 +450,6 @@
       "dragged": null,
       "elevation": null,
       "enabled": null,
-      "expanded": null,
       "expanded_ratio": null,
       "fab": null,
       "fab_icon": null,
@@ -536,7 +529,6 @@
       "year_min": null
     },
     {
-      "alignment": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,
@@ -559,7 +551,6 @@
       "dragged": null,
       "elevation": null,
       "enabled": false,
-      "expanded": null,
       "expanded_ratio": null,
       "fab": null,
       "fab_icon": null,
@@ -639,7 +630,6 @@
       "year_min": null
     },
     {
-      "alignment": null,
       "always_show_label": null,
       "arrangement": null,
       "body_color": null,
@@ -662,7 +652,6 @@
       "dragged": null,
       "elevation": null,
       "enabled": null,
-      "expanded": null,
       "expanded_ratio": null,
       "fab": null,
       "fab_icon": null,
