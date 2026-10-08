@@ -1,0 +1,65 @@
+{
+  "name": "card-elevation-motion",
+  "type": "canvas",
+  "parity": "motion",
+  "size": [
+    240,
+    160
+  ],
+  "densities": [
+    1,
+    2
+  ],
+  "theme": {
+    "seed": "6750A4",
+    "variant": "tonal-spot",
+    "spec": "spec2025",
+    "platform": "phone",
+    "dark": false,
+    "contrast": 0.0
+  },
+  "fonts": {
+    "plain": "Roboto",
+    "brand": "Roboto"
+  },
+  "widgets": [
+    {
+      "kind": "elevated-card",
+      "x": 60,
+      "y": 40,
+      "width": 120,
+      "height": 80,
+      "clickable": true,
+      "dragged": true
+    }
+  ],
+  "trace_elements": [
+    "card0"
+  ],
+  "trace_props": [
+    "shadow_elevation"
+  ],
+  "times": [
+    0,
+    15,
+    30,
+    60,
+    120,
+    200,
+    400
+  ],
+  "mask_decor": {
+    "card0": {
+      "times": [
+        0,
+        15,
+        30,
+        60,
+        120,
+        200,
+        400
+      ],
+      "margin": 24
+    }
+  }
+}

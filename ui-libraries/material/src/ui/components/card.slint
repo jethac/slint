@@ -2,110 +2,501 @@
 // SPDX-License-Identifier: MIT
 
 import { MaterialPalette } from "../styling/material_palette.slint";
-import { MaterialStyleMetrics } from "../styling/material_style_metrics.slint";
+import { MaterialCornerShape } from "../styling/generated/material_shape_tokens.slint";
+import { ElevatedCardTokens, FilledCardTokens, OutlinedCardTokens } from "../styling/generated/material_component_tokens.slint";
 import { Elevation } from "./elevation.slint";
-import { StateLayerArea } from "./state_layer.slint";
+import { FocusRing, StateLayerArea } from "./state_layer.slint";
 
-component BaseCard {
-    in property <bool> clickable;
-    in property <bool> has_elevation;
-    in property <color> background;
+/// The upstream `Interaction` subclasses `animateElevation` follows; `drag`
+/// reaches it through the caller-hoisted `dragged` (upstream
+/// `DragInteraction` — the caller's `interactionSource` sees it).
+enum CardInteraction { none, press, hover, focus, drag }
+
+/// The private `Card`/`Surface` body shared by the three card styles in the
+/// pinned `Card.kt`: an `Elevation` caster (background + `animateElevation`
+/// shadow), the `surfaceClickable` state layer/ripple when `interactive`,
+/// clipped `ColumnScope` content, an inside-stroke `border`, and the inset
+/// focus ring.
+component CardBase {
+    /// `*Elevation` tables as `ElevationTokens` level slots.
+    in property <int> elevation_default;
+    in property <int> elevation_pressed;
+    in property <int> elevation_focused;
+    in property <int> elevation_hovered;
+    in property <int> elevation_dragged;
+    in property <int> elevation_disabled;
+    /// The upstream onClick overload — the surface is clickable, ripples,
+    /// takes focus and shows the state layer.
+    in property <bool> interactive;
+    in property <bool> enabled: true;
+    /// The hoisted `DragInteraction` — callers driving a drag set this while
+    /// the drag is live (`CardDragGestureNode` upstream).
+    in property <bool> dragged;
+    in property <color> container_color;
+    /// Already composited over its base — see `CardDefaults.*CardColors`.
+    in property <color> disabled_container_color;
+    in property <color> content_color;
+    /// `copy(DisabledAlpha)` already applied.
+    in property <color> disabled_content_color;
+    in property <MaterialCornerShape> container_shape;
     in property <color> border_color;
+    in property <color> disabled_border_color;
     in property <length> border_width;
+    /// See `StateLayerArea.simulate_*` — parity-harness state hooks.
+    in property <bool> simulate_hover;
+    in property <bool> simulate_press;
 
-    callback clicked();
+    callback clicked;
+    forward-focus: area;
+    out property <bool> has_focus <=> area.has_focus;
+    out property <bool> pressed <=> area.effective_pressed;
+    out property <bool> has_hover <=> area.effective_hover;
+    /// `animateElevation`'s live `State<Dp>` — the shadow's dp.
+    out property <length> shadow_elevation <=> container.shadow_height;
+    /// `LocalContentColor` for `@children` — binds through `enabled`.
+    out property <color> resolved_content_color: root.enabled ? root.content_color : root.disabled_content_color;
 
-    forward_focus: state_layer;
-
-    if root.has_elevation : Elevation {
-        width: 100%;
-        height: 100%;
-        border_radius: background_layer.border_radius;
-        level: 1;
-    }
-
-    background_layer := Rectangle {
-        background: root.background;
-        border_radius: MaterialStyleMetrics.border_radius_12;
-        border_width: root.border_width;
-        border_color: root.border_color;
-    }
-
-    state_layer := StateLayerArea {
-        width: 100%;
-        height: 100%;
-        border_radius: background_layer.border_radius;
-        visible: root.clickable;
-        enabled: root.visible;
-
-        clicked => {
-            root.clicked();
+    // `interactions.lastOrNull()`: each live interaction is stamped with a
+    // recency tick and the newest stamp wins the elevation; `last_target`
+    // keeps the released winner to pick the outgoing spec.
+    property <int> clock;
+    property <int> press_stamp: -1;
+    property <int> hover_stamp: -1;
+    property <int> focus_stamp: -1;
+    property <int> drag_stamp: -1;
+    property <CardInteraction> last_target: CardInteraction.none;
+    property <bool> state_pressed: area.effective_pressed;
+    property <bool> state_hover: area.effective_hover;
+    property <bool> state_focus: area.has_focus;
+    // The non-clickable overload has no `interactionSource`, so a hoisted
+    // `dragged` only applies when the surface is interactive. `drag_live`
+    // defers it one tick: upstream emits `DragInteraction.Start` from a
+    // `LaunchedEffect` after composition, and deferring likewise lets
+    // `animate shadow_height` tween instead of snapping at construction.
+    property <bool> drag_live;
+    property <bool> state_drag: root.interactive && root.drag_live;
+    drag_timer := Timer {
+        interval: 0ms;
+        running: root.dragged != root.drag_live;
+        triggered => {
+            root.drag_live = root.dragged;
+            self.running = false;
         }
     }
+    // The drag state layer is the `ripple` indication's own overlay, not a
+    // `StateLayer` state: upstream's state-layer animator fades a new
+    // interaction in linearly over ~45ms (measured on the pinned reference)
+    // while slint `states` switch instantly, so `drag_alpha` tweens the
+    // overlay off `drag_live` (~1ms ≈ the upstream emit). Slint samples
+    // bound animations on the 60Hz tick lattice, landing the first eased
+    // value ~16ms in — the same moment the upstream emit lands.
+    property <float> drag_alpha: root.drag_live ? MaterialPalette.state_layer_opacity_drag : 0;
+    animate drag_alpha { enabled: !MaterialPalette.reduced-motion; duration: 45ms; easing: linear; }
+    init => {
+        // `changed` callbacks miss states bound at construction — the
+        // upstream emit order is the widget's authored interaction first,
+        // a hoisted `DragInteraction` last, so stamps run press→drag and
+        // the newest wins ties.
+        if root.state_pressed {
+            root.last_target = root.winner;
+            root.clock += 1;
+            root.press_stamp = root.clock;
+        }
+        if root.state_hover {
+            root.last_target = root.winner;
+            root.clock += 1;
+            root.hover_stamp = root.clock;
+        }
+        if root.state_focus {
+            root.last_target = root.winner;
+            root.clock += 1;
+            root.focus_stamp = root.clock;
+        }
+        if root.state_drag {
+            root.last_target = root.winner;
+            root.clock += 1;
+            root.drag_stamp = root.clock;
+        }
+    }
+    changed state_pressed => {
+        root.last_target = root.winner;
+        root.clock += 1;
+        root.press_stamp = root.state_pressed ? root.clock : -1;
+    }
+    changed state_hover => {
+        root.last_target = root.winner;
+        root.clock += 1;
+        root.hover_stamp = root.state_hover ? root.clock : -1;
+    }
+    changed state_focus => {
+        root.last_target = root.winner;
+        root.clock += 1;
+        root.focus_stamp = root.state_focus ? root.clock : -1;
+    }
+    changed state_drag => {
+        root.last_target = root.winner;
+        root.clock += 1;
+        root.drag_stamp = root.state_drag ? root.clock : -1;
+    }
+    /// `to != null` upstream picks the incoming spec; a null target (rest)
+    /// picks the outgoing spec by `last_target`.
+    property <CardInteraction> winner:
+        root.press_stamp > root.hover_stamp && root.press_stamp > root.focus_stamp && root.press_stamp > root.drag_stamp ? CardInteraction.press :
+        root.hover_stamp > root.focus_stamp && root.hover_stamp > root.drag_stamp ? CardInteraction.hover :
+        root.focus_stamp > root.drag_stamp ? CardInteraction.focus :
+        root.drag_stamp > -1 ? CardInteraction.drag : CardInteraction.none;
+    /// `enabled = false` — upstream `elevation.snapTo(disabledElevation)`.
+    property <int> current_level:
+        !root.enabled ? root.elevation_disabled :
+        root.winner == CardInteraction.press ? root.elevation_pressed :
+        root.winner == CardInteraction.hover ? root.elevation_hovered :
+        root.winner == CardInteraction.focus ? root.elevation_focused :
+        root.winner == CardInteraction.drag ? root.elevation_dragged :
+        root.elevation_default;
 
-    Rectangle {
-        clip: true;
-        border_radius: MaterialStyleMetrics.border_radius_12;
+    // CornerMedium resolved per corner; `full` is the stadium half-extent
+    // upstream `CircleShape` resolves to.
+    property <length> corner_extent: Math.min(root.width, root.height);
+    property <length> corner_tl: root.container_shape.full ? root.corner_extent / 2 : root.container_shape.top_left;
+    property <length> corner_tr: root.container_shape.full ? root.corner_extent / 2 : root.container_shape.top_right;
+    property <length> corner_br: root.container_shape.full ? root.corner_extent / 2 : root.container_shape.bottom_right;
+    property <length> corner_bl: root.container_shape.full ? root.corner_extent / 2 : root.container_shape.bottom_left;
 
-        @children
+    container := Elevation {
+        width: 100%;
+        height: 100%;
+        background: root.enabled ? root.container_color : root.disabled_container_color;
+        shaped_corners: true;
+        corners: {
+            top_left: root.corner_tl,
+            top_right: root.corner_tr,
+            bottom_right: root.corner_br,
+            bottom_left: root.corner_bl,
+        };
+        level: root.current_level;
+        interaction_active: root.enabled && root.winner != CardInteraction.none;
+        // `ElevationDefaults` (internal/Elevation.kt): incoming 120ms
+        // FastOutSlowInEasing for every interaction kind; outgoing
+        // `DefaultOutgoingSpec` 150ms — except hover's
+        // `HoveredOutgoingSpec` 120ms — `OutgoingSpecEasing`
+        // (0.4, 0, 0.6, 1). `enabled = false` snaps.
+        in_duration: root.enabled ? 120ms : 0ms;
+        in_easing: cubic-bezier(0.4, 0, 0.2, 1);
+        out_duration: !root.enabled ? 0ms : root.last_target == CardInteraction.hover ? 120ms : 150ms;
+        out_easing: cubic-bezier(0.4, 0, 0.6, 1);
+
+        // `Modifier.surfaceClickable`: state layer + bounded ripple +
+        // keyboard/focus handling. Upstream draws the indication under the
+        // content, so the area stays below `clipper` here.
+        area := StateLayerArea {
+            x: 0;
+            y: 0;
+            width: 100%;
+            height: 100%;
+            enabled: root.interactive && root.enabled;
+            color: root.resolved_content_color;
+            shaped_corners: true;
+            corners: {
+                top_left: root.corner_tl,
+                top_right: root.corner_tr,
+                bottom_right: root.corner_br,
+                bottom_left: root.corner_bl,
+            };
+            hit_corners: self.corners;
+            display_background: false;
+            focus_ring: true;
+            simulate_hover: root.simulate_hover;
+            simulate_press: root.simulate_press;
+
+            clicked => {
+                if !area.pointer_inside && !area.enter_pressed {
+                    return;
+                }
+                root.clicked();
+            }
+        }
+
+        // `StateTokens.DraggedStateLayerOpacity` (0.16) over
+        // `contentColor`, clipped to the card shape and faded by
+        // `drag_alpha` like the upstream state-layer animator.
+        // Always instantiated so `drag_alpha` is read every frame — a
+        // lazily-evaluated binding behind a false `if` never starts its
+        // animation under the settled-frame driver.
+        if root.interactive && root.enabled : Rectangle {
+            x: 0;
+            y: 0;
+            width: 100%;
+            height: 100%;
+            opacity: root.drag_alpha;
+            background: root.resolved_content_color;
+            border_radius: root.corner_tl;
+            border-top-right-radius: root.corner_tr;
+            border-bottom-right-radius: root.corner_br;
+            border-bottom-left-radius: root.corner_bl;
+        }
+
+        // Upstream `Column(content)`: children stack top-to-bottom inside
+        // the shape-clipped bounds.
+        clipper := Rectangle {
+            x: 0;
+            y: 0;
+            width: 100%;
+            height: 100%;
+            clip: true;
+            border_radius: max(root.corner_tl, root.corner_tr, root.corner_br, root.corner_bl);
+
+            VerticalLayout {
+                @children
+            }
+        }
+
+        // `border` strokes the shape edge over the content — upstream's
+        // `Modifier.border` is an inside stroke in Compose.
+        if root.border_width > 0 : Rectangle {
+            x: 0;
+            y: 0;
+            width: 100%;
+            height: 100%;
+            border_width: root.border_width;
+            border_color: root.enabled ? root.border_color : root.disabled_border_color;
+            border-top-left-radius: root.corner_tl;
+            border-top-right-radius: root.corner_tr;
+            border-bottom-right-radius: root.corner_br;
+            border-bottom-left-radius: root.corner_bl;
+        }
+
+        // `RippleConfiguration.Focus.InsetRing` — the focused inset ring,
+        // drawn over the content.
+        if root.interactive && area.has_focus && root.enabled : FocusRing {
+            width: 100%;
+            height: 100%;
+            shaped_corners: true;
+            corners: {
+                top_left: root.corner_tl,
+                top_right: root.corner_tr,
+                bottom_right: root.corner_br,
+                bottom_left: root.corner_bl,
+            };
+        }
     }
 }
 
+/// [Material Design card](https://m3.material.io/components/cards/overview) —
+/// upstream `ElevatedCard` (`Card.kt`): a `surface_container_low` container
+/// with the elevated elevation table.
 export component ElevatedCard {
-    in property <bool> clickable <=> base.clickable;
+    /// Upstream `onClick` — the card is clickable, ripples, and takes focus.
+    in property <bool> clickable;
+    in property <bool> enabled: true;
+    /// The hoisted `DragInteraction` — see `CardBase.dragged`.
+    in property <bool> dragged;
+    /// `containerColor` — `ElevatedCardTokens.ContainerColor`.
+    in property <color> container_color: ElevatedCardTokens.container_color;
+    /// `contentColor` — `contentColorFor(containerColor)`.
+    in property <color> content_color: MaterialPalette.on_surface;
+    /// `shape` — `ElevatedCardTokens.ContainerShape`.
+    in property <MaterialCornerShape> container_shape: ElevatedCardTokens.container_shape;
+    /// `border` — unset upstream (`null`); exposed for the optional
+    /// `BorderStroke` param.
+    in property <color> border_color: transparent;
+    in property <length> border_width: 0px;
+    /// See `CardBase.simulate_*`.
+    in property <bool> simulate_hover;
+    in property <bool> simulate_press;
 
     callback clicked <=> base.clicked;
 
-    forward_focus: base;
+    out property <bool> has_focus <=> base.has_focus;
+    out property <bool> pressed <=> base.pressed;
+    out property <bool> has_hover <=> base.has_hover;
+    out property <length> shadow_elevation <=> base.shadow_elevation;
+    /// The content color after `enabled` — `LocalContentColor`.
+    out property <color> resolved_content_color <=> base.resolved_content_color;
+
+    forward-focus: base;
     accessible-role: button;
-    accessible-enabled: root.clickable;
+    accessible-enabled: root.clickable && root.enabled;
     accessible-action-default => { base.clicked(); }
 
-    base := BaseCard {
+    base := CardBase {
         width: 100%;
         height: 100%;
-        has_elevation: true;
-        background: MaterialPalette.surface;
+        interactive: root.clickable;
+        enabled: root.enabled;
+        dragged: root.dragged;
+        elevation_default: 1;
+        elevation_pressed: 1;
+        elevation_focused: 1;
+        // `ElevatedCardTokens.HoverContainerElevation` = Level2.
+        elevation_hovered: 2;
+        // `ElevatedCardTokens.DraggedContainerElevation` = Level4.
+        elevation_dragged: 4;
+        // `ElevatedCardTokens.DisabledContainerElevation` = Level1.
+        elevation_disabled: 1;
+        container_color: root.container_color;
+        // `elevatedCardColors()`: `DisabledContainerColor.copy(alpha =
+        // DisabledContainerOpacity).compositeOver(DisabledContainerColor)` —
+        // the token composited over itself is itself.
+        disabled_container_color: ElevatedCardTokens.disabled_container_color;
+        content_color: root.content_color;
+        // `contentColor.copy(DisabledAlpha)` — `DisabledAlpha` is 0.38.
+        disabled_content_color: root.content_color.with_alpha(0.38);
+        container_shape: root.container_shape;
+        border_color: root.border_color;
+        disabled_border_color: root.border_color;
+        border_width: root.border_width;
+        simulate_hover: root.simulate_hover;
+        simulate_press: root.simulate_press;
 
         @children
     }
 }
 
+/// [Material Design card](https://m3.material.io/components/cards/overview) —
+/// upstream `Card`/`FilledCard` (`Card.kt`): a `surface_container_highest`
+/// container at rest elevation 0.
 export component FilledCard {
-    in property <bool> clickable <=> base.clickable;
+    /// Upstream `onClick` — the card is clickable, ripples, and takes focus.
+    in property <bool> clickable;
+    in property <bool> enabled: true;
+    /// The hoisted `DragInteraction` — see `CardBase.dragged`.
+    in property <bool> dragged;
+    /// `containerColor` — `FilledCardTokens.ContainerColor`.
+    in property <color> container_color: FilledCardTokens.container_color;
+    /// `contentColor` — `contentColorFor(containerColor)`.
+    in property <color> content_color: MaterialPalette.on_surface;
+    /// `shape` — `FilledCardTokens.ContainerShape`.
+    in property <MaterialCornerShape> container_shape: FilledCardTokens.container_shape;
+    /// `border` — unset upstream (`null`); exposed for the optional
+    /// `BorderStroke` param.
+    in property <color> border_color: transparent;
+    in property <length> border_width: 0px;
+    /// See `CardBase.simulate_*`.
+    in property <bool> simulate_hover;
+    in property <bool> simulate_press;
 
     callback clicked <=> base.clicked;
 
-    forward_focus: base;
+    out property <bool> has_focus <=> base.has_focus;
+    out property <bool> pressed <=> base.pressed;
+    out property <bool> has_hover <=> base.has_hover;
+    out property <length> shadow_elevation <=> base.shadow_elevation;
+    /// The content color after `enabled` — `LocalContentColor`.
+    out property <color> resolved_content_color <=> base.resolved_content_color;
+
+    forward-focus: base;
     accessible-role: button;
-    accessible-enabled: root.clickable;
+    accessible-enabled: root.clickable && root.enabled;
     accessible-action-default => { base.clicked(); }
 
-    base := BaseCard {
+    base := CardBase {
         width: 100%;
         height: 100%;
-        background: MaterialPalette.surface_container_highest;
+        interactive: root.clickable;
+        enabled: root.enabled;
+        dragged: root.dragged;
+        elevation_default: 0;
+        elevation_pressed: 0;
+        elevation_focused: 0;
+        // `FilledCardTokens.HoverContainerElevation` = Level1.
+        elevation_hovered: 1;
+        // `FilledCardTokens.DraggedContainerElevation` = Level3.
+        elevation_dragged: 3;
+        // `FilledCardTokens.DisabledContainerElevation` = Level0.
+        elevation_disabled: 0;
+        container_color: root.container_color;
+        // `cardColors()`: `DisabledContainerColor.copy(alpha =
+        // DisabledContainerOpacity).compositeOver(ContainerColor)` — both
+        // colors are opaque, so source-over is a plain channel blend
+        // (`a.mix(b, t)` weights `a` by `t`).
+        disabled_container_color: FilledCardTokens.disabled_container_color.mix(
+            FilledCardTokens.container_color,
+            FilledCardTokens.disabled_container_opacity);
+        content_color: root.content_color;
+        // `contentColor.copy(DisabledAlpha)` — `DisabledAlpha` is 0.38.
+        disabled_content_color: root.content_color.with_alpha(0.38);
+        container_shape: root.container_shape;
+        border_color: root.border_color;
+        disabled_border_color: root.border_color;
+        border_width: root.border_width;
+        simulate_hover: root.simulate_hover;
+        simulate_press: root.simulate_press;
 
         @children
     }
 }
 
+/// [Material Design card](https://m3.material.io/components/cards/overview) —
+/// upstream `OutlinedCard` (`Card.kt`): a `surface` container stroked by
+/// `outlinedCardBorder`.
 export component OutlinedCard {
-    in property <bool> clickable <=> base.clickable;
+    /// Upstream `onClick` — the card is clickable, ripples, and takes focus.
+    in property <bool> clickable;
+    in property <bool> enabled: true;
+    /// The hoisted `DragInteraction` — see `CardBase.dragged`.
+    in property <bool> dragged;
+    /// `containerColor` — `OutlinedCardTokens.ContainerColor`.
+    in property <color> container_color: OutlinedCardTokens.container_color;
+    /// `contentColor` — `contentColorFor(containerColor)`.
+    in property <color> content_color: MaterialPalette.on_surface;
+    /// `shape` — `OutlinedCardTokens.ContainerShape`.
+    in property <MaterialCornerShape> container_shape: OutlinedCardTokens.container_shape;
+    /// `border` color — `OutlinedCardTokens.OutlineColor`; the width is the
+    /// token's `OutlineWidth` and cannot change without leaving the pin.
+    in property <color> border_color: OutlinedCardTokens.outline_color;
+    /// See `CardBase.simulate_*`.
+    in property <bool> simulate_hover;
+    in property <bool> simulate_press;
 
     callback clicked <=> base.clicked;
 
-    forward_focus: base;
+    out property <bool> has_focus <=> base.has_focus;
+    out property <bool> pressed <=> base.pressed;
+    out property <bool> has_hover <=> base.has_hover;
+    out property <length> shadow_elevation <=> base.shadow_elevation;
+    /// The content color after `enabled` — `LocalContentColor`.
+    out property <color> resolved_content_color <=> base.resolved_content_color;
+
+    forward-focus: base;
     accessible-role: button;
-    accessible-enabled: root.clickable;
+    accessible-enabled: root.clickable && root.enabled;
     accessible-action-default => { base.clicked(); }
 
-    base := BaseCard {
+    base := CardBase {
         width: 100%;
         height: 100%;
-        background: MaterialPalette.surface_container_low;
-        border_width: 1px;
-        border_color: MaterialPalette.outline;
+        interactive: root.clickable;
+        enabled: root.enabled;
+        dragged: root.dragged;
+        elevation_default: 0;
+        elevation_pressed: 0;
+        elevation_focused: 0;
+        // `outlinedCardElevation()` passes `defaultElevation` for hover —
+        // the token's `HoverContainerElevation` (Level1) is unused.
+        elevation_hovered: 0;
+        // `OutlinedCardTokens.DraggedContainerElevation` = Level3.
+        elevation_dragged: 3;
+        // `OutlinedCardTokens.DisabledContainerElevation` = Level0.
+        elevation_disabled: 0;
+        container_color: root.container_color;
+        // `outlinedCardColors()`: the disabled container keeps the plain
+        // `ContainerColor`.
+        disabled_container_color: OutlinedCardTokens.container_color;
+        content_color: root.content_color;
+        // `contentColor.copy(DisabledAlpha)` — `DisabledAlpha` is 0.38.
+        disabled_content_color: root.content_color.with_alpha(0.38);
+        container_shape: root.container_shape;
+        border_color: root.border_color;
+        // `outlinedCardBorder(enabled)`: `DisabledOutlineColor.copy(alpha =
+        // DisabledOutlineOpacity).compositeOver(ElevatedCardTokens.ContainerColor)`
+        // — both colors are opaque, so source-over is a plain channel blend
+        // (`a.mix(b, t)` weights `a` by `t`).
+        disabled_border_color: OutlinedCardTokens.disabled_outline_color.mix(
+            ElevatedCardTokens.container_color,
+            OutlinedCardTokens.disabled_outline_opacity);
+        border_width: OutlinedCardTokens.outline_width;
+        simulate_hover: root.simulate_hover;
+        simulate_press: root.simulate_press;
 
         @children
     }

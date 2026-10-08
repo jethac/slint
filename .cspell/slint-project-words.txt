@@ -228,6 +228,7 @@ ELCDIF
 elementwise
 elems
 elevatedbutton
+elevatedcard
 elevatedsplitbutton
 elit
 embeddedfonts
@@ -280,6 +281,7 @@ fexceptions
 figsize
 fileaccess
 filledbutton
+filledcard
 fillediconbutton
 filledsplitbutton
 filterchip
@@ -597,6 +599,7 @@ ospi
 Ostromentsky
 othercomp
 outlinebutton
+outlinedcard
 outlineiconbutton
 outlinesplitbutton
 oversizing

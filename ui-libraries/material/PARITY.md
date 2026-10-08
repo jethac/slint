@@ -104,9 +104,9 @@ States: disabled, dragged, focused, hovered, pressed
 
 | Component | Source | Status | Issues | Needs | Notes |
 |---|---|---|---|---|---|
-| Card | Card.kt | partial | #11 | none | slint component: ElevatedCard/FilledCard/OutlinedCard |
-| ElevatedCard | Card.kt | partial | #11 | none | slint component: ElevatedCard |
-| OutlinedCard | Card.kt | partial | #11 | none | slint component: OutlinedCard |
+| Card | Card.kt | done | #11 | none | slint component: ElevatedCard/FilledCard/OutlinedCard |
+| ElevatedCard | Card.kt | done | #11 | none | slint component: ElevatedCard |
+| OutlinedCard | Card.kt | done | #11 | none | slint component: OutlinedCard |
 
 ### Carousel
 

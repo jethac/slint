@@ -1,0 +1,81 @@
+// Copyright © SixtyFPS GmbH <info@slint.dev>
+// SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0
+
+// Scene: card-states-filled — generated from `ui-libraries/material/parity/scenes/card-states-filled.json`
+// (edit the scene, regenerate with `cargo run -p material-parity-generator`).
+//PARITY=static
+//SIZE=856x112
+//TRACE_ELEMENTS=card0,card1,card2,card3,card4
+//ACTION=key:Tab
+//ACTION=key:Tab
+//ACTION=key:Tab
+//MASK_INNER=card2@2000
+//MASK_DECOR=card0@2000
+//MASK_DECOR=card1@2000
+//MASK_DECOR=card2@2000
+//MASK_DECOR=card3@2000
+//MASK_DECOR=card4+10@2000
+//DENSITIES=1,2
+import "../../fonts/Roboto-VariableFont.ttf";
+import { FilledCard, MaterialPalette, MaterialTheme, MaterialWindow } from "@material";
+
+export component TestCase inherits MaterialWindow {
+    init => {
+        // The scene pins seed #6750A4, tonal-spot, spec2025, light, contrast 0
+        // (all the library defaults; restated here so a default change can't
+        // silently move the parity baseline).
+        MaterialTheme.seed-color = #6750A4;
+        MaterialTheme.dark = false;
+        MaterialTheme.contrast-level = 0;
+        MaterialTheme.use-platform-color = false;
+        MaterialTheme.plain-family = "Roboto";
+        MaterialTheme.brand-family = "Roboto";
+        // Compose builds its scene scheme from the same seed — use the
+        // runtime-generated scheme, not the static expressive table.
+        MaterialPalette.dynamic = true;
+    }
+
+    card0 := FilledCard {
+        x: 16px;
+        y: 16px;
+        width: 120px;
+        height: 80px;
+        clickable: true;
+    }
+
+    card1 := FilledCard {
+        x: 156px;
+        y: 16px;
+        width: 120px;
+        height: 80px;
+        clickable: true;
+        simulate_hover: true;
+    }
+
+    card2 := FilledCard {
+        x: 296px;
+        y: 16px;
+        width: 120px;
+        height: 80px;
+        clickable: true;
+    }
+
+    card3 := FilledCard {
+        x: 436px;
+        y: 16px;
+        width: 120px;
+        height: 80px;
+        clickable: true;
+        enabled: false;
+    }
+
+    card4 := FilledCard {
+        x: 576px;
+        y: 16px;
+        width: 120px;
+        height: 80px;
+        clickable: true;
+        dragged: true;
+    }
+
+}

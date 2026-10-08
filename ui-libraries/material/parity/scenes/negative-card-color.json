@@ -1,0 +1,38 @@
+{
+  "name": "negative-card-color",
+  "type": "canvas",
+  "parity": "negative",
+  "negative_note": "slint_overrides.container_color renders the filled card's surface_container_highest container as primary \u2014 a card painted the wrong color must fail",
+  "size": [
+    152,
+    112
+  ],
+  "densities": [
+    1,
+    2
+  ],
+  "theme": {
+    "seed": "6750A4",
+    "variant": "tonal-spot",
+    "spec": "spec2025",
+    "platform": "phone",
+    "dark": false,
+    "contrast": 0.0
+  },
+  "fonts": {
+    "plain": "Roboto",
+    "brand": "Roboto"
+  },
+  "widgets": [
+    {
+      "kind": "filled-card",
+      "x": 16,
+      "y": 16,
+      "width": 120,
+      "height": 80,
+      "slint_overrides": {
+        "container_color": "primary"
+      }
+    }
+  ]
+}

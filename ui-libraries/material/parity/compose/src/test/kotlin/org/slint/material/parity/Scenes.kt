@@ -52,7 +52,10 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
 import androidx.compose.material3.Checkbox
+import androidx.compose.material3.ElevatedCard
+import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.ButtonGroup
 import androidx.compose.material3.ButtonGroupDefaults
 import androidx.compose.material3.DropdownMenuItem
@@ -633,6 +636,7 @@ private fun CanvasScene(
         var badges = 0
         var badgedBoxes = 0
         var menus = 0
+        var cards = 0
         var nav_bars = 0
         var scaffolds = 0
         var tooltips = 0
@@ -654,6 +658,7 @@ private fun CanvasScene(
                     w.kind == "connected-button" ||
                         (w.isButton && w.kind != "radio-button") ||
                         w.kind.endsWith("chip") -> 1
+                    w.isCard && w.text != null -> 1
                     // The Slint side's Text elements in tree order:
                     // title, then the text slot, then each action label
                     // (emitted confirm-first by the flipped flow row).
@@ -1310,6 +1315,15 @@ private fun CanvasScene(
                         }
                     }
                 }
+                widget.isCard -> StateCard(
+                    widget,
+                    scene,
+                    tracer,
+                    "card${cards++}",
+                    textBase,
+                    emitPress,
+                    density,
+                )
                 widget.kind == "badge" -> {
                     // Upstream `Badge`: an empty `text` is the null-content
                     // branch (the `BadgeTokens.Size` dot), any text the
@@ -3750,6 +3764,205 @@ private fun iconInkColor(widget: Widget, checked: Boolean): Color {
             else -> error("unknown icon button kind ${widget.kind}")
         }
     }
+}
+
+/** `ElevatedCard`/`Card`/`OutlinedCard` — `card{n}` element names. The
+ * `clickable` field picks the upstream `onClick` overload (interactive:
+ * `interactionSource` with emitted states) or the plain `Surface`
+ * overload. `dragged` emits a live `DragInteraction.Start` — the hoisted
+ * interaction `animateElevation` reads — emitted after the `state`
+ * interaction so the `lastOrNull` winner matches the Slint side's newest
+ * stamp. The text is the `Text` in the upstream `Column` content slot. */
+@Composable
+private fun StateCard(
+    widget: Widget,
+    scene: Scene,
+    tracer: Tracer,
+    elementId: String,
+    textBase: Int,
+    emitPress: java.util.concurrent.CopyOnWriteArrayList<Pair<Long, Runnable>>,
+    density: Float,
+) {
+    val interactionSource = remember { ReplayableInteractionSource() }
+    if (widget.clickable) {
+        emitStateInteractions(
+            widget,
+            scene,
+            tracer,
+            elementId,
+            interactionSource,
+            emitPress,
+            Offset(16f * density, 16f * density),
+            density,
+        )
+        if (widget.dragged) {
+            // The Slint side defers a construction-bound `dragged` one
+            // tick so `animate` tweens instead of snapping at init; its
+            // animation driver then ticks on 60Hz frames, which lands the
+            // first eased step ~15ms in. The frame sink emits the drag at
+            // `at` 15 — 15 sim-ms on motion scenes — so both animations
+            // start on matching clock times. Unlike a coroutine `delay`
+            // the sink fires at a fixed frame index on every density
+            // pump, keeping captured frames clock-time independent.
+            val drag = Runnable {
+                interactionSource.tryEmit(DragInteraction.Start())
+            }
+            DisposableEffect(drag) {
+                val entry = 15L to drag
+                emitPress.add(entry)
+                onDispose { emitPress.remove(entry) }
+            }
+        }
+    }
+    // The card `animateElevation` probe — `propGetters` keys are flat, so
+    // only `card0` registers, matching the Slint side's forwarding.
+    if (widget.clickable && elementId == "card0") {
+        val shadowElevation =
+            cardShadowElevationProbe(interactionSource, cardElevationLevels(widget.kind), widget.enabled)
+        tracer.propGetters["shadow_elevation"] = { shadowElevation.value.toDouble() }
+    }
+    val textId = "text:$textBase"
+    val style = androidx.compose.material3.MaterialTheme.typography.bodyLarge
+    val content: @Composable androidx.compose.foundation.layout.ColumnScope.() -> Unit = {
+        widget.text?.let {
+            Text(
+                it,
+                style = style,
+                modifier = Modifier.trackText(tracer, textId, density),
+                onTextLayout = recordTextLayout(
+                    tracer,
+                    textId,
+                    LocalDensity.current,
+                    androidx.compose.ui.platform.LocalFontFamilyResolver.current,
+                    style.fontFamily,
+                ),
+            )
+        }
+    }
+    val modifier = Modifier.offset(widget.x.dp, widget.y.dp)
+        .width(widget.width.dp)
+        .height(widget.height.dp)
+        .track(tracer, elementId)
+    if (widget.clickable) {
+        when (widget.kind) {
+            "elevated-card" -> ElevatedCard(
+                onClick = {},
+                modifier = modifier,
+                enabled = widget.enabled,
+                interactionSource = interactionSource,
+                content = content,
+            )
+            "filled-card" -> Card(
+                onClick = {},
+                modifier = modifier,
+                enabled = widget.enabled,
+                interactionSource = interactionSource,
+                content = content,
+            )
+            else -> OutlinedCard(
+                onClick = {},
+                modifier = modifier,
+                enabled = widget.enabled,
+                interactionSource = interactionSource,
+                content = content,
+            )
+        }
+    } else {
+        when (widget.kind) {
+            "elevated-card" -> ElevatedCard(modifier = modifier, content = content)
+            "filled-card" -> Card(modifier = modifier, content = content)
+            else -> OutlinedCard(modifier = modifier, content = content)
+        }
+    }
+}
+
+private class CardElevationLevels(
+    val default: Dp,
+    val pressed: Dp,
+    val focused: Dp,
+    val hovered: Dp,
+    val dragged: Dp,
+    val disabled: Dp,
+)
+
+/** The `*CardElevation` tables — `CardDefaults.elevatedCardElevation()` /
+ * `cardElevation()` / `outlinedCardElevation()` resolved against the
+ * `*CardTokens` at the pin. */
+private fun cardElevationLevels(kind: String): CardElevationLevels =
+    when (kind) {
+        "elevated-card" -> CardElevationLevels(1.dp, 1.dp, 1.dp, 3.dp, 8.dp, 1.dp)
+        "filled-card" -> CardElevationLevels(0.dp, 0.dp, 0.dp, 1.dp, 6.dp, 0.dp)
+        else -> CardElevationLevels(0.dp, 0.dp, 0.dp, 0.dp, 6.dp, 0.dp)
+    }
+
+/** `shadow_elevation` probe — mirrors `animateElevation` in `CardElevation`
+ * (Card.kt at the pin) on the same interaction stream: the
+ * `lastOrNull` winner, `ElevationDefaults`' 120ms `FastOutSlowInEasing`
+ * incoming and 150/120ms `OutgoingSpecEasing` outgoing, `snapTo` on
+ * `enabled = false`. `propGetters` keys are flat, so only `card0`
+ * registers — the same element the Slint side forwards to its case root. */
+@Composable
+private fun cardShadowElevationProbe(
+    interactionSource: androidx.compose.foundation.interaction.InteractionSource,
+    levels: CardElevationLevels,
+    enabled: Boolean,
+): State<Float> {
+    val animatable =
+        remember(interactionSource) {
+            Animatable(if (enabled) levels.default.value else levels.disabled.value, Float.VectorConverter)
+        }
+    var lastTargetInteraction by remember { mutableStateOf<Interaction?>(null) }
+
+    fun Interaction?.targetElevation(): Float =
+        when (this) {
+            is PressInteraction.Press -> levels.pressed.value
+            is HoverInteraction.Enter -> levels.hovered.value
+            is FocusInteraction.Focus -> levels.focused.value
+            is DragInteraction.Start -> levels.dragged.value
+            else -> levels.default.value
+        }
+
+    LaunchedEffect(interactionSource) {
+        val interactions = mutableListOf<Interaction>()
+        interactionSource.interactions.collect { interaction ->
+            when (interaction) {
+                is HoverInteraction.Enter -> interactions.add(interaction)
+                is HoverInteraction.Exit -> interactions.remove(interaction.enter)
+                is FocusInteraction.Focus -> interactions.add(interaction)
+                is FocusInteraction.Unfocus -> interactions.remove(interaction.focus)
+                is PressInteraction.Press -> interactions.add(interaction)
+                is PressInteraction.Release -> interactions.remove(interaction.press)
+                is PressInteraction.Cancel -> interactions.remove(interaction.press)
+                is DragInteraction.Start -> interactions.add(interaction)
+                is DragInteraction.Stop -> interactions.remove(interaction.start)
+                is DragInteraction.Cancel -> interactions.remove(interaction.start)
+            }
+            val to = interactions.lastOrNull()
+            val from = lastTargetInteraction
+            lastTargetInteraction = to
+            val target = if (!enabled) levels.disabled.value else to.targetElevation()
+            if (animatable.targetValue != target) {
+                launch {
+                    val spec =
+                        when {
+                            to != null -> TweenSpec<Float>(120, easing = FastOutSlowInEasing)
+                            from is HoverInteraction.Enter ||
+                                from is PressInteraction.Press ||
+                                from is DragInteraction.Start ||
+                                from is FocusInteraction.Focus ->
+                                TweenSpec(
+                                    if (from is HoverInteraction.Enter) 120 else 150,
+                                    easing = CubicBezierEasing(0.4f, 0f, 0.6f, 1f),
+                                )
+                            else -> null
+                        }
+                    if (spec != null) animatable.animateTo(target, spec)
+                    else animatable.snapTo(target)
+                }
+            }
+        }
+    }
+    return animatable.asState()
 }
 
 /** Flips once the frame-sink press lands — the same slot the bare `Press`
