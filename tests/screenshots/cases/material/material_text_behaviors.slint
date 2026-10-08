@@ -1,0 +1,121 @@
+// Copyright © SixtyFPS GmbH <info@slint.dev>
+// SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0
+
+// Scene: material-text-behaviors — generated from `ui-libraries/material/parity/scenes/material-text-behaviors.json`
+// (edit the scene, regenerate with `cargo run -p material-parity-generator`).
+//PARITY=xfail: Compose keeps text at its natural font metrics while slint's `line-height` hard-sets the line box and parley splits the leading half above/half below, so glyph ink lands ~1-3px off vertically inside its cells and element h differs; width-constrained text reports the constraint width as its element w rather than the laid-out advance the w check compares against; parley also appends letter-spacing after the trailing cluster.
+//SIZE=360x400
+//TRACE_ELEMENTS=text0,text1,text2,text3,text4,text5,text6,text7,text8,text9,text10,text11
+//DENSITIES=1,2
+import "../../fonts/Roboto-VariableFont.ttf";
+import { MaterialPalette, MaterialText, MaterialTheme, MaterialWindow } from "@material";
+
+export component TestCase inherits MaterialWindow {
+    init => {
+        // The scene pins seed #6750A4, tonal-spot, spec2025, light, contrast 0
+        // (all the library defaults; restated here so a default change can't
+        // silently move the parity baseline).
+        MaterialTheme.seed-color = #6750A4;
+        MaterialTheme.dark = false;
+        MaterialTheme.contrast-level = 0;
+        MaterialTheme.use-platform-color = false;
+        MaterialTheme.plain-family = "Roboto";
+        MaterialTheme.brand-family = "Roboto";
+        // Compose builds its scene scheme from the same seed — use the
+        // runtime-generated scheme, not the static expressive table.
+        MaterialPalette.dynamic = true;
+    }
+
+    text0 := MaterialText {
+        x: 16px;
+        y: 12px;
+        text: "Default body large";
+    }
+
+    text1 := MaterialText {
+        x: 16px;
+        y: 40px;
+        text: "Primary colored";
+        color: MaterialPalette.primary;
+    }
+
+    text2 := MaterialText {
+        x: 16px;
+        y: 68px;
+        text: "Error colored";
+        color: MaterialPalette.error;
+    }
+
+    text3 := MaterialText {
+        x: 16px;
+        y: 96px;
+        text: "Centered text";
+        width: 328px;
+        horizontal-alignment: center;
+    }
+
+    text4 := MaterialText {
+        x: 16px;
+        y: 124px;
+        text: "End aligned text";
+        width: 328px;
+        horizontal-alignment: end;
+    }
+
+    text5 := MaterialText {
+        x: 16px;
+        y: 152px;
+        text: "A long line that gets elided";
+        width: 120px;
+        overflow: elide;
+        wrap: no-wrap;
+    }
+
+    text6 := MaterialText {
+        x: 16px;
+        y: 180px;
+        text: "A long line that gets clipped";
+        width: 120px;
+        overflow: clip;
+        wrap: no-wrap;
+    }
+
+    text7 := MaterialText {
+        x: 16px;
+        y: 208px;
+        text: "Soft wrap makes this line break into two";
+        width: 120px;
+        wrap: word-wrap;
+    }
+
+    text8 := MaterialText {
+        x: 16px;
+        y: 254px;
+        text: "Clamped to one line even though it wraps";
+        width: 120px;
+        max-lines: 1;
+        wrap: word-wrap;
+    }
+
+    text9 := MaterialText {
+        x: 16px;
+        y: 282px;
+        text: "Min";
+        min-lines: 3;
+    }
+
+    text10 := MaterialText {
+        x: 16px;
+        y: 352px;
+        text: "Underlined";
+        font-underline: true;
+    }
+
+    text11 := MaterialText {
+        x: 160px;
+        y: 352px;
+        text: "Struck through";
+        font-strikeout: true;
+    }
+
+}

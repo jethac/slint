@@ -1,0 +1,100 @@
+// Copyright © SixtyFPS GmbH <info@slint.dev>
+// SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0
+
+// The preferred height of a Text with `min-lines` set never drops below that many line
+// heights, whether the text has fewer lines or none at all; a text that already has more
+// lines is unaffected. The layouts below size the elements to their preferred size.
+//
+// The first group uses the fixed test font (every glyph is 10phx x 10phx) for exact
+// geometry. The second group goes through the real (parley) text layout with the imported
+// Inter font, asserting the same properties relative to unlimited reference elements.
+
+import "../../../demos/printerdemo/ui/fonts/Inter-24pt-Regular.ttf";
+
+export component TestCase inherits Window {
+    width: 500phx;
+    height: 300phx;
+    default-font-size: 10px;
+    default-font-family: "FixedTestFont";
+
+    VerticalLayout {
+        alignment: start;
+        short := Text {
+            min-lines: 3;
+            text: "One";
+        }
+        empty := Text {
+            min-lines: 2;
+        }
+        one-line := Text {
+            min-lines: 1;
+            text: "One\nTwo\nThree";
+        }
+        not-reached := Text {
+            min-lines: 2;
+            text: "One\nTwo\nThree";
+        }
+        disabled := Text {
+            min-lines: -1;
+            text: "One";
+        }
+    }
+
+    VerticalLayout {
+        x: 150phx;
+        alignment: start;
+        parley-short := Text {
+            font-family: "Inter 24pt";
+            min-lines: 3;
+            text: "One";
+        }
+        parley-reference := Text {
+            font-family: "Inter 24pt";
+            text: "One\nTwo\nThree";
+        }
+        parley-one-line := Text {
+            font-family: "Inter 24pt";
+            text: "One";
+        }
+        parley-not-reached := Text {
+            font-family: "Inter 24pt";
+            min-lines: 2;
+            text: "One\nTwo\nThree";
+        }
+    }
+
+    out property <bool> test-fixed-font: short.height == 30phx
+        && empty.height == 20phx
+        && one-line.height == 30phx
+        && not-reached.height == 30phx
+        && disabled.height == 10phx;
+
+    out property <bool> test-parley: parley-short.height == parley-reference.height
+        && parley-short.height > parley-one-line.height
+        // A minimum the text already reaches leaves the size unchanged.
+        && parley-not-reached.height == parley-reference.height;
+
+    out property <bool> test: test-fixed-font && test-parley;
+}
+
+/*
+```rust
+let instance = TestCase::new().unwrap();
+assert!(instance.get_test_fixed_font());
+assert!(instance.get_test_parley());
+```
+
+```cpp
+auto handle = TestCase::create();
+const TestCase &instance = *handle;
+assert(instance.get_test_fixed_font());
+assert(instance.get_test_parley());
+```
+
+```js
+let instance = new slint.TestCase({});
+assert(instance.test_fixed_font);
+assert(instance.test_parley);
+```
+
+*/
