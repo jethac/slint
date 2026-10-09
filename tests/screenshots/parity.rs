@@ -1628,37 +1628,35 @@ fn compare_text_metrics(
             continue;
         }
         // `text:<n>` keys sorted numerically — document order, so they line
-        // up with the `Text` handles' tree order. Entries the viewport
-        // clipped to an empty rect are dropped first, and so are the Slint
-        // texts whose `visible_bounds` is empty (invisible items report a
-        // zero intersection the same way) — the pairing is visible-only on
-        // both sides.
+        // up with the traced `Text` elements' tree order. Both sides emit
+        // an entry per Text in the scene — zeros while the node is unplaced
+        // or culled — so `text:<n>` pairs with the n-th traced Slint text
+        // directly, not with the n-th *visible* one: the reveal stagger can
+        // place a node on one side a frame before the other (issue #27),
+        // and index pairing keeps comparing the same node instead of
+        // shifting the whole tail.
         let mut entries: Vec<(u64, &serde_json::Value)> = texts
             .iter()
             .filter_map(|(k, v)| {
                 let n: u64 = k.strip_prefix("text:")?.parse().ok()?;
-                (v["w"].as_f64().unwrap_or_default() > 0.0
-                    && v["h"].as_f64().unwrap_or_default() > 0.0)
-                    .then_some((n, v))
+                Some((n, v))
             })
             .collect();
         entries.sort_by_key(|(n, _)| *n);
-        let visible_texts: Vec<&[f64; 5]> =
-            frame.texts.iter().filter(|t| t[2] > 0.0 && t[3] > 0.0).collect();
-        if entries.len() != visible_texts.len() {
+        if entries.len() != frame.texts.len() {
             errors.push(format!(
-                "t={}ms: {} visible compose texts vs {} Slint Text elements",
+                "t={}ms: {} compose texts vs {} Slint Text elements",
                 frame.t_ms,
                 entries.len(),
-                visible_texts.len()
+                frame.texts.len()
             ));
         }
-        for (i, (n, m)) in entries.iter().enumerate() {
-            let Some(&[sx, sy, sw_clip, sh, sw]) = visible_texts.get(i).copied() else {
+        for (n, m) in entries.iter() {
+            let Some(&[sx, sy, sw_clip, sh, sw]) = frame.texts.get(*n as usize) else {
                 errors.push(format!(
                     "t={}ms text:{n}: no Slint Text element ({} found)",
                     frame.t_ms,
-                    visible_texts.len()
+                    frame.texts.len()
                 ));
                 continue;
             };
@@ -1813,8 +1811,30 @@ fn compare_text_metrics(
             let (slint_off, compose_off) = if multi_line {
                 (None, None)
             } else if let Some(container) = item_container {
+                // The Slint counterpart is the `*item*` element holding
+                // the text's midpoint — looked up in the Slint trace
+                // rather than by the Compose name, since the sides number
+                // clipped-away items differently. The item's own clip
+                // applies to its x too: an `item{i}` scrolled partly out
+                // of its row reports unclipped bounds while Compose gives
+                // the clipped left edge, so clamp to the row's x.
+                let slint_item = frame.elements.iter().find_map(|(eid, g)| {
+                    parse_item_ref(eid)?;
+                    let (mx, my) = (sx + sw_clip / 2.0, sy + sh / 2.0);
+                    (mx >= g[0] && mx <= g[0] + g[2] && my >= g[1] && my <= g[1] + g[3])
+                        .then_some(eid.as_str())
+                });
                 (
-                    frame.elements.get(&container).map(|g| sx - g[0]),
+                    slint_item
+                        .and_then(|eid| frame.elements.get_key_value(eid))
+                        .or_else(|| frame.elements.get_key_value(&container))
+                        .map(|(eid, g)| {
+                            let clip_x = parse_item_ref(eid)
+                                .and_then(|(row, _)| frame.elements.get(&row))
+                                .map(|r| r[0])
+                                .unwrap_or(f64::NEG_INFINITY);
+                            sx - g[0].max(clip_x)
+                        }),
                     cf["elements"]
                         .get(&container)
                         .and_then(|ce| ce["x"].as_f64())
@@ -2277,11 +2297,12 @@ fn build_frame_mask<C: i_slint_core::api::ComponentHandle>(
             PixelClass::Text,
         );
     }
-    // Editable text is the same drift class as `Text` — its ink shifts with
-    // the advance quantization the `Text` layer exists for — but a
-    // `TextInput`'s bounds are its field's whole interior, not the ink.
-    // Mark the bounds shrunk by 4dp so a field's border and padding
-    // ring stay strict while the centered ink gets per-cell checks.
+    // `TextInput` ink is the same drift class as `Text` — the advance
+    // quantization the `Text` layer exists for — so its bounds join the
+    // mask with the same dilation. Shrinking would push edge-hugging ink
+    // into the strict layer: text starts at the bounds' leading edge.
+    // A field's border and padding ring stay strict because they lie
+    // outside the `TextInput` bounds altogether.
     for handle in i_slint_backend_testing::ElementQuery::from_root(component)
         .match_inherits("TextInput")
         .find_all()
@@ -2295,7 +2316,7 @@ fn build_frame_mask<C: i_slint_core::api::ComponentHandle>(
                 x1: (p.x + s.width) as f64 * d,
                 y1: (p.y + s.height) as f64 * d,
             }
-            .dilated(-4.0 * d),
+            .dilated(text_dilate),
             PixelClass::Text,
         );
     }
@@ -2889,14 +2910,13 @@ pub fn run_parity_case<C: i_slint_core::api::ComponentHandle>(
             // (density-scaled like the xfail relaxation) for platform
             // rasterization drift that stays under the strict bound on the
             // reference platform but passes it on another.
-            let text_cell_eps = spec
-                .text_eps
-                .map(|e| e as f64 * *density as f64)
-                .unwrap_or(if xfail_text.is_some() {
+            let text_cell_eps = spec.text_eps.map(|e| e as f64 * *density as f64).unwrap_or(
+                if xfail_text.is_some() {
                     TEXT_CELL_EPS * 2.0 * *density as f64 * spec.xfail_text_scale
                 } else {
                     TEXT_CELL_EPS
-                });
+                },
+            );
             let result =
                 layered_compare(&actual, &expected, Some(&mask), pixel_eps, region, text_cell_eps);
             strict_caught += result.strict_failures;
