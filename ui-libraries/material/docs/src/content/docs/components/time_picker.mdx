@@ -1,10 +1,203 @@
 ---
-title: TimePickerPopup
-description: TimePickerPopup API.
+title: TimePicker
+description: TimePicker, TimeInput, TimeScroll, TimePickerDialog, and VibrantTimePickerDialog API.
 ---
 
 import CodeSnippetMD from '@slint/common-files/src/components/CodeSnippetMD.astro';
 import SlintProperty from '@slint/common-files/src/components/SlintProperty.astro';
+
+`TimePicker` lets the user select a time on a clock dial, matching the Material 3 Expressive time picker. `TimeInput` covers the keyboard-input presentation, `TimeScroll` the roller-wheel presentation, and `TimePickerDialog` / `VibrantTimePickerDialog` host them in a modal dialog.
+
+## TimePicker
+
+<CodeSnippetMD imagePath="/src/assets/generated/time_picker.png" scale="2" imageWidth="400" imageHeight="560" imageAlt="">
+```slint
+import { TimePicker } from "@material";
+export component Example inherits Window {
+    width: 400px;
+    height: 560px;
+    background: transparent;
+
+    TimePicker {
+        x: (parent.width - self.width) / 2;
+        y: (parent.height - self.height) / 2;
+        hour: 10;
+        minute: 30;
+    }
+}
+```
+</CodeSnippetMD>
+
+The dial edits whichever display field is `selection`; tapping a display field or the AM/PM segment moves the selector. Drag or tap the dial to pick, or step the value with the arrow keys.
+
+### Properties
+
+### hour / minute
+<SlintProperty propName="hour" typeName="int">
+<SlintProperty propName="minute" typeName="int">
+The currently displayed time, read and written together with `selection`.
+</SlintProperty>
+</SlintProperty>
+
+### use-24-hour-format
+<SlintProperty propName="use_24_hour_format" typeName="bool" defaultValue="false">
+Hides the AM/PM toggle and shows values 0–11 on the outer ring and 12–23 on the inner ring.
+</SlintProperty>
+
+### layout-type
+<SlintProperty propName="layout_type" typeName="enum" enumName="TimePickerLayoutType" defaultValue="vertical">
+`vertical` stacks the display over the dial; `horizontal` places them side by side.
+</SlintProperty>
+
+### selection
+<SlintProperty propName="selection" typeName="enum" enumName="TimePickerSelection" defaultValue="hour">
+Which display field the dial edits — `hour` or `minute`.
+</SlintProperty>
+
+### vibrant
+<SlintProperty propName="vibrant" typeName="bool" defaultValue="false">
+Uses the vibrant container colors (`SurfaceContainerLowest` dial, smaller display fields).
+</SlintProperty>
+
+### Callbacks
+
+### hour-changed(int) / minute-changed(int) / selection-changed(TimePickerSelection)
+Invoked as the user edits the hour, minute, or active field.
+
+## TimeInput
+
+<CodeSnippetMD imagePath="/src/assets/generated/time_input.png" scale="2" imageWidth="400" imageHeight="240" imageAlt="">
+```slint
+import { TimeInput } from "@material";
+export component Example inherits Window {
+    width: 400px;
+    height: 240px;
+    background: transparent;
+
+    TimeInput {
+        x: (parent.width - self.width) / 2;
+        y: (parent.height - self.height) / 2;
+        hour: 10;
+        minute: 30;
+    }
+}
+```
+</CodeSnippetMD>
+
+`TimeInput` presents the hour and minute as text fields with the AM/PM outlined-button group underneath — the `input` display mode of the upstream time picker.
+
+### Properties
+
+`TimeInput` shares `hour`, `minute`, `use-24-hour-format`, `selection`, and `vibrant` with `TimePicker`, plus `hour-label` and `minute-label` for the field labels.
+
+### Callbacks
+
+`hour-changed(int)`, `minute-changed(int)`, and `selection-changed(TimePickerSelection)`, same as `TimePicker`.
+
+## TimeScroll
+
+<CodeSnippetMD imagePath="/src/assets/generated/time_scroll.png" scale="2" imageWidth="340" imageHeight="240" imageAlt="">
+```slint
+import { TimeScroll } from "@material";
+export component Example inherits Window {
+    width: 340px;
+    height: 240px;
+    background: transparent;
+
+    TimeScroll {
+        x: (parent.width - self.width) / 2;
+        y: (parent.height - self.height) / 2;
+        hour: 10;
+        minute: 30;
+    }
+}
+```
+</CodeSnippetMD>
+
+`TimeScroll` is the roller-wheel presentation (`display_mode == scroll` upstream): each field is a vertical wheel of values with the selected one centered and highlighted.
+
+### Properties
+
+`TimeScroll` shares `hour`, `minute`, and `use-24-hour-format` with `TimePicker`, plus `has-toggle` to show the AM/PM column.
+
+### Callbacks
+
+`hour-changed(int)` and `minute-changed(int)`.
+
+## TimePickerDialog / VibrantTimePickerDialog
+
+<CodeSnippetMD imagePath="" noScreenShot scale="2" imageWidth="300" imageHeight="200" imageAlt="">
+```slint
+import { FilledButton, TimePicker, TimePickerDialog } from "@material";
+export component Example inherits Window {
+    width: 400px;
+    height: 600px;
+
+    button := FilledButton {
+        text: @tr("Open Time Picker");
+
+        clicked => {
+            dialog.show();
+        }
+    }
+
+    dialog := TimePickerDialog {
+        x: -root.absolute_position.x;
+        y: -root.absolute_position.y;
+        width: root.width;
+        height: root.height;
+        show_mode_toggle: true;
+
+        TimePicker {
+            hour: 10;
+            minute: 30;
+        }
+
+        confirm_clicked => {
+            dialog.close();
+        }
+        dismiss_clicked => {
+            dialog.close();
+        }
+    }
+}
+```
+</CodeSnippetMD>
+
+`TimePickerDialog` is the modal surface (level-3 elevation, `extraLarge` shape, scrim) that hosts a `TimePicker`, `TimeInput`, or `TimeScroll` child, plus the Cancel/OK action row and the optional display-mode toggle icon. `VibrantTimePickerDialog` is the vibrant variant of the same surface.
+
+### Properties
+
+### title
+<SlintProperty propName="title" typeName="string" defaultValue='"Select Time" / "Enter Time"'>
+The supporting text above the picker. Defaults to the upstream strings for the active `display-mode`.
+</SlintProperty>
+
+### dismiss-text / confirm-text / confirm-enabled
+<SlintProperty propName="dismiss_text" typeName="string" defaultValue='"Cancel"'>
+<SlintProperty propName="confirm_text" typeName="string" defaultValue='"OK"'>
+<SlintProperty propName="confirm_enabled" typeName="bool" defaultValue="true">
+The action row labels and whether the confirm action is enabled.
+</SlintProperty>
+</SlintProperty>
+</SlintProperty>
+
+### show-mode-toggle
+<SlintProperty propName="show_mode_toggle" typeName="bool" defaultValue="false">
+Shows the display-mode icon button at the start of the actions row.
+</SlintProperty>
+
+### display-mode
+<SlintProperty propName="display_mode" typeName="enum" enumName="TimePickerDisplayMode" defaultValue="picker">
+Drives the title text and the toggle icon — `picker`, `input`, or `scroll`.
+</SlintProperty>
+
+### Callbacks
+
+### confirm-clicked / dismiss-clicked / mode-toggle-clicked / dismissed
+`mode-toggle-clicked` asks the caller to flip `display-mode`; `dismissed` fires for every dismissal path (Cancel, scrim tap, Escape).
+
+## TimePickerPopup
 
 <CodeSnippetMD imagePath="" noScreenShot scale="3" imageWidth="300" imageHeight="200" imageAlt="">
 ```slint
@@ -32,9 +225,9 @@ export component Example inherits Window {
 ```
 </CodeSnippetMD>
 
-A `TimePicker` allows users to select a time using a clock interface or text input.
+`TimePickerPopup` is the self-contained variant kept for compatibility: it embeds the picker, input mode, actions, and AM/PM handling internally and reports the result through `ok` / `cancel-clicked`.
 
-## Properties
+### Properties
 
 ### time
 <SlintProperty propName="time" typeName="struct" structName="Time" >

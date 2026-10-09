@@ -1,0 +1,48 @@
+{
+  "densities": [
+    1,
+    2
+  ],
+  "fonts": {
+    "brand": "Roboto",
+    "plain": "Roboto"
+  },
+  "mask_decor": {
+    "picker0": {
+      "margin": 4,
+      "times": [
+        2000
+      ]
+    }
+  },
+  "name": "time-picker-dark",
+  "parity": "static",
+  "size": [
+    400,
+    560
+  ],
+  "theme": {
+    "contrast": 0.0,
+    "dark": true,
+    "platform": "phone",
+    "seed": "6750A4",
+    "spec": "spec2025",
+    "variant": "tonal-spot"
+  },
+  "trace_elements": [
+    "picker0"
+  ],
+  "trace_items": {},
+  "trace_props": [],
+  "type": "canvas",
+  "widgets": [
+    {
+      "hour": 10,
+      "kind": "time-picker",
+      "minute": 30
+    }
+  ],
+  "xfail_text": "issue #28: Slint ceils text layout widths where Compose keeps fractional advances",
+  "parity_eps": 12,
+  "parity_eps_reason": "llvmpipe coverage rasterization lands the dial circle's flattest bottom arc ~9-10 channels off the Compose reference on 2-6 edge pixels at 2x; skia/software/vello_cpu match within the default 8 - AA sampling noise on a near-horizontal curve, not geometry"
+}

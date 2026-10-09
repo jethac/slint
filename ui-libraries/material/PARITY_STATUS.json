@@ -1071,32 +1071,32 @@
       11
     ],
     "needs": "none",
-    "notes": "",
-    "status": "missing"
+    "notes": "slint component: TimeInput; tokens: generated component tokens",
+    "status": "done"
   },
   "TimePicker": {
     "issues": [
       11
     ],
     "needs": "none",
-    "notes": "slint component: TimePickerPopup",
-    "status": "partial"
+    "notes": "slint component: TimePicker; tokens: generated component tokens",
+    "status": "done"
   },
   "TimePickerDialog": {
     "issues": [
       11
     ],
     "needs": "none",
-    "notes": "",
-    "status": "missing"
+    "notes": "slint component: TimePickerDialog; tokens: generated component tokens",
+    "status": "done"
   },
   "TimeScroll": {
     "issues": [
       11
     ],
     "needs": "none",
-    "notes": "",
-    "status": "missing"
+    "notes": "slint component: TimeScroll; tokens: generated component tokens",
+    "status": "done"
   },
   "ToggleButton": {
     "issues": [
@@ -1199,8 +1199,8 @@
       11
     ],
     "needs": "none",
-    "notes": "",
-    "status": "missing"
+    "notes": "slint component: VibrantTimePickerDialog; tokens: generated component tokens",
+    "status": "done"
   },
   "WideNavigationRail": {
     "issues": [

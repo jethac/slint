@@ -2254,25 +2254,6 @@ fn build_frame_mask<C: i_slint_core::api::ComponentHandle>(
             PixelClass::Text,
         );
     }
-    // `TextInput` ink is the same drift class as `Text`: it does not inherit
-    // `Text`, so its editable value/placeholder pixels need their own mask.
-    for handle in i_slint_backend_testing::ElementQuery::from_root(component)
-        .match_inherits("TextInput")
-        .find_all()
-    {
-        let p = handle.absolute_position();
-        let s = handle.size();
-        mask.fill_rect(
-            PxRect {
-                x0: p.x as f64 * d,
-                y0: p.y as f64 * d,
-                x1: (p.x + s.width) as f64 * d,
-                y1: (p.y + s.height) as f64 * d,
-            }
-            .dilated(text_dilate),
-            PixelClass::Text,
-        );
-    }
     // Rasterized icon content inside fixed bounds is the same drift class as
     // text: a centered icon's position carries half the label's width drift,
     // so per-cell checks apply instead of the strict layer.
@@ -2290,6 +2271,28 @@ fn build_frame_mask<C: i_slint_core::api::ComponentHandle>(
                 y1: (p.y + s.height) as f64 * d,
             }
             .dilated(text_dilate),
+            PixelClass::Text,
+        );
+    }
+    // Editable text is the same drift class as `Text` — its ink shifts with
+    // the advance quantization the `Text` layer exists for — but a
+    // `TextInput`'s bounds are its field's whole interior, not the ink.
+    // Mark the bounds shrunk by 4dp so a field's border and padding
+    // ring stay strict while the centered ink gets per-cell checks.
+    for handle in i_slint_backend_testing::ElementQuery::from_root(component)
+        .match_inherits("TextInput")
+        .find_all()
+    {
+        let p = handle.absolute_position();
+        let s = handle.size();
+        mask.fill_rect(
+            PxRect {
+                x0: p.x as f64 * d,
+                y0: p.y as f64 * d,
+                x1: (p.x + s.width) as f64 * d,
+                y1: (p.y + s.height) as f64 * d,
+            }
+            .dilated(-4.0 * d),
             PixelClass::Text,
         );
     }
@@ -2877,13 +2880,20 @@ pub fn run_parity_case<C: i_slint_core::api::ComponentHandle>(
             // the glyph even starts, so the relaxation needs headroom past
             // the single-label 1.25×. At headline sizes with a several-px
             // accumulated shift the moved ink band fills enough of a cell to
-            // double that baseline — `//XFAIL_TEXT=*N` scales the cap per
-            // case.
-            let text_cell_eps = if xfail_text.is_some() {
-                TEXT_CELL_EPS * 2.0 * *density as f64 * spec.xfail_text_scale
-            } else {
-                TEXT_CELL_EPS
-            };
+            // double that baseline — the cap is 2× the base per density,
+            // `//XFAIL_TEXT=*N` scales it per case, and a
+            // `//PARITY_TEXT_EPS=` case overrides the bound outright
+            // (density-scaled like the xfail relaxation) for platform
+            // rasterization drift that stays under the strict bound on the
+            // reference platform but passes it on another.
+            let text_cell_eps = spec
+                .text_eps
+                .map(|e| e as f64 * *density as f64)
+                .unwrap_or(if xfail_text.is_some() {
+                    TEXT_CELL_EPS * 2.0 * *density as f64 * spec.xfail_text_scale
+                } else {
+                    TEXT_CELL_EPS
+                });
             let result =
                 layered_compare(&actual, &expected, Some(&mask), pixel_eps, region, text_cell_eps);
             strict_caught += result.strict_failures;

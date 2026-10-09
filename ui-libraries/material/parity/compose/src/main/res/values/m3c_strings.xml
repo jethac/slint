@@ -123,4 +123,20 @@
     <string name="m3c_wide_navigation_rail_close_rail">"Close rail"</string>
     <!-- Accessibility pane title for the modal rail. -->
     <string name="m3c_wide_navigation_rail_pane_title">"Navigation rail"</string>
+    <!-- Accessibility pane title for the bottom sheet. -->
+    <string name="m3c_bottom_sheet_pane_title">Bottom Sheet</string>
+    <!-- Spoken content description of a button that collapses the bottom sheet. -->
+    <string name="m3c_bottom_sheet_collapse_description">Collapse bottom sheet</string>
+    <!-- Spoken content description of a button that dismisses the bottom sheet. -->
+    <string name="m3c_bottom_sheet_dismiss_description">Dismiss bottom sheet</string>
+    <!-- Spoken content description of the bottom sheet drag handle. -->
+    <string name="m3c_bottom_sheet_drag_handle_description">Drag handle</string>
+    <!-- Spoken content description of a button that expands the bottom sheet. -->
+    <string name="m3c_bottom_sheet_expand_description">Expand bottom sheet</string>
+    <!-- The search bar's default label. -->
+    <string name="m3c_search_bar_search">Search</string>
+    <!-- Spoken announcement that suggestions are available below the search bar. -->
+    <string name="m3c_suggestions_available">Suggestions below</string>
+    <!-- Accessibility pane title for the snackbar. -->
+    <string name="m3c_snackbar_pane_title">Alert</string>
 </resources>

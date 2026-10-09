@@ -1,0 +1,48 @@
+{
+  "densities": [
+    1,
+    2
+  ],
+  "fonts": {
+    "brand": "Roboto",
+    "plain": "Roboto"
+  },
+  "mask_decor": {
+    "picker0": {
+      "margin": 4,
+      "times": [
+        2000
+      ]
+    }
+  },
+  "name": "vibrant-time-picker-dialog",
+  "parity": "static",
+  "size": [
+    500,
+    640
+  ],
+  "theme": {
+    "contrast": 0.0,
+    "dark": false,
+    "platform": "phone",
+    "seed": "6750A4",
+    "spec": "spec2025",
+    "variant": "tonal-spot"
+  },
+  "trace_elements": [
+    "scrim0",
+    "picker0"
+  ],
+  "trace_items": {},
+  "trace_props": [],
+  "type": "canvas",
+  "widgets": [
+    {
+      "hour": 10,
+      "kind": "vibrant-time-picker-dialog",
+      "minute": 30,
+      "show_mode_toggle": true
+    }
+  ],
+  "xfail_text": "issue #28: Slint ceils text layout widths where Compose keeps fractional advances"
+}
