@@ -1,0 +1,9315 @@
+{
+  "times_ms": [
+    2000
+  ],
+  "frames": [
+    {
+      "t_ms": 0,
+      "props": {},
+      "elements": {
+        "tabrow0": {
+          "x": 16,
+          "y": 16,
+          "w": 608,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1": {
+          "x": 16,
+          "y": 80,
+          "w": 608,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2": {
+          "x": 16,
+          "y": 144,
+          "w": 608,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item0": {
+          "x": 16,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item1": {
+          "x": 168,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item2": {
+          "x": 320,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item3": {
+          "x": 472,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item0": {
+          "x": 16,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item1": {
+          "x": 168,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item2": {
+          "x": 320,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item3": {
+          "x": 472,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2item0": {
+          "x": 16,
+          "y": 144,
+          "w": 202.5,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2item1": {
+          "x": 218.5,
+          "y": 144,
+          "w": 202.5,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2item2": {
+          "x": 421,
+          "y": 144,
+          "w": 202.5,
+          "h": 48,
+          "opacity": 1
+        }
+      },
+      "text": {
+        "text:0": {
+          "x": 62.5,
+          "y": 30,
+          "w": 59,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 59,
+          "unhint_w": 58.1875,
+          "chars": 8
+        },
+        "text:1": {
+          "x": 224.5,
+          "y": 30,
+          "w": 39.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 39.5,
+          "unhint_w": 38.8125,
+          "chars": 5
+        },
+        "text:10": {
+          "x": 520,
+          "y": 158,
+          "w": 36.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 36.5,
+          "unhint_w": 35.6875,
+          "chars": 5
+        },
+        "text:2": {
+          "x": 369.5,
+          "y": 30,
+          "w": 53.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 53.5,
+          "unhint_w": 52.4375,
+          "chars": 7
+        },
+        "text:3": {
+          "x": 536.5,
+          "y": 30,
+          "w": 23.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 23.5,
+          "unhint_w": 23.1875,
+          "chars": 3
+        },
+        "text:4": {
+          "x": 80,
+          "y": 94,
+          "w": 24.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 24.5,
+          "unhint_w": 23.6875,
+          "chars": 3
+        },
+        "text:5": {
+          "x": 226,
+          "y": 94,
+          "w": 36,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 36,
+          "unhint_w": 34.75,
+          "chars": 4
+        },
+        "text:6": {
+          "x": 375.5,
+          "y": 94,
+          "w": 41.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 41.5,
+          "unhint_w": 40.875,
+          "chars": 5
+        },
+        "text:7": {
+          "x": 533.5,
+          "y": 94,
+          "w": 29,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 29,
+          "unhint_w": 28.4375,
+          "chars": 4
+        },
+        "text:8": {
+          "x": 121,
+          "y": 158,
+          "w": 25,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 25,
+          "unhint_w": 24.25,
+          "chars": 4
+        },
+        "text:9": {
+          "x": 307,
+          "y": 158,
+          "w": 57.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 57.5,
+          "unhint_w": 56.6875,
+          "chars": 8
+        }
+      }
+    },
+    {
+      "t_ms": 50,
+      "props": {},
+      "elements": {
+        "tabrow0": {
+          "x": 16,
+          "y": 16,
+          "w": 608,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1": {
+          "x": 16,
+          "y": 80,
+          "w": 608,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2": {
+          "x": 16,
+          "y": 144,
+          "w": 608,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item0": {
+          "x": 16,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item1": {
+          "x": 168,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item2": {
+          "x": 320,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item3": {
+          "x": 472,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item0": {
+          "x": 16,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item1": {
+          "x": 168,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item2": {
+          "x": 320,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item3": {
+          "x": 472,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2item0": {
+          "x": 16,
+          "y": 144,
+          "w": 202.5,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2item1": {
+          "x": 218.5,
+          "y": 144,
+          "w": 202.5,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2item2": {
+          "x": 421,
+          "y": 144,
+          "w": 202.5,
+          "h": 48,
+          "opacity": 1
+        }
+      },
+      "text": {
+        "text:0": {
+          "x": 62.5,
+          "y": 30,
+          "w": 59,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 59,
+          "unhint_w": 58.1875,
+          "chars": 8
+        },
+        "text:1": {
+          "x": 224.5,
+          "y": 30,
+          "w": 39.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 39.5,
+          "unhint_w": 38.8125,
+          "chars": 5
+        },
+        "text:10": {
+          "x": 520,
+          "y": 158,
+          "w": 36.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 36.5,
+          "unhint_w": 35.6875,
+          "chars": 5
+        },
+        "text:2": {
+          "x": 369.5,
+          "y": 30,
+          "w": 53.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 53.5,
+          "unhint_w": 52.4375,
+          "chars": 7
+        },
+        "text:3": {
+          "x": 536.5,
+          "y": 30,
+          "w": 23.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 23.5,
+          "unhint_w": 23.1875,
+          "chars": 3
+        },
+        "text:4": {
+          "x": 80,
+          "y": 94,
+          "w": 24.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 24.5,
+          "unhint_w": 23.6875,
+          "chars": 3
+        },
+        "text:5": {
+          "x": 226,
+          "y": 94,
+          "w": 36,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 36,
+          "unhint_w": 34.75,
+          "chars": 4
+        },
+        "text:6": {
+          "x": 375.5,
+          "y": 94,
+          "w": 41.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 41.5,
+          "unhint_w": 40.875,
+          "chars": 5
+        },
+        "text:7": {
+          "x": 533.5,
+          "y": 94,
+          "w": 29,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 29,
+          "unhint_w": 28.4375,
+          "chars": 4
+        },
+        "text:8": {
+          "x": 121,
+          "y": 158,
+          "w": 25,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 25,
+          "unhint_w": 24.25,
+          "chars": 4
+        },
+        "text:9": {
+          "x": 307,
+          "y": 158,
+          "w": 57.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 57.5,
+          "unhint_w": 56.6875,
+          "chars": 8
+        }
+      }
+    },
+    {
+      "t_ms": 100,
+      "props": {},
+      "elements": {
+        "tabrow0": {
+          "x": 16,
+          "y": 16,
+          "w": 608,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1": {
+          "x": 16,
+          "y": 80,
+          "w": 608,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2": {
+          "x": 16,
+          "y": 144,
+          "w": 608,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item0": {
+          "x": 16,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item1": {
+          "x": 168,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item2": {
+          "x": 320,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item3": {
+          "x": 472,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item0": {
+          "x": 16,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item1": {
+          "x": 168,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item2": {
+          "x": 320,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item3": {
+          "x": 472,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2item0": {
+          "x": 16,
+          "y": 144,
+          "w": 202.5,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2item1": {
+          "x": 218.5,
+          "y": 144,
+          "w": 202.5,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2item2": {
+          "x": 421,
+          "y": 144,
+          "w": 202.5,
+          "h": 48,
+          "opacity": 1
+        }
+      },
+      "text": {
+        "text:0": {
+          "x": 62.5,
+          "y": 30,
+          "w": 59,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 59,
+          "unhint_w": 58.1875,
+          "chars": 8
+        },
+        "text:1": {
+          "x": 224.5,
+          "y": 30,
+          "w": 39.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 39.5,
+          "unhint_w": 38.8125,
+          "chars": 5
+        },
+        "text:10": {
+          "x": 520,
+          "y": 158,
+          "w": 36.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 36.5,
+          "unhint_w": 35.6875,
+          "chars": 5
+        },
+        "text:2": {
+          "x": 369.5,
+          "y": 30,
+          "w": 53.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 53.5,
+          "unhint_w": 52.4375,
+          "chars": 7
+        },
+        "text:3": {
+          "x": 536.5,
+          "y": 30,
+          "w": 23.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 23.5,
+          "unhint_w": 23.1875,
+          "chars": 3
+        },
+        "text:4": {
+          "x": 80,
+          "y": 94,
+          "w": 24.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 24.5,
+          "unhint_w": 23.6875,
+          "chars": 3
+        },
+        "text:5": {
+          "x": 226,
+          "y": 94,
+          "w": 36,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 36,
+          "unhint_w": 34.75,
+          "chars": 4
+        },
+        "text:6": {
+          "x": 375.5,
+          "y": 94,
+          "w": 41.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 41.5,
+          "unhint_w": 40.875,
+          "chars": 5
+        },
+        "text:7": {
+          "x": 533.5,
+          "y": 94,
+          "w": 29,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 29,
+          "unhint_w": 28.4375,
+          "chars": 4
+        },
+        "text:8": {
+          "x": 121,
+          "y": 158,
+          "w": 25,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 25,
+          "unhint_w": 24.25,
+          "chars": 4
+        },
+        "text:9": {
+          "x": 307,
+          "y": 158,
+          "w": 57.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 57.5,
+          "unhint_w": 56.6875,
+          "chars": 8
+        }
+      }
+    },
+    {
+      "t_ms": 150,
+      "props": {},
+      "elements": {
+        "tabrow0": {
+          "x": 16,
+          "y": 16,
+          "w": 608,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1": {
+          "x": 16,
+          "y": 80,
+          "w": 608,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2": {
+          "x": 16,
+          "y": 144,
+          "w": 608,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item0": {
+          "x": 16,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item1": {
+          "x": 168,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item2": {
+          "x": 320,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item3": {
+          "x": 472,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item0": {
+          "x": 16,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item1": {
+          "x": 168,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item2": {
+          "x": 320,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item3": {
+          "x": 472,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2item0": {
+          "x": 16,
+          "y": 144,
+          "w": 202.5,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2item1": {
+          "x": 218.5,
+          "y": 144,
+          "w": 202.5,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2item2": {
+          "x": 421,
+          "y": 144,
+          "w": 202.5,
+          "h": 48,
+          "opacity": 1
+        }
+      },
+      "text": {
+        "text:0": {
+          "x": 62.5,
+          "y": 30,
+          "w": 59,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 59,
+          "unhint_w": 58.1875,
+          "chars": 8
+        },
+        "text:1": {
+          "x": 224.5,
+          "y": 30,
+          "w": 39.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 39.5,
+          "unhint_w": 38.8125,
+          "chars": 5
+        },
+        "text:10": {
+          "x": 520,
+          "y": 158,
+          "w": 36.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 36.5,
+          "unhint_w": 35.6875,
+          "chars": 5
+        },
+        "text:2": {
+          "x": 369.5,
+          "y": 30,
+          "w": 53.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 53.5,
+          "unhint_w": 52.4375,
+          "chars": 7
+        },
+        "text:3": {
+          "x": 536.5,
+          "y": 30,
+          "w": 23.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 23.5,
+          "unhint_w": 23.1875,
+          "chars": 3
+        },
+        "text:4": {
+          "x": 80,
+          "y": 94,
+          "w": 24.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 24.5,
+          "unhint_w": 23.6875,
+          "chars": 3
+        },
+        "text:5": {
+          "x": 226,
+          "y": 94,
+          "w": 36,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 36,
+          "unhint_w": 34.75,
+          "chars": 4
+        },
+        "text:6": {
+          "x": 375.5,
+          "y": 94,
+          "w": 41.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 41.5,
+          "unhint_w": 40.875,
+          "chars": 5
+        },
+        "text:7": {
+          "x": 533.5,
+          "y": 94,
+          "w": 29,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 29,
+          "unhint_w": 28.4375,
+          "chars": 4
+        },
+        "text:8": {
+          "x": 121,
+          "y": 158,
+          "w": 25,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 25,
+          "unhint_w": 24.25,
+          "chars": 4
+        },
+        "text:9": {
+          "x": 307,
+          "y": 158,
+          "w": 57.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 57.5,
+          "unhint_w": 56.6875,
+          "chars": 8
+        }
+      }
+    },
+    {
+      "t_ms": 200,
+      "props": {},
+      "elements": {
+        "tabrow0": {
+          "x": 16,
+          "y": 16,
+          "w": 608,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1": {
+          "x": 16,
+          "y": 80,
+          "w": 608,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2": {
+          "x": 16,
+          "y": 144,
+          "w": 608,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item0": {
+          "x": 16,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item1": {
+          "x": 168,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item2": {
+          "x": 320,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item3": {
+          "x": 472,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item0": {
+          "x": 16,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item1": {
+          "x": 168,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item2": {
+          "x": 320,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item3": {
+          "x": 472,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2item0": {
+          "x": 16,
+          "y": 144,
+          "w": 202.5,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2item1": {
+          "x": 218.5,
+          "y": 144,
+          "w": 202.5,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2item2": {
+          "x": 421,
+          "y": 144,
+          "w": 202.5,
+          "h": 48,
+          "opacity": 1
+        }
+      },
+      "text": {
+        "text:0": {
+          "x": 62.5,
+          "y": 30,
+          "w": 59,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 59,
+          "unhint_w": 58.1875,
+          "chars": 8
+        },
+        "text:1": {
+          "x": 224.5,
+          "y": 30,
+          "w": 39.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 39.5,
+          "unhint_w": 38.8125,
+          "chars": 5
+        },
+        "text:10": {
+          "x": 520,
+          "y": 158,
+          "w": 36.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 36.5,
+          "unhint_w": 35.6875,
+          "chars": 5
+        },
+        "text:2": {
+          "x": 369.5,
+          "y": 30,
+          "w": 53.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 53.5,
+          "unhint_w": 52.4375,
+          "chars": 7
+        },
+        "text:3": {
+          "x": 536.5,
+          "y": 30,
+          "w": 23.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 23.5,
+          "unhint_w": 23.1875,
+          "chars": 3
+        },
+        "text:4": {
+          "x": 80,
+          "y": 94,
+          "w": 24.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 24.5,
+          "unhint_w": 23.6875,
+          "chars": 3
+        },
+        "text:5": {
+          "x": 226,
+          "y": 94,
+          "w": 36,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 36,
+          "unhint_w": 34.75,
+          "chars": 4
+        },
+        "text:6": {
+          "x": 375.5,
+          "y": 94,
+          "w": 41.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 41.5,
+          "unhint_w": 40.875,
+          "chars": 5
+        },
+        "text:7": {
+          "x": 533.5,
+          "y": 94,
+          "w": 29,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 29,
+          "unhint_w": 28.4375,
+          "chars": 4
+        },
+        "text:8": {
+          "x": 121,
+          "y": 158,
+          "w": 25,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 25,
+          "unhint_w": 24.25,
+          "chars": 4
+        },
+        "text:9": {
+          "x": 307,
+          "y": 158,
+          "w": 57.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 57.5,
+          "unhint_w": 56.6875,
+          "chars": 8
+        }
+      }
+    },
+    {
+      "t_ms": 250,
+      "props": {},
+      "elements": {
+        "tabrow0": {
+          "x": 16,
+          "y": 16,
+          "w": 608,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1": {
+          "x": 16,
+          "y": 80,
+          "w": 608,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2": {
+          "x": 16,
+          "y": 144,
+          "w": 608,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item0": {
+          "x": 16,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item1": {
+          "x": 168,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item2": {
+          "x": 320,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item3": {
+          "x": 472,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item0": {
+          "x": 16,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item1": {
+          "x": 168,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item2": {
+          "x": 320,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item3": {
+          "x": 472,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2item0": {
+          "x": 16,
+          "y": 144,
+          "w": 202.5,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2item1": {
+          "x": 218.5,
+          "y": 144,
+          "w": 202.5,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2item2": {
+          "x": 421,
+          "y": 144,
+          "w": 202.5,
+          "h": 48,
+          "opacity": 1
+        }
+      },
+      "text": {
+        "text:0": {
+          "x": 62.5,
+          "y": 30,
+          "w": 59,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 59,
+          "unhint_w": 58.1875,
+          "chars": 8
+        },
+        "text:1": {
+          "x": 224.5,
+          "y": 30,
+          "w": 39.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 39.5,
+          "unhint_w": 38.8125,
+          "chars": 5
+        },
+        "text:10": {
+          "x": 520,
+          "y": 158,
+          "w": 36.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 36.5,
+          "unhint_w": 35.6875,
+          "chars": 5
+        },
+        "text:2": {
+          "x": 369.5,
+          "y": 30,
+          "w": 53.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 53.5,
+          "unhint_w": 52.4375,
+          "chars": 7
+        },
+        "text:3": {
+          "x": 536.5,
+          "y": 30,
+          "w": 23.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 23.5,
+          "unhint_w": 23.1875,
+          "chars": 3
+        },
+        "text:4": {
+          "x": 80,
+          "y": 94,
+          "w": 24.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 24.5,
+          "unhint_w": 23.6875,
+          "chars": 3
+        },
+        "text:5": {
+          "x": 226,
+          "y": 94,
+          "w": 36,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 36,
+          "unhint_w": 34.75,
+          "chars": 4
+        },
+        "text:6": {
+          "x": 375.5,
+          "y": 94,
+          "w": 41.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 41.5,
+          "unhint_w": 40.875,
+          "chars": 5
+        },
+        "text:7": {
+          "x": 533.5,
+          "y": 94,
+          "w": 29,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 29,
+          "unhint_w": 28.4375,
+          "chars": 4
+        },
+        "text:8": {
+          "x": 121,
+          "y": 158,
+          "w": 25,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 25,
+          "unhint_w": 24.25,
+          "chars": 4
+        },
+        "text:9": {
+          "x": 307,
+          "y": 158,
+          "w": 57.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 57.5,
+          "unhint_w": 56.6875,
+          "chars": 8
+        }
+      }
+    },
+    {
+      "t_ms": 300,
+      "props": {},
+      "elements": {
+        "tabrow0": {
+          "x": 16,
+          "y": 16,
+          "w": 608,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1": {
+          "x": 16,
+          "y": 80,
+          "w": 608,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2": {
+          "x": 16,
+          "y": 144,
+          "w": 608,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item0": {
+          "x": 16,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item1": {
+          "x": 168,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item2": {
+          "x": 320,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item3": {
+          "x": 472,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item0": {
+          "x": 16,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item1": {
+          "x": 168,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item2": {
+          "x": 320,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item3": {
+          "x": 472,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2item0": {
+          "x": 16,
+          "y": 144,
+          "w": 202.5,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2item1": {
+          "x": 218.5,
+          "y": 144,
+          "w": 202.5,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2item2": {
+          "x": 421,
+          "y": 144,
+          "w": 202.5,
+          "h": 48,
+          "opacity": 1
+        }
+      },
+      "text": {
+        "text:0": {
+          "x": 62.5,
+          "y": 30,
+          "w": 59,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 59,
+          "unhint_w": 58.1875,
+          "chars": 8
+        },
+        "text:1": {
+          "x": 224.5,
+          "y": 30,
+          "w": 39.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 39.5,
+          "unhint_w": 38.8125,
+          "chars": 5
+        },
+        "text:10": {
+          "x": 520,
+          "y": 158,
+          "w": 36.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 36.5,
+          "unhint_w": 35.6875,
+          "chars": 5
+        },
+        "text:2": {
+          "x": 369.5,
+          "y": 30,
+          "w": 53.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 53.5,
+          "unhint_w": 52.4375,
+          "chars": 7
+        },
+        "text:3": {
+          "x": 536.5,
+          "y": 30,
+          "w": 23.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 23.5,
+          "unhint_w": 23.1875,
+          "chars": 3
+        },
+        "text:4": {
+          "x": 80,
+          "y": 94,
+          "w": 24.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 24.5,
+          "unhint_w": 23.6875,
+          "chars": 3
+        },
+        "text:5": {
+          "x": 226,
+          "y": 94,
+          "w": 36,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 36,
+          "unhint_w": 34.75,
+          "chars": 4
+        },
+        "text:6": {
+          "x": 375.5,
+          "y": 94,
+          "w": 41.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 41.5,
+          "unhint_w": 40.875,
+          "chars": 5
+        },
+        "text:7": {
+          "x": 533.5,
+          "y": 94,
+          "w": 29,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 29,
+          "unhint_w": 28.4375,
+          "chars": 4
+        },
+        "text:8": {
+          "x": 121,
+          "y": 158,
+          "w": 25,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 25,
+          "unhint_w": 24.25,
+          "chars": 4
+        },
+        "text:9": {
+          "x": 307,
+          "y": 158,
+          "w": 57.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 57.5,
+          "unhint_w": 56.6875,
+          "chars": 8
+        }
+      }
+    },
+    {
+      "t_ms": 350,
+      "props": {},
+      "elements": {
+        "tabrow0": {
+          "x": 16,
+          "y": 16,
+          "w": 608,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1": {
+          "x": 16,
+          "y": 80,
+          "w": 608,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2": {
+          "x": 16,
+          "y": 144,
+          "w": 608,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item0": {
+          "x": 16,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item1": {
+          "x": 168,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item2": {
+          "x": 320,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item3": {
+          "x": 472,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item0": {
+          "x": 16,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item1": {
+          "x": 168,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item2": {
+          "x": 320,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item3": {
+          "x": 472,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2item0": {
+          "x": 16,
+          "y": 144,
+          "w": 202.5,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2item1": {
+          "x": 218.5,
+          "y": 144,
+          "w": 202.5,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2item2": {
+          "x": 421,
+          "y": 144,
+          "w": 202.5,
+          "h": 48,
+          "opacity": 1
+        }
+      },
+      "text": {
+        "text:0": {
+          "x": 62.5,
+          "y": 30,
+          "w": 59,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 59,
+          "unhint_w": 58.1875,
+          "chars": 8
+        },
+        "text:1": {
+          "x": 224.5,
+          "y": 30,
+          "w": 39.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 39.5,
+          "unhint_w": 38.8125,
+          "chars": 5
+        },
+        "text:10": {
+          "x": 520,
+          "y": 158,
+          "w": 36.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 36.5,
+          "unhint_w": 35.6875,
+          "chars": 5
+        },
+        "text:2": {
+          "x": 369.5,
+          "y": 30,
+          "w": 53.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 53.5,
+          "unhint_w": 52.4375,
+          "chars": 7
+        },
+        "text:3": {
+          "x": 536.5,
+          "y": 30,
+          "w": 23.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 23.5,
+          "unhint_w": 23.1875,
+          "chars": 3
+        },
+        "text:4": {
+          "x": 80,
+          "y": 94,
+          "w": 24.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 24.5,
+          "unhint_w": 23.6875,
+          "chars": 3
+        },
+        "text:5": {
+          "x": 226,
+          "y": 94,
+          "w": 36,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 36,
+          "unhint_w": 34.75,
+          "chars": 4
+        },
+        "text:6": {
+          "x": 375.5,
+          "y": 94,
+          "w": 41.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 41.5,
+          "unhint_w": 40.875,
+          "chars": 5
+        },
+        "text:7": {
+          "x": 533.5,
+          "y": 94,
+          "w": 29,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 29,
+          "unhint_w": 28.4375,
+          "chars": 4
+        },
+        "text:8": {
+          "x": 121,
+          "y": 158,
+          "w": 25,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 25,
+          "unhint_w": 24.25,
+          "chars": 4
+        },
+        "text:9": {
+          "x": 307,
+          "y": 158,
+          "w": 57.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 57.5,
+          "unhint_w": 56.6875,
+          "chars": 8
+        }
+      }
+    },
+    {
+      "t_ms": 400,
+      "props": {},
+      "elements": {
+        "tabrow0": {
+          "x": 16,
+          "y": 16,
+          "w": 608,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1": {
+          "x": 16,
+          "y": 80,
+          "w": 608,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2": {
+          "x": 16,
+          "y": 144,
+          "w": 608,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item0": {
+          "x": 16,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item1": {
+          "x": 168,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item2": {
+          "x": 320,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item3": {
+          "x": 472,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item0": {
+          "x": 16,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item1": {
+          "x": 168,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item2": {
+          "x": 320,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item3": {
+          "x": 472,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2item0": {
+          "x": 16,
+          "y": 144,
+          "w": 202.5,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2item1": {
+          "x": 218.5,
+          "y": 144,
+          "w": 202.5,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2item2": {
+          "x": 421,
+          "y": 144,
+          "w": 202.5,
+          "h": 48,
+          "opacity": 1
+        }
+      },
+      "text": {
+        "text:0": {
+          "x": 62.5,
+          "y": 30,
+          "w": 59,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 59,
+          "unhint_w": 58.1875,
+          "chars": 8
+        },
+        "text:1": {
+          "x": 224.5,
+          "y": 30,
+          "w": 39.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 39.5,
+          "unhint_w": 38.8125,
+          "chars": 5
+        },
+        "text:10": {
+          "x": 520,
+          "y": 158,
+          "w": 36.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 36.5,
+          "unhint_w": 35.6875,
+          "chars": 5
+        },
+        "text:2": {
+          "x": 369.5,
+          "y": 30,
+          "w": 53.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 53.5,
+          "unhint_w": 52.4375,
+          "chars": 7
+        },
+        "text:3": {
+          "x": 536.5,
+          "y": 30,
+          "w": 23.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 23.5,
+          "unhint_w": 23.1875,
+          "chars": 3
+        },
+        "text:4": {
+          "x": 80,
+          "y": 94,
+          "w": 24.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 24.5,
+          "unhint_w": 23.6875,
+          "chars": 3
+        },
+        "text:5": {
+          "x": 226,
+          "y": 94,
+          "w": 36,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 36,
+          "unhint_w": 34.75,
+          "chars": 4
+        },
+        "text:6": {
+          "x": 375.5,
+          "y": 94,
+          "w": 41.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 41.5,
+          "unhint_w": 40.875,
+          "chars": 5
+        },
+        "text:7": {
+          "x": 533.5,
+          "y": 94,
+          "w": 29,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 29,
+          "unhint_w": 28.4375,
+          "chars": 4
+        },
+        "text:8": {
+          "x": 121,
+          "y": 158,
+          "w": 25,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 25,
+          "unhint_w": 24.25,
+          "chars": 4
+        },
+        "text:9": {
+          "x": 307,
+          "y": 158,
+          "w": 57.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 57.5,
+          "unhint_w": 56.6875,
+          "chars": 8
+        }
+      }
+    },
+    {
+      "t_ms": 450,
+      "props": {},
+      "elements": {
+        "tabrow0": {
+          "x": 16,
+          "y": 16,
+          "w": 608,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1": {
+          "x": 16,
+          "y": 80,
+          "w": 608,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2": {
+          "x": 16,
+          "y": 144,
+          "w": 608,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item0": {
+          "x": 16,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item1": {
+          "x": 168,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item2": {
+          "x": 320,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item3": {
+          "x": 472,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item0": {
+          "x": 16,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item1": {
+          "x": 168,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item2": {
+          "x": 320,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item3": {
+          "x": 472,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2item0": {
+          "x": 16,
+          "y": 144,
+          "w": 202.5,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2item1": {
+          "x": 218.5,
+          "y": 144,
+          "w": 202.5,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2item2": {
+          "x": 421,
+          "y": 144,
+          "w": 202.5,
+          "h": 48,
+          "opacity": 1
+        }
+      },
+      "text": {
+        "text:0": {
+          "x": 62.5,
+          "y": 30,
+          "w": 59,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 59,
+          "unhint_w": 58.1875,
+          "chars": 8
+        },
+        "text:1": {
+          "x": 224.5,
+          "y": 30,
+          "w": 39.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 39.5,
+          "unhint_w": 38.8125,
+          "chars": 5
+        },
+        "text:10": {
+          "x": 520,
+          "y": 158,
+          "w": 36.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 36.5,
+          "unhint_w": 35.6875,
+          "chars": 5
+        },
+        "text:2": {
+          "x": 369.5,
+          "y": 30,
+          "w": 53.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 53.5,
+          "unhint_w": 52.4375,
+          "chars": 7
+        },
+        "text:3": {
+          "x": 536.5,
+          "y": 30,
+          "w": 23.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 23.5,
+          "unhint_w": 23.1875,
+          "chars": 3
+        },
+        "text:4": {
+          "x": 80,
+          "y": 94,
+          "w": 24.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 24.5,
+          "unhint_w": 23.6875,
+          "chars": 3
+        },
+        "text:5": {
+          "x": 226,
+          "y": 94,
+          "w": 36,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 36,
+          "unhint_w": 34.75,
+          "chars": 4
+        },
+        "text:6": {
+          "x": 375.5,
+          "y": 94,
+          "w": 41.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 41.5,
+          "unhint_w": 40.875,
+          "chars": 5
+        },
+        "text:7": {
+          "x": 533.5,
+          "y": 94,
+          "w": 29,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 29,
+          "unhint_w": 28.4375,
+          "chars": 4
+        },
+        "text:8": {
+          "x": 121,
+          "y": 158,
+          "w": 25,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 25,
+          "unhint_w": 24.25,
+          "chars": 4
+        },
+        "text:9": {
+          "x": 307,
+          "y": 158,
+          "w": 57.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 57.5,
+          "unhint_w": 56.6875,
+          "chars": 8
+        }
+      }
+    },
+    {
+      "t_ms": 500,
+      "props": {},
+      "elements": {
+        "tabrow0": {
+          "x": 16,
+          "y": 16,
+          "w": 608,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1": {
+          "x": 16,
+          "y": 80,
+          "w": 608,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2": {
+          "x": 16,
+          "y": 144,
+          "w": 608,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item0": {
+          "x": 16,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item1": {
+          "x": 168,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item2": {
+          "x": 320,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item3": {
+          "x": 472,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item0": {
+          "x": 16,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item1": {
+          "x": 168,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item2": {
+          "x": 320,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item3": {
+          "x": 472,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2item0": {
+          "x": 16,
+          "y": 144,
+          "w": 202.5,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2item1": {
+          "x": 218.5,
+          "y": 144,
+          "w": 202.5,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2item2": {
+          "x": 421,
+          "y": 144,
+          "w": 202.5,
+          "h": 48,
+          "opacity": 1
+        }
+      },
+      "text": {
+        "text:0": {
+          "x": 62.5,
+          "y": 30,
+          "w": 59,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 59,
+          "unhint_w": 58.1875,
+          "chars": 8
+        },
+        "text:1": {
+          "x": 224.5,
+          "y": 30,
+          "w": 39.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 39.5,
+          "unhint_w": 38.8125,
+          "chars": 5
+        },
+        "text:10": {
+          "x": 520,
+          "y": 158,
+          "w": 36.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 36.5,
+          "unhint_w": 35.6875,
+          "chars": 5
+        },
+        "text:2": {
+          "x": 369.5,
+          "y": 30,
+          "w": 53.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 53.5,
+          "unhint_w": 52.4375,
+          "chars": 7
+        },
+        "text:3": {
+          "x": 536.5,
+          "y": 30,
+          "w": 23.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 23.5,
+          "unhint_w": 23.1875,
+          "chars": 3
+        },
+        "text:4": {
+          "x": 80,
+          "y": 94,
+          "w": 24.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 24.5,
+          "unhint_w": 23.6875,
+          "chars": 3
+        },
+        "text:5": {
+          "x": 226,
+          "y": 94,
+          "w": 36,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 36,
+          "unhint_w": 34.75,
+          "chars": 4
+        },
+        "text:6": {
+          "x": 375.5,
+          "y": 94,
+          "w": 41.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 41.5,
+          "unhint_w": 40.875,
+          "chars": 5
+        },
+        "text:7": {
+          "x": 533.5,
+          "y": 94,
+          "w": 29,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 29,
+          "unhint_w": 28.4375,
+          "chars": 4
+        },
+        "text:8": {
+          "x": 121,
+          "y": 158,
+          "w": 25,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 25,
+          "unhint_w": 24.25,
+          "chars": 4
+        },
+        "text:9": {
+          "x": 307,
+          "y": 158,
+          "w": 57.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 57.5,
+          "unhint_w": 56.6875,
+          "chars": 8
+        }
+      }
+    },
+    {
+      "t_ms": 550,
+      "props": {},
+      "elements": {
+        "tabrow0": {
+          "x": 16,
+          "y": 16,
+          "w": 608,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1": {
+          "x": 16,
+          "y": 80,
+          "w": 608,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2": {
+          "x": 16,
+          "y": 144,
+          "w": 608,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item0": {
+          "x": 16,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item1": {
+          "x": 168,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item2": {
+          "x": 320,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item3": {
+          "x": 472,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item0": {
+          "x": 16,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item1": {
+          "x": 168,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item2": {
+          "x": 320,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item3": {
+          "x": 472,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2item0": {
+          "x": 16,
+          "y": 144,
+          "w": 202.5,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2item1": {
+          "x": 218.5,
+          "y": 144,
+          "w": 202.5,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2item2": {
+          "x": 421,
+          "y": 144,
+          "w": 202.5,
+          "h": 48,
+          "opacity": 1
+        }
+      },
+      "text": {
+        "text:0": {
+          "x": 62.5,
+          "y": 30,
+          "w": 59,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 59,
+          "unhint_w": 58.1875,
+          "chars": 8
+        },
+        "text:1": {
+          "x": 224.5,
+          "y": 30,
+          "w": 39.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 39.5,
+          "unhint_w": 38.8125,
+          "chars": 5
+        },
+        "text:10": {
+          "x": 520,
+          "y": 158,
+          "w": 36.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 36.5,
+          "unhint_w": 35.6875,
+          "chars": 5
+        },
+        "text:2": {
+          "x": 369.5,
+          "y": 30,
+          "w": 53.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 53.5,
+          "unhint_w": 52.4375,
+          "chars": 7
+        },
+        "text:3": {
+          "x": 536.5,
+          "y": 30,
+          "w": 23.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 23.5,
+          "unhint_w": 23.1875,
+          "chars": 3
+        },
+        "text:4": {
+          "x": 80,
+          "y": 94,
+          "w": 24.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 24.5,
+          "unhint_w": 23.6875,
+          "chars": 3
+        },
+        "text:5": {
+          "x": 226,
+          "y": 94,
+          "w": 36,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 36,
+          "unhint_w": 34.75,
+          "chars": 4
+        },
+        "text:6": {
+          "x": 375.5,
+          "y": 94,
+          "w": 41.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 41.5,
+          "unhint_w": 40.875,
+          "chars": 5
+        },
+        "text:7": {
+          "x": 533.5,
+          "y": 94,
+          "w": 29,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 29,
+          "unhint_w": 28.4375,
+          "chars": 4
+        },
+        "text:8": {
+          "x": 121,
+          "y": 158,
+          "w": 25,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 25,
+          "unhint_w": 24.25,
+          "chars": 4
+        },
+        "text:9": {
+          "x": 307,
+          "y": 158,
+          "w": 57.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 57.5,
+          "unhint_w": 56.6875,
+          "chars": 8
+        }
+      }
+    },
+    {
+      "t_ms": 600,
+      "props": {},
+      "elements": {
+        "tabrow0": {
+          "x": 16,
+          "y": 16,
+          "w": 608,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1": {
+          "x": 16,
+          "y": 80,
+          "w": 608,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2": {
+          "x": 16,
+          "y": 144,
+          "w": 608,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item0": {
+          "x": 16,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item1": {
+          "x": 168,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item2": {
+          "x": 320,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item3": {
+          "x": 472,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item0": {
+          "x": 16,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item1": {
+          "x": 168,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item2": {
+          "x": 320,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item3": {
+          "x": 472,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2item0": {
+          "x": 16,
+          "y": 144,
+          "w": 202.5,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2item1": {
+          "x": 218.5,
+          "y": 144,
+          "w": 202.5,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2item2": {
+          "x": 421,
+          "y": 144,
+          "w": 202.5,
+          "h": 48,
+          "opacity": 1
+        }
+      },
+      "text": {
+        "text:0": {
+          "x": 62.5,
+          "y": 30,
+          "w": 59,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 59,
+          "unhint_w": 58.1875,
+          "chars": 8
+        },
+        "text:1": {
+          "x": 224.5,
+          "y": 30,
+          "w": 39.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 39.5,
+          "unhint_w": 38.8125,
+          "chars": 5
+        },
+        "text:10": {
+          "x": 520,
+          "y": 158,
+          "w": 36.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 36.5,
+          "unhint_w": 35.6875,
+          "chars": 5
+        },
+        "text:2": {
+          "x": 369.5,
+          "y": 30,
+          "w": 53.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 53.5,
+          "unhint_w": 52.4375,
+          "chars": 7
+        },
+        "text:3": {
+          "x": 536.5,
+          "y": 30,
+          "w": 23.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 23.5,
+          "unhint_w": 23.1875,
+          "chars": 3
+        },
+        "text:4": {
+          "x": 80,
+          "y": 94,
+          "w": 24.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 24.5,
+          "unhint_w": 23.6875,
+          "chars": 3
+        },
+        "text:5": {
+          "x": 226,
+          "y": 94,
+          "w": 36,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 36,
+          "unhint_w": 34.75,
+          "chars": 4
+        },
+        "text:6": {
+          "x": 375.5,
+          "y": 94,
+          "w": 41.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 41.5,
+          "unhint_w": 40.875,
+          "chars": 5
+        },
+        "text:7": {
+          "x": 533.5,
+          "y": 94,
+          "w": 29,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 29,
+          "unhint_w": 28.4375,
+          "chars": 4
+        },
+        "text:8": {
+          "x": 121,
+          "y": 158,
+          "w": 25,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 25,
+          "unhint_w": 24.25,
+          "chars": 4
+        },
+        "text:9": {
+          "x": 307,
+          "y": 158,
+          "w": 57.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 57.5,
+          "unhint_w": 56.6875,
+          "chars": 8
+        }
+      }
+    },
+    {
+      "t_ms": 650,
+      "props": {},
+      "elements": {
+        "tabrow0": {
+          "x": 16,
+          "y": 16,
+          "w": 608,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1": {
+          "x": 16,
+          "y": 80,
+          "w": 608,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2": {
+          "x": 16,
+          "y": 144,
+          "w": 608,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item0": {
+          "x": 16,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item1": {
+          "x": 168,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item2": {
+          "x": 320,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item3": {
+          "x": 472,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item0": {
+          "x": 16,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item1": {
+          "x": 168,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item2": {
+          "x": 320,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item3": {
+          "x": 472,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2item0": {
+          "x": 16,
+          "y": 144,
+          "w": 202.5,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2item1": {
+          "x": 218.5,
+          "y": 144,
+          "w": 202.5,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2item2": {
+          "x": 421,
+          "y": 144,
+          "w": 202.5,
+          "h": 48,
+          "opacity": 1
+        }
+      },
+      "text": {
+        "text:0": {
+          "x": 62.5,
+          "y": 30,
+          "w": 59,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 59,
+          "unhint_w": 58.1875,
+          "chars": 8
+        },
+        "text:1": {
+          "x": 224.5,
+          "y": 30,
+          "w": 39.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 39.5,
+          "unhint_w": 38.8125,
+          "chars": 5
+        },
+        "text:10": {
+          "x": 520,
+          "y": 158,
+          "w": 36.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 36.5,
+          "unhint_w": 35.6875,
+          "chars": 5
+        },
+        "text:2": {
+          "x": 369.5,
+          "y": 30,
+          "w": 53.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 53.5,
+          "unhint_w": 52.4375,
+          "chars": 7
+        },
+        "text:3": {
+          "x": 536.5,
+          "y": 30,
+          "w": 23.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 23.5,
+          "unhint_w": 23.1875,
+          "chars": 3
+        },
+        "text:4": {
+          "x": 80,
+          "y": 94,
+          "w": 24.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 24.5,
+          "unhint_w": 23.6875,
+          "chars": 3
+        },
+        "text:5": {
+          "x": 226,
+          "y": 94,
+          "w": 36,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 36,
+          "unhint_w": 34.75,
+          "chars": 4
+        },
+        "text:6": {
+          "x": 375.5,
+          "y": 94,
+          "w": 41.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 41.5,
+          "unhint_w": 40.875,
+          "chars": 5
+        },
+        "text:7": {
+          "x": 533.5,
+          "y": 94,
+          "w": 29,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 29,
+          "unhint_w": 28.4375,
+          "chars": 4
+        },
+        "text:8": {
+          "x": 121,
+          "y": 158,
+          "w": 25,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 25,
+          "unhint_w": 24.25,
+          "chars": 4
+        },
+        "text:9": {
+          "x": 307,
+          "y": 158,
+          "w": 57.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 57.5,
+          "unhint_w": 56.6875,
+          "chars": 8
+        }
+      }
+    },
+    {
+      "t_ms": 700,
+      "props": {},
+      "elements": {
+        "tabrow0": {
+          "x": 16,
+          "y": 16,
+          "w": 608,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1": {
+          "x": 16,
+          "y": 80,
+          "w": 608,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2": {
+          "x": 16,
+          "y": 144,
+          "w": 608,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item0": {
+          "x": 16,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item1": {
+          "x": 168,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item2": {
+          "x": 320,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item3": {
+          "x": 472,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item0": {
+          "x": 16,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item1": {
+          "x": 168,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item2": {
+          "x": 320,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item3": {
+          "x": 472,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2item0": {
+          "x": 16,
+          "y": 144,
+          "w": 202.5,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2item1": {
+          "x": 218.5,
+          "y": 144,
+          "w": 202.5,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2item2": {
+          "x": 421,
+          "y": 144,
+          "w": 202.5,
+          "h": 48,
+          "opacity": 1
+        }
+      },
+      "text": {
+        "text:0": {
+          "x": 62.5,
+          "y": 30,
+          "w": 59,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 59,
+          "unhint_w": 58.1875,
+          "chars": 8
+        },
+        "text:1": {
+          "x": 224.5,
+          "y": 30,
+          "w": 39.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 39.5,
+          "unhint_w": 38.8125,
+          "chars": 5
+        },
+        "text:10": {
+          "x": 520,
+          "y": 158,
+          "w": 36.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 36.5,
+          "unhint_w": 35.6875,
+          "chars": 5
+        },
+        "text:2": {
+          "x": 369.5,
+          "y": 30,
+          "w": 53.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 53.5,
+          "unhint_w": 52.4375,
+          "chars": 7
+        },
+        "text:3": {
+          "x": 536.5,
+          "y": 30,
+          "w": 23.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 23.5,
+          "unhint_w": 23.1875,
+          "chars": 3
+        },
+        "text:4": {
+          "x": 80,
+          "y": 94,
+          "w": 24.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 24.5,
+          "unhint_w": 23.6875,
+          "chars": 3
+        },
+        "text:5": {
+          "x": 226,
+          "y": 94,
+          "w": 36,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 36,
+          "unhint_w": 34.75,
+          "chars": 4
+        },
+        "text:6": {
+          "x": 375.5,
+          "y": 94,
+          "w": 41.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 41.5,
+          "unhint_w": 40.875,
+          "chars": 5
+        },
+        "text:7": {
+          "x": 533.5,
+          "y": 94,
+          "w": 29,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 29,
+          "unhint_w": 28.4375,
+          "chars": 4
+        },
+        "text:8": {
+          "x": 121,
+          "y": 158,
+          "w": 25,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 25,
+          "unhint_w": 24.25,
+          "chars": 4
+        },
+        "text:9": {
+          "x": 307,
+          "y": 158,
+          "w": 57.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 57.5,
+          "unhint_w": 56.6875,
+          "chars": 8
+        }
+      }
+    },
+    {
+      "t_ms": 750,
+      "props": {},
+      "elements": {
+        "tabrow0": {
+          "x": 16,
+          "y": 16,
+          "w": 608,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1": {
+          "x": 16,
+          "y": 80,
+          "w": 608,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2": {
+          "x": 16,
+          "y": 144,
+          "w": 608,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item0": {
+          "x": 16,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item1": {
+          "x": 168,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item2": {
+          "x": 320,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item3": {
+          "x": 472,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item0": {
+          "x": 16,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item1": {
+          "x": 168,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item2": {
+          "x": 320,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item3": {
+          "x": 472,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2item0": {
+          "x": 16,
+          "y": 144,
+          "w": 202.5,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2item1": {
+          "x": 218.5,
+          "y": 144,
+          "w": 202.5,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2item2": {
+          "x": 421,
+          "y": 144,
+          "w": 202.5,
+          "h": 48,
+          "opacity": 1
+        }
+      },
+      "text": {
+        "text:0": {
+          "x": 62.5,
+          "y": 30,
+          "w": 59,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 59,
+          "unhint_w": 58.1875,
+          "chars": 8
+        },
+        "text:1": {
+          "x": 224.5,
+          "y": 30,
+          "w": 39.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 39.5,
+          "unhint_w": 38.8125,
+          "chars": 5
+        },
+        "text:10": {
+          "x": 520,
+          "y": 158,
+          "w": 36.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 36.5,
+          "unhint_w": 35.6875,
+          "chars": 5
+        },
+        "text:2": {
+          "x": 369.5,
+          "y": 30,
+          "w": 53.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 53.5,
+          "unhint_w": 52.4375,
+          "chars": 7
+        },
+        "text:3": {
+          "x": 536.5,
+          "y": 30,
+          "w": 23.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 23.5,
+          "unhint_w": 23.1875,
+          "chars": 3
+        },
+        "text:4": {
+          "x": 80,
+          "y": 94,
+          "w": 24.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 24.5,
+          "unhint_w": 23.6875,
+          "chars": 3
+        },
+        "text:5": {
+          "x": 226,
+          "y": 94,
+          "w": 36,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 36,
+          "unhint_w": 34.75,
+          "chars": 4
+        },
+        "text:6": {
+          "x": 375.5,
+          "y": 94,
+          "w": 41.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 41.5,
+          "unhint_w": 40.875,
+          "chars": 5
+        },
+        "text:7": {
+          "x": 533.5,
+          "y": 94,
+          "w": 29,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 29,
+          "unhint_w": 28.4375,
+          "chars": 4
+        },
+        "text:8": {
+          "x": 121,
+          "y": 158,
+          "w": 25,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 25,
+          "unhint_w": 24.25,
+          "chars": 4
+        },
+        "text:9": {
+          "x": 307,
+          "y": 158,
+          "w": 57.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 57.5,
+          "unhint_w": 56.6875,
+          "chars": 8
+        }
+      }
+    },
+    {
+      "t_ms": 800,
+      "props": {},
+      "elements": {
+        "tabrow0": {
+          "x": 16,
+          "y": 16,
+          "w": 608,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1": {
+          "x": 16,
+          "y": 80,
+          "w": 608,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2": {
+          "x": 16,
+          "y": 144,
+          "w": 608,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item0": {
+          "x": 16,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item1": {
+          "x": 168,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item2": {
+          "x": 320,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item3": {
+          "x": 472,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item0": {
+          "x": 16,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item1": {
+          "x": 168,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item2": {
+          "x": 320,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item3": {
+          "x": 472,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2item0": {
+          "x": 16,
+          "y": 144,
+          "w": 202.5,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2item1": {
+          "x": 218.5,
+          "y": 144,
+          "w": 202.5,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2item2": {
+          "x": 421,
+          "y": 144,
+          "w": 202.5,
+          "h": 48,
+          "opacity": 1
+        }
+      },
+      "text": {
+        "text:0": {
+          "x": 62.5,
+          "y": 30,
+          "w": 59,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 59,
+          "unhint_w": 58.1875,
+          "chars": 8
+        },
+        "text:1": {
+          "x": 224.5,
+          "y": 30,
+          "w": 39.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 39.5,
+          "unhint_w": 38.8125,
+          "chars": 5
+        },
+        "text:10": {
+          "x": 520,
+          "y": 158,
+          "w": 36.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 36.5,
+          "unhint_w": 35.6875,
+          "chars": 5
+        },
+        "text:2": {
+          "x": 369.5,
+          "y": 30,
+          "w": 53.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 53.5,
+          "unhint_w": 52.4375,
+          "chars": 7
+        },
+        "text:3": {
+          "x": 536.5,
+          "y": 30,
+          "w": 23.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 23.5,
+          "unhint_w": 23.1875,
+          "chars": 3
+        },
+        "text:4": {
+          "x": 80,
+          "y": 94,
+          "w": 24.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 24.5,
+          "unhint_w": 23.6875,
+          "chars": 3
+        },
+        "text:5": {
+          "x": 226,
+          "y": 94,
+          "w": 36,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 36,
+          "unhint_w": 34.75,
+          "chars": 4
+        },
+        "text:6": {
+          "x": 375.5,
+          "y": 94,
+          "w": 41.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 41.5,
+          "unhint_w": 40.875,
+          "chars": 5
+        },
+        "text:7": {
+          "x": 533.5,
+          "y": 94,
+          "w": 29,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 29,
+          "unhint_w": 28.4375,
+          "chars": 4
+        },
+        "text:8": {
+          "x": 121,
+          "y": 158,
+          "w": 25,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 25,
+          "unhint_w": 24.25,
+          "chars": 4
+        },
+        "text:9": {
+          "x": 307,
+          "y": 158,
+          "w": 57.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 57.5,
+          "unhint_w": 56.6875,
+          "chars": 8
+        }
+      }
+    },
+    {
+      "t_ms": 850,
+      "props": {},
+      "elements": {
+        "tabrow0": {
+          "x": 16,
+          "y": 16,
+          "w": 608,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1": {
+          "x": 16,
+          "y": 80,
+          "w": 608,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2": {
+          "x": 16,
+          "y": 144,
+          "w": 608,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item0": {
+          "x": 16,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item1": {
+          "x": 168,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item2": {
+          "x": 320,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item3": {
+          "x": 472,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item0": {
+          "x": 16,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item1": {
+          "x": 168,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item2": {
+          "x": 320,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item3": {
+          "x": 472,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2item0": {
+          "x": 16,
+          "y": 144,
+          "w": 202.5,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2item1": {
+          "x": 218.5,
+          "y": 144,
+          "w": 202.5,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2item2": {
+          "x": 421,
+          "y": 144,
+          "w": 202.5,
+          "h": 48,
+          "opacity": 1
+        }
+      },
+      "text": {
+        "text:0": {
+          "x": 62.5,
+          "y": 30,
+          "w": 59,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 59,
+          "unhint_w": 58.1875,
+          "chars": 8
+        },
+        "text:1": {
+          "x": 224.5,
+          "y": 30,
+          "w": 39.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 39.5,
+          "unhint_w": 38.8125,
+          "chars": 5
+        },
+        "text:10": {
+          "x": 520,
+          "y": 158,
+          "w": 36.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 36.5,
+          "unhint_w": 35.6875,
+          "chars": 5
+        },
+        "text:2": {
+          "x": 369.5,
+          "y": 30,
+          "w": 53.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 53.5,
+          "unhint_w": 52.4375,
+          "chars": 7
+        },
+        "text:3": {
+          "x": 536.5,
+          "y": 30,
+          "w": 23.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 23.5,
+          "unhint_w": 23.1875,
+          "chars": 3
+        },
+        "text:4": {
+          "x": 80,
+          "y": 94,
+          "w": 24.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 24.5,
+          "unhint_w": 23.6875,
+          "chars": 3
+        },
+        "text:5": {
+          "x": 226,
+          "y": 94,
+          "w": 36,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 36,
+          "unhint_w": 34.75,
+          "chars": 4
+        },
+        "text:6": {
+          "x": 375.5,
+          "y": 94,
+          "w": 41.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 41.5,
+          "unhint_w": 40.875,
+          "chars": 5
+        },
+        "text:7": {
+          "x": 533.5,
+          "y": 94,
+          "w": 29,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 29,
+          "unhint_w": 28.4375,
+          "chars": 4
+        },
+        "text:8": {
+          "x": 121,
+          "y": 158,
+          "w": 25,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 25,
+          "unhint_w": 24.25,
+          "chars": 4
+        },
+        "text:9": {
+          "x": 307,
+          "y": 158,
+          "w": 57.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 57.5,
+          "unhint_w": 56.6875,
+          "chars": 8
+        }
+      }
+    },
+    {
+      "t_ms": 900,
+      "props": {},
+      "elements": {
+        "tabrow0": {
+          "x": 16,
+          "y": 16,
+          "w": 608,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1": {
+          "x": 16,
+          "y": 80,
+          "w": 608,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2": {
+          "x": 16,
+          "y": 144,
+          "w": 608,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item0": {
+          "x": 16,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item1": {
+          "x": 168,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item2": {
+          "x": 320,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item3": {
+          "x": 472,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item0": {
+          "x": 16,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item1": {
+          "x": 168,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item2": {
+          "x": 320,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item3": {
+          "x": 472,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2item0": {
+          "x": 16,
+          "y": 144,
+          "w": 202.5,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2item1": {
+          "x": 218.5,
+          "y": 144,
+          "w": 202.5,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2item2": {
+          "x": 421,
+          "y": 144,
+          "w": 202.5,
+          "h": 48,
+          "opacity": 1
+        }
+      },
+      "text": {
+        "text:0": {
+          "x": 62.5,
+          "y": 30,
+          "w": 59,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 59,
+          "unhint_w": 58.1875,
+          "chars": 8
+        },
+        "text:1": {
+          "x": 224.5,
+          "y": 30,
+          "w": 39.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 39.5,
+          "unhint_w": 38.8125,
+          "chars": 5
+        },
+        "text:10": {
+          "x": 520,
+          "y": 158,
+          "w": 36.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 36.5,
+          "unhint_w": 35.6875,
+          "chars": 5
+        },
+        "text:2": {
+          "x": 369.5,
+          "y": 30,
+          "w": 53.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 53.5,
+          "unhint_w": 52.4375,
+          "chars": 7
+        },
+        "text:3": {
+          "x": 536.5,
+          "y": 30,
+          "w": 23.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 23.5,
+          "unhint_w": 23.1875,
+          "chars": 3
+        },
+        "text:4": {
+          "x": 80,
+          "y": 94,
+          "w": 24.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 24.5,
+          "unhint_w": 23.6875,
+          "chars": 3
+        },
+        "text:5": {
+          "x": 226,
+          "y": 94,
+          "w": 36,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 36,
+          "unhint_w": 34.75,
+          "chars": 4
+        },
+        "text:6": {
+          "x": 375.5,
+          "y": 94,
+          "w": 41.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 41.5,
+          "unhint_w": 40.875,
+          "chars": 5
+        },
+        "text:7": {
+          "x": 533.5,
+          "y": 94,
+          "w": 29,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 29,
+          "unhint_w": 28.4375,
+          "chars": 4
+        },
+        "text:8": {
+          "x": 121,
+          "y": 158,
+          "w": 25,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 25,
+          "unhint_w": 24.25,
+          "chars": 4
+        },
+        "text:9": {
+          "x": 307,
+          "y": 158,
+          "w": 57.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 57.5,
+          "unhint_w": 56.6875,
+          "chars": 8
+        }
+      }
+    },
+    {
+      "t_ms": 950,
+      "props": {},
+      "elements": {
+        "tabrow0": {
+          "x": 16,
+          "y": 16,
+          "w": 608,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1": {
+          "x": 16,
+          "y": 80,
+          "w": 608,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2": {
+          "x": 16,
+          "y": 144,
+          "w": 608,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item0": {
+          "x": 16,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item1": {
+          "x": 168,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item2": {
+          "x": 320,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item3": {
+          "x": 472,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item0": {
+          "x": 16,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item1": {
+          "x": 168,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item2": {
+          "x": 320,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item3": {
+          "x": 472,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2item0": {
+          "x": 16,
+          "y": 144,
+          "w": 202.5,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2item1": {
+          "x": 218.5,
+          "y": 144,
+          "w": 202.5,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2item2": {
+          "x": 421,
+          "y": 144,
+          "w": 202.5,
+          "h": 48,
+          "opacity": 1
+        }
+      },
+      "text": {
+        "text:0": {
+          "x": 62.5,
+          "y": 30,
+          "w": 59,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 59,
+          "unhint_w": 58.1875,
+          "chars": 8
+        },
+        "text:1": {
+          "x": 224.5,
+          "y": 30,
+          "w": 39.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 39.5,
+          "unhint_w": 38.8125,
+          "chars": 5
+        },
+        "text:10": {
+          "x": 520,
+          "y": 158,
+          "w": 36.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 36.5,
+          "unhint_w": 35.6875,
+          "chars": 5
+        },
+        "text:2": {
+          "x": 369.5,
+          "y": 30,
+          "w": 53.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 53.5,
+          "unhint_w": 52.4375,
+          "chars": 7
+        },
+        "text:3": {
+          "x": 536.5,
+          "y": 30,
+          "w": 23.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 23.5,
+          "unhint_w": 23.1875,
+          "chars": 3
+        },
+        "text:4": {
+          "x": 80,
+          "y": 94,
+          "w": 24.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 24.5,
+          "unhint_w": 23.6875,
+          "chars": 3
+        },
+        "text:5": {
+          "x": 226,
+          "y": 94,
+          "w": 36,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 36,
+          "unhint_w": 34.75,
+          "chars": 4
+        },
+        "text:6": {
+          "x": 375.5,
+          "y": 94,
+          "w": 41.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 41.5,
+          "unhint_w": 40.875,
+          "chars": 5
+        },
+        "text:7": {
+          "x": 533.5,
+          "y": 94,
+          "w": 29,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 29,
+          "unhint_w": 28.4375,
+          "chars": 4
+        },
+        "text:8": {
+          "x": 121,
+          "y": 158,
+          "w": 25,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 25,
+          "unhint_w": 24.25,
+          "chars": 4
+        },
+        "text:9": {
+          "x": 307,
+          "y": 158,
+          "w": 57.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 57.5,
+          "unhint_w": 56.6875,
+          "chars": 8
+        }
+      }
+    },
+    {
+      "t_ms": 1000,
+      "props": {},
+      "elements": {
+        "tabrow0": {
+          "x": 16,
+          "y": 16,
+          "w": 608,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1": {
+          "x": 16,
+          "y": 80,
+          "w": 608,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2": {
+          "x": 16,
+          "y": 144,
+          "w": 608,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item0": {
+          "x": 16,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item1": {
+          "x": 168,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item2": {
+          "x": 320,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item3": {
+          "x": 472,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item0": {
+          "x": 16,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item1": {
+          "x": 168,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item2": {
+          "x": 320,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item3": {
+          "x": 472,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2item0": {
+          "x": 16,
+          "y": 144,
+          "w": 202.5,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2item1": {
+          "x": 218.5,
+          "y": 144,
+          "w": 202.5,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2item2": {
+          "x": 421,
+          "y": 144,
+          "w": 202.5,
+          "h": 48,
+          "opacity": 1
+        }
+      },
+      "text": {
+        "text:0": {
+          "x": 62.5,
+          "y": 30,
+          "w": 59,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 59,
+          "unhint_w": 58.1875,
+          "chars": 8
+        },
+        "text:1": {
+          "x": 224.5,
+          "y": 30,
+          "w": 39.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 39.5,
+          "unhint_w": 38.8125,
+          "chars": 5
+        },
+        "text:10": {
+          "x": 520,
+          "y": 158,
+          "w": 36.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 36.5,
+          "unhint_w": 35.6875,
+          "chars": 5
+        },
+        "text:2": {
+          "x": 369.5,
+          "y": 30,
+          "w": 53.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 53.5,
+          "unhint_w": 52.4375,
+          "chars": 7
+        },
+        "text:3": {
+          "x": 536.5,
+          "y": 30,
+          "w": 23.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 23.5,
+          "unhint_w": 23.1875,
+          "chars": 3
+        },
+        "text:4": {
+          "x": 80,
+          "y": 94,
+          "w": 24.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 24.5,
+          "unhint_w": 23.6875,
+          "chars": 3
+        },
+        "text:5": {
+          "x": 226,
+          "y": 94,
+          "w": 36,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 36,
+          "unhint_w": 34.75,
+          "chars": 4
+        },
+        "text:6": {
+          "x": 375.5,
+          "y": 94,
+          "w": 41.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 41.5,
+          "unhint_w": 40.875,
+          "chars": 5
+        },
+        "text:7": {
+          "x": 533.5,
+          "y": 94,
+          "w": 29,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 29,
+          "unhint_w": 28.4375,
+          "chars": 4
+        },
+        "text:8": {
+          "x": 121,
+          "y": 158,
+          "w": 25,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 25,
+          "unhint_w": 24.25,
+          "chars": 4
+        },
+        "text:9": {
+          "x": 307,
+          "y": 158,
+          "w": 57.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 57.5,
+          "unhint_w": 56.6875,
+          "chars": 8
+        }
+      }
+    },
+    {
+      "t_ms": 1050,
+      "props": {},
+      "elements": {
+        "tabrow0": {
+          "x": 16,
+          "y": 16,
+          "w": 608,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1": {
+          "x": 16,
+          "y": 80,
+          "w": 608,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2": {
+          "x": 16,
+          "y": 144,
+          "w": 608,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item0": {
+          "x": 16,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item1": {
+          "x": 168,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item2": {
+          "x": 320,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item3": {
+          "x": 472,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item0": {
+          "x": 16,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item1": {
+          "x": 168,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item2": {
+          "x": 320,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item3": {
+          "x": 472,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2item0": {
+          "x": 16,
+          "y": 144,
+          "w": 202.5,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2item1": {
+          "x": 218.5,
+          "y": 144,
+          "w": 202.5,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2item2": {
+          "x": 421,
+          "y": 144,
+          "w": 202.5,
+          "h": 48,
+          "opacity": 1
+        }
+      },
+      "text": {
+        "text:0": {
+          "x": 62.5,
+          "y": 30,
+          "w": 59,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 59,
+          "unhint_w": 58.1875,
+          "chars": 8
+        },
+        "text:1": {
+          "x": 224.5,
+          "y": 30,
+          "w": 39.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 39.5,
+          "unhint_w": 38.8125,
+          "chars": 5
+        },
+        "text:10": {
+          "x": 520,
+          "y": 158,
+          "w": 36.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 36.5,
+          "unhint_w": 35.6875,
+          "chars": 5
+        },
+        "text:2": {
+          "x": 369.5,
+          "y": 30,
+          "w": 53.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 53.5,
+          "unhint_w": 52.4375,
+          "chars": 7
+        },
+        "text:3": {
+          "x": 536.5,
+          "y": 30,
+          "w": 23.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 23.5,
+          "unhint_w": 23.1875,
+          "chars": 3
+        },
+        "text:4": {
+          "x": 80,
+          "y": 94,
+          "w": 24.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 24.5,
+          "unhint_w": 23.6875,
+          "chars": 3
+        },
+        "text:5": {
+          "x": 226,
+          "y": 94,
+          "w": 36,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 36,
+          "unhint_w": 34.75,
+          "chars": 4
+        },
+        "text:6": {
+          "x": 375.5,
+          "y": 94,
+          "w": 41.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 41.5,
+          "unhint_w": 40.875,
+          "chars": 5
+        },
+        "text:7": {
+          "x": 533.5,
+          "y": 94,
+          "w": 29,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 29,
+          "unhint_w": 28.4375,
+          "chars": 4
+        },
+        "text:8": {
+          "x": 121,
+          "y": 158,
+          "w": 25,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 25,
+          "unhint_w": 24.25,
+          "chars": 4
+        },
+        "text:9": {
+          "x": 307,
+          "y": 158,
+          "w": 57.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 57.5,
+          "unhint_w": 56.6875,
+          "chars": 8
+        }
+      }
+    },
+    {
+      "t_ms": 1100,
+      "props": {},
+      "elements": {
+        "tabrow0": {
+          "x": 16,
+          "y": 16,
+          "w": 608,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1": {
+          "x": 16,
+          "y": 80,
+          "w": 608,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2": {
+          "x": 16,
+          "y": 144,
+          "w": 608,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item0": {
+          "x": 16,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item1": {
+          "x": 168,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item2": {
+          "x": 320,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item3": {
+          "x": 472,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item0": {
+          "x": 16,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item1": {
+          "x": 168,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item2": {
+          "x": 320,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item3": {
+          "x": 472,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2item0": {
+          "x": 16,
+          "y": 144,
+          "w": 202.5,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2item1": {
+          "x": 218.5,
+          "y": 144,
+          "w": 202.5,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2item2": {
+          "x": 421,
+          "y": 144,
+          "w": 202.5,
+          "h": 48,
+          "opacity": 1
+        }
+      },
+      "text": {
+        "text:0": {
+          "x": 62.5,
+          "y": 30,
+          "w": 59,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 59,
+          "unhint_w": 58.1875,
+          "chars": 8
+        },
+        "text:1": {
+          "x": 224.5,
+          "y": 30,
+          "w": 39.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 39.5,
+          "unhint_w": 38.8125,
+          "chars": 5
+        },
+        "text:10": {
+          "x": 520,
+          "y": 158,
+          "w": 36.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 36.5,
+          "unhint_w": 35.6875,
+          "chars": 5
+        },
+        "text:2": {
+          "x": 369.5,
+          "y": 30,
+          "w": 53.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 53.5,
+          "unhint_w": 52.4375,
+          "chars": 7
+        },
+        "text:3": {
+          "x": 536.5,
+          "y": 30,
+          "w": 23.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 23.5,
+          "unhint_w": 23.1875,
+          "chars": 3
+        },
+        "text:4": {
+          "x": 80,
+          "y": 94,
+          "w": 24.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 24.5,
+          "unhint_w": 23.6875,
+          "chars": 3
+        },
+        "text:5": {
+          "x": 226,
+          "y": 94,
+          "w": 36,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 36,
+          "unhint_w": 34.75,
+          "chars": 4
+        },
+        "text:6": {
+          "x": 375.5,
+          "y": 94,
+          "w": 41.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 41.5,
+          "unhint_w": 40.875,
+          "chars": 5
+        },
+        "text:7": {
+          "x": 533.5,
+          "y": 94,
+          "w": 29,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 29,
+          "unhint_w": 28.4375,
+          "chars": 4
+        },
+        "text:8": {
+          "x": 121,
+          "y": 158,
+          "w": 25,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 25,
+          "unhint_w": 24.25,
+          "chars": 4
+        },
+        "text:9": {
+          "x": 307,
+          "y": 158,
+          "w": 57.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 57.5,
+          "unhint_w": 56.6875,
+          "chars": 8
+        }
+      }
+    },
+    {
+      "t_ms": 1150,
+      "props": {},
+      "elements": {
+        "tabrow0": {
+          "x": 16,
+          "y": 16,
+          "w": 608,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1": {
+          "x": 16,
+          "y": 80,
+          "w": 608,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2": {
+          "x": 16,
+          "y": 144,
+          "w": 608,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item0": {
+          "x": 16,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item1": {
+          "x": 168,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item2": {
+          "x": 320,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item3": {
+          "x": 472,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item0": {
+          "x": 16,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item1": {
+          "x": 168,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item2": {
+          "x": 320,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item3": {
+          "x": 472,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2item0": {
+          "x": 16,
+          "y": 144,
+          "w": 202.5,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2item1": {
+          "x": 218.5,
+          "y": 144,
+          "w": 202.5,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2item2": {
+          "x": 421,
+          "y": 144,
+          "w": 202.5,
+          "h": 48,
+          "opacity": 1
+        }
+      },
+      "text": {
+        "text:0": {
+          "x": 62.5,
+          "y": 30,
+          "w": 59,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 59,
+          "unhint_w": 58.1875,
+          "chars": 8
+        },
+        "text:1": {
+          "x": 224.5,
+          "y": 30,
+          "w": 39.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 39.5,
+          "unhint_w": 38.8125,
+          "chars": 5
+        },
+        "text:10": {
+          "x": 520,
+          "y": 158,
+          "w": 36.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 36.5,
+          "unhint_w": 35.6875,
+          "chars": 5
+        },
+        "text:2": {
+          "x": 369.5,
+          "y": 30,
+          "w": 53.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 53.5,
+          "unhint_w": 52.4375,
+          "chars": 7
+        },
+        "text:3": {
+          "x": 536.5,
+          "y": 30,
+          "w": 23.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 23.5,
+          "unhint_w": 23.1875,
+          "chars": 3
+        },
+        "text:4": {
+          "x": 80,
+          "y": 94,
+          "w": 24.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 24.5,
+          "unhint_w": 23.6875,
+          "chars": 3
+        },
+        "text:5": {
+          "x": 226,
+          "y": 94,
+          "w": 36,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 36,
+          "unhint_w": 34.75,
+          "chars": 4
+        },
+        "text:6": {
+          "x": 375.5,
+          "y": 94,
+          "w": 41.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 41.5,
+          "unhint_w": 40.875,
+          "chars": 5
+        },
+        "text:7": {
+          "x": 533.5,
+          "y": 94,
+          "w": 29,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 29,
+          "unhint_w": 28.4375,
+          "chars": 4
+        },
+        "text:8": {
+          "x": 121,
+          "y": 158,
+          "w": 25,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 25,
+          "unhint_w": 24.25,
+          "chars": 4
+        },
+        "text:9": {
+          "x": 307,
+          "y": 158,
+          "w": 57.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 57.5,
+          "unhint_w": 56.6875,
+          "chars": 8
+        }
+      }
+    },
+    {
+      "t_ms": 1200,
+      "props": {},
+      "elements": {
+        "tabrow0": {
+          "x": 16,
+          "y": 16,
+          "w": 608,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1": {
+          "x": 16,
+          "y": 80,
+          "w": 608,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2": {
+          "x": 16,
+          "y": 144,
+          "w": 608,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item0": {
+          "x": 16,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item1": {
+          "x": 168,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item2": {
+          "x": 320,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item3": {
+          "x": 472,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item0": {
+          "x": 16,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item1": {
+          "x": 168,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item2": {
+          "x": 320,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item3": {
+          "x": 472,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2item0": {
+          "x": 16,
+          "y": 144,
+          "w": 202.5,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2item1": {
+          "x": 218.5,
+          "y": 144,
+          "w": 202.5,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2item2": {
+          "x": 421,
+          "y": 144,
+          "w": 202.5,
+          "h": 48,
+          "opacity": 1
+        }
+      },
+      "text": {
+        "text:0": {
+          "x": 62.5,
+          "y": 30,
+          "w": 59,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 59,
+          "unhint_w": 58.1875,
+          "chars": 8
+        },
+        "text:1": {
+          "x": 224.5,
+          "y": 30,
+          "w": 39.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 39.5,
+          "unhint_w": 38.8125,
+          "chars": 5
+        },
+        "text:10": {
+          "x": 520,
+          "y": 158,
+          "w": 36.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 36.5,
+          "unhint_w": 35.6875,
+          "chars": 5
+        },
+        "text:2": {
+          "x": 369.5,
+          "y": 30,
+          "w": 53.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 53.5,
+          "unhint_w": 52.4375,
+          "chars": 7
+        },
+        "text:3": {
+          "x": 536.5,
+          "y": 30,
+          "w": 23.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 23.5,
+          "unhint_w": 23.1875,
+          "chars": 3
+        },
+        "text:4": {
+          "x": 80,
+          "y": 94,
+          "w": 24.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 24.5,
+          "unhint_w": 23.6875,
+          "chars": 3
+        },
+        "text:5": {
+          "x": 226,
+          "y": 94,
+          "w": 36,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 36,
+          "unhint_w": 34.75,
+          "chars": 4
+        },
+        "text:6": {
+          "x": 375.5,
+          "y": 94,
+          "w": 41.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 41.5,
+          "unhint_w": 40.875,
+          "chars": 5
+        },
+        "text:7": {
+          "x": 533.5,
+          "y": 94,
+          "w": 29,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 29,
+          "unhint_w": 28.4375,
+          "chars": 4
+        },
+        "text:8": {
+          "x": 121,
+          "y": 158,
+          "w": 25,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 25,
+          "unhint_w": 24.25,
+          "chars": 4
+        },
+        "text:9": {
+          "x": 307,
+          "y": 158,
+          "w": 57.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 57.5,
+          "unhint_w": 56.6875,
+          "chars": 8
+        }
+      }
+    },
+    {
+      "t_ms": 1250,
+      "props": {},
+      "elements": {
+        "tabrow0": {
+          "x": 16,
+          "y": 16,
+          "w": 608,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1": {
+          "x": 16,
+          "y": 80,
+          "w": 608,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2": {
+          "x": 16,
+          "y": 144,
+          "w": 608,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item0": {
+          "x": 16,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item1": {
+          "x": 168,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item2": {
+          "x": 320,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item3": {
+          "x": 472,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item0": {
+          "x": 16,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item1": {
+          "x": 168,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item2": {
+          "x": 320,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item3": {
+          "x": 472,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2item0": {
+          "x": 16,
+          "y": 144,
+          "w": 202.5,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2item1": {
+          "x": 218.5,
+          "y": 144,
+          "w": 202.5,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2item2": {
+          "x": 421,
+          "y": 144,
+          "w": 202.5,
+          "h": 48,
+          "opacity": 1
+        }
+      },
+      "text": {
+        "text:0": {
+          "x": 62.5,
+          "y": 30,
+          "w": 59,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 59,
+          "unhint_w": 58.1875,
+          "chars": 8
+        },
+        "text:1": {
+          "x": 224.5,
+          "y": 30,
+          "w": 39.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 39.5,
+          "unhint_w": 38.8125,
+          "chars": 5
+        },
+        "text:10": {
+          "x": 520,
+          "y": 158,
+          "w": 36.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 36.5,
+          "unhint_w": 35.6875,
+          "chars": 5
+        },
+        "text:2": {
+          "x": 369.5,
+          "y": 30,
+          "w": 53.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 53.5,
+          "unhint_w": 52.4375,
+          "chars": 7
+        },
+        "text:3": {
+          "x": 536.5,
+          "y": 30,
+          "w": 23.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 23.5,
+          "unhint_w": 23.1875,
+          "chars": 3
+        },
+        "text:4": {
+          "x": 80,
+          "y": 94,
+          "w": 24.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 24.5,
+          "unhint_w": 23.6875,
+          "chars": 3
+        },
+        "text:5": {
+          "x": 226,
+          "y": 94,
+          "w": 36,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 36,
+          "unhint_w": 34.75,
+          "chars": 4
+        },
+        "text:6": {
+          "x": 375.5,
+          "y": 94,
+          "w": 41.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 41.5,
+          "unhint_w": 40.875,
+          "chars": 5
+        },
+        "text:7": {
+          "x": 533.5,
+          "y": 94,
+          "w": 29,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 29,
+          "unhint_w": 28.4375,
+          "chars": 4
+        },
+        "text:8": {
+          "x": 121,
+          "y": 158,
+          "w": 25,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 25,
+          "unhint_w": 24.25,
+          "chars": 4
+        },
+        "text:9": {
+          "x": 307,
+          "y": 158,
+          "w": 57.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 57.5,
+          "unhint_w": 56.6875,
+          "chars": 8
+        }
+      }
+    },
+    {
+      "t_ms": 1300,
+      "props": {},
+      "elements": {
+        "tabrow0": {
+          "x": 16,
+          "y": 16,
+          "w": 608,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1": {
+          "x": 16,
+          "y": 80,
+          "w": 608,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2": {
+          "x": 16,
+          "y": 144,
+          "w": 608,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item0": {
+          "x": 16,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item1": {
+          "x": 168,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item2": {
+          "x": 320,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item3": {
+          "x": 472,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item0": {
+          "x": 16,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item1": {
+          "x": 168,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item2": {
+          "x": 320,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item3": {
+          "x": 472,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2item0": {
+          "x": 16,
+          "y": 144,
+          "w": 202.5,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2item1": {
+          "x": 218.5,
+          "y": 144,
+          "w": 202.5,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2item2": {
+          "x": 421,
+          "y": 144,
+          "w": 202.5,
+          "h": 48,
+          "opacity": 1
+        }
+      },
+      "text": {
+        "text:0": {
+          "x": 62.5,
+          "y": 30,
+          "w": 59,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 59,
+          "unhint_w": 58.1875,
+          "chars": 8
+        },
+        "text:1": {
+          "x": 224.5,
+          "y": 30,
+          "w": 39.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 39.5,
+          "unhint_w": 38.8125,
+          "chars": 5
+        },
+        "text:10": {
+          "x": 520,
+          "y": 158,
+          "w": 36.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 36.5,
+          "unhint_w": 35.6875,
+          "chars": 5
+        },
+        "text:2": {
+          "x": 369.5,
+          "y": 30,
+          "w": 53.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 53.5,
+          "unhint_w": 52.4375,
+          "chars": 7
+        },
+        "text:3": {
+          "x": 536.5,
+          "y": 30,
+          "w": 23.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 23.5,
+          "unhint_w": 23.1875,
+          "chars": 3
+        },
+        "text:4": {
+          "x": 80,
+          "y": 94,
+          "w": 24.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 24.5,
+          "unhint_w": 23.6875,
+          "chars": 3
+        },
+        "text:5": {
+          "x": 226,
+          "y": 94,
+          "w": 36,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 36,
+          "unhint_w": 34.75,
+          "chars": 4
+        },
+        "text:6": {
+          "x": 375.5,
+          "y": 94,
+          "w": 41.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 41.5,
+          "unhint_w": 40.875,
+          "chars": 5
+        },
+        "text:7": {
+          "x": 533.5,
+          "y": 94,
+          "w": 29,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 29,
+          "unhint_w": 28.4375,
+          "chars": 4
+        },
+        "text:8": {
+          "x": 121,
+          "y": 158,
+          "w": 25,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 25,
+          "unhint_w": 24.25,
+          "chars": 4
+        },
+        "text:9": {
+          "x": 307,
+          "y": 158,
+          "w": 57.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 57.5,
+          "unhint_w": 56.6875,
+          "chars": 8
+        }
+      }
+    },
+    {
+      "t_ms": 1350,
+      "props": {},
+      "elements": {
+        "tabrow0": {
+          "x": 16,
+          "y": 16,
+          "w": 608,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1": {
+          "x": 16,
+          "y": 80,
+          "w": 608,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2": {
+          "x": 16,
+          "y": 144,
+          "w": 608,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item0": {
+          "x": 16,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item1": {
+          "x": 168,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item2": {
+          "x": 320,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item3": {
+          "x": 472,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item0": {
+          "x": 16,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item1": {
+          "x": 168,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item2": {
+          "x": 320,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item3": {
+          "x": 472,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2item0": {
+          "x": 16,
+          "y": 144,
+          "w": 202.5,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2item1": {
+          "x": 218.5,
+          "y": 144,
+          "w": 202.5,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2item2": {
+          "x": 421,
+          "y": 144,
+          "w": 202.5,
+          "h": 48,
+          "opacity": 1
+        }
+      },
+      "text": {
+        "text:0": {
+          "x": 62.5,
+          "y": 30,
+          "w": 59,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 59,
+          "unhint_w": 58.1875,
+          "chars": 8
+        },
+        "text:1": {
+          "x": 224.5,
+          "y": 30,
+          "w": 39.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 39.5,
+          "unhint_w": 38.8125,
+          "chars": 5
+        },
+        "text:10": {
+          "x": 520,
+          "y": 158,
+          "w": 36.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 36.5,
+          "unhint_w": 35.6875,
+          "chars": 5
+        },
+        "text:2": {
+          "x": 369.5,
+          "y": 30,
+          "w": 53.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 53.5,
+          "unhint_w": 52.4375,
+          "chars": 7
+        },
+        "text:3": {
+          "x": 536.5,
+          "y": 30,
+          "w": 23.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 23.5,
+          "unhint_w": 23.1875,
+          "chars": 3
+        },
+        "text:4": {
+          "x": 80,
+          "y": 94,
+          "w": 24.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 24.5,
+          "unhint_w": 23.6875,
+          "chars": 3
+        },
+        "text:5": {
+          "x": 226,
+          "y": 94,
+          "w": 36,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 36,
+          "unhint_w": 34.75,
+          "chars": 4
+        },
+        "text:6": {
+          "x": 375.5,
+          "y": 94,
+          "w": 41.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 41.5,
+          "unhint_w": 40.875,
+          "chars": 5
+        },
+        "text:7": {
+          "x": 533.5,
+          "y": 94,
+          "w": 29,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 29,
+          "unhint_w": 28.4375,
+          "chars": 4
+        },
+        "text:8": {
+          "x": 121,
+          "y": 158,
+          "w": 25,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 25,
+          "unhint_w": 24.25,
+          "chars": 4
+        },
+        "text:9": {
+          "x": 307,
+          "y": 158,
+          "w": 57.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 57.5,
+          "unhint_w": 56.6875,
+          "chars": 8
+        }
+      }
+    },
+    {
+      "t_ms": 1400,
+      "props": {},
+      "elements": {
+        "tabrow0": {
+          "x": 16,
+          "y": 16,
+          "w": 608,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1": {
+          "x": 16,
+          "y": 80,
+          "w": 608,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2": {
+          "x": 16,
+          "y": 144,
+          "w": 608,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item0": {
+          "x": 16,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item1": {
+          "x": 168,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item2": {
+          "x": 320,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item3": {
+          "x": 472,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item0": {
+          "x": 16,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item1": {
+          "x": 168,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item2": {
+          "x": 320,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item3": {
+          "x": 472,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2item0": {
+          "x": 16,
+          "y": 144,
+          "w": 202.5,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2item1": {
+          "x": 218.5,
+          "y": 144,
+          "w": 202.5,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2item2": {
+          "x": 421,
+          "y": 144,
+          "w": 202.5,
+          "h": 48,
+          "opacity": 1
+        }
+      },
+      "text": {
+        "text:0": {
+          "x": 62.5,
+          "y": 30,
+          "w": 59,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 59,
+          "unhint_w": 58.1875,
+          "chars": 8
+        },
+        "text:1": {
+          "x": 224.5,
+          "y": 30,
+          "w": 39.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 39.5,
+          "unhint_w": 38.8125,
+          "chars": 5
+        },
+        "text:10": {
+          "x": 520,
+          "y": 158,
+          "w": 36.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 36.5,
+          "unhint_w": 35.6875,
+          "chars": 5
+        },
+        "text:2": {
+          "x": 369.5,
+          "y": 30,
+          "w": 53.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 53.5,
+          "unhint_w": 52.4375,
+          "chars": 7
+        },
+        "text:3": {
+          "x": 536.5,
+          "y": 30,
+          "w": 23.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 23.5,
+          "unhint_w": 23.1875,
+          "chars": 3
+        },
+        "text:4": {
+          "x": 80,
+          "y": 94,
+          "w": 24.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 24.5,
+          "unhint_w": 23.6875,
+          "chars": 3
+        },
+        "text:5": {
+          "x": 226,
+          "y": 94,
+          "w": 36,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 36,
+          "unhint_w": 34.75,
+          "chars": 4
+        },
+        "text:6": {
+          "x": 375.5,
+          "y": 94,
+          "w": 41.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 41.5,
+          "unhint_w": 40.875,
+          "chars": 5
+        },
+        "text:7": {
+          "x": 533.5,
+          "y": 94,
+          "w": 29,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 29,
+          "unhint_w": 28.4375,
+          "chars": 4
+        },
+        "text:8": {
+          "x": 121,
+          "y": 158,
+          "w": 25,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 25,
+          "unhint_w": 24.25,
+          "chars": 4
+        },
+        "text:9": {
+          "x": 307,
+          "y": 158,
+          "w": 57.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 57.5,
+          "unhint_w": 56.6875,
+          "chars": 8
+        }
+      }
+    },
+    {
+      "t_ms": 1450,
+      "props": {},
+      "elements": {
+        "tabrow0": {
+          "x": 16,
+          "y": 16,
+          "w": 608,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1": {
+          "x": 16,
+          "y": 80,
+          "w": 608,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2": {
+          "x": 16,
+          "y": 144,
+          "w": 608,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item0": {
+          "x": 16,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item1": {
+          "x": 168,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item2": {
+          "x": 320,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item3": {
+          "x": 472,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item0": {
+          "x": 16,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item1": {
+          "x": 168,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item2": {
+          "x": 320,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item3": {
+          "x": 472,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2item0": {
+          "x": 16,
+          "y": 144,
+          "w": 202.5,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2item1": {
+          "x": 218.5,
+          "y": 144,
+          "w": 202.5,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2item2": {
+          "x": 421,
+          "y": 144,
+          "w": 202.5,
+          "h": 48,
+          "opacity": 1
+        }
+      },
+      "text": {
+        "text:0": {
+          "x": 62.5,
+          "y": 30,
+          "w": 59,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 59,
+          "unhint_w": 58.1875,
+          "chars": 8
+        },
+        "text:1": {
+          "x": 224.5,
+          "y": 30,
+          "w": 39.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 39.5,
+          "unhint_w": 38.8125,
+          "chars": 5
+        },
+        "text:10": {
+          "x": 520,
+          "y": 158,
+          "w": 36.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 36.5,
+          "unhint_w": 35.6875,
+          "chars": 5
+        },
+        "text:2": {
+          "x": 369.5,
+          "y": 30,
+          "w": 53.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 53.5,
+          "unhint_w": 52.4375,
+          "chars": 7
+        },
+        "text:3": {
+          "x": 536.5,
+          "y": 30,
+          "w": 23.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 23.5,
+          "unhint_w": 23.1875,
+          "chars": 3
+        },
+        "text:4": {
+          "x": 80,
+          "y": 94,
+          "w": 24.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 24.5,
+          "unhint_w": 23.6875,
+          "chars": 3
+        },
+        "text:5": {
+          "x": 226,
+          "y": 94,
+          "w": 36,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 36,
+          "unhint_w": 34.75,
+          "chars": 4
+        },
+        "text:6": {
+          "x": 375.5,
+          "y": 94,
+          "w": 41.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 41.5,
+          "unhint_w": 40.875,
+          "chars": 5
+        },
+        "text:7": {
+          "x": 533.5,
+          "y": 94,
+          "w": 29,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 29,
+          "unhint_w": 28.4375,
+          "chars": 4
+        },
+        "text:8": {
+          "x": 121,
+          "y": 158,
+          "w": 25,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 25,
+          "unhint_w": 24.25,
+          "chars": 4
+        },
+        "text:9": {
+          "x": 307,
+          "y": 158,
+          "w": 57.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 57.5,
+          "unhint_w": 56.6875,
+          "chars": 8
+        }
+      }
+    },
+    {
+      "t_ms": 1500,
+      "props": {},
+      "elements": {
+        "tabrow0": {
+          "x": 16,
+          "y": 16,
+          "w": 608,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1": {
+          "x": 16,
+          "y": 80,
+          "w": 608,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2": {
+          "x": 16,
+          "y": 144,
+          "w": 608,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item0": {
+          "x": 16,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item1": {
+          "x": 168,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item2": {
+          "x": 320,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item3": {
+          "x": 472,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item0": {
+          "x": 16,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item1": {
+          "x": 168,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item2": {
+          "x": 320,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item3": {
+          "x": 472,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2item0": {
+          "x": 16,
+          "y": 144,
+          "w": 202.5,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2item1": {
+          "x": 218.5,
+          "y": 144,
+          "w": 202.5,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2item2": {
+          "x": 421,
+          "y": 144,
+          "w": 202.5,
+          "h": 48,
+          "opacity": 1
+        }
+      },
+      "text": {
+        "text:0": {
+          "x": 62.5,
+          "y": 30,
+          "w": 59,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 59,
+          "unhint_w": 58.1875,
+          "chars": 8
+        },
+        "text:1": {
+          "x": 224.5,
+          "y": 30,
+          "w": 39.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 39.5,
+          "unhint_w": 38.8125,
+          "chars": 5
+        },
+        "text:10": {
+          "x": 520,
+          "y": 158,
+          "w": 36.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 36.5,
+          "unhint_w": 35.6875,
+          "chars": 5
+        },
+        "text:2": {
+          "x": 369.5,
+          "y": 30,
+          "w": 53.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 53.5,
+          "unhint_w": 52.4375,
+          "chars": 7
+        },
+        "text:3": {
+          "x": 536.5,
+          "y": 30,
+          "w": 23.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 23.5,
+          "unhint_w": 23.1875,
+          "chars": 3
+        },
+        "text:4": {
+          "x": 80,
+          "y": 94,
+          "w": 24.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 24.5,
+          "unhint_w": 23.6875,
+          "chars": 3
+        },
+        "text:5": {
+          "x": 226,
+          "y": 94,
+          "w": 36,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 36,
+          "unhint_w": 34.75,
+          "chars": 4
+        },
+        "text:6": {
+          "x": 375.5,
+          "y": 94,
+          "w": 41.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 41.5,
+          "unhint_w": 40.875,
+          "chars": 5
+        },
+        "text:7": {
+          "x": 533.5,
+          "y": 94,
+          "w": 29,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 29,
+          "unhint_w": 28.4375,
+          "chars": 4
+        },
+        "text:8": {
+          "x": 121,
+          "y": 158,
+          "w": 25,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 25,
+          "unhint_w": 24.25,
+          "chars": 4
+        },
+        "text:9": {
+          "x": 307,
+          "y": 158,
+          "w": 57.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 57.5,
+          "unhint_w": 56.6875,
+          "chars": 8
+        }
+      }
+    },
+    {
+      "t_ms": 1550,
+      "props": {},
+      "elements": {
+        "tabrow0": {
+          "x": 16,
+          "y": 16,
+          "w": 608,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1": {
+          "x": 16,
+          "y": 80,
+          "w": 608,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2": {
+          "x": 16,
+          "y": 144,
+          "w": 608,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item0": {
+          "x": 16,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item1": {
+          "x": 168,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item2": {
+          "x": 320,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item3": {
+          "x": 472,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item0": {
+          "x": 16,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item1": {
+          "x": 168,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item2": {
+          "x": 320,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item3": {
+          "x": 472,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2item0": {
+          "x": 16,
+          "y": 144,
+          "w": 202.5,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2item1": {
+          "x": 218.5,
+          "y": 144,
+          "w": 202.5,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2item2": {
+          "x": 421,
+          "y": 144,
+          "w": 202.5,
+          "h": 48,
+          "opacity": 1
+        }
+      },
+      "text": {
+        "text:0": {
+          "x": 62.5,
+          "y": 30,
+          "w": 59,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 59,
+          "unhint_w": 58.1875,
+          "chars": 8
+        },
+        "text:1": {
+          "x": 224.5,
+          "y": 30,
+          "w": 39.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 39.5,
+          "unhint_w": 38.8125,
+          "chars": 5
+        },
+        "text:10": {
+          "x": 520,
+          "y": 158,
+          "w": 36.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 36.5,
+          "unhint_w": 35.6875,
+          "chars": 5
+        },
+        "text:2": {
+          "x": 369.5,
+          "y": 30,
+          "w": 53.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 53.5,
+          "unhint_w": 52.4375,
+          "chars": 7
+        },
+        "text:3": {
+          "x": 536.5,
+          "y": 30,
+          "w": 23.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 23.5,
+          "unhint_w": 23.1875,
+          "chars": 3
+        },
+        "text:4": {
+          "x": 80,
+          "y": 94,
+          "w": 24.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 24.5,
+          "unhint_w": 23.6875,
+          "chars": 3
+        },
+        "text:5": {
+          "x": 226,
+          "y": 94,
+          "w": 36,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 36,
+          "unhint_w": 34.75,
+          "chars": 4
+        },
+        "text:6": {
+          "x": 375.5,
+          "y": 94,
+          "w": 41.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 41.5,
+          "unhint_w": 40.875,
+          "chars": 5
+        },
+        "text:7": {
+          "x": 533.5,
+          "y": 94,
+          "w": 29,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 29,
+          "unhint_w": 28.4375,
+          "chars": 4
+        },
+        "text:8": {
+          "x": 121,
+          "y": 158,
+          "w": 25,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 25,
+          "unhint_w": 24.25,
+          "chars": 4
+        },
+        "text:9": {
+          "x": 307,
+          "y": 158,
+          "w": 57.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 57.5,
+          "unhint_w": 56.6875,
+          "chars": 8
+        }
+      }
+    },
+    {
+      "t_ms": 1600,
+      "props": {},
+      "elements": {
+        "tabrow0": {
+          "x": 16,
+          "y": 16,
+          "w": 608,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1": {
+          "x": 16,
+          "y": 80,
+          "w": 608,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2": {
+          "x": 16,
+          "y": 144,
+          "w": 608,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item0": {
+          "x": 16,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item1": {
+          "x": 168,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item2": {
+          "x": 320,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item3": {
+          "x": 472,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item0": {
+          "x": 16,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item1": {
+          "x": 168,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item2": {
+          "x": 320,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item3": {
+          "x": 472,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2item0": {
+          "x": 16,
+          "y": 144,
+          "w": 202.5,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2item1": {
+          "x": 218.5,
+          "y": 144,
+          "w": 202.5,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2item2": {
+          "x": 421,
+          "y": 144,
+          "w": 202.5,
+          "h": 48,
+          "opacity": 1
+        }
+      },
+      "text": {
+        "text:0": {
+          "x": 62.5,
+          "y": 30,
+          "w": 59,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 59,
+          "unhint_w": 58.1875,
+          "chars": 8
+        },
+        "text:1": {
+          "x": 224.5,
+          "y": 30,
+          "w": 39.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 39.5,
+          "unhint_w": 38.8125,
+          "chars": 5
+        },
+        "text:10": {
+          "x": 520,
+          "y": 158,
+          "w": 36.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 36.5,
+          "unhint_w": 35.6875,
+          "chars": 5
+        },
+        "text:2": {
+          "x": 369.5,
+          "y": 30,
+          "w": 53.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 53.5,
+          "unhint_w": 52.4375,
+          "chars": 7
+        },
+        "text:3": {
+          "x": 536.5,
+          "y": 30,
+          "w": 23.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 23.5,
+          "unhint_w": 23.1875,
+          "chars": 3
+        },
+        "text:4": {
+          "x": 80,
+          "y": 94,
+          "w": 24.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 24.5,
+          "unhint_w": 23.6875,
+          "chars": 3
+        },
+        "text:5": {
+          "x": 226,
+          "y": 94,
+          "w": 36,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 36,
+          "unhint_w": 34.75,
+          "chars": 4
+        },
+        "text:6": {
+          "x": 375.5,
+          "y": 94,
+          "w": 41.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 41.5,
+          "unhint_w": 40.875,
+          "chars": 5
+        },
+        "text:7": {
+          "x": 533.5,
+          "y": 94,
+          "w": 29,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 29,
+          "unhint_w": 28.4375,
+          "chars": 4
+        },
+        "text:8": {
+          "x": 121,
+          "y": 158,
+          "w": 25,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 25,
+          "unhint_w": 24.25,
+          "chars": 4
+        },
+        "text:9": {
+          "x": 307,
+          "y": 158,
+          "w": 57.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 57.5,
+          "unhint_w": 56.6875,
+          "chars": 8
+        }
+      }
+    },
+    {
+      "t_ms": 1650,
+      "props": {},
+      "elements": {
+        "tabrow0": {
+          "x": 16,
+          "y": 16,
+          "w": 608,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1": {
+          "x": 16,
+          "y": 80,
+          "w": 608,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2": {
+          "x": 16,
+          "y": 144,
+          "w": 608,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item0": {
+          "x": 16,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item1": {
+          "x": 168,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item2": {
+          "x": 320,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item3": {
+          "x": 472,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item0": {
+          "x": 16,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item1": {
+          "x": 168,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item2": {
+          "x": 320,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item3": {
+          "x": 472,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2item0": {
+          "x": 16,
+          "y": 144,
+          "w": 202.5,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2item1": {
+          "x": 218.5,
+          "y": 144,
+          "w": 202.5,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2item2": {
+          "x": 421,
+          "y": 144,
+          "w": 202.5,
+          "h": 48,
+          "opacity": 1
+        }
+      },
+      "text": {
+        "text:0": {
+          "x": 62.5,
+          "y": 30,
+          "w": 59,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 59,
+          "unhint_w": 58.1875,
+          "chars": 8
+        },
+        "text:1": {
+          "x": 224.5,
+          "y": 30,
+          "w": 39.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 39.5,
+          "unhint_w": 38.8125,
+          "chars": 5
+        },
+        "text:10": {
+          "x": 520,
+          "y": 158,
+          "w": 36.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 36.5,
+          "unhint_w": 35.6875,
+          "chars": 5
+        },
+        "text:2": {
+          "x": 369.5,
+          "y": 30,
+          "w": 53.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 53.5,
+          "unhint_w": 52.4375,
+          "chars": 7
+        },
+        "text:3": {
+          "x": 536.5,
+          "y": 30,
+          "w": 23.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 23.5,
+          "unhint_w": 23.1875,
+          "chars": 3
+        },
+        "text:4": {
+          "x": 80,
+          "y": 94,
+          "w": 24.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 24.5,
+          "unhint_w": 23.6875,
+          "chars": 3
+        },
+        "text:5": {
+          "x": 226,
+          "y": 94,
+          "w": 36,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 36,
+          "unhint_w": 34.75,
+          "chars": 4
+        },
+        "text:6": {
+          "x": 375.5,
+          "y": 94,
+          "w": 41.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 41.5,
+          "unhint_w": 40.875,
+          "chars": 5
+        },
+        "text:7": {
+          "x": 533.5,
+          "y": 94,
+          "w": 29,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 29,
+          "unhint_w": 28.4375,
+          "chars": 4
+        },
+        "text:8": {
+          "x": 121,
+          "y": 158,
+          "w": 25,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 25,
+          "unhint_w": 24.25,
+          "chars": 4
+        },
+        "text:9": {
+          "x": 307,
+          "y": 158,
+          "w": 57.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 57.5,
+          "unhint_w": 56.6875,
+          "chars": 8
+        }
+      }
+    },
+    {
+      "t_ms": 1700,
+      "props": {},
+      "elements": {
+        "tabrow0": {
+          "x": 16,
+          "y": 16,
+          "w": 608,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1": {
+          "x": 16,
+          "y": 80,
+          "w": 608,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2": {
+          "x": 16,
+          "y": 144,
+          "w": 608,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item0": {
+          "x": 16,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item1": {
+          "x": 168,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item2": {
+          "x": 320,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item3": {
+          "x": 472,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item0": {
+          "x": 16,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item1": {
+          "x": 168,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item2": {
+          "x": 320,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item3": {
+          "x": 472,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2item0": {
+          "x": 16,
+          "y": 144,
+          "w": 202.5,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2item1": {
+          "x": 218.5,
+          "y": 144,
+          "w": 202.5,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2item2": {
+          "x": 421,
+          "y": 144,
+          "w": 202.5,
+          "h": 48,
+          "opacity": 1
+        }
+      },
+      "text": {
+        "text:0": {
+          "x": 62.5,
+          "y": 30,
+          "w": 59,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 59,
+          "unhint_w": 58.1875,
+          "chars": 8
+        },
+        "text:1": {
+          "x": 224.5,
+          "y": 30,
+          "w": 39.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 39.5,
+          "unhint_w": 38.8125,
+          "chars": 5
+        },
+        "text:10": {
+          "x": 520,
+          "y": 158,
+          "w": 36.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 36.5,
+          "unhint_w": 35.6875,
+          "chars": 5
+        },
+        "text:2": {
+          "x": 369.5,
+          "y": 30,
+          "w": 53.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 53.5,
+          "unhint_w": 52.4375,
+          "chars": 7
+        },
+        "text:3": {
+          "x": 536.5,
+          "y": 30,
+          "w": 23.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 23.5,
+          "unhint_w": 23.1875,
+          "chars": 3
+        },
+        "text:4": {
+          "x": 80,
+          "y": 94,
+          "w": 24.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 24.5,
+          "unhint_w": 23.6875,
+          "chars": 3
+        },
+        "text:5": {
+          "x": 226,
+          "y": 94,
+          "w": 36,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 36,
+          "unhint_w": 34.75,
+          "chars": 4
+        },
+        "text:6": {
+          "x": 375.5,
+          "y": 94,
+          "w": 41.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 41.5,
+          "unhint_w": 40.875,
+          "chars": 5
+        },
+        "text:7": {
+          "x": 533.5,
+          "y": 94,
+          "w": 29,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 29,
+          "unhint_w": 28.4375,
+          "chars": 4
+        },
+        "text:8": {
+          "x": 121,
+          "y": 158,
+          "w": 25,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 25,
+          "unhint_w": 24.25,
+          "chars": 4
+        },
+        "text:9": {
+          "x": 307,
+          "y": 158,
+          "w": 57.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 57.5,
+          "unhint_w": 56.6875,
+          "chars": 8
+        }
+      }
+    },
+    {
+      "t_ms": 1750,
+      "props": {},
+      "elements": {
+        "tabrow0": {
+          "x": 16,
+          "y": 16,
+          "w": 608,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1": {
+          "x": 16,
+          "y": 80,
+          "w": 608,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2": {
+          "x": 16,
+          "y": 144,
+          "w": 608,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item0": {
+          "x": 16,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item1": {
+          "x": 168,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item2": {
+          "x": 320,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item3": {
+          "x": 472,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item0": {
+          "x": 16,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item1": {
+          "x": 168,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item2": {
+          "x": 320,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item3": {
+          "x": 472,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2item0": {
+          "x": 16,
+          "y": 144,
+          "w": 202.5,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2item1": {
+          "x": 218.5,
+          "y": 144,
+          "w": 202.5,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2item2": {
+          "x": 421,
+          "y": 144,
+          "w": 202.5,
+          "h": 48,
+          "opacity": 1
+        }
+      },
+      "text": {
+        "text:0": {
+          "x": 62.5,
+          "y": 30,
+          "w": 59,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 59,
+          "unhint_w": 58.1875,
+          "chars": 8
+        },
+        "text:1": {
+          "x": 224.5,
+          "y": 30,
+          "w": 39.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 39.5,
+          "unhint_w": 38.8125,
+          "chars": 5
+        },
+        "text:10": {
+          "x": 520,
+          "y": 158,
+          "w": 36.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 36.5,
+          "unhint_w": 35.6875,
+          "chars": 5
+        },
+        "text:2": {
+          "x": 369.5,
+          "y": 30,
+          "w": 53.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 53.5,
+          "unhint_w": 52.4375,
+          "chars": 7
+        },
+        "text:3": {
+          "x": 536.5,
+          "y": 30,
+          "w": 23.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 23.5,
+          "unhint_w": 23.1875,
+          "chars": 3
+        },
+        "text:4": {
+          "x": 80,
+          "y": 94,
+          "w": 24.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 24.5,
+          "unhint_w": 23.6875,
+          "chars": 3
+        },
+        "text:5": {
+          "x": 226,
+          "y": 94,
+          "w": 36,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 36,
+          "unhint_w": 34.75,
+          "chars": 4
+        },
+        "text:6": {
+          "x": 375.5,
+          "y": 94,
+          "w": 41.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 41.5,
+          "unhint_w": 40.875,
+          "chars": 5
+        },
+        "text:7": {
+          "x": 533.5,
+          "y": 94,
+          "w": 29,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 29,
+          "unhint_w": 28.4375,
+          "chars": 4
+        },
+        "text:8": {
+          "x": 121,
+          "y": 158,
+          "w": 25,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 25,
+          "unhint_w": 24.25,
+          "chars": 4
+        },
+        "text:9": {
+          "x": 307,
+          "y": 158,
+          "w": 57.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 57.5,
+          "unhint_w": 56.6875,
+          "chars": 8
+        }
+      }
+    },
+    {
+      "t_ms": 1800,
+      "props": {},
+      "elements": {
+        "tabrow0": {
+          "x": 16,
+          "y": 16,
+          "w": 608,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1": {
+          "x": 16,
+          "y": 80,
+          "w": 608,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2": {
+          "x": 16,
+          "y": 144,
+          "w": 608,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item0": {
+          "x": 16,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item1": {
+          "x": 168,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item2": {
+          "x": 320,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item3": {
+          "x": 472,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item0": {
+          "x": 16,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item1": {
+          "x": 168,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item2": {
+          "x": 320,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item3": {
+          "x": 472,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2item0": {
+          "x": 16,
+          "y": 144,
+          "w": 202.5,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2item1": {
+          "x": 218.5,
+          "y": 144,
+          "w": 202.5,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2item2": {
+          "x": 421,
+          "y": 144,
+          "w": 202.5,
+          "h": 48,
+          "opacity": 1
+        }
+      },
+      "text": {
+        "text:0": {
+          "x": 62.5,
+          "y": 30,
+          "w": 59,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 59,
+          "unhint_w": 58.1875,
+          "chars": 8
+        },
+        "text:1": {
+          "x": 224.5,
+          "y": 30,
+          "w": 39.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 39.5,
+          "unhint_w": 38.8125,
+          "chars": 5
+        },
+        "text:10": {
+          "x": 520,
+          "y": 158,
+          "w": 36.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 36.5,
+          "unhint_w": 35.6875,
+          "chars": 5
+        },
+        "text:2": {
+          "x": 369.5,
+          "y": 30,
+          "w": 53.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 53.5,
+          "unhint_w": 52.4375,
+          "chars": 7
+        },
+        "text:3": {
+          "x": 536.5,
+          "y": 30,
+          "w": 23.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 23.5,
+          "unhint_w": 23.1875,
+          "chars": 3
+        },
+        "text:4": {
+          "x": 80,
+          "y": 94,
+          "w": 24.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 24.5,
+          "unhint_w": 23.6875,
+          "chars": 3
+        },
+        "text:5": {
+          "x": 226,
+          "y": 94,
+          "w": 36,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 36,
+          "unhint_w": 34.75,
+          "chars": 4
+        },
+        "text:6": {
+          "x": 375.5,
+          "y": 94,
+          "w": 41.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 41.5,
+          "unhint_w": 40.875,
+          "chars": 5
+        },
+        "text:7": {
+          "x": 533.5,
+          "y": 94,
+          "w": 29,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 29,
+          "unhint_w": 28.4375,
+          "chars": 4
+        },
+        "text:8": {
+          "x": 121,
+          "y": 158,
+          "w": 25,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 25,
+          "unhint_w": 24.25,
+          "chars": 4
+        },
+        "text:9": {
+          "x": 307,
+          "y": 158,
+          "w": 57.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 57.5,
+          "unhint_w": 56.6875,
+          "chars": 8
+        }
+      }
+    },
+    {
+      "t_ms": 1850,
+      "props": {},
+      "elements": {
+        "tabrow0": {
+          "x": 16,
+          "y": 16,
+          "w": 608,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1": {
+          "x": 16,
+          "y": 80,
+          "w": 608,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2": {
+          "x": 16,
+          "y": 144,
+          "w": 608,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item0": {
+          "x": 16,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item1": {
+          "x": 168,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item2": {
+          "x": 320,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item3": {
+          "x": 472,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item0": {
+          "x": 16,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item1": {
+          "x": 168,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item2": {
+          "x": 320,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item3": {
+          "x": 472,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2item0": {
+          "x": 16,
+          "y": 144,
+          "w": 202.5,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2item1": {
+          "x": 218.5,
+          "y": 144,
+          "w": 202.5,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2item2": {
+          "x": 421,
+          "y": 144,
+          "w": 202.5,
+          "h": 48,
+          "opacity": 1
+        }
+      },
+      "text": {
+        "text:0": {
+          "x": 62.5,
+          "y": 30,
+          "w": 59,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 59,
+          "unhint_w": 58.1875,
+          "chars": 8
+        },
+        "text:1": {
+          "x": 224.5,
+          "y": 30,
+          "w": 39.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 39.5,
+          "unhint_w": 38.8125,
+          "chars": 5
+        },
+        "text:10": {
+          "x": 520,
+          "y": 158,
+          "w": 36.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 36.5,
+          "unhint_w": 35.6875,
+          "chars": 5
+        },
+        "text:2": {
+          "x": 369.5,
+          "y": 30,
+          "w": 53.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 53.5,
+          "unhint_w": 52.4375,
+          "chars": 7
+        },
+        "text:3": {
+          "x": 536.5,
+          "y": 30,
+          "w": 23.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 23.5,
+          "unhint_w": 23.1875,
+          "chars": 3
+        },
+        "text:4": {
+          "x": 80,
+          "y": 94,
+          "w": 24.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 24.5,
+          "unhint_w": 23.6875,
+          "chars": 3
+        },
+        "text:5": {
+          "x": 226,
+          "y": 94,
+          "w": 36,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 36,
+          "unhint_w": 34.75,
+          "chars": 4
+        },
+        "text:6": {
+          "x": 375.5,
+          "y": 94,
+          "w": 41.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 41.5,
+          "unhint_w": 40.875,
+          "chars": 5
+        },
+        "text:7": {
+          "x": 533.5,
+          "y": 94,
+          "w": 29,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 29,
+          "unhint_w": 28.4375,
+          "chars": 4
+        },
+        "text:8": {
+          "x": 121,
+          "y": 158,
+          "w": 25,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 25,
+          "unhint_w": 24.25,
+          "chars": 4
+        },
+        "text:9": {
+          "x": 307,
+          "y": 158,
+          "w": 57.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 57.5,
+          "unhint_w": 56.6875,
+          "chars": 8
+        }
+      }
+    },
+    {
+      "t_ms": 1900,
+      "props": {},
+      "elements": {
+        "tabrow0": {
+          "x": 16,
+          "y": 16,
+          "w": 608,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1": {
+          "x": 16,
+          "y": 80,
+          "w": 608,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2": {
+          "x": 16,
+          "y": 144,
+          "w": 608,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item0": {
+          "x": 16,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item1": {
+          "x": 168,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item2": {
+          "x": 320,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item3": {
+          "x": 472,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item0": {
+          "x": 16,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item1": {
+          "x": 168,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item2": {
+          "x": 320,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item3": {
+          "x": 472,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2item0": {
+          "x": 16,
+          "y": 144,
+          "w": 202.5,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2item1": {
+          "x": 218.5,
+          "y": 144,
+          "w": 202.5,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2item2": {
+          "x": 421,
+          "y": 144,
+          "w": 202.5,
+          "h": 48,
+          "opacity": 1
+        }
+      },
+      "text": {
+        "text:0": {
+          "x": 62.5,
+          "y": 30,
+          "w": 59,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 59,
+          "unhint_w": 58.1875,
+          "chars": 8
+        },
+        "text:1": {
+          "x": 224.5,
+          "y": 30,
+          "w": 39.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 39.5,
+          "unhint_w": 38.8125,
+          "chars": 5
+        },
+        "text:10": {
+          "x": 520,
+          "y": 158,
+          "w": 36.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 36.5,
+          "unhint_w": 35.6875,
+          "chars": 5
+        },
+        "text:2": {
+          "x": 369.5,
+          "y": 30,
+          "w": 53.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 53.5,
+          "unhint_w": 52.4375,
+          "chars": 7
+        },
+        "text:3": {
+          "x": 536.5,
+          "y": 30,
+          "w": 23.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 23.5,
+          "unhint_w": 23.1875,
+          "chars": 3
+        },
+        "text:4": {
+          "x": 80,
+          "y": 94,
+          "w": 24.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 24.5,
+          "unhint_w": 23.6875,
+          "chars": 3
+        },
+        "text:5": {
+          "x": 226,
+          "y": 94,
+          "w": 36,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 36,
+          "unhint_w": 34.75,
+          "chars": 4
+        },
+        "text:6": {
+          "x": 375.5,
+          "y": 94,
+          "w": 41.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 41.5,
+          "unhint_w": 40.875,
+          "chars": 5
+        },
+        "text:7": {
+          "x": 533.5,
+          "y": 94,
+          "w": 29,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 29,
+          "unhint_w": 28.4375,
+          "chars": 4
+        },
+        "text:8": {
+          "x": 121,
+          "y": 158,
+          "w": 25,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 25,
+          "unhint_w": 24.25,
+          "chars": 4
+        },
+        "text:9": {
+          "x": 307,
+          "y": 158,
+          "w": 57.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 57.5,
+          "unhint_w": 56.6875,
+          "chars": 8
+        }
+      }
+    },
+    {
+      "t_ms": 1950,
+      "props": {},
+      "elements": {
+        "tabrow0": {
+          "x": 16,
+          "y": 16,
+          "w": 608,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1": {
+          "x": 16,
+          "y": 80,
+          "w": 608,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2": {
+          "x": 16,
+          "y": 144,
+          "w": 608,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item0": {
+          "x": 16,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item1": {
+          "x": 168,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item2": {
+          "x": 320,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item3": {
+          "x": 472,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item0": {
+          "x": 16,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item1": {
+          "x": 168,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item2": {
+          "x": 320,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item3": {
+          "x": 472,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2item0": {
+          "x": 16,
+          "y": 144,
+          "w": 202.5,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2item1": {
+          "x": 218.5,
+          "y": 144,
+          "w": 202.5,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2item2": {
+          "x": 421,
+          "y": 144,
+          "w": 202.5,
+          "h": 48,
+          "opacity": 1
+        }
+      },
+      "text": {
+        "text:0": {
+          "x": 62.5,
+          "y": 30,
+          "w": 59,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 59,
+          "unhint_w": 58.1875,
+          "chars": 8
+        },
+        "text:1": {
+          "x": 224.5,
+          "y": 30,
+          "w": 39.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 39.5,
+          "unhint_w": 38.8125,
+          "chars": 5
+        },
+        "text:10": {
+          "x": 520,
+          "y": 158,
+          "w": 36.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 36.5,
+          "unhint_w": 35.6875,
+          "chars": 5
+        },
+        "text:2": {
+          "x": 369.5,
+          "y": 30,
+          "w": 53.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 53.5,
+          "unhint_w": 52.4375,
+          "chars": 7
+        },
+        "text:3": {
+          "x": 536.5,
+          "y": 30,
+          "w": 23.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 23.5,
+          "unhint_w": 23.1875,
+          "chars": 3
+        },
+        "text:4": {
+          "x": 80,
+          "y": 94,
+          "w": 24.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 24.5,
+          "unhint_w": 23.6875,
+          "chars": 3
+        },
+        "text:5": {
+          "x": 226,
+          "y": 94,
+          "w": 36,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 36,
+          "unhint_w": 34.75,
+          "chars": 4
+        },
+        "text:6": {
+          "x": 375.5,
+          "y": 94,
+          "w": 41.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 41.5,
+          "unhint_w": 40.875,
+          "chars": 5
+        },
+        "text:7": {
+          "x": 533.5,
+          "y": 94,
+          "w": 29,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 29,
+          "unhint_w": 28.4375,
+          "chars": 4
+        },
+        "text:8": {
+          "x": 121,
+          "y": 158,
+          "w": 25,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 25,
+          "unhint_w": 24.25,
+          "chars": 4
+        },
+        "text:9": {
+          "x": 307,
+          "y": 158,
+          "w": 57.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 57.5,
+          "unhint_w": 56.6875,
+          "chars": 8
+        }
+      }
+    },
+    {
+      "t_ms": 2000,
+      "props": {},
+      "elements": {
+        "tabrow0": {
+          "x": 16,
+          "y": 16,
+          "w": 608,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1": {
+          "x": 16,
+          "y": 80,
+          "w": 608,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2": {
+          "x": 16,
+          "y": 144,
+          "w": 608,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item0": {
+          "x": 16,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item1": {
+          "x": 168,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item2": {
+          "x": 320,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow0item3": {
+          "x": 472,
+          "y": 16,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item0": {
+          "x": 16,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item1": {
+          "x": 168,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item2": {
+          "x": 320,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow1item3": {
+          "x": 472,
+          "y": 80,
+          "w": 152,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2item0": {
+          "x": 16,
+          "y": 144,
+          "w": 202.5,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2item1": {
+          "x": 218.5,
+          "y": 144,
+          "w": 202.5,
+          "h": 48,
+          "opacity": 1
+        },
+        "tabrow2item2": {
+          "x": 421,
+          "y": 144,
+          "w": 202.5,
+          "h": 48,
+          "opacity": 1
+        }
+      },
+      "text": {
+        "text:0": {
+          "x": 62.5,
+          "y": 30,
+          "w": 59,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 59,
+          "unhint_w": 58.1875,
+          "chars": 8
+        },
+        "text:1": {
+          "x": 224.5,
+          "y": 30,
+          "w": 39.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 39.5,
+          "unhint_w": 38.8125,
+          "chars": 5
+        },
+        "text:10": {
+          "x": 520,
+          "y": 158,
+          "w": 36.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 36.5,
+          "unhint_w": 35.6875,
+          "chars": 5
+        },
+        "text:2": {
+          "x": 369.5,
+          "y": 30,
+          "w": 53.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 53.5,
+          "unhint_w": 52.4375,
+          "chars": 7
+        },
+        "text:3": {
+          "x": 536.5,
+          "y": 30,
+          "w": 23.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 23.5,
+          "unhint_w": 23.1875,
+          "chars": 3
+        },
+        "text:4": {
+          "x": 80,
+          "y": 94,
+          "w": 24.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 24.5,
+          "unhint_w": 23.6875,
+          "chars": 3
+        },
+        "text:5": {
+          "x": 226,
+          "y": 94,
+          "w": 36,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 36,
+          "unhint_w": 34.75,
+          "chars": 4
+        },
+        "text:6": {
+          "x": 375.5,
+          "y": 94,
+          "w": 41.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 41.5,
+          "unhint_w": 40.875,
+          "chars": 5
+        },
+        "text:7": {
+          "x": 533.5,
+          "y": 94,
+          "w": 29,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 29,
+          "unhint_w": 28.4375,
+          "chars": 4
+        },
+        "text:8": {
+          "x": 121,
+          "y": 158,
+          "w": 25,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 25,
+          "unhint_w": 24.25,
+          "chars": 4
+        },
+        "text:9": {
+          "x": 307,
+          "y": 158,
+          "w": 57.5,
+          "h": 20,
+          "baseline": 14.5,
+          "lines": 1,
+          "frac_w": 57.5,
+          "unhint_w": 56.6875,
+          "chars": 8
+        }
+      }
+    }
+  ],
+  "settle_ms": null
+}

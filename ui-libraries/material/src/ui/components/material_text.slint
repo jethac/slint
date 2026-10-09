@@ -4,6 +4,24 @@
 import { MaterialTypography, MaterialTypeStyle } from "../styling/material_typography.slint";
 import { MaterialPalette } from "../styling/material_palette.slint";
 
+/// Text-metric helpers shared by the components that replicate upstream
+/// baseline math (`TabBaselineLayout`, `TopAppBarLayout`).
+export global TextMetrics {
+    /// The space below the last baseline of a type style: the font descent
+    /// plus the (centered) leading of the last line. `0.2441` and `1.1719`
+    /// are the Roboto hhea metrics in em — descender 500/2048, ascender plus
+    /// descender 2400/2048 — the font the Material theme loads for parity.
+    pure public function baseline-to-bottom(style: MaterialTypeStyle) -> length {
+        (style.line-height - style.font-size * 1.1719) / 2 + style.font-size * 0.2441
+    }
+
+    /// The first baseline's distance from the top of a text block: one line
+    /// height minus the descent below that baseline.
+    pure public function first-baseline(style: MaterialTypeStyle) -> length {
+        style.line-height - self.baseline-to-bottom(style)
+    }
+}
+
 export component MaterialText inherits Text {
     // Compose provides `LocalTextStyle = MaterialTheme.typography.bodyLarge`
     // from `MaterialTheme.kt`, so bare `MaterialText` uses `body_large`.

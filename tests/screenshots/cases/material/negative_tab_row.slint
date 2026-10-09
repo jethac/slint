@@ -1,0 +1,39 @@
+// Copyright © SixtyFPS GmbH <info@slint.dev>
+// SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0
+
+// Scene: negative-tab-row — generated from `ui-libraries/material/parity/scenes/negative-tab-row.json`
+// (edit the scene, regenerate with `cargo run -p material-parity-generator`).
+//PARITY=static
+//SIZE=640x80
+//TRACE_ELEMENTS=tabrow0
+//TRACE_ITEMS=tabrow0:item
+//XFAIL_TEXT=issue #28: Slint ceils text layout widths where Compose keeps fractional advances
+//DENSITIES=1,2
+import "../../fonts/Roboto-VariableFont.ttf";
+import { MaterialPalette, MaterialTheme, MaterialWindow, TabBar } from "@material";
+
+export component TestCase inherits MaterialWindow {
+    init => {
+        // The scene pins seed #6750A4, tonal-spot, spec2025, light, contrast 0
+        // (all the library defaults; restated here so a default change can't
+        // silently move the parity baseline).
+        MaterialTheme.seed-color = #6750A4;
+        MaterialTheme.dark = false;
+        MaterialTheme.contrast-level = 0;
+        MaterialTheme.use-platform-color = false;
+        MaterialTheme.plain-family = "Roboto";
+        MaterialTheme.brand-family = "Roboto";
+        // Compose builds its scene scheme from the same seed — use the
+        // runtime-generated scheme, not the static expressive table.
+        MaterialPalette.dynamic = true;
+    }
+
+    tabrow0 := TabBar {
+        x: 16px;
+        y: 16px;
+        items: [{ icon: @image-url(""), selected_icon: @image-url(""), text: "Movies", disabled: false, leading_icon: false }, { icon: @image-url(""), selected_icon: @image-url(""), text: "TV", disabled: false, leading_icon: false }, { icon: @image-url(""), selected_icon: @image-url(""), text: "Music", disabled: false, leading_icon: false }, { icon: @image-url(""), selected_icon: @image-url(""), text: "Books", disabled: false, leading_icon: false }];
+        current_index: 0;
+        width: 608px;
+    }
+
+}
