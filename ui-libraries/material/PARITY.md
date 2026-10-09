@@ -487,11 +487,11 @@ States: focused, selected, hovered, pressed, unselected
 
 | Component | Source | Status | Issues | Needs | Notes |
 |---|---|---|---|---|---|
-| TimeInput | TimePicker.kt | missing | #11 | none | - |
-| TimePicker | TimePicker.kt | partial | #11 | none | slint component: TimePickerPopup |
-| TimePickerDialog | TimePickerDialog.kt | missing | #11 | none | - |
-| TimeScroll | TimePicker.kt | missing | #11 | none | - |
-| VibrantTimePickerDialog | TimePickerDialog.kt | missing | #11 | none | - |
+| TimeInput | TimePicker.kt | done | #11 | none | slint component: TimeInput; tokens: generated component tokens |
+| TimePicker | TimePicker.kt | done | #11 | none | slint component: TimePicker; tokens: generated component tokens |
+| TimePickerDialog | TimePickerDialog.kt | done | #11 | none | slint component: TimePickerDialog; tokens: generated component tokens |
+| TimeScroll | TimePicker.kt | done | #11 | none | slint component: TimeScroll; tokens: generated component tokens |
+| VibrantTimePickerDialog | TimePickerDialog.kt | done | #11 | none | slint component: VibrantTimePickerDialog; tokens: generated component tokens |
 
 ### Toggle buttons
 

@@ -195,8 +195,11 @@ class Widget(json: JSONObject) {
     /** `flexible-bottom-app-bar` `expandedHeight` — `0` uses the default. */
     val expandedHeight: Float = json.optDouble("expanded_height", 0.0).toFloat()
     val placeholder: String? = (json.opt("placeholder") as? String)?.takeIf { it.isNotEmpty() }
-    /** `button-group` selection: `none` (clickable items, default),
-     * `single`/`multiple` (toggle items). */
+    /** `button-group` selection (`none` clickable default / `single` /
+     * `multiple` toggle) or `time-picker*` `TimePickerSelectionMode`
+     * (`hour` / `minute`) — same JSON key on disjoint widget kinds; a
+     * missing value reads `none`, which time-picker consumers treat as
+     * hour (`!= "minute"`). */
     val selection: String = (json.opt("selection") as? String) ?: "none"
     /** `button-group` `expanded-ratio` — `ButtonGroupDefaults.ExpandedRatio`. */
     val expandedRatio: Float = json.optDouble("expanded_ratio", 0.15).toFloat()
@@ -247,8 +250,8 @@ class Widget(json: JSONObject) {
      * upstream `text` composable; 0/unset sizes it to the text. */
     val labelWidth: Float = json.optDouble("label_width", 0.0).toFloat()
 
-    /** `date-picker`/`date-range-picker` initial `DisplayMode` —
-     * `picker` (default) or `input`. */
+    /** `*-picker*` initial `DisplayMode` — `picker` (default), `input`,
+     * or `scroll` (time-pickers only). */
     val displayMode: String = (json.opt("display_mode") as? String) ?: "picker"
     /** `date-picker` selected day — `DatePickerState.selectedDateMillis`
      * as an ISO `YYYY-MM-DD`. Shares the `selected` JSON key with the list
@@ -364,6 +367,17 @@ class Widget(json: JSONObject) {
     /** `*-card` kinds only: the hoisted `DragInteraction` — `true` emits a
      * live `DragInteraction.Start` on the card's `interactionSource`. */
     val dragged: Boolean = json.optBoolean("dragged", false)
+
+    /** `time-picker*` widgets: `rememberTimePickerState` initial values. */
+    val hour: Int = json.optInt("hour", 0)
+    val minute: Int = json.optInt("minute", 0)
+    /** `is24hour` — hides the AM/PM toggle and gives the hour dial the
+     * inner ring upstream. */
+    val is24h: Boolean = json.optBoolean("is24h", false)
+    /** `TimePickerLayoutType` — `"vertical"` (default) or `"horizontal"`. */
+    val layout: String = (json.opt("layout") as? String) ?: "vertical"
+    /** Vibrant styling — upstream `vibrantColors()` + `TimePickerShapes`. */
+    val vibrant: Boolean = json.optBoolean("vibrant", false)
 
     // --- navigation-rail kinds (`navigation-rail`, `wide-navigation-rail`,
     // `modal-navigation-rail`) ---

@@ -812,6 +812,10 @@ component DateInputField {
 
         floated_label := MaterialText {
             x: 4px;
+            // The cutout reserves the label's run plus its trailing padding —
+            // the bounds span the slot so the notch edge counts as
+            // label-derived geometry, not field border.
+            width: parent.width - 4px;
             style: MaterialTypography.body_small;
             color: root.has_error ? MaterialPalette.error : input.has_focus ? MaterialPalette.primary : MaterialPalette.on_surface_variant;
             text: root.label_text;

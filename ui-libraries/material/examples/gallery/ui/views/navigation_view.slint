@@ -55,7 +55,11 @@ import {
     InputChip,
     SuggestionChip,
     ElevatedSuggestionChip,
-    TimePickerPopup,
+    TimePicker,
+    TimeInput,
+    TimePickerDialog,
+    TimePickerDisplayMode,
+    VibrantTimePickerDialog,
     Switch,
     Slider,
     TextField,
@@ -967,6 +971,23 @@ export component NavigationView {
             }
 
             ComponentCard {
+                title: "Time input";
+
+                Horizontal {
+                    alignment: center;
+
+                    TextButton {
+                        icon: OutlinedIcons.edit;
+                        text: "Show time input";
+
+                        clicked => {
+                            time_input.show();
+                        }
+                    }
+                }
+            }
+
+            ComponentCard {
                 title: "Date picker";
 
                 Horizontal {
@@ -1264,16 +1285,50 @@ export component NavigationView {
         ];
     }
 
-    time_picker := TimePickerPopup {
+    time_picker := TimePickerDialog {
         // this is used to place the popup on 0,0 of the window and also to fill the window
         x: -root.absolute_position.x;
         y: -root.absolute_position.y;
         width: MainWindowAdapter.width;
         height: MainWindowAdapter.height;
-        title: @tr("Select time");
+        show_mode_toggle: true;
 
-        ok => {
+        TimePicker {
+            hour: 10;
+            minute: 30;
+        }
+
+        mode_toggle_clicked => {
+            time_picker.display_mode = time_picker.display_mode == TimePickerDisplayMode.picker ? TimePickerDisplayMode.input : TimePickerDisplayMode.picker;
+        }
+
+        confirm_clicked => {
             time_picker.close();
+        }
+        dismiss_clicked => {
+            time_picker.close();
+        }
+    }
+
+    time_input := VibrantTimePickerDialog {
+        // this is used to place the popup on 0,0 of the window and also to fill the window
+        x: -root.absolute_position.x;
+        y: -root.absolute_position.y;
+        width: MainWindowAdapter.width;
+        height: MainWindowAdapter.height;
+        display_mode: TimePickerDisplayMode.input;
+
+        TimeInput {
+            hour: 10;
+            minute: 30;
+            vibrant: true;
+        }
+
+        confirm_clicked => {
+            time_input.close();
+        }
+        dismiss_clicked => {
+            time_input.close();
         }
     }
 
