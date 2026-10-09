@@ -171,6 +171,7 @@ negative-surface-color
 negative-surface-radius
 negative-surface-tonal
 negative-swipe-dismiss-initial
+negative-tab-row
 negative-thumb-offset
 negative-toggle-select
 negative-tooltip-color
@@ -190,6 +191,7 @@ radio-uncheck-morph
 scaffold-drag
 scaffold-ops
 scaffolds
+scrollable-tab-rows
 search-bars
 secure-text-fields
 segmented-list
@@ -227,6 +229,9 @@ switch-hover
 switch-off-morph
 switch-on-morph
 switch-states
+tab-indicator-motion
+tab-rows
+tab-states
 text-field-adornments
 text-field-states
 toggle-buttons

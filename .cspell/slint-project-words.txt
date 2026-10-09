@@ -721,9 +721,12 @@ scanout
 Schukat
 sclk
 scopeguard
+scrollablesecondarytabbar
+scrollabletabbar
 sdkconfig
 sdkmanager
 seatd
+secondarytabbar
 segmentedbutton
 segmenteditem
 segmentedlistitem
@@ -826,6 +829,8 @@ systemtrayicon
 systest
 tableheadersection
 Tabler
+tabrow
+tabrows
 tanf
 targetstruct
 Tdefmt

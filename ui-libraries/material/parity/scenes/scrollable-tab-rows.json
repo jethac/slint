@@ -1,0 +1,123 @@
+{
+  "name": "scrollable-tab-rows",
+  "type": "canvas",
+  "parity": "static",
+  "densities": [
+    1,
+    2
+  ],
+  "theme": {
+    "seed": "6750A4",
+    "variant": "tonal-spot",
+    "spec": "spec2025",
+    "platform": "phone",
+    "dark": false,
+    "contrast": 0.0
+  },
+  "xfail_text": "issue #28: Slint ceils text layout widths where Compose keeps fractional advances",
+  "fonts": {
+    "plain": "Roboto",
+    "brand": "Roboto"
+  },
+  "size": [
+    640,
+    160
+  ],
+  "widgets": [
+    {
+      "kind": "scrollable-tab-row",
+      "x": 16,
+      "y": 16,
+      "width": 608,
+      "items": [
+        {
+          "text": "All"
+        },
+        {
+          "text": "Images"
+        },
+        {
+          "text": "Videos"
+        },
+        {
+          "text": "News"
+        },
+        {
+          "text": "Books"
+        },
+        {
+          "text": "Flights"
+        },
+        {
+          "text": "Shopping"
+        },
+        {
+          "text": "Finance"
+        }
+      ],
+      "selected_index": 5
+    },
+    {
+      "kind": "scrollable-tab-row",
+      "x": 16,
+      "y": 80,
+      "width": 608,
+      "items": [
+        {
+          "text": "Add",
+          "icon": "add"
+        },
+        {
+          "text": "Edit",
+          "icon": "edit"
+        },
+        {
+          "text": "Done",
+          "icon": "check"
+        },
+        {
+          "text": "Dates",
+          "icon": "calendar_today"
+        },
+        {
+          "text": "Clock",
+          "icon": "schedule"
+        },
+        {
+          "text": "Menu",
+          "icon": "menu"
+        },
+        {
+          "text": "Keys",
+          "icon": "keyboard"
+        },
+        {
+          "text": "More",
+          "icon": "more_vert"
+        }
+      ],
+      "selected_index": 3,
+      "variant": "secondary"
+    }
+  ],
+  "trace_elements": [
+    "tabrow0",
+    "tabrow1",
+    "tabrow0item0",
+    "tabrow0item1",
+    "tabrow0item2",
+    "tabrow0item3",
+    "tabrow0item4",
+    "tabrow0item5",
+    "tabrow0item6",
+    "tabrow0item7",
+    "tabrow1item0",
+    "tabrow1item1",
+    "tabrow1item2",
+    "tabrow1item3",
+    "tabrow1item4",
+    "tabrow1item5",
+    "tabrow1item6",
+    "tabrow1item7"
+  ]
+}

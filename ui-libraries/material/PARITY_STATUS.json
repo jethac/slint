@@ -569,9 +569,9 @@
     "issues": [
       11
     ],
-    "needs": "none",
-    "notes": "",
-    "status": "missing"
+    "needs": "springs (#5)",
+    "notes": "slint component: leading-icon items on TabBar/SecondaryTabBar (TabItemTemplate leading layout); tokens: generated component tokens",
+    "status": "done"
   },
   "LinearProgressIndicator": {
     "issues": [
@@ -809,17 +809,17 @@
     "issues": [
       11
     ],
-    "needs": "none",
-    "notes": "",
-    "status": "missing"
+    "needs": "springs (#5)",
+    "notes": "slint component: ScrollableTabBar; tokens: generated component tokens; springs via active motion scheme",
+    "status": "done"
   },
   "PrimaryTabRow": {
     "issues": [
       11
     ],
-    "needs": "none",
-    "notes": "slint component: TabBar",
-    "status": "partial"
+    "needs": "springs (#5)",
+    "notes": "slint component: TabBar; tokens: generated component tokens; springs via active motion scheme",
+    "status": "done"
   },
   "ProvideTextStyle": {
     "issues": [
@@ -883,17 +883,17 @@
     "issues": [
       11
     ],
-    "needs": "none",
-    "notes": "",
-    "status": "missing"
+    "needs": "springs (#5)",
+    "notes": "slint component: ScrollableSecondaryTabBar; tokens: generated component tokens; springs via active motion scheme",
+    "status": "done"
   },
   "SecondaryTabRow": {
     "issues": [
       11
     ],
-    "needs": "none",
-    "notes": "slint component: SecondaryTabBar",
-    "status": "partial"
+    "needs": "springs (#5)",
+    "notes": "slint component: SecondaryTabBar; tokens: generated component tokens; springs via active motion scheme",
+    "status": "done"
   },
   "SecureTextField": {
     "issues": [
@@ -1038,9 +1038,9 @@
     "issues": [
       11
     ],
-    "needs": "none",
-    "notes": "slint component: TabBar",
-    "status": "partial"
+    "needs": "springs (#5)",
+    "notes": "slint component: TabBar items (TabItemTemplate); tokens: generated component tokens; springs via active motion scheme",
+    "status": "done"
   },
   "Text": {
     "issues": [

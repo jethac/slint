@@ -541,6 +541,9 @@ class GroupItem(json: JSONObject) {
     val disabled: Boolean = json.optBoolean("disabled", false)
     val enabled: Boolean = json.optBoolean("enabled", true)
     val checked: Boolean = json.optBoolean("checked", false)
+    /** `tab-row` items: `LeadingIconTab` (icon and label side by side)
+     * instead of the stacked `Tab`. */
+    val leading: Boolean = json.optBoolean("leading", false)
     /** `enabled` (default), `pressed`, `hovered`, or `focused`. */
     val state: String = (json.opt("state") as? String) ?: "enabled"
     /** The item participates when both sides' enable flags say so. */
