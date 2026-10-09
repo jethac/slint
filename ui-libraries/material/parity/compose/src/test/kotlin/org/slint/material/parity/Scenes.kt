@@ -728,6 +728,7 @@ private fun CanvasScene(
                         "button${buttons++}",
                         density,
                         emitPress,
+                    )
                 widget.kind == "tab-row" || widget.kind == "scrollable-tab-row" ->
                     StateTabRow(
                         widget,
