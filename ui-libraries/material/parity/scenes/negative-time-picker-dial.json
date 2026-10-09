@@ -1,0 +1,40 @@
+{
+  "densities": [
+    1,
+    2
+  ],
+  "fonts": {
+    "brand": "Roboto",
+    "plain": "Roboto"
+  },
+  "name": "negative-time-picker-dial",
+  "negative_note": "the dial fills plain surface instead of surface-container-highest",
+  "parity": "negative",
+  "size": [
+    400,
+    560
+  ],
+  "theme": {
+    "contrast": 0.0,
+    "dark": false,
+    "platform": "phone",
+    "seed": "6750A4",
+    "spec": "spec2025",
+    "variant": "tonal-spot"
+  },
+  "trace_elements": [],
+  "trace_items": {},
+  "trace_props": [],
+  "type": "canvas",
+  "widgets": [
+    {
+      "hour": 10,
+      "kind": "time-picker",
+      "minute": 30,
+      "slint_overrides": {
+        "clock_dial": "surface"
+      }
+    }
+  ],
+  "xfail_text": "issue #28: Slint ceils text layout widths where Compose keeps fractional advances"
+}

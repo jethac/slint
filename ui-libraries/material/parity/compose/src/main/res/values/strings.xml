@@ -1,26 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-Copyright © SixtyFPS GmbH <info@slint.dev>
-SPDX-License-Identifier: MIT
--->
+<!-- Copyright © SixtyFPS GmbH <info@slint.dev> -->
+<!-- SPDX-License-Identifier: MIT -->
+<!-- Paparazzi does not load aar resources for unit-test renders (resources.json
+     lists no aarExplodedDirs), so the internal getString() lookups of the
+     upstream components fail. Declaring the strings they resolve gives them the
+     same merged ids with their official default values — the `m3c_*` ones live
+     in m3c_strings.xml (androidx.compose.material3:material3:1.5.0-alpha18,
+     values.xml; androidx.compose.ui:ui's close_sheet;
+     androidx.compose.foundation:foundation's tooltip_*). -->
 <resources>
-    <!-- Paparazzi does not load aar resources for unit-test renders
-         (resources.json lists no aarExplodedDirs), so the internal getString()
-         lookups of the SearchBarDefaults.InputField, BottomSheetImpl,
-         DragHandleWithTooltip, ModalBottomSheetScrim and RangeSliderImpl
-         paths fail. Declaring the strings they resolve here gives them the
-         same merged ids with their official default values
-         (androidx.compose.material3:material3:1.5.0-alpha18, values.xml;
-         androidx.compose.ui:ui's close_sheet;
-         androidx.compose.foundation:foundation's tooltip_*). -->
-    <string name="m3c_search_bar_search">Search</string>
-    <string name="m3c_suggestions_available">Suggestions below</string>
-    <string name="m3c_bottom_sheet_pane_title">Bottom Sheet</string>
-    <string name="m3c_bottom_sheet_collapse_description">Collapse bottom sheet</string>
-    <string name="m3c_bottom_sheet_dismiss_description">Dismiss bottom sheet</string>
-    <string name="m3c_bottom_sheet_drag_handle_description">Drag handle</string>
-    <string name="m3c_bottom_sheet_expand_description">Expand bottom sheet</string>
-    <string name="m3c_snackbar_pane_title">Alert</string>
     <string name="close_sheet">Close sheet</string>
     <string name="tooltip_label">show tooltip</string>
     <string name="tooltip_description">tooltip</string>
