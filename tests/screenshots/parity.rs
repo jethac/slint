@@ -1642,12 +1642,12 @@ fn compare_text_metrics(
             })
             .collect();
         entries.sort_by_key(|(n, _)| *n);
-        if entries.len() != handles.len() {
+        if entries.len() != frame.texts.len() {
             errors.push(format!(
                 "t={}ms: {} visible compose texts vs {} Slint Text elements",
                 frame.t_ms,
                 entries.len(),
-                handles.len()
+                frame.texts.len()
             ));
         }
         for (i, (n, m)) in entries.iter().enumerate() {
