@@ -1628,13 +1628,15 @@ fn compare_text_metrics(
             continue;
         }
         // `text:<n>` keys sorted numerically — document order, so they line
-        // up with the traced `Text` elements' tree order. Both sides emit
-        // an entry per Text in the scene — zeros while the node is unplaced
-        // or culled — so `text:<n>` pairs with the n-th traced Slint text
-        // directly, not with the n-th *visible* one: the reveal stagger can
-        // place a node on one side a frame before the other (issue #27),
-        // and index pairing keeps comparing the same node instead of
-        // shifting the whole tail.
+        // up with the traced `Text` elements' tree order. When the counts
+        // agree, `text:<n>` pairs with the n-th Slint text directly: both
+        // sides then emit an entry per node — zeros while unplaced or
+        // culled — so a reveal stagger that places a node a frame early on
+        // one side keeps pairing the same node instead of shifting the
+        // tail (issue #27). A component that keeps extra Texts in
+        // never-placed subtrees (an inactive layout variant) makes the
+        // counts diverge — Compose then emits only its placed nodes, so
+        // pair the placed subsequences in order instead.
         let mut entries: Vec<(u64, &serde_json::Value)> = texts
             .iter()
             .filter_map(|(k, v)| {
@@ -1643,23 +1645,42 @@ fn compare_text_metrics(
             })
             .collect();
         entries.sort_by_key(|(n, _)| *n);
-        if entries.len() != frame.texts.len() {
-            errors.push(format!(
-                "t={}ms: {} compose texts vs {} Slint Text elements",
-                frame.t_ms,
-                entries.len(),
-                frame.texts.len()
-            ));
-        }
-        for (n, m) in entries.iter() {
-            let Some(&[sx, sy, sw_clip, sh, sw]) = frame.texts.get(*n as usize) else {
+        let placed_slint = |t: &[f64; 5]| t[2] > 0.0 && t[3] > 0.0;
+        let placed_compose = |m: &serde_json::Value| {
+            m["w"].as_f64().unwrap_or(0.0) > 0.0 && m["h"].as_f64().unwrap_or(0.0) > 0.0
+        };
+        let mut pairs: Vec<(u64, &serde_json::Value, [f64; 5])> = Vec::new();
+        if entries.len() == frame.texts.len() {
+            for (n, m) in &entries {
+                let Some(&g) = frame.texts.get(*n as usize) else {
+                    errors.push(format!(
+                        "t={}ms text:{n}: no Slint Text element ({} found)",
+                        frame.t_ms,
+                        frame.texts.len()
+                    ));
+                    continue;
+                };
+                pairs.push((*n, *m, g));
+            }
+        } else {
+            let placed_entries: Vec<(u64, &serde_json::Value)> =
+                entries.iter().copied().filter(|(_, m)| placed_compose(m)).collect();
+            let placed_sltexts: Vec<[f64; 5]> =
+                frame.texts.iter().copied().filter(|t| placed_slint(t)).collect();
+            if placed_entries.len() != placed_sltexts.len() {
                 errors.push(format!(
-                    "t={}ms text:{n}: no Slint Text element ({} found)",
+                    "t={}ms: {} visible compose texts vs {} visible Slint Text elements ({} traced)",
                     frame.t_ms,
+                    placed_entries.len(),
+                    placed_sltexts.len(),
                     frame.texts.len()
                 ));
-                continue;
-            };
+            }
+            for ((n, m), g) in placed_entries.iter().zip(placed_sltexts.iter()) {
+                pairs.push((*n, *m, *g));
+            }
+        }
+        for (n, m, [sx, sy, sw_clip, sh, sw]) in pairs {
             let Some(cw) = m["w"].as_f64() else { continue };
             let Some(cx) = m["x"].as_f64() else { continue };
 
@@ -1938,7 +1959,7 @@ fn compare_text_metrics(
                 // the nearest placed entry in the window carries the metric.
                 if key == "h" {
                     let entry = if cf_placed {
-                        Some(*m)
+                        Some(m)
                     } else {
                         placed
                             .iter()
