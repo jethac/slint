@@ -644,7 +644,6 @@ private fun CanvasScene(
         var tabrows = 0
         var badges = 0
         var badgedBoxes = 0
-        var menus = 0
         var cards = 0
         var nav_bars = 0
         var scaffolds = 0
@@ -8925,6 +8924,9 @@ private fun SwipeDismissScene(
             }
             emitPress.add(entry)
             DisposableEffect(Unit) { onDispose { emitPress.remove(entry) } }
+        }
+    }
+}
 /** `FloatingActionButtonMenu` — the items column above a toggle FAB.
  * `expanded` is the upstream `expanded` parameter; a `press`+`release`
  * action pair on the button is its click, so `expanded` flips at the

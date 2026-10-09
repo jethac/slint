@@ -1629,9 +1629,10 @@ fn compare_text_metrics(
         }
         // `text:<n>` keys sorted numerically — document order, so they line
         // up with the `Text` handles' tree order. Entries the viewport
-        // clipped to an empty rect are dropped first: Slint's item tree
-        // culls invisible `Text` elements (see `nth_visible_item`), so only
-        // the visible subsequence pairs with the found handles.
+        // clipped to an empty rect are dropped first, and so are the Slint
+        // texts whose `visible_bounds` is empty (invisible items report a
+        // zero intersection the same way) — the pairing is visible-only on
+        // both sides.
         let mut entries: Vec<(u64, &serde_json::Value)> = texts
             .iter()
             .filter_map(|(k, v)| {
@@ -1642,20 +1643,22 @@ fn compare_text_metrics(
             })
             .collect();
         entries.sort_by_key(|(n, _)| *n);
-        if entries.len() != frame.texts.len() {
+        let visible_texts: Vec<&[f64; 5]> =
+            frame.texts.iter().filter(|t| t[2] > 0.0 && t[3] > 0.0).collect();
+        if entries.len() != visible_texts.len() {
             errors.push(format!(
                 "t={}ms: {} visible compose texts vs {} Slint Text elements",
                 frame.t_ms,
                 entries.len(),
-                frame.texts.len()
+                visible_texts.len()
             ));
         }
         for (i, (n, m)) in entries.iter().enumerate() {
-            let Some(&[sx, sy, sw_clip, sh, sw]) = frame.texts.get(i) else {
+            let Some(&[sx, sy, sw_clip, sh, sw]) = visible_texts.get(i).copied() else {
                 errors.push(format!(
                     "t={}ms text:{n}: no Slint Text element ({} found)",
                     frame.t_ms,
-                    frame.texts.len()
+                    visible_texts.len()
                 ));
                 continue;
             };
