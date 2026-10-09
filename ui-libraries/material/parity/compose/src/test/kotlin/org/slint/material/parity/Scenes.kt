@@ -183,14 +183,20 @@ import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.AppBarWithSearch
 import androidx.compose.material3.rememberSearchBarState
 import androidx.compose.material3.FabPosition
-import androidx.compose.material3.Slider
-import androidx.compose.material3.VerticalSlider
+import androidx.compose.material3.LeadingIconTab
+import androidx.compose.material3.PrimaryScrollableTabRow
+import androidx.compose.material3.PrimaryTabRow
 import androidx.compose.material3.RangeSlider
+import androidx.compose.material3.RangeSliderState
+import androidx.compose.material3.SecondaryScrollableTabRow
+import androidx.compose.material3.SecondaryTabRow
+import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.SliderState
-import androidx.compose.material3.RangeSliderState
-import androidx.compose.material3.rememberSliderState
+import androidx.compose.material3.Tab
+import androidx.compose.material3.VerticalSlider
 import androidx.compose.material3.rememberRangeSliderState
+import androidx.compose.material3.rememberSliderState
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationItemIconPosition
@@ -633,6 +639,7 @@ private fun CanvasScene(
         var pickers = 0
         var icons = 0
         var dividers = 0
+        var tabrows = 0
         var badges = 0
         var badgedBoxes = 0
         var menus = 0
@@ -652,6 +659,8 @@ private fun CanvasScene(
                 texts += when {
                     w.kind == "connected-button-group" ||
                         w.kind == "vertical-connected-button-group" ||
+                        w.kind == "tab-row" ||
+                        w.kind == "scrollable-tab-row" ||
                         w.kind == "button-group" -> w.items.size
                     // `radio-button` renders no Text — the single text
                     // slot is only for button-family widgets.
@@ -717,6 +726,15 @@ private fun CanvasScene(
                         "button${buttons++}",
                         density,
                         emitPress,
+                widget.kind == "tab-row" || widget.kind == "scrollable-tab-row" ->
+                    StateTabRow(
+                        widget,
+                        scene,
+                        tracer,
+                        "tabrow${tabrows++}",
+                        density,
+                        emitPress,
+                        textBase,
                     )
                 widget.kind == "button-group" -> {
                     StateButtonGroup(
@@ -1698,7 +1716,10 @@ private fun emitStateInteractions(
 /** The state-driven version — also usable per item (a connected-button
  * group's `items[].state`), where `onRelease` runs at the click's release
  * `at` time when this item was the one pressed (the single/multi-select
- * flip). */
+ * flip). `emitPressed` drops the real press emission for callers whose
+ * settled-ink overlay paints over the item anyway — the ripple's expanding
+ * ink under the overlay would show through it where the overlay's flat
+ * alpha is meant to be the whole visual. */
 @Composable
 private fun emitStateInteractions(
     state: String,
@@ -1794,6 +1815,26 @@ private fun emitStateInteractions(
                 emitPress.add(entry)
                 onDispose { emitPress.remove(entry) }
             }
+        }
+    }
+    // A `pressed` item emitted through the state path never enters the
+    // action-press branch above, so `emitted` can't gate its release: when
+    // the action's press hit-tests inside, the release still runs the
+    // element's click effect (`onRelease` — the tab row's selection flip).
+    if (pressAction != null && releaseAction != null && state == "pressed") {
+        val release = Runnable {
+            val b = tracer.elementBounds[elementId]
+            val hits = b == null ||
+                (pressAction.x * density >= b.left && pressAction.x * density <= b.right &&
+                    pressAction.y * density >= b.top && pressAction.y * density <= b.bottom)
+            if (hits) {
+                onRelease?.run()
+            }
+        }
+        DisposableEffect(release) {
+            val entry = releaseAction.at to release
+            emitPress.add(entry)
+            onDispose { emitPress.remove(entry) }
         }
     }
     // `move` actions drive hover the way the driver's pointer move does on
@@ -6665,6 +6706,150 @@ private fun StateSlider(
         }
     } else {
         content()
+    }
+}
+
+/** A `tab-row`/`scrollable-tab-row` widget: `variant` `secondary` picks the
+ * secondary row upstream (`SecondaryTabRow`/`SecondaryScrollableTabRow`),
+ * `items` the tabs, `selected_index` the `selectedTabIndex`. Items with
+ * `leading` render `LeadingIconTab`; the rest render the stacked `Tab`.
+ *
+ * The `Tab` color pair feeds the token roles the Slint side uses —
+ * `PrimaryNavigationTabTokens`/`SecondaryNavigationTabTokens` active and
+ * inactive label/icon colors — rather than upstream's
+ * `unselectedContentColor = selectedContentColor` default.
+ */
+@Composable
+private fun StateTabRow(
+    widget: Widget,
+    scene: Scene,
+    tracer: Tracer,
+    tag: String,
+    density: Float,
+    emitPress: java.util.concurrent.CopyOnWriteArrayList<Pair<Long, Runnable>>,
+    textBase: Int,
+) {
+    val secondary = widget.variant == "secondary"
+    var selectedIndex by remember { mutableStateOf(widget.selectedIndex) }
+    val containerModifier = Modifier.offset(widget.x.dp, widget.y.dp)
+        .then(if (widget.width > 0f) Modifier.width(widget.width.dp) else Modifier)
+        .track(tracer, tag)
+    val scheme = androidx.compose.material3.MaterialTheme.colorScheme
+    val selectedColor =
+        if (secondary) scheme.onSurface else scheme.primary
+    val unselectedColor = scheme.onSurfaceVariant
+
+    val itemsContent: @Composable () -> Unit = {
+        widget.items.forEachIndexed { index, item ->
+            val itemTag = "${tag}item$index"
+            val interactionSource = remember { ReplayableInteractionSource() }
+            if (!item.disabled) {
+                emitStateInteractions(
+                    item.state,
+                    scene,
+                    tracer,
+                    itemTag,
+                    interactionSource,
+                    emitPress,
+                    Offset(24f * density, 24f * density),
+                    density,
+                    Runnable { selectedIndex = index },
+                    pressViaSink = true,
+                )
+            }
+            val textId = "text:${textBase + index}"
+            val text: @Composable (() -> Unit)? = item.text?.let { t ->
+                {
+                    Text(
+                        t,
+                        modifier = Modifier.trackText(tracer, textId, density),
+                        onTextLayout = recordTextLayout(
+                            tracer,
+                            textId,
+                            LocalDensity.current,
+                            androidx.compose.ui.platform.LocalFontFamilyResolver.current,
+                            androidx.compose.material3.MaterialTheme.typography.titleSmall.fontFamily,
+                        ),
+                    )
+                }
+            }
+            val icon: @Composable (() -> Unit)? = item.icon?.let { name ->
+                { Icon(sceneIcon(name), contentDescription = null) }
+            }
+            val pressInk = pressInkMarker(item.state, emitPress)
+            // The Box keeps the ink overlay out of the row's tab count —
+            // a scene-level `PressInkOverlay` sibling would be measured as
+            // a tab itself. `propagateMinConstraints` forwards the row's
+            // `minWidth`/`minHeight` tab constraints — without it the Tab
+            // below measures at content width and the Box's TopStart
+            // alignment left-packs the content instead of centering it in
+            // the min-width slot like upstream.
+            Box(Modifier.track(tracer, itemTag), propagateMinConstraints = true) {
+                if (item.leading) {
+                    // Upstream `LeadingIconTab` takes non-null `text`/`icon`
+                    // slots — the icon-first arrangement needs both.
+                    require(item.text != null && item.icon != null) {
+                        "leading tab items need text and icon"
+                    }
+                    LeadingIconTab(
+                        selected = index == selectedIndex,
+                        onClick = {},
+                        enabled = !item.disabled,
+                        icon = icon!!,
+                        text = text!!,
+                        interactionSource = interactionSource,
+                        selectedContentColor = selectedColor,
+                        unselectedContentColor = unselectedColor,
+                    )
+                } else {
+                    Tab(
+                        selected = index == selectedIndex,
+                        onClick = {},
+                        enabled = !item.disabled,
+                        icon = icon,
+                        text = text,
+                        interactionSource = interactionSource,
+                        selectedContentColor = selectedColor,
+                        unselectedContentColor = unselectedColor,
+                    )
+                }
+                // Tabs are `CornerNone`: the settled held-press ink is a
+                // flat `PRESSED_STATE_LAYER_ALPHA` rect of the ripple's
+                // `selectedContentColor`, like `PressInkOverlay` paints.
+                if (pressInk.value) {
+                    Box(
+                        Modifier.matchParentSize()
+                            .background(selectedColor.copy(alpha = PRESSED_STATE_LAYER_ALPHA)),
+                    )
+                }
+            }
+        }
+    }
+
+    if (widget.kind == "scrollable-tab-row") {
+        if (secondary) {
+            SecondaryScrollableTabRow(
+                selectedTabIndex = selectedIndex,
+                modifier = containerModifier,
+            ) { itemsContent() }
+        } else {
+            PrimaryScrollableTabRow(
+                selectedTabIndex = selectedIndex,
+                modifier = containerModifier,
+            ) { itemsContent() }
+        }
+    } else {
+        if (secondary) {
+            SecondaryTabRow(
+                selectedTabIndex = selectedIndex,
+                modifier = containerModifier,
+            ) { itemsContent() }
+        } else {
+            PrimaryTabRow(
+                selectedTabIndex = selectedIndex,
+                modifier = containerModifier,
+            ) { itemsContent() }
+        }
     }
 }
 

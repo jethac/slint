@@ -1,0 +1,47 @@
+// Copyright © SixtyFPS GmbH <info@slint.dev>
+// SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0
+
+// Scene: scrollable-tab-rows — generated from `ui-libraries/material/parity/scenes/scrollable-tab-rows.json`
+// (edit the scene, regenerate with `cargo run -p material-parity-generator`).
+//PARITY=static
+//SIZE=640x160
+//TRACE_ELEMENTS=tabrow0,tabrow1
+//TRACE_ITEMS=tabrow0:item,tabrow1:item
+//XFAIL_TEXT=issue #28: Slint ceils text layout widths where Compose keeps fractional advances
+//DENSITIES=1,2
+import "../../fonts/Roboto-VariableFont.ttf";
+import { Icons, MaterialPalette, MaterialTheme, MaterialWindow, ScrollableSecondaryTabBar, ScrollableTabBar } from "@material";
+
+export component TestCase inherits MaterialWindow {
+    init => {
+        // The scene pins seed #6750A4, tonal-spot, spec2025, light, contrast 0
+        // (all the library defaults; restated here so a default change can't
+        // silently move the parity baseline).
+        MaterialTheme.seed-color = #6750A4;
+        MaterialTheme.dark = false;
+        MaterialTheme.contrast-level = 0;
+        MaterialTheme.use-platform-color = false;
+        MaterialTheme.plain-family = "Roboto";
+        MaterialTheme.brand-family = "Roboto";
+        // Compose builds its scene scheme from the same seed — use the
+        // runtime-generated scheme, not the static expressive table.
+        MaterialPalette.dynamic = true;
+    }
+
+    tabrow0 := ScrollableTabBar {
+        x: 16px;
+        y: 16px;
+        items: [{ icon: @image-url(""), selected_icon: @image-url(""), text: "All", disabled: false, leading_icon: false }, { icon: @image-url(""), selected_icon: @image-url(""), text: "Images", disabled: false, leading_icon: false }, { icon: @image-url(""), selected_icon: @image-url(""), text: "Videos", disabled: false, leading_icon: false }, { icon: @image-url(""), selected_icon: @image-url(""), text: "News", disabled: false, leading_icon: false }, { icon: @image-url(""), selected_icon: @image-url(""), text: "Books", disabled: false, leading_icon: false }, { icon: @image-url(""), selected_icon: @image-url(""), text: "Flights", disabled: false, leading_icon: false }, { icon: @image-url(""), selected_icon: @image-url(""), text: "Shopping", disabled: false, leading_icon: false }, { icon: @image-url(""), selected_icon: @image-url(""), text: "Finance", disabled: false, leading_icon: false }];
+        current_index: 5;
+        width: 608px;
+    }
+
+    tabrow1 := ScrollableSecondaryTabBar {
+        x: 16px;
+        y: 80px;
+        items: [{ icon: Icons.add, selected_icon: @image-url(""), text: "Add", disabled: false, leading_icon: false }, { icon: Icons.edit, selected_icon: @image-url(""), text: "Edit", disabled: false, leading_icon: false }, { icon: Icons.check, selected_icon: @image-url(""), text: "Done", disabled: false, leading_icon: false }, { icon: Icons.calendar_today, selected_icon: @image-url(""), text: "Dates", disabled: false, leading_icon: false }, { icon: Icons.schedule, selected_icon: @image-url(""), text: "Clock", disabled: false, leading_icon: false }, { icon: Icons.menu, selected_icon: @image-url(""), text: "Menu", disabled: false, leading_icon: false }, { icon: Icons.keyboard, selected_icon: @image-url(""), text: "Keys", disabled: false, leading_icon: false }, { icon: Icons.more_vert, selected_icon: @image-url(""), text: "More", disabled: false, leading_icon: false }];
+        current_index: 3;
+        width: 608px;
+    }
+
+}

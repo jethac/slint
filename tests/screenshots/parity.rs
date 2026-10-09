@@ -76,6 +76,50 @@ fn parse_item_ref(id: &str) -> Option<(String, usize)> {
     Some((container.to_string(), num.parse().ok()?))
 }
 
+/// Intersect an `[x, y, w, h, opacity]` geometry with a clip rect in the
+/// same format. Slint's trace reports an element's unclipped bounds
+/// inside a `Flickable` while the Compose harness reports the clipped
+/// rect — intersecting with the container's bounds puts both sides on
+/// the visible portion, so a partially-scrolled item stays verifiable.
+fn clip_to(geo: &[f64; 5], clip: &[f64; 5]) -> [f64; 5] {
+    let x0 = geo[0].max(clip[0]);
+    let y0 = geo[1].max(clip[1]);
+    let x1 = (geo[0] + geo[2]).min(clip[0] + clip[2]);
+    let y1 = (geo[1] + geo[3]).min(clip[1] + clip[3]);
+    [x0, y0, (x1 - x0).max(0.0), (y1 - y0).max(0.0), geo[4]]
+}
+
+/// The `nth`-th *visible* `{container}item{j}` of a Compose frame. The
+/// two sides number repeated items differently under a clip: Slint's
+/// item tree culls elements fully outside a `Flickable`'s viewport
+/// (`ItemRc::is_visible`), so the Slint trace's `item{i}` is the i-th
+/// visible item, while the Compose harness reports every model item and
+/// gives clipped-away ones an empty rect. Slint `item{i}` pairs with the
+/// i-th Compose item whose bounds aren't empty — not with `item{i}`.
+fn nth_visible_item(
+    cf: &serde_json::Value,
+    container: &str,
+    nth: usize,
+) -> Option<(String, usize)> {
+    let elements = cf["elements"].as_object()?;
+    let mut indices: Vec<usize> = elements
+        .keys()
+        .filter_map(|k| {
+            let (c, j) = parse_item_ref(k)?;
+            (c == container).then_some(j)
+        })
+        .collect();
+    indices.sort_unstable();
+    indices
+        .into_iter()
+        .filter(|j| {
+            let ce = &elements[&format!("{container}item{j}")];
+            ce["w"].as_f64().unwrap_or_default() > 0.0 && ce["h"].as_f64().unwrap_or_default() > 0.0
+        })
+        .nth(nth)
+        .map(|j| (format!("{container}item{j}"), j))
+}
+
 /// Strict layer: maximum absolute per-channel difference allowed on
 /// non-text pixels. 8 is well below the channel difference any wrong
 /// token (color role, corner radius, size) produces, and above the
@@ -326,8 +370,7 @@ impl PixelMask {
     /// elevation shadow paints, minus the caster's own bounds.
     fn fill_ring(&mut self, outer: PxRect, inner: PxRect, class: PixelClass) {
         for y in outer.y0.floor().max(0.0) as usize..(outer.y1.ceil() as usize).min(self.h) {
-            for x in outer.x0.floor().max(0.0) as usize..(outer.x1.ceil() as usize).min(self.w)
-            {
+            for x in outer.x0.floor().max(0.0) as usize..(outer.x1.ceil() as usize).min(self.w) {
                 let (px, py) = (x as f64 + 0.5, y as f64 + 0.5);
                 if !inner.contains(px, py) {
                     self.set(x, y, class);
@@ -954,8 +997,7 @@ pub fn capture_trace<C: i_slint_core::api::ComponentHandle>(
                     e.id()
                         .map(|candidate| {
                             let candidate = candidate.as_str();
-                            candidate == sub_owned
-                                || candidate.ends_with(&format!("::{sub_owned}"))
+                            candidate == sub_owned || candidate.ends_with(&format!("::{sub_owned}"))
                         })
                         .unwrap_or(false)
                 })
@@ -1283,9 +1325,8 @@ pub fn compare_traces(
     // millisecond, so a missing frame is itself a finding, not something to
     // approximate by a neighbor. The measured clock offset is reported below
     // for the xfail note; it is never applied to the comparison.
-    let compose_at = |t: u64| -> Vec<&serde_json::Value> {
-        by_time.get(&t).copied().into_iter().collect()
-    };
+    let compose_at =
+        |t: u64| -> Vec<&serde_json::Value> { by_time.get(&t).copied().into_iter().collect() };
     let compose_in = |t: u64, tol: u64| -> Vec<&serde_json::Value> {
         if tol == 0 {
             return compose_at(t);
@@ -1412,10 +1453,10 @@ pub fn compare_traces(
                 .chars()
                 .rev()
                 .collect::<String>();
-            let drift_eps = |cf: &serde_json::Value| -> f64 {
+            let drift_eps = |cf: &serde_json::Value, ce_key: &str| -> f64 {
                 if item_ref.is_some() {
                     return cf["elements"]
-                        .get(id)
+                        .get(ce_key)
                         .map(|rect| drift_inside(cf, rect))
                         .unwrap_or(0.0)
                         + GEOM_EPS
@@ -1431,19 +1472,33 @@ pub fn compare_traces(
                 }
                 text_drift.get(&format!("text:{drift}")).copied().unwrap_or(0.0) + GEOM_EPS + 1.0
             };
-            let mut best: Option<(&serde_json::Value, f64, u64)> = None;
+            let mut best: Option<(&serde_json::Value, String, [f64; 5], f64, u64)> = None;
             for cf in &element_candidates {
-                let Some(ce) = cf["elements"].get(id) else { continue };
+                // A `<c>item<i>` pairs by visible order — Slint's id is the
+                // i-th item the viewport leaves unclipped — and compares
+                // after clipping to the container's bounds, matching the
+                // clipped rects the Compose trace reports.
+                let (ce_key, geo_cmp) = if let Some((container, idx)) = &item_ref {
+                    let Some(clip) = frame.elements.get(container) else { continue };
+                    match nth_visible_item(cf, container, *idx) {
+                        Some((key, _)) => (key, clip_to(geo, clip)),
+                        None => continue,
+                    }
+                } else {
+                    (id.clone(), *geo)
+                };
+                let Some(ce) = cf["elements"].get(&ce_key) else { continue };
                 // `x` of a text-sized element inherits `w`'s drift: the
                 // element's width is the text's hinted-width difference and
                 // an end- or center-anchored placement shifts by as much.
                 // Container items (`<c>item<i>`) get their own x bound —
                 // the items tile inside a shared container, so x tolerance
                 // is a per-index offset, not the text drift.
-                let w_eps = if drift.is_empty() { GEOM_EPS } else { drift_eps(cf) };
+                let w_eps = if drift.is_empty() { GEOM_EPS } else { drift_eps(cf, &ce_key) };
                 let x_eps = item_ref
                     .as_ref()
-                    .map(|(container, idx)| item_x_eps(cf, container, *idx))
+                    .and_then(|(container, _)| parse_item_ref(&ce_key).map(|(_, j)| (container, j)))
+                    .map(|(container, idx)| item_x_eps(cf, container, idx))
                     .unwrap_or(w_eps);
                 let err: f64 = ["x", "y", "w", "h", "opacity"]
                     .iter()
@@ -1456,22 +1511,25 @@ pub fn compare_traces(
                         } else {
                             GEOM_EPS
                         };
-                        ce[key].as_f64().map(|e| (geo[i] - e).abs() / eps.max(GEOM_EPS))
+                        ce[key].as_f64().map(|e| (geo_cmp[i] - e).abs() / eps.max(GEOM_EPS))
                     })
                     .fold(0.0, f64::max);
-                if best.as_ref().is_none_or(|(_, e, _)| err < *e) {
-                    best = Some((cf, err, cf["t_ms"].as_u64().unwrap_or(0)));
+                if best.as_ref().is_none_or(|(_, _, _, e, _)| err < *e) {
+                    best = Some((cf, ce_key, geo_cmp, err, cf["t_ms"].as_u64().unwrap_or(0)));
                 }
             }
             match best {
                 None => errors
                     .push(format!("t={}ms element '{id}' missing from Compose trace", frame.t_ms)),
-                Some((cf, err, ct)) if err > 1.0 => {
-                    let ce = &cf["elements"][id];
-                    let w_eps = if drift.is_empty() { GEOM_EPS } else { drift_eps(cf) };
+                Some((cf, ce_key, geo_cmp, err, ct)) if err > 1.0 => {
+                    let ce = &cf["elements"][&ce_key];
+                    let w_eps = if drift.is_empty() { GEOM_EPS } else { drift_eps(cf, &ce_key) };
                     let x_eps = item_ref
                         .as_ref()
-                        .map(|(container, idx)| item_x_eps(cf, container, *idx))
+                        .and_then(|(container, _)| {
+                            parse_item_ref(&ce_key).map(|(_, j)| (container, j))
+                        })
+                        .map(|(container, idx)| item_x_eps(cf, container, idx))
                         .unwrap_or(w_eps);
                     for (i, key) in ["x", "y", "w", "h", "opacity"].iter().enumerate() {
                         let Some(e) = ce[key].as_f64() else { continue };
@@ -1482,10 +1540,10 @@ pub fn compare_traces(
                         } else {
                             GEOM_EPS
                         };
-                        if (geo[i] - e).abs() > eps {
+                        if (geo_cmp[i] - e).abs() > eps {
                             errors.push(format!(
                                 "t={}ms element '{id}'.{key}: slint {} vs compose@{ct}ms {e} (eps {eps:.2})",
-                                frame.t_ms, geo[i]
+                                frame.t_ms, geo_cmp[i]
                             ));
                         }
                     }
@@ -1570,14 +1628,28 @@ fn compare_text_metrics(
             continue;
         }
         // `text:<n>` keys sorted numerically — document order, so they line
-        // up with the `Text` handles' tree order.
+        // up with the `Text` handles' tree order. Entries the viewport
+        // clipped to an empty rect are dropped first: Slint's item tree
+        // culls invisible `Text` elements (see `nth_visible_item`), so only
+        // the visible subsequence pairs with the found handles.
         let mut entries: Vec<(u64, &serde_json::Value)> = texts
             .iter()
             .filter_map(|(k, v)| {
-                k.strip_prefix("text:").and_then(|n| n.parse().ok()).map(|n| (n, v))
+                let n: u64 = k.strip_prefix("text:")?.parse().ok()?;
+                (v["w"].as_f64().unwrap_or_default() > 0.0
+                    && v["h"].as_f64().unwrap_or_default() > 0.0)
+                    .then_some((n, v))
             })
             .collect();
         entries.sort_by_key(|(n, _)| *n);
+        if entries.len() != handles.len() {
+            errors.push(format!(
+                "t={}ms: {} visible compose texts vs {} Slint Text elements",
+                frame.t_ms,
+                entries.len(),
+                handles.len()
+            ));
+        }
         for (i, (n, m)) in entries.iter().enumerate() {
             let Some(&[sx, sy, sw_clip, sh, sw]) = frame.texts.get(i) else {
                 errors.push(format!(
@@ -1724,12 +1796,9 @@ fn compare_text_metrics(
             let item_container = cf["elements"].as_object().and_then(|elements| {
                 elements.iter().find_map(|(eid, ce)| {
                     parse_item_ref(eid)?;
-                    let (Some(ex), Some(ey), Some(ew), Some(eh)) = (
-                        ce["x"].as_f64(),
-                        ce["y"].as_f64(),
-                        ce["w"].as_f64(),
-                        ce["h"].as_f64(),
-                    ) else {
+                    let (Some(ex), Some(ey), Some(ew), Some(eh)) =
+                        (ce["x"].as_f64(), ce["y"].as_f64(), ce["w"].as_f64(), ce["h"].as_f64())
+                    else {
                         return None;
                     };
                     let (mx, my) = (cx + cw / 2.0, m["y"].as_f64()? + m["h"].as_f64()? / 2.0);
@@ -1749,22 +1818,18 @@ fn compare_text_metrics(
                         .map(|bx| (cx - bx, cw)),
                 )
             } else {
-                let slint_off = ["button", "container"]
-                    .iter()
-                    .map(|p| format!("{p}{n}"))
-                    .find_map(|want| {
-                        frame
-                            .elements
-                            .iter()
-                            .find(|(k, _)| leaf(k) == want)
-                            .map(|(_, g)| sx - g[0])
+                let slint_off =
+                    ["button", "container"].iter().map(|p| format!("{p}{n}")).find_map(|want| {
+                        frame.elements.iter().find(|(k, _)| leaf(k) == want).map(|(_, g)| sx - g[0])
                     });
                 let c_offs: Vec<(f64, f64)> = placed
                     .iter()
                     .filter_map(|(cf2, m2)| {
                         ["button", "container"].iter().map(|p| format!("{p}{n}")).find_map(|want| {
-                            let (_, ce) =
-                                cf2["elements"].as_object()?.iter().find(|(k, _)| leaf(k) == want)?;
+                            let (_, ce) = cf2["elements"]
+                                .as_object()?
+                                .iter()
+                                .find(|(k, _)| leaf(k) == want)?;
                             // An unplaced container emits all-zero bounds — its
                             // `x` is not a real edge, so the frame contributes
                             // no offset candidate.
@@ -1776,20 +1841,16 @@ fn compare_text_metrics(
                                 return None;
                             }
                             ce["x"].as_f64().and_then(|bx| {
-                                m2["x"].as_f64().and_then(|tx| {
-                                    m2["w"].as_f64().map(|tw| (tx - bx, tw))
-                                })
+                                m2["x"]
+                                    .as_f64()
+                                    .and_then(|tx| m2["w"].as_f64().map(|tw| (tx - bx, tw)))
                             })
                         })
                     })
                     .collect();
                 let compose_off = slint_off.and_then(|s| {
                     c_offs.iter().copied().reduce(|best, off| {
-                        if (s - off.0).abs() < (s - best.0).abs() {
-                            off
-                        } else {
-                            best
-                        }
+                        if (s - off.0).abs() < (s - best.0).abs() { off } else { best }
                     })
                 });
                 (slint_off, compose_off)
@@ -2059,18 +2120,17 @@ fn compose_phase_frame(compose: &serde_json::Value, t: u64, tol: u64) -> serde_j
     let Some(frames) = compose["frames"].as_array() else {
         return json!({});
     };
-    let union =
-        |acc: &mut Map<String, Value>, key: &String, x: f64, y: f64, w: f64, h: f64| {
-            if w == 0.0 && h == 0.0 && x == 0.0 && y == 0.0 {
-                return;
-            }
-            let entry = acc.entry(key.clone()).or_insert_with(|| json!([x, y, x + w, y + h]));
-            let Some(u) = entry.as_array_mut() else { return };
-            u[0] = json!(u[0].as_f64().unwrap_or(x).min(x));
-            u[1] = json!(u[1].as_f64().unwrap_or(y).min(y));
-            u[2] = json!(u[2].as_f64().unwrap_or(x + w).max(x + w));
-            u[3] = json!(u[3].as_f64().unwrap_or(y + h).max(y + h));
-        };
+    let union = |acc: &mut Map<String, Value>, key: &String, x: f64, y: f64, w: f64, h: f64| {
+        if w == 0.0 && h == 0.0 && x == 0.0 && y == 0.0 {
+            return;
+        }
+        let entry = acc.entry(key.clone()).or_insert_with(|| json!([x, y, x + w, y + h]));
+        let Some(u) = entry.as_array_mut() else { return };
+        u[0] = json!(u[0].as_f64().unwrap_or(x).min(x));
+        u[1] = json!(u[1].as_f64().unwrap_or(y).min(y));
+        u[2] = json!(u[2].as_f64().unwrap_or(x + w).max(x + w));
+        u[3] = json!(u[3].as_f64().unwrap_or(y + h).max(y + h));
+    };
     for f in frames {
         let Some(ft) = f["t_ms"].as_u64() else { continue };
         if ft.abs_diff(t) > tol {
@@ -2251,7 +2311,8 @@ fn build_frame_mask<C: i_slint_core::api::ComponentHandle>(
                 PixelClass::Text
             };
             mask.fill_rect(
-                PxRect { x0: x * d, y0: y * d, x1: (x + w) * d, y1: (y + h) * d }.dilated(text_dilate),
+                PxRect { x0: x * d, y0: y * d, x1: (x + w) * d, y1: (y + h) * d }
+                    .dilated(text_dilate),
                 class,
             );
         }
@@ -2268,12 +2329,9 @@ fn build_frame_mask<C: i_slint_core::api::ComponentHandle>(
                     continue;
                 }
                 let Some(ce) = compose_elements.get(id) else { continue };
-                let (Some(x), Some(y), Some(w), Some(h)) = (
-                    ce["x"].as_f64(),
-                    ce["y"].as_f64(),
-                    ce["w"].as_f64(),
-                    ce["h"].as_f64(),
-                ) else {
+                let (Some(x), Some(y), Some(w), Some(h)) =
+                    (ce["x"].as_f64(), ce["y"].as_f64(), ce["w"].as_f64(), ce["h"].as_f64())
+                else {
                     continue;
                 };
                 let union = PxRect {
@@ -2282,11 +2340,7 @@ fn build_frame_mask<C: i_slint_core::api::ComponentHandle>(
                     x1: ((geo[0] + geo[2]) * d).max((x + w) * d),
                     y1: ((geo[1] + geo[3]) * d).max((y + h) * d),
                 };
-                mask.fill_ring(
-                    union.dilated(SHADOW_MARGIN_DP * d),
-                    union,
-                    PixelClass::Skip,
-                );
+                mask.fill_ring(union.dilated(SHADOW_MARGIN_DP * d), union, PixelClass::Skip);
             }
         }
         for (id, geo) in &slint_frame.elements {

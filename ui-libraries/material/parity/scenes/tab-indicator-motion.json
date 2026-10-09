@@ -1,0 +1,86 @@
+{
+  "name": "tab-indicator-motion",
+  "type": "canvas",
+  "parity": "motion",
+  "densities": [
+    1,
+    2
+  ],
+  "theme": {
+    "seed": "6750A4",
+    "variant": "tonal-spot",
+    "spec": "spec2025",
+    "platform": "phone",
+    "dark": false,
+    "contrast": 0.0
+  },
+  "xfail_text": "issue #28: Slint ceils text layout widths where Compose keeps fractional advances",
+  "fonts": {
+    "plain": "Roboto",
+    "brand": "Roboto"
+  },
+  "size": [
+    640,
+    80
+  ],
+  "widgets": [
+    {
+      "kind": "tab-row",
+      "x": 16,
+      "y": 16,
+      "width": 608,
+      "items": [
+        {
+          "text": "Movies"
+        },
+        {
+          "text": "TV"
+        },
+        {
+          "text": "Music",
+          "state": "pressed"
+        },
+        {
+          "text": "Books"
+        }
+      ],
+      "selected_index": 0
+    }
+  ],
+  "times": [
+    60,
+    140,
+    200,
+    320,
+    450,
+    620,
+    900,
+    1500
+  ],
+  "actions": [
+    {
+      "kind": "press",
+      "x": 396,
+      "y": 40
+    },
+    {
+      "kind": "release",
+      "x": 396,
+      "y": 40,
+      "at": 200
+    },
+    {
+      "kind": "move",
+      "x": 0,
+      "y": 0,
+      "at": 201
+    }
+  ],
+  "trace_elements": [
+    "tabrow0",
+    "tabrow0item0",
+    "tabrow0item1",
+    "tabrow0item2",
+    "tabrow0item3"
+  ]
+}

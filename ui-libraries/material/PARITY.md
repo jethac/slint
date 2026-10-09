@@ -452,12 +452,12 @@ States: active, focused, hovered, pressed, inactive
 
 | Component | Source | Status | Issues | Needs | Notes |
 |---|---|---|---|---|---|
-| LeadingIconTab | Tab.kt | missing | #11 | none | - |
-| PrimaryScrollableTabRow | TabRow.kt | missing | #11 | none | - |
-| PrimaryTabRow | TabRow.kt | partial | #11 | none | slint component: TabBar |
-| SecondaryScrollableTabRow | TabRow.kt | missing | #11 | none | - |
-| SecondaryTabRow | TabRow.kt | partial | #11 | none | slint component: SecondaryTabBar |
-| Tab | Tab.kt | partial | #11 | none | slint component: TabBar |
+| LeadingIconTab | Tab.kt | done | #11 | springs (#5) | slint component: leading-icon items on TabBar/SecondaryTabBar (TabItemTemplate leading layout); tokens: generated component tokens |
+| PrimaryScrollableTabRow | TabRow.kt | done | #11 | springs (#5) | slint component: ScrollableTabBar; tokens: generated component tokens; springs via active motion scheme |
+| PrimaryTabRow | TabRow.kt | done | #11 | springs (#5) | slint component: TabBar; tokens: generated component tokens; springs via active motion scheme |
+| SecondaryScrollableTabRow | TabRow.kt | done | #11 | springs (#5) | slint component: ScrollableSecondaryTabBar; tokens: generated component tokens; springs via active motion scheme |
+| SecondaryTabRow | TabRow.kt | done | #11 | springs (#5) | slint component: SecondaryTabBar; tokens: generated component tokens; springs via active motion scheme |
+| Tab | Tab.kt | done | #11 | springs (#5) | slint component: TabBar items (TabItemTemplate); tokens: generated component tokens; springs via active motion scheme |
 
 ### Text
 
