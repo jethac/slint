@@ -184,10 +184,6 @@ class Widget(json: JSONObject) {
     val trailingIcons: List<String> =
         json.optJSONArray("trailing_icons")?.let { a -> (0 until a.length()).map(a::getString) }
             ?: emptyList()
-    /** FAB slot position on a `*FloatingToolbar`: `start`/`end` horizontal,
-     * `top`/`bottom` vertical. */
-    val fabPosition: String? =
-        (json.opt("fab_position") as? String)?.takeIf { it.isNotEmpty() }
     /** `FloatingToolbarColorStyle` — `standard` (default) or `vibrant`. */
     val colorStyle: String = (json.opt("color_style") as? String) ?: "standard"
     /** `flexible-bottom-app-bar` item gap for the `spaced` arrangement. */
@@ -289,8 +285,10 @@ class Widget(json: JSONObject) {
      * mechanics, not the snackbar, are under test. */
     val snackbar: Boolean = json.optBoolean("snackbar", false)
     val fab: Boolean = json.optBoolean("fab", false)
-    /** `floatingActionButtonPosition`: `start`/`center`/`end` (default)/
-     * `end-overlay`. */
+    /** `floatingActionButtonPosition` on a scaffold (`start`/`center`/
+     * `end` (default)/`end-overlay`); FAB slot position on a
+     * `*FloatingToolbar` (`start`/`end` horizontal, `top`/`bottom`
+     * vertical — `end` is also the toolbar default). */
     val fabPosition: String = (json.opt("fab_position") as? String) ?: "end"
     /** Snackbar-slot placeholder size. */
     val snackWidth: Float = json.optDouble("snack_width", 200.0).toFloat()
@@ -318,7 +316,8 @@ class Widget(json: JSONObject) {
     val thumb: String = (json.opt("thumb") as? String) ?: "start"
     val state2: String? = json.opt("state2") as? String
 
-    /** `*-text-field` kinds: the floating label (`label` slot). */
+    /** `*-text-field` floating label (`label` slot); `menu-group`/
+     * `menu-group-label` label text. */
     val label: String? = (json.opt("label") as? String)?.takeIf { it.isNotEmpty() }
     /** `*-text-field`: `isError` upstream / `has_error` on the Slint side. */
     val error: Boolean = json.optBoolean("error", false)
@@ -445,8 +444,6 @@ class Widget(json: JSONObject) {
     val shapePosition: String = (json.opt("shape_position") as? String) ?: "standalone"
     val selectedIcon: String? = (json.opt("selected_icon") as? String)?.takeIf { it.isNotEmpty() }
     val supportingText: String? = (json.opt("supporting_text") as? String)?.takeIf { it.isNotEmpty() }
-    /** `menu-group`/`menu-group-label` label text. */
-    val label: String? = (json.opt("label") as? String)?.takeIf { it.isNotEmpty() }
     /** `menu` only: hide the leading `first-index` items. */
     val firstIndex: Int = json.optInt("first_index", 0)
 
