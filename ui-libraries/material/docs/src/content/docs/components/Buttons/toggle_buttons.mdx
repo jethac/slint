@@ -41,11 +41,25 @@ Give every icon toggle a descriptive tooltip.
 
 All eight components default to `checkable: true` and `checked: false`.
 They inherit size, shape, enabled state, and motion behavior from their corresponding button style.
-`ToggleButton` also inherits padding overrides from `FilledButton`.
+All four text variants expose `padding-leading`, `padding-trailing`, and `padding-vertical` overrides.
 Icon variants also inherit `icon` and `checked-icon`.
 Use `checked` to observe or set the current state.
 Keep `checkable` enabled when using a named toggle component.
 
-The pinned Compose API audit remains open for custom colors, elevation, and shape overrides.
+Set `container-color` and `content-color` for the unchecked state, and `checked-container-color` and `checked-content-color` for the checked state.
+Use `disabled-container-color` and `disabled-content-color` for disabled controls, including their alpha.
+The standard icon variant also retains its `has-error` and `inverse` color modes.
+
+Set `resting-radius`, `pressed-radius`, and `checked-radius` to override uniform corners.
+Set `elevation-default`, `elevation-pressed`, `elevation-hovered`, `elevation-focused`, and `elevation-disabled` in logical pixels.
+These accept fractional values such as `2.5px`.
+Use `border-width`, `checked-border-width`, `border-color`, and `disabled-border-color` to customize borders.
+The default checked border width is zero.
+
+Place custom children inside any variant to add content to its centered row.
+Text and icon properties can be combined with custom children.
+The container grows to fit content and padding while preserving the minimum touch target.
+
+The pinned Compose API audit remains open for arbitrary shapes, inherited content styling, and complete custom-parameter parity checks.
 The inventory tracks these components as partial until the remaining API and parity checks pass.
 The [button completion checklist](https://github.com/jethac/slint/blob/preview/material-fieldnotes/ui-libraries/material/COMPLETION_BUTTONS.md) records the remaining API and verification work.

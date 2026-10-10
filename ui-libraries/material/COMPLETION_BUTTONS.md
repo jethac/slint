@@ -12,26 +12,27 @@ All sixteen component entries remain partial until their API and verification ch
 ## Public API gaps
 
 The pinned [ToggleButton.kt](https://github.com/androidx/androidx/blob/23327507f7fc7d5b19d65fec4b090f60c970079b/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/ToggleButton.kt) exposes colors, shapes, elevation, border, content padding, and composable content.
-The Slint styles currently resolve most of these internally.
+The Slint styles expose state colors, uniform corner radii, physical elevation, borders, padding, and child content.
+Arbitrary shapes and inherited child styling still require implementation and verification.
 The pinned [IconButton.kt](https://github.com/androidx/androidx/blob/23327507f7fc7d5b19d65fec4b090f60c970079b/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/IconButton.kt) also has static-shape and interaction-shape overloads.
 The existing round/square selector does not cover arbitrary shape overrides.
 
 | Slint toggle | Existing style | Additional API checks |
 | --- | --- | --- |
-| `ToggleButton` | `FilledButton` | Leading/trailing/vertical padding exists; arbitrary border, content, colors, shapes, and elevation remain open. |
-| `FilledTonalToggleButton` | `TonalButton` | Add padding overrides and verify all custom style parameters. |
-| `ElevatedToggleButton` | `ElevatedButton` | Add padding overrides; verify custom elevation in every interaction state. |
-| `OutlinedToggleButton` | `OutlineButton` | Add padding overrides; support custom borders without removing the selected default behavior. |
+| `ToggleButton` | `FilledButton` | Verify custom style parameters, arbitrary shapes, and child styling. |
+| `FilledTonalToggleButton` | `TonalButton` | Verify custom style parameters, arbitrary shapes, and child styling. |
+| `ElevatedToggleButton` | `ElevatedButton` | Verify custom elevation in every interaction state, arbitrary shapes, and child styling. |
+| `OutlinedToggleButton` | `OutlineButton` | Verify custom borders in every state, arbitrary shapes, and child styling. |
 | `IconToggleButton` | `IconButton` | Cover both pinned color families and static/interaction shape overloads. |
 | `FilledIconToggleButton` | `FilledIconButton` | Cover custom state colors, content, and both shape overloads. |
 | `FilledTonalIconToggleButton` | `TonalIconButton` | Cover custom state colors, content, and both shape overloads. |
 | `OutlinedIconToggleButton` | `OutlineIconButton` | Cover custom borders, state colors, content, and both shape overloads. |
 
-- [ ] Expose enabled, disabled, checked, and unchecked container/content color overrides for each style.
+- [x] Expose enabled, disabled, checked, and unchecked container/content color overrides for each style.
 - [ ] Expose resting, pressed, and checked shapes, including per-corner geometry and interruption behavior.
-- [ ] Expose interaction elevation overrides where the pinned API supports them.
-- [ ] Expose border color and width overrides, including disabled and checked states.
-- [ ] Provide padding overrides for all four text-toggle styles.
+- [x] Expose interaction elevation overrides where the pinned API supports them.
+- [x] Expose border color and width overrides, including disabled and checked states.
+- [x] Provide padding overrides for all four text-toggle styles.
 - [ ] Support arbitrary child content and document how it inherits typography and content color.
 - [ ] Document the mapping from Compose's externally owned `checked`/`onCheckedChange` to Slint properties and callbacks.
 - [ ] Verify controlled state bindings and single-selection groups without replacing their bindings during activation.

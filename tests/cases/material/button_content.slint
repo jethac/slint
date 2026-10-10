@@ -1,0 +1,50 @@
+// Copyright © SixtyFPS GmbH <info@slint.dev>
+// SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0
+
+// Native drivers embed the material library's variable fonts.
+//ignore: rust,cpp,js,pyi
+
+import {
+    ToggleButton, FilledTonalToggleButton, ElevatedToggleButton, OutlinedToggleButton,
+    IconToggleButton, FilledIconToggleButton, FilledTonalIconToggleButton, OutlinedIconToggleButton,
+} from "../../../ui-libraries/material/src/material.slint";
+
+export component TestCase inherits Window {
+    width: 400px;
+    height: 1000px;
+
+    VerticalLayout {
+        filled := ToggleButton {
+            padding-leading: 11px; padding-trailing: 17px; padding-vertical: 20px;
+            Rectangle { width: 64px; height: 64px; }
+        }
+        tonal := FilledTonalToggleButton {
+            padding-leading: 11px; padding-trailing: 17px; padding-vertical: 20px;
+            Rectangle { width: 64px; height: 64px; }
+        }
+        elevated := ElevatedToggleButton {
+            padding-leading: 11px; padding-trailing: 17px; padding-vertical: 20px;
+            elevation-default: 2.5px;
+            Rectangle { width: 64px; height: 64px; }
+        }
+        outlined := OutlinedToggleButton {
+            padding-leading: 11px; padding-trailing: 17px; padding-vertical: 20px;
+            checked-border-width: 3px;
+            Rectangle { width: 64px; height: 64px; }
+        }
+        icon := IconToggleButton { Rectangle { width: 64px; height: 64px; } }
+        filled-icon := FilledIconToggleButton { Rectangle { width: 64px; height: 64px; } }
+        tonal-icon := FilledTonalIconToggleButton { Rectangle { width: 64px; height: 64px; } }
+        outlined-icon := OutlinedIconToggleButton { Rectangle { width: 64px; height: 64px; } }
+    }
+
+    out property <bool> test:
+        filled.min-width == 92px && filled.min-height == 104px
+        && tonal.min-width == 92px && tonal.min-height == 104px
+        && elevated.min-width == 92px && elevated.min-height == 104px
+        && outlined.min-width == 92px && outlined.min-height == 104px
+        && icon.min-width == 64px && icon.min-height == 64px
+        && filled-icon.min-width == 64px && filled-icon.min-height == 64px
+        && tonal-icon.min-width == 64px && tonal-icon.min-height == 64px
+        && outlined-icon.min-width == 64px && outlined-icon.min-height == 64px;
+}

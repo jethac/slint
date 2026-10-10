@@ -60,12 +60,19 @@ export component MaterialButtonBase {
     /// The unchecked border width; the border disappears while checked,
     /// matching `OutlinedToggleButtonDefaults.border`.
     in property <length> border_width;
+    /// The border width while checked.
+    in property <length> checked_border_width;
     // The `*ButtonElevation` table as M3 elevation levels.
     in property <int> elevation_default: 0;
     in property <int> elevation_pressed: 0;
     in property <int> elevation_hovered: 0;
     in property <int> elevation_focused: 0;
     in property <int> elevation_disabled: 0;
+    in property <length> elevation_default_dp: -1px;
+    in property <length> elevation_pressed_dp: -1px;
+    in property <length> elevation_hovered_dp: -1px;
+    in property <length> elevation_focused_dp: -1px;
+    in property <length> elevation_disabled_dp: -1px;
     /// `ToggleButton` morphs with the fast spatial spec while `Button` and
     /// the icon buttons use the default effects spec (`shapeByInteraction`
     /// in the pinned sources).
@@ -148,12 +155,11 @@ export component MaterialButtonBase {
     out property <length> corner_bl: root.target_bl;
 
     property <length> touch: root.enforce_touch_target ? 48px : 0px;
-    property <length> box_width: root.container_width > 0px ? root.container_width : root.width;
-    property <length> box_height: root.container_height;
+    property <length> box_width: root.container_width > 0px ? max(root.container_width, area.min_width) : root.width;
+    property <length> box_height: max(root.container_height, area.min_height);
 
-    min_width: max(root.min_button_width, root.touch,
-        root.icon_button ? root.container_width : area.min_width);
-    min_height: max(root.touch, root.container_height);
+    min_width: max(root.min_button_width, root.touch, root.container_width, area.min_width);
+    min_height: max(root.touch, root.box_height);
     preferred_width: root.min_width;
     preferred_height: root.min_height;
 
@@ -217,7 +223,7 @@ export component MaterialButtonBase {
 
     // `animateBorderStrokeAsState`: the width follows the fast spatial spec,
     // the color the fast effects spec.
-    property <length> current_border_width: root.checkable && root.checked ? 0px : root.border_width;
+    property <length> current_border_width: root.checkable && root.checked ? root.checked_border_width : root.border_width;
     property <color> current_border_color: root.enabled ? root.border_color : root.disabled_border_color;
     animate current_border_width {
         easing: MaterialAnimations.fast-spatial-spring;
@@ -234,6 +240,10 @@ export component MaterialButtonBase {
         area.effective_hover ? root.elevation_hovered :
         area.has_focus ? root.elevation_focused :
         root.elevation_default;
+    property <length> current_elevation: !root.enabled ? root.elevation_disabled_dp :
+        area.effective_pressed ? root.elevation_pressed_dp :
+        area.effective_hover ? root.elevation_hovered_dp :
+        area.has_focus ? root.elevation_focused_dp : root.elevation_default_dp;
 
     container := Elevation {
         x: (root.width - root.box_width) / 2;
@@ -245,6 +255,7 @@ export component MaterialButtonBase {
         shaped_corners: root.shaped_corners;
         background: root.current_container_color;
         level: root.current_level;
+        shadow_height_override: root.current_elevation;
     }
 
     area := StateLayerArea {
@@ -317,6 +328,8 @@ export component MaterialButtonBase {
                 max_height: root.label_style.line_height;
                 vertical_alignment: center;
             }
+
+            @children
         }
     }
 

@@ -1,6 +1,7 @@
 // Copyright © SixtyFPS GmbH <info@slint.dev>
 // SPDX-License-Identifier: MIT
 
+import { ElevationTokens } from "../styling/generated/material_elevation_tokens.slint";
 import { MaterialButtonBase } from "./button_base.slint";
 import { MaterialButtonMetrics, MaterialButtonShape, MaterialButtonSize } from "./button_metrics.slint";
 import { TonalButtonTokens } from "../styling/generated/material_component_tokens.slint";
@@ -26,6 +27,69 @@ export component TonalButton {
     /// the parity harness's per-widget state hook.
     in property <bool> simulate_hover;
     in property <bool> simulate_press;
+
+    /// The enabled container color; bindings can depend on checked state.
+    in property <color> container_color: (root.checkable ? TonalButtonTokens.unselected_container_color : TonalButtonTokens.container_color);
+
+    /// The enabled content color; bindings can depend on checked state.
+    in property <color> content_color: (root.checkable ? TonalButtonTokens.unselected_label_text_color : TonalButtonTokens.label_text_color);
+
+    /// The disabled container color, including its alpha.
+    in property <color> disabled_container_color: TonalButtonTokens.disabled_container_color.with_alpha(TonalButtonTokens.disabled_container_opacity);
+
+    /// The disabled content color, including its alpha.
+    in property <color> disabled_content_color: TonalButtonTokens.disabled_label_text_color.with_alpha(TonalButtonTokens.disabled_label_text_opacity);
+
+    /// The resting corner radius.
+    in property <length> resting_radius: MaterialButtonMetrics.resting-radius(root.size, root.button_shape, MaterialButtonMetrics.container-height(root.size));
+
+    /// The corner radius while pressed.
+    in property <length> pressed_radius: MaterialButtonMetrics.pressed-radius(root.size, root.checkable);
+
+    /// The checked corner radius.
+    in property <length> checked_radius: MaterialButtonMetrics.checked-radius(root.size);
+
+    /// The resting shadow elevation.
+    in property <length> elevation_default: ElevationTokens.level0;
+
+    /// The shadow elevation while pressed.
+    in property <length> elevation_pressed: ElevationTokens.level0;
+
+    /// The shadow elevation while hovered.
+    in property <length> elevation_hovered: ElevationTokens.level1;
+
+    /// The shadow elevation while focused.
+    in property <length> elevation_focused: ElevationTokens.level0;
+
+    /// The disabled shadow elevation.
+    in property <length> elevation_disabled: ElevationTokens.level0;
+
+    /// The border color.
+    in property <color> border_color: transparent;
+
+    /// The disabled border color.
+    in property <color> disabled_border_color: root.border_color;
+
+    /// The border width.
+    in property <length> border_width: 0px;
+
+    /// The checked border width; zero matches the default toggle border.
+    in property <length> checked_border_width: 0px;
+
+    /// Overrides padding leading; negative values use the size default.
+    in property <length> padding_leading: -1px;
+
+    /// Overrides padding trailing; negative values use the size default.
+    in property <length> padding_trailing: -1px;
+
+    /// Overrides padding vertical; negative values use the size default.
+    in property <length> padding_vertical: -1px;
+
+    /// The checked container color.
+    in property <color> checked_container_color: TonalButtonTokens.selected_container_color;
+
+    /// The checked content color.
+    in property <color> checked_content_color: TonalButtonTokens.selected_label_text_color;
 
     callback clicked <=> base.clicked;
 
@@ -59,29 +123,35 @@ export component TonalButton {
         simulate_press: root.simulate_press;
 
         container_height: MaterialButtonMetrics.container-height(root.size);
-        resting_radius: MaterialButtonMetrics.resting-radius(root.size, root.button_shape, self.container_height);
-        pressed_radius: MaterialButtonMetrics.pressed-radius(root.size, root.checkable);
-        checked_radius: MaterialButtonMetrics.checked-radius(root.size);
+        resting_radius: root.resting_radius;
+        pressed_radius: root.pressed_radius;
+        checked_radius: root.checked_radius;
         min_button_width: root.checkable ? 0px : 58px; // `ButtonDefaults.MinWidth`
         fast_spatial: root.checkable;
 
-        container_color: root.checked ? TonalButtonTokens.selected_container_color :
-            (root.checkable ? TonalButtonTokens.unselected_container_color : TonalButtonTokens.container_color);
-        content_color: root.checked ? TonalButtonTokens.selected_label_text_color :
-            (root.checkable ? TonalButtonTokens.unselected_label_text_color : TonalButtonTokens.label_text_color);
-        disabled_container_color: TonalButtonTokens.disabled_container_color.with_alpha(TonalButtonTokens.disabled_container_opacity);
-        disabled_content_color: TonalButtonTokens.disabled_label_text_color.with_alpha(TonalButtonTokens.disabled_label_text_opacity);
-        elevation_default: 0;
-        elevation_pressed: 0;
-        elevation_hovered: 1;
-        elevation_focused: 0;
-        elevation_disabled: 0;
+        container_color: root.checked ? root.checked_container_color : root.container_color;
+        content_color: root.checked ? root.checked_content_color : root.content_color;
+        disabled_container_color: root.disabled_container_color;
+        disabled_content_color: root.disabled_content_color;
+        border_color: root.border_color;
+        disabled_border_color: root.disabled_border_color;
+        border_width: root.border_width;
+        checked_border_width: root.checked_border_width;
+        elevation_default_dp: root.elevation_default;
+        elevation_pressed_dp: root.elevation_pressed;
+        elevation_hovered_dp: root.elevation_hovered;
+        elevation_focused_dp: root.elevation_focused;
+        elevation_disabled_dp: root.elevation_disabled;
 
         text: root.text;
         icon: root.icon;
         checked_icon: root.icon;
+        padding_leading: root.padding_leading;
+        padding_trailing: root.padding_trailing;
         padding_horizontal: MaterialButtonMetrics.horizontal-padding(root.size);
-        padding_vertical: MaterialButtonMetrics.vertical-padding(root.size);
+        padding_vertical: root.padding_vertical >= 0px ? root.padding_vertical : MaterialButtonMetrics.vertical-padding(root.size);
+        @children
+
         icon_size: MaterialButtonMetrics.icon-size(root.size);
         icon_spacing: MaterialButtonMetrics.icon-spacing(root.size);
         label_style: MaterialButtonMetrics.label-style(root.size, root.checkable);

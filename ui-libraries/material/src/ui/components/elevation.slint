@@ -19,6 +19,8 @@ export component Elevation {
     // upstream.
     in property <bool> clip_content;
     in property <int> level;
+    /// A shadow elevation in logical pixels; negative values use the level preset.
+    in property <length> shadow_height_override: -1px;
     /// Opt-in `animateElevation` tween specs (the private `ElevationDefaults`
     /// in upstream `internal/Elevation.kt`): the `in_*` spec animates toward
     /// an interaction target, the `out_*` spec back to rest — the caller
@@ -44,6 +46,7 @@ export component Elevation {
     // The M3 `level` slot mapped to its dp token (ElevationTokens.levelN) —
     // `out` so the parity trace reads the live tween value.
     out property <length> shadow_height:
+        root.shadow_height_override >= 0px ? root.shadow_height_override :
         root.level <= 0 ? ElevationTokens.level0 :
         root.level == 1 ? ElevationTokens.level1 :
         root.level == 2 ? ElevationTokens.level2 :

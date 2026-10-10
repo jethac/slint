@@ -1,6 +1,7 @@
 // Copyright © SixtyFPS GmbH <info@slint.dev>
 // SPDX-License-Identifier: MIT
 
+import { ElevationTokens } from "../styling/generated/material_elevation_tokens.slint";
 import { MaterialButtonBase } from "./button_base.slint";
 import { IconButtonWidth, MaterialButtonMetrics, MaterialButtonShape, MaterialButtonSize } from "./button_metrics.slint";
 import { FilledTonalIconButtonTokens } from "../styling/generated/material_component_tokens.slint";
@@ -28,6 +29,60 @@ export component TonalIconButton {
     /// the parity harness's per-widget state hook.
     in property <bool> simulate_hover;
     in property <bool> simulate_press;
+
+    /// The enabled container color; bindings can depend on checked state.
+    in property <color> container_color: (root.checkable ? FilledTonalIconButtonTokens.unselected_container_color : FilledTonalIconButtonTokens.container_color);
+
+    /// The enabled content color; bindings can depend on checked state.
+    in property <color> content_color: (root.checkable ? FilledTonalIconButtonTokens.unselected_color : FilledTonalIconButtonTokens.color);
+
+    /// The disabled container color, including its alpha.
+    in property <color> disabled_container_color: FilledTonalIconButtonTokens.disabled_container_color.with_alpha(FilledTonalIconButtonTokens.disabled_container_opacity);
+
+    /// The disabled content color, including its alpha.
+    in property <color> disabled_content_color: FilledTonalIconButtonTokens.disabled_color.with_alpha(FilledTonalIconButtonTokens.disabled_opacity);
+
+    /// The resting corner radius.
+    in property <length> resting_radius: MaterialButtonMetrics.icon-resting-radius(root.size, root.button_shape, MaterialButtonMetrics.icon-container-height(root.size));
+
+    /// The corner radius while pressed.
+    in property <length> pressed_radius: MaterialButtonMetrics.icon-pressed-radius(root.size);
+
+    /// The checked corner radius.
+    in property <length> checked_radius: MaterialButtonMetrics.icon-checked-radius(root.size, root.button_shape, MaterialButtonMetrics.icon-container-height(root.size));
+
+    /// The resting shadow elevation.
+    in property <length> elevation_default: ElevationTokens.level0;
+
+    /// The shadow elevation while pressed.
+    in property <length> elevation_pressed: ElevationTokens.level0;
+
+    /// The shadow elevation while hovered.
+    in property <length> elevation_hovered: ElevationTokens.level0;
+
+    /// The shadow elevation while focused.
+    in property <length> elevation_focused: ElevationTokens.level0;
+
+    /// The disabled shadow elevation.
+    in property <length> elevation_disabled: ElevationTokens.level0;
+
+    /// The border color.
+    in property <color> border_color: transparent;
+
+    /// The disabled border color.
+    in property <color> disabled_border_color: root.border_color;
+
+    /// The border width.
+    in property <length> border_width: 0px;
+
+    /// The checked border width; zero matches the default toggle border.
+    in property <length> checked_border_width: 0px;
+
+    /// The checked container color.
+    in property <color> checked_container_color: FilledTonalIconButtonTokens.selected_container_color;
+
+    /// The checked content color.
+    in property <color> checked_content_color: FilledTonalIconButtonTokens.selected_color;
 
     callback clicked <=> base.clicked;
 
@@ -63,25 +118,29 @@ export component TonalIconButton {
 
         container_height: MaterialButtonMetrics.icon-container-height(root.size);
         container_width: MaterialButtonMetrics.icon-container-width(root.size, root.width_option);
-        resting_radius: MaterialButtonMetrics.icon-resting-radius(root.size, root.button_shape, self.container_height);
-        pressed_radius: MaterialButtonMetrics.icon-pressed-radius(root.size);
-        checked_radius: MaterialButtonMetrics.icon-checked-radius(root.size, root.button_shape, self.container_height);
+        resting_radius: root.resting_radius;
+        pressed_radius: root.pressed_radius;
+        checked_radius: root.checked_radius;
         min_button_width: 0px;
 
-        container_color: root.checked ? FilledTonalIconButtonTokens.selected_container_color :
-            (root.checkable ? FilledTonalIconButtonTokens.unselected_container_color : FilledTonalIconButtonTokens.container_color);
-        content_color: root.checked ? FilledTonalIconButtonTokens.selected_color :
-            (root.checkable ? FilledTonalIconButtonTokens.unselected_color : FilledTonalIconButtonTokens.color);
-        disabled_container_color: FilledTonalIconButtonTokens.disabled_container_color.with_alpha(FilledTonalIconButtonTokens.disabled_container_opacity);
-        disabled_content_color: FilledTonalIconButtonTokens.disabled_color.with_alpha(FilledTonalIconButtonTokens.disabled_opacity);
-        elevation_default: 0;
-        elevation_pressed: 0;
-        elevation_hovered: 0;
-        elevation_focused: 0;
-        elevation_disabled: 0;
+        container_color: root.checked ? root.checked_container_color : root.container_color;
+        content_color: root.checked ? root.checked_content_color : root.content_color;
+        disabled_container_color: root.disabled_container_color;
+        disabled_content_color: root.disabled_content_color;
+        border_color: root.border_color;
+        disabled_border_color: root.disabled_border_color;
+        border_width: root.border_width;
+        checked_border_width: root.checked_border_width;
+        elevation_default_dp: root.elevation_default;
+        elevation_pressed_dp: root.elevation_pressed;
+        elevation_hovered_dp: root.elevation_hovered;
+        elevation_focused_dp: root.elevation_focused;
+        elevation_disabled_dp: root.elevation_disabled;
 
         icon: root.icon;
         checked_icon: root.checked_icon;
+        @children
+
         icon_size: MaterialButtonMetrics.icon-container-icon-size(root.size);
     }
 }
