@@ -206,6 +206,7 @@ export component SchemeDialog inherits Dialog {
 
             spec_buttons := ConnectedButtonGroup {
                 selected_index: root.spec_index(MaterialTheme.spec-version);
+                selection_on_click: false;
                 items: [
                     { text: "2021" },
                     { text: "2025" },
@@ -226,6 +227,7 @@ export component SchemeDialog inherits Dialog {
 
             platform_buttons := ConnectedButtonGroup {
                 selected_index: MaterialTheme.platform == MaterialSchemePlatform.phone ? 0 : 1;
+                selection_on_click: false;
                 items: [
                     { text: "Phone" },
                     { text: "Watch" },

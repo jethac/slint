@@ -26,6 +26,8 @@ export component FilledButton {
     /// non-checkable items so a press keeps the resting shape.
     in property <bool> press_shape_morph: true;
     in-out property <bool> checked;
+    /// Set false when the application owns checked state.
+    in property <bool> toggle_on_click: true;
     in property <bool> enabled: true;
     in property <string> tooltip;
     /// Reserve a 48x48 touch target around the visual (default on).
@@ -122,6 +124,8 @@ export component FilledButton {
     in property <color> checked_content_color: FilledButtonTokens.selected_pressed_label_text_color;
 
     callback clicked <=> base.clicked;
+    /// Requests the next checked state on enabled toggle activation.
+    callback checked_changed <=> base.checked_changed;
 
     out property <bool> has_focus <=> base.has_focus;
     out property <bool> pressed <=> base.pressed;
@@ -146,6 +150,7 @@ export component FilledButton {
         height: 100%;
         checkable: root.checkable;
         checked <=> root.checked;
+        toggle_on_click: root.toggle_on_click;
         enabled: root.enabled;
         tooltip: root.tooltip;
         enforce_touch_target: root.enforce_touch_target;

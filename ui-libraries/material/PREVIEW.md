@@ -107,6 +107,18 @@ The full interpreter suite passes 959 tests; its log is `target/material-preview
 
 ## Scope and Remaining Work
 
+All eight toggle styles now expose `toggle-on-click` and `checked-changed`.
+Controlled activation requests the opposite state without overwriting the application's `checked` binding.
+Default activation updates local state before invoking the state callback and `clicked`, once each.
+Both connected-group orientations expose `selection-on-click` and preserve application-owned selection in controlled mode.
+Multi-select groups update model rows instead of replacing delegate bindings.
+Connected accessibility actions use the shared activation handler and reject disabled items.
+The gallery's application-owned theme, motion, and shape selections use controlled mode.
+All 965 interpreter tests, ten Skia checks with required references, the native gallery check, and three Fieldnotes regressions pass.
+Generator drift and formatting checks pass.
+Evidence logs use the `target/material-preview/controlled-selection-` prefix, including `full-interpreter-final.log`, `render.log`, `native-gallery.log`, and `native-fieldnotes.log`.
+Standard ButtonGroup and legacy SegmentedButton selection still require their complete API and behavior audits.
+
 The reviewed spike inventory contained 61 done, 72 partial, and 17 missing entries.
 The completion audit corrected extension function names that had been recorded as receiver types.
 The current inventory contains 60 done, 82 partial, and 7 missing entries.

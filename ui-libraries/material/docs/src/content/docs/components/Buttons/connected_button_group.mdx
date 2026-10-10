@@ -82,8 +82,11 @@ variant's shapes.
 ## ConnectedButtonGroup Properties
 
 ### items
-<SlintProperty propName="items" typeName="[struct]" structName="ConnectedButtonGroupItem">
+<SlintProperty propName="items" typeName="[struct]" structName="ConnectedButtonGroupItem" propertyVisibility="in-out">
 An array of connected items, each containing an optional icon, checked icon, text, tooltip, disabled flag and checked flag.
+Multi-select activation updates the model row's checked flag.
+Delegates retain their model bindings and respond to subsequent row updates.
+Use a writable model when the group owns multi-select state.
 </SlintProperty>
 
 ### multi-select
@@ -101,17 +104,46 @@ The checked item for single-select groups; `-1` selects none.
 The horizontal gap between items — the upstream samples' `spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween)` parameter.
 </SlintProperty>
 
+### selection-on-click
+<SlintProperty propName="selection-on-click" typeName="bool" defaultValue="true">
+Update group state on activation before invoking the selection callback.
+Set false to preserve application-owned bindings and only request state changes.
+</SlintProperty>
+
 ## ConnectedButtonGroup Callbacks
 
+Set `selection-on-click: false` when the application owns selection.
+Callbacks then request changes without writing `selected-index` or the checked flags in `items`.
+The application can accept or reject requests and update the bound source.
+The default, `true`, updates group state before invoking the callback.
+Disabled items ignore pointer, keyboard, and accessibility activation.
+Programmatic selection and model updates emit neither callback.
+
+```slint
+import { ConnectedButtonGroup } from "@material";
+
+export component Example inherits Window {
+    width: 300px;
+    height: 100px;
+    in-out property <int> selected: 0;
+    ConnectedButtonGroup {
+        items: [{ text: "Day" }, { text: "Week" }, { text: "Month" }];
+        selected-index: root.selected;
+        selection-on-click: false;
+        selected-index-changed(index) => { root.selected = index; }
+    }
+}
+```
+
 ### selected-index-changed(index: int)
-Invoked when the selection moves in a single-select group.
+Requests selection of an enabled item in a single-select group, including the already selected item.
 
 ### item-checked-changed(index: int, checked: bool)
-Invoked when an item of a multi-select group is toggled.
+Requests the next checked state of an enabled item in a multi-select group.
 
 ## VerticalConnectedButtonGroup Properties
 
-`items`, `multi-select`, `selected-index` and the callbacks work exactly
+`items`, `multi-select`, `selected-index`, `selection-on-click`, and the callbacks work exactly
 like `ConnectedButtonGroup`'s.
 
 ### item-spacing
@@ -160,3 +192,7 @@ Whether the item can be clicked.
 <SlintProperty propName="checked" typeName="bool" propertyVisibility="in-out">
 Whether the item is checked — toggles on click unless `toggle-on-click` is off.
 </SlintProperty>
+
+Set `toggle-on-click: false` to preserve an application-owned `checked` binding.
+The `checked-changed(checked)` callback requests the opposite state, followed by `clicked`.
+With the default `true`, the component updates `checked` before invoking these callbacks.

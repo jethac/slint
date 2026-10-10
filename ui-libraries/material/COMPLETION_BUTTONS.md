@@ -38,13 +38,17 @@ The pinned `shapeByInteraction` switches arbitrary paths immediately and animate
 - [x] Expose border color and width overrides, including disabled and checked states.
 - [x] Provide padding overrides for all four text-toggle styles.
 - [x] Support arbitrary child content and document how it inherits typography and content color.
-- [ ] Document the mapping from Compose's externally owned `checked`/`onCheckedChange` to Slint properties and callbacks.
-- [ ] Verify controlled state bindings and single-selection groups without replacing their bindings during activation.
+- [x] Document the mapping from Compose's externally owned `checked`/`onCheckedChange` to Slint properties and callbacks.
+- [x] Verify controlled checked bindings across all eight styles and both connected-group orientations without replacing bindings during activation.
+- [ ] Verify application-owned selection in the standard ButtonGroup and mapped SegmentedButton APIs.
 - [ ] Compare every default size, icon spacing, padding, typography, and minimum touch target against the pinned helpers.
 
 ## Input and accessibility
 
 The interpreter fixture verifies checkbox roles, names, activation, and disabled accessibility actions across all eight styles.
+Controlled toggle activation requests changes without overwriting application bindings.
+Connected groups preserve selection bindings in controlled mode and model-row bindings in both modes.
+Pointer, keyboard release, and accessibility checks cover rejected and accepted requests.
 Keyboard activation must follow the pinned [Clickable.kt](https://github.com/androidx/androidx/blob/23327507f7fc7d5b19d65fec4b090f60c970079b/compose/foundation/foundation/src/commonMain/kotlin/androidx/compose/foundation/Clickable.kt).
 Key-down creates a press; matching key-up activates; focus loss cancels pending keys.
 

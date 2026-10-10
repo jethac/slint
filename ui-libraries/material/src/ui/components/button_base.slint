@@ -132,13 +132,18 @@ export component MaterialButtonBase {
     in property <bool> simulate_press;
 
     callback clicked;
+    callback checked_changed(bool);
 
     public function activate() {
         if !root.enabled {
             return;
         }
-        if root.checkable && root.toggle_on_click {
-            root.checked = !root.checked;
+        if root.checkable {
+            let requested = !root.checked;
+            if root.toggle_on_click {
+                root.checked = requested;
+            }
+            root.checked_changed(requested);
         }
         root.clicked();
     }

@@ -4,6 +4,7 @@
 import {
     ToggleButton, FilledTonalToggleButton, ElevatedToggleButton, OutlinedToggleButton,
     IconToggleButton, FilledIconToggleButton, FilledTonalIconToggleButton, OutlinedIconToggleButton, ExtendedTouchArea,
+    ConnectedButton, ConnectedButtonGroup, VerticalConnectedButtonGroup, ConnectedButtonGroupItem,
 } from "../../../ui-libraries/material/src/material.slint";
 
 export component TestCase inherits Window {
@@ -11,20 +12,134 @@ export component TestCase inherits Window {
     height: 480px;
     in-out property <bool> controls-enabled: true;
     out property <int> clicks;
+    out property <int> requests;
+    out property <bool> callback-state-matches: true;
     out property <bool> test: root.clicks == 32 && !root.controls-enabled;
     out property <bool> first-pressed: first.pressed;
     out property <bool> first-checked: first.checked;
     out property <bool> first-focused: first.has-focus;
 
     VerticalLayout {
-        first := ToggleButton { text: "Filled"; enabled: root.controls-enabled; clicked => { root.clicks += 1; } }
-        FilledTonalToggleButton { text: "Tonal"; enabled: root.controls-enabled; clicked => { root.clicks += 1; } }
-        ElevatedToggleButton { text: "Elevated"; enabled: root.controls-enabled; clicked => { root.clicks += 1; } }
-        OutlinedToggleButton { text: "Outlined"; enabled: root.controls-enabled; clicked => { root.clicks += 1; } }
-        IconToggleButton { tooltip: "Icon"; enabled: root.controls-enabled; clicked => { root.clicks += 1; } }
-        FilledIconToggleButton { tooltip: "Filled icon"; enabled: root.controls-enabled; clicked => { root.clicks += 1; } }
-        FilledTonalIconToggleButton { tooltip: "Tonal icon"; enabled: root.controls-enabled; clicked => { root.clicks += 1; } }
-        OutlinedIconToggleButton { tooltip: "Outlined icon"; enabled: root.controls-enabled; clicked => { root.clicks += 1; } }
+        first := ToggleButton { text: "Filled"; enabled: root.controls-enabled; checked-changed(checked) => { root.requests += 1; root.callback-state-matches = root.callback-state-matches && self.checked == checked; } clicked => { root.clicks += 1; } }
+        FilledTonalToggleButton { text: "Tonal"; enabled: root.controls-enabled; checked-changed(checked) => { root.requests += 1; root.callback-state-matches = root.callback-state-matches && self.checked == checked; } clicked => { root.clicks += 1; } }
+        ElevatedToggleButton { text: "Elevated"; enabled: root.controls-enabled; checked-changed(checked) => { root.requests += 1; root.callback-state-matches = root.callback-state-matches && self.checked == checked; } clicked => { root.clicks += 1; } }
+        OutlinedToggleButton { text: "Outlined"; enabled: root.controls-enabled; checked-changed(checked) => { root.requests += 1; root.callback-state-matches = root.callback-state-matches && self.checked == checked; } clicked => { root.clicks += 1; } }
+        IconToggleButton { tooltip: "Icon"; enabled: root.controls-enabled; checked-changed(checked) => { root.requests += 1; root.callback-state-matches = root.callback-state-matches && self.checked == checked; } clicked => { root.clicks += 1; } }
+        FilledIconToggleButton { tooltip: "Filled icon"; enabled: root.controls-enabled; checked-changed(checked) => { root.requests += 1; root.callback-state-matches = root.callback-state-matches && self.checked == checked; } clicked => { root.clicks += 1; } }
+        FilledTonalIconToggleButton { tooltip: "Tonal icon"; enabled: root.controls-enabled; checked-changed(checked) => { root.requests += 1; root.callback-state-matches = root.callback-state-matches && self.checked == checked; } clicked => { root.clicks += 1; } }
+        OutlinedIconToggleButton { tooltip: "Outlined icon"; enabled: root.controls-enabled; checked-changed(checked) => { root.requests += 1; root.callback-state-matches = root.callback-state-matches && self.checked == checked; } clicked => { root.clicks += 1; } }
+    }
+}
+
+export component ControlledCase inherits Window {
+    width: 300px;
+    height: 480px;
+    in-out property <bool> controls-enabled: true;
+    in-out property <bool> selected;
+    in-out property <bool> accept-requests;
+    out property <int> requests;
+    out property <int> clicks;
+    out property <bool> last-request;
+    out property <bool> ordered: true;
+
+    function request(checked: bool) {
+        root.ordered = root.ordered && root.requests == root.clicks;
+        root.requests += 1;
+        root.last-request = checked;
+        if root.accept-requests {
+            root.selected = checked;
+        }
+    }
+
+    VerticalLayout {
+        ToggleButton {
+            text: "Filled";
+            enabled: root.controls-enabled;
+            checked: root.selected;
+            toggle-on-click: false;
+            checked-changed(checked) => { root.request(checked); }
+            clicked => {
+                root.ordered = root.ordered && root.requests == root.clicks + 1;
+                root.clicks += 1;
+            }
+        }
+        FilledTonalToggleButton {
+            text: "Tonal";
+            enabled: root.controls-enabled;
+            checked: root.selected;
+            toggle-on-click: false;
+            checked-changed(checked) => { root.request(checked); }
+            clicked => {
+                root.ordered = root.ordered && root.requests == root.clicks + 1;
+                root.clicks += 1;
+            }
+        }
+        ElevatedToggleButton {
+            text: "Elevated";
+            enabled: root.controls-enabled;
+            checked: root.selected;
+            toggle-on-click: false;
+            checked-changed(checked) => { root.request(checked); }
+            clicked => {
+                root.ordered = root.ordered && root.requests == root.clicks + 1;
+                root.clicks += 1;
+            }
+        }
+        OutlinedToggleButton {
+            text: "Outlined";
+            enabled: root.controls-enabled;
+            checked: root.selected;
+            toggle-on-click: false;
+            checked-changed(checked) => { root.request(checked); }
+            clicked => {
+                root.ordered = root.ordered && root.requests == root.clicks + 1;
+                root.clicks += 1;
+            }
+        }
+        IconToggleButton {
+            tooltip: "Icon";
+            enabled: root.controls-enabled;
+            checked: root.selected;
+            toggle-on-click: false;
+            checked-changed(checked) => { root.request(checked); }
+            clicked => {
+                root.ordered = root.ordered && root.requests == root.clicks + 1;
+                root.clicks += 1;
+            }
+        }
+        FilledIconToggleButton {
+            tooltip: "Filled icon";
+            enabled: root.controls-enabled;
+            checked: root.selected;
+            toggle-on-click: false;
+            checked-changed(checked) => { root.request(checked); }
+            clicked => {
+                root.ordered = root.ordered && root.requests == root.clicks + 1;
+                root.clicks += 1;
+            }
+        }
+        FilledTonalIconToggleButton {
+            tooltip: "Tonal icon";
+            enabled: root.controls-enabled;
+            checked: root.selected;
+            toggle-on-click: false;
+            checked-changed(checked) => { root.request(checked); }
+            clicked => {
+                root.ordered = root.ordered && root.requests == root.clicks + 1;
+                root.clicks += 1;
+            }
+        }
+        OutlinedIconToggleButton {
+            tooltip: "Outlined icon";
+            enabled: root.controls-enabled;
+            checked: root.selected;
+            toggle-on-click: false;
+            checked-changed(checked) => { root.request(checked); }
+            clicked => {
+                root.ordered = root.ordered && root.requests == root.clicks + 1;
+                root.clicks += 1;
+            }
+        }
     }
 }
 
@@ -37,6 +152,85 @@ export component ExtendedCase inherits Window {
     area := ExtendedTouchArea {
         enabled: root.controls-enabled;
         clicked => { root.clicks += 1; }
+    }
+}
+
+
+export component HorizontalGroupCase inherits Window {
+    width: 400px;
+    height: 300px;
+    in-out property <bool> multiple;
+    in-out property <bool> automatic;
+    in-out property <bool> accept-requests;
+    in-out property <int> selected: 0;
+    in-out property <[ConnectedButtonGroupItem]> items: [
+        { text: "First" }, { text: "Second" }, { text: "Disabled", disabled: true },
+    ];
+    out property <int> requests;
+    out property <int> requested-index: -1;
+    out property <bool> requested-checked;
+    out property <int> observed-selection: group.selected-index;
+    out property <bool> model-checked: root.items[0].checked;
+
+    group := ConnectedButtonGroup {
+        items: root.items;
+        multi-select: root.multiple;
+        selection-on-click: root.automatic;
+        selected-index: root.selected;
+        selected-index-changed(index) => {
+            root.requests += 1;
+            root.requested-index = index;
+            if root.accept-requests {
+                root.selected = index;
+            }
+        }
+        item-checked-changed(index, checked) => {
+            root.requests += 1;
+            root.requested-index = index;
+            root.requested-checked = checked;
+            if root.accept-requests {
+                root.items[index].checked = checked;
+            }
+        }
+    }
+}
+
+export component VerticalGroupCase inherits Window {
+    width: 400px;
+    height: 300px;
+    in-out property <bool> multiple;
+    in-out property <bool> automatic;
+    in-out property <bool> accept-requests;
+    in-out property <int> selected: 0;
+    in-out property <[ConnectedButtonGroupItem]> items: [
+        { text: "First" }, { text: "Second" }, { text: "Disabled", disabled: true },
+    ];
+    out property <int> requests;
+    out property <int> requested-index: -1;
+    out property <bool> requested-checked;
+    out property <int> observed-selection: group.selected-index;
+    out property <bool> model-checked: root.items[0].checked;
+
+    group := VerticalConnectedButtonGroup {
+        items: root.items;
+        multi-select: root.multiple;
+        selection-on-click: root.automatic;
+        selected-index: root.selected;
+        selected-index-changed(index) => {
+            root.requests += 1;
+            root.requested-index = index;
+            if root.accept-requests {
+                root.selected = index;
+            }
+        }
+        item-checked-changed(index, checked) => {
+            root.requests += 1;
+            root.requested-index = index;
+            root.requested-checked = checked;
+            if root.accept-requests {
+                root.items[index].checked = checked;
+            }
+        }
     }
 }
 

@@ -178,6 +178,7 @@ export component ShapesView {
                         ConnectedButtonGroup {
                             items: [{ text: "normalized" }, { text: "fill" }, { text: "contain" }, { text: "cover" }];
                             selected_index: root.fit_index;
+                            selection_on_click: false;
 
                             selected_index_changed(index) => { root.fit_index = index; }
                         }

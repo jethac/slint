@@ -13,7 +13,7 @@ import {
 /// the label with an optional leading icon. `checked_icon` replaces `icon`
 /// while the item is checked (the upstream samples swap filled for
 /// outlined icons); when left empty `icon` is kept. `checked` is the
-/// item's initial checked state for `multi-select` groups — single-select
+/// item's checked state for `multi-select` groups — single-select
 /// groups check `selected-index` instead. `disabled` marks the item
 /// disabled — struct fields can't carry a default, so the enabled state
 /// is implicit.
@@ -67,6 +67,7 @@ export component ConnectedButton {
     in property <bool> toggle_on_click: true;
 
     callback clicked <=> base.clicked;
+    callback checked_changed <=> base.checked_changed;
 
     out property <bool> has_focus <=> base.has_focus;
     out property <bool> pressed <=> base.pressed;
@@ -90,7 +91,7 @@ export component ConnectedButton {
     accessible-item-index: root.index;
     accessible-item-selectable: true;
     accessible-item-selected: root.checked;
-    accessible-action-default => { base.clicked(); }
+    accessible-action-default => { base.activate(); }
 
     property <length> inner: ConnectedButtonGroupSmallTokens.inner_corner_corner_size;
     property <length> pressed_inner: ConnectedButtonGroupSmallTokens.pressed_inner_corner_corner_size;
@@ -205,7 +206,9 @@ component ConnectedRadioItem inherits ConnectedButton {
 /// single-select with `selected-index` and radio semantics. `start`
 /// corners resolve to the left — the upstream samples' LTR shapes.
 export component ConnectedButtonGroup {
-    in property <[ConnectedButtonGroupItem]> items;
+    in-out property <[ConnectedButtonGroupItem]> items;
+    /// Set false to request selection changes without writing application state.
+    in property <bool> selection_on_click: true;
     /// Give each item its own checked state instead of a single
     /// `selected-index`.
     in property <bool> multi_select;
@@ -257,12 +260,16 @@ export component ConnectedButtonGroup {
             tooltip: data.tooltip;
             enabled: !data.disabled;
             checked: data.checked;
+            toggle_on_click: false;
             enforce_touch_target: root.enforce_touch_target;
             simulate_press: index == root.simulate_press_index;
             simulate_hover: index == root.simulate_hover_index;
 
-            clicked => {
-                root.item_checked_changed(index, self.checked);
+            checked_changed(checked) => {
+                if root.selection_on_click {
+                    root.items[index].checked = checked;
+                }
+                root.item_checked_changed(index, checked);
             }
         }
 
@@ -284,7 +291,9 @@ export component ConnectedButtonGroup {
             toggle_on_click: false;
 
             clicked => {
-                root.selected_index = index;
+                if root.selection_on_click {
+                    root.selected_index = index;
+                }
                 root.selected_index_changed(index);
             }
         }
@@ -298,7 +307,9 @@ export component ConnectedButtonGroup {
 /// `RoundedCornerShape(6.dp)`. Selection and callbacks work exactly like
 /// `ConnectedButtonGroup`.
 export component VerticalConnectedButtonGroup {
-    in property <[ConnectedButtonGroupItem]> items;
+    in-out property <[ConnectedButtonGroupItem]> items;
+    /// Set false to request selection changes without writing application state.
+    in property <bool> selection_on_click: true;
     in property <bool> multi_select;
     in-out property <int> selected_index: -1;
     /// The vertical spacing between items — negative so each item pulls
@@ -337,6 +348,7 @@ export component VerticalConnectedButtonGroup {
             tooltip: data.tooltip;
             enabled: !data.disabled;
             checked: data.checked;
+            toggle_on_click: false;
             enforce_touch_target: root.enforce_touch_target;
             simulate_press: index == root.simulate_press_index;
             simulate_hover: index == root.simulate_hover_index;
@@ -345,8 +357,11 @@ export component VerticalConnectedButtonGroup {
             horizontal-stretch: 0;
             vertical-stretch: 0;
 
-            clicked => {
-                root.item_checked_changed(index, self.checked);
+            checked_changed(checked) => {
+                if root.selection_on_click {
+                    root.items[index].checked = checked;
+                }
+                root.item_checked_changed(index, checked);
             }
         }
 
@@ -369,7 +384,9 @@ export component VerticalConnectedButtonGroup {
             vertical-stretch: 0;
 
             clicked => {
-                root.selected_index = index;
+                if root.selection_on_click {
+                    root.selected_index = index;
+                }
                 root.selected_index_changed(index);
             }
         }

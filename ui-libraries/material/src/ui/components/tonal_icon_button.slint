@@ -16,6 +16,8 @@ export component TonalIconButton {
     /// Turn the button into a toggle: `checked` becomes the selected state.
     in property <bool> checkable;
     in-out property <bool> checked;
+    /// Set false when the application owns checked state.
+    in property <bool> toggle_on_click: true;
     in property <bool> enabled: true;
     in property <string> tooltip;
     /// One of the five container sizes.
@@ -110,6 +112,8 @@ export component TonalIconButton {
     in property <color> checked_content_color: FilledTonalIconButtonTokens.selected_color;
 
     callback clicked <=> base.clicked;
+    /// Requests the next checked state on enabled toggle activation.
+    callback checked_changed <=> base.checked_changed;
 
     out property <bool> has_focus <=> base.has_focus;
     out property <bool> pressed <=> base.pressed;
@@ -135,6 +139,7 @@ export component TonalIconButton {
         icon_button: true;
         checkable: root.checkable;
         checked <=> root.checked;
+        toggle_on_click: root.toggle_on_click;
         enabled: root.enabled;
         tooltip: root.tooltip;
         enforce_touch_target: root.enforce_touch_target;

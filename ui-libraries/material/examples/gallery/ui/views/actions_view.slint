@@ -1556,6 +1556,7 @@ export component ActionsView {
                             { text: "Standard" },
                         ];
                         selected_index: MaterialAnimations.motion-scheme == MaterialMotionScheme.expressive ? 0 : 1;
+                        selection_on_click: false;
 
                         selected_index_changed(index) => {
                             MaterialAnimations.motion-scheme = index == 0 ? MaterialMotionScheme.expressive : MaterialMotionScheme.standard;
