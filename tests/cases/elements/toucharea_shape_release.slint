@@ -1,0 +1,58 @@
+// Copyright © SixtyFPS GmbH <info@slint.dev>
+// SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0
+
+export component TestCase inherits Window {
+    width: 120px;
+    height: 120px;
+    out property <int> clicks;
+    out property <int> cancellations;
+    out property <bool> pressed: area.pressed;
+    out property <bool> test: root.clicks == 0;
+    area := TouchArea {
+        x: 20px; y: 20px; width: 80px; height: 80px;
+        shape: Shapes.path("M0.5 0L1 0.5L0.5 1L0 0.5Z");
+        shape-fit: ShapeFit.normalized;
+        clicked => { root.clicks += 1; }
+        pointer-event(event) => {
+            if event.kind == PointerEventKind.cancel { root.cancellations += 1; }
+        }
+    }
+}
+
+/*
+```rust
+use slint::platform::{PointerEventButton, WindowEvent};
+use slint::LogicalPosition;
+let instance = TestCase::new().unwrap();
+instance.show().unwrap();
+let center = LogicalPosition::new(60., 60.);
+let press = || instance.window().dispatch_event(WindowEvent::PointerPressed {
+    position: center, button: PointerEventButton::Left,
+});
+let release = |position| instance.window().dispatch_event(WindowEvent::PointerReleased {
+    position, button: PointerEventButton::Left,
+});
+press();
+release(LogicalPosition::new(28., 48.));
+assert_eq!(instance.get_clicks(), 0);
+press();
+instance.window().dispatch_event(WindowEvent::PointerExited);
+release(center);
+assert_eq!(instance.get_clicks(), 0);
+let touch = |phase| instance.window().dispatch_event(WindowEvent::internal(
+    i_slint_core::platform::InternalEvent::Touch {
+        id: 1,
+        position: i_slint_core::lengths::LogicalPoint::new(60., 60.),
+        phase,
+    }));
+touch(i_slint_core::input::TouchPhase::Started);
+assert!(instance.get_pressed());
+touch(i_slint_core::input::TouchPhase::Cancelled);
+assert!(!instance.get_pressed());
+assert_eq!(instance.get_clicks(), 0);
+assert_eq!(instance.get_cancellations(), 2);
+press();
+release(LogicalPosition::new(60., 24.));
+assert_eq!(instance.get_clicks(), 1);
+```
+*/

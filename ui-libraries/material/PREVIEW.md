@@ -130,6 +130,15 @@ Skia checks cover standard groups, weighted sizing, overflow, selection motion, 
 Generator drift and formatting checks pass.
 Evidence logs use the `target/material-preview/standard-selection-` prefix, including `full-interpreter-final.log`, `final-render.log`, and `native-gallery-final.log`.
 
+Captured pointer releases now check TouchArea's outline as well as its rectangle.
+A cancelled touch emits cancellation without a release, preventing accidental activation.
+Material buttons cancel pending pointer presses when disabled, including re-enabling before release.
+Disabled buttons clear their effective pressed visuals immediately.
+Interaction regressions cover all eight toggle styles with custom and rounded outlines, pointer exit, touch cancellation, and fresh activation after cancellation.
+All 969 interpreter tests, 533 core tests, and six native TouchArea tests pass.
+Eight required-reference Skia checks, native gallery rendering, three Fieldnotes regressions, generator drift, and formatting checks pass.
+Evidence logs use the `target/material-preview/pointer-cancellation-` prefix, including `full-interpreter-final.log`, `core.log`, `native.log`, and `render.log`.
+
 The reviewed spike inventory contained 61 done, 72 partial, and 17 missing entries.
 The completion audit corrected extension function names that had been recorded as receiver types.
 The current inventory contains 60 done, 82 partial, and 7 missing entries.
@@ -149,11 +158,11 @@ Full Compose TextStyle fields, adaptive behavior, and provider reference scenes 
 
 The harness contains 264 scenes, including 79 deliberate negative cases and 53 cases with expected-failure declarations.
 An expected failure records a known difference; it does not establish visual parity.
-Keep those differences visible when deciding whether a component is ready for an application.
+Resolve these differences before claiming complete parity.
 
 Tooltips remain in-tree overlays.
 The preview fixes pinned app bars, but other clipped containers, including collapsing app bars, still need an overlay solution.
 
-Further work should prioritize interaction, accessibility, and renderer gaps in the components an application uses.
-The generated inventory remains the source for broader port coverage.
+Complete every remaining API, interaction, accessibility, motion, and renderer requirement in the generated inventory.
+Recording a gap does not satisfy a completion requirement.
 No inventory entries are promoted to done by the preview or the receiver-name correction.

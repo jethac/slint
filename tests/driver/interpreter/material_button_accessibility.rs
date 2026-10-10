@@ -58,6 +58,121 @@ fn key(instance: &slint_interpreter::ComponentInstance, text: &str, pressed: boo
 }
 
 #[test]
+fn pointer_cancellation_and_shape_release_do_not_activate_toggles() -> Result<(), Box<dyn Error>> {
+    let instance = create_fixture("ShapeCase")?;
+    for (case, custom_outline) in [true, false].into_iter().enumerate() {
+        instance.set_property("custom-outline", custom_outline.into())?;
+        for (index, label) in [
+            "Filled",
+            "Tonal",
+            "Elevated",
+            "Outlined",
+            "Icon",
+            "Filled icon",
+            "Tonal icon",
+            "Outlined icon",
+        ]
+        .into_iter()
+        .enumerate()
+        {
+            let control = ElementHandle::find_by_accessible_label(&instance, label)
+                .find(|element| element.accessible_role() == Some(AccessibleRole::Checkbox))
+                .unwrap();
+            let origin = control.absolute_position();
+            let size = control.size();
+            let center =
+                LogicalPosition::new(origin.x + size.width / 2.0, origin.y + size.height / 2.0);
+            let visual_width =
+                if label.to_lowercase().contains("icon") { 40.0 } else { size.width };
+            let (x, y) = if custom_outline { (0.1, 0.35) } else { (0.03, 0.03) };
+            let dead_corner = LogicalPosition::new(
+                origin.x + (size.width - visual_width) / 2.0 + visual_width * x,
+                origin.y + (size.height - 40.0) / 2.0 + 40.0 * y,
+            );
+            let expected_clicks = ((case * 8 + index) * 2) as f64;
+            let press = || {
+                instance.window().dispatch_event(WindowEvent::PointerMoved { position: center });
+                instance.window().dispatch_event(WindowEvent::PointerPressed {
+                    position: center,
+                    button: PointerEventButton::Left,
+                });
+            };
+            let release = |position| {
+                instance.window().dispatch_event(WindowEvent::PointerReleased {
+                    position,
+                    button: PointerEventButton::Left,
+                })
+            };
+            press();
+            assert_eq!(instance.get_property("any-pressed")?, Value::Bool(true));
+            release(dead_corner);
+            assert_eq!(
+                control.accessible_checked(),
+                Some(false),
+                "{label}: release outside outline"
+            );
+            assert_eq!(instance.get_property("any-pressed")?, Value::Bool(false));
+            press();
+            let outside = LogicalPosition::new(-20.0, -20.0);
+            instance.window().dispatch_event(WindowEvent::PointerMoved { position: outside });
+            release(outside);
+            press();
+            instance.window().dispatch_event(WindowEvent::PointerExited);
+            release(center);
+            assert_eq!(instance.get_property("clicks")?, Value::Number(expected_clicks));
+            let touch = |phase| {
+                instance.window().dispatch_event(WindowEvent::internal(
+                    i_slint_core::platform::InternalEvent::Touch {
+                        id: 1,
+                        position: i_slint_core::lengths::LogicalPoint::new(center.x, center.y),
+                        phase,
+                    },
+                ))
+            };
+            touch(i_slint_core::input::TouchPhase::Started);
+            assert_eq!(instance.get_property("any-pressed")?, Value::Bool(true));
+            touch(i_slint_core::input::TouchPhase::Cancelled);
+            assert_eq!(instance.get_property("any-pressed")?, Value::Bool(false));
+            assert_eq!(control.accessible_checked(), Some(false), "{label}: cancelled touch");
+            assert_eq!(instance.get_property("clicks")?, Value::Number(expected_clicks));
+            press();
+            instance.set_property("controls-enabled", false.into())?;
+            assert_eq!(
+                instance.get_property("any-pressed")?,
+                Value::Bool(false),
+                "{label}: disabled visual state"
+            );
+            i_slint_backend_testing::mock_elapsed_time(1);
+            instance.set_property("controls-enabled", true.into())?;
+            instance.window().dispatch_event(WindowEvent::PointerPressed {
+                position: center,
+                button: PointerEventButton::Right,
+            });
+            release(center);
+            instance.window().dispatch_event(WindowEvent::PointerReleased {
+                position: center,
+                button: PointerEventButton::Right,
+            });
+            assert_eq!(
+                control.accessible_checked(),
+                Some(false),
+                "{label}: disabling cancels pending press"
+            );
+            assert_eq!(instance.get_property("clicks")?, Value::Number(expected_clicks));
+            pointer_click(&instance, &control);
+            assert_eq!(
+                control.accessible_checked(),
+                Some(true),
+                "{label}: fresh press after cancellation"
+            );
+            control.invoke_accessible_default_action();
+            assert_eq!(control.accessible_checked(), Some(false));
+        }
+    }
+    Ok(())
+}
+
+#[test]
 fn standard_group_selection_requests_preserve_row_and_menu_bindings() -> Result<(), Box<dyn Error>>
 {
     let instance = create_fixture("StandardGroupCase")?;

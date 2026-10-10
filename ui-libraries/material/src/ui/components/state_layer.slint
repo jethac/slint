@@ -279,6 +279,8 @@ export component FocusTouchArea inherits TouchArea {
     out property <bool> enter_pressed: root.enabled && root.has_focus && (root.space_pressed || root.return_pressed);
     property <bool> space_pressed;
     property <bool> return_pressed;
+    /// Whether cancellation or disabling ended the pending pointer press.
+    out property <bool> pointer_cancelled;
     in property <string> tooltip;
     /// Deprecated: the upstream position provider places the tooltip — this
     /// offset is no longer consumed.
@@ -290,6 +292,7 @@ export component FocusTouchArea inherits TouchArea {
 
     changed enabled => {
         if !root.enabled {
+            root.pointer_cancelled = true;
             root.space_pressed = false;
             root.return_pressed = false;
         }
@@ -301,6 +304,16 @@ export component FocusTouchArea inherits TouchArea {
             root.return_pressed = false;
         }
     }
+
+    /// Update cancellation state when overriding the `pointer-event` callback.
+    public function track_pointer_event(event: PointerEvent) {
+        if event.kind == PointerEventKind.down && event.button == PointerEventButton.left {
+            root.pointer_cancelled = false;
+        } else if event.kind == PointerEventKind.cancel {
+            root.pointer_cancelled = true;
+        }
+    }
+    pointer-event(event) => { root.track_pointer_event(event); }
 
     focus_scope := FocusScope {
         x: 0;
@@ -389,8 +402,8 @@ export component StateLayerArea inherits FocusTouchArea {
     in property <bool> simulate_press;
     /// A hoisted `DragInteraction` — see `StateLayer.dragged`.
     in property <bool> dragged;
-    /// `pressed` limited to pointer-downs that started inside the shape.
-    out property <bool> effective_pressed: (root.pressed && root.pointer_inside) || root.enter_pressed || root.simulate_press;
+    /// An enabled pointer or keyboard press, excluding cancelled pointer presses.
+    out property <bool> effective_pressed: root.enabled && ((root.pressed && root.pointer_inside && !root.pointer_cancelled) || root.enter_pressed || root.simulate_press);
     /// `has_hover` limited to pointer positions inside the shape.
     out property <bool> effective_hover: (root.has_hover && root.point_inside(root.mouse_x, root.mouse_y)) || root.simulate_hover;
 
@@ -454,6 +467,7 @@ export component StateLayerArea inherits FocusTouchArea {
     }
 
     pointer-event(event) => {
+        root.track_pointer_event(event);
         if event.kind == PointerEventKind.down {
             root.pointer_inside = root.point_inside(root.pressed_x, root.pressed_y);
         }

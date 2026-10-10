@@ -158,9 +158,8 @@ impl Item for TouchArea {
             }
 
             MouseEvent::Released { button, position, click_count, touch_finger_id } => {
-                let geometry = self_rc.geometry();
                 if *button == PointerEventButton::Left
-                    && LogicalRect::new(LogicalPoint::default(), geometry.size).contains(*position)
+                    && self_rc.hit_test(*position + self_rc.geometry().origin.to_vector())
                     && self.pressed()
                 {
                     Self::FIELD_OFFSETS.clicked().apply_pin(self).call(&());

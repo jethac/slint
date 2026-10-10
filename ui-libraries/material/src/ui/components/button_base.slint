@@ -294,9 +294,7 @@ export component MaterialButtonBase {
         simulate_press: root.simulate_press;
 
         clicked() => {
-            // A click counts only when the press landed inside the clipped
-            // shape — or came from the keyboard, which is always inside.
-            if !area.pointer_inside && !area.enter_pressed {
+            if !area.enter_pressed && (area.pointer_cancelled || !area.pointer_inside || !area.point_inside(area.mouse_x, area.mouse_y)) {
                 return;
             }
             root.activate();
