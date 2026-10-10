@@ -416,6 +416,7 @@ SPDX-License-Identifier = "MIT"
 path = [
   "ui-libraries/material/src/ui/icons/**.svg",
   "ui-libraries/material/examples/gallery/ui/icons/**.svg",
+  "ui-libraries/material/examples/fieldnotes/ui/icons/**.svg",
   "ui-libraries/material/parity/compose/src/test/resources/icons/**.svg",
 ]
 precedence = "aggregate"

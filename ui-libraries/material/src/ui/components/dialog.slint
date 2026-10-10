@@ -458,6 +458,8 @@ export component Dialog inherits PopupWindow {
     callback default_action_clicked <=> base.default_action_clicked;
     callback action_button_clicked <=> base.action_button_clicked;
     callback action_clicked <=> base.action_clicked;
+    /// Emitted when Escape or a click outside the dialog dismisses it.
+    callback dismissed();
 
     close_policy: no_auto_close;
     forward_focus: base;
@@ -469,6 +471,7 @@ export component Dialog inherits PopupWindow {
         @children
 
         close => {
+            root.dismissed();
             root.close();
         }
     }

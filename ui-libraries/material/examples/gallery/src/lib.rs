@@ -17,6 +17,55 @@ fn ui() -> MainWindow {
     ui
 }
 
+#[cfg(test)]
+mod preview_tests {
+    use slint::ComponentHandle;
+
+    #[test]
+    fn gallery_renders_at_phone_and_desktop_sizes() {
+        std::thread::Builder::new()
+            .stack_size(16 * 1024 * 1024)
+            .spawn(|| {
+                slint::platform::set_platform(Box::new(
+                    i_slint_backend_testing::TestingBackend::new(
+                        i_slint_backend_testing::TestingBackendOptions {
+                            mock_time: true,
+                            renderer_name: Some("skia".into()),
+                            ..Default::default()
+                        },
+                    ),
+                ))
+                .unwrap();
+                let ui = super::ui();
+                ui.show().unwrap();
+                let directory = std::env::var_os("MATERIAL_GALLERY_SCREENSHOTS");
+                for (name, width, height) in
+                    [("gallery-phone", 390, 844), ("gallery-desktop", 1440, 1000)]
+                {
+                    ui.window().set_size(slint::PhysicalSize::new(width, height));
+                    i_slint_backend_testing::mock_elapsed_time(1000);
+                    let snapshot = ui.window().take_snapshot().unwrap();
+                    assert_eq!(snapshot.width(), width);
+                    assert_eq!(snapshot.height(), height);
+                    if let Some(directory) = &directory {
+                        std::fs::create_dir_all(directory).unwrap();
+                        image::save_buffer(
+                            std::path::Path::new(directory).join(format!("{name}.png")),
+                            snapshot.as_bytes(),
+                            width,
+                            height,
+                            image::ColorType::Rgba8,
+                        )
+                        .unwrap();
+                    }
+                }
+            })
+            .unwrap()
+            .join()
+            .unwrap();
+    }
+}
+
 #[cfg_attr(target_arch = "wasm32", wasm_bindgen(start))]
 pub fn main() {
     let ui = ui();

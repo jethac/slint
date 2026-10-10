@@ -141,7 +141,8 @@ fn run() -> Result<(), String> {
         for (rel, content) in &disk_outputs {
             let path = material_root.join(rel);
             match std::fs::read_to_string(&path) {
-                Ok(existing) if existing == *content => {}
+                Ok(existing) if existing.replace("\r\n", "\n") == content.replace("\r\n", "\n") => {
+                }
                 Ok(_) => drifted.push(format!("{rel} (differs)")),
                 Err(_) => drifted.push(format!("{rel} (missing)")),
             }

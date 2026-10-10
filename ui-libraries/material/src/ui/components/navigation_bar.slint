@@ -524,6 +524,8 @@ export component NavigationBar inherits BaseNavigation {
             max(root.items.length - 1, 0)) / max(root.items.length, 1) / 1px) * 1px;
 
     min-height: NavigationBarMetrics.tall-container-height();
+    preferred-height: self.min-height;
+    vertical-stretch: 0;
 
     Rectangle {
         background: NavigationBarTokens.container_color;

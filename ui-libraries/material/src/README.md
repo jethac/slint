@@ -12,6 +12,13 @@ See the [changelog](https://material.slint.dev/changelog/) for new features, fix
 
 ## Demos
 
+Try [Fieldnotes](../examples/fieldnotes), a day planner that combines expressive components into a complete workflow.
+It includes task editing, completion filters, responsive navigation, dark colors, and reduced motion.
+
+```sh
+cargo run --release --manifest-path ui-libraries/material/Cargo.toml -p material-fieldnotes
+```
+
 [WebAssembly build in the web browser](https://material.slint.dev/wasm/)
 
 Download and install the [APK for android](https://material.slint.dev/apk/slint_material.apk)

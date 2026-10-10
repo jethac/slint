@@ -36,6 +36,10 @@ slint = { path = "../../../../api/rs/slint", features = ["renderer-skia"] }
 [build-dependencies]
 slint-build = { path = "../../../../api/rs/build" }
 
+[dev-dependencies]
+i-slint-backend-testing = { path = "../../../../internal/backends/testing", features = ["internal", "renderer-skia"] }
+image = { version = "0.25", default-features = false, features = ["png"] }
+
 [package.metadata.android]
 package = "com.slint.material"
 apk_name = "slint_material"

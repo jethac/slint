@@ -428,8 +428,11 @@ pub fn scan_components(
             }
             let text = std::fs::read_to_string(&path)
                 .map_err(|e| format!("cannot read {}: {e}", path.display()))?;
-            let rel =
-                path.strip_prefix(material3_dir).unwrap_or(&path).to_string_lossy().to_string();
+            let rel = path
+                .strip_prefix(material3_dir)
+                .unwrap_or(&path)
+                .to_string_lossy()
+                .replace('\\', "/");
             for fn_name in composable_functions(&text) {
                 out.push(SourceComponent {
                     family: family.to_string(),
@@ -874,5 +877,27 @@ fn slint_ref(obj: &ResolvedObject, m: &crate::model::ResolvedMember) -> String {
             format!("TypographyTokens.{}", snake_case(&m.name))
         }
         _ => format!("{global}.{}", snake_case(&m.name)),
+    }
+}
+
+#[cfg(test)]
+mod source_path_tests {
+    #[test]
+    fn inventory_paths_use_slashes_on_every_platform() {
+        let root = std::env::temp_dir().join(format!(
+            "slint-material-inventory-{}-{}",
+            std::process::id(),
+            std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos()
+        ));
+        let directory = root.join("carousel");
+        let source = directory.join("Carousel.kt");
+        std::fs::create_dir_all(&directory).unwrap();
+        std::fs::write(&source, "@Composable\nfun HorizontalCenteredHeroCarousel() {}\n").unwrap();
+        let components = super::scan_components(&root, &[]).unwrap();
+        assert_eq!(components.len(), 1);
+        assert_eq!(components[0].file, "carousel/Carousel.kt");
+        std::fs::remove_file(source).unwrap();
+        std::fs::remove_dir(directory).unwrap();
+        std::fs::remove_dir(root).unwrap();
     }
 }

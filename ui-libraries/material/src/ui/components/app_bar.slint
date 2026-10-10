@@ -148,7 +148,6 @@ component AppBarRowLayout inherits Rectangle {
         root.layout-height - root.title-block-height - max(0px, root.adjusted-bottom-padding);
 
     height: root.layout-height;
-    clip: true;
 
     nav-box := Rectangle {
         x: 0;
@@ -366,7 +365,7 @@ component TopAppBarBase {
             enabled: !MaterialPalette.reduced-motion && !root.two-rows;
             easing: MaterialAnimations.default-effects-spring;
         }
-        clip: true;
+        clip: root.scroll-behavior != TopAppBarScrollBehavior.pinned;
 
         // `appBarDragModifier`: vertically dragging the bar adjusts the
         // offset; releasing snaps it.
@@ -480,6 +479,9 @@ export component TopAppBar {
     out property <float> overlapped-fraction <=> base.overlapped-fraction;
 
     min-height: base.min-height;
+    preferred-height: self.min-height;
+    vertical-stretch: 0;
+    z: 10000;
 
     base := TopAppBarBase {
         width: 100%;
@@ -548,6 +550,9 @@ export component TwoRowsTopAppBar {
     out property <float> overlapped-fraction <=> base.overlapped-fraction;
 
     min-height: base.min-height;
+    preferred-height: self.min-height;
+    vertical-stretch: 0;
+    z: 10000;
 
     base := TopAppBarBase {
         width: 100%;
@@ -607,6 +612,9 @@ export component MediumTopAppBar {
     out property <float> overlapped-fraction <=> base.overlapped-fraction;
 
     min-height: base.min-height;
+    preferred-height: self.min-height;
+    vertical-stretch: 0;
+    z: 10000;
 
     base := TwoRowsTopAppBar {
         width: 100%;
@@ -667,6 +675,9 @@ export component MediumFlexibleTopAppBar {
     out property <float> overlapped-fraction <=> base.overlapped-fraction;
 
     min-height: base.min-height;
+    preferred-height: self.min-height;
+    vertical-stretch: 0;
+    z: 10000;
 
     base := TwoRowsTopAppBar {
         width: 100%;
@@ -723,6 +734,9 @@ export component LargeTopAppBar {
     out property <float> overlapped-fraction <=> base.overlapped-fraction;
 
     min-height: base.min-height;
+    preferred-height: self.min-height;
+    vertical-stretch: 0;
+    z: 10000;
 
     base := TwoRowsTopAppBar {
         width: 100%;
@@ -783,6 +797,9 @@ export component LargeFlexibleTopAppBar {
     out property <float> overlapped-fraction <=> base.overlapped-fraction;
 
     min-height: base.min-height;
+    preferred-height: self.min-height;
+    vertical-stretch: 0;
+    z: 10000;
 
     base := TwoRowsTopAppBar {
         width: 100%;

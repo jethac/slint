@@ -1,0 +1,19 @@
+# Copyright © SixtyFPS GmbH <info@slint.dev>
+# SPDX-License-Identifier: MIT
+
+[package]
+name = "material-fieldnotes"
+version.workspace = true
+edition.workspace = true
+license = "MIT"
+publish = false
+
+[dependencies]
+slint = { path = "../../../../api/rs/slint", default-features = false, features = ["std", "backend-winit", "renderer-skia", "accessibility", "compat-1-18"] }
+
+[build-dependencies]
+slint-build = { path = "../../../../api/rs/build" }
+
+[dev-dependencies]
+i-slint-backend-testing = { path = "../../../../internal/backends/testing", features = ["internal", "renderer-software"] }
+image = { version = "0.25", default-features = false, features = ["png"] }

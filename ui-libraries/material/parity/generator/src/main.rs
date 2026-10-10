@@ -993,7 +993,7 @@ fn emit_or_check(
                 path.display()
             )
         })?;
-        if on_disk != content {
+        if on_disk.replace("\r\n", "\n") != content.replace("\r\n", "\n") {
             return Err(format!(
                 "{} is stale — regenerate with `cargo run -p material-parity-generator`",
                 path.display()
@@ -1894,7 +1894,7 @@ fn widget_actions(scene: &Scene) -> Vec<Action> {
             ) {
                 (w.x + 12.0, w.y + 12.0)
             } else {
-                (x, w.y + 16.0)
+                (x, y)
             };
             actions.push(Action { kind: kind.into(), x, y, at: 0.0, velocity: 0.0 });
         }
@@ -2861,7 +2861,6 @@ fn slint_canvas(s: &mut String, scene: &Scene) {
     // `sheet{n}`/`handle{n}` count sheet-family and handle widgets.
     let mut buttons = 0;
     let mut surfaces = 0;
-    let mut menus = 0;
     // The first traced fab widget owns the scene's `TRACE_PROPS` forwarding —
     // the same `button0` convention the button-family scenes use.
     let mut fab_traced = false;
@@ -6068,4 +6067,41 @@ fn material_text_widget(s: &mut String, w: &Widget, i: usize) {
         p,
     )
     .unwrap();
+}
+
+#[cfg(test)]
+mod generated_file_tests {
+    #[test]
+    fn slider_press_actions_land_on_the_thumb_in_both_orientations() {
+        let mut scene: super::Scene =
+            serde_json::from_str(include_str!("../../scenes/slider-states.json")).unwrap();
+        scene.times = vec![0, 15];
+        for (kind, width, height, expected) in
+            [("slider", 200.0, 48.0, (61.0, 44.0)), ("vertical-slider", 48.0, 200.0, (34.0, 169.0))]
+        {
+            scene.widgets = vec![
+                serde_json::from_value(serde_json::json!({
+                    "kind": kind, "x": 10.0, "y": 20.0, "width": width,
+                    "height": height, "value": 0.25, "state": "pressed"
+                }))
+                .unwrap(),
+            ];
+            let actions = super::widget_actions(&scene);
+            let press = actions.iter().find(|action| action.kind == "press").unwrap();
+            assert_eq!((press.x, press.y), expected);
+        }
+    }
+
+    #[test]
+    fn check_accepts_crlf_and_rejects_changed_content() {
+        let path = std::env::temp_dir().join(format!(
+            "slint-parity-line-endings-{}-{}.txt",
+            std::process::id(),
+            std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos()
+        ));
+        std::fs::write(&path, "first\r\nsecond\r\n").unwrap();
+        assert!(super::emit_or_check(&path, "first\nsecond\n", true).is_ok());
+        assert!(super::emit_or_check(&path, "first\nchanged\n", true).is_err());
+        std::fs::remove_file(path).unwrap();
+    }
 }
