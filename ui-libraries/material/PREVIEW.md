@@ -100,6 +100,11 @@ The deliberate toggle-selection defect is still detected.
 Logs are `target/material-preview/toggle-full-interpreter.log`, `toggle-preview-check.log`, `toggle-skia-parity.log`, and `toggle-skia-negative.log`.
 The first Skia run caught a generator override defect; the negative-case rerun passes after honoring that override.
 
+Keyboard activation now follows the pinned Compose click handler: Space and Enter activate on matching release.
+Focus loss and disabling a control cancel pending keyboard presses.
+Both touch-area helpers share this behavior, including repeat and overlapping-key handling.
+The full interpreter suite passes 959 tests; its log is `target/material-preview/keyboard-full-interpreter.log`.
+
 ## Scope and Remaining Work
 
 The reviewed spike inventory contained 61 done, 72 partial, and 17 missing entries.

@@ -3,7 +3,7 @@
 
 import {
     ToggleButton, FilledTonalToggleButton, ElevatedToggleButton, OutlinedToggleButton,
-    IconToggleButton, FilledIconToggleButton, FilledTonalIconToggleButton, OutlinedIconToggleButton,
+    IconToggleButton, FilledIconToggleButton, FilledTonalIconToggleButton, OutlinedIconToggleButton, ExtendedTouchArea,
 } from "../../../ui-libraries/material/src/material.slint";
 
 export component TestCase inherits Window {
@@ -12,9 +12,12 @@ export component TestCase inherits Window {
     in-out property <bool> controls-enabled: true;
     out property <int> clicks;
     out property <bool> test: root.clicks == 32 && !root.controls-enabled;
+    out property <bool> first-pressed: first.pressed;
+    out property <bool> first-checked: first.checked;
+    out property <bool> first-focused: first.has-focus;
 
     VerticalLayout {
-        ToggleButton { text: "Filled"; enabled: root.controls-enabled; clicked => { root.clicks += 1; } }
+        first := ToggleButton { text: "Filled"; enabled: root.controls-enabled; clicked => { root.clicks += 1; } }
         FilledTonalToggleButton { text: "Tonal"; enabled: root.controls-enabled; clicked => { root.clicks += 1; } }
         ElevatedToggleButton { text: "Elevated"; enabled: root.controls-enabled; clicked => { root.clicks += 1; } }
         OutlinedToggleButton { text: "Outlined"; enabled: root.controls-enabled; clicked => { root.clicks += 1; } }
@@ -22,5 +25,17 @@ export component TestCase inherits Window {
         FilledIconToggleButton { tooltip: "Filled icon"; enabled: root.controls-enabled; clicked => { root.clicks += 1; } }
         FilledTonalIconToggleButton { tooltip: "Tonal icon"; enabled: root.controls-enabled; clicked => { root.clicks += 1; } }
         OutlinedIconToggleButton { tooltip: "Outlined icon"; enabled: root.controls-enabled; clicked => { root.clicks += 1; } }
+    }
+}
+
+export component ExtendedCase inherits Window {
+    width: 100px;
+    height: 100px;
+    in-out property <bool> controls-enabled: true;
+    out property <bool> active: area.enter-pressed;
+    out property <int> clicks;
+    area := ExtendedTouchArea {
+        enabled: root.controls-enabled;
+        clicked => { root.clicks += 1; }
     }
 }

@@ -1,66 +1,7 @@
 // Copyright © SixtyFPS GmbH <info@slint.dev>
 // SPDX-License-Identifier: MIT
 
-import { MaterialAnimations } from "../styling/material_animations.slint";
-import { MaterialPalette } from "../styling/material_palette.slint";
-import { TooltipContent } from "tooltip.slint";
-import { MaterialWindowAdapter } from "material_window.slint";
+import { FocusTouchArea } from "state_layer.slint";
 
-export component ExtendedTouchArea inherits TouchArea {
-    in property <string> tooltip;
-    /// Deprecated: the upstream position provider places the tooltip — this
-    /// offset is no longer consumed.
-    in property <length> tooltip_offset;
-    out property <bool> has_focus <=> focus_scope.has_focus;
-    out property <bool> enter_pressed;
-
-    callback key_pressed(KeyEvent) -> EventResult;
-
-    forward-focus: focus-scope;
-
-    focus_scope := FocusScope {
-        x: 0;
-        width: 0px;
-        enabled: root.enabled;
-
-        key_pressed(event) => {
-            if !root.enabled {
-                return reject;
-            }
-
-            if (event.text == " " || event.text == "\n") && !root.enter_pressed {
-                root.enter_pressed = true;
-                root.clicked();
-                return accept;
-            }
-
-            root.key_pressed(event)
-        }
-
-        key_released(event) => {
-            if !root.enabled {
-                return reject;
-            }
-
-            if (event.text == " " || event.text == "\n") && root.enter_pressed {
-                root.enter_pressed = false;
-                return accept;
-            }
-
-            reject
-        }
-    }
-
-    @children
-
-    // `BasicTooltipBox` upstream: hover enter shows the tooltip, keyboard
-    // focus does too; the provider centers it above the anchor with a below
-    // fallback (Tooltip.kt / BasicTooltip.kt @23327507).
-    if root.tooltip != "" && (root.has-hover || root.has_focus) && !MaterialWindowAdapter.disable_hover && !root.pressed : TooltipContent {
-        anchor_abs_x: root.absolute-position.x;
-        anchor_abs_y: root.absolute-position.y;
-        anchor_width: root.width;
-        anchor_height: root.height;
-        plain_text: root.tooltip;
-    }
-}
+/// A touch area with keyboard focus and an optional tooltip.
+export component ExtendedTouchArea inherits FocusTouchArea { }

@@ -251,7 +251,9 @@ export component FocusRing {
 
 export component FocusTouchArea inherits TouchArea {
     out property <bool> has_focus <=> focus_scope.has_focus;
-    out property <bool> enter_pressed;
+    out property <bool> enter_pressed: root.enabled && root.has_focus && (root.space_pressed || root.return_pressed);
+    property <bool> space_pressed;
+    property <bool> return_pressed;
     in property <string> tooltip;
     /// Deprecated: the upstream position provider places the tooltip — this
     /// offset is no longer consumed.
@@ -260,6 +262,20 @@ export component FocusTouchArea inherits TouchArea {
     callback key_pressed(KeyEvent) -> EventResult;
 
     forward_focus: focus_scope;
+
+    changed enabled => {
+        if !root.enabled {
+            root.space_pressed = false;
+            root.return_pressed = false;
+        }
+    }
+
+    changed has_focus => {
+        if !root.has_focus {
+            root.space_pressed = false;
+            root.return_pressed = false;
+        }
+    }
 
     focus_scope := FocusScope {
         x: 0;
@@ -271,9 +287,12 @@ export component FocusTouchArea inherits TouchArea {
                 return reject;
             }
 
-            if (event.text == " " || event.text == "\n") && !root.enter_pressed {
-                root.enter_pressed = true;
-                root.clicked();
+            if event.text == " " {
+                root.space_pressed = true;
+                return accept;
+            }
+            if event.text == "\n" {
+                root.return_pressed = true;
                 return accept;
             }
 
@@ -285,8 +304,14 @@ export component FocusTouchArea inherits TouchArea {
                 return reject;
             }
 
-            if (event.text == " " || event.text == "\n") && root.enter_pressed {
-                root.enter_pressed = false;
+            if event.text == " " && root.space_pressed {
+                root.clicked();
+                root.space_pressed = false;
+                return accept;
+            }
+            if event.text == "\n" && root.return_pressed {
+                root.clicked();
+                root.return_pressed = false;
                 return accept;
             }
 

@@ -9,6 +9,12 @@ use std::error::Error;
 
 #[test]
 fn toggle_buttons_accessibility_activation() -> Result<(), Box<dyn Error>> {
+    let instance = create_fixture("TestCase")?;
+    check_activation(&instance)?;
+    Ok(())
+}
+
+fn create_fixture(name: &str) -> Result<slint_interpreter::ComponentInstance, Box<dyn Error>> {
     i_slint_backend_testing::init_no_event_loop();
     i_slint_backend_testing::configure_test_fonts();
     let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
@@ -19,8 +25,12 @@ fn toggle_buttons_accessibility_activation() -> Result<(), Box<dyn Error>> {
         spin_on::spin_on(compiler.build_from_source(std::fs::read_to_string(&path)?, path));
     slint_interpreter::print_diagnostics(&result.diagnostics().collect::<Vec<_>>());
     assert!(!result.has_errors());
-    let instance = result.component("TestCase").unwrap().create()?;
+    let instance = result.component(name).unwrap().create()?;
     instance.show()?;
+    Ok(instance)
+}
+
+fn check_activation(instance: &slint_interpreter::ComponentInstance) -> Result<(), Box<dyn Error>> {
     let labels = [
         "Filled",
         "Tonal",
@@ -32,7 +42,7 @@ fn toggle_buttons_accessibility_activation() -> Result<(), Box<dyn Error>> {
         "Outlined icon",
     ];
     for (index, label) in labels.into_iter().enumerate() {
-        let control = ElementHandle::find_by_accessible_label(&instance, label)
+        let control = ElementHandle::find_by_accessible_label(instance, label)
             .find(|element| element.accessible_role() == Some(AccessibleRole::Checkbox))
             .expect("toggle controls must expose the checkbox role");
         assert_eq!(control.accessible_checked(), Some(false));
@@ -63,7 +73,7 @@ fn toggle_buttons_accessibility_activation() -> Result<(), Box<dyn Error>> {
     }
     instance.set_property("controls-enabled", Value::Bool(false))?;
     for label in labels {
-        let control = ElementHandle::find_by_accessible_label(&instance, label)
+        let control = ElementHandle::find_by_accessible_label(instance, label)
             .find(|element| element.accessible_role() == Some(AccessibleRole::Checkbox))
             .unwrap();
         control.invoke_accessible_default_action();
@@ -71,5 +81,89 @@ fn toggle_buttons_accessibility_activation() -> Result<(), Box<dyn Error>> {
     }
     assert_eq!(instance.get_property("clicks")?, Value::Number(32.0));
     assert_eq!(instance.get_property("test")?, Value::Bool(true));
+    Ok(())
+}
+
+#[test]
+fn keyboard_press_cancels_when_focus_leaves_or_control_is_disabled() -> Result<(), Box<dyn Error>> {
+    let instance = create_fixture("TestCase")?;
+    let key = |text: &str, pressed: bool| {
+        instance.window().dispatch_event(if pressed {
+            WindowEvent::KeyPressed { text: text.into() }
+        } else {
+            WindowEvent::KeyReleased { text: text.into() }
+        });
+    };
+    key("\t", true);
+    key("\t", false);
+    key(" ", true);
+    assert_eq!(instance.get_property("first-pressed")?, Value::Bool(true));
+    assert_eq!(instance.get_property("clicks")?, Value::Number(0.0));
+    key("\t", true);
+    key("\t", false);
+    assert_eq!(instance.get_property("first-pressed")?, Value::Bool(false));
+    key(" ", false);
+    for _ in 0..7 {
+        key("\t", true);
+        key("\t", false);
+    }
+    key(" ", true);
+    key(" ", false);
+    assert_eq!(instance.get_property("first-checked")?, Value::Bool(true));
+    assert_eq!(instance.get_property("clicks")?, Value::Number(1.0));
+    key(" ", true);
+    assert_eq!(instance.get_property("first-pressed")?, Value::Bool(true));
+    instance.set_property("controls-enabled", Value::Bool(false))?;
+    assert_eq!(instance.get_property("first-pressed")?, Value::Bool(false));
+    key(" ", false);
+    key("\n", true);
+    key("\n", false);
+    assert_eq!(instance.get_property("clicks")?, Value::Number(1.0));
+    instance.set_property("controls-enabled", Value::Bool(true))?;
+    for _ in 0..8 {
+        if instance.get_property("first-focused")? == Value::Bool(true) {
+            break;
+        }
+        key("\t", true);
+        key("\t", false);
+    }
+    assert_eq!(instance.get_property("first-focused")?, Value::Bool(true));
+    key("\n", true);
+    key("\n", false);
+    assert_eq!(instance.get_property("first-checked")?, Value::Bool(false));
+    assert_eq!(instance.get_property("first-pressed")?, Value::Bool(false));
+    assert_eq!(instance.get_property("clicks")?, Value::Number(2.0));
+    key(" ", true);
+    key(" ", true);
+    key("\n", false);
+    assert_eq!(instance.get_property("clicks")?, Value::Number(2.0));
+    assert_eq!(instance.get_property("first-pressed")?, Value::Bool(true));
+    key("\n", true);
+    key("\n", false);
+    assert_eq!(instance.get_property("clicks")?, Value::Number(3.0));
+    assert_eq!(instance.get_property("first-pressed")?, Value::Bool(true));
+    key(" ", false);
+    assert_eq!(instance.get_property("clicks")?, Value::Number(4.0));
+    assert_eq!(instance.get_property("first-pressed")?, Value::Bool(false));
+    assert_eq!(instance.get_property("first-checked")?, Value::Bool(false));
+    Ok(())
+}
+
+#[test]
+fn extended_touch_area_uses_release_activation() -> Result<(), Box<dyn Error>> {
+    let instance = create_fixture("ExtendedCase")?;
+    instance.window().dispatch_event(WindowEvent::KeyPressed { text: "\t".into() });
+    instance.window().dispatch_event(WindowEvent::KeyReleased { text: "\t".into() });
+    instance.window().dispatch_event(WindowEvent::KeyPressed { text: " ".into() });
+    assert_eq!(instance.get_property("active")?, Value::Bool(true));
+    assert_eq!(instance.get_property("clicks")?, Value::Number(0.0));
+    instance.window().dispatch_event(WindowEvent::KeyReleased { text: " ".into() });
+    assert_eq!(instance.get_property("active")?, Value::Bool(false));
+    assert_eq!(instance.get_property("clicks")?, Value::Number(1.0));
+    instance.window().dispatch_event(WindowEvent::KeyPressed { text: "\n".into() });
+    instance.set_property("controls-enabled", Value::Bool(false))?;
+    assert_eq!(instance.get_property("active")?, Value::Bool(false));
+    instance.window().dispatch_event(WindowEvent::KeyReleased { text: "\n".into() });
+    assert_eq!(instance.get_property("clicks")?, Value::Number(1.0));
     Ok(())
 }
