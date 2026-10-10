@@ -105,6 +105,19 @@ Focus loss and disabling a control cancel pending keyboard presses.
 Both touch-area helpers share this behavior, including repeat and overlapping-key handling.
 The full interpreter suite passes 959 tests; its log is `target/material-preview/keyboard-full-interpreter.log`.
 
+Button elevation now tracks the latest live interaction and restores the prior interaction when it ends.
+Incoming transitions take 120ms; outgoing hover takes 120ms, while outgoing press and focus take 150ms.
+A pointer press that establishes hover in the same dispatch keeps press as the newer interaction.
+Disabling and reduced motion cancel active elevation tweens, including transitions whose target stays unchanged.
+The shared state layer retains hover during a press and uses the pinned hover, focus, and drag timings.
+It also cancels active opacity transitions when disabled or when reduced motion changes.
+The regression fixture verifies these contracts across all eight toggle styles.
+Compose hover-exit actions retain the matching enter identity, fixing the FAB reference that previously stayed hovered after exit.
+All 973 unfiltered interpreter tests, nineteen required-reference Skia checks, and 31 software checks pass.
+The generator checks, native gallery check, and three Fieldnotes regressions pass.
+Evidence logs use the `target/material-preview/button-elevation-state-layer-` prefix.
+The custom elevation scenes remain unfinished; their pixel comparisons must pass before they enter the reviewed parity suite.
+
 ## Scope and Remaining Work
 
 All eight toggle styles now expose `toggle-on-click` and `checked-changed`.

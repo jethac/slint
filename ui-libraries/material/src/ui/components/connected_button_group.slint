@@ -72,6 +72,8 @@ export component ConnectedButton {
     out property <bool> has_focus <=> base.has_focus;
     out property <bool> pressed <=> base.pressed;
     out property <bool> has_hover <=> base.has_hover;
+    /// The live shadow elevation in logical pixels.
+    out property <length> shadow_elevation <=> base.shadow_elevation;
     /// The live per-corner radii of the morphing shape — the parity
     /// harness's motion trace. `CornerSize(percent)` resolves against the
     /// item's shorter side, so cap each reported radius at `min(w,h)` —

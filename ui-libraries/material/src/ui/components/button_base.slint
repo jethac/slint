@@ -10,6 +10,9 @@ import { MaterialPalette } from "../styling/material_palette.slint";
 import { MaterialCornerShape } from "../styling/generated/material_shape_tokens.slint";
 import { MaterialTypeStyle, MaterialTypography } from "../styling/material_typography.slint";
 import { StateTokens } from "../styling/generated/material_state_tokens.slint";
+import { ElevationTokens } from "../styling/generated/material_elevation_tokens.slint";
+
+enum ButtonInteraction { none, press, hover, focus }
 
 /// The shared interaction+decoration shell behind every button style:
 /// the 48dp touch-target slot with the visual container centered in it
@@ -150,6 +153,8 @@ export component MaterialButtonBase {
     out property <bool> has_focus <=> area.has_focus;
     out property <bool> pressed <=> area.effective_pressed;
     out property <bool> has_hover <=> area.effective_hover;
+    /// The live shadow elevation in logical pixels.
+    out property <length> shadow_elevation <=> container.shadow_height;
     /// The live, animating corner radius — traced by the parity harness.
     out property <length> container_radius <=> container.border_radius;
     /// The live per-corner radii mid-morph — parity motion traces read them
@@ -248,16 +253,77 @@ export component MaterialButtonBase {
         enabled: !MaterialPalette.reduced-motion;
     }
 
-    // Last interaction wins for elevation, like `animateElevation`.
+    // ToggleButtonElevation and ButtonElevation use interactions.lastOrNull().
+    property <int> interaction_clock;
+    property <int> press_stamp: -1;
+    property <int> hover_stamp: -1;
+    property <int> focus_stamp: -1;
+    property <bool> state_pressed: area.effective_pressed;
+    property <bool> state_hover: area.effective_hover;
+    property <bool> state_focus: area.has_focus;
+    property <ButtonInteraction> elevation_interaction:
+        root.press_stamp > root.hover_stamp && root.press_stamp > root.focus_stamp ? ButtonInteraction.press :
+        root.hover_stamp > root.focus_stamp ? ButtonInteraction.hover :
+        root.focus_stamp >= 0 ? ButtonInteraction.focus : ButtonInteraction.none;
+
+    property <bool> observed_hover;
+    property <bool> observed_press;
+    property <bool> observed_focus;
+    function sync_interactions() {
+        // A pointer press can establish hover and press together; hover precedes the press.
+        if root.state_hover != root.observed_hover {
+            root.interaction_clock += 1;
+            root.hover_stamp = root.state_hover ? root.interaction_clock : -1;
+            root.observed_hover = root.state_hover;
+        }
+        if root.state_pressed != root.observed_press {
+            root.interaction_clock += 1;
+            root.press_stamp = root.state_pressed ? root.interaction_clock : -1;
+            root.observed_press = root.state_pressed;
+        }
+        if root.state_focus != root.observed_focus {
+            root.interaction_clock += 1;
+            root.focus_stamp = root.state_focus ? root.interaction_clock : -1;
+            root.observed_focus = root.state_focus;
+        }
+    }
+    init => {
+        root.sync_interactions();
+        root.elevation_target = root.current_elevation;
+    }
+    changed state_pressed => { root.sync_interactions(); }
+    changed state_hover => { root.sync_interactions(); }
+    changed state_focus => { root.sync_interactions(); }
+
     property <int> current_level: !root.enabled ? root.elevation_disabled :
-        area.effective_pressed ? root.elevation_pressed :
-        area.effective_hover ? root.elevation_hovered :
-        area.has_focus ? root.elevation_focused :
+        root.elevation_interaction == ButtonInteraction.press ? root.elevation_pressed :
+        root.elevation_interaction == ButtonInteraction.hover ? root.elevation_hovered :
+        root.elevation_interaction == ButtonInteraction.focus ? root.elevation_focused :
         root.elevation_default;
-    property <length> current_elevation: !root.enabled ? root.elevation_disabled_dp :
-        area.effective_pressed ? root.elevation_pressed_dp :
-        area.effective_hover ? root.elevation_hovered_dp :
-        area.has_focus ? root.elevation_focused_dp : root.elevation_default_dp;
+    pure function elevation_value(value: length, level: int) -> length {
+        value >= 0px ? value : level <= 0 ? ElevationTokens.level0 :
+            level == 1 ? ElevationTokens.level1 : level == 2 ? ElevationTokens.level2 :
+            level == 3 ? ElevationTokens.level3 : level == 4 ? ElevationTokens.level4 : ElevationTokens.level5
+    }
+    property <length> current_elevation: root.elevation_value(!root.enabled ? root.elevation_disabled_dp :
+        root.elevation_interaction == ButtonInteraction.press ? root.elevation_pressed_dp :
+        root.elevation_interaction == ButtonInteraction.hover ? root.elevation_hovered_dp :
+        root.elevation_interaction == ButtonInteraction.focus ? root.elevation_focused_dp : root.elevation_default_dp,
+        root.current_level);
+    property <length> previous_elevation_target: -1px;
+    property <length> elevation_target: root.current_elevation;
+    changed current_elevation => {
+        root.previous_elevation_target = root.elevation_target;
+        root.elevation_target = root.current_elevation;
+    }
+    changed enabled => {
+        if !root.enabled { container.snap_to_target(); }
+    }
+    // The pinned animateElevation infers the outgoing interaction from the old target value.
+    property <duration> elevation_out_duration:
+        root.previous_elevation_target == root.elevation_value(root.elevation_pressed_dp, root.elevation_pressed) ? 150ms :
+        root.previous_elevation_target == root.elevation_value(root.elevation_hovered_dp, root.elevation_hovered) ? 120ms :
+        root.previous_elevation_target == root.elevation_value(root.elevation_focused_dp, root.elevation_focused) ? 150ms : 0ms;
 
     container := Elevation {
         x: (root.width - root.box_width) / 2;
@@ -270,7 +336,12 @@ export component MaterialButtonBase {
         shape: root.target_shape;
         background: root.current_container_color;
         level: root.current_level;
-        shadow_height_override: root.current_elevation;
+        shadow_height_override: root.elevation_target;
+        interaction_active: root.enabled && root.elevation_interaction != ButtonInteraction.none;
+        in_duration: root.enabled ? 120ms : 0ms;
+        in_easing: cubic-bezier(0.4, 0, 0.2, 1);
+        out_duration: root.enabled ? root.elevation_out_duration : 0ms;
+        out_easing: cubic-bezier(0.4, 0, 0.6, 1);
     }
 
     area := StateLayerArea {

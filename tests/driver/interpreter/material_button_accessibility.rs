@@ -58,6 +58,188 @@ fn key(instance: &slint_interpreter::ComponentInstance, text: &str, pressed: boo
 }
 
 #[test]
+fn button_elevation_uses_reference_timings_and_cancels_motion_when_disabled()
+-> Result<(), Box<dyn Error>> {
+    let instance = create_fixture("ElevationCase")?;
+    let elevation = |index| -> Result<f64, Box<dyn Error>> {
+        let Value::Model(values) = instance.get_property("elevations")? else {
+            panic!("elevation model");
+        };
+        let Some(Value::Number(value)) = values.row_data(index) else {
+            panic!("elevation row");
+        };
+        Ok(value)
+    };
+    let update = |name: &str, value: Value| -> Result<(), Box<dyn Error>> {
+        instance.set_property(name, value)?;
+        i_slint_backend_testing::mock_elapsed_time(1);
+        Ok(())
+    };
+    update("reduced-motion", Value::Bool(false))?;
+    for index in 0..8 {
+        assert_eq!(elevation(index)?, 2.0);
+        update("hover-index", Value::Number(index as f64))?;
+        let start = elevation(index)?;
+        i_slint_backend_testing::mock_elapsed_time(60);
+        let middle = elevation(index)?;
+        assert!(
+            middle > start && middle < 8.0,
+            "style {index}: incoming hover {start} -> {middle}"
+        );
+        i_slint_backend_testing::mock_elapsed_time(60);
+        assert_eq!(elevation(index)?, 8.0, "style {index}: incoming hover settles at 120ms");
+        update("hover-index", Value::Number(-1.0))?;
+        let _ = elevation(index)?;
+        i_slint_backend_testing::mock_elapsed_time(60);
+        assert!((elevation(index)? - 5.0).abs() < 0.15, "style {index}: outgoing hover easing");
+        i_slint_backend_testing::mock_elapsed_time(60);
+        assert_eq!(elevation(index)?, 2.0, "style {index}: outgoing hover settles at 120ms");
+        instance.invoke("focus-outside", &[])?;
+        for _ in 0..=index {
+            key(&instance, "\t", true);
+            key(&instance, "\t", false);
+        }
+        i_slint_backend_testing::mock_elapsed_time(1);
+        let _ = elevation(index)?;
+        i_slint_backend_testing::mock_elapsed_time(120);
+        assert_eq!(elevation(index)?, 10.0, "style {index}: incoming focus settles at 120ms");
+        instance.invoke("focus-outside", &[])?;
+        i_slint_backend_testing::mock_elapsed_time(1);
+        let _ = elevation(index)?;
+        i_slint_backend_testing::mock_elapsed_time(120);
+        assert!(elevation(index)? > 2.0, "style {index}: outgoing focus remains active at 120ms");
+        i_slint_backend_testing::mock_elapsed_time(30);
+        assert_eq!(elevation(index)?, 2.0, "style {index}: outgoing focus settles at 150ms");
+        update("press-index", Value::Number(index as f64))?;
+        let _ = elevation(index)?;
+        i_slint_backend_testing::mock_elapsed_time(120);
+        assert_eq!(elevation(index)?, 6.0);
+        update("press-index", Value::Number(-1.0))?;
+        let _ = elevation(index)?;
+        i_slint_backend_testing::mock_elapsed_time(120);
+        assert!(elevation(index)? > 2.0, "style {index}: outgoing press remains active at 120ms");
+        i_slint_backend_testing::mock_elapsed_time(30);
+        assert_eq!(elevation(index)?, 2.0, "style {index}: outgoing press settles at 150ms");
+        update("hover-index", Value::Number(index as f64))?;
+        let _ = elevation(index)?;
+        i_slint_backend_testing::mock_elapsed_time(60);
+        let interrupted = elevation(index)?;
+        update("press-index", Value::Number(index as f64))?;
+        assert!(
+            (elevation(index)? - interrupted).abs() < 0.2,
+            "style {index}: retarget stays continuous"
+        );
+        i_slint_backend_testing::mock_elapsed_time(120);
+        assert_eq!(elevation(index)?, 6.0);
+        update("controls-enabled", Value::Bool(false))?;
+        assert_eq!(elevation(index)?, 1.0, "style {index}: disable snaps");
+        update("hover-index", Value::Number(-1.0))?;
+        update("press-index", Value::Number(-1.0))?;
+        update("controls-enabled", Value::Bool(true))?;
+        assert_eq!(
+            elevation(index)?,
+            2.0,
+            "style {index}: enable from unrelated disabled target snaps"
+        );
+        update("press-index", Value::Number(index as f64))?;
+        let _ = elevation(index)?;
+        i_slint_backend_testing::mock_elapsed_time(30);
+        assert!(elevation(index)? < 6.0);
+        update("reduced-motion", Value::Bool(true))?;
+        assert_eq!(elevation(index)?, 6.0, "style {index}: reduced motion snaps an active tween");
+        update("press-index", Value::Number(-1.0))?;
+        assert_eq!(elevation(index)?, 2.0);
+        update("reduced-motion", Value::Bool(false))?;
+        assert_eq!(elevation(index)?, 2.0);
+        i_slint_backend_testing::mock_elapsed_time(60);
+        assert_eq!(elevation(index)?, 2.0, "style {index}: cancelled tween does not resume");
+        update("disabled-elevation", Value::Number(2.0))?;
+        update("press-index", Value::Number(index as f64))?;
+        let _ = elevation(index)?;
+        i_slint_backend_testing::mock_elapsed_time(120);
+        assert_eq!(elevation(index)?, 6.0);
+        update("press-index", Value::Number(-1.0))?;
+        let _ = elevation(index)?;
+        i_slint_backend_testing::mock_elapsed_time(60);
+        assert!(elevation(index)? > 2.0);
+        update("controls-enabled", Value::Bool(false))?;
+        assert_eq!(
+            elevation(index)?,
+            2.0,
+            "style {index}: disable snaps even when the target is unchanged"
+        );
+        update("controls-enabled", Value::Bool(true))?;
+        update("disabled-elevation", Value::Number(1.0))?;
+    }
+    update("pressed-elevation", Value::Number(8.0))?;
+    update("hover-index", Value::Number(0.0))?;
+    let _ = elevation(0)?;
+    i_slint_backend_testing::mock_elapsed_time(120);
+    assert_eq!(elevation(0)?, 8.0);
+    update("hover-index", Value::Number(-1.0))?;
+    let _ = elevation(0)?;
+    i_slint_backend_testing::mock_elapsed_time(120);
+    assert!(
+        elevation(0)? > 2.0,
+        "equal pressed/hovered targets use the reference's press outgoing spec"
+    );
+    i_slint_backend_testing::mock_elapsed_time(30);
+    assert_eq!(elevation(0)?, 2.0);
+    update("resting-elevation", Value::Number(5.0))?;
+    assert_eq!(elevation(0)?, 5.0, "a new baseline without a matching old interaction snaps");
+    Ok(())
+}
+
+#[test]
+fn button_elevation_tracks_the_latest_live_interaction() -> Result<(), Box<dyn Error>> {
+    let instance = create_fixture("ElevationCase")?;
+    let elevation = |index| -> Result<f64, Box<dyn Error>> {
+        let Value::Model(values) = instance.get_property("elevations")? else {
+            panic!("elevation model");
+        };
+        let Some(Value::Number(value)) = values.row_data(index) else {
+            panic!("elevation row");
+        };
+        Ok(value)
+    };
+    let update = |name: &str, value: Value| -> Result<(), Box<dyn Error>> {
+        instance.set_property(name, value)?;
+        i_slint_backend_testing::mock_elapsed_time(1);
+        Ok(())
+    };
+    for index in 0..8 {
+        instance.invoke("focus-outside", &[])?;
+        i_slint_backend_testing::mock_elapsed_time(1);
+        assert_eq!(elevation(index)?, 2.0);
+        update("hover-index", Value::Number(index as f64))?;
+        assert_eq!(elevation(index)?, 8.0);
+        for _ in 0..=index {
+            key(&instance, "\t", true);
+            key(&instance, "\t", false);
+        }
+        i_slint_backend_testing::mock_elapsed_time(1);
+        assert_eq!(elevation(index)?, 10.0, "style {index}: focus supersedes hover");
+        update("press-index", Value::Number(index as f64))?;
+        assert_eq!(elevation(index)?, 6.0);
+        update("hover-index", Value::Number(-1.0))?;
+        assert_eq!(elevation(index)?, 6.0);
+        update("hover-index", Value::Number(index as f64))?;
+        assert_eq!(elevation(index)?, 8.0, "style {index}: new hover supersedes press");
+        update("hover-index", Value::Number(-1.0))?;
+        assert_eq!(elevation(index)?, 6.0, "style {index}: removal restores press");
+        update("press-index", Value::Number(-1.0))?;
+        assert_eq!(elevation(index)?, 10.0, "style {index}: removal restores focus");
+        update("controls-enabled", Value::Bool(false))?;
+        assert_eq!(elevation(index)?, 1.0);
+        update("controls-enabled", Value::Bool(true))?;
+        instance.invoke("focus-outside", &[])?;
+        i_slint_backend_testing::mock_elapsed_time(1);
+        assert_eq!(elevation(index)?, 2.0);
+    }
+    Ok(())
+}
+
+#[test]
 fn pointer_cancellation_and_shape_release_do_not_activate_toggles() -> Result<(), Box<dyn Error>> {
     let instance = create_fixture("ShapeCase")?;
     for (case, custom_outline) in [true, false].into_iter().enumerate() {
@@ -703,6 +885,143 @@ fn custom_shapes_clip_pointer_activation_in_every_toggle_style() -> Result<(), B
             assert_eq!(control.accessible_checked(), Some(checked), "shape hit test: {label}");
         }
         assert_eq!(instance.get_property("clicks")?, Value::Number((index + 1) as f64));
+    }
+    Ok(())
+}
+
+#[test]
+fn state_layer_retains_hover_during_press_and_uses_reference_timings() -> Result<(), Box<dyn Error>>
+{
+    let instance = create_fixture("StateLayerCase")?;
+    let opacity = || -> Result<f64, Box<dyn Error>> {
+        let Value::Number(value) = instance.get_property("layer-opacity")? else {
+            panic!("opacity");
+        };
+        Ok(value)
+    };
+    let update = |name: &str, value: bool| -> Result<(), Box<dyn Error>> {
+        instance.set_property(name, Value::Bool(value))?;
+        i_slint_backend_testing::mock_elapsed_time(1);
+        let _ = opacity()?;
+        Ok(())
+    };
+    let close = |value: f64, expected: f64| {
+        assert!((value - expected).abs() < 0.002, "{value} != {expected}")
+    };
+    close(opacity()?, 0.0);
+    update("hover", true)?;
+    i_slint_backend_testing::mock_elapsed_time(7);
+    close(opacity()?, 0.08 * 7.0 / 15.0);
+    i_slint_backend_testing::mock_elapsed_time(8);
+    close(opacity()?, 0.08);
+    update("press", true)?;
+    i_slint_backend_testing::mock_elapsed_time(60);
+    close(opacity()?, 0.08);
+    update("focused", true)?;
+    i_slint_backend_testing::mock_elapsed_time(22);
+    close(opacity()?, 0.08 + 0.02 * 22.0 / 45.0);
+    i_slint_backend_testing::mock_elapsed_time(23);
+    close(opacity()?, 0.10);
+    update("drag", true)?;
+    i_slint_backend_testing::mock_elapsed_time(45);
+    close(opacity()?, 0.16);
+    update("hover", false)?;
+    update("hover", true)?;
+    i_slint_backend_testing::mock_elapsed_time(15);
+    close(opacity()?, 0.08);
+    update("hover", false)?;
+    i_slint_backend_testing::mock_elapsed_time(45);
+    close(opacity()?, 0.16);
+    update("focused", false)?;
+    update("drag", false)?;
+    i_slint_backend_testing::mock_elapsed_time(75);
+    close(opacity()?, 0.08);
+    i_slint_backend_testing::mock_elapsed_time(75);
+    close(opacity()?, 0.0);
+    update("focused", true)?;
+    i_slint_backend_testing::mock_elapsed_time(45);
+    close(opacity()?, 0.10);
+    update("ring", true)?;
+    i_slint_backend_testing::mock_elapsed_time(45);
+    close(opacity()?, 0.0);
+    update("hover", true)?;
+    i_slint_backend_testing::mock_elapsed_time(5);
+    assert!(opacity()? > 0.0 && opacity()? < 0.08);
+    update("reduced-motion", true)?;
+    close(opacity()?, 0.08);
+    update("hover", false)?;
+    close(opacity()?, 0.0);
+    update("ring", false)?;
+    close(opacity()?, 0.10);
+    update("control-enabled", false)?;
+    close(opacity()?, 0.0);
+    update("control-enabled", true)?;
+    close(opacity()?, 0.10);
+    update("reduced-motion", false)?;
+    update("ring", true)?;
+    i_slint_backend_testing::mock_elapsed_time(15);
+    assert!(opacity()? > 0.0);
+    update("control-enabled", false)?;
+    close(opacity()?, 0.0);
+    Ok(())
+}
+
+#[test]
+fn button_elevation_preserves_event_order_before_the_next_frame() -> Result<(), Box<dyn Error>> {
+    let instance = create_fixture("ElevationCase")?;
+    let elevation = |index| -> Result<f64, Box<dyn Error>> {
+        let Value::Model(values) = instance.get_property("elevations")? else {
+            panic!("elevation model");
+        };
+        let Some(Value::Number(value)) = values.row_data(index) else {
+            panic!("elevation row");
+        };
+        Ok(value)
+    };
+    for (index, label) in [
+        "ToggleButton",
+        "FilledTonalToggleButton",
+        "ElevatedToggleButton",
+        "OutlinedToggleButton",
+        "IconToggleButton",
+        "FilledIconToggleButton",
+        "FilledTonalIconToggleButton",
+        "OutlinedIconToggleButton",
+    ]
+    .into_iter()
+    .enumerate()
+    {
+        instance.invoke("focus-outside", &[])?;
+        instance.window().dispatch_event(WindowEvent::PointerMoved {
+            position: LogicalPosition::new(-20.0, -20.0),
+        });
+        i_slint_backend_testing::mock_elapsed_time(1);
+        let control = ElementHandle::find_by_accessible_label(&instance, label)
+            .find(|element| element.accessible_role() == Some(AccessibleRole::Checkbox))
+            .unwrap();
+        let origin = control.absolute_position();
+        let size = control.size();
+        let position =
+            LogicalPosition::new(origin.x + size.width / 2.0, origin.y + size.height / 2.0);
+        // A press without a preceding move establishes hover in the same input dispatch.
+        instance.window().dispatch_event(WindowEvent::PointerPressed {
+            position,
+            button: PointerEventButton::Left,
+        });
+        i_slint_backend_testing::mock_elapsed_time(1);
+        assert_eq!(elevation(index)?, 6.0, "style {index}: press follows hover in one frame");
+        for _ in 0..=index {
+            key(&instance, "\t", true);
+            key(&instance, "\t", false);
+        }
+        i_slint_backend_testing::mock_elapsed_time(1);
+        assert_eq!(elevation(index)?, 10.0, "style {index}: focus follows held press");
+        instance.window().dispatch_event(WindowEvent::PointerReleased {
+            position,
+            button: PointerEventButton::Left,
+        });
+        i_slint_backend_testing::mock_elapsed_time(1);
+        assert_eq!(elevation(index)?, 10.0, "style {index}: release retains newer focus");
     }
     Ok(())
 }

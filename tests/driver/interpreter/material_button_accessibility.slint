@@ -1,11 +1,12 @@
 // Copyright © SixtyFPS GmbH <info@slint.dev>
 // SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0
 
+import { StateLayer } from "../../../ui-libraries/material/src/ui/components/state_layer.slint";
 import {
     ToggleButton, FilledTonalToggleButton, ElevatedToggleButton, OutlinedToggleButton,
     IconToggleButton, FilledIconToggleButton, FilledTonalIconToggleButton, OutlinedIconToggleButton, ExtendedTouchArea,
     ConnectedButton, ConnectedButtonGroup, VerticalConnectedButtonGroup, ConnectedButtonGroupItem,
-    ButtonGroup, ButtonGroupItem, ButtonGroupSelection, SegmentedButton,
+    ButtonGroup, ButtonGroupItem, ButtonGroupSelection, SegmentedButton, MaterialPalette,
 } from "../../../ui-libraries/material/src/material.slint";
 
 export component TestCase inherits Window {
@@ -306,6 +307,116 @@ export component SegmentedCase inherits Window {
     }
 }
 
+export component ElevationCase inherits Window {
+    width: 200px;
+    height: 480px;
+    in-out property <int> hover-index: -1;
+    in-out property <int> press-index: -1;
+    in-out property <bool> controls-enabled: true;
+    in-out property <bool> reduced-motion: true;
+    in-out property <length> resting-elevation: 2px;
+    in-out property <length> pressed-elevation: 6px;
+    in-out property <length> hovered-elevation: 8px;
+    in-out property <length> focused-elevation: 10px;
+    in-out property <length> disabled-elevation: 1px;
+    out property <[length]> elevations: [button0.shadow-elevation, button1.shadow-elevation, button2.shadow-elevation, button3.shadow-elevation, button4.shadow-elevation, button5.shadow-elevation, button6.shadow-elevation, button7.shadow-elevation];
+    out property <[bool]> focused: [button0.has-focus, button1.has-focus, button2.has-focus, button3.has-focus, button4.has-focus, button5.has-focus, button6.has-focus, button7.has-focus];
+    init => { MaterialPalette.reduced-motion = root.reduced-motion; }
+    changed reduced-motion => { MaterialPalette.reduced-motion = root.reduced-motion; }
+    public function focus-outside() { outside-focus.focus(); }
+    VerticalLayout {
+        button0 := ToggleButton {
+            text: "ToggleButton";
+            enabled: root.controls-enabled;
+            simulate-hover: root.hover-index == 0;
+            simulate-press: root.press-index == 0;
+            elevation-default: root.resting-elevation;
+            elevation-pressed: root.pressed-elevation;
+            elevation-hovered: root.hovered-elevation;
+            elevation-focused: root.focused-elevation;
+            elevation-disabled: root.disabled-elevation;
+        }
+        button1 := FilledTonalToggleButton {
+            text: "FilledTonalToggleButton";
+            enabled: root.controls-enabled;
+            simulate-hover: root.hover-index == 1;
+            simulate-press: root.press-index == 1;
+            elevation-default: root.resting-elevation;
+            elevation-pressed: root.pressed-elevation;
+            elevation-hovered: root.hovered-elevation;
+            elevation-focused: root.focused-elevation;
+            elevation-disabled: root.disabled-elevation;
+        }
+        button2 := ElevatedToggleButton {
+            text: "ElevatedToggleButton";
+            enabled: root.controls-enabled;
+            simulate-hover: root.hover-index == 2;
+            simulate-press: root.press-index == 2;
+            elevation-default: root.resting-elevation;
+            elevation-pressed: root.pressed-elevation;
+            elevation-hovered: root.hovered-elevation;
+            elevation-focused: root.focused-elevation;
+            elevation-disabled: root.disabled-elevation;
+        }
+        button3 := OutlinedToggleButton {
+            text: "OutlinedToggleButton";
+            enabled: root.controls-enabled;
+            simulate-hover: root.hover-index == 3;
+            simulate-press: root.press-index == 3;
+            elevation-default: root.resting-elevation;
+            elevation-pressed: root.pressed-elevation;
+            elevation-hovered: root.hovered-elevation;
+            elevation-focused: root.focused-elevation;
+            elevation-disabled: root.disabled-elevation;
+        }
+        button4 := IconToggleButton {
+            tooltip: "IconToggleButton";
+            enabled: root.controls-enabled;
+            simulate-hover: root.hover-index == 4;
+            simulate-press: root.press-index == 4;
+            elevation-default: root.resting-elevation;
+            elevation-pressed: root.pressed-elevation;
+            elevation-hovered: root.hovered-elevation;
+            elevation-focused: root.focused-elevation;
+            elevation-disabled: root.disabled-elevation;
+        }
+        button5 := FilledIconToggleButton {
+            tooltip: "FilledIconToggleButton";
+            enabled: root.controls-enabled;
+            simulate-hover: root.hover-index == 5;
+            simulate-press: root.press-index == 5;
+            elevation-default: root.resting-elevation;
+            elevation-pressed: root.pressed-elevation;
+            elevation-hovered: root.hovered-elevation;
+            elevation-focused: root.focused-elevation;
+            elevation-disabled: root.disabled-elevation;
+        }
+        button6 := FilledTonalIconToggleButton {
+            tooltip: "FilledTonalIconToggleButton";
+            enabled: root.controls-enabled;
+            simulate-hover: root.hover-index == 6;
+            simulate-press: root.press-index == 6;
+            elevation-default: root.resting-elevation;
+            elevation-pressed: root.pressed-elevation;
+            elevation-hovered: root.hovered-elevation;
+            elevation-focused: root.focused-elevation;
+            elevation-disabled: root.disabled-elevation;
+        }
+        button7 := OutlinedIconToggleButton {
+            tooltip: "OutlinedIconToggleButton";
+            enabled: root.controls-enabled;
+            simulate-hover: root.hover-index == 7;
+            simulate-press: root.press-index == 7;
+            elevation-default: root.resting-elevation;
+            elevation-pressed: root.pressed-elevation;
+            elevation-hovered: root.hovered-elevation;
+            elevation-focused: root.focused-elevation;
+            elevation-disabled: root.disabled-elevation;
+        }
+    }
+    outside-focus := FocusScope { width: 0px; height: 0px; }
+}
+
 export component ShapeCase inherits Window {
     width: 200px;
     height: 480px;
@@ -325,5 +436,32 @@ export component ShapeCase inherits Window {
         filled-icon := FilledIconToggleButton { enabled: root.controls-enabled; tooltip: "Filled icon"; resting-shape: root.diamond; clicked => { root.clicks += 1; } }
         tonal-icon := FilledTonalIconToggleButton { enabled: root.controls-enabled; tooltip: "Tonal icon"; resting-shape: root.diamond; clicked => { root.clicks += 1; } }
         outlined-icon := OutlinedIconToggleButton { enabled: root.controls-enabled; tooltip: "Outlined icon"; resting-shape: root.diamond; clicked => { root.clicks += 1; } }
+    }
+}
+
+export component StateLayerCase inherits Window {
+    width: 100px;
+    height: 40px;
+    in-out property <bool> hover;
+    in-out property <bool> focused;
+    in-out property <bool> drag;
+    in-out property <bool> press;
+    in-out property <bool> ring;
+    in-out property <bool> control-enabled: true;
+    in-out property <bool> reduced-motion;
+    init => { MaterialPalette.reduced-motion = root.reduced-motion; }
+    changed reduced-motion => { MaterialPalette.reduced-motion = root.reduced-motion; }
+    out property <float> layer-opacity: layer.state_layer_opacity;
+    layer := StateLayer {
+        width: 100%;
+        height: 100%;
+        enabled: root.control-enabled;
+        has_hover: root.hover;
+        has_focus: root.focused;
+        dragged: root.drag;
+        pressed: root.press;
+        focus_ring: root.ring;
+        display_background: false;
+        background: black;
     }
 }

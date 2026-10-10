@@ -1860,20 +1860,20 @@ private fun emitStateInteractions(
     // `HoverInteraction.Enter`, leaving them emits `Exit` — each at the
     // action's `at` time. Hit-tested like the press above so a pointer
     // inside another widget never lights this one up.
+    val hoverEnter = remember(interactionSource) { arrayOfNulls<HoverInteraction.Enter>(1) }
     scene.actions.filter { it.kind == "move" }.forEach { move ->
-        var hoverEnter: HoverInteraction.Enter? = null
         val step = Runnable {
             val b = tracer.elementBounds[elementId]
             val inside = b == null ||
                 (move.x * density >= b.left && move.x * density <= b.right &&
                     move.y * density >= b.top && move.y * density <= b.bottom)
-            if (inside && hoverEnter == null) {
+            if (inside && hoverEnter[0] == null) {
                 val e = HoverInteraction.Enter()
-                hoverEnter = e
+                hoverEnter[0] = e
                 interactionSource.tryEmit(e)
             } else if (!inside) {
-                hoverEnter?.let { interactionSource.tryEmit(HoverInteraction.Exit(it)) }
-                hoverEnter = null
+                hoverEnter[0]?.let { interactionSource.tryEmit(HoverInteraction.Exit(it)) }
+                hoverEnter[0] = null
             }
         }
         DisposableEffect(step) {

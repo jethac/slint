@@ -38,6 +38,8 @@ export component TextButton {
     out property <bool> has_focus <=> base.has_focus;
     out property <bool> pressed <=> base.pressed;
     out property <bool> has_hover <=> base.has_hover;
+    /// The live shadow elevation in logical pixels.
+    out property <length> shadow_elevation <=> base.shadow_elevation;
     /// The live corner radius — for the parity harness's motion trace.
     out property <length> container_radius <=> base.container_radius;
 

@@ -91,6 +91,8 @@ export component Ripple {
     }
 }
 
+enum LayerInteraction { none, hover, focus, drag }
+
 export component StateLayer {
     in property <color> background;
     in property <length> border_radius;
@@ -113,7 +115,52 @@ export component StateLayer {
     // MaterialShapes live in the normalized (0,0)-(1,1) space; see Elevation.
     shape-fit: ShapeFit.normalized;
 
-    property <float> state_layer_opacity;
+    /// The animated opacity of the most recent hover, focus, or drag interaction.
+    out property <float> state_layer_opacity: root.target_opacity;
+    property <int> interaction_clock;
+    property <int> hover_stamp: -1;
+    property <int> focus_stamp: -1;
+    property <int> drag_stamp: -1;
+    property <bool> active_hover: root.has_hover && !MaterialWindowAdapter.disable_hover;
+    init => {
+        if root.active_hover { root.interaction_clock += 1; root.hover_stamp = root.interaction_clock; }
+        if root.has_focus { root.interaction_clock += 1; root.focus_stamp = root.interaction_clock; }
+        if root.dragged { root.interaction_clock += 1; root.drag_stamp = root.interaction_clock; }
+        root.state_layer_opacity = root.target_opacity;
+    }
+    changed active_hover => {
+        if root.active_hover { root.interaction_clock += 1; root.hover_stamp = root.interaction_clock; }
+    }
+    changed has_focus => {
+        if root.has_focus { root.interaction_clock += 1; root.focus_stamp = root.interaction_clock; }
+    }
+    changed dragged => {
+        if root.dragged { root.interaction_clock += 1; root.drag_stamp = root.interaction_clock; }
+    }
+    property <LayerInteraction> interaction: !root.enabled ? LayerInteraction.none :
+        root.dragged && (!root.active_hover || root.drag_stamp >= root.hover_stamp) &&
+            (!root.has_focus || root.drag_stamp >= root.focus_stamp) ? LayerInteraction.drag :
+        root.has_focus && (!root.active_hover || root.focus_stamp >= root.hover_stamp) ? LayerInteraction.focus :
+        root.active_hover ? LayerInteraction.hover : LayerInteraction.none;
+    property <LayerInteraction> previous_interaction;
+    property <LayerInteraction> animation_interaction;
+    changed interaction => {
+        root.previous_interaction = root.animation_interaction;
+        root.animation_interaction = root.interaction;
+    }
+    property <float> target_opacity: !root.enabled ?
+            (root.display_background ? MaterialPalette.state_layer_opacity_focus : 0) :
+        root.interaction == LayerInteraction.hover ? MaterialPalette.state_layer_opacity_hover :
+        root.interaction == LayerInteraction.focus ? (root.focus_ring ? 0 : MaterialPalette.state_layer_opacity_focus) :
+        root.interaction == LayerInteraction.drag ? MaterialPalette.state_layer_opacity_drag : 0;
+    property <bool> reduced_motion: MaterialPalette.reduced-motion;
+    changed target_opacity => { root.state_layer_opacity = root.target_opacity; }
+    changed reduced_motion => {
+        if root.reduced_motion { root.state_layer_opacity = root.target_opacity; }
+    }
+    changed enabled => {
+        if !root.enabled { root.state_layer_opacity = root.target_opacity; }
+    }
 
     Rectangle {
         width: 100%;
@@ -144,29 +191,15 @@ export component StateLayer {
         @children
     }
 
-    // First matching state wins: `pressed` is deliberately first so an active
-    // press suppresses the focus/hover overlay — the Ripple already paints
-    // the pressed overlay, so the state layer contributes nothing while
-    // pressed (matching Compose, where the ripple *is* the pressed layer).
-    states [
-        pressed when root.enabled && root.pressed : {
-            root.state_layer_opacity: 0;
-        }
-        disabled when !root.enabled && root.display_background : {
-            root.state_layer_opacity: MaterialPalette.state_layer_opacity_focus;
-        }
-        focus when root.enabled && root.has_focus && !root.focus_ring : {
-            root.state_layer_opacity: MaterialPalette.state_layer_opacity_focus;
-        }
-        drag when root.enabled && root.dragged : {
-            root.state_layer_opacity: MaterialPalette.state_layer_opacity_drag;
-        }
-        hover when root.enabled && root.has_hover && !MaterialWindowAdapter.disable_hover : {
-            root.state_layer_opacity: MaterialPalette.state_layer_opacity_hover;
-        }
-    ]
+    // Press ink is independent of the hover/focus/drag layer (M3 ripple/Ripple.kt).
+    animate state_layer_opacity {
+        enabled: root.enabled && !root.reduced_motion;
+        duration: root.interaction == LayerInteraction.none
+            ? (root.previous_interaction == LayerInteraction.drag ? 150ms : 15ms)
+            : (root.interaction == LayerInteraction.hover ? 15ms : 45ms);
+        easing: linear;
+    }
 
-    animate state_layer_opacity { enabled: !MaterialPalette.reduced-motion; duration: MaterialAnimations.opacity_duration; easing: MaterialAnimations.opacity_easing; }
 }
 
 /// The M3 inset focus ring (`RippleThemeConfiguration.Focus.InsetRing`):
@@ -473,7 +506,7 @@ export component StateLayerArea inherits FocusTouchArea {
         }
     }
 
-    if !root.enabled || (root.enabled && (root.has_focus || root.effective_pressed || root.effective_hover || root.dragged)) : StateLayer {
+    StateLayer {
         width: 100%;
         height: 100%;
         background: root.transparent_background ? transparent : root.color;

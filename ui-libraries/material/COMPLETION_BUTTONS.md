@@ -35,6 +35,7 @@ The pinned `shapeByInteraction` switches arbitrary paths immediately and animate
 - [x] Expose resting, pressed, and checked paths and per-corner geometry.
 - [ ] Verify corner-transition interruption behavior against pinned Compose traces.
 - [x] Expose interaction elevation overrides where the pinned API supports them.
+- [x] Verify elevation interaction order, tween timings, interruptions, disable/re-enable, and reduced-motion changes across all eight toggle styles.
 - [x] Expose border color and width overrides, including disabled and checked states.
 - [x] Provide padding overrides for all four text-toggle styles.
 - [x] Support arbitrary child content and document how it inherits typography and content color.
@@ -69,6 +70,16 @@ The named APIs run in the existing text-toggle, icon-toggle, and selection-motio
 The deliberate negative selection case must continue rejecting a missing shape morph.
 Skia regressions check custom path states, content clipping, state colors, borders, focus rings, and asymmetric corners across all eight styles.
 Exact rendered comparisons check inherited typography and icon tint across checked, unchecked, enabled, and disabled states.
+Button elevation uses the most recent live press, hover, or focus interaction.
+Ending it restores the previous live interaction.
+A pointer press that also establishes hover treats hover as the earlier interaction.
+Incoming transitions take 120ms; outgoing hover takes 120ms, while outgoing press and focus take 150ms.
+Disabling snaps to the disabled elevation, including when it equals the tween target.
+Changing reduced motion during a tween snaps to its target.
+The live `shadow_elevation` output is available on ordinary buttons, named toggles, and connected buttons.
+The shared state layer retains hover during a press and follows the latest hover, focus, or drag interaction.
+Hover transitions take 15ms; focus and drag enter in 45ms; drag exits in 150ms.
+Reduced motion and disabling cancel active state-layer transitions.
 
 - [ ] Add Compose and Slint scenes for each supported custom style parameter.
 - [ ] Add keyboard press/release and cancellation motion traces.
