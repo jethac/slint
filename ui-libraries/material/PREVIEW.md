@@ -65,7 +65,7 @@ The local PowerShell workflow passes on Windows.
 
 | Check | Result |
 | --- | --- |
-| Token generator | 20 regression tests pass; generated files match the pinned source |
+| Token generator | 21 regression tests pass; generated files match the pinned source |
 | Scene generator | 2 regression tests pass; generated scenes match their definitions |
 | Fieldnotes | 3 tests pass, including task identity, validation, keyboard input, accessible actions, layout, phone scrolling, and tooltip clipping |
 | Native Fieldnotes build | Release build runs on Windows with Skia/WGPU and Direct3D 12; the local binary is `target/material-preview/Fieldnotes.exe` |
@@ -94,7 +94,10 @@ These headless checks exercise accessibility properties and actions, but do not 
 
 ## Scope and Remaining Work
 
-The recorded inventory contains 61 done, 72 partial, and 17 missing entries.
+The reviewed spike inventory contained 61 done, 72 partial, and 17 missing entries.
+The completion audit corrected extension function names that had been recorded as receiver types.
+The current inventory contains 60 done, 73 partial, and 16 missing entries.
+Affected entries retain their implementation notes and remain partial until their API and behavior are audited.
 Entries include component variants and Compose functions, so these counts do not represent distinct Slint widgets.
 The missing entries include carousel and wavy progress families, drawer-sheet APIs, toggle names, and text-style helpers.
 
@@ -107,4 +110,4 @@ The preview fixes pinned app bars, but other clipped containers, including colla
 
 Further work should prioritize interaction, accessibility, and renderer gaps in the components an application uses.
 The generated inventory remains the source for broader port coverage.
-No inventory entries are promoted to done by this preview.
+No inventory entries are promoted to done by the preview or the receiver-name correction.

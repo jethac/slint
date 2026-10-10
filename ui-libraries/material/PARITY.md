@@ -115,7 +115,6 @@ States: disabled, dragged, focused, hovered, pressed
 | HorizontalCenteredHeroCarousel | carousel/Carousel.kt | missing | #11 | springs (#5), shapes (#6) | - |
 | HorizontalMultiBrowseCarousel | carousel/Carousel.kt | missing | #11 | springs (#5), shapes (#6) | - |
 | HorizontalUncontainedCarousel | carousel/Carousel.kt | missing | #11 | springs (#5), shapes (#6) | - |
-| Modifier | carousel/CarouselParallaxScrollEffect.kt | missing | #11 | springs (#5), shapes (#6) | - |
 
 ### Checkbox
 
@@ -205,7 +204,7 @@ Sizes: baseline
 | Component | Source | Status | Issues | Needs | Notes |
 |---|---|---|---|---|---|
 | FloatingActionButtonMenu | FloatingActionButtonMenu.kt | partial | #5, #10 | springs (#5), shapes (#6) | slint component: FloatingActionButtonMenu |
-| FloatingActionButtonMenuScope | FloatingActionButtonMenu.kt | partial | #10 | springs (#5), shapes (#6) | slint component: FloatingActionButtonMenuItem (scope members of FloatingActionButtonMenu) |
+| FloatingActionButtonMenuItem | FloatingActionButtonMenu.kt | partial | #10 | springs (#5), shapes (#6) | slint component: FloatingActionButtonMenuItem (scope members of FloatingActionButtonMenu); receiver inventory corrected; full API and behavior audit pending |
 | ToggleFloatingActionButton | FloatingActionButtonMenu.kt | partial | #10 | springs (#5), shapes (#6) | slint component: ToggleFloatingActionButton |
 
 ### Icon
@@ -269,8 +268,8 @@ States: focused, selected, active, hovered, pressed, inactive, disabled
 | DropdownMenuItem | Menu.kt | partial | #11 | springs (#5), shapes (#6) | slint component: MenuItemContent (MenuItem struct); tokens: generated component tokens; springs via active motion scheme |
 | DropdownMenuItemLegacy | Menu.kt | partial | #11 | springs (#5), shapes (#6) | deprecated at pin; covered by MenuItemContent (item-kind: standard); tokens: generated component tokens; springs via active motion scheme |
 | DropdownMenuPopup | Menu.kt | partial | #11 | springs (#5), shapes (#6) | slint component: MenuPopupContent (grouped items with gaps); tokens: generated component tokens; springs via active motion scheme |
+| ExposedDropdownMenu | ExposedDropdownMenu.kt | partial | #11 | springs (#5), shapes (#6) | slint component: DropDownMenu (menuAnchor role folded into the component); tokens: generated component tokens; springs via active motion scheme; receiver inventory corrected; full API and behavior audit pending |
 | ExposedDropdownMenuBox | ExposedDropdownMenu.kt | partial | #11 | springs (#5), shapes (#6) | slint component: DropDownMenu + PopupMenu exposed/match-anchor-width; tokens: generated component tokens; springs via active motion scheme |
-| ExposedDropdownMenuBoxScope | ExposedDropdownMenu.kt | partial | #11 | springs (#5), shapes (#6) | slint component: DropDownMenu (menuAnchor role folded into the component); tokens: generated component tokens; springs via active motion scheme |
 | SelectableDropdownMenuItem | Menu.kt | partial | #11 | springs (#5), shapes (#6) | slint component: MenuItemContent (item-kind: selectable); tokens: generated component tokens; springs via active motion scheme |
 
 ### Navigation bar
@@ -282,7 +281,7 @@ States: active, inactive
 | Component | Source | Status | Issues | Needs | Notes |
 |---|---|---|---|---|---|
 | NavigationBar | NavigationBar.kt | partial | #11, #12 | adaptive (#12) | slint component: NavigationBar; tokens: generated component tokens; springs via active motion scheme |
-| RowScope | NavigationBar.kt | partial | #11, #12 | adaptive (#12) | slint component: NavigationItemTemplate (internal); the RowScope receiver has no slint equivalent |
+| NavigationBarItem | NavigationBar.kt | partial | #11, #12 | adaptive (#12) | slint component: NavigationItemTemplate (internal); the RowScope receiver has no slint equivalent; receiver inventory corrected; full API and behavior audit pending |
 | ShortNavigationBar | ShortNavigationBar.kt | partial | #11, #12 | adaptive (#12) | slint component: ShortNavigationBar; tokens: generated component tokens; springs via active motion scheme |
 | ShortNavigationBarItem | ShortNavigationBar.kt | partial | #11, #12 | adaptive (#12) | slint component: ShortNavigationBarItemTemplate (internal) |
 
@@ -383,9 +382,8 @@ States: disabled, selected, focused, hovered, pressed, unselected
 | Component | Source | Status | Issues | Needs | Notes |
 |---|---|---|---|---|---|
 | MultiChoiceSegmentedButtonRow | SegmentedButton.kt | partial | #10 | springs (#5), shapes (#6) | Expressive mapping -> ConnectedButtonGroup; slint SegmentedButton deprecated |
-| MultiChoiceSegmentedButtonRowScope | SegmentedButton.kt | partial | #10 | springs (#5), shapes (#6) | Expressive mapping -> ConnectedButtonGroup; slint SegmentedButton deprecated |
+| SegmentedButton | SegmentedButton.kt | partial | #10 | springs (#5), shapes (#6) | Expressive mapping -> ConnectedButtonGroup; slint SegmentedButton deprecated; receiver inventory corrected; full API and behavior audit pending |
 | SingleChoiceSegmentedButtonRow | SegmentedButton.kt | partial | #10 | springs (#5), shapes (#6) | Expressive mapping -> ConnectedButtonGroup; slint SegmentedButton deprecated |
-| SingleChoiceSegmentedButtonRowScope | SegmentedButton.kt | partial | #10 | springs (#5), shapes (#6) | Expressive mapping -> ConnectedButtonGroup; slint SegmentedButton deprecated |
 
 ### Slider
 
@@ -521,8 +519,9 @@ States: focused, hovered, pressed
 
 | Component | Source | Status | Issues | Needs | Notes |
 |---|---|---|---|---|---|
+| PlainTooltip | Tooltip.kt | partial | #11 | none | Scope slots map to props: caret/caret_edge/caret_x on PlainTooltip+RichTooltip, content via tooltip/rich_* props on TooltipBox; receiver inventory corrected; full API and behavior audit pending |
+| RichTooltip | Tooltip.kt | partial | #11 | none | Scope slots map to props: caret/caret_edge/caret_x on PlainTooltip+RichTooltip, content via tooltip/rich_* props on TooltipBox; receiver inventory corrected; full API and behavior audit pending |
 | TooltipBox | Tooltip.kt | done | #11 | none | TooltipBox (hover/focus/long-press triggers, position provider, caret) + PlainTooltip/RichTooltip surfaces; ToolTip kept as deprecated alias |
-| TooltipScope | Tooltip.kt | done | #11 | none | Scope slots map to props: caret/caret_edge/caret_x on PlainTooltip+RichTooltip, content via tooltip/rich_* props on TooltipBox |
 
 ## Token reference
 

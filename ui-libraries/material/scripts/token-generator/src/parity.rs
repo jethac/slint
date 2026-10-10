@@ -485,9 +485,10 @@ fn composable_functions(text: &str) -> Vec<String> {
                     break;
                 }
                 let rest = &l[pos + 4..];
-                let name_end =
-                    rest.find(|c: char| !(c.is_alphanumeric() || c == '_')).unwrap_or(rest.len());
-                let name = &rest[..name_end];
+                let name_end = rest
+                    .find(|c: char| !(c.is_alphanumeric() || c == '_' || c == '.'))
+                    .unwrap_or(rest.len());
+                let name = rest[..name_end].rsplit('.').next().unwrap_or_default();
                 if name.chars().next().map(|c| c.is_uppercase()).unwrap_or(false)
                     && !out.iter().any(|n| n == name)
                 {
@@ -882,6 +883,30 @@ fn slint_ref(obj: &ResolvedObject, m: &crate::model::ResolvedMember) -> String {
 
 #[cfg(test)]
 mod source_path_tests {
+    #[test]
+    fn extension_components_use_function_names_instead_of_receiver_types() {
+        let source = r#"
+@Composable
+public fun RowScope.NavigationBarItem() {}
+@Composable
+public fun TooltipScope.PlainTooltip() {}
+@Composable
+public fun TooltipScope.RichTooltip() {}
+@Composable
+public fun Modifier.carouselParallaxScrollEffect() {}
+@Composable
+private fun HiddenComponent() {}
+class Container {
+    @Composable
+    public fun NestedComponent() {}
+}
+"#;
+        assert_eq!(
+            super::composable_functions(source),
+            ["NavigationBarItem", "PlainTooltip", "RichTooltip"]
+        );
+    }
+
     #[test]
     fn inventory_paths_use_slashes_on_every_platform() {
         let root = std::env::temp_dir().join(format!(

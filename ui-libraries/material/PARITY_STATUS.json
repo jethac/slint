@@ -110,7 +110,8 @@
     ],
     "needs": "springs (#5), shapes (#6)",
     "notes": "connected variants: slint components ConnectedButtonGroup, ConnectedButton, VerticalConnectedButtonGroup; standard variant: slint component ButtonGroup (#10); parity cases: connected-button-groups, connected-button-morph, connected-button-press-morph, negative-connected-button-group, button-group, button-group-weights, button-group-overflow, button-group-toggle, button-group-press, button-group-press-morph, negative-button-group-spacing, negative-button-group-weight",
-    "status": "partial"  },
+    "status": "partial"
+  },
   "Card": {
     "issues": [
       11
@@ -347,20 +348,20 @@
     "notes": "slint component: ExpandedFullScreenSearchBar; tokens: generated component tokens; springs via active motion scheme",
     "status": "partial"
   },
+  "ExposedDropdownMenu": {
+    "issues": [
+      11
+    ],
+    "needs": "springs (#5), shapes (#6)",
+    "notes": "slint component: DropDownMenu (menuAnchor role folded into the component); tokens: generated component tokens; springs via active motion scheme; receiver inventory corrected; full API and behavior audit pending",
+    "status": "partial"
+  },
   "ExposedDropdownMenuBox": {
     "issues": [
       11
     ],
     "needs": "springs (#5), shapes (#6)",
     "notes": "slint component: DropDownMenu + PopupMenu exposed/match-anchor-width; tokens: generated component tokens; springs via active motion scheme",
-    "status": "partial"
-  },
-  "ExposedDropdownMenuBoxScope": {
-    "issues": [
-      11
-    ],
-    "needs": "springs (#5), shapes (#6)",
-    "notes": "slint component: DropDownMenu (menuAnchor role folded into the component); tokens: generated component tokens; springs via active motion scheme",
     "status": "partial"
   },
   "ExtendedFloatingActionButton": {
@@ -453,12 +454,12 @@
     "notes": "slint component: FloatingActionButtonMenu",
     "status": "partial"
   },
-  "FloatingActionButtonMenuScope": {
+  "FloatingActionButtonMenuItem": {
     "issues": [
       10
     ],
     "needs": "springs (#5), shapes (#6)",
-    "notes": "slint component: FloatingActionButtonMenuItem (scope members of FloatingActionButtonMenu)",
+    "notes": "slint component: FloatingActionButtonMenuItem (scope members of FloatingActionButtonMenu); receiver inventory corrected; full API and behavior audit pending",
     "status": "partial"
   },
   "HorizontalCenteredHeroCarousel": {
@@ -595,7 +596,7 @@
       11
     ],
     "needs": "shapes (#6)",
-    "notes": "slint component: ListTile — interactive/selectable/checkable, interactive shape morph",
+    "notes": "slint component: ListTile \u2014 interactive/selectable/checkable, interactive shape morph",
     "status": "done"
   },
   "LoadingIndicator": {
@@ -673,23 +674,7 @@
     "notes": "slint component: ModalWideNavigationRail; tokens: generated component tokens; springs via active motion scheme",
     "status": "partial"
   },
-  "Modifier": {
-    "issues": [
-      11
-    ],
-    "needs": "springs (#5), shapes (#6)",
-    "notes": "",
-    "status": "missing"
-  },
   "MultiChoiceSegmentedButtonRow": {
-    "issues": [
-      10
-    ],
-    "needs": "springs (#5), shapes (#6)",
-    "notes": "Expressive mapping -> ConnectedButtonGroup; slint SegmentedButton deprecated",
-    "status": "partial"
-  },
-  "MultiChoiceSegmentedButtonRowScope": {
     "issues": [
       10
     ],
@@ -704,6 +689,15 @@
     ],
     "needs": "adaptive (#12)",
     "notes": "slint component: NavigationBar; tokens: generated component tokens; springs via active motion scheme",
+    "status": "partial"
+  },
+  "NavigationBarItem": {
+    "issues": [
+      11,
+      12
+    ],
+    "needs": "adaptive (#12)",
+    "notes": "slint component: NavigationItemTemplate (internal); the RowScope receiver has no slint equivalent; receiver inventory corrected; full API and behavior audit pending",
     "status": "partial"
   },
   "NavigationDrawerItem": {
@@ -805,6 +799,14 @@
     "notes": "slint component: Drawer",
     "status": "partial"
   },
+  "PlainTooltip": {
+    "issues": [
+      11
+    ],
+    "needs": "none",
+    "notes": "Scope slots map to props: caret/caret_edge/caret_x on PlainTooltip+RichTooltip, content via tooltip/rich_* props on TooltipBox; receiver inventory corrected; full API and behavior audit pending",
+    "status": "partial"
+  },
   "PrimaryScrollableTabRow": {
     "issues": [
       11
@@ -835,7 +837,7 @@
       11
     ],
     "needs": "none",
-    "notes": "slint components: PullToRefreshBox, PullToRefreshIndicatorBox, PullToRefreshIndicator, PullToRefreshLoadingIndicator; constants in-code per the pin (no component tokens upstream); springs: spring(1, 1500) settle + default-effects crossfade; parity cases: pull-to-refresh-states/pull-refresh-refreshing (xfail on femtovg, #53-class edge-AA band vs coverage-integral drivers), pull-refresh-settle/pull-refresh-threshold-settle (xfail, #27-class spring settle), negative-pull-refresh-fraction; loading-indicator kind stays a private port of ContainedLoadingIndicator — upstream applies the -(progress-1)*180 overshoot as a drawWithContent wrapper Slint can't express around a component instance — and reuses the exported LoadingIndicatorShapes polygons",
+    "notes": "slint components: PullToRefreshBox, PullToRefreshIndicatorBox, PullToRefreshIndicator, PullToRefreshLoadingIndicator; constants in-code per the pin (no component tokens upstream); springs: spring(1, 1500) settle + default-effects crossfade; parity cases: pull-to-refresh-states/pull-refresh-refreshing (xfail on femtovg, #53-class edge-AA band vs coverage-integral drivers), pull-refresh-settle/pull-refresh-threshold-settle (xfail, #27-class spring settle), negative-pull-refresh-fraction; loading-indicator kind stays a private port of ContainedLoadingIndicator \u2014 upstream applies the -(progress-1)*180 overshoot as a drawWithContent wrapper Slint can't express around a component instance \u2014 and reuses the exported LoadingIndicatorShapes polygons",
     "status": "partial"
   },
   "RadioButton": {
@@ -843,7 +845,7 @@
       11
     ],
     "needs": "shapes (#6)",
-    "notes": "slint component: RadioButton; tokens: generated component tokens; RadioButtonImpl geometry — 20dp IconSize canvas, 2dp RadioButtonPadding, 2dp RadioStrokeWidth, dot radius to RadioButtonDotSize/2 on FastSpatial (androidx/androidx@23327507f7fc, material3 1.5.0-alpha18)",
+    "notes": "slint component: RadioButton; tokens: generated component tokens; RadioButtonImpl geometry \u2014 20dp IconSize canvas, 2dp RadioButtonPadding, 2dp RadioStrokeWidth, dot radius to RadioButtonDotSize/2 on FastSpatial (androidx/androidx@23327507f7fc, material3 1.5.0-alpha18)",
     "status": "done"
   },
   "RangeSlider": {
@@ -854,13 +856,12 @@
     "notes": "slint component: RangeSlider; same Slider.kt pin",
     "status": "done"
   },
-  "RowScope": {
+  "RichTooltip": {
     "issues": [
-      11,
-      12
+      11
     ],
-    "needs": "adaptive (#12)",
-    "notes": "slint component: NavigationItemTemplate (internal); the RowScope receiver has no slint equivalent",
+    "needs": "none",
+    "notes": "Scope slots map to props: caret/caret_edge/caret_x on PlainTooltip+RichTooltip, content via tooltip/rich_* props on TooltipBox; receiver inventory corrected; full API and behavior audit pending",
     "status": "partial"
   },
   "Scaffold": {
@@ -900,15 +901,23 @@
       11
     ],
     "needs": "springs (#5), shapes (#6)",
-    "notes": "slint component: SecureTextField; obfuscation via new TextInput password-character builtin (all renderers via shared layout); gap: obscure is the all-masked settled state — upstream default TextObfuscationMode.RevealLastTyped briefly reveals the last typed char; parity case: secure-text-fields",
+    "notes": "slint component: SecureTextField; obfuscation via new TextInput password-character builtin (all renderers via shared layout); gap: obscure is the all-masked settled state \u2014 upstream default TextObfuscationMode.RevealLastTyped briefly reveals the last typed char; parity case: secure-text-fields",
     "status": "done"
+  },
+  "SegmentedButton": {
+    "issues": [
+      10
+    ],
+    "needs": "springs (#5), shapes (#6)",
+    "notes": "Expressive mapping -> ConnectedButtonGroup; slint SegmentedButton deprecated; receiver inventory corrected; full API and behavior audit pending",
+    "status": "partial"
   },
   "SegmentedListItem": {
     "issues": [
       11
     ],
     "needs": "shapes (#6)",
-    "notes": "slint component: SegmentedListItem — index/count segmentedShapes positions",
+    "notes": "slint component: SegmentedListItem \u2014 index/count segmentedShapes positions",
     "status": "done"
   },
   "SelectableDropdownMenuItem": {
@@ -938,14 +947,6 @@
     "status": "partial"
   },
   "SingleChoiceSegmentedButtonRow": {
-    "issues": [
-      10
-    ],
-    "needs": "springs (#5), shapes (#6)",
-    "notes": "Expressive mapping -> ConnectedButtonGroup; slint SegmentedButton deprecated",
-    "status": "partial"
-  },
-  "SingleChoiceSegmentedButtonRowScope": {
     "issues": [
       10
     ],
@@ -1014,7 +1015,7 @@
       11
     ],
     "needs": "dynamic color (#8)",
-    "notes": "Surface.kt all four overloads as flags: clickable/selectable/toggleable; surfaceColorAtElevation tint via surface_tint.mix; parent_absolute_tonal_elevation stands in for LocalAbsoluteTonalElevation; contentColor via MaterialPalette.content-color-for. Paparazzi can't draw Modifier.shadow — parity scenes exercise the tonal side only.",
+    "notes": "Surface.kt all four overloads as flags: clickable/selectable/toggleable; surfaceColorAtElevation tint via surface_tint.mix; parent_absolute_tonal_elevation stands in for LocalAbsoluteTonalElevation; contentColor via MaterialPalette.content-color-for. Paparazzi can't draw Modifier.shadow \u2014 parity scenes exercise the tonal side only.",
     "status": "done"
   },
   "SwipeToDismissBox": {
@@ -1031,7 +1032,7 @@
       11
     ],
     "needs": "springs (#5), shapes (#6)",
-    "notes": "slint component: Switch; tokens: generated component tokens; SwitchImpl + ThumbNode — 52x32dp track, thumb pressed 28/snap + resting 24/16 on FastSpatial, offsets incl. pressed TrackOutlineWidth inset, thumbContent slot (androidx/androidx@23327507f7fc, material3 1.5.0-alpha18); parity scenes: switch-states/switch-hover/switch-on-morph/switch-off-morph (xfail on femtovg, #53-class edge-AA band vs coverage-integral drivers)",
+    "notes": "slint component: Switch; tokens: generated component tokens; SwitchImpl + ThumbNode \u2014 52x32dp track, thumb pressed 28/snap + resting 24/16 on FastSpatial, offsets incl. pressed TrackOutlineWidth inset, thumbContent slot (androidx/androidx@23327507f7fc, material3 1.5.0-alpha18); parity scenes: switch-states/switch-hover/switch-on-morph/switch-off-morph (xfail on femtovg, #53-class edge-AA band vs coverage-integral drivers)",
     "status": "done"
   },
   "Tab": {
@@ -1120,14 +1121,6 @@
     ],
     "needs": "none",
     "notes": "TooltipBox (hover/focus/long-press triggers, position provider, caret) + PlainTooltip/RichTooltip surfaces; ToolTip kept as deprecated alias",
-    "status": "done"
-  },
-  "TooltipScope": {
-    "issues": [
-      11
-    ],
-    "needs": "none",
-    "notes": "Scope slots map to props: caret/caret_edge/caret_x on PlainTooltip+RichTooltip, content via tooltip/rich_* props on TooltipBox",
     "status": "done"
   },
   "TopAppBar": {
