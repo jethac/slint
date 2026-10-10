@@ -37,3 +37,16 @@ The gallery has a similar `MATERIAL_GALLERY_SCREENSHOTS` setting for its Skia pr
 Run `ui-libraries/material/scripts/check-preview.ps1` from PowerShell to check both examples and their generated resources.
 Add `-Parity` to run all Material screenshot cases on the renderers supported by the Windows driver.
 Use `-TokenSource <directory>` to supply an existing checkout of the pinned AndroidX Material3 source directory.
+
+## Motion captures
+
+Export timed application frames for the separate landing page:
+
+```powershell
+$env:FIELDNOTES_MOTION = 'target/material-preview/motion'
+cargo test --manifest-path ui-libraries/material/Cargo.toml -p material-fieldnotes export_landing_page_motion -- --ignored
+```
+
+The exporter renders two seconds at a controlled 60 Hz clock, with reduced motion off and on.
+It uses the headless software renderer and checks that keyboard entry saves the task and closes the editor.
+These frames demonstrate behavior rather than GPU performance.

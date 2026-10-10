@@ -184,6 +184,58 @@ mod tests {
     }
 
     #[test]
+    #[ignore = "exports timed UI frames for the landing page"]
+    fn export_landing_page_motion() {
+        let directory = std::path::PathBuf::from(
+            std::env::var_os("FIELDNOTES_MOTION")
+                .expect("set FIELDNOTES_MOTION to an output directory"),
+        );
+        let initial_ui = setup();
+        drop(initial_ui);
+        for reduced_motion in [false, true] {
+            let ui = create_ui().unwrap();
+            ui.set_dark(false);
+            ui.set_reduced_motion(reduced_motion);
+            ui.window().set_size(slint::PhysicalSize::new(1000, 760));
+            ui.show().unwrap();
+            i_slint_backend_testing::mock_elapsed_time(1000);
+            let output = directory.join(if reduced_motion { "reduced" } else { "expressive" });
+            std::fs::create_dir_all(&output).unwrap();
+            let mut elapsed = 0;
+            for frame in 0..120 {
+                let time = frame * 1000 / 60;
+                i_slint_backend_testing::mock_elapsed_time((time - elapsed) as u64);
+                elapsed = time;
+                if frame == 12 {
+                    ui.invoke_new_task();
+                }
+                if frame == 54 {
+                    i_slint_backend_testing::send_keyboard_string_sequence(
+                        &ui,
+                        "Try something new",
+                    );
+                }
+                if frame == 90 {
+                    i_slint_backend_testing::send_keyboard_char(&ui, '\n', true);
+                    i_slint_backend_testing::send_keyboard_char(&ui, '\n', false);
+                }
+                let snapshot = ui.window().take_snapshot().unwrap();
+                image::save_buffer(
+                    output.join(format!("frame-{frame:03}.png")),
+                    snapshot.as_bytes(),
+                    snapshot.width(),
+                    snapshot.height(),
+                    image::ColorType::Rgba8,
+                )
+                .unwrap();
+            }
+            assert_eq!(ui.get_total_count(), 5);
+            assert!(!ui.get_editor_open());
+            ui.hide().unwrap();
+        }
+    }
+
+    #[test]
     fn tasks_keep_their_identity_when_filtered_and_edited() {
         let ui = setup();
         ui.set_filter(1);
