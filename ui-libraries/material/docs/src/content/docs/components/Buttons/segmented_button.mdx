@@ -26,7 +26,7 @@ export component Example inherits Window {
 
 A `SegmentedButton` displays a group of related options as a single control, where only one option can be selected at a time.
 
-Deprecated by the Expressive spec and mapped here: `SegmentedButton` → [`ConnectedButtonGroup`](connected_button_group) (kept working and pixel-correct against the pin, which carries no `@Deprecated` on `SegmentedButton`). Single-select groups map `current-index`/`index-changed` to `selected-index`/`selected-index-changed` and `select(index)` to assigning `selected-index`; per-item checked state maps to `multi-select` items' `checked` flags and `item-checked-changed`.
+Deprecated by the Expressive spec and mapped here: `SegmentedButton` → [`ConnectedButtonGroup`](connected_button_group) (kept working and pixel-correct against the pin, which carries no `@Deprecated` on `SegmentedButton`). Single-select groups map `current-index`/`index-changed` to `selected-index`/`selected-index-changed`; per-item checked state maps to `multi-select` items' `checked` flags and `item-checked-changed`.
 
 ## Properties
 
@@ -42,10 +42,12 @@ An array of segmented items, each containing an icon and text.
 
 ## Callbacks
 
+Set `selection-on-click: false` to keep an application-owned `current-index` binding.
+The `index-changed` callback then requests selection without writing the index.
+Accept the request by updating the binding's source.
+The default updates local selection before invoking the callback.
+Set `enabled: false` to reject pointer, keyboard, and accessibility activation.
+Programmatic index changes emit no callback.
+
 ### index-changed(index: int)
-Invoked when the current-index changes.
-
-## Functions
-
-### select(index: int)
-Selects the item at the specified index.
+Requests selection of an enabled item, including the currently selected item.

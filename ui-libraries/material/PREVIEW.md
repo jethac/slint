@@ -119,6 +119,17 @@ Generator drift and formatting checks pass.
 Evidence logs use the `target/material-preview/controlled-selection-` prefix, including `full-interpreter-final.log`, `render.log`, `native-gallery.log`, and `native-fieldnotes.log`.
 Standard ButtonGroup and legacy SegmentedButton selection still require their complete API and behavior audits.
 
+Their selection requests now preserve application-owned index bindings.
+Standard ButtonGroup row and overflow activation share one guarded handler, including deselection.
+Default mode retains synchronization between programmatic model checked flags and the selected index.
+Overflow activation resolves its item before dismissing the popup, preserving the correct delegate index.
+Toggle items expose checkbox semantics; overflow menu items expose enabled accessibility actions.
+SegmentedButton supports controlled selection and rejects disabled pointer, keyboard, and accessibility activation.
+All 967 interpreter tests, ten required-reference Skia checks, and the native gallery check pass.
+Skia checks cover standard groups, weighted sizing, overflow, selection motion, and deliberate negative cases.
+Generator drift and formatting checks pass.
+Evidence logs use the `target/material-preview/standard-selection-` prefix, including `full-interpreter-final.log`, `final-render.log`, and `native-gallery-final.log`.
+
 The reviewed spike inventory contained 61 done, 72 partial, and 17 missing entries.
 The completion audit corrected extension function names that had been recorded as receiver types.
 The current inventory contains 60 done, 82 partial, and 7 missing entries.

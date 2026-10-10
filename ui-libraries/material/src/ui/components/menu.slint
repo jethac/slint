@@ -451,6 +451,14 @@ export component MenuItemTemplate {
     in property <bool> selected;
 
     callback clicked();
+    accessible-role: button;
+    accessible-label: root.text;
+    accessible-enabled: root.enabled;
+    accessible-action-default => {
+        if root.enabled {
+            root.clicked();
+        }
+    }
 
     property <bool> has_icon: root.icon.width > 0 && root.icon.height > 0;
     property <color> color: MaterialPalette.on_surface;

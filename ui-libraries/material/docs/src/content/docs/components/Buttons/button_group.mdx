@@ -81,8 +81,43 @@ The icon and tooltip of the overflow indicator shown when items do not fit.
 
 ## Callbacks
 
+Set `selection-on-click: false` when the application owns checked state or `current-index`.
+Row buttons and overflow menu items request the same state change without writing the bound selection.
+The application can accept or reject requests.
+The default updates group state before invoking callbacks.
+Controlled single selection uses `current-index` as its source; activating its selected item requests `-1` to deselect it.
+Default single selection also synchronizes the model's checked flags and selected index.
+Multiple selection uses each model row's checked flag.
+Programmatic changes emit neither selection callback.
+Disabled controls ignore activation.
+
+```slint
+import { ButtonGroup, ButtonGroupSelection } from "@material";
+
+export component Example inherits Window {
+    width: 300px;
+    height: 100px;
+    in-out property <int> selected: 0;
+    ButtonGroup {
+        items: [{ text: "First" }, { text: "Second" }];
+        selection: ButtonGroupSelection.single;
+        current-index: root.selected;
+        selection-on-click: false;
+        current-index-changed(index) => { root.selected = index; }
+    }
+}
+```
+
+### current-index-changed(index: int)
+Requests the selected index in single-selection mode, or `-1` to deselect.
+
+### item-checked-changed(index: int, checked: bool)
+Requests an item's checked state in single- or multiple-selection mode.
+Use a writable model when the group owns selection.
+
 ### activated(index: int)
-Invoked when the item at `index` is clicked.
+Invoked after an enabled row or menu item requests selection.
+Plain clickable items invoke only this callback.
 
 ## Functions
 

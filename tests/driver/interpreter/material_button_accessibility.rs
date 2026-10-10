@@ -58,6 +58,157 @@ fn key(instance: &slint_interpreter::ComponentInstance, text: &str, pressed: boo
 }
 
 #[test]
+fn standard_group_selection_requests_preserve_row_and_menu_bindings() -> Result<(), Box<dyn Error>>
+{
+    let instance = create_fixture("StandardGroupCase")?;
+    let button = |label: &str| {
+        ElementHandle::find_by_accessible_label(&instance, label)
+            .find(|element| element.accessible_role() == Some(AccessibleRole::Checkbox))
+            .unwrap()
+    };
+    let first = button("First");
+    let second = button("Second");
+    second.invoke_accessible_default_action();
+    assert_eq!(instance.get_property("requests")?, Value::Number(1.0));
+    assert_eq!(instance.get_property("observed-selection")?, Value::Number(0.0));
+    instance.set_property("selected", 1.into())?;
+    assert_eq!(second.accessible_checked(), Some(true));
+    second.invoke_accessible_default_action();
+    assert_eq!(instance.get_property("requested-checked")?, Value::Bool(false));
+    assert_eq!(second.accessible_checked(), Some(true));
+    instance.set_property("selected", 0.into())?;
+    instance.set_property("accept-requests", true.into())?;
+    pointer_click(&instance, &second);
+    assert_eq!(instance.get_property("selected")?, Value::Number(1.0));
+    key(&instance, "\t", true);
+    key(&instance, "\t", false);
+    key(&instance, " ", true);
+    key(&instance, " ", false);
+    assert_eq!(instance.get_property("selected")?, Value::Number(0.0));
+    instance.set_property("accept-requests", false.into())?;
+    instance.set_property("multiple", true.into())?;
+    set_first_model_checked(&instance, false)?;
+    first.invoke_accessible_default_action();
+    assert_eq!(first.accessible_checked(), Some(false));
+    assert_eq!(instance.get_property("requested-checked")?, Value::Bool(true));
+    set_first_model_checked(&instance, true)?;
+    assert_eq!(first.accessible_checked(), Some(true));
+    first.invoke_accessible_default_action();
+    assert_eq!(first.accessible_checked(), Some(true));
+    assert_eq!(instance.get_property("requested-checked")?, Value::Bool(false));
+    instance.set_property("automatic", true.into())?;
+    first.invoke_accessible_default_action();
+    assert_eq!(instance.get_property("model-checked")?, Value::Bool(false));
+    set_first_model_checked(&instance, true)?;
+    assert_eq!(first.accessible_checked(), Some(true));
+    let requests = instance.get_property("requests")?;
+    button("Disabled").invoke_accessible_default_action();
+    instance.set_property("controls-enabled", false.into())?;
+    first.invoke_accessible_default_action();
+    assert_eq!(instance.get_property("requests")?, requests);
+    instance.set_property("controls-enabled", true.into())?;
+    instance.set_property("automatic", false.into())?;
+    instance.set_property("available-width", 90.into())?;
+    i_slint_backend_testing::mock_elapsed_time(1);
+    let more = ElementHandle::find_by_accessible_label(&instance, "More options")
+        .find(|element| element.accessible_role() == Some(AccessibleRole::Button))
+        .unwrap();
+    more.invoke_accessible_default_action();
+    let disabled = ElementHandle::find_by_element_type_name(&instance, "MenuItemTemplate")
+        .find(|element| element.accessible_label().as_deref() == Some("Disabled"))
+        .unwrap();
+    let before_menu = instance.get_property("requests")?;
+    disabled.invoke_accessible_default_action();
+    assert_eq!(instance.get_property("requests")?, before_menu);
+    let menu = ElementHandle::find_by_element_type_name(&instance, "MenuItemTemplate")
+        .find(|element| element.accessible_label().as_deref() == Some("Second"))
+        .unwrap();
+    menu.invoke_accessible_default_action();
+    assert_eq!(instance.get_property("requested-index")?, Value::Number(1.0));
+    assert_eq!(
+        instance.get_property("requests")?,
+        Value::Number(f64::try_from(requests).unwrap() + 1.0)
+    );
+    assert_eq!(instance.get_property("requests")?, instance.get_property("activations")?);
+    let requests = instance.get_property("requests")?;
+    let activations = instance.get_property("activations")?;
+    instance.set_property("clickable", true.into())?;
+    instance.set_property("available-width", 400.into())?;
+    i_slint_backend_testing::mock_elapsed_time(1);
+    let clickable = ElementHandle::find_by_accessible_label(&instance, "First")
+        .find(|element| element.accessible_role() == Some(AccessibleRole::Button))
+        .unwrap();
+    clickable.invoke_accessible_default_action();
+    assert_eq!(instance.get_property("requests")?, requests);
+    assert_eq!(
+        instance.get_property("activations")?,
+        Value::Number(f64::try_from(activations).unwrap() + 1.0)
+    );
+    instance.hide()?;
+    let owned = load_fixture("StandardGroupCase")?;
+    owned.set_property("automatic", true.into())?;
+    i_slint_backend_testing::mock_elapsed_time(1);
+    let Value::Model(model) = owned.get_property("items")? else { panic!("items must be a model") };
+    let Value::Struct(mut row) = model.row_data(1).unwrap() else {
+        panic!("item must be a struct")
+    };
+    row.set_field("checked".into(), true.into());
+    model.set_row_data(1, row.into());
+    i_slint_backend_testing::mock_elapsed_time(1);
+    assert_eq!(owned.get_property("observed-selection")?, Value::Number(1.0));
+    let Value::Struct(mut row) = model.row_data(1).unwrap() else {
+        panic!("item must be a struct")
+    };
+    row.set_field("checked".into(), false.into());
+    model.set_row_data(1, row.into());
+    i_slint_backend_testing::mock_elapsed_time(1);
+    assert_eq!(owned.get_property("observed-selection")?, Value::Number(-1.0));
+    assert_eq!(owned.get_property("requests")?, Value::Number(0.0));
+    Ok(())
+}
+
+#[test]
+fn segmented_selection_requests_preserve_external_index() -> Result<(), Box<dyn Error>> {
+    let instance = create_fixture("SegmentedCase")?;
+    let second = ElementHandle::find_by_accessible_label(&instance, "Second")
+        .find(|element| element.accessible_role() == Some(AccessibleRole::ListItem))
+        .unwrap();
+    second.invoke_accessible_default_action();
+    assert_eq!(instance.get_property("requests")?, Value::Number(1.0));
+    assert_eq!(instance.get_property("observed-selection")?, Value::Number(0.0));
+    instance.set_property("selected", 1.into())?;
+    assert_eq!(instance.get_property("observed-selection")?, Value::Number(1.0));
+    instance.set_property("selected", 0.into())?;
+    instance.set_property("accept-requests", true.into())?;
+    pointer_click(&instance, &second);
+    assert_eq!(instance.get_property("selected")?, Value::Number(1.0));
+    instance.set_property("selected", 0.into())?;
+    assert_eq!(instance.get_property("observed-selection")?, Value::Number(0.0));
+    key(&instance, "\t", true);
+    key(&instance, "\t", false);
+    key(&instance, "\n", true);
+    key(&instance, "\n", false);
+    assert_eq!(instance.get_property("requested-index")?, Value::Number(0.0));
+    key(&instance, "\t", true);
+    key(&instance, "\t", false);
+    key(&instance, " ", true);
+    key(&instance, " ", false);
+    assert_eq!(instance.get_property("selected")?, Value::Number(1.0));
+    instance.set_property("selected", 0.into())?;
+    assert_eq!(instance.get_property("observed-selection")?, Value::Number(0.0));
+    instance.set_property("accept-requests", false.into())?;
+    instance.set_property("automatic", true.into())?;
+    second.invoke_accessible_default_action();
+    assert_eq!(instance.get_property("observed-selection")?, Value::Number(1.0));
+    instance.set_property("controls-enabled", false.into())?;
+    let requests = instance.get_property("requests")?;
+    second.invoke_accessible_default_action();
+    pointer_click(&instance, &second);
+    assert_eq!(instance.get_property("requests")?, requests);
+    Ok(())
+}
+
+#[test]
 fn controlled_toggle_requests_preserve_bindings_in_every_style() -> Result<(), Box<dyn Error>> {
     let instance = create_fixture("ControlledCase")?;
     for (index, label) in [

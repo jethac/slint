@@ -87,10 +87,15 @@ component ButtonGroupItemDelegate {
     in property <bool> simulate-hover;
     in property <bool> simulate-press;
     in property <length> group-height;
-    in-out property <int> current-index;
+    in property <int> current-index;
     in-out property <bool> checked;
+    in property <bool> selection-on-click;
+    property <bool> effective-checked: root.selection == ButtonGroupSelection.single && !root.selection-on-click
+        ? root.current-index == root.index : root.checked;
 
     callback activated(index: int);
+    callback initialize-selection(index: int);
+    callback update-selection(index: int);
 
     property <int> count: model.length;
     property <ButtonGroupItemAlignment> effective-alignment:
@@ -209,10 +214,12 @@ component ButtonGroupItemDelegate {
 
     init => {
         push();
-        if (root.selection == ButtonGroupSelection.single && root.checked && root.current-index == -1) {
-            root.current-index = root.index;
-        } else if (root.selection == ButtonGroupSelection.single && !root.checked
-            && root.current-index == root.index) {
+        if root.selection-on-click && root.selection == ButtonGroupSelection.single
+            && root.itm.checked && root.current-index == -1 {
+            root.initialize-selection(root.index);
+        }
+        if root.selection-on-click && root.selection == ButtonGroupSelection.single
+            && root.current-index == root.index && !root.checked {
             root.checked = true;
         }
     }
@@ -233,18 +240,27 @@ component ButtonGroupItemDelegate {
     }
 
     changed checked => {
-        if (root.selection == ButtonGroupSelection.single) {
-            if (root.checked && root.current-index != root.index) {
-                root.current-index = root.index;
-            } else if (!root.checked && root.current-index == root.index) {
-                root.current-index = -1;
+        if root.selection-on-click && root.selection == ButtonGroupSelection.single {
+            if root.checked && root.current-index != root.index {
+                root.update-selection(root.index);
+            } else if !root.checked && root.current-index == root.index {
+                root.update-selection(-1);
             }
         }
     }
-
     changed current-index => {
-        if (root.selection == ButtonGroupSelection.single && (root.current-index == root.index) != root.checked) {
+        if root.selection-on-click && root.selection == ButtonGroupSelection.single
+            && (root.current-index == root.index) != root.checked {
             root.checked = root.current-index == root.index;
+        }
+    }
+    changed selection-on-click => {
+        if root.selection-on-click && root.selection == ButtonGroupSelection.single {
+            if root.current-index == -1 && root.checked {
+                root.initialize-selection(root.index);
+            } else if (root.current-index == root.index) != root.checked {
+                root.checked = root.current-index == root.index;
+            }
         }
     }
 
@@ -259,7 +275,7 @@ component ButtonGroupItemDelegate {
     accessible-label: itm.text;
     accessible-item-index: index;
     accessible-item-selectable: selection != ButtonGroupSelection.none;
-    accessible-item-selected: checked;
+    accessible-item-selected: root.effective-checked;
 
     btn := FilledButton {
         width: 100%;
@@ -272,7 +288,9 @@ component ButtonGroupItemDelegate {
         // `clickableItem` resolves the static `Button(shape:)` overload — no
         // press morph; `toggleableItem`'s `ToggleButton` morphs shapes.
         press_shape_morph: root.selection != ButtonGroupSelection.none;
-        checked <=> root.checked;
+        checked: root.effective-checked;
+        toggle-on-click: false;
+        accessible-role: none;
         enabled: root.group-enabled && itm.enabled;
         enforce_touch_target: false;
         simulate_hover: root.simulate-hover;
@@ -287,6 +305,25 @@ component ButtonGroupItemDelegate {
         clicked => {
             root.activated(root.index);
         }
+    }
+
+    if root.selection == ButtonGroupSelection.none : Rectangle {
+        width: 100%;
+        height: 100%;
+        accessible-role: button;
+        accessible-label: root.itm.text;
+        accessible-enabled: root.group-enabled && root.itm.enabled;
+        accessible-action-default => { root.activated(root.index); }
+    }
+    if root.selection != ButtonGroupSelection.none : Rectangle {
+        width: 100%;
+        height: 100%;
+        accessible-role: checkbox;
+        accessible-label: root.itm.text;
+        accessible-enabled: root.group-enabled && root.itm.enabled;
+        accessible-checkable: true;
+        accessible-checked: root.effective-checked;
+        accessible-action-default => { root.activated(root.index); }
     }
 }
 
@@ -303,6 +340,10 @@ export component ButtonGroup {
     in property <ButtonGroupSelection> selection: ButtonGroupSelection.none;
     /// The selected item in `single` selection mode; -1 selects none.
     in-out property <int> current-index: -1;
+    /// Set false to request selection changes without writing selection state.
+    in property <bool> selection-on-click: true;
+    callback current-index-changed(index: int);
+    callback item-checked-changed(index: int, checked: bool);
     /// Fires when any item is activated, from the row or the overflow menu.
     callback activated(index: int);
     /// `ButtonGroupDefaults.ExpandedRatio` (0.15) — fraction of a pressed
@@ -336,6 +377,27 @@ export component ButtonGroup {
 
         root.items[index].checked = true;
         root.current-index = index;
+    }
+
+    function activate(index: int) {
+        if !root.enabled || index < 0 || index >= root.items.length || !root.items[index].enabled {
+            return;
+        }
+        if root.selection != ButtonGroupSelection.none {
+            let checked = root.selection == ButtonGroupSelection.single
+                ? root.current-index != index : !root.items[index].checked;
+            if root.selection == ButtonGroupSelection.single {
+                let selected = checked ? index : -1;
+                if root.selection-on-click {
+                    root.current-index = selected;
+                }
+                root.current-index-changed(selected);
+            } else if root.selection-on-click {
+                root.items[index].checked = checked;
+            }
+            root.item-checked-changed(index, checked);
+        }
+        root.activated(index);
     }
 
     accessible-role: list;
@@ -381,11 +443,22 @@ export component ButtonGroup {
             simulate-hover: root.simulate-hover && index == root.simulate-index;
             simulate-press: root.simulate-press && index == root.simulate-index;
             checked <=> itm.checked;
-            current-index <=> root.current-index;
+            current-index: root.current-index;
+            selection-on-click: root.selection-on-click;
             group-height: row.height;
 
             activated => {
-                root.activated(index);
+                root.activate(index);
+            }
+            initialize-selection(index) => {
+                if root.selection-on-click && root.current-index == -1 {
+                    root.current-index = index;
+                }
+            }
+            update-selection(index) => {
+                if root.selection-on-click {
+                    root.current-index = index;
+                }
             }
         }
 
@@ -435,11 +508,8 @@ export component ButtonGroup {
                     enabled: root.enabled && itm2.enabled;
 
                     clicked => {
-                        if (root.selection != ButtonGroupSelection.none) {
-                            root.items[index].checked = !root.items[index].checked;
-                        }
+                        root.activate(index);
                         menu.close();
-                        root.activated(index);
                     }
                 }
             }

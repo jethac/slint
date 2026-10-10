@@ -5,6 +5,7 @@ import {
     ToggleButton, FilledTonalToggleButton, ElevatedToggleButton, OutlinedToggleButton,
     IconToggleButton, FilledIconToggleButton, FilledTonalIconToggleButton, OutlinedIconToggleButton, ExtendedTouchArea,
     ConnectedButton, ConnectedButtonGroup, VerticalConnectedButtonGroup, ConnectedButtonGroupItem,
+    ButtonGroup, ButtonGroupItem, ButtonGroupSelection, SegmentedButton,
 } from "../../../ui-libraries/material/src/material.slint";
 
 export component TestCase inherits Window {
@@ -229,6 +230,77 @@ export component VerticalGroupCase inherits Window {
             root.requested-checked = checked;
             if root.accept-requests {
                 root.items[index].checked = checked;
+            }
+        }
+    }
+}
+
+
+export component StandardGroupCase inherits Window {
+    width: 400px;
+    height: 200px;
+    in-out property <length> available-width: 400px;
+    in-out property <bool> multiple;
+    in-out property <bool> clickable;
+    in-out property <bool> automatic;
+    in-out property <bool> accept-requests;
+    in-out property <bool> controls-enabled: true;
+    in-out property <int> selected: 0;
+    in-out property <[ButtonGroupItem]> items: [
+        { text: "First" }, { text: "Second" }, { text: "Disabled", enabled: false },
+    ];
+    out property <int> requests;
+    out property <int> activations;
+    out property <int> requested-index: -1;
+    out property <bool> requested-checked;
+    out property <int> observed-selection: group.current-index;
+    out property <bool> model-checked: root.items[0].checked;
+
+    group := ButtonGroup {
+        width: root.available-width;
+        height: 40px;
+        items: root.items;
+        selection: root.clickable ? ButtonGroupSelection.none : root.multiple ? ButtonGroupSelection.multiple : ButtonGroupSelection.single;
+        selection-on-click: root.automatic;
+        current-index: root.selected;
+        enabled: root.controls-enabled;
+        current-index-changed(index) => {
+            if root.accept-requests {
+                root.selected = index;
+            }
+        }
+        item-checked-changed(index, checked) => {
+            root.requests += 1;
+            root.requested-index = index;
+            root.requested-checked = checked;
+            if root.accept-requests && root.multiple {
+                root.items[index].checked = checked;
+            }
+        }
+        activated(index) => { root.activations += 1; }
+    }
+}
+
+export component SegmentedCase inherits Window {
+    width: 400px;
+    height: 100px;
+    in-out property <int> selected;
+    in-out property <bool> automatic;
+    in-out property <bool> accept-requests;
+    in-out property <bool> controls-enabled: true;
+    out property <int> requests;
+    out property <int> requested-index: -1;
+    out property <int> observed-selection: group.current-index;
+    group := SegmentedButton {
+        enabled: root.controls-enabled;
+        items: [{text: "First"}, {text: "Second"}];
+        current-index: root.selected;
+        selection-on-click: root.automatic;
+        index-changed(index) => {
+            root.requests += 1;
+            root.requested-index = index;
+            if root.accept-requests {
+                root.selected = index;
             }
         }
     }
