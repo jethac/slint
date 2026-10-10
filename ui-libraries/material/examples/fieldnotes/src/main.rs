@@ -202,22 +202,35 @@ mod tests {
             let output = directory.join(if reduced_motion { "reduced" } else { "expressive" });
             std::fs::create_dir_all(&output).unwrap();
             let mut elapsed = 0;
-            for frame in 0..120 {
+            let title: Vec<char> = "Try something new".chars().collect();
+            for frame in 0..960 {
                 let time = frame * 1000 / 60;
                 i_slint_backend_testing::mock_elapsed_time((time - elapsed) as u64);
                 elapsed = time;
-                if frame == 12 {
+                if frame == 90 {
                     ui.invoke_new_task();
                 }
-                if frame == 54 {
-                    i_slint_backend_testing::send_keyboard_string_sequence(
-                        &ui,
-                        "Try something new",
-                    );
+                if frame >= 180 && (frame - 180) % 9 == 0 {
+                    let index = ((frame - 180) / 9) as usize;
+                    if let Some(character) = title.get(index) {
+                        i_slint_backend_testing::send_keyboard_string_sequence(
+                            &ui,
+                            &character.to_string(),
+                        );
+                    }
                 }
-                if frame == 90 {
+                if frame == 480 {
                     i_slint_backend_testing::send_keyboard_char(&ui, '\n', true);
                     i_slint_backend_testing::send_keyboard_char(&ui, '\n', false);
+                    assert_eq!(ui.get_total_count(), 5);
+                    assert!(!ui.get_editor_open());
+                }
+                if frame == 630 {
+                    ui.invoke_edit_task(4);
+                    assert_eq!(ui.get_draft_title().as_str(), "Try something new");
+                }
+                if frame == 810 {
+                    ui.invoke_close_editor();
                 }
                 let snapshot = ui.window().take_snapshot().unwrap();
                 image::save_buffer(

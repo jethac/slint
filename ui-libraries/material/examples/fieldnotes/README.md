@@ -44,9 +44,10 @@ Export timed application frames for the separate landing page:
 
 ```powershell
 $env:FIELDNOTES_MOTION = 'target/material-preview/motion'
-cargo test --manifest-path ui-libraries/material/Cargo.toml -p material-fieldnotes export_landing_page_motion -- --ignored
+cargo test --config 'profile.dev.package.i-slint-renderer-software.opt-level=3' --config 'profile.dev.package.image.opt-level=3' --config 'profile.dev.package.png.opt-level=3' --manifest-path ui-libraries/material/Cargo.toml -p material-fieldnotes export_landing_page_motion -- --ignored
 ```
 
-The exporter renders two seconds at a controlled 60 Hz clock, with reduced motion off and on.
-It uses the headless software renderer and checks that keyboard entry saves the task and closes the editor.
+The exporter renders 16 seconds at a controlled 60 Hz clock, with reduced motion off and on.
+It opens the editor, types one character at a time, saves the task, then reopens and dismisses the editor.
+It uses the headless software renderer and checks that saving and reopening preserve the entered title.
 These frames demonstrate behavior rather than GPU performance.
