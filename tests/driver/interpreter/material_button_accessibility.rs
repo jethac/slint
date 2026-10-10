@@ -167,3 +167,45 @@ fn extended_touch_area_uses_release_activation() -> Result<(), Box<dyn Error>> {
     assert_eq!(instance.get_property("clicks")?, Value::Number(1.0));
     Ok(())
 }
+
+#[test]
+fn custom_shapes_clip_pointer_activation_in_every_toggle_style() -> Result<(), Box<dyn Error>> {
+    let instance = create_fixture("ShapeCase")?;
+    for (index, label) in [
+        "Filled",
+        "Tonal",
+        "Elevated",
+        "Outlined",
+        "Icon",
+        "Filled icon",
+        "Tonal icon",
+        "Outlined icon",
+    ]
+    .into_iter()
+    .enumerate()
+    {
+        let control = ElementHandle::find_by_accessible_label(&instance, label)
+            .find(|element| element.accessible_role() == Some(AccessibleRole::Checkbox))
+            .unwrap();
+        let origin = control.absolute_position();
+        let size = control.size();
+        let visual_width = if label.to_lowercase().contains("icon") { 40.0 } else { size.width };
+        let visual_x = origin.x + (size.width - visual_width) / 2.0;
+        let visual_y = origin.y + (size.height - 40.0) / 2.0;
+        for (x, y, checked) in [(0.1, 0.35, false), (0.5, 0.5, true)] {
+            let position = LogicalPosition::new(visual_x + visual_width * x, visual_y + 40.0 * y);
+            instance.window().dispatch_event(WindowEvent::PointerMoved { position });
+            instance.window().dispatch_event(WindowEvent::PointerPressed {
+                position,
+                button: PointerEventButton::Left,
+            });
+            instance.window().dispatch_event(WindowEvent::PointerReleased {
+                position,
+                button: PointerEventButton::Left,
+            });
+            assert_eq!(control.accessible_checked(), Some(checked), "shape hit test: {label}");
+        }
+        assert_eq!(instance.get_property("clicks")?, Value::Number((index + 1) as f64));
+    }
+    Ok(())
+}

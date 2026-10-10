@@ -12,10 +12,11 @@ All sixteen component entries remain partial until their API and verification ch
 ## Public API gaps
 
 The pinned [ToggleButton.kt](https://github.com/androidx/androidx/blob/23327507f7fc7d5b19d65fec4b090f60c970079b/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/ToggleButton.kt) exposes colors, shapes, elevation, border, content padding, and composable content.
-The Slint styles expose state colors, uniform corner radii, physical elevation, borders, padding, and child content.
-Arbitrary shapes and inherited child styling still require implementation and verification.
+The Slint styles expose state colors, uniform and per-corner radii, arbitrary paths, physical elevation, borders, padding, and child content.
+Inherited child styling still requires implementation and verification.
 The pinned [IconButton.kt](https://github.com/androidx/androidx/blob/23327507f7fc7d5b19d65fec4b090f60c970079b/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/IconButton.kt) also has static-shape and interaction-shape overloads.
-The existing round/square selector does not cover arbitrary shape overrides.
+The path overrides cover static and interaction paths; corner radii retain the pinned spring behavior.
+The pinned `shapeByInteraction` switches arbitrary paths immediately and animates corner-based geometry.
 
 | Slint toggle | Existing style | Additional API checks |
 | --- | --- | --- |
@@ -29,7 +30,8 @@ The existing round/square selector does not cover arbitrary shape overrides.
 | `OutlinedIconToggleButton` | `OutlineIconButton` | Cover custom borders, state colors, content, and both shape overloads. |
 
 - [x] Expose enabled, disabled, checked, and unchecked container/content color overrides for each style.
-- [ ] Expose resting, pressed, and checked shapes, including per-corner geometry and interruption behavior.
+- [x] Expose resting, pressed, and checked paths and per-corner geometry.
+- [ ] Verify corner-transition interruption behavior against pinned Compose traces.
 - [x] Expose interaction elevation overrides where the pinned API supports them.
 - [x] Expose border color and width overrides, including disabled and checked states.
 - [x] Provide padding overrides for all four text-toggle styles.
@@ -48,6 +50,7 @@ Key-down creates a press; matching key-up activates; focus loss cancels pending 
 - [x] Reject disabled accessibility activation.
 - [x] Verify keyboard repeat, overlapping Space/Enter presses, mismatched releases, focus loss, and disabling during a press.
 - [x] Verify the shared keyboard contract through the public `ExtendedTouchArea` API.
+- [x] Reject pointer activation outside custom paths across all eight toggle styles.
 - [ ] Verify touch cancellation, drag outside, shape-clipped hit testing, and disabling during a pointer press.
 - [ ] Verify accessible state announcements and focus order with a native Windows screen reader.
 
@@ -55,6 +58,7 @@ Key-down creates a press; matching key-up activates; focus loss cancels pending 
 
 The named APIs run in the existing text-toggle, icon-toggle, and selection-motion scenes.
 The deliberate negative selection case must continue rejecting a missing shape morph.
+Skia regressions check custom path states, content clipping, state colors, borders, focus rings, and asymmetric corners across all eight styles.
 
 - [ ] Add Compose and Slint scenes for each supported custom style parameter.
 - [ ] Add keyboard press/release and cancellation motion traces.

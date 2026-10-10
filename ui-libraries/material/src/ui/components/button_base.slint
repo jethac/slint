@@ -31,6 +31,10 @@ export component MaterialButtonBase {
     in property <length> resting_radius;
     in property <length> pressed_radius;
     in property <length> checked_radius;
+    /// Normalized path overrides; empty shapes use the corner geometry.
+    in property <shape> resting_shape: root.shape;
+    in property <shape> pressed_shape: root.resting_shape;
+    in property <shape> checked_shape: root.resting_shape;
     /// Per-corner shapes (the split button's asymmetric
     /// `leadingButtonShape`/`trailingButtonShape`): the three `*_corners`
     /// sets replace the matching `*_radius` values and each corner animates
@@ -157,6 +161,11 @@ export component MaterialButtonBase {
     property <length> touch: root.enforce_touch_target ? 48px : 0px;
     property <length> box_width: root.container_width > 0px ? max(root.container_width, area.min_width) : root.width;
     property <length> box_height: max(root.container_height, area.min_height);
+    property <shape> empty_shape;
+    // The pinned shapeByInteraction switches non-CornerBasedShape paths immediately.
+    property <shape> target_shape: area.effective_pressed ? root.pressed_shape :
+        root.checkable && root.checked ? root.checked_shape : root.resting_shape;
+    property <bool> custom_shape: root.target_shape != root.empty_shape;
 
     min_width: max(root.min_button_width, root.touch, root.container_width, area.min_width);
     min_height: max(root.touch, root.box_height);
@@ -253,6 +262,7 @@ export component MaterialButtonBase {
         border_radius: root.target_radius;
         corners: { top_left: root.target_tl, top_right: root.target_tr, bottom_right: root.target_br, bottom_left: root.target_bl };
         shaped_corners: root.shaped_corners;
+        shape: root.target_shape;
         background: root.current_container_color;
         level: root.current_level;
         shadow_height_override: root.current_elevation;
@@ -267,8 +277,9 @@ export component MaterialButtonBase {
         color: root.current_content_color;
         border_radius: root.target_radius;
         corners: { top_left: root.target_tl, top_right: root.target_tr, bottom_right: root.target_br, bottom_left: root.target_bl };
-        shaped_corners: root.shaped_corners;
-        hit_radius: root.resting_radius;
+        shaped_corners: root.shaped_corners && !root.custom_shape;
+        shape: root.target_shape;
+        hit_radius: root.custom_shape ? 0px : root.resting_radius;
         hit_corners: root.resting_corners;
         tooltip: root.tooltip;
         display_background: false;
@@ -286,50 +297,61 @@ export component MaterialButtonBase {
             root.activate();
         }
 
-        layout := HorizontalLayout {
-            // `padding_leading`/`padding_trailing` replace the whole side
-            // when set (button-group item slots); otherwise the base
-            // `padding_horizontal` plus the split button's `padding_start`/
-            // `padding_end` extras and the optical-centering offset apply.
-            padding_left: root.icon_button ? 0px : (root.padding_leading >= 0px ? root.padding_leading
-                : root.padding_horizontal + root.padding_start + root.optical_offset);
-            // Compose's content is `Icon + Spacer(iconSpacing) + Text` — the
-            // spacer is emitted whenever an icon is present, so it still
-            // counts when the label is empty.
-            padding_right: root.icon_button ? 0px : (root.padding_trailing >= 0px ? root.padding_trailing
-                : root.padding_horizontal + root.padding_end - root.optical_offset
-                    + (root.icon.width > 0 && root.text == "" ? root.icon_spacing : 0px));
-            padding_top: root.icon_button ? 0px : root.padding_vertical;
-            padding_bottom: root.icon_button ? 0px : root.padding_vertical;
-            spacing: root.icon_spacing;
-            alignment: center;
-            // Compose's content row is `verticalAlignment = CenterVertically`:
-            // children keep their own heights and are centered, not stretched.
-            cross_axis_alignment: center;
+        Rectangle {
+            min-width: layout.min-width;
+            min-height: layout.min-height;
+            clip: true;
+            shape: root.target_shape;
+            shape-fit: ShapeFit.normalized;
+            border-top-left-radius: root.target_tl;
+            border-top-right-radius: root.target_tr;
+            border-bottom-right-radius: root.target_br;
+            border-bottom-left-radius: root.target_bl;
+            layout := HorizontalLayout {
+                // `padding_leading`/`padding_trailing` replace the whole side
+                // when set (button-group item slots); otherwise the base
+                // `padding_horizontal` plus the split button's `padding_start`/
+                // `padding_end` extras and the optical-centering offset apply.
+                padding_left: root.icon_button ? 0px : (root.padding_leading >= 0px ? root.padding_leading
+                    : root.padding_horizontal + root.padding_start + root.optical_offset);
+                // Compose's content is `Icon + Spacer(iconSpacing) + Text` — the
+                // spacer is emitted whenever an icon is present, so it still
+                // counts when the label is empty.
+                padding_right: root.icon_button ? 0px : (root.padding_trailing >= 0px ? root.padding_trailing
+                    : root.padding_horizontal + root.padding_end - root.optical_offset
+                        + (root.icon.width > 0 && root.text == "" ? root.icon_spacing : 0px));
+                padding_top: root.icon_button ? 0px : root.padding_vertical;
+                padding_bottom: root.icon_button ? 0px : root.padding_vertical;
+                spacing: root.icon_spacing;
+                alignment: center;
+                // Compose's content row is `verticalAlignment = CenterVertically`:
+                // children keep their own heights and are centered, not stretched.
+                cross_axis_alignment: center;
 
-            if root.icon.width > 0 && root.icon.height > 0 : Icon {
-                source: root.checked ? root.checked_icon : root.icon;
-                colorize: root.current_content_color;
-                width: root.icon_size;
-                height: self.width;
-                transform-rotation: root.animated_icon_rotation;
+                if root.icon.width > 0 && root.icon.height > 0 : Icon {
+                    source: root.checked ? root.checked_icon : root.icon;
+                    colorize: root.current_content_color;
+                    width: root.icon_size;
+                    height: self.width;
+                    transform-rotation: root.animated_icon_rotation;
+                }
+
+                if !root.icon_button && root.text != "" : MaterialText {
+                    text: root.text;
+                    style: root.label_style;
+                    color: root.current_content_color;
+                    // A button always sizes to its full label — `MaterialText`'s
+                    // default `elide` would report a collapsible min-width.
+                    overflow: clip;
+                    // Compose's `Text` stays `lineHeight`-tall inside the padded
+                    // content row; the layout would otherwise stretch the element
+                    // to the full row height.
+                    max_height: root.label_style.line_height;
+                    vertical_alignment: center;
+                }
+
+                @children
             }
-
-            if !root.icon_button && root.text != "" : MaterialText {
-                text: root.text;
-                style: root.label_style;
-                color: root.current_content_color;
-                // A button always sizes to its full label — `MaterialText`'s
-                // default `elide` would report a collapsible min-width.
-                overflow: clip;
-                // Compose's `Text` stays `lineHeight`-tall inside the padded
-                // content row; the layout would otherwise stretch the element
-                // to the full row height.
-                max_height: root.label_style.line_height;
-                vertical_alignment: center;
-            }
-
-            @children
         }
     }
 
@@ -344,6 +366,8 @@ export component MaterialButtonBase {
         background: transparent;
         border_width: root.current_border_width;
         border_color: root.current_border_color;
+        shape: root.target_shape;
+        shape-fit: ShapeFit.normalized;
         border_radius: root.target_radius;
         border-top-left-radius: root.target_tl;
         border-top-right-radius: root.target_tr;
@@ -360,6 +384,8 @@ export component MaterialButtonBase {
         width: container.width;
         height: container.height;
         background: root.current_content_color.with_alpha(StateTokens.pressed_state_layer_opacity);
+        shape: root.target_shape;
+        shape-fit: ShapeFit.normalized;
         border-top-left-radius: root.target_tl;
         border-top-right-radius: root.target_tr;
         border-bottom-right-radius: root.target_br;
@@ -375,5 +401,6 @@ export component MaterialButtonBase {
         border_radius: root.target_radius;
         corners: { top_left: root.target_tl, top_right: root.target_tr, bottom_right: root.target_br, bottom_left: root.target_bl };
         shaped_corners: root.shaped_corners;
+        shape: root.target_shape;
     }
 }

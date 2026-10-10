@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: MIT
 
 import { ElevationTokens } from "../styling/generated/material_elevation_tokens.slint";
+import { MaterialCornerRadii } from "./material_corner_radii.slint";
 import { MaterialButtonBase } from "./button_base.slint";
 import { IconButtonWidth, MaterialButtonMetrics, MaterialButtonShape, MaterialButtonSize } from "./button_metrics.slint";
 import { FilledTonalIconButtonTokens } from "../styling/generated/material_component_tokens.slint";
@@ -41,6 +42,30 @@ export component TonalIconButton {
 
     /// The disabled content color, including its alpha.
     in property <color> disabled_content_color: FilledTonalIconButtonTokens.disabled_color.with_alpha(FilledTonalIconButtonTokens.disabled_opacity);
+
+    /// A normalized resting path; empty uses the corner geometry.
+    in property <shape> resting_shape: root.shape;
+    /// The pressed path; defaults to the resting path.
+    in property <shape> pressed_shape: root.resting_shape;
+    /// The checked path; defaults to the resting path.
+    in property <shape> checked_shape: root.resting_shape;
+    /// Use independent corner radii instead of uniform radii.
+    in property <bool> shaped_corners;
+    /// Resting corner radii in logical pixels.
+    in property <MaterialCornerRadii> resting_corners: {
+        top_left: root.resting_radius, top_right: root.resting_radius,
+        bottom_right: root.resting_radius, bottom_left: root.resting_radius,
+    };
+    /// Pressed corner radii in logical pixels.
+    in property <MaterialCornerRadii> pressed_corners: {
+        top_left: root.pressed_radius, top_right: root.pressed_radius,
+        bottom_right: root.pressed_radius, bottom_left: root.pressed_radius,
+    };
+    /// Checked corner radii in logical pixels.
+    in property <MaterialCornerRadii> checked_corners: {
+        top_left: root.checked_radius, top_right: root.checked_radius,
+        bottom_right: root.checked_radius, bottom_left: root.checked_radius,
+    };
 
     /// The resting corner radius.
     in property <length> resting_radius: MaterialButtonMetrics.icon-resting-radius(root.size, root.button_shape, MaterialButtonMetrics.icon-container-height(root.size));
@@ -121,6 +146,13 @@ export component TonalIconButton {
         resting_radius: root.resting_radius;
         pressed_radius: root.pressed_radius;
         checked_radius: root.checked_radius;
+        resting_shape: root.resting_shape;
+        pressed_shape: root.pressed_shape;
+        checked_shape: root.checked_shape;
+        shaped_corners: root.shaped_corners;
+        resting_corners: root.resting_corners;
+        pressed_corners: root.pressed_corners;
+        checked_corners: root.checked_corners;
         min_button_width: 0px;
 
         container_color: root.checked ? root.checked_container_color : root.container_color;

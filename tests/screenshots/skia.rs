@@ -235,3 +235,148 @@ fn text_alignment_anchor_stays_fixed() {
         }
     }
 }
+
+#[test]
+fn material_custom_button_paths_clip_content_and_follow_state() {
+    init_skia();
+    let path =
+        std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("material_button_shapes.slint");
+    for name in [
+        "ToggleButton",
+        "FilledTonalToggleButton",
+        "ElevatedToggleButton",
+        "OutlinedToggleButton",
+        "IconToggleButton",
+        "FilledIconToggleButton",
+        "FilledTonalIconToggleButton",
+        "OutlinedIconToggleButton",
+    ] {
+        let padding = if name.contains("Icon") {
+            ""
+        } else {
+            "padding-leading: 0px; padding-trailing: 0px; padding-vertical: 0px;"
+        };
+        let source = format!(
+            r#"
+            import {{ {name}, MaterialPalette }} from "../../ui-libraries/material/src/material.slint";
+            export component TestCase inherits Window {{
+                width: 140px; height: 80px; background: white;
+                in property <bool> selected;
+                in property <bool> active: true;
+                in property <bool> press;
+                in property <bool> content;
+                in property <length> stroke;
+                in property <bool> corners;
+                property <shape> empty-shape;
+                init => {{ MaterialPalette.reduced-motion = true; }}
+                {name} {{
+                    x: 20px; y: 20px; width: 100px; height: 40px;
+                    enforce-touch-target: false;
+                    {padding}
+                    enabled: root.active; checked: root.selected; simulate-press: root.press;
+                    resting-shape: root.corners ? root.empty-shape : Shapes.path("M0.5 0L1 0.5L0.5 1L0 0.5Z");
+                    shaped-corners: root.corners;
+                    resting-corners: {{ top-left: 20px, top-right: 0px, bottom-right: 0px, bottom-left: 0px }};
+                    pressed-shape: Shapes.path("M0 0L1 0L1 1L0 1Z");
+                    checked-shape: Shapes.path("M0 0L1 0L0.5 1Z");
+                    container-color: blue; checked-container-color: green;
+                    disabled-container-color: yellow;
+                    content-color: transparent; checked-content-color: transparent;
+                    disabled-content-color: transparent;
+                    border-width: root.stroke; checked-border-width: root.stroke; border-color: black;
+                    elevation-default: 0px; elevation-hovered: 0px;
+                    elevation-focused: 0px; elevation-pressed: 0px; elevation-disabled: 0px;
+                    Rectangle {{ visible: root.content; width: 40px; height: 40px; background: red; }}
+                }}
+            }}
+        "#
+        );
+        let compiler = slint_interpreter::Compiler::default();
+        let result =
+            crate::interpreter::poll_once(compiler.build_from_source(source, path.clone()))
+                .unwrap();
+        assert!(!result.has_errors(), "{:?}", result.diagnostics().collect::<Vec<_>>());
+        let component = result.components().last().unwrap().create().unwrap();
+        component.show().unwrap();
+        let snapshot = || component.window().take_snapshot().unwrap();
+        let pixel = |image: &i_slint_core::graphics::SharedPixelBuffer<
+            i_slint_core::graphics::Rgba8Pixel,
+        >,
+                     x,
+                     y| { image.as_slice()[y * image.width() as usize + x] };
+        let rest = snapshot();
+        assert_eq!(pixel(&rest, 70, 40).b, 255, "{name}: resting color");
+        assert_eq!(pixel(&rest, 53, 23).r, 255, "{name}: diamond corner");
+        component.set_property("content", true.into()).unwrap();
+        let content = snapshot();
+        assert_eq!(pixel(&content, 70, 40).r, 255, "{name}: custom content");
+        assert_eq!(pixel(&content, 53, 23).g, 255, "{name}: clipped content");
+        component.set_property("content", false.into()).unwrap();
+        component.set_property("selected", true.into()).unwrap();
+        let selected = snapshot();
+        assert_eq!(pixel(&selected, 70, 40).g, 128, "{name}: checked color");
+        assert_eq!(pixel(&selected, 53, 23).b, 0, "{name}: checked path");
+        component.set_property("press", true.into()).unwrap();
+        let pressed = snapshot();
+        assert_eq!(pixel(&pressed, 53, 57).b, 0, "{name}: pressed path wins over checked");
+        component.set_property("press", false.into()).unwrap();
+        component.set_property("active", false.into()).unwrap();
+        let disabled = snapshot();
+        assert_eq!(pixel(&disabled, 70, 40).r, 255, "{name}: disabled color");
+        assert_eq!(pixel(&disabled, 70, 40).g, 255, "{name}: disabled color");
+        component.set_property("active", true.into()).unwrap();
+        component.set_property("selected", false.into()).unwrap();
+        component.set_property("stroke", 3.0.into()).unwrap();
+        let bordered = snapshot();
+        assert!(
+            bordered.as_slice().iter().any(|p| p.r == 0 && p.g == 0 && p.b == 0),
+            "{name}: custom border"
+        );
+        assert_eq!(pixel(&bordered, 53, 23).g, 255, "{name}: border follows the path");
+        component.set_property("stroke", 0.0.into()).unwrap();
+        let unfocused = snapshot();
+        component
+            .window()
+            .dispatch_event(i_slint_core::platform::WindowEvent::KeyPressed { text: "\t".into() });
+        component
+            .window()
+            .dispatch_event(i_slint_core::platform::WindowEvent::KeyReleased { text: "\t".into() });
+        let focused = snapshot();
+        assert_ne!(focused.as_bytes(), unfocused.as_bytes(), "{name}: keyboard focus ring");
+        assert_eq!(pixel(&focused, 70, 40).b, 255, "{name}: focus ring preserves the center");
+        assert_eq!(pixel(&focused, 53, 23).g, 255, "{name}: focus ring follows the path");
+        component.hide().unwrap();
+        let corners = result.components().last().unwrap().create().unwrap();
+        corners.set_property("corners", true.into()).unwrap();
+        corners.show().unwrap();
+        let corner_image = corners.window().take_snapshot().unwrap();
+        let left = if name.contains("Icon") { 50 } else { 20 };
+        let right = if name.contains("Icon") { 90 } else { 120 };
+        assert_eq!(pixel(&corner_image, left + 3, 23).g, 255, "{name}: rounded top-left");
+        assert_eq!(pixel(&corner_image, right - 3, 23).r, 0, "{name}: square top-right");
+        if let Some(directory) = std::env::var_os("SLINT_MATERIAL_SHAPE_ARTIFACTS") {
+            let directory = std::path::PathBuf::from(directory);
+            std::fs::create_dir_all(&directory).unwrap();
+            for (state, image) in [
+                ("rest", &rest),
+                ("content", &content),
+                ("selected", &selected),
+                ("pressed", &pressed),
+                ("disabled", &disabled),
+                ("border", &bordered),
+                ("focus", &focused),
+                ("corners", &corner_image),
+            ] {
+                image::save_buffer(
+                    directory.join(format!("{name}-{state}.png")),
+                    image.as_bytes(),
+                    image.width(),
+                    image.height(),
+                    image::ColorType::Rgba8,
+                )
+                .unwrap();
+            }
+        }
+        corners.hide().unwrap();
+    }
+}

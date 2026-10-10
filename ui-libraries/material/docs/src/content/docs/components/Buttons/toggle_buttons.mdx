@@ -51,6 +51,17 @@ Use `disabled-container-color` and `disabled-content-color` for disabled control
 The standard icon variant also retains its `has-error` and `inverse` color modes.
 
 Set `resting-radius`, `pressed-radius`, and `checked-radius` to override uniform corners.
+For independent corners, set `shaped-corners: true` and provide `resting-corners`, `pressed-corners`, and `checked-corners`.
+Each structure has `top-left`, `top-right`, `bottom-right`, and `bottom-left` lengths.
+Unspecified corner structures use the corresponding uniform radius.
+
+Set `resting-shape`, `pressed-shape`, and `checked-shape` to use arbitrary paths in normalized `(0, 0)` to `(1, 1)` coordinates.
+The pressed and checked paths default to the resting path.
+The element's `shape` property supplies the default resting path.
+Empty paths use the corner geometry.
+Paths control the container, shadows, content clipping, ripple, borders, focus ring, and pointer hit testing.
+Corner geometry animates with the expressive spring; arbitrary paths switch immediately, following the pinned Compose behavior.
+
 Set `elevation-default`, `elevation-pressed`, `elevation-hovered`, `elevation-focused`, and `elevation-disabled` in logical pixels.
 These accept fractional values such as `2.5px`.
 Use `border-width`, `checked-border-width`, `border-color`, and `disabled-border-color` to customize borders.
@@ -60,6 +71,6 @@ Place custom children inside any variant to add content to its centered row.
 Text and icon properties can be combined with custom children.
 The container grows to fit content and padding while preserving the minimum touch target.
 
-The pinned Compose API audit remains open for arbitrary shapes, inherited content styling, and complete custom-parameter parity checks.
+The pinned Compose API audit remains open for inherited content styling, corner-transition interruption, and complete custom-parameter parity checks.
 The inventory tracks these components as partial until the remaining API and parity checks pass.
 The [button completion checklist](https://github.com/jethac/slint/blob/preview/material-fieldnotes/ui-libraries/material/COMPLETION_BUTTONS.md) records the remaining API and verification work.

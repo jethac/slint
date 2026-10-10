@@ -188,6 +188,8 @@ export component FocusRing {
     in property <MaterialCornerRadii> corners;
     in property <bool> shaped_corners;
     property <MaterialFocusRing> ring: MaterialFocusIndicator.ring;
+    property <shape> empty_shape;
+    property <bool> custom_shape: root.shape != root.empty_shape;
     property <bool> has_radii: root.corner_radii.full || root.corner_radii.top_left > 0px ||
         root.corner_radii.top_right > 0px || root.corner_radii.bottom_right > 0px ||
         root.corner_radii.bottom_left > 0px;
@@ -213,6 +215,7 @@ export component FocusRing {
     // `inner_stroke_inset..+inner_stroke_width` and the outer
     // `outer_stroke_inset..+outer_stroke_width` on top of it.
     inner := Rectangle {
+        visible: !root.custom_shape;
         property <length> inset: root.ring.inner_stroke_inset;
         x: inset;
         y: inset;
@@ -231,6 +234,7 @@ export component FocusRing {
     }
 
     Rectangle {
+        visible: !root.custom_shape;
         property <length> inset: root.ring.outer_stroke_inset;
         x: inset;
         y: inset;
@@ -246,6 +250,27 @@ export component FocusRing {
         border_color: MaterialPalette.secondary;
         shape: root.has_radii ? root.stroke_shape(self.width, self.height, inset) : root.no_shape;
         shape-fit: ShapeFit.fill;
+    }
+
+    // The opaque outer band covers the inner band's leading inset.
+    // Keeping the original path avoids scaling concave outlines at the inset.
+    if root.custom_shape : Rectangle {
+        width: 100%;
+        height: 100%;
+        shape: root.shape;
+        shape-fit: ShapeFit.normalized;
+        background: transparent;
+        border-width: root.ring.inner_stroke_inset + root.ring.inner_stroke_width;
+        border-color: MaterialPalette.on_secondary;
+        Rectangle {
+            width: 100%;
+            height: 100%;
+            shape: root.shape;
+            shape-fit: ShapeFit.normalized;
+            background: transparent;
+            border-width: root.ring.outer_stroke_width;
+            border-color: MaterialPalette.secondary;
+        }
     }
 }
 

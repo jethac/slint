@@ -39,3 +39,21 @@ export component ExtendedCase inherits Window {
         clicked => { root.clicks += 1; }
     }
 }
+
+export component ShapeCase inherits Window {
+    width: 200px;
+    height: 480px;
+    out property <int> clicks;
+    property <shape> diamond: Shapes.path("M0.5 0L1 0.5L0.5 1L0 0.5Z");
+
+    VerticalLayout {
+        ToggleButton { text: "Filled"; resting-shape: root.diamond; clicked => { root.clicks += 1; } }
+        FilledTonalToggleButton { text: "Tonal"; resting-shape: root.diamond; clicked => { root.clicks += 1; } }
+        ElevatedToggleButton { text: "Elevated"; resting-shape: root.diamond; clicked => { root.clicks += 1; } }
+        OutlinedToggleButton { text: "Outlined"; resting-shape: root.diamond; clicked => { root.clicks += 1; } }
+        IconToggleButton { tooltip: "Icon"; resting-shape: root.diamond; clicked => { root.clicks += 1; } }
+        FilledIconToggleButton { tooltip: "Filled icon"; resting-shape: root.diamond; clicked => { root.clicks += 1; } }
+        FilledTonalIconToggleButton { tooltip: "Tonal icon"; resting-shape: root.diamond; clicked => { root.clicks += 1; } }
+        OutlinedIconToggleButton { tooltip: "Outlined icon"; resting-shape: root.diamond; clicked => { root.clicks += 1; } }
+    }
+}
