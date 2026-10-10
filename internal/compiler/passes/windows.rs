@@ -38,6 +38,7 @@ pub fn ensure_window(
     // the old_root becomes the Window
     let mut win_elem_mut = win_elem.borrow_mut();
     let new_root = Element {
+        inherited_requests: Default::default(),
         id: std::mem::replace(&mut win_elem_mut.id, "root_window".into()),
         base_type: std::mem::replace(&mut win_elem_mut.base_type, window_type),
         bindings: Default::default(),

@@ -380,3 +380,90 @@ fn material_custom_button_paths_clip_content_and_follow_state() {
         corners.hide().unwrap();
     }
 }
+
+#[test]
+fn material_button_children_inherit_text_and_icon_style() {
+    init_skia();
+    let path =
+        std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("material_content_style.slint");
+    for name in [
+        "ToggleButton",
+        "FilledTonalToggleButton",
+        "ElevatedToggleButton",
+        "OutlinedToggleButton",
+        "IconToggleButton",
+        "FilledIconToggleButton",
+        "FilledTonalIconToggleButton",
+        "OutlinedIconToggleButton",
+    ] {
+        let expected_color = "root.active ? (root.selected ? #007000 : #d00000) : #777777";
+        let expected_style = if name.contains("Icon") {
+            "MaterialTypography.body_large"
+        } else {
+            "MaterialTypography.label_large"
+        };
+        let mut definitions = Vec::new();
+        for explicit in [false, true] {
+            let text_style = if explicit {
+                format!("style: {expected_style}; color: {expected_color};")
+            } else {
+                String::new()
+            };
+            let icon_style =
+                if explicit { format!("colorize: {expected_color};") } else { String::new() };
+            let source = format!(
+                r#"
+                import {{ {name}, MaterialText, MaterialTypography, MaterialPalette, Icon, Icons }}
+                    from "../../ui-libraries/material/src/material.slint";
+                export component TestCase inherits Window {{
+                    width: 220px; height: 70px; background: white;
+                    in property <bool> selected;
+                    in property <bool> active: true;
+                    init => {{ MaterialPalette.reduced-motion = true; }}
+                    {name} {{
+                        x: 10px; y: 10px; width: 180px; height: 48px;
+                        enabled: root.active; checked: root.selected;
+                        container-color: transparent; checked-container-color: transparent;
+                        disabled-container-color: transparent;
+                        content-color: #d00000; checked-content-color: #007000; disabled-content-color: #777777;
+                        elevation-default: 0px; elevation-hovered: 0px; elevation-focused: 0px;
+                        elevation-pressed: 0px; elevation-disabled: 0px;
+                        border-width: 0px; checked-border-width: 0px;
+                        MaterialText {{ text: "Ag"; {text_style} }}
+                        Icon {{ source: Icons.add; {icon_style} }}
+                    }}
+                }}
+            "#
+            );
+            let compiler = slint_interpreter::Compiler::default();
+            let result =
+                crate::interpreter::poll_once(compiler.build_from_source(source, path.clone()))
+                    .unwrap();
+            assert!(!result.has_errors(), "{:?}", result.diagnostics().collect::<Vec<_>>());
+            definitions.push(result.components().last().unwrap());
+        }
+        let actual = definitions[0].create().unwrap();
+        let expected = definitions[1].create().unwrap();
+        actual.show().unwrap();
+        expected.show().unwrap();
+        for (active, selected) in [(true, false), (true, true), (false, false), (false, true)] {
+            for component in [&actual, &expected] {
+                component.set_property("active", active.into()).unwrap();
+                component.set_property("selected", selected.into()).unwrap();
+            }
+            let image = actual.window().take_snapshot().unwrap();
+            let reference = expected.window().take_snapshot().unwrap();
+            assert!(
+                image.as_slice().iter().any(|p| p.r < 200 || p.g < 200 || p.b < 200),
+                "{name}: content must render"
+            );
+            assert_eq!(
+                image.as_bytes(),
+                reference.as_bytes(),
+                "{name}: active={active}, selected={selected}"
+            );
+        }
+        actual.hide().unwrap();
+        expected.hide().unwrap();
+    }
+}

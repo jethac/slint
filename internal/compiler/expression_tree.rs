@@ -205,6 +205,8 @@ pub enum BuiltinFunction {
 /// for the generator. Macro however can do some transformation on their argument.
 ///
 pub enum BuiltinMacroFunction {
+    /// Read the nearest ancestor property, with a local fallback.
+    Inherit,
     /// Transform `min(a, b, c, ..., z)` into a series of conditional expression and comparisons
     Min,
     /// Transform `max(a, b, c, ..., z)` into  a series of conditional expression and comparisons

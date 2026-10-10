@@ -1,0 +1,89 @@
+// Copyright © SixtyFPS GmbH <info@slint.dev>
+// SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0
+
+component Consumer inherits Rectangle {
+    in property <int> fallback: 5;
+    in-out property <int> value: inherit("tone", root.fallback);
+    width: root.value * 1px;
+    height: 10px;
+}
+
+component Wrapper inherits Rectangle {
+    out property <int> value: child.value;
+    child := Consumer {}
+}
+
+struct Style { accent: color, font-size: length }
+
+component StyledConsumer inherits Rectangle {
+    in-out property <Style> appearance: inherit("local-style", { accent: blue, font-size: 15px });
+    background: root.appearance.accent;
+}
+
+component Numbers inherits Rectangle {
+    in-out property <[int]> values: inherit("numbers", []);
+}
+
+export component TestCase inherits Window {
+    width: 400px;
+    height: 200px;
+    in-out property <int> source: 42;
+    out property <int> first-value: first.value;
+    out property <int> second-value: second.value;
+    out property <int> nested-value: nested-child.value;
+    out property <int> local-fallback: local.value;
+    out property <length> repeated-width: repeated.min-width;
+    out property <length> styled-size: styled.appearance.font-size;
+    out property <color> styled-color: styled.appearance.accent;
+    out property <int> number-total: numbers.values[0] + numbers.values[1];
+
+    Rectangle {
+        in property <int> tone: root.source;
+        first := Wrapper {}
+        Rectangle {
+            in property <int> tone: inherit("tone", 1) + 3;
+            nested-child := Wrapper {}
+        }
+        repeated := HorizontalLayout {
+            spacing: 0px;
+            for n in [1, 2]: Consumer { fallback: n; }
+        }
+    }
+    Rectangle {
+        in property <int> tone: 13;
+        second := Wrapper {}
+    }
+    plain := Wrapper {}
+    local := Consumer { fallback: 17; }
+    explicit := Consumer { value: 99; }
+    Rectangle {
+        in property <Style> local-style: { accent: #123456, font-size: root.source * 1px };
+        styled := StyledConsumer {}
+        in property <[int]> numbers: [root.source, root.source + 1];
+        numbers := Numbers {}
+    }
+    empty-numbers := Numbers {}
+
+    out property <bool> test: first-value == root.source && second-value == 13
+        && nested-value == root.source + 3 && plain.value == 5 && local-fallback == 17
+        && explicit.value == 99 && repeated-width == root.source * 2px
+        && styled-size == root.source * 1px && styled-color == #123456
+        && number-total == root.source * 2 + 1 && empty-numbers.values.length == 0;
+}
+
+/*
+```rust
+let instance = TestCase::new().unwrap();
+assert!(instance.get_test());
+instance.set_source(21);
+assert_eq!(instance.get_first_value(), 21);
+assert_eq!(instance.get_second_value(), 13);
+assert_eq!(instance.get_nested_value(), 24);
+assert_eq!(instance.get_local_fallback(), 17);
+assert_eq!(instance.get_repeated_width(), 42.);
+assert_eq!(instance.get_styled_size(), 21.);
+assert_eq!(instance.get_styled_color(), slint::Color::from_rgb_u8(0x12, 0x34, 0x56));
+assert_eq!(instance.get_number_total(), 43);
+assert!(instance.get_test());
+```
+*/

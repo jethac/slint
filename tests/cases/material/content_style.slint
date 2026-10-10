@@ -1,0 +1,50 @@
+// Copyright © SixtyFPS GmbH <info@slint.dev>
+// SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0
+
+// Native drivers embed the material library's variable fonts.
+//ignore: rust,cpp,js,pyi
+
+import { MaterialText, MaterialTypography, ProvideTextStyle, ProvideContentColor, ToggleButton, FilledIconToggleButton, Icon }
+    from "../../../ui-libraries/material/src/material.slint";
+
+export component TestCase inherits Window {
+    width: 300px;
+    height: 300px;
+    plain := MaterialText { text: "Plain"; }
+    ProvideTextStyle {
+        font-size: 23px;
+        line-height: 30px;
+        font-weight: 600;
+        tracking: 3px;
+        ProvideContentColor {
+            content-color: red;
+            inherited := MaterialText { text: "Inherited"; }
+            explicit := MaterialText { text: "Explicit"; style: MaterialTypography.label_small; color: blue; }
+            icon := Icon {}
+            FilledIconToggleButton {
+                checked: true;
+                checked-content-color: green;
+                icon-child := MaterialText { text: "Icon child"; }
+            }
+            ProvideTextStyle {
+                font-weight: 400;
+                nested := MaterialText { text: "Nested"; }
+            }
+        }
+    }
+    ToggleButton {
+        checked: true;
+        checked-content-color: green;
+        child := MaterialText { text: "Button child"; }
+    }
+    FilledIconToggleButton { plain-icon-child := MaterialText { text: "Plain icon child"; } }
+
+    out property <bool> test: plain.style == MaterialTypography.body_large
+        && inherited.font-size == 23px && inherited.font-weight == 600
+        && inherited.letter-spacing == 3px && inherited.line-height == 30px && inherited.color == red
+        && explicit.style == MaterialTypography.label_small && explicit.color == blue
+        && nested.font-size == 23px && nested.font-weight == 400 && nested.color == red
+        && icon.colorize == red && child.color == green && child.style == MaterialTypography.label_large
+        && icon-child.font-size == 23px && icon-child.font-weight == 600 && icon-child.color == green
+        && plain-icon-child.style == MaterialTypography.body_large;
+}

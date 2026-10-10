@@ -783,6 +783,8 @@ impl Display for PropertyVisibility {
 
 #[derive(Clone, Debug, Default)]
 pub struct PropertyDeclaration {
+    /// Ancestor property requested by an `inherit()` expression.
+    pub inherited_context: Option<SmolStr>,
     pub property_type: Type,
     pub node: Option<SyntaxNode>,
     /// Tells if getter and setter will be added to expose in the native language API
@@ -1153,6 +1155,7 @@ impl ElementDebugInfo {
 /// An Element is an instantiation of a Component
 #[derive(Default)]
 pub struct Element {
+    pub inherited_requests: RefCell<Vec<crate::passes::inherited_context::InheritanceRequest>>,
     /// The id as named in the original .slint file.
     ///
     /// Note that it can only be used for lookup before inlining.

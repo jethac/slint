@@ -1,0 +1,12 @@
+// Copyright © SixtyFPS GmbH <info@slint.dev>
+// SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0
+
+export component TestCase inherits Window {
+    in property <string> name: "tone";
+    property <int> missing: inherit("tone");
+//                          >     <error{inherit expects a literal property name and a fallback value}
+    property <int> dynamic: inherit(root.name, 1);
+//                          >     <error{inherit expects a literal property name and a fallback value}
+    property <int> empty: inherit("", 1);
+//                        >     <error{The inherited property name cannot be empty}
+}

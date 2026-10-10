@@ -25,7 +25,7 @@ export global TextMetrics {
 export component MaterialText inherits Text {
     // Compose provides `LocalTextStyle = MaterialTheme.typography.bodyLarge`
     // from `MaterialTheme.kt`, so bare `MaterialText` uses `body_large`.
-    in property <MaterialTypeStyle> style: MaterialTypography.body_large;
+    in property <MaterialTypeStyle> style: inherit("text-style", MaterialTypography.body_large);
 
     font_family: root.style.font_family;
     font_size: root.style.font_size;
@@ -36,6 +36,6 @@ export component MaterialText inherits Text {
     // tokens, so `opsz` stays at the font's default instead of tracking the
     // size. Keep parity.
     font_optical_sizing: FontOpticalSizing.none;
-    color: MaterialPalette.on_background;
+    color: inherit("content-color", MaterialPalette.on_background);
     // Compose `Text` defaults to `TextOverflow.Clip`; don't force `elide`.
 }

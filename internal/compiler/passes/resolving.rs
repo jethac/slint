@@ -448,6 +448,7 @@ pub fn resolve_expressions(
             },
         );
     }
+    crate::passes::inherited_context::materialize_requests(doc);
 }
 
 /// To be used in [`Expression::from_qualified_name_node`] to specify if the lookup is performed
@@ -1931,6 +1932,15 @@ impl Expression {
         let function = match function {
             LookupResultCallable::Callable(c) => c,
             LookupResultCallable::Macro(mac) => {
+                if matches!(mac, BuiltinMacroFunction::Inherit) {
+                    let expected = [Type::String, ctx.expected_type.clone()];
+                    arguments.extend(convert_args(ctx, &expected));
+                    return crate::passes::inherited_context::lower_inherit(
+                        arguments,
+                        &source_location,
+                        ctx,
+                    );
+                }
                 arguments.extend(convert_args(ctx, &[]));
                 return crate::builtin_macros::lower_macro(
                     mac,

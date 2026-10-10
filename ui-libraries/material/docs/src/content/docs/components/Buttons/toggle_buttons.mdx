@@ -70,7 +70,16 @@ The default checked border width is zero.
 Place custom children inside any variant to add content to its centered row.
 Text and icon properties can be combined with custom children.
 The container grows to fit content and padding while preserving the minimum touch target.
+Custom `MaterialText` children inherit a text button's label style and current content color.
+Icon variants preserve the enclosing text style and provide their current content color.
+Custom `Icon` children inherit its current content color.
+Explicit `style`, font properties, `color`, or `colorize` bindings override these defaults.
+The inherited color follows checked and disabled states.
 
-The pinned Compose API audit remains open for inherited content styling, corner-transition interruption, and complete custom-parameter parity checks.
+Use `ProvideTextStyle` to override typography within a subtree.
+Its `value` accepts a complete `MaterialTypeStyle`; individual font properties merge with the enclosing style.
+Use `ProvideContentColor` to override the subtree's `content-color`.
+
+The pinned Compose API audit remains open for corner-transition interruption and complete custom-parameter parity checks.
 The inventory tracks these components as partial until the remaining API and parity checks pass.
 The [button completion checklist](https://github.com/jethac/slint/blob/preview/material-fieldnotes/ui-libraries/material/COMPLETION_BUTTONS.md) records the remaining API and verification work.

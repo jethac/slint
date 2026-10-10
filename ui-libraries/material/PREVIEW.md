@@ -109,11 +109,20 @@ The full interpreter suite passes 959 tests; its log is `target/material-preview
 
 The reviewed spike inventory contained 61 done, 72 partial, and 17 missing entries.
 The completion audit corrected extension function names that had been recorded as receiver types.
-The current inventory contains 60 done, 81 partial, and 8 missing entries.
+The current inventory contains 60 done, 82 partial, and 7 missing entries.
 Affected entries retain their implementation notes and remain partial until their API and behavior are audited.
 Entries include component variants and Compose functions, so these counts do not represent distinct Slint widgets.
-The missing entries include carousel and wavy progress families, drawer-sheet APIs, and text-style helpers.
+The missing entries include carousel and wavy progress families and drawer-sheet APIs.
 Eight named toggle APIs are implemented and remain partial while custom styling and renderer verification continue.
+
+Scoped typography and content colors now pass through reusable components and repeaters.
+`ProvideTextStyle` merges font fields with the enclosing style; `ProvideContentColor` supplies descendant text and icon colors.
+Text buttons provide label typography, while icon buttons preserve their enclosing text style.
+Explicit child bindings override these defaults, and context updates remain reactive.
+All 963 interpreter tests, the native inheritance regression, and the full compiler suite pass.
+Eight Skia checks pass, including exact inherited-child render comparisons and required Compose references for existing toggle scenes.
+Logs use the `target/material-preview/inherited-context-` prefix.
+Full Compose TextStyle fields, adaptive behavior, and provider reference scenes remain required completion work.
 
 The harness contains 264 scenes, including 79 deliberate negative cases and 53 cases with expected-failure declarations.
 An expected failure records a known difference; it does not establish visual parity.

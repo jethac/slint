@@ -2001,6 +2001,7 @@ fn lower_dialog_layout(
                                     .property_declarations
                                     .entry(format_smolstr!("{}-clicked", kind))
                                     .or_insert_with(|| PropertyDeclaration {
+                                        inherited_context: None,
                                         property_type: clicked_ty,
                                         node: None,
                                         expose_in_public_api: true,

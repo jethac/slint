@@ -24,5 +24,5 @@ import { SmallIconButtonTokens } from "../styling/generated/material_component_t
 export component Icon inherits Image {
     width: self.source.width <= 0 ? SmallIconButtonTokens.icon_size : self.source.width * 1px;
     height: self.source.height <= 0 ? SmallIconButtonTokens.icon_size : self.source.height * 1px;
-    colorize: MaterialPalette.on_background;
+    colorize: inherit("content-color", MaterialPalette.on_background);
 }

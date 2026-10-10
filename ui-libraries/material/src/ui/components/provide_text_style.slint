@@ -1,0 +1,28 @@
+// Copyright © SixtyFPS GmbH <info@slint.dev>
+// SPDX-License-Identifier: MIT
+
+import { MaterialTypography, MaterialTypeStyle } from "../styling/material_typography.slint";
+import { MaterialPalette } from "../styling/material_palette.slint";
+
+/// Provide typography to descendant MaterialText controls.
+/// Override individual fields to merge them with the enclosing style.
+export component ProvideTextStyle {
+    in property <MaterialTypeStyle> value: inherit("text-style", MaterialTypography.body_large);
+    in property <string> font-family: root.value.font_family;
+    in property <int> font-weight: root.value.font_weight;
+    in property <length> font-size: root.value.font_size;
+    in property <length> line-height: root.value.line_height;
+    in property <length> tracking: root.value.tracking;
+    out property <MaterialTypeStyle> text-style: {
+        font_family: root.font-family, font_weight: root.font-weight,
+        font_size: root.font-size, line_height: root.line-height, tracking: root.tracking,
+    };
+
+    @children
+}
+
+/// Provide a content color to descendant MaterialText and Icon controls.
+export component ProvideContentColor {
+    in property <color> content-color: inherit("content-color", MaterialPalette.on_background);
+    @children
+}

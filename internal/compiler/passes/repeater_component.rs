@@ -38,6 +38,7 @@ fn create_repeater_components(component: &Rc<Component>) {
 
         let repeated_component = Rc::new(Component {
             root_element: Rc::new(RefCell::new(Element {
+                inherited_requests: Default::default(),
                 id: original_elem.id.clone(),
                 base_type: std::mem::take(&mut original_elem.base_type),
                 bindings: std::mem::take(&mut original_elem.bindings),

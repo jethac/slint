@@ -22,7 +22,35 @@ export component Example inherits Window {
 ```
 </CodeSnippetMD>
 
-`MaterialText` renders text in one of the Material 3 type-scale roles. It inherits the `Text` element, so every `Text` property and callback applies; the `style` property selects the role — font family, size, weight, tracking, and line height come from the generated type tokens. With no `style` it renders `body_large`, matching Compose's `LocalTextStyle` default.
+`MaterialText` renders text in one of the Material 3 type-scale roles.
+It inherits the `Text` element, so every `Text` property and callback applies.
+The `style` property selects the font family, size, weight, tracking, and line height.
+Its default comes from the enclosing text style, falling back to `body_large`.
+The default color comes from the enclosing content color, falling back to `MaterialPalette.on_background`.
+
+## Scoped styling
+
+Use `ProvideTextStyle` to supply typography to descendant `MaterialText` components.
+Set `value` to a `MaterialTypeStyle`, or override individual fields to merge with the enclosing style.
+Use `ProvideContentColor` to supply color to descendant `MaterialText` and `Icon` components.
+Both providers work through reusable components and repeaters, and their updates remain reactive.
+Explicit child bindings override inherited defaults.
+
+```slint
+import { MaterialText, MaterialTypography, ProvideTextStyle, ProvideContentColor } from "@material";
+
+export component Example inherits Window {
+    width: 300px;
+    height: 100px;
+    ProvideTextStyle {
+        value: MaterialTypography.title_medium;
+        ProvideContentColor {
+            content-color: #6750a4;
+            MaterialText { text: "Scoped typography and color"; }
+        }
+    }
+}
+```
 
 <CodeSnippetMD imagePath="/src/assets/generated/text-roles.png" scale="3" imageWidth="300" imageHeight="200" imageAlt="" needsBackground="true">
 ```slint
@@ -54,7 +82,9 @@ export component Example inherits Window {
 
 ### style
 <SlintProperty propName="style" typeName="struct" structName="MaterialTypeStyle" defaultValue="MaterialTypography.body_large">
-The type-scale role to render with, taken from `MaterialTypography`. Every role in the Material 3 type scale is available — `display_large/medium/small`, `headline_large/medium/small`, `title_large/medium/small`, `body_large/medium/small`, `label_large/medium/small` — and each has an `*_emphasized` variant that uses the emphasized (medium-weight) tokens.
+The type-scale role to render with, taken from `MaterialTypography`.
+The default inherits the enclosing text style and falls back to `MaterialTypography.body_large`.
+Every role in the Material 3 type scale is available — `display_large/medium/small`, `headline_large/medium/small`, `title_large/medium/small`, `body_large/medium/small`, `label_large/medium/small` — and each has an `*_emphasized` variant that uses the emphasized (medium-weight) tokens.
 
 ```slint "style: MaterialTypography.headline_medium;"
 MaterialText {
@@ -66,7 +96,8 @@ MaterialText {
 
 ### color
 <SlintProperty propName="color" typeName="brush" defaultValue="MaterialPalette.on_background">
-The text color. Defaults to `MaterialPalette.on_background`; set it explicitly to a palette role such as `MaterialPalette.primary` or `MaterialPalette.on_surface_variant` for colored or secondary text.
+The text color inherits the enclosing content color and falls back to `MaterialPalette.on_background`.
+Set it explicitly to a palette role such as `MaterialPalette.primary` or `MaterialPalette.on_surface_variant` for colored or secondary text.
 </SlintProperty>
 
 All other `Text` properties — `font-family`, `font-size`, `font-weight`, `letter-spacing`, `line-height`, `wrap`, `overflow`, `max-lines`, `min-lines`, `font-underline`, `font-strikeout`, `horizontal-alignment`, `vertical-alignment` — are inherited from `Text` and can be set directly.

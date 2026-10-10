@@ -23,6 +23,7 @@ pub fn lower_macro(
     symbol_counters: &SymbolCounters,
 ) -> Expression {
     match mac {
+        BuiltinMacroFunction::Inherit => unreachable!("inherit is lowered with its element scope"),
         BuiltinMacroFunction::Min => {
             min_max_macro(n, MinMaxOp::Min, sub_expr.collect(), diag, symbol_counters)
         }

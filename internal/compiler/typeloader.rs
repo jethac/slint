@@ -541,6 +541,7 @@ impl Snapshotter {
             .iter()
             .map(|(k, v)| {
                 let decl = object_tree::PropertyDeclaration {
+                    inherited_context: v.inherited_context.clone(),
                     property_type: v.property_type.clone(),
                     node: v.node.clone(),
                     expose_in_public_api: v.expose_in_public_api,

@@ -461,7 +461,7 @@ States: active, focused, hovered, pressed, inactive
 
 | Component | Source | Status | Issues | Needs | Notes |
 |---|---|---|---|---|---|
-| ProvideTextStyle | Text.kt | missing | #7 | variable fonts (#7), adaptive (#12) | - |
+| ProvideTextStyle | Text.kt | partial | #7 | variable fonts (#7), adaptive (#12) | slint component: ProvideTextStyle; scoped reactive typography through reusable components and repeaters; individual font fields merge with enclosing MaterialTypeStyle; explicit child bindings take precedence; interpreter and native Rust regressions; pending: full Compose TextStyle field mapping, adaptive behavior, and pinned Compose comparisons |
 | Text | Text.kt | partial | #11 | variable fonts (#7), adaptive (#12) | slint component: MaterialText |
 
 ### Text fields

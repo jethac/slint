@@ -587,6 +587,7 @@ fn duplicate_element_with_mapping(
 ) -> ElementRc {
     let elem = element.borrow();
     let new = Rc::new(RefCell::new(Element {
+        inherited_requests: Default::default(),
         base_type: elem.base_type.clone(),
         id: elem.id.clone(),
         is_injected_wrapper_element: elem.is_injected_wrapper_element,

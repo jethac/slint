@@ -30,6 +30,36 @@ export component Example inherits Window {
 }
 ```
 
+## inherit(property-name, fallback)
+
+Read a property from the nearest ancestor element that defines it.
+The property name must be a string literal.
+The fallback determines the result type and applies when no ancestor provides a value.
+Ancestor values must convert to that type.
+Changes to the ancestor property update bindings that consume it.
+
+The lookup starts at the parent of the element containing the expression.
+It follows the rendered component hierarchy, including child slots, reusable components, and repeaters.
+Each component instance receives its enclosing context independently.
+Explicit bindings override inherited defaults through normal property precedence.
+
+Unlike CSS's standalone `inherit` value, this function names the property and supplies a typed fallback.
+Use it for scoped styling or other reactive context values.
+Global components have no ancestor scope and cannot call `inherit`.
+
+```slint
+component Label inherits Text {
+    color: inherit("content-color", #000000);
+}
+
+export component Example inherits Window {
+    Rectangle {
+        in property <color> content-color: #6750a4;
+        Label { text: "Inherited color"; }
+    }
+}
+```
+
 ## debug(...)
 
 The debug function can take one or multiple values as arguments, prints them, and returns nothing.

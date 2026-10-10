@@ -13,7 +13,9 @@ All sixteen component entries remain partial until their API and verification ch
 
 The pinned [ToggleButton.kt](https://github.com/androidx/androidx/blob/23327507f7fc7d5b19d65fec4b090f60c970079b/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/ToggleButton.kt) exposes colors, shapes, elevation, border, content padding, and composable content.
 The Slint styles expose state colors, uniform and per-corner radii, arbitrary paths, physical elevation, borders, padding, and child content.
-Inherited child styling still requires implementation and verification.
+MaterialText and Icon children inherit reactive content colors through reusable components and repeaters.
+Text buttons provide label typography; icon buttons preserve the enclosing text style.
+Explicit child bindings override inherited defaults.
 The pinned [IconButton.kt](https://github.com/androidx/androidx/blob/23327507f7fc7d5b19d65fec4b090f60c970079b/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/IconButton.kt) also has static-shape and interaction-shape overloads.
 The path overrides cover static and interaction paths; corner radii retain the pinned spring behavior.
 The pinned `shapeByInteraction` switches arbitrary paths immediately and animates corner-based geometry.
@@ -35,7 +37,7 @@ The pinned `shapeByInteraction` switches arbitrary paths immediately and animate
 - [x] Expose interaction elevation overrides where the pinned API supports them.
 - [x] Expose border color and width overrides, including disabled and checked states.
 - [x] Provide padding overrides for all four text-toggle styles.
-- [ ] Support arbitrary child content and document how it inherits typography and content color.
+- [x] Support arbitrary child content and document how it inherits typography and content color.
 - [ ] Document the mapping from Compose's externally owned `checked`/`onCheckedChange` to Slint properties and callbacks.
 - [ ] Verify controlled state bindings and single-selection groups without replacing their bindings during activation.
 - [ ] Compare every default size, icon spacing, padding, typography, and minimum touch target against the pinned helpers.
@@ -59,6 +61,7 @@ Key-down creates a press; matching key-up activates; focus loss cancels pending 
 The named APIs run in the existing text-toggle, icon-toggle, and selection-motion scenes.
 The deliberate negative selection case must continue rejecting a missing shape morph.
 Skia regressions check custom path states, content clipping, state colors, borders, focus rings, and asymmetric corners across all eight styles.
+Exact rendered comparisons check inherited typography and icon tint across checked, unchecked, enabled, and disabled states.
 
 - [ ] Add Compose and Slint scenes for each supported custom style parameter.
 - [ ] Add keyboard press/release and cancellation motion traces.

@@ -29,6 +29,7 @@ pub mod infer_aliases_types;
 mod inject_debug_hooks;
 pub use inject_debug_hooks::property_id;
 mod inlining;
+pub(crate) mod inherited_context;
 mod key_bindings;
 mod lower_absolute_coordinates;
 mod lower_accessibility;
@@ -146,6 +147,7 @@ pub async fn run_passes(
 
     inlining::inline(doc, inlining::InlineSelection::InlineOnlyRequiredComponents, diag);
     collect_subcomponents::collect_subcomponents(doc);
+    inherited_context::resolve_contexts(doc, &symbol_counters, diag);
 
     for root_component in doc.exported_roots() {
         focus_handling::call_focus_on_init(&root_component);
