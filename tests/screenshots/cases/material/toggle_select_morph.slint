@@ -14,7 +14,7 @@
 //MASK_INNER=button0@15,30,60,120,200,333,500,800,1500
 //DENSITIES=1,2
 import "../../fonts/Roboto-VariableFont.ttf";
-import { FilledButton, IconButtonWidth, MaterialButtonShape, MaterialButtonSize, MaterialPalette, MaterialTheme, MaterialWindow } from "@material";
+import { IconButtonWidth, MaterialButtonShape, MaterialButtonSize, MaterialPalette, MaterialTheme, MaterialWindow, ToggleButton } from "@material";
 
 export component TestCase inherits MaterialWindow {
     init => {
@@ -32,7 +32,7 @@ export component TestCase inherits MaterialWindow {
         MaterialPalette.dynamic = true;
     }
 
-    button0 := FilledButton {
+    button0 := ToggleButton {
         x: 40px;
         y: 28px;
         text: "Label";

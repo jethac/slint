@@ -224,13 +224,13 @@ States: disabled, focused, hovered, pressed, selected, unselected
 | Component | Source | Status | Issues | Needs | Notes |
 |---|---|---|---|---|---|
 | FilledIconButton | IconButton.kt | partial | #9 | springs (#5), shapes (#6) | slint component: FilledIconButton |
-| FilledIconToggleButton | IconButton.kt | missing | #9 | springs (#5), shapes (#6) | - |
+| FilledIconToggleButton | IconButton.kt | partial | #9 | none | slint component: FilledIconToggleButton; inherited toggle tokens and spring behavior; checkbox role; interpreter regression checks pointer, keyboard, accessibility, and disabled activation for all eight styles; gallery uses named APIs; pending: complete pinned color, elevation, and shape override API audit; verify named APIs across renderers and motion scenes |
 | FilledTonalIconButton | IconButton.kt | partial | #9 | springs (#5), shapes (#6) | slint component: TonalIconButton |
-| FilledTonalIconToggleButton | IconButton.kt | missing | #9 | springs (#5), shapes (#6) | - |
+| FilledTonalIconToggleButton | IconButton.kt | partial | #9 | none | slint component: FilledTonalIconToggleButton; inherited toggle tokens and spring behavior; checkbox role; interpreter regression checks pointer, keyboard, accessibility, and disabled activation for all eight styles; gallery uses named APIs; pending: complete pinned color, elevation, and shape override API audit; verify named APIs across renderers and motion scenes |
 | IconButton | IconButton.kt | partial | #9 | springs (#5), shapes (#6) | slint component: IconButton |
-| IconToggleButton | IconButton.kt | missing | #9 | springs (#5), shapes (#6) | - |
+| IconToggleButton | IconButton.kt | partial | #9 | none | slint component: IconToggleButton; inherited toggle tokens and spring behavior; checkbox role; interpreter regression checks pointer, keyboard, accessibility, and disabled activation for all eight styles; gallery uses named APIs; pending: complete pinned color, elevation, and shape override API audit; verify named APIs across renderers and motion scenes |
 | OutlinedIconButton | IconButton.kt | partial | #9 | springs (#5), shapes (#6) | slint component: OutlineIconButton |
-| OutlinedIconToggleButton | IconButton.kt | missing | #9 | springs (#5), shapes (#6) | - |
+| OutlinedIconToggleButton | IconButton.kt | partial | #9 | none | slint component: OutlinedIconToggleButton; inherited toggle tokens and spring behavior; checkbox role; interpreter regression checks pointer, keyboard, accessibility, and disabled activation for all eight styles; gallery uses named APIs; pending: complete pinned color, elevation, and shape override API audit; verify named APIs across renderers and motion scenes |
 
 ### Lists
 
@@ -495,10 +495,10 @@ States: focused, selected, hovered, pressed, unselected
 
 | Component | Source | Status | Issues | Needs | Notes |
 |---|---|---|---|---|---|
-| ElevatedToggleButton | ToggleButton.kt | missing | #9 | springs (#5), shapes (#6) | - |
-| FilledTonalToggleButton | ToggleButton.kt | missing | #9 | springs (#5), shapes (#6) | - |
-| OutlinedToggleButton | ToggleButton.kt | missing | #9 | springs (#5), shapes (#6) | - |
-| ToggleButton | ToggleButton.kt | missing | #9 | springs (#5), shapes (#6) | - |
+| ElevatedToggleButton | ToggleButton.kt | partial | #9 | none | slint component: ElevatedToggleButton; inherited toggle tokens and spring behavior; checkbox role; interpreter regression checks pointer, keyboard, accessibility, and disabled activation for all eight styles; gallery uses named APIs; pending: complete pinned color, elevation, and shape override API audit; verify named APIs across renderers and motion scenes |
+| FilledTonalToggleButton | ToggleButton.kt | partial | #9 | none | slint component: FilledTonalToggleButton; inherited toggle tokens and spring behavior; checkbox role; interpreter regression checks pointer, keyboard, accessibility, and disabled activation for all eight styles; gallery uses named APIs; pending: complete pinned color, elevation, and shape override API audit; verify named APIs across renderers and motion scenes |
+| OutlinedToggleButton | ToggleButton.kt | partial | #9 | none | slint component: OutlinedToggleButton; inherited toggle tokens and spring behavior; checkbox role; interpreter regression checks pointer, keyboard, accessibility, and disabled activation for all eight styles; gallery uses named APIs; pending: complete pinned color, elevation, and shape override API audit; verify named APIs across renderers and motion scenes |
+| ToggleButton | ToggleButton.kt | partial | #9 | none | slint component: ToggleButton; inherited toggle tokens and spring behavior; checkbox role; interpreter regression checks pointer, keyboard, accessibility, and disabled activation for all eight styles; gallery uses named APIs; pending: complete pinned color, elevation, and shape override API audit; verify named APIs across renderers and motion scenes |
 
 ### Toolbars
 

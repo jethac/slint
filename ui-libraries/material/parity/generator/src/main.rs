@@ -1326,14 +1326,22 @@ fn slint_case(scene: &Scene) -> String {
     let mut needs_icons = false;
     for w in &scene.widgets {
         let component = match w.kind.as_str() {
+            "filled-button" if is_toggle_button(w) => "ToggleButton",
             "filled-button" => "FilledButton",
+            "tonal-button" if is_toggle_button(w) => "FilledTonalToggleButton",
             "tonal-button" => "TonalButton",
+            "elevated-button" if is_toggle_button(w) => "ElevatedToggleButton",
             "elevated-button" => "ElevatedButton",
+            "outlined-button" if is_toggle_button(w) => "OutlinedToggleButton",
             "outlined-button" => "OutlineButton",
             "text-button" => "TextButton",
+            "icon-button" if is_toggle_button(w) => "IconToggleButton",
             "icon-button" => "IconButton",
+            "filled-icon-button" if is_toggle_button(w) => "FilledIconToggleButton",
             "filled-icon-button" => "FilledIconButton",
+            "tonal-icon-button" if is_toggle_button(w) => "FilledTonalIconToggleButton",
             "tonal-icon-button" => "TonalIconButton",
+            "outlined-icon-button" if is_toggle_button(w) => "OutlinedIconToggleButton",
             "outlined-icon-button" => "OutlineIconButton",
             "toggle-fab" => "ToggleFloatingActionButton",
             "fab-menu" => "FloatingActionButtonMenu",
@@ -2196,6 +2204,14 @@ fn size_variant(size: &str) -> &'static str {
     }
 }
 
+fn is_toggle_button(w: &Widget) -> bool {
+    w.slint_overrides
+        .get("checkable")
+        .and_then(serde_json::Value::as_bool)
+        .or(w.checkable)
+        .unwrap_or(false)
+}
+
 /// The shared property lines every button-family component takes. A
 /// `slint_overrides` entry shadows the widget's authored value — the
 /// negative scenes use it to inject a defect only the Slint side renders.
@@ -3016,14 +3032,22 @@ fn slint_canvas(s: &mut String, scene: &Scene) {
 
                 continue;
             }
+            "filled-button" if is_toggle_button(w) => "ToggleButton",
             "filled-button" => "FilledButton",
+            "tonal-button" if is_toggle_button(w) => "FilledTonalToggleButton",
             "tonal-button" => "TonalButton",
+            "elevated-button" if is_toggle_button(w) => "ElevatedToggleButton",
             "elevated-button" => "ElevatedButton",
+            "outlined-button" if is_toggle_button(w) => "OutlinedToggleButton",
             "outlined-button" => "OutlineButton",
             "text-button" => "TextButton",
+            "icon-button" if is_toggle_button(w) => "IconToggleButton",
             "icon-button" => "IconButton",
+            "filled-icon-button" if is_toggle_button(w) => "FilledIconToggleButton",
             "filled-icon-button" => "FilledIconButton",
+            "tonal-icon-button" if is_toggle_button(w) => "FilledTonalIconToggleButton",
             "tonal-icon-button" => "TonalIconButton",
+            "outlined-icon-button" if is_toggle_button(w) => "OutlinedIconToggleButton",
             "outlined-icon-button" => "OutlineIconButton",
 
             "loading-indicator" | "contained-loading-indicator" => {

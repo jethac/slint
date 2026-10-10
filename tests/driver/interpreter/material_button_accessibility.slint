@@ -1,0 +1,26 @@
+// Copyright © SixtyFPS GmbH <info@slint.dev>
+// SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0
+
+import {
+    ToggleButton, FilledTonalToggleButton, ElevatedToggleButton, OutlinedToggleButton,
+    IconToggleButton, FilledIconToggleButton, FilledTonalIconToggleButton, OutlinedIconToggleButton,
+} from "../../../ui-libraries/material/src/material.slint";
+
+export component TestCase inherits Window {
+    width: 300px;
+    height: 480px;
+    in-out property <bool> controls-enabled: true;
+    out property <int> clicks;
+    out property <bool> test: root.clicks == 32 && !root.controls-enabled;
+
+    VerticalLayout {
+        ToggleButton { text: "Filled"; enabled: root.controls-enabled; clicked => { root.clicks += 1; } }
+        FilledTonalToggleButton { text: "Tonal"; enabled: root.controls-enabled; clicked => { root.clicks += 1; } }
+        ElevatedToggleButton { text: "Elevated"; enabled: root.controls-enabled; clicked => { root.clicks += 1; } }
+        OutlinedToggleButton { text: "Outlined"; enabled: root.controls-enabled; clicked => { root.clicks += 1; } }
+        IconToggleButton { tooltip: "Icon"; enabled: root.controls-enabled; clicked => { root.clicks += 1; } }
+        FilledIconToggleButton { tooltip: "Filled icon"; enabled: root.controls-enabled; clicked => { root.clicks += 1; } }
+        FilledTonalIconToggleButton { tooltip: "Tonal icon"; enabled: root.controls-enabled; clicked => { root.clicks += 1; } }
+        OutlinedIconToggleButton { tooltip: "Outlined icon"; enabled: root.controls-enabled; clicked => { root.clicks += 1; } }
+    }
+}

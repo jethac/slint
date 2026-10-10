@@ -18,6 +18,7 @@ Tasks stay in memory until the window closes.
 - Generator checks accept Windows line endings and use portable source paths in the inventory.
 - Slider press actions retain the computed thumb coordinates in both orientations.
 - Fieldnotes combines the components in a working application instead of isolated samples.
+- Named toggle buttons expose checkbox semantics and share activation behavior across pointer, keyboard, and accessibility input.
 
 ## Run the Preview
 
@@ -92,14 +93,22 @@ The images were inspected for layout, wrapping, colors, and dialog presentation.
 The local workflow log is `target/material-preview/check-preview.log`.
 These headless checks exercise accessibility properties and actions, but do not validate a screen reader on a native platform.
 
+The named-toggle milestone passes all 957 unfiltered interpreter tests and 27 preview checks.
+The toggle regression covers all eight styles through pointer, keyboard, accessibility, and disabled activation.
+Skia comparisons pass for the text-toggle, icon-toggle, and selection-motion scenes.
+The deliberate toggle-selection defect is still detected.
+Logs are `target/material-preview/toggle-full-interpreter.log`, `toggle-preview-check.log`, `toggle-skia-parity.log`, and `toggle-skia-negative.log`.
+The first Skia run caught a generator override defect; the negative-case rerun passes after honoring that override.
+
 ## Scope and Remaining Work
 
 The reviewed spike inventory contained 61 done, 72 partial, and 17 missing entries.
 The completion audit corrected extension function names that had been recorded as receiver types.
-The current inventory contains 60 done, 73 partial, and 16 missing entries.
+The current inventory contains 60 done, 81 partial, and 8 missing entries.
 Affected entries retain their implementation notes and remain partial until their API and behavior are audited.
 Entries include component variants and Compose functions, so these counts do not represent distinct Slint widgets.
-The missing entries include carousel and wavy progress families, drawer-sheet APIs, toggle names, and text-style helpers.
+The missing entries include carousel and wavy progress families, drawer-sheet APIs, and text-style helpers.
+Eight named toggle APIs are implemented and remain partial while custom styling and renderer verification continue.
 
 The harness contains 264 scenes, including 79 deliberate negative cases and 53 cases with expected-failure declarations.
 An expected failure records a known difference; it does not establish visual parity.

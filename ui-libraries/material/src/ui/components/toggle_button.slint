@@ -1,0 +1,59 @@
+// Copyright © SixtyFPS GmbH <info@slint.dev>
+// SPDX-License-Identifier: MIT
+
+import { FilledButton } from "filled_button.slint";
+import { TonalButton } from "tonal_button.slint";
+import { ElevatedButton } from "elevated_button.slint";
+import { OutlineButton } from "outline_button.slint";
+import { IconButton } from "icon_button.slint";
+import { FilledIconButton } from "filled_icon_button.slint";
+import { TonalIconButton } from "tonal_icon_button.slint";
+import { OutlineIconButton } from "outline_icon_button.slint";
+
+/// A filled toggle button with an editable checked state and checkbox semantics.
+export component ToggleButton inherits FilledButton {
+    checkable: true;
+    accessible-role: checkbox;
+}
+
+/// A tonal toggle button with an editable checked state and checkbox semantics.
+export component FilledTonalToggleButton inherits TonalButton {
+    checkable: true;
+    accessible-role: checkbox;
+}
+
+/// An elevated toggle button with an editable checked state and checkbox semantics.
+export component ElevatedToggleButton inherits ElevatedButton {
+    checkable: true;
+    accessible-role: checkbox;
+}
+
+/// An outlined toggle button with an editable checked state and checkbox semantics.
+export component OutlinedToggleButton inherits OutlineButton {
+    checkable: true;
+    accessible-role: checkbox;
+}
+
+/// An icon toggle button with an editable checked state and checkbox semantics.
+export component IconToggleButton inherits IconButton {
+    checkable: true;
+    accessible-role: checkbox;
+}
+
+/// A filled icon toggle button with an editable checked state and checkbox semantics.
+export component FilledIconToggleButton inherits FilledIconButton {
+    checkable: true;
+    accessible-role: checkbox;
+}
+
+/// A tonal icon toggle button with an editable checked state and checkbox semantics.
+export component FilledTonalIconToggleButton inherits TonalIconButton {
+    checkable: true;
+    accessible-role: checkbox;
+}
+
+/// An outlined icon toggle button with an editable checked state and checkbox semantics.
+export component OutlinedIconToggleButton inherits OutlineIconButton {
+    checkable: true;
+    accessible-role: checkbox;
+}

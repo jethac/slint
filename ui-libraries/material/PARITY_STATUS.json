@@ -312,9 +312,9 @@
     "issues": [
       9
     ],
-    "needs": "springs (#5), shapes (#6)",
-    "notes": "",
-    "status": "missing"
+    "needs": "none",
+    "notes": "slint component: ElevatedToggleButton; inherited toggle tokens and spring behavior; checkbox role; interpreter regression checks pointer, keyboard, accessibility, and disabled activation for all eight styles; gallery uses named APIs; pending: complete pinned color, elevation, and shape override API audit; verify named APIs across renderers and motion scenes",
+    "status": "partial"
   },
   "ExpandedDockedSearchBar": {
     "issues": [
@@ -384,9 +384,9 @@
     "issues": [
       9
     ],
-    "needs": "springs (#5), shapes (#6)",
-    "notes": "",
-    "status": "missing"
+    "needs": "none",
+    "notes": "slint component: FilledIconToggleButton; inherited toggle tokens and spring behavior; checkbox role; interpreter regression checks pointer, keyboard, accessibility, and disabled activation for all eight styles; gallery uses named APIs; pending: complete pinned color, elevation, and shape override API audit; verify named APIs across renderers and motion scenes",
+    "status": "partial"
   },
   "FilledTonalButton": {
     "issues": [
@@ -408,17 +408,17 @@
     "issues": [
       9
     ],
-    "needs": "springs (#5), shapes (#6)",
-    "notes": "",
-    "status": "missing"
+    "needs": "none",
+    "notes": "slint component: FilledTonalIconToggleButton; inherited toggle tokens and spring behavior; checkbox role; interpreter regression checks pointer, keyboard, accessibility, and disabled activation for all eight styles; gallery uses named APIs; pending: complete pinned color, elevation, and shape override API audit; verify named APIs across renderers and motion scenes",
+    "status": "partial"
   },
   "FilledTonalToggleButton": {
     "issues": [
       9
     ],
-    "needs": "springs (#5), shapes (#6)",
-    "notes": "",
-    "status": "missing"
+    "needs": "none",
+    "notes": "slint component: FilledTonalToggleButton; inherited toggle tokens and spring behavior; checkbox role; interpreter regression checks pointer, keyboard, accessibility, and disabled activation for all eight styles; gallery uses named APIs; pending: complete pinned color, elevation, and shape override API audit; verify named APIs across renderers and motion scenes",
+    "status": "partial"
   },
   "FilterChip": {
     "issues": [
@@ -522,9 +522,9 @@
     "issues": [
       9
     ],
-    "needs": "springs (#5), shapes (#6)",
-    "notes": "",
-    "status": "missing"
+    "needs": "none",
+    "notes": "slint component: IconToggleButton; inherited toggle tokens and spring behavior; checkbox role; interpreter regression checks pointer, keyboard, accessibility, and disabled activation for all eight styles; gallery uses named APIs; pending: complete pinned color, elevation, and shape override API audit; verify named APIs across renderers and motion scenes",
+    "status": "partial"
   },
   "InputChip": {
     "issues": [
@@ -754,9 +754,9 @@
     "issues": [
       9
     ],
-    "needs": "springs (#5), shapes (#6)",
-    "notes": "",
-    "status": "missing"
+    "needs": "none",
+    "notes": "slint component: OutlinedIconToggleButton; inherited toggle tokens and spring behavior; checkbox role; interpreter regression checks pointer, keyboard, accessibility, and disabled activation for all eight styles; gallery uses named APIs; pending: complete pinned color, elevation, and shape override API audit; verify named APIs across renderers and motion scenes",
+    "status": "partial"
   },
   "OutlinedSecureTextField": {
     "issues": [
@@ -778,9 +778,9 @@
     "issues": [
       9
     ],
-    "needs": "springs (#5), shapes (#6)",
-    "notes": "",
-    "status": "missing"
+    "needs": "none",
+    "notes": "slint component: OutlinedToggleButton; inherited toggle tokens and spring behavior; checkbox role; interpreter regression checks pointer, keyboard, accessibility, and disabled activation for all eight styles; gallery uses named APIs; pending: complete pinned color, elevation, and shape override API audit; verify named APIs across renderers and motion scenes",
+    "status": "partial"
   },
   "PermanentDrawerSheet": {
     "issues": [
@@ -1103,9 +1103,9 @@
     "issues": [
       9
     ],
-    "needs": "springs (#5), shapes (#6)",
-    "notes": "",
-    "status": "missing"
+    "needs": "none",
+    "notes": "slint component: ToggleButton; inherited toggle tokens and spring behavior; checkbox role; interpreter regression checks pointer, keyboard, accessibility, and disabled activation for all eight styles; gallery uses named APIs; pending: complete pinned color, elevation, and shape override API audit; verify named APIs across renderers and motion scenes",
+    "status": "partial"
   },
   "ToggleFloatingActionButton": {
     "issues": [

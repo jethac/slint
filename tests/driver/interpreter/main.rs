@@ -8,6 +8,9 @@ mod interpreter;
 #[cfg(test)]
 mod material_toolbar_scroll;
 
+#[cfg(test)]
+mod material_button_accessibility;
+
 include!(env!("TEST_FUNCTIONS"));
 
 // Run an example .slint file (path relative to the repo root) through the interpreter.

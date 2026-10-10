@@ -121,6 +121,16 @@ export component MaterialButtonBase {
     in property <bool> simulate_press;
 
     callback clicked;
+
+    public function activate() {
+        if !root.enabled {
+            return;
+        }
+        if root.checkable && root.toggle_on_click {
+            root.checked = !root.checked;
+        }
+        root.clicked();
+    }
     out property <bool> has_focus <=> area.has_focus;
     out property <bool> pressed <=> area.effective_pressed;
     out property <bool> has_hover <=> area.effective_hover;
@@ -262,10 +272,7 @@ export component MaterialButtonBase {
             if !area.pointer_inside && !area.enter_pressed {
                 return;
             }
-            if root.checkable && root.toggle_on_click {
-                root.checked = !root.checked;
-            }
-            root.clicked();
+            root.activate();
         }
 
         layout := HorizontalLayout {

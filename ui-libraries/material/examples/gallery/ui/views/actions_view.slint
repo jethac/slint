@@ -9,9 +9,13 @@ import {
     MaterialPalette,
     MaterialTypography,
     ElevatedButton,
+    ElevatedToggleButton,
     FilledButton,
+    ToggleButton,
     TonalButton,
+    FilledTonalToggleButton,
     OutlineButton,
+    OutlinedToggleButton,
     TextButton,
     FloatingActionButton,
     ExtendedFloatingActionButton,
@@ -20,12 +24,16 @@ import {
     FloatingActionButtonMenu,
     FabMenuSize,
     IconButton,
+    IconToggleButton,
     Vertical,
     Horizontal,
     Grid,
     FilledIconButton,
+    FilledIconToggleButton,
     TonalIconButton,
+    FilledTonalIconToggleButton,
     OutlineIconButton,
+    OutlinedIconToggleButton,
     SegmentedButton,
     ConnectedButtonGroup,
     VerticalConnectedButtonGroup,
@@ -235,36 +243,32 @@ export component ActionsView {
                         }
 
                         for size[size_i] in root.button_sizes: Grid {
-                            FilledButton {
+                            ToggleButton {
                                 text: "Filled";
                                 size: size;
-                                checkable: true;
                                 checked: Math.mod(size_i, 2) == 1;
                                 row: 0;
                                 col: size_i;
                             }
 
-                            TonalButton {
+                            FilledTonalToggleButton {
                                 text: "Tonal";
                                 size: size;
-                                checkable: true;
                                 checked: Math.mod(size_i, 2) == 0;
                                 row: 0;
                                 col: size_i + 1;
                             }
 
-                            ElevatedButton {
+                            ElevatedToggleButton {
                                 text: "Elevated";
                                 size: size;
-                                checkable: true;
                                 row: 0;
                                 col: size_i + 2;
                             }
 
-                            OutlineButton {
+                            OutlinedToggleButton {
                                 text: "Outlined";
                                 size: size;
-                                checkable: true;
                                 checked: Math.mod(size_i, 2) == 1;
                                 row: 0;
                                 col: size_i + 3;
@@ -567,40 +571,36 @@ export component ActionsView {
                         }
 
                         for size[size_i] in root.button_sizes: Grid {
-                            IconButton {
+                            IconToggleButton {
                                 icon: OutlinedIcons.settings;
                                 checked_icon: FilledIcons.settings;
-                                checkable: true;
                                 checked: Math.mod(size_i, 2) == 1;
                                 size: size;
                                 row: 0;
                                 col: size_i;
                             }
 
-                            FilledIconButton {
+                            FilledIconToggleButton {
                                 icon: OutlinedIcons.settings;
                                 checked_icon: FilledIcons.settings;
-                                checkable: true;
                                 checked: Math.mod(size_i, 2) == 0;
                                 size: size;
                                 row: 0;
                                 col: size_i + 1;
                             }
 
-                            TonalIconButton {
+                            FilledTonalIconToggleButton {
                                 icon: OutlinedIcons.settings;
                                 checked_icon: FilledIcons.settings;
-                                checkable: true;
                                 checked: Math.mod(size_i, 2) == 1;
                                 size: size;
                                 row: 0;
                                 col: size_i + 2;
                             }
 
-                            OutlineIconButton {
+                            OutlinedIconToggleButton {
                                 icon: OutlinedIcons.settings;
                                 checked_icon: FilledIcons.settings;
-                                checkable: true;
                                 checked: Math.mod(size_i, 2) == 0;
                                 size: size;
                                 row: 0;

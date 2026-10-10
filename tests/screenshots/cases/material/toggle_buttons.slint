@@ -19,7 +19,7 @@
 //XFAIL_TEXT=issue #28: Slint ceils text layout widths where Compose keeps fractional advances
 //DENSITIES=1,2
 import "../../fonts/Roboto-VariableFont.ttf";
-import { ElevatedButton, FilledButton, IconButtonWidth, MaterialButtonShape, MaterialButtonSize, MaterialPalette, MaterialTheme, MaterialWindow, OutlineButton, TonalButton } from "@material";
+import { ElevatedToggleButton, FilledTonalToggleButton, IconButtonWidth, MaterialButtonShape, MaterialButtonSize, MaterialPalette, MaterialTheme, MaterialWindow, OutlinedToggleButton, ToggleButton } from "@material";
 
 export component TestCase inherits MaterialWindow {
     init => {
@@ -37,7 +37,7 @@ export component TestCase inherits MaterialWindow {
         MaterialPalette.dynamic = true;
     }
 
-    button0 := FilledButton {
+    button0 := ToggleButton {
         x: 16px;
         y: 120px;
         text: "OK";
@@ -47,7 +47,7 @@ export component TestCase inherits MaterialWindow {
         enforce_touch_target: false;
     }
 
-    button1 := FilledButton {
+    button1 := ToggleButton {
         x: 206px;
         y: 112px;
         text: "OK";
@@ -57,7 +57,7 @@ export component TestCase inherits MaterialWindow {
         enforce_touch_target: false;
     }
 
-    button2 := FilledButton {
+    button2 := ToggleButton {
         x: 396px;
         y: 96px;
         text: "OK";
@@ -67,7 +67,7 @@ export component TestCase inherits MaterialWindow {
         enforce_touch_target: false;
     }
 
-    button3 := FilledButton {
+    button3 := ToggleButton {
         x: 586px;
         y: 56px;
         text: "OK";
@@ -77,7 +77,7 @@ export component TestCase inherits MaterialWindow {
         enforce_touch_target: false;
     }
 
-    button4 := FilledButton {
+    button4 := ToggleButton {
         x: 776px;
         y: 16px;
         text: "OK";
@@ -87,7 +87,7 @@ export component TestCase inherits MaterialWindow {
         enforce_touch_target: false;
     }
 
-    button5 := TonalButton {
+    button5 := FilledTonalToggleButton {
         x: 16px;
         y: 272px;
         text: "OK";
@@ -97,7 +97,7 @@ export component TestCase inherits MaterialWindow {
         enforce_touch_target: false;
     }
 
-    button6 := TonalButton {
+    button6 := FilledTonalToggleButton {
         x: 206px;
         y: 264px;
         text: "OK";
@@ -107,7 +107,7 @@ export component TestCase inherits MaterialWindow {
         enforce_touch_target: false;
     }
 
-    button7 := TonalButton {
+    button7 := FilledTonalToggleButton {
         x: 396px;
         y: 248px;
         text: "OK";
@@ -117,7 +117,7 @@ export component TestCase inherits MaterialWindow {
         enforce_touch_target: false;
     }
 
-    button8 := TonalButton {
+    button8 := FilledTonalToggleButton {
         x: 586px;
         y: 208px;
         text: "OK";
@@ -127,7 +127,7 @@ export component TestCase inherits MaterialWindow {
         enforce_touch_target: false;
     }
 
-    button9 := TonalButton {
+    button9 := FilledTonalToggleButton {
         x: 776px;
         y: 168px;
         text: "OK";
@@ -137,7 +137,7 @@ export component TestCase inherits MaterialWindow {
         enforce_touch_target: false;
     }
 
-    button10 := ElevatedButton {
+    button10 := ElevatedToggleButton {
         x: 16px;
         y: 424px;
         text: "OK";
@@ -147,7 +147,7 @@ export component TestCase inherits MaterialWindow {
         enforce_touch_target: false;
     }
 
-    button11 := ElevatedButton {
+    button11 := ElevatedToggleButton {
         x: 206px;
         y: 416px;
         text: "OK";
@@ -157,7 +157,7 @@ export component TestCase inherits MaterialWindow {
         enforce_touch_target: false;
     }
 
-    button12 := ElevatedButton {
+    button12 := ElevatedToggleButton {
         x: 396px;
         y: 400px;
         text: "OK";
@@ -167,7 +167,7 @@ export component TestCase inherits MaterialWindow {
         enforce_touch_target: false;
     }
 
-    button13 := ElevatedButton {
+    button13 := ElevatedToggleButton {
         x: 586px;
         y: 360px;
         text: "OK";
@@ -177,7 +177,7 @@ export component TestCase inherits MaterialWindow {
         enforce_touch_target: false;
     }
 
-    button14 := ElevatedButton {
+    button14 := ElevatedToggleButton {
         x: 776px;
         y: 320px;
         text: "OK";
@@ -187,7 +187,7 @@ export component TestCase inherits MaterialWindow {
         enforce_touch_target: false;
     }
 
-    button15 := OutlineButton {
+    button15 := OutlinedToggleButton {
         x: 16px;
         y: 576px;
         text: "OK";
@@ -197,7 +197,7 @@ export component TestCase inherits MaterialWindow {
         enforce_touch_target: false;
     }
 
-    button16 := OutlineButton {
+    button16 := OutlinedToggleButton {
         x: 206px;
         y: 568px;
         text: "OK";
@@ -207,7 +207,7 @@ export component TestCase inherits MaterialWindow {
         enforce_touch_target: false;
     }
 
-    button17 := OutlineButton {
+    button17 := OutlinedToggleButton {
         x: 396px;
         y: 552px;
         text: "OK";
@@ -217,7 +217,7 @@ export component TestCase inherits MaterialWindow {
         enforce_touch_target: false;
     }
 
-    button18 := OutlineButton {
+    button18 := OutlinedToggleButton {
         x: 586px;
         y: 512px;
         text: "OK";
@@ -227,7 +227,7 @@ export component TestCase inherits MaterialWindow {
         enforce_touch_target: false;
     }
 
-    button19 := OutlineButton {
+    button19 := OutlinedToggleButton {
         x: 776px;
         y: 472px;
         text: "OK";
@@ -237,7 +237,7 @@ export component TestCase inherits MaterialWindow {
         enforce_touch_target: false;
     }
 
-    button20 := FilledButton {
+    button20 := ToggleButton {
         x: 16px;
         y: 760px;
         text: "OK";
@@ -248,7 +248,7 @@ export component TestCase inherits MaterialWindow {
         enforce_touch_target: false;
     }
 
-    button21 := FilledButton {
+    button21 := ToggleButton {
         x: 206px;
         y: 752px;
         text: "OK";
@@ -259,7 +259,7 @@ export component TestCase inherits MaterialWindow {
         enforce_touch_target: false;
     }
 
-    button22 := FilledButton {
+    button22 := ToggleButton {
         x: 396px;
         y: 736px;
         text: "OK";
@@ -270,7 +270,7 @@ export component TestCase inherits MaterialWindow {
         enforce_touch_target: false;
     }
 
-    button23 := FilledButton {
+    button23 := ToggleButton {
         x: 586px;
         y: 696px;
         text: "OK";
@@ -281,7 +281,7 @@ export component TestCase inherits MaterialWindow {
         enforce_touch_target: false;
     }
 
-    button24 := FilledButton {
+    button24 := ToggleButton {
         x: 776px;
         y: 656px;
         text: "OK";
@@ -292,7 +292,7 @@ export component TestCase inherits MaterialWindow {
         enforce_touch_target: false;
     }
 
-    button25 := TonalButton {
+    button25 := FilledTonalToggleButton {
         x: 16px;
         y: 912px;
         text: "OK";
@@ -303,7 +303,7 @@ export component TestCase inherits MaterialWindow {
         enforce_touch_target: false;
     }
 
-    button26 := TonalButton {
+    button26 := FilledTonalToggleButton {
         x: 206px;
         y: 904px;
         text: "OK";
@@ -314,7 +314,7 @@ export component TestCase inherits MaterialWindow {
         enforce_touch_target: false;
     }
 
-    button27 := TonalButton {
+    button27 := FilledTonalToggleButton {
         x: 396px;
         y: 888px;
         text: "OK";
@@ -325,7 +325,7 @@ export component TestCase inherits MaterialWindow {
         enforce_touch_target: false;
     }
 
-    button28 := TonalButton {
+    button28 := FilledTonalToggleButton {
         x: 586px;
         y: 848px;
         text: "OK";
@@ -336,7 +336,7 @@ export component TestCase inherits MaterialWindow {
         enforce_touch_target: false;
     }
 
-    button29 := TonalButton {
+    button29 := FilledTonalToggleButton {
         x: 776px;
         y: 808px;
         text: "OK";
@@ -347,7 +347,7 @@ export component TestCase inherits MaterialWindow {
         enforce_touch_target: false;
     }
 
-    button30 := ElevatedButton {
+    button30 := ElevatedToggleButton {
         x: 16px;
         y: 1064px;
         text: "OK";
@@ -358,7 +358,7 @@ export component TestCase inherits MaterialWindow {
         enforce_touch_target: false;
     }
 
-    button31 := ElevatedButton {
+    button31 := ElevatedToggleButton {
         x: 206px;
         y: 1056px;
         text: "OK";
@@ -369,7 +369,7 @@ export component TestCase inherits MaterialWindow {
         enforce_touch_target: false;
     }
 
-    button32 := ElevatedButton {
+    button32 := ElevatedToggleButton {
         x: 396px;
         y: 1040px;
         text: "OK";
@@ -380,7 +380,7 @@ export component TestCase inherits MaterialWindow {
         enforce_touch_target: false;
     }
 
-    button33 := ElevatedButton {
+    button33 := ElevatedToggleButton {
         x: 586px;
         y: 1000px;
         text: "OK";
@@ -391,7 +391,7 @@ export component TestCase inherits MaterialWindow {
         enforce_touch_target: false;
     }
 
-    button34 := ElevatedButton {
+    button34 := ElevatedToggleButton {
         x: 776px;
         y: 960px;
         text: "OK";
@@ -402,7 +402,7 @@ export component TestCase inherits MaterialWindow {
         enforce_touch_target: false;
     }
 
-    button35 := OutlineButton {
+    button35 := OutlinedToggleButton {
         x: 16px;
         y: 1216px;
         text: "OK";
@@ -413,7 +413,7 @@ export component TestCase inherits MaterialWindow {
         enforce_touch_target: false;
     }
 
-    button36 := OutlineButton {
+    button36 := OutlinedToggleButton {
         x: 206px;
         y: 1208px;
         text: "OK";
@@ -424,7 +424,7 @@ export component TestCase inherits MaterialWindow {
         enforce_touch_target: false;
     }
 
-    button37 := OutlineButton {
+    button37 := OutlinedToggleButton {
         x: 396px;
         y: 1192px;
         text: "OK";
@@ -435,7 +435,7 @@ export component TestCase inherits MaterialWindow {
         enforce_touch_target: false;
     }
 
-    button38 := OutlineButton {
+    button38 := OutlinedToggleButton {
         x: 586px;
         y: 1152px;
         text: "OK";
@@ -446,7 +446,7 @@ export component TestCase inherits MaterialWindow {
         enforce_touch_target: false;
     }
 
-    button39 := OutlineButton {
+    button39 := OutlinedToggleButton {
         x: 776px;
         y: 1112px;
         text: "OK";

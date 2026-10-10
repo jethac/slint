@@ -8,7 +8,7 @@
 //TRACE_ELEMENTS=button0,button1,button2,button3,button4,button5,button6,button7,button8,button9,button10,button11,button12,button13,button14,button15,button16,button17,button18,button19,button20,button21,button22,button23,button24,button25,button26,button27,button28,button29,button30,button31,button32,button33,button34,button35,button36,button37,button38,button39,button40,button41,button42,button43,button44,button45,button46,button47,button48,button49,button50,button51,button52,button53,button54,button55,button56,button57,button58,button59,button60,button61,button62,button63,button64,button65,button66,button67,button68,button69,button70,button71,button72,button73,button74,button75,button76,button77,button78,button79,button80,button81,button82,button83,button84,button85,button86,button87,button88,button89,button90,button91,button92,button93,button94,button95,button96,button97,button98,button99,button100,button101,button102,button103,button104,button105,button106,button107,button108,button109,button110,button111,button112,button113,button114,button115,button116,button117,button118,button119
 //DENSITIES=1,2
 import "../../fonts/Roboto-VariableFont.ttf";
-import { FilledIconButton, IconButton, IconButtonWidth, Icons, MaterialButtonShape, MaterialButtonSize, MaterialPalette, MaterialTheme, MaterialWindow, OutlineIconButton, TonalIconButton } from "@material";
+import { FilledIconButton, FilledIconToggleButton, FilledTonalIconToggleButton, IconButton, IconButtonWidth, IconToggleButton, Icons, MaterialButtonShape, MaterialButtonSize, MaterialPalette, MaterialTheme, MaterialWindow, OutlineIconButton, OutlinedIconToggleButton, TonalIconButton } from "@material";
 
 export component TestCase inherits MaterialWindow {
     init => {
@@ -566,7 +566,7 @@ export component TestCase inherits MaterialWindow {
         enforce_touch_target: false;
     }
 
-    button60 := IconButton {
+    button60 := IconToggleButton {
         x: 22px;
         y: 760px;
         size: MaterialButtonSize.extra_small;
@@ -577,7 +577,7 @@ export component TestCase inherits MaterialWindow {
         enforce_touch_target: false;
     }
 
-    button61 := IconButton {
+    button61 := IconToggleButton {
         x: 72px;
         y: 760px;
         size: MaterialButtonSize.extra_small;
@@ -588,7 +588,7 @@ export component TestCase inherits MaterialWindow {
         enforce_touch_target: false;
     }
 
-    button62 := IconButton {
+    button62 := IconToggleButton {
         x: 120px;
         y: 760px;
         size: MaterialButtonSize.extra_small;
@@ -599,7 +599,7 @@ export component TestCase inherits MaterialWindow {
         enforce_touch_target: false;
     }
 
-    button63 := IconButton {
+    button63 := IconToggleButton {
         x: 182px;
         y: 752px;
         size: MaterialButtonSize.small;
@@ -610,7 +610,7 @@ export component TestCase inherits MaterialWindow {
         enforce_touch_target: false;
     }
 
-    button64 := IconButton {
+    button64 := IconToggleButton {
         x: 242px;
         y: 752px;
         size: MaterialButtonSize.small;
@@ -621,7 +621,7 @@ export component TestCase inherits MaterialWindow {
         enforce_touch_target: false;
     }
 
-    button65 := IconButton {
+    button65 := IconToggleButton {
         x: 300px;
         y: 752px;
         size: MaterialButtonSize.small;
@@ -632,7 +632,7 @@ export component TestCase inherits MaterialWindow {
         enforce_touch_target: false;
     }
 
-    button66 := IconButton {
+    button66 := IconToggleButton {
         x: 376px;
         y: 736px;
         size: MaterialButtonSize.medium;
@@ -643,7 +643,7 @@ export component TestCase inherits MaterialWindow {
         enforce_touch_target: false;
     }
 
-    button67 := IconButton {
+    button67 := IconToggleButton {
         x: 456px;
         y: 736px;
         size: MaterialButtonSize.medium;
@@ -654,7 +654,7 @@ export component TestCase inherits MaterialWindow {
         enforce_touch_target: false;
     }
 
-    button68 := IconButton {
+    button68 := IconToggleButton {
         x: 532px;
         y: 736px;
         size: MaterialButtonSize.medium;
@@ -665,7 +665,7 @@ export component TestCase inherits MaterialWindow {
         enforce_touch_target: false;
     }
 
-    button69 := IconButton {
+    button69 := IconToggleButton {
         x: 648px;
         y: 696px;
         size: MaterialButtonSize.large;
@@ -676,7 +676,7 @@ export component TestCase inherits MaterialWindow {
         enforce_touch_target: false;
     }
 
-    button70 := IconButton {
+    button70 := IconToggleButton {
         x: 772px;
         y: 696px;
         size: MaterialButtonSize.large;
@@ -687,7 +687,7 @@ export component TestCase inherits MaterialWindow {
         enforce_touch_target: false;
     }
 
-    button71 := IconButton {
+    button71 := IconToggleButton {
         x: 896px;
         y: 696px;
         size: MaterialButtonSize.large;
@@ -698,7 +698,7 @@ export component TestCase inherits MaterialWindow {
         enforce_touch_target: false;
     }
 
-    button72 := IconButton {
+    button72 := IconToggleButton {
         x: 1076px;
         y: 656px;
         size: MaterialButtonSize.extra_large;
@@ -709,7 +709,7 @@ export component TestCase inherits MaterialWindow {
         enforce_touch_target: false;
     }
 
-    button73 := IconButton {
+    button73 := IconToggleButton {
         x: 1256px;
         y: 656px;
         size: MaterialButtonSize.extra_large;
@@ -720,7 +720,7 @@ export component TestCase inherits MaterialWindow {
         enforce_touch_target: false;
     }
 
-    button74 := IconButton {
+    button74 := IconToggleButton {
         x: 1428px;
         y: 656px;
         size: MaterialButtonSize.extra_large;
@@ -731,7 +731,7 @@ export component TestCase inherits MaterialWindow {
         enforce_touch_target: false;
     }
 
-    button75 := FilledIconButton {
+    button75 := FilledIconToggleButton {
         x: 22px;
         y: 912px;
         size: MaterialButtonSize.extra_small;
@@ -742,7 +742,7 @@ export component TestCase inherits MaterialWindow {
         enforce_touch_target: false;
     }
 
-    button76 := FilledIconButton {
+    button76 := FilledIconToggleButton {
         x: 72px;
         y: 912px;
         size: MaterialButtonSize.extra_small;
@@ -753,7 +753,7 @@ export component TestCase inherits MaterialWindow {
         enforce_touch_target: false;
     }
 
-    button77 := FilledIconButton {
+    button77 := FilledIconToggleButton {
         x: 120px;
         y: 912px;
         size: MaterialButtonSize.extra_small;
@@ -764,7 +764,7 @@ export component TestCase inherits MaterialWindow {
         enforce_touch_target: false;
     }
 
-    button78 := FilledIconButton {
+    button78 := FilledIconToggleButton {
         x: 182px;
         y: 904px;
         size: MaterialButtonSize.small;
@@ -775,7 +775,7 @@ export component TestCase inherits MaterialWindow {
         enforce_touch_target: false;
     }
 
-    button79 := FilledIconButton {
+    button79 := FilledIconToggleButton {
         x: 242px;
         y: 904px;
         size: MaterialButtonSize.small;
@@ -786,7 +786,7 @@ export component TestCase inherits MaterialWindow {
         enforce_touch_target: false;
     }
 
-    button80 := FilledIconButton {
+    button80 := FilledIconToggleButton {
         x: 300px;
         y: 904px;
         size: MaterialButtonSize.small;
@@ -797,7 +797,7 @@ export component TestCase inherits MaterialWindow {
         enforce_touch_target: false;
     }
 
-    button81 := FilledIconButton {
+    button81 := FilledIconToggleButton {
         x: 376px;
         y: 888px;
         size: MaterialButtonSize.medium;
@@ -808,7 +808,7 @@ export component TestCase inherits MaterialWindow {
         enforce_touch_target: false;
     }
 
-    button82 := FilledIconButton {
+    button82 := FilledIconToggleButton {
         x: 456px;
         y: 888px;
         size: MaterialButtonSize.medium;
@@ -819,7 +819,7 @@ export component TestCase inherits MaterialWindow {
         enforce_touch_target: false;
     }
 
-    button83 := FilledIconButton {
+    button83 := FilledIconToggleButton {
         x: 532px;
         y: 888px;
         size: MaterialButtonSize.medium;
@@ -830,7 +830,7 @@ export component TestCase inherits MaterialWindow {
         enforce_touch_target: false;
     }
 
-    button84 := FilledIconButton {
+    button84 := FilledIconToggleButton {
         x: 648px;
         y: 848px;
         size: MaterialButtonSize.large;
@@ -841,7 +841,7 @@ export component TestCase inherits MaterialWindow {
         enforce_touch_target: false;
     }
 
-    button85 := FilledIconButton {
+    button85 := FilledIconToggleButton {
         x: 772px;
         y: 848px;
         size: MaterialButtonSize.large;
@@ -852,7 +852,7 @@ export component TestCase inherits MaterialWindow {
         enforce_touch_target: false;
     }
 
-    button86 := FilledIconButton {
+    button86 := FilledIconToggleButton {
         x: 896px;
         y: 848px;
         size: MaterialButtonSize.large;
@@ -863,7 +863,7 @@ export component TestCase inherits MaterialWindow {
         enforce_touch_target: false;
     }
 
-    button87 := FilledIconButton {
+    button87 := FilledIconToggleButton {
         x: 1076px;
         y: 808px;
         size: MaterialButtonSize.extra_large;
@@ -874,7 +874,7 @@ export component TestCase inherits MaterialWindow {
         enforce_touch_target: false;
     }
 
-    button88 := FilledIconButton {
+    button88 := FilledIconToggleButton {
         x: 1256px;
         y: 808px;
         size: MaterialButtonSize.extra_large;
@@ -885,7 +885,7 @@ export component TestCase inherits MaterialWindow {
         enforce_touch_target: false;
     }
 
-    button89 := FilledIconButton {
+    button89 := FilledIconToggleButton {
         x: 1428px;
         y: 808px;
         size: MaterialButtonSize.extra_large;
@@ -896,7 +896,7 @@ export component TestCase inherits MaterialWindow {
         enforce_touch_target: false;
     }
 
-    button90 := TonalIconButton {
+    button90 := FilledTonalIconToggleButton {
         x: 22px;
         y: 1064px;
         size: MaterialButtonSize.extra_small;
@@ -907,7 +907,7 @@ export component TestCase inherits MaterialWindow {
         enforce_touch_target: false;
     }
 
-    button91 := TonalIconButton {
+    button91 := FilledTonalIconToggleButton {
         x: 72px;
         y: 1064px;
         size: MaterialButtonSize.extra_small;
@@ -918,7 +918,7 @@ export component TestCase inherits MaterialWindow {
         enforce_touch_target: false;
     }
 
-    button92 := TonalIconButton {
+    button92 := FilledTonalIconToggleButton {
         x: 120px;
         y: 1064px;
         size: MaterialButtonSize.extra_small;
@@ -929,7 +929,7 @@ export component TestCase inherits MaterialWindow {
         enforce_touch_target: false;
     }
 
-    button93 := TonalIconButton {
+    button93 := FilledTonalIconToggleButton {
         x: 182px;
         y: 1056px;
         size: MaterialButtonSize.small;
@@ -940,7 +940,7 @@ export component TestCase inherits MaterialWindow {
         enforce_touch_target: false;
     }
 
-    button94 := TonalIconButton {
+    button94 := FilledTonalIconToggleButton {
         x: 242px;
         y: 1056px;
         size: MaterialButtonSize.small;
@@ -951,7 +951,7 @@ export component TestCase inherits MaterialWindow {
         enforce_touch_target: false;
     }
 
-    button95 := TonalIconButton {
+    button95 := FilledTonalIconToggleButton {
         x: 300px;
         y: 1056px;
         size: MaterialButtonSize.small;
@@ -962,7 +962,7 @@ export component TestCase inherits MaterialWindow {
         enforce_touch_target: false;
     }
 
-    button96 := TonalIconButton {
+    button96 := FilledTonalIconToggleButton {
         x: 376px;
         y: 1040px;
         size: MaterialButtonSize.medium;
@@ -973,7 +973,7 @@ export component TestCase inherits MaterialWindow {
         enforce_touch_target: false;
     }
 
-    button97 := TonalIconButton {
+    button97 := FilledTonalIconToggleButton {
         x: 456px;
         y: 1040px;
         size: MaterialButtonSize.medium;
@@ -984,7 +984,7 @@ export component TestCase inherits MaterialWindow {
         enforce_touch_target: false;
     }
 
-    button98 := TonalIconButton {
+    button98 := FilledTonalIconToggleButton {
         x: 532px;
         y: 1040px;
         size: MaterialButtonSize.medium;
@@ -995,7 +995,7 @@ export component TestCase inherits MaterialWindow {
         enforce_touch_target: false;
     }
 
-    button99 := TonalIconButton {
+    button99 := FilledTonalIconToggleButton {
         x: 648px;
         y: 1000px;
         size: MaterialButtonSize.large;
@@ -1006,7 +1006,7 @@ export component TestCase inherits MaterialWindow {
         enforce_touch_target: false;
     }
 
-    button100 := TonalIconButton {
+    button100 := FilledTonalIconToggleButton {
         x: 772px;
         y: 1000px;
         size: MaterialButtonSize.large;
@@ -1017,7 +1017,7 @@ export component TestCase inherits MaterialWindow {
         enforce_touch_target: false;
     }
 
-    button101 := TonalIconButton {
+    button101 := FilledTonalIconToggleButton {
         x: 896px;
         y: 1000px;
         size: MaterialButtonSize.large;
@@ -1028,7 +1028,7 @@ export component TestCase inherits MaterialWindow {
         enforce_touch_target: false;
     }
 
-    button102 := TonalIconButton {
+    button102 := FilledTonalIconToggleButton {
         x: 1076px;
         y: 960px;
         size: MaterialButtonSize.extra_large;
@@ -1039,7 +1039,7 @@ export component TestCase inherits MaterialWindow {
         enforce_touch_target: false;
     }
 
-    button103 := TonalIconButton {
+    button103 := FilledTonalIconToggleButton {
         x: 1256px;
         y: 960px;
         size: MaterialButtonSize.extra_large;
@@ -1050,7 +1050,7 @@ export component TestCase inherits MaterialWindow {
         enforce_touch_target: false;
     }
 
-    button104 := TonalIconButton {
+    button104 := FilledTonalIconToggleButton {
         x: 1428px;
         y: 960px;
         size: MaterialButtonSize.extra_large;
@@ -1061,7 +1061,7 @@ export component TestCase inherits MaterialWindow {
         enforce_touch_target: false;
     }
 
-    button105 := OutlineIconButton {
+    button105 := OutlinedIconToggleButton {
         x: 22px;
         y: 1216px;
         size: MaterialButtonSize.extra_small;
@@ -1072,7 +1072,7 @@ export component TestCase inherits MaterialWindow {
         enforce_touch_target: false;
     }
 
-    button106 := OutlineIconButton {
+    button106 := OutlinedIconToggleButton {
         x: 72px;
         y: 1216px;
         size: MaterialButtonSize.extra_small;
@@ -1083,7 +1083,7 @@ export component TestCase inherits MaterialWindow {
         enforce_touch_target: false;
     }
 
-    button107 := OutlineIconButton {
+    button107 := OutlinedIconToggleButton {
         x: 120px;
         y: 1216px;
         size: MaterialButtonSize.extra_small;
@@ -1094,7 +1094,7 @@ export component TestCase inherits MaterialWindow {
         enforce_touch_target: false;
     }
 
-    button108 := OutlineIconButton {
+    button108 := OutlinedIconToggleButton {
         x: 182px;
         y: 1208px;
         size: MaterialButtonSize.small;
@@ -1105,7 +1105,7 @@ export component TestCase inherits MaterialWindow {
         enforce_touch_target: false;
     }
 
-    button109 := OutlineIconButton {
+    button109 := OutlinedIconToggleButton {
         x: 242px;
         y: 1208px;
         size: MaterialButtonSize.small;
@@ -1116,7 +1116,7 @@ export component TestCase inherits MaterialWindow {
         enforce_touch_target: false;
     }
 
-    button110 := OutlineIconButton {
+    button110 := OutlinedIconToggleButton {
         x: 300px;
         y: 1208px;
         size: MaterialButtonSize.small;
@@ -1127,7 +1127,7 @@ export component TestCase inherits MaterialWindow {
         enforce_touch_target: false;
     }
 
-    button111 := OutlineIconButton {
+    button111 := OutlinedIconToggleButton {
         x: 376px;
         y: 1192px;
         size: MaterialButtonSize.medium;
@@ -1138,7 +1138,7 @@ export component TestCase inherits MaterialWindow {
         enforce_touch_target: false;
     }
 
-    button112 := OutlineIconButton {
+    button112 := OutlinedIconToggleButton {
         x: 456px;
         y: 1192px;
         size: MaterialButtonSize.medium;
@@ -1149,7 +1149,7 @@ export component TestCase inherits MaterialWindow {
         enforce_touch_target: false;
     }
 
-    button113 := OutlineIconButton {
+    button113 := OutlinedIconToggleButton {
         x: 532px;
         y: 1192px;
         size: MaterialButtonSize.medium;
@@ -1160,7 +1160,7 @@ export component TestCase inherits MaterialWindow {
         enforce_touch_target: false;
     }
 
-    button114 := OutlineIconButton {
+    button114 := OutlinedIconToggleButton {
         x: 648px;
         y: 1152px;
         size: MaterialButtonSize.large;
@@ -1171,7 +1171,7 @@ export component TestCase inherits MaterialWindow {
         enforce_touch_target: false;
     }
 
-    button115 := OutlineIconButton {
+    button115 := OutlinedIconToggleButton {
         x: 772px;
         y: 1152px;
         size: MaterialButtonSize.large;
@@ -1182,7 +1182,7 @@ export component TestCase inherits MaterialWindow {
         enforce_touch_target: false;
     }
 
-    button116 := OutlineIconButton {
+    button116 := OutlinedIconToggleButton {
         x: 896px;
         y: 1152px;
         size: MaterialButtonSize.large;
@@ -1193,7 +1193,7 @@ export component TestCase inherits MaterialWindow {
         enforce_touch_target: false;
     }
 
-    button117 := OutlineIconButton {
+    button117 := OutlinedIconToggleButton {
         x: 1076px;
         y: 1112px;
         size: MaterialButtonSize.extra_large;
@@ -1204,7 +1204,7 @@ export component TestCase inherits MaterialWindow {
         enforce_touch_target: false;
     }
 
-    button118 := OutlineIconButton {
+    button118 := OutlinedIconToggleButton {
         x: 1256px;
         y: 1112px;
         size: MaterialButtonSize.extra_large;
@@ -1215,7 +1215,7 @@ export component TestCase inherits MaterialWindow {
         enforce_touch_target: false;
     }
 
-    button119 := OutlineIconButton {
+    button119 := OutlinedIconToggleButton {
         x: 1428px;
         y: 1112px;
         size: MaterialButtonSize.extra_large;

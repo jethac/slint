@@ -40,7 +40,7 @@ export component ElevatedButton {
     accessible-enabled: root.enabled;
     accessible-checkable: root.checkable;
     accessible-checked <=> root.checked;
-    accessible-action-default => { base.clicked(); }
+    accessible-action-default => { base.activate(); }
 
     min_width: base.min_width;
     min_height: base.min_height;

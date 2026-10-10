@@ -1,0 +1,47 @@
+---
+title: Toggle buttons
+description: Text and icon buttons with checked state and checkbox semantics.
+---
+
+Use a toggle button for an action with a persistent checked state.
+Pointer clicks, Space, Enter, and the accessibility default action change `checked` and invoke `clicked` once.
+Disabled controls ignore activation.
+
+```slint
+import { ToggleButton, FilledTonalIconToggleButton } from "@material";
+
+export component Example inherits Window {
+    width: 300px;
+    height: 100px;
+    HorizontalLayout {
+        ToggleButton { text: "Follow"; checked: true; }
+        FilledTonalIconToggleButton { tooltip: "Pin"; }
+    }
+}
+```
+
+The named toggle components expose the checkbox accessibility role.
+Text buttons use `text` as their accessible name, falling back to `tooltip` when the text is empty.
+Icon buttons use `tooltip` as their accessible name.
+Give every icon toggle a descriptive tooltip.
+
+| Component | Styling and inherited properties |
+| --- | --- |
+| `ToggleButton` | `FilledButton` |
+| `FilledTonalToggleButton` | `TonalButton` |
+| `ElevatedToggleButton` | `ElevatedButton` |
+| `OutlinedToggleButton` | `OutlineButton` |
+| `IconToggleButton` | `IconButton` |
+| `FilledIconToggleButton` | `FilledIconButton` |
+| `FilledTonalIconToggleButton` | `TonalIconButton` |
+| `OutlinedIconToggleButton` | `OutlineIconButton` |
+
+All eight components default to `checkable: true` and `checked: false`.
+They inherit size, shape, enabled state, and motion behavior from their corresponding button style.
+Text variants also inherit padding overrides.
+Icon variants also inherit `icon` and `checked-icon`.
+Use `checked` to observe or set the current state.
+Keep `checkable` enabled when using a named toggle component.
+
+The pinned Compose API audit remains open for custom colors, elevation, and shape overrides.
+The inventory tracks these components as partial until the remaining API and parity checks pass.
