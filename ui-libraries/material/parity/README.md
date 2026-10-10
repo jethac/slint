@@ -34,6 +34,12 @@ are compared pixel-per-pixel (with text masked) plus numerically for motion.
   metrics, motion samples). The references are committed; the Slint driver
   fails when they're missing or stale.
 
+Each scene and density has a generated test class and runs in a fresh JVM.
+Gradle's `forkEvery = 1` isolates test classes, rather than individual parameters of a shared class.
+Use `-Dparity.scene=<name>` and `-Dparity.density=<number>` to restrict capture generation.
+Comma-separated scene names capture a subset without generating unrelated render test classes.
+Set `-Dparity.traceRender=true` to log the process ID for each capture.
+
 ## Running the Slint side
 
 ```sh

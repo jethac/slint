@@ -13,9 +13,6 @@ import app.cash.paparazzi.Paparazzi
 import app.cash.paparazzi.TestName
 import com.android.resources.Density
 import java.io.File
-import org.junit.Test
-import org.junit.runner.RunWith
-import org.junit.runners.Parameterized
 
 /** Renders every parity scene on Jetpack Compose material3 through Paparazzi
  * (layoutlib — the same rasterizer Android Studio previews use) and writes the
@@ -28,20 +25,21 @@ import org.junit.runners.Parameterized
  * property `-Pparity.record` writes them into `references/` to regenerate the
  * committed references.
  *
- * One parameterized case per (scene, density), one JVM per case
- * (`forkEvery = 1`): composition state that survives teardown — the frame
- * clock keeps its epoch across render sessions — can freeze a scene's
- * coroutine-driven animations on a later render in a shared JVM, so each
- * render gets a fresh one. Scene-filtered and full-suite records therefore
- * produce identical PNGs. */
-@RunWith(Parameterized::class)
+ * Gradle generates one test class per scene and density. Its `forkEvery = 1`
+ * setting gives each class a fresh JVM, preventing frame-clock and rendering
+ * state from leaking between reference captures. */
 class RenderTest(private val sceneName: String, private val density: Int) {
 
     private val frames = FrameSink()
 
-    @Test
     fun render() {
         val scene = Scene.loadAll().first { it.name == sceneName }
+        if (java.lang.Boolean.getBoolean("parity.traceRender")) {
+            // Android's compile classpath lacks ProcessHandle, although these tests run on Java 21.
+            val processType = Class.forName("java.lang.ProcessHandle")
+            val process = processType.getMethod("current").invoke(null)
+            println("render process: pid=${processType.getMethod("pid").invoke(process)} scene=$sceneName density=$density")
+        }
         // The generator resolves the scheme with Slint's own
         // material-color-utils port; the Compose side re-derives it with
         // the Kotlin MCU port. If they disagree a port has drifted —
@@ -220,16 +218,5 @@ class RenderTest(private val sceneName: String, private val density: Int) {
 
     companion object {
         private const val STATIC_SETTLE_MS = 2000L
-
-        /** `-Dparity.scene=<name>` restricts the run to one scene
-         * (debugging); every (scene, density) pair is one JVM. */
-        @JvmStatic
-        @Parameterized.Parameters(name = "{0}_d{1}")
-        fun scenesAndDensities(): List<Array<Any>> {
-            val only = System.getProperty("parity.scene")
-            return Scene.loadAll()
-                .filter { only == null || it.name == only }
-                .flatMap { scene -> scene.densities.map { arrayOf(scene.name, it) } }
-        }
     }
 }

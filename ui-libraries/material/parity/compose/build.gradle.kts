@@ -1,6 +1,8 @@
 // Copyright © SixtyFPS GmbH <info@slint.dev>
 // SPDX-License-Identifier: MIT
 
+import groovy.json.JsonSlurper
+
 plugins {
     // Paparazzi 2.x supports pre-AGP-9 consumers; the compose plugin supplies
     // the Compose compiler for Kotlin Android.
@@ -70,13 +72,66 @@ dependencies {
     testImplementation(project(":harness"))
 }
 
+val renderCaseDirectory = layout.buildDirectory.dir("generated/parity-render-cases")
+val generateParityRenderCases by tasks.registering {
+    val sceneDirectory = layout.projectDirectory.dir("src/test/resources/scenes")
+    val sceneFilter = providers.systemProperty("parity.scene").orElse("")
+    val densityFilter = providers.systemProperty("parity.density").orElse("")
+    inputs.dir(sceneDirectory)
+    inputs.property("scene", sceneFilter)
+    inputs.property("density", densityFilter)
+    outputs.dir(renderCaseDirectory)
+    doLast {
+        val onlyScenes = sceneFilter.get().split(',').map { it.trim() }.filter { it.isNotEmpty() }.toSet()
+        val onlyDensity = densityFilter.get().takeIf { it.isNotEmpty() }?.toInt()
+        val directory = renderCaseDirectory.get().asFile
+        directory.mkdirs()
+        val sources = mutableMapOf<String, String>()
+        val matchedScenes = mutableSetOf<String>()
+        val index = sceneDirectory.file("index.txt").asFile.readLines().filter { it.isNotBlank() }
+        for (entry in index) {
+            val scene = JsonSlurper().parse(sceneDirectory.file("$entry.json").asFile) as Map<*, *>
+            val name = scene["name"] as String
+            require(name.matches(Regex("[a-z][a-z0-9_-]*"))) { "Invalid scene name: $name" }
+            if (onlyScenes.isNotEmpty() && name !in onlyScenes) continue
+            matchedScenes += name
+            for (value in scene["densities"] as List<*>) {
+                val density = (value as Number).toInt()
+                if (onlyDensity != null && density != onlyDensity) continue
+                val className = "RenderTest_${name.replace('-', '_')}_d$density"
+                val fileName = "$className.java"
+                require(fileName !in sources) { "Duplicate render case: $className" }
+                sources[fileName] = """
+                    package org.slint.material.parity;
+                    public final class $className {
+                        @org.junit.Test
+                        public void render() {
+                            new RenderTest("$name", $density).render();
+                        }
+                    }
+                """.trimIndent() + "\n"
+            }
+        }
+        val missingScenes = onlyScenes - matchedScenes
+        require(missingScenes.isEmpty()) { "Unknown render scenes: ${missingScenes.joinToString()}" }
+        require(sources.isNotEmpty()) { "No render scenes match the requested filters" }
+        directory.listFiles()?.filter { it.extension == "java" && it.name !in sources }
+            ?.forEach { check(it.delete()) { "Cannot remove stale render case: $it" } }
+        sources.forEach { (name, source) -> directory.resolve(name).writeText(source) }
+    }
+}
+android.sourceSets["test"].java.srcDir(renderCaseDirectory)
+tasks.matching {
+    it.name.startsWith("compile") &&
+        (it.name.endsWith("UnitTestKotlin") || it.name.endsWith("UnitTestJavaWithJavac"))
+}.configureEach { dependsOn(generateParityRenderCases) }
+
 tasks.withType<Test>().configureEach {
     testLogging.showStandardStreams = true
-    // One JVM per render: composition state that survives teardown (the
-    // frame clock keeps its epoch across render sessions) can freeze a
-    // later render's coroutine-driven animations in a shared JVM.
+    // Gradle forks per test class; generated classes keep each scene and density in a fresh JVM.
     forkEvery = 1
     providers.systemProperty("parity.scene").orNull?.let { systemProperty("parity.scene", it) }
+    providers.systemProperty("parity.traceRender").orNull?.let { systemProperty("parity.traceRender", it) }
     // Paparazzi decompresses layoutlib natives at runtime.
     jvmArgs = (jvmArgs ?: emptyList()) + listOf(
         "--add-opens=java.base/java.lang=ALL-UNNAMED",
