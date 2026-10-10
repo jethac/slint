@@ -1027,7 +1027,7 @@ impl ItemRenderer for SkiaItemRenderer<'_> {
             self.window.scale_factor(),
         );
 
-        let path = outline_to_skia_path(&outline, geom * self.scale_factor);
+        let path = elevation_shadow_path(&outline, geom * self.scale_factor, self.scale_factor);
         if path.is_empty() {
             return;
         }
@@ -1410,9 +1410,8 @@ pub fn to_skia_rect(rect: &PhysicalRect) -> skia_safe::Rect {
     skia_safe::Rect::from_xywh(rect.origin.x, rect.origin.y, rect.size.width, rect.size.height)
 }
 
-/// The outline's vector path fitted into `target` (physical pixels), for the
-/// [`i_slint_core::graphics::ElementOutline::Shape`] variant; rounded
-/// rectangles keep their [`to_skia_rrect`] fast path instead.
+/// The outline's vector path fitted into `target`.
+/// Rectangle radii use the same coordinate units as `target`.
 pub fn outline_to_skia_path(
     outline: &i_slint_core::graphics::ElementOutline,
     target: PhysicalRect,
@@ -1441,6 +1440,16 @@ pub fn outline_to_skia_path(
         _ => skia_safe::PathFillType::Winding,
     });
     builder.detach()
+}
+
+fn elevation_shadow_path(
+    outline: &i_slint_core::graphics::ElementOutline,
+    target: PhysicalRect,
+    scale_factor: ScaleFactor,
+) -> skia_safe::Path {
+    let logical_target = (target / scale_factor).cast_unit();
+    outline_to_skia_path(outline, logical_target)
+        .with_transform(&skia_safe::Matrix::scale((scale_factor.get(), scale_factor.get())))
 }
 
 pub fn to_skia_rrect(rect: &PhysicalRect, radius: &PhysicalBorderRadius) -> skia_safe::RRect {
@@ -1511,6 +1520,16 @@ mod shadow_parity_tests {
 
     const W: i32 = 480;
     const H: i32 = 360;
+
+    #[test]
+    fn elevation_shadow_keeps_corner_radius_at_high_density() {
+        let outline = ElementOutline::Rectangle(LogicalBorderRadius::new_uniform(20.));
+        let target = PhysicalRect::new(PhysicalPoint::new(0., 0.), PhysicalSize::new(240., 80.));
+        let path = elevation_shadow_path(&outline, target, ScaleFactor::new(2.));
+        assert_eq!(path.bounds(), &skia_safe::Rect::from_xywh(0., 0., 240., 80.));
+        assert_eq!(path.points()[0], skia_safe::Point::new(40., 0.));
+        assert!(path.points().contains(&skia_safe::Point::new(240., 40.)));
+    }
 
     fn snapshot(surface: &mut skia_safe::Surface) -> Vec<u8> {
         surface
@@ -1604,11 +1623,12 @@ mod shadow_parity_tests {
         caster_alpha: f32,
         ambient: i_slint_core::graphics::Color,
         spot: i_slint_core::graphics::Color,
+        scale_factor: ScaleFactor,
     ) {
         let canvas = surface.canvas();
         canvas.save();
         canvas.set_matrix(&(*canvas_ctm).into());
-        let path = outline_to_skia_path(outline, geom_phys);
+        let path = elevation_shadow_path(outline, geom_phys, scale_factor);
         let flags = (caster_alpha < 1.)
             .then_some(skia_safe::utils::shadow_utils::ShadowFlags::TRANSPARENT_OCCLUDER);
         canvas.draw_shadow(
@@ -1632,11 +1652,12 @@ mod shadow_parity_tests {
         geom_phys: PhysicalRect,
         canvas_ctm: &skia_safe::Matrix,
         alpha: f32,
+        scale_factor: ScaleFactor,
     ) {
         let canvas = surface.canvas();
         canvas.save();
         canvas.set_matrix(&(*canvas_ctm).into());
-        let path = outline_to_skia_path(outline, geom_phys);
+        let path = elevation_shadow_path(outline, geom_phys, scale_factor);
         let mut paint = skia_safe::Paint::default();
         paint.set_anti_alias(true);
         paint.set_color(skia_safe::Color::from_argb((alpha * 255.) as u8, 255, 255, 255));
@@ -1743,7 +1764,14 @@ mod shadow_parity_tests {
             ambient,
             spot,
         );
-        draw_caster(&mut s_ported, &outline, geom_phys, &canvas_matrix, caster_alpha);
+        draw_caster(
+            &mut s_ported,
+            &outline,
+            geom_phys,
+            &canvas_matrix,
+            caster_alpha,
+            ScaleFactor::new(sf),
+        );
         let p = snapshot(&mut s_ported);
 
         let mut s_native = skia_safe::surfaces::raster_n32_premul((W, H)).unwrap();
@@ -1759,8 +1787,16 @@ mod shadow_parity_tests {
             caster_alpha,
             ambient,
             spot,
+            ScaleFactor::new(sf),
         );
-        draw_caster(&mut s_native, &outline, geom_phys, &canvas_matrix, caster_alpha);
+        draw_caster(
+            &mut s_native,
+            &outline,
+            geom_phys,
+            &canvas_matrix,
+            caster_alpha,
+            ScaleFactor::new(sf),
+        );
         let n = snapshot(&mut s_native);
 
         compare(name, &p, &n);
@@ -1787,6 +1823,16 @@ mod shadow_parity_tests {
         let circle = shape_outline(shapes::circle_shape(64));
 
         let cases = [
+            Case {
+                name: "rounded z2 d2 translucent",
+                outline: rounded_outline(20.),
+                w: 120.,
+                h: 40.,
+                xf: Affine::new(1., 0., 0., 1., 40., 40.),
+                sf: 2.,
+                elevation: 2.,
+                caster_alpha: 0.6,
+            },
             // Convex casters, several elevations.
             Case {
                 name: "rect z4 d1",

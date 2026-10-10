@@ -19,6 +19,7 @@ Tasks stay in memory until the window closes.
 - Slider press actions retain the computed thumb coordinates in both orientations.
 - Fieldnotes combines the components in a working application instead of isolated samples.
 - Named toggle buttons expose checkbox semantics and share activation behavior across pointer, keyboard, and accessibility input.
+- Skia elevation shadows scale their corner radii with the display density.
 
 ## Run the Preview
 
@@ -31,6 +32,11 @@ The software renderer remains available to the headless regression tests.
 The existing component gallery remains available as `material-gallery` in the same workspace.
 
 ## Verification
+
+The Skia shadow regression checks a 20 logical-pixel corner at density 2, where its physical radius must be 40 pixels.
+It rejects the unscaled path.
+The native shadow comparison also includes a translucent rounded caster at density 2.
+Run these checks with `cargo test -p i-slint-renderer-skia --no-default-features elevation_shadow_`.
 
 Run the local PowerShell workflow from the repository root:
 
