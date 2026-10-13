@@ -565,8 +565,8 @@ pub fn embed_glyphs(
     // reached when `exclude_vector_fonts` is unset — see the error loop
     // above.)
     if !font_axes.dynamic.is_empty() && !compiler_config.exclude_vector_fonts {
-        let mut embedded_paths: HashSet<std::path::PathBuf> = HashSet::new();
-        let is_default_set = |path: &std::path::Path| default_fonts.iter().any(|(p, _)| p == path);
+        let mut embedded_paths: HashSet<SourcePath> = HashSet::new();
+        let is_default_set = |path: &SourcePath| default_fonts.iter().any(|(p, _)| p == path);
         // The axes a request can carry for an embedded vector font: `wght`
         // (every request has a weight), `opsz` (optical sizing is on by
         // default), every constant tuple tag (a constant request can still
@@ -643,7 +643,7 @@ pub fn embed_glyphs(
                 .unwrap_or_else(|| source.to_vec());
             let resource_id = doc.embedded_file_resources.borrow_mut().push_and_get_key(
                 crate::embedded_resources::EmbeddedResources {
-                    path: Some(path.to_string_lossy().as_ref().into()),
+                    path: Some(path.clone()),
                     kind: crate::embedded_resources::EmbeddedResourcesKind::DataUriPayload(
                         font_data,
                         "ttf".into(),
