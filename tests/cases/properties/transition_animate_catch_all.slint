@@ -79,7 +79,7 @@ slint_testing::mock_elapsed_time(50);
 assert_eq!(instance.get_prop_1(), 17);
 assert_eq!(instance.get_prop_2(), 50);
 assert_eq!(instance.get_prop_3(), 50.0);
-assert_eq!(instance.get_prop_4(), slint::Color::from_rgb_u8(0x7f, 0x7f, 0x7f));
+assert_eq!(instance.get_prop_4(), slint::Color::from_rgb_u8(0x63, 0x63, 0x63));
 assert_eq!(instance.get_prop_5(), 50.0);
 
 slint_testing::mock_elapsed_time(100);
@@ -149,7 +149,7 @@ slint_testing::mock_elapsed_time(50);
 assert_eq(instance.get_prop_1(), 17);
 assert_eq(instance.get_prop_2(), 50);
 assert_eq(instance.get_prop_3(), 50.0);
-assert_eq(instance.get_prop_4(), slint::Color::from_rgb_uint8(0x7f, 0x7f, 0x7f));
+assert_eq(instance.get_prop_4(), slint::Color::from_rgb_uint8(0x63, 0x63, 0x63));
 assert_eq(instance.get_prop_5(), 50.0);
 
 slint_testing::mock_elapsed_time(100);
@@ -216,7 +216,7 @@ slintlib.private_api.mock_elapsed_time(50);
 assert.equal(instance.prop_1, 17);
 assert.equal(instance.prop_2, 50);
 assert.equal(instance.prop_3, 50.0);
-assert.equal(instance.prop_4.toString(), "#7f7f7f");
+assert.equal(instance.prop_4.toString(), "#636363");
 assert.equal(instance.prop_5, 50.0);
 
 slintlib.private_api.mock_elapsed_time(100);

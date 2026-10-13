@@ -34,7 +34,7 @@ pub use crate::item_tree::{ItemRc, ItemTreeVTable};
 use crate::layout::LayoutInfo;
 use crate::lengths::{
     LogicalBorderRadius, LogicalLength, LogicalPoint, LogicalPx, LogicalRect, LogicalSize,
-    LogicalVector, PointLengths, RectLengths,
+    LogicalVector, PointLengths,
 };
 pub use crate::menus::MenuItem;
 use crate::model::Model;
@@ -2252,6 +2252,10 @@ impl Item for BackdropBlur {
         // Covering that margin makes partial rendering redraw it along with the blur.
         let margin = LogicalLength::new(self.blur().get().max(0 as Coord) * 3 as Coord);
         geometry.outer_rect(euclid::SideOffsets2D::from_length_all_same(margin))
+    }
+
+    fn boundary_shape(self: Pin<&Self>, _geometry: LogicalRect) -> ItemBoundaryShape {
+        Default::default()
     }
 
     fn clips_children(self: core::pin::Pin<&Self>) -> bool {

@@ -91,7 +91,7 @@ pub extern "C" fn slint_context_color_scheme(
 /// Runtime entry point for `BuiltinFunction::ReducedMotion`.
 #[unsafe(no_mangle)]
 pub extern "C" fn slint_context_reduced_motion(root: &i_slint_core::item_tree::ItemTreeRc) -> bool {
-    i_slint_core::window::context_for_root(root).map_or(false, |ctx| ctx.reduced_motion())
+    i_slint_core::window::context_for_root(root).reduced_motion()
 }
 
 /// Runtime entry point for `BuiltinFunction::PlatformContrastLevel`.

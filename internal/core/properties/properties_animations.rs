@@ -66,12 +66,14 @@ where
                     let tick = crate::animations::current_tick();
                     let scale = crate::animations::duration_scale();
                     let tick = if scale <= 0.0 {
-                        crate::animations::Instant(u64::MAX)
+                        crate::animations::Instant::from_nanos(u64::MAX)
                     } else {
-                        crate::animations::Instant(self.installed_at.0.saturating_add(
-                            (tick.0.saturating_sub(self.installed_at.0) as f64 / scale as f64)
-                                as u64,
-                        ))
+                        crate::animations::Instant::from_nanos(
+                            self.installed_at.as_nanos().saturating_add(
+                                (tick.duration_since(self.installed_at).as_nanos() as f64
+                                    / scale as f64) as u64,
+                            ),
+                        )
                     };
                     let finished = simulation.borrow_mut().step(&mut value, tick);
                     *target = value as crate::Coord;
@@ -398,8 +400,10 @@ impl<T: InterpolatedPropertyValue + Clone> PropertyValueAnimationData<T> {
                         (self.apply_map(self.from_value.clone()), false)
                     }
                 } else {
-                    self.start_time = crate::animations::Instant(
-                        new_tick.0.saturating_sub(time_progress - delay),
+                    self.start_time = crate::animations::Instant::from_nanos(
+                        new_tick
+                            .as_nanos()
+                            .saturating_sub((time_progress - delay).saturating_mul(1_000_000)),
                     );
 
                     // Decide on next state:
@@ -547,8 +551,11 @@ impl<T: InterpolatedPropertyValue + Clone> PropertyValueAnimationData<T> {
                         current_iteration =
                             current_iteration.saturating_add(time_progress / duration);
                         time_progress %= duration;
-                        self.start_time =
-                            crate::animations::Instant(new_tick.0.saturating_sub(time_progress));
+                        self.start_time = crate::animations::Instant::from_nanos(
+                            new_tick
+                                .as_nanos()
+                                .saturating_sub(time_progress.saturating_mul(1_000_000)),
+                        );
                     }
                 }
 

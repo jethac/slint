@@ -1588,10 +1588,9 @@ pub(crate) fn handle_mouse_grab(
     // — a swipe that crosses the item's bounds before its distance threshold
     // must still reach the handler.
     let parked = !mouse_input_state.grabbed
-        && mouse_input_state
-            .delayed
-            .as_ref()
-            .is_some_and(|(_, event)| event.touch_finger_id() == mouse_event.touch_finger_id());
+        && mouse_input_state.delayed.as_ref().is_some_and(|press| {
+            press.original_event.touch_finger_id() == mouse_event.touch_finger_id()
+        });
     if mouse_input_state.item_stack.is_empty() || (!mouse_input_state.grabbed && !parked) {
         return MouseGrabResult { event: Some(mouse_event.clone()), accepted: false };
     };
@@ -1660,6 +1659,7 @@ pub(crate) fn handle_mouse_grab(
         // The interceptor claimed the gesture: drop the press parked for the
         // children it would otherwise reach out of time.
         mouse_input_state.delayed = None;
+        mouse_input_state.send_delayed_exit_events(window_adapter);
     }
 
     let grabber = mouse_input_state.top_item().unwrap();

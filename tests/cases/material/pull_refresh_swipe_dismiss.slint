@@ -72,7 +72,7 @@ use slint_testing::{InternalEvent, LogicalPoint, TouchPhase};
 
 fn touch(instance: &TestCase, id: i32, x: f32, y: f32, phase: TouchPhase) {
     instance.window().dispatch_event(WindowEvent::internal(
-        InternalEvent::Touch { id, position: LogicalPoint::new(x, y), phase }));
+        InternalEvent::Touch { id, position: LogicalPoint::new(x, y), phase, event_time: None, history: Default::default() }));
 }
 
 let instance = TestCase::new().unwrap();

@@ -164,7 +164,7 @@ pub fn platform_color_scheme(
     contrast_level: f32,
 ) -> MaterialColorScheme {
     platform_color_scheme_for_context(
-        crate::window::context_for_root(root).as_ref(),
+        Some(&crate::window::context_for_root(root)),
         variant,
         spec_version,
         platform,

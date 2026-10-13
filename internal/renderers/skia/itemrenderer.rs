@@ -225,18 +225,36 @@ impl<'a> SkiaItemRenderer<'a> {
         if !layout.background_rect.is_empty()
             && let Some(paint) = paint_for(background.clone())
         {
-            source_canvas.draw_rrect(
-                to_skia_rrect(&layout.background_rect, &layout.background_radius),
-                &paint,
-            );
+            match &outline {
+                Some(outline) => {
+                    source_canvas
+                        .draw_path(&outline_to_skia_path(outline, layout.background_rect), &paint);
+                }
+                None => {
+                    source_canvas.draw_rrect(
+                        to_skia_rrect(&layout.background_rect, &layout.background_radius),
+                        &paint,
+                    );
+                }
+            }
         }
         if layout.border_width.get() > 0.
             && let Some(mut paint) = paint_for(layout.border_color.clone())
         {
             paint.set_style(skia_safe::PaintStyle::Stroke);
             paint.set_stroke_width(layout.border_width.get());
-            source_canvas
-                .draw_rrect(to_skia_rrect(&layout.border_rect, &layout.border_radius), &paint);
+            match &outline {
+                Some(outline) => {
+                    source_canvas
+                        .draw_path(&outline_to_skia_path(outline, layout.border_rect), &paint);
+                }
+                None => {
+                    source_canvas.draw_rrect(
+                        to_skia_rrect(&layout.border_rect, &layout.border_radius),
+                        &paint,
+                    );
+                }
+            }
         }
         let source = surface.image_snapshot();
         let mut output = canvas.new_surface(&image_info, None)?;
@@ -1608,6 +1626,70 @@ pub fn to_skia_color(col: &Color) -> skia_safe::Color {
 /// Gamma encoded sRGB as well, see [`to_skia_color`].
 pub fn to_skia_color4f(col: &Color) -> skia_safe::Color4f {
     to_skia_color(col).into()
+}
+
+#[cfg(test)]
+mod drop_shadow_tests {
+    use super::*;
+    use i_slint_core::graphics::{
+        GradientStop, LinearGradientBrush, boxshadowcache::BoxShadowOptions, shapes,
+    };
+    use i_slint_core::items::ShapeFit;
+
+    #[test]
+    fn nonopaque_shape_shadow_preserves_fill_and_border_outline() {
+        let translucent = Color::from_argb_u8(128, 255, 255, 255);
+        let gradient = Brush::LinearGradient(LinearGradientBrush::new(
+            90.,
+            [
+                GradientStop { color: Color::from_argb_u8(64, 255, 255, 255), position: 0. },
+                GradientStop { color: Color::from_argb_u8(192, 255, 255, 255), position: 1. },
+            ],
+        ));
+        for (background, border) in [
+            (Brush::SolidColor(translucent), Brush::default()),
+            (gradient, Brush::default()),
+            (Brush::default(), Brush::SolidColor(translucent)),
+        ] {
+            let border_only = background.is_transparent();
+            let size = PhysicalSize::new(32., 32.);
+            let options = BoxShadowOptions {
+                source: Some((
+                    background,
+                    BorderRectLayout {
+                        brush_size: size,
+                        outer_radius: Default::default(),
+                        background_rect: PhysicalRect::from_size(size),
+                        background_radius: Default::default(),
+                        border_rect: PhysicalRect::from_size(size)
+                            .inner_rect(euclid::SideOffsets2D::new_all_same(2.)),
+                        border_radius: Default::default(),
+                        border_width: PhysicalLength::new(if border_only { 4. } else { 0. }),
+                        border_color: border,
+                    },
+                )),
+                scale_factor: ScaleFactor::new(1.),
+                width: PhysicalLength::new(32.),
+                height: PhysicalLength::new(32.),
+                color: Color::from_rgb_u8(0, 0, 0),
+                shape: shapes::circle_shape(64),
+                shape_fit: ShapeFit::Fill,
+                ..Default::default()
+            };
+            assert!(options.opaque_source_radius().is_none());
+            let mut surface = skia_safe::surfaces::raster_n32_premul((32, 32)).unwrap();
+            let image =
+                SkiaItemRenderer::render_drop_shadow_image(surface.canvas(), &options).unwrap();
+            let pixels = image.peek_pixels().unwrap();
+            assert_eq!(pixels.get_color((1, 1)).a(), 0, "shadow must not fill outside the circle");
+            let sample = if border_only { (16, 2) } else { (16, 16) };
+            let alpha = pixels.get_color(sample).a();
+            assert!(alpha > 0 && alpha < 255, "shadow must preserve source alpha: {alpha}");
+            if border_only {
+                assert_eq!(pixels.get_color((16, 16)).a(), 0);
+            }
+        }
+    }
 }
 
 #[cfg(test)]

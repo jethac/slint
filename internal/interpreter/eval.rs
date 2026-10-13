@@ -2328,15 +2328,7 @@ fn call_builtin_function(
             let root = root_instance(ctx).map(vtable::VRc::into_dyn);
             component_context(ctx).color_scheme(root.as_ref()).into()
         }
-        BuiltinFunction::ReducedMotion => {
-            let reduced = root_instance(ctx)
-                .map(vtable::VRc::into_dyn)
-                .and_then(|root| {
-                    i_slint_core::window::context_for_root(&root).map(|ctx| ctx.reduced_motion())
-                })
-                .unwrap_or(false);
-            Value::Bool(reduced)
-        }
+        BuiltinFunction::ReducedMotion => Value::Bool(component_context(ctx).reduced_motion()),
         BuiltinFunction::MaterialColorScheme => {
             let seed_color: i_slint_core::Color =
                 eval_expression(ctx, &arguments[0]).try_into().unwrap_or_default();

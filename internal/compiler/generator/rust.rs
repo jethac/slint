@@ -5133,7 +5133,7 @@ fn compile_builtin_function_call(
             let global_access = &ctx.generator_state.global_access;
             quote!({
                 let _root = #global_access.root_item_tree_weak.upgrade().unwrap();
-                sp::context_for_root(&_root).map_or(false, |c| c.reduced_motion())
+                sp::context_for_root(&_root).reduced_motion()
             })
         }
         BuiltinFunction::MaterialColorScheme => {

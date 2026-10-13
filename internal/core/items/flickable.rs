@@ -1057,7 +1057,7 @@ impl FlickableDataInner {
                     let stop = start_value + velocity * velocity.abs() / (2.0 * DECELERATION);
                     let lower_limit = Self::flick_limits(flick_rc, -1., dimension);
                     let target = Box::pin(Property::new(0.));
-                    target.set_binding(move || stop.clamp(lower_limit.get().min(0.), 0.));
+                    target.set_binding(move || stop.clamp(lower_limit.as_ref().get().min(0.), 0.));
                     let simulation =
                         Rc::new_cyclic(|weak: &Weak<RefCell<PhysicalSpringToLimit>>| {
                             content.set_physic_animation_value(weak.clone());
