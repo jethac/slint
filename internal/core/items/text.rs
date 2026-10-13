@@ -1045,6 +1045,7 @@ fn single_line_height(
 fn shared_parley_line_height(
     window_adapter: &Rc<dyn WindowAdapter>,
     font_request: &crate::graphics::FontRequest,
+    line_height_factor: Option<f32>,
 ) -> Option<Coord> {
     crate::window::WindowInner::from_pub(window_adapter.window())
         .try_context()
@@ -1052,6 +1053,7 @@ fn shared_parley_line_height(
             crate::textlayout::sharedparley::text_line_height(
                 &mut ctx.font_context().borrow_mut(),
                 font_request,
+                line_height_factor,
             )
         })
         .map(|h| h.get())
@@ -1061,6 +1063,7 @@ fn shared_parley_line_height(
 fn shared_parley_line_height(
     _window_adapter: &Rc<dyn WindowAdapter>,
     _font_request: &crate::graphics::FontRequest,
+    _line_height_factor: Option<f32>,
 ) -> Option<Coord> {
     None
 }
@@ -1139,11 +1142,14 @@ fn text_layout_info(
             .ceil();
             if let min_lines @ 1.. = text.min_lines() {
                 let font_request = text.font_request(self_rc);
+                let line_height_factor = text.line_height_factor();
                 let line_height = window_adapter
                     .renderer()
-                    .text_line_height(font_request.clone())
+                    .text_line_height(font_request.clone(), line_height_factor)
                     .map(|h| h.get())
-                    .or_else(|| shared_parley_line_height(window_adapter, &font_request))
+                    .or_else(|| {
+                        shared_parley_line_height(window_adapter, &font_request, line_height_factor)
+                    })
                     // With no line-height metric at all there is no reliable
                     // per-line unit (the text's own height is a multiple of it),
                     // so the minimum can't be applied.

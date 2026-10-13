@@ -34,7 +34,7 @@ pub use crate::item_tree::{ItemRc, ItemTreeVTable};
 use crate::layout::LayoutInfo;
 use crate::lengths::{
     LogicalBorderRadius, LogicalLength, LogicalPoint, LogicalPx, LogicalRect, LogicalSize,
-    LogicalVector, PointLengths, RectLengths,
+    LogicalVector, PointLengths,
 };
 pub use crate::menus::MenuItem;
 use crate::model::Model;
