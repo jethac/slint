@@ -81,6 +81,7 @@ pub use i_slint_compiler::DefaultTranslationContext;
 #[derive(Clone, Default)]
 pub struct CompilerConfiguration {
     overrides: project_file::Overrides,
+    exclude_vector_fonts: Option<bool>,
 }
 
 /// How should the Slint compiler embed images and fonts
@@ -219,7 +220,7 @@ impl CompilerConfiguration {
     /// asserts the rasterizer feature at compile time instead.
     #[must_use]
     pub fn exclude_vector_fonts(mut self, exclude: bool) -> Self {
-        self.config.exclude_vector_fonts = exclude;
+        self.exclude_vector_fonts = Some(exclude);
         self
     }
 
@@ -340,6 +341,9 @@ impl CompilerConfiguration {
             i_slint_compiler::generator::OutputFormat::Rust,
         );
         self.overrides.apply(project_file, &mut config);
+        if let Some(exclude) = self.exclude_vector_fonts {
+            config.exclude_vector_fonts = exclude;
+        }
         config
     }
 
