@@ -17,6 +17,21 @@ pub struct SoftwareRendererAdapter {
     display: Arc<dyn crate::display::swdisplay::SoftwareBufferDisplay>,
     presenter: Arc<dyn crate::display::Presenter>,
     size: PhysicalWindowSize,
+    shadow: std::cell::RefCell<Shadow>,
+}
+
+/// A cached-memory copy of the screen for displays whose buffers are
+/// write-combined. Blending (antialiased text, translucent fills) reads the
+/// destination, and reads from write-combined memory are an order of magnitude
+/// slower than from cached memory; so the renderer draws here, partially (the
+/// shadow always holds the previous frame), and only the changed rectangles are
+/// copied into the display's buffer.
+#[derive(Default)]
+struct Shadow {
+    pixels: Vec<u32>,
+    /// Rectangles (x, y, width, height) copied for the previous frame: a
+    /// buffer two frames old also needs those.
+    prev: Vec<(usize, usize, usize, usize)>,
 }
 
 const SOFTWARE_RENDER_SUPPORTED_DRM_FOURCC_FORMATS: &[drm::buffer::DrmFourcc] = &[
@@ -178,11 +193,57 @@ impl SoftwareRendererAdapter {
             display: display.clone(),
             presenter: display.as_presenter(),
             size,
+            shadow: Default::default(),
         });
 
         eprintln!("Using Software renderer");
 
         Ok(renderer)
+    }
+}
+
+impl SoftwareRendererAdapter {
+    /// Render into the cached shadow buffer, then copy what changed into the
+    /// display's buffer `pixels` (32 bits per pixel, `stride` pixels per row)
+    /// of the given age.
+    fn render_shadowed<P: TargetPixel + bytemuck::Pod>(&self, pixels: &mut [u8], age: u8, stride: usize) {
+        let width = self.size.width as usize;
+        let height = self.size.height as usize;
+        let mut shadow = self.shadow.borrow_mut();
+        let fresh = shadow.pixels.len() != width * height;
+        if fresh {
+            shadow.pixels = vec![0; width * height];
+        }
+        self.renderer.set_repaint_buffer_type(if fresh {
+            RepaintBufferType::NewBuffer
+        } else {
+            RepaintBufferType::ReusedBuffer
+        });
+        let region = {
+            let buffer: &mut [P] = bytemuck::cast_slice_mut(&mut shadow.pixels);
+            self.renderer.render(buffer, width)
+        };
+        let rects: Vec<(usize, usize, usize, usize)> = region
+            .iter()
+            .map(|(p, s)| (p.x.max(0) as usize, p.y.max(0) as usize, s.width as usize, s.height as usize))
+            .collect();
+        let dst: &mut [u32] = bytemuck::cast_slice_mut(pixels);
+        let src = &shadow.pixels;
+        let mut copy = |x: usize, y: usize, w: usize, h: usize| {
+            let x1 = (x + w).min(width);
+            if x >= x1 {
+                return;
+            }
+            for row in y..(y + h).min(height) {
+                dst[row * stride + x..row * stride + x1].copy_from_slice(&src[row * width + x..row * width + x1]);
+            }
+        };
+        match age {
+            1 => rects.iter().for_each(|r| copy(r.0, r.1, r.2, r.3)),
+            2 if !fresh => rects.iter().chain(shadow.prev.iter()).for_each(|r| copy(r.0, r.1, r.2, r.3)),
+            _ => copy(0, 0, width, height),
+        }
+        shadow.prev = rects;
     }
 }
 
@@ -197,11 +258,23 @@ impl crate::fullscreenwindowadapter::FullscreenRenderer for SoftwareRendererAdap
         _draw_mouse_cursor_callback: &dyn Fn(&mut dyn i_slint_core::item_rendering::ItemRenderer),
     ) -> Result<DrawOutcome, PlatformError> {
         self.display.map_back_buffer(&mut |pixels, age, format| {
-            self.renderer.set_repaint_buffer_type(match age {
-                1 => RepaintBufferType::ReusedBuffer,
-                2 => RepaintBufferType::SwappedBuffers,
-                _ => RepaintBufferType::NewBuffer,
-            });
+            let shadowed = self.display.is_write_combined_memory()
+                && rotation == RenderingRotation::NoRotation
+                && matches!(
+                    format,
+                    drm::buffer::DrmFourcc::Xrgb8888
+                        | drm::buffer::DrmFourcc::Argb8888
+                        | drm::buffer::DrmFourcc::Bgra8888
+                );
+            // The shadow path sets its own buffer type; changing the type
+            // clears the renderer's caches, so it is set once per path.
+            if !shadowed {
+                self.renderer.set_repaint_buffer_type(match age {
+                    1 => RepaintBufferType::ReusedBuffer,
+                    2 => RepaintBufferType::SwappedBuffers,
+                    _ => RepaintBufferType::NewBuffer,
+                });
+            }
 
             self.renderer.set_rendering_rotation(match rotation {
                 RenderingRotation::NoRotation => {
@@ -225,6 +298,12 @@ impl crate::fullscreenwindowadapter::FullscreenRenderer for SoftwareRendererAdap
                 (pixels.len() / height / bytes_per_pixel).max(self.size.width as usize)
             };
             match format {
+                drm::buffer::DrmFourcc::Xrgb8888 | drm::buffer::DrmFourcc::Argb8888 if shadowed => {
+                    self.render_shadowed::<DumbBufferPixelXrgb888>(pixels, age, stride(4));
+                }
+                drm::buffer::DrmFourcc::Bgra8888 if shadowed => {
+                    self.render_shadowed::<DumbBufferPixelBgra8888>(pixels, age, stride(4));
+                }
                 drm::buffer::DrmFourcc::Xrgb8888 | drm::buffer::DrmFourcc::Argb8888 => {
                     let stride = stride(std::mem::size_of::<DumbBufferPixelXrgb888>());
                     let buffer: &mut [DumbBufferPixelXrgb888] = bytemuck::cast_slice_mut(pixels);
