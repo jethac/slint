@@ -9,14 +9,20 @@ use crate::drmoutput::DrmOutput;
 use drm::control::Device;
 use i_slint_core::platform::PlatformError;
 
+/// Two dumb buffers: one on screen (or queued to be), one to render into.
+///
+/// Rendering into the back buffer waits until the previous page flip has
+/// completed, so the back buffer is never being scanned out while it is drawn.
+/// The back buffer then always holds the frame before last (age 2), which the
+/// software renderer repaints partially (`RepaintBufferType::SwappedBuffers`).
+/// With three buffers in rotation the back buffer was three frames old, an age
+/// the renderer cannot track, and every frame was repainted in full.
 pub struct DumbBufferDisplay {
     drm_output: DrmOutput,
-    /// Currently displayed buffer
+    /// Buffer on screen, or queued to be by the last page flip
     front_buffer: RefCell<DumbBuffer>,
     /// Buffer next to be rendered into
     back_buffer: RefCell<DumbBuffer>,
-    /// Buffer currently on the way to the display, to become front_buffer
-    in_flight_buffer: RefCell<DumbBuffer>,
 }
 
 impl DumbBufferDisplay {
@@ -50,16 +56,8 @@ impl DumbBufferDisplay {
             front_buffer.borrow().bpp,
         )?
         .into();
-        let in_flight_buffer = DumbBuffer::allocate(
-            &drm_output.drm_device,
-            drm_output.size(),
-            front_buffer.borrow().format,
-            front_buffer.borrow().depth,
-            front_buffer.borrow().bpp,
-        )?
-        .into();
 
-        Ok(Arc::new(Self { drm_output, front_buffer, back_buffer, in_flight_buffer }))
+        Ok(Arc::new(Self { drm_output, front_buffer, back_buffer }))
     }
 }
 
@@ -76,6 +74,8 @@ impl super::SoftwareBufferDisplay for DumbBufferDisplay {
             drm::buffer::DrmFourcc,
         ) -> Result<(), PlatformError>,
     ) -> Result<(), PlatformError> {
+        // The back buffer was on screen until the last flip completed.
+        self.drm_output.wait_for_page_flip();
         let mut back_buffer = self.back_buffer.borrow_mut();
         let age = back_buffer.age;
         let format = back_buffer.format;
@@ -101,20 +101,19 @@ impl crate::display::Presenter for DumbBufferDisplay {
         self.drm_output.wait_for_page_flip();
 
         self.back_buffer.swap(&self.front_buffer);
-        self.front_buffer.swap(&self.in_flight_buffer);
 
-        self.in_flight_buffer.borrow_mut().age = 1;
-        for buffer in [&self.back_buffer, &self.front_buffer] {
-            let mut buffer_borrow = buffer.borrow_mut();
-            if buffer_borrow.age != 0 {
-                buffer_borrow.age += 1;
+        self.front_buffer.borrow_mut().age = 1;
+        {
+            let mut back = self.back_buffer.borrow_mut();
+            if back.age != 0 {
+                back.age += 1;
             }
         }
 
         // TODO: dirty framebuffer
         self.drm_output.present(
-            self.in_flight_buffer.borrow().buffer_handle,
-            self.in_flight_buffer.borrow().fb_handle,
+            self.front_buffer.borrow().buffer_handle,
+            self.front_buffer.borrow().fb_handle,
         )?;
         Ok(())
     }
