@@ -1,0 +1,58 @@
+// Copyright © SixtyFPS GmbH <info@slint.dev>
+// SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0
+
+import "../../../demos/printerdemo/ui/fonts/Inter-24pt-Regular.ttf";
+
+// StyledText takes `line-height` like Text, so a styled text spaces its
+// lines like a Text of the same string.
+export component TestCase inherits Window {
+    width: 500phx;
+    height: 500phx;
+    default-font-size: 10px;
+
+    VerticalLayout {
+        alignment: start;
+
+        default-styled := StyledText {
+            text: @markdown("One\\\nTwo");
+            default-font-family: "Inter 24pt";
+        }
+
+        styled := StyledText {
+            text: @markdown("One\\\nTwo");
+            default-font-family: "Inter 24pt";
+            line-height: 30px;
+        }
+
+        text := Text {
+            text: "One\nTwo";
+            font-family: "Inter 24pt";
+            line-height: 30px;
+        }
+    }
+
+    out property <length> default-height: default-styled.preferred-height;
+    out property <length> styled-height: styled.preferred-height;
+    out property <length> text-height: text.preferred-height;
+    out property <bool> test: styled.preferred-height == 60phx
+        && styled.preferred-height == text.preferred-height
+        && default-styled.preferred-height != styled.preferred-height;
+}
+
+/*
+```rust
+let instance = TestCase::new().unwrap();
+assert!(instance.get_test(), "default {:?} styled {:?} text {:?}", instance.get_default_height(), instance.get_styled_height(), instance.get_text_height());
+```
+
+```cpp
+auto handle = TestCase::create();
+const TestCase &instance = *handle;
+assert(instance.get_test());
+```
+
+```js
+let instance = new slint.TestCase({});
+assert(instance.test);
+```
+*/

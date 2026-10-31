@@ -1334,6 +1334,16 @@ fn build(l: &mut Loader) {
         in property <string> default-font-family;
         /// The default font size used to render the text, when no size is specified via markup. If unset (or zero), the value falls back to the enclosing `Window`'s `default-font-size`.
         in property <length> default-font-size;
+        /// The default font weight used to render the text, when no markup makes it bold.
+        /// The values range from 100 (lightest) to 900 (thickest); 400 is the normal weight.
+        /// If unset (or zero), the value falls back to the enclosing `Window`'s
+        /// `default-font-weight`.
+        in property <int> default-font-weight;
+        /// The absolute line height applied to each line, replacing the font's natural line
+        /// height, as the `Text` element's `line-height`. The default of `0` keeps the
+        /// natural line height.
+        /// \default 0
+        in property <length> line-height;
         /// The default font width used to render the text, when no `<font>` tag in the markup
         /// specifies one. It's a percentage like the CSS `font-stretch` property and maps onto
         /// a variable font's `wdth` axis. `0%` means unset and falls back to the enclosing
