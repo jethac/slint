@@ -206,7 +206,12 @@ impl SoftwareRendererAdapter {
     /// Render into the cached shadow buffer, then copy what changed into the
     /// display's buffer `pixels` (32 bits per pixel, `stride` pixels per row)
     /// of the given age.
-    fn render_shadowed<P: TargetPixel + bytemuck::Pod>(&self, pixels: &mut [u8], age: u8, stride: usize) {
+    fn render_shadowed<P: TargetPixel + bytemuck::Pod>(
+        &self,
+        pixels: &mut [u8],
+        age: u8,
+        stride: usize,
+    ) {
         let width = self.size.width as usize;
         let height = self.size.height as usize;
         let mut shadow = self.shadow.borrow_mut();
@@ -223,27 +228,144 @@ impl SoftwareRendererAdapter {
             let buffer: &mut [P] = bytemuck::cast_slice_mut(&mut shadow.pixels);
             self.renderer.render(buffer, width)
         };
-        let rects: Vec<(usize, usize, usize, usize)> = region
+        let rects: Vec<Rect> = region
             .iter()
-            .map(|(p, s)| (p.x.max(0) as usize, p.y.max(0) as usize, s.width as usize, s.height as usize))
+            .map(|(p, s)| {
+                (p.x.max(0) as usize, p.y.max(0) as usize, s.width as usize, s.height as usize)
+            })
             .collect();
         let dst: &mut [u32] = bytemuck::cast_slice_mut(pixels);
-        let src = &shadow.pixels;
-        let mut copy = |x: usize, y: usize, w: usize, h: usize| {
-            let x1 = (x + w).min(width);
-            if x >= x1 {
-                return;
-            }
-            for row in y..(y + h).min(height) {
-                dst[row * stride + x..row * stride + x1].copy_from_slice(&src[row * width + x..row * width + x1]);
-            }
-        };
-        match age {
-            1 => rects.iter().for_each(|r| copy(r.0, r.1, r.2, r.3)),
-            2 if !fresh => rects.iter().chain(shadow.prev.iter()).for_each(|r| copy(r.0, r.1, r.2, r.3)),
-            _ => copy(0, 0, width, height),
-        }
+        copy_damage(dst, stride, &shadow.pixels, width, height, &rects, &shadow.prev, age, fresh);
         shadow.prev = rects;
+    }
+}
+
+/// A rectangle (x, y, width, height) in pixels.
+type Rect = (usize, usize, usize, usize);
+
+/// Bring a display buffer of the given `age` up to date with the shadow `src`
+/// (`width` x `height`, tightly packed), given the rectangles that changed in
+/// this frame (`rects`) and in the previous one (`prev`).
+///
+/// A buffer of age 1 holds the previous frame, so this frame's rectangles are
+/// enough. A buffer of age 2 holds the frame before that: it also misses what
+/// changed in the previous frame, which went only into the other buffer. That
+/// includes the place an item has just left, so without `prev` an item that
+/// moves or disappears leaves a copy of itself behind in every other frame.
+/// Any other age, or a shadow that was just created, takes a full copy.
+#[allow(clippy::too_many_arguments)]
+fn copy_damage(
+    dst: &mut [u32],
+    stride: usize,
+    src: &[u32],
+    width: usize,
+    height: usize,
+    rects: &[Rect],
+    prev: &[Rect],
+    age: u8,
+    fresh: bool,
+) {
+    let mut copy = |&(x, y, w, h): &Rect| {
+        let x1 = (x + w).min(width);
+        if x >= x1 {
+            return;
+        }
+        for row in y..(y + h).min(height) {
+            dst[row * stride + x..row * stride + x1]
+                .copy_from_slice(&src[row * width + x..row * width + x1]);
+        }
+    };
+    match age {
+        1 if !fresh => rects.iter().for_each(copy),
+        2 if !fresh => rects.iter().chain(prev.iter()).for_each(copy),
+        _ => copy(&(0, 0, width, height)),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{Rect, copy_damage};
+
+    const W: usize = 40;
+    const H: usize = 20;
+    const STRIDE: usize = 48;
+
+    /// The shadow for a frame: background 0, and a 10 x 8 "pill" at `x`
+    /// (which may be partly or wholly left of the screen), if shown.
+    fn frame(x: Option<i32>) -> Vec<u32> {
+        let mut v = vec![0; W * H];
+        if let Some(x) = x {
+            for row in 6..14 {
+                for col in x.max(0)..(x + 10).clamp(0, W as i32) {
+                    v[row * W + col as usize] = 7;
+                }
+            }
+        }
+        v
+    }
+
+    /// What changed between two frames, as a renderer reports it: the union of
+    /// the old and new places, clipped to the screen.
+    fn damage(a: Option<i32>, b: Option<i32>) -> Vec<Rect> {
+        let span = |x: Option<i32>| x.map(|x| (x.max(0), (x + 10).clamp(0, W as i32)));
+        let spans: Vec<(i32, i32)> =
+            [span(a), span(b)].into_iter().flatten().filter(|s| s.0 < s.1).collect();
+        if spans.is_empty() {
+            return vec![];
+        }
+        let x0 = spans.iter().map(|s| s.0).min().unwrap();
+        let x1 = spans.iter().map(|s| s.1).max().unwrap();
+        vec![(x0 as usize, 6, (x1 - x0) as usize, 8)]
+    }
+
+    /// Two display buffers in rotation, each frame copied from the shadow into
+    /// the one two frames old, must show exactly the shadow. The sequence is
+    /// the volume charm: off the left edge, sliding in, then out and hidden,
+    /// with a few frames where only something elsewhere changes.
+    #[test]
+    fn two_buffers_follow_an_item_that_slides_off_screen_and_hides() {
+        let seq: Vec<Option<i32>> = [
+            None,
+            None,
+            Some(-9),
+            Some(-5),
+            Some(-1),
+            Some(3),
+            Some(5),
+            Some(5),
+            Some(1),
+            Some(-4),
+            Some(-8),
+            None,
+            None,
+            None,
+        ]
+        .into();
+        let mut buffers = [vec![0xdead_u32; STRIDE * H], vec![0xbeef_u32; STRIDE * H]];
+        let mut ages = [0u8, 0u8];
+        let mut prev: Vec<Rect> = vec![];
+        let mut last = None;
+        for (i, &x) in seq.iter().enumerate() {
+            let src = frame(x);
+            let rects = damage(last, x);
+            let b = i % 2;
+            copy_damage(&mut buffers[b], STRIDE, &src, W, H, &rects, &prev, ages[b], i == 0);
+            for row in 0..H {
+                assert_eq!(
+                    &buffers[b][row * STRIDE..row * STRIDE + W],
+                    &src[row * W..(row + 1) * W],
+                    "frame {i} (pill at {x:?}), row {row}"
+                );
+            }
+            // As DumbBufferDisplay::present: the presented buffer is age 1, the
+            // other one a frame older (a never drawn buffer stays at 0).
+            ages[b] = 1;
+            if ages[1 - b] != 0 {
+                ages[1 - b] += 1;
+            }
+            prev = rects;
+            last = x;
+        }
     }
 }
 
