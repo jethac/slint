@@ -7,7 +7,7 @@
 //! `doRepeat` helpers from `MaterialShapes.kt` (pinned commit
 //! `23327507f7fc7d5b19d65fec4b090f60c970079b`).
 
-use super::ShapeError;
+use crate::ShapeError;
 use super::corner::CornerRounding;
 use super::rounded_polygon::RoundedPolygon;
 use super::utils::{

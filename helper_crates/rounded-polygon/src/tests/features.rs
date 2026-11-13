@@ -4,7 +4,7 @@
 //! Port of upstream `FeaturesTest.kt`. Upstream's `assertThrows` maps to the
 //! `Result::Err` the builders return.
 
-use super::super::*;
+use crate::*;
 use super::utils::*;
 use alloc::vec;
 

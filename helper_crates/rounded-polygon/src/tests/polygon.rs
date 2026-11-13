@@ -3,7 +3,7 @@
 
 //! Port of upstream `PolygonTest.kt`.
 
-use super::super::*;
+use crate::*;
 use super::utils::*;
 
 use alloc::vec::Vec;

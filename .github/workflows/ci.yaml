@@ -438,6 +438,8 @@ jobs:
               run: cargo check --target=thumbv6m-none-eabi -p material-color-utils --no-default-features --release
             - name: Test material-color-utils no_std vectors
               run: cargo test -p material-color-utils --no-default-features --test vectors
+            - name: Check rounded-polygon no_std
+              run: cargo check --target=thumbv6m-none-eabi -p rounded-polygon --no-default-features --release
             - name: Check software renderer's embedded vector fonts on no_std MCU
               if: ${{ inputs.full || contains(fromJSON(inputs.changes), 'internal') || contains(fromJSON(inputs.changes), 'api_rs') }}
               env:

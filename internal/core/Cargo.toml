@@ -40,6 +40,7 @@ std = [
   "i-slint-common/color-parsing",
   "i-slint-common/markdown",
   "taffy/std",
+  "rounded-polygon/std",
 ]
 # Unsafe feature meaning that there is only one core running and all thread_local are static.
 # You can only enable this feature if you are sure that any API of this crate is only called
@@ -114,6 +115,7 @@ i-slint-core-macros = { workspace = true, features = ["default"] }
 
 const-field-offset = { version = "0.2.1", path = "../../helper_crates/const-field-offset" }
 material-color-utils = { workspace = true }
+rounded-polygon = { workspace = true }
 vtable = { workspace = true }
 
 portable-atomic = { version = "1", features = ["critical-section"] }

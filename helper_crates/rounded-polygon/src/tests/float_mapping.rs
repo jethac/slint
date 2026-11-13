@@ -4,7 +4,7 @@
 //! Port of upstream `FloatMappingTest.kt`. `DoubleMapper(...)` throwing maps to
 //! `DoubleMapper::new` returning `None`.
 
-use super::super::mapping::DoubleMapper;
+use crate::mapping::DoubleMapper;
 use super::utils::*;
 
 fn validate_mapping(mapper: DoubleMapper, expected_function: impl Fn(f32) -> f32) {

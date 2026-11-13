@@ -647,11 +647,7 @@ static LICENSE_FOR_FILE: LazyLock<Vec<(regex::Regex, &'static str)>> = LazyLock:
         ("^editors/zed/", MIT_LICENSE),
         ("^helper_crates/const-field-offset/", MIT_OR_APACHE2_LICENSE),
         ("^helper_crates/material-color-utils/", APACHE2_LICENSE),
-        (
-            "^internal/core/graphics/shapes/(constructors|corner|cubic|feature|mapping|measure|mod|morph|rounded_polygon|svg|utils)\\.rs$",
-            APACHE2_LICENSE,
-        ),
-        ("^internal/core/graphics/shapes/tests/", APACHE2_LICENSE),
+        ("^helper_crates/rounded-polygon/", APACHE2_LICENSE),
         ("^internal/core/animations/simulations/spring_estimation", APACHE2_LICENSE),
         ("^internal/core/graphics/oklab_compose_reference\\.py$", APACHE2_LICENSE),
         ("^internal/core/graphics/shadow\\.rs$", BSD3_LICENSE),

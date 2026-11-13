@@ -9,15 +9,36 @@
 //! ([`crate::items::CornerRounding`], [`LogicalPosition`]) and return a
 //! [`Shape`], mapping invalid arguments to the empty shape.
 
-use super::corner::CornerRounding;
-use super::rounded_polygon::RoundedPolygon;
 use super::shape::Shape;
-use super::utils::Point;
+use crate::items::CornerRounding;
+use rounded_polygon::{Point, RoundedPolygon};
 use crate::api::LogicalPosition;
 use crate::model::{Model as _, ModelRc};
 use alloc::vec::Vec;
 
-fn shape(polygon: Result<RoundedPolygon, super::ShapeError>) -> Shape {
+impl CornerRounding {
+    /// A rounding radius of zero, producing a sharp corner at a vertex.
+    pub const UNROUNDED: CornerRounding = CornerRounding { radius: 0., smoothing: 0. };
+
+    /// Creates a corner rounding from the `radius` of its circular arc and a `smoothing` factor from 0 to 1.
+    pub const fn new(radius: f32, smoothing: f32) -> Self {
+        Self { radius, smoothing }
+    }
+}
+
+impl From<CornerRounding> for rounded_polygon::CornerRounding {
+    fn from(rounding: CornerRounding) -> Self {
+        Self { radius: rounding.radius, smoothing: rounding.smoothing }
+    }
+}
+
+const UNROUNDED: rounded_polygon::CornerRounding = rounded_polygon::CornerRounding::UNROUNDED;
+
+fn polygon_roundings(roundings: &ModelRc<CornerRounding>) -> Vec<rounded_polygon::CornerRounding> {
+    roundings.iter().map(Into::into).collect()
+}
+
+fn shape(polygon: Result<RoundedPolygon, rounded_polygon::ShapeError>) -> Shape {
     polygon.map(|p| Shape::from_polygon(&p)).unwrap_or_else(|e| {
         crate::debug_log!("Shapes: {e}");
         Shape::default()
@@ -31,6 +52,7 @@ pub fn rounded_polygon_polygon(
     rounding: CornerRounding,
 ) -> Shape {
     let flat: Vec<f32> = vertices.iter().flat_map(|p| [p.x, p.y]).collect();
+    let rounding = rounding.into();
     let roundings = alloc::vec![rounding; vertices.row_count()];
     shape(RoundedPolygon::from_vertices(&flat, rounding, Some(&roundings), None))
 }
@@ -41,18 +63,18 @@ pub fn rounded_polygon_per_vertex(
     vertices: &ModelRc<LogicalPosition>,
     roundings: &ModelRc<CornerRounding>,
 ) -> Shape {
-    let roundings: Vec<CornerRounding> = roundings.iter().collect();
+    let roundings = polygon_roundings(roundings);
     if vertices.row_count() == 0 || vertices.row_count() != roundings.len() {
         return Shape::default();
     }
     let flat: Vec<f32> = vertices.iter().flat_map(|p| [p.x, p.y]).collect();
-    shape(RoundedPolygon::from_vertices(&flat, CornerRounding::UNROUNDED, Some(&roundings), None))
+    shape(RoundedPolygon::from_vertices(&flat, UNROUNDED, Some(&roundings), None))
 }
 
 /// `Shapes.regular-polygon(num-vertices, rounding)`: a regular `num-vertices`-gon
 /// with unit radius centered on the origin.
 pub fn regular_polygon(num_vertices: usize, rounding: CornerRounding) -> Shape {
-    shape(RoundedPolygon::regular(num_vertices, 1., Point::ZERO, rounding, None))
+    shape(RoundedPolygon::regular(num_vertices, 1., Point::ZERO, rounding.into(), None))
 }
 
 /// `Shapes.regular-polygon-per-vertex(num-vertices, roundings)`.
@@ -60,7 +82,7 @@ pub fn regular_polygon_per_vertex(
     num_vertices: usize,
     roundings: &ModelRc<CornerRounding>,
 ) -> Shape {
-    let roundings: Vec<CornerRounding> = roundings.iter().collect();
+    let roundings = polygon_roundings(roundings);
     if num_vertices != roundings.len() {
         return Shape::default();
     }
@@ -68,7 +90,7 @@ pub fn regular_polygon_per_vertex(
         num_vertices,
         1.,
         Point::ZERO,
-        CornerRounding::UNROUNDED,
+        UNROUNDED,
         Some(&roundings),
     ))
 }
@@ -77,20 +99,20 @@ pub fn regular_polygon_per_vertex(
 /// centered on the origin. `roundings` may be empty (sharp corners), a single
 /// element (uniform rounding) or four elements (per-corner rounding).
 pub fn rectangle_shape(width: f32, height: f32, roundings: &ModelRc<CornerRounding>) -> Shape {
-    let roundings: Vec<CornerRounding> = roundings.iter().collect();
+    let roundings = polygon_roundings(roundings);
     let (rounding, per_vertex) = match roundings.len() {
-        0 => (CornerRounding::UNROUNDED, None),
+        0 => (UNROUNDED, None),
         1 => (roundings[0], None),
-        4 => (CornerRounding::UNROUNDED, Some(roundings)),
+        4 => (UNROUNDED, Some(roundings)),
         _ => return Shape::default(),
     };
-    shape(super::constructors::rectangle(width, height, rounding, per_vertex, Point::ZERO))
+    shape(rounded_polygon::rectangle(width, height, rounding, per_vertex, Point::ZERO))
 }
 
 /// `Shapes.circle(num-vertices)`: a unit pseudo-circle approximated with
 /// `num-vertices` vertices, centered on the origin.
 pub fn circle_shape(num_vertices: usize) -> Shape {
-    shape(super::constructors::circle(num_vertices, 1., Point::ZERO))
+    shape(rounded_polygon::circle(num_vertices, 1., Point::ZERO))
 }
 
 /// `Shapes.star(num-vertices-per-radius, inner-radius, rounding, inner-rounding)`:
@@ -101,12 +123,12 @@ pub fn star_shape(
     rounding: CornerRounding,
     inner_rounding: CornerRounding,
 ) -> Shape {
-    shape(super::constructors::star(
+    shape(rounded_polygon::star(
         num_vertices_per_radius,
         1.,
         inner_radius,
-        rounding,
-        Some(inner_rounding),
+        rounding.into(),
+        Some(inner_rounding.into()),
         None,
         Point::ZERO,
     ))
@@ -114,7 +136,7 @@ pub fn star_shape(
 
 /// `Shapes.pill(width, height, smoothing)`.
 pub fn pill_shape(width: f32, height: f32, smoothing: f32) -> Shape {
-    shape(super::constructors::pill(width, height, smoothing, Point::ZERO))
+    shape(rounded_polygon::pill(width, height, smoothing, Point::ZERO))
 }
 
 /// `Shapes.pill-star(num-vertices-per-radius, width, height, inner-radius-ratio, rounding)`.
@@ -125,12 +147,12 @@ pub fn pill_star_shape(
     inner_radius_ratio: f32,
     rounding: CornerRounding,
 ) -> Shape {
-    shape(super::constructors::pill_star(
+    shape(rounded_polygon::pill_star(
         width,
         height,
         num_vertices_per_radius,
         inner_radius_ratio,
-        rounding,
+        rounding.into(),
         None,
         None,
         1.,
@@ -153,8 +175,8 @@ pub fn custom_shape(
         return Shape::default();
     }
     let vertices: Vec<(f32, f32)> = vertices.iter().map(|p| (p.x, p.y)).collect();
-    let roundings: Vec<CornerRounding> = roundings.iter().collect();
-    shape(super::constructors::custom_polygon(
+    let roundings = polygon_roundings(roundings);
+    shape(rounded_polygon::custom_polygon(
         &vertices,
         &roundings,
         Point { x: center.x, y: center.y },

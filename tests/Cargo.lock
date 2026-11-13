@@ -2403,7 +2403,6 @@ dependencies = [
  "fontcull-klippa",
  "fontcull-write-fonts",
  "i-slint-common",
- "i-slint-core",
  "icu_normalizer",
  "icu_properties",
  "image",
@@ -2419,6 +2418,7 @@ dependencies = [
  "quote",
  "rayon",
  "resvg",
+ "rounded-polygon",
  "rowan",
  "rspolib",
  "serde",
@@ -2470,6 +2470,7 @@ dependencies = [
  "raw-window-handle",
  "resvg",
  "rgb",
+ "rounded-polygon",
  "scopeguard",
  "skrifa",
  "slab",
@@ -4523,6 +4524,14 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "47b34b781b31e5d73e9fbc8689c70551fd1ade9a19e3e28cfec8580a79290cc4"
 dependencies = [
  "bytemuck",
+]
+
+[[package]]
+name = "rounded-polygon"
+version = "0.1.0"
+dependencies = [
+ "libm",
+ "num-traits",
 ]
 
 [[package]]

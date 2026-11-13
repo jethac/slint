@@ -3,8 +3,8 @@
 
 //! Port of upstream `FeatureMappingTest.kt`.
 
-use super::super::mapping::{do_mapping, feature_dist_squared};
-use super::super::*;
+use crate::mapping::{do_mapping, feature_dist_squared};
+use crate::*;
 use super::utils::*;
 
 use alloc::rc::Rc;
@@ -87,7 +87,7 @@ fn feature_mapping_does_not_crash() {
     .unwrap()
     .normalized()
     .unwrap();
-    let very_sunny = super::super::constructors::star(
+    let very_sunny = crate::constructors::star(
         8,
         1.,
         0.65,

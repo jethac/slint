@@ -3560,7 +3560,6 @@ dependencies = [
  "fontcull-klippa",
  "fontcull-write-fonts",
  "i-slint-common",
- "i-slint-core",
  "i-slint-parser-test-macro",
  "icu_normalizer",
  "icu_properties",
@@ -3579,6 +3578,7 @@ dependencies = [
  "rayon",
  "regex",
  "resvg",
+ "rounded-polygon",
  "rowan",
  "rspolib",
  "serde",
@@ -3636,6 +3636,7 @@ dependencies = [
  "raw-window-handle",
  "resvg",
  "rgb",
+ "rounded-polygon",
  "rustybuzz",
  "scopeguard",
  "serde",
@@ -6937,6 +6938,14 @@ name = "riscv-pac"
 version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8188909339ccc0c68cfb5a04648313f09621e8b87dc03095454f1a11f6c5d436"
+
+[[package]]
+name = "rounded-polygon"
+version = "0.1.0"
+dependencies = [
+ "libm",
+ "num-traits",
+]
 
 [[package]]
 name = "rowan"

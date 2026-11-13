@@ -3,14 +3,14 @@
 
 //! Port of upstream `FeatureDetectorTest.kt`.
 
-use super::super::*;
+use crate::*;
 use super::utils::*;
 use alloc::vec;
 use alloc::vec::Vec;
 
 fn pill_star_polygon(rounding: CornerRounding) -> RoundedPolygon {
     // Upstream `RoundedPolygon.pillStar()` defaults.
-    super::super::constructors::pill_star(
+    crate::constructors::pill_star(
         2.,
         1.,
         8,
@@ -155,7 +155,7 @@ fn reconstructs_pill_star() {
         .collect();
 
     let created_polygon = RoundedPolygon::from_features(
-        super::super::feature::detect_features(&split_cubics),
+        crate::feature::detect_features(&split_cubics),
         Some(original_polygon.center()),
     )
     .unwrap();
@@ -208,7 +208,7 @@ fn reconstructs_rounded_pill_star_close_enough() {
     // the roundings of pill star gets pointy as they are small in the [0,1] space
     let original_polygon = pill_star_polygon(CornerRounding::new(0.2, 0.));
     let created_polygon = RoundedPolygon::from_features(
-        super::super::feature::detect_features(original_polygon.cubics()),
+        crate::feature::detect_features(original_polygon.cubics()),
         Some(original_polygon.center()),
     )
     .unwrap();

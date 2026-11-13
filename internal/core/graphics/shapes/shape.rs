@@ -8,14 +8,12 @@
 //! canonical form exchanged with the `.slint` language, the language bindings and
 //! JSON serialization, plus the content-keyed morph cache used by shape animations.
 
-use super::ShapeError;
-use super::cubic::Cubic;
-use super::feature::{Feature, detect_features_preserving};
-use super::morph::Morph;
 use super::next_shape_id;
-use super::rounded_polygon::RoundedPolygon;
-use super::svg::SvgPathParser;
-use super::utils::{Point, PointTransformer, interpolate, k_cos, k_sin};
+use rounded_polygon::utils::{interpolate, k_cos, k_sin};
+use rounded_polygon::{
+    Cubic, Feature, Morph, Point, PointTransformer, RoundedPolygon, ShapeError,
+    detect_features_preserving,
+};
 use crate::SharedVector;
 use crate::items::FillRule;
 use alloc::collections::VecDeque;
@@ -275,20 +273,13 @@ impl Shape {
     }
 
     /// A shape parsed from an SVG path data string (the `path()` builtin).
-    /// See [SvgPathParser::parse_features].
+    /// See [rounded_polygon::SvgPathParser::parse_features].
     ///
     /// A shape is a single closed outline: `svg_path` must not describe more
     /// than one outline (i.e. contain a second `m`/`M` section), and percentages
     /// are not supported — shapes have no reference box to resolve them against.
     pub fn from_svg_path(svg_path: &str, fill_rule: FillRule) -> Result<Shape, ShapeError> {
-        if svg_path.contains('%') {
-            return Err(ShapeError::new("percentages are not supported in shape paths"));
-        }
-        if super::svg::has_multiple_outlines(svg_path) {
-            return Err(ShapeError::new("a shape path must describe a single outline"));
-        }
-        let features = SvgPathParser::parse_features(svg_path)?;
-        let polygon = RoundedPolygon::from_features(features, None)?;
+        let polygon = RoundedPolygon::from_svg_path(svg_path)?;
         let mut shape = Shape::from_polygon(&polygon);
         shape.fill_rule = fill_rule;
         Ok(shape)

@@ -4945,7 +4945,6 @@ dependencies = [
  "fontcull-klippa",
  "fontcull-write-fonts",
  "i-slint-common",
- "i-slint-core",
  "icu_normalizer",
  "icu_properties",
  "image",
@@ -4959,6 +4958,7 @@ dependencies = [
  "quote",
  "rayon",
  "resvg",
+ "rounded-polygon",
  "rowan",
  "rspolib",
  "serde",
@@ -5011,6 +5011,7 @@ dependencies = [
  "raw-window-handle",
  "resvg",
  "rgb",
+ "rounded-polygon",
  "scopeguard",
  "serde",
  "skrifa",
@@ -7766,6 +7767,14 @@ dependencies = [
  "serde_derive",
  "typeid",
  "unicode-ident",
+]
+
+[[package]]
+name = "rounded-polygon"
+version = "0.1.0"
+dependencies = [
+ "libm",
+ "num-traits",
 ]
 
 [[package]]

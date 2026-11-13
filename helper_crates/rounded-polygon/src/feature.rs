@@ -5,7 +5,7 @@
 
 //! Port of `Features.kt` and `FeatureDetector.kt` from androidx.graphics.shapes.
 
-use super::ShapeError;
+use crate::ShapeError;
 use super::cubic::Cubic;
 use super::utils::{DISTANCE_EPSILON, PointTransformer, RELAXED_DISTANCE_EPSILON, collinear_ish};
 use alloc::vec::Vec;
@@ -24,7 +24,7 @@ use alloc::vec::Vec;
 ///   Note that edges or features created with [Feature::build_ignorable_feature] are
 ///   ignored in the default mapping.
 ///
-/// [Morph]: crate::graphics::shapes::Morph
+/// [Morph]: crate::Morph
 #[derive(Clone, Debug, PartialEq)]
 pub enum Feature {
     /// Edges have only a list of the cubic curves which make up the edge. Edges lie
@@ -45,7 +45,7 @@ pub enum Feature {
 
 impl Feature {
     /// Group a list of [Cubic] objects to a feature that should be ignored in the
-    /// default [Morph](crate::graphics::shapes::Morph) mapping. The feature can have
+    /// default [Morph](crate::Morph) mapping. The feature can have
     /// any indentation.
     ///
     /// Only the features marked as important are smoothly transitioned between the
@@ -111,7 +111,7 @@ impl Feature {
         }
     }
 
-    /// Whether this feature gets ignored in the [Morph](crate::graphics::shapes::Morph)
+    /// Whether this feature gets ignored in the [Morph](crate::Morph)
     /// mapping. See [Feature::build_ignorable_feature] for details.
     pub fn is_ignorable_feature(&self) -> bool {
         matches!(self, Feature::Edge(..))
@@ -170,7 +170,7 @@ fn is_continuous(feature: &Feature) -> bool {
 ///   and last cubic, that remain the same in order to persist the start position.
 ///
 /// Assumes the list of cubics is continuous.
-pub(crate) fn detect_features(cubics: &[Cubic]) -> Vec<Feature> {
+pub fn detect_features(cubics: &[Cubic]) -> Vec<Feature> {
     if cubics.is_empty() {
         return Vec::new();
     }
@@ -208,7 +208,7 @@ pub(crate) fn detect_features(cubics: &[Cubic]) -> Vec<Feature> {
 /// no cubic is approximated by `extend`. Used where the cubics must round-trip
 /// exactly, like morph output (`Morph::as_cubics` interpolates real geometry;
 /// `Cubic::empty` placeholders are still dropped on rebuild as zero-length).
-pub(crate) fn detect_features_preserving(cubics: &[Cubic]) -> Vec<Feature> {
+pub fn detect_features_preserving(cubics: &[Cubic]) -> Vec<Feature> {
     if cubics.is_empty() {
         return Vec::new();
     }

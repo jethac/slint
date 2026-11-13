@@ -5,7 +5,7 @@
 
 //! Port of `SvgPathParser.kt` and `FeatureSerializer.kt` from androidx.graphics.shapes.
 
-use super::ShapeError;
+use crate::ShapeError;
 use super::cubic::Cubic;
 use super::feature::{Feature, detect_features};
 use super::rounded_polygon::{RoundedPolygon, fix_polygon_orientation};
@@ -110,9 +110,24 @@ impl SvgPathParser {
     }
 }
 
+impl RoundedPolygon {
+    /// Creates a polygon from the single closed outline that the SVG path data `svg_path` describes.
+    ///
+    /// Returns an error for percentages, for more than one outline, and for a path that is invalid or not closed.
+    pub fn from_svg_path(svg_path: &str) -> Result<RoundedPolygon, ShapeError> {
+        if svg_path.contains('%') {
+            return Err(ShapeError::new("percentages are not supported in shape paths"));
+        }
+        if has_multiple_outlines(svg_path) {
+            return Err(ShapeError::new("a shape path must describe a single outline"));
+        }
+        RoundedPolygon::from_features(SvgPathParser::parse_features(svg_path)?, None)
+    }
+}
+
 /// Whether `svg_path` contains more than one outline (a second `m`/`M` section),
 /// splitting on move commands exactly like [SvgPathParser::parse_cubics].
-pub(crate) fn has_multiple_outlines(svg_path: &str) -> bool {
+fn has_multiple_outlines(svg_path: &str) -> bool {
     split_before(svg_path, |c| c == 'm' || c == 'M')
         .iter()
         .filter(|p| !p.trim().is_empty())
@@ -404,8 +419,8 @@ fn arc_to_cubics(
     /* Convert rotation angle from degrees to radians */
     let theta_d: f64 = theta as f64 / 180. * core::f64::consts::PI;
     /* Pre-compute rotation matrix entries */
-    let cos_theta = crate::graphics::math::cos(theta_d);
-    let sin_theta = crate::graphics::math::sin(theta_d);
+    let cos_theta = libm::cos(theta_d);
+    let sin_theta = libm::sin(theta_d);
     /* Transform (x0, y0) and (x1, y1) into unit space */
     /* using (inverse) rotation, followed by (inverse) scale */
     let x0p = (x0 as f64 * cos_theta + y0 as f64 * sin_theta) / a as f64;
@@ -451,9 +466,9 @@ fn arc_to_cubics(
         cy = ym - sdx;
     }
 
-    let eta0 = crate::graphics::math::atan2(y0p - cy, x0p - cx);
+    let eta0 = libm::atan2(y0p - cy, x0p - cx);
 
-    let eta1 = crate::graphics::math::atan2(y1p - cy, x1p - cx);
+    let eta1 = libm::atan2(y1p - cy, x1p - cx);
 
     let mut sweep = eta1 - eta0;
     if is_positive_arc != (sweep >= 0.) {

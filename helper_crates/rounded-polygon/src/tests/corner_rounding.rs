@@ -3,7 +3,7 @@
 
 //! Port of upstream `CornerRoundingTest.kt`.
 
-use super::super::*;
+use crate::*;
 
 #[test]
 fn corner_rounding_test() {

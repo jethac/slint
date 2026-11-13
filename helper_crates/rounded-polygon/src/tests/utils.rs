@@ -3,7 +3,7 @@
 
 //! Port of upstream `TestUtils.kt`.
 
-use super::super::*;
+use crate::*;
 use alloc::format;
 
 pub const EPSILON: f32 = 1e-4;

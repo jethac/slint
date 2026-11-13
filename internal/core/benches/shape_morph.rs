@@ -13,7 +13,9 @@
 //!   hit still pays.
 
 use criterion::{Criterion, criterion_group, criterion_main};
-use i_slint_core::graphics::shapes::{self, CornerRounding, MorphCache, Point};
+use i_slint_core::graphics::shapes::{
+    self, MorphCache, Point, PolygonCornerRounding as CornerRounding,
+};
 
 const ROUNDING: CornerRounding = CornerRounding::new(0.1, 0.);
 

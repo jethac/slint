@@ -106,9 +106,7 @@ experimental-library-module = ["std"]
 
 [dependencies]
 i-slint-common = { workspace = true }
-# For validating `Shapes.path` literals at compile time with the same ported
-# SVG parser that runs at runtime.
-i-slint-core = { workspace = true, features = ["std"] }
+rounded-polygon = { workspace = true, features = ["std"] }
 
 num_enum = { version = "0.7", optional = true }
 icu_normalizer = { workspace = true, optional = true }

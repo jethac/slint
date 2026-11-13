@@ -3,7 +3,7 @@
 
 //! Port of upstream `PolygonMeasureTest.kt`.
 
-use super::super::*;
+use crate::*;
 use super::utils::*;
 
 use alloc::rc::Rc;
@@ -125,7 +125,7 @@ fn measure_circle() {
     // this test validates if the chosen segment count approximates the arc length up to
     // an error of 1.5% from the true length
     let vertices = 4;
-    let polygon = super::super::constructors::circle(vertices, 1., Point::ZERO).unwrap();
+    let polygon = crate::constructors::circle(vertices, 1., Point::ZERO).unwrap();
 
     let measurer = LengthMeasurer::default();
     let actual_length: f64 =

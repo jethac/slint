@@ -3,8 +3,8 @@
 
 //! Port of upstream `SvgPathParserTest.kt`.
 
-use super::super::svg::SvgPathParser;
-use super::super::*;
+use crate::svg::SvgPathParser;
+use crate::*;
 use super::utils::*;
 
 fn parsing_is_equalish(path_a: &str, path_b: &str) {

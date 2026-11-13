@@ -4,8 +4,8 @@
 //! Port of upstream `PolygonValidationTest.kt` (`PolygonValidator.fix` is
 //! `fix_polygon_orientation` here).
 
-use super::super::rounded_polygon::fix_polygon_orientation;
-use super::super::*;
+use crate::rounded_polygon::fix_polygon_orientation;
+use crate::*;
 use super::utils::*;
 
 const PENTAGON_POINTS: [f32; 10] = [0.2, 0., 0.8, 0., 1., 0.6, 0.5, 1., 0., 0.6];

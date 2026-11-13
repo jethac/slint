@@ -5,7 +5,7 @@
 
 //! Port of `RoundedPolygon.kt` and `PolygonValidation.kt` from androidx.graphics.shapes.
 
-use super::ShapeError;
+use crate::ShapeError;
 use super::corner::{CornerRounding, RoundedCorner};
 use super::cubic::Cubic;
 use super::feature::Feature;
@@ -29,7 +29,7 @@ pub struct RoundedPolygon {
 impl RoundedPolygon {
     /// A single-point polygon at `center`. Used where an invalid outline must be
     /// replaced by a defined result.
-    pub(crate) fn degenerate(center: Point) -> Self {
+    pub fn degenerate(center: Point) -> Self {
         Self { features: Vec::new(), center, cubics: alloc::vec![Cubic::empty(center.x, center.y)] }
     }
 

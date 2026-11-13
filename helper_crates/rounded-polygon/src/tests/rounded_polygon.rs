@@ -3,8 +3,8 @@
 
 //! Port of upstream `RoundedPolygonTest.kt`.
 
-use super::super::constructors;
-use super::super::*;
+use crate::constructors;
+use crate::*;
 use super::utils::*;
 
 use alloc::format;

@@ -2,10 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 //! Ports of the upstream `androidx.graphics.shapes` `commonTest` unit tests
-//! (pinned commit 23327507f7fc7d5b19d65fec4b090f60c970079b). They exercise
-//! internals (`detect_features`, `do_mapping`, `fix_polygon_orientation`, ...)
-//! that are `pub(crate)` in this port, so they live inside the crate rather
-//! than in `internal/core/tests/`.
+//! (pinned commit 23327507f7fc7d5b19d65fec4b090f60c970079b).
 //!
 //! Mapping of upstream assertions: Kotlin's `assertThrows` becomes an `is_err()`
 //! or `is_none()` check on the `Result`/`Option` the port returns; `assertEquals`

@@ -201,14 +201,9 @@ fn shape_path_macro(
     }
 }
 
-/// Runs the real ported `SvgPathParser` (via `Shape::from_svg_path`) on a
-/// literal `d` string, so every literal that would fail at runtime is a compile
-/// error instead of a warning + empty shape. Returns the error message, or
-/// `None` when the literal parses.
+/// Returns the error that the `Shapes.path` literal `d` produces at runtime, if any.
 fn shape_path_literal_error(d: &str) -> Option<String> {
-    i_slint_core::graphics::Shape::from_svg_path(d, i_slint_core::items::FillRule::Nonzero)
-        .err()
-        .map(|e| e.to_string())
+    rounded_polygon::RoundedPolygon::from_svg_path(d).err().map(|e| e.to_string())
 }
 
 /// The unit-less number an argument of `cubic-bezier`/`spring` wrote, including a

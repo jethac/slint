@@ -4,8 +4,8 @@
 //! Port of upstream `ShapesTest.kt` — tests the utility shape-creating
 //! functions like Circle and Star.
 
-use super::super::constructors;
-use super::super::*;
+use crate::constructors;
+use crate::*;
 use super::utils::*;
 use alloc::vec::Vec;
 

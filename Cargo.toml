@@ -23,6 +23,7 @@ members = [
   'editors/zed',
   'helper_crates/const-field-offset',
   'helper_crates/material-color-utils',
+  'helper_crates/rounded-polygon',
   'helper_crates/vtable',
   'helper_crates/vtable/macro',
   'internal/backends/winit',
@@ -110,6 +111,7 @@ slint-macros = { version = "=1.20.0", path = "api/rs/macros", default-features =
 
 vtable = { version = "0.5.1", path = "helper_crates/vtable" }
 material-color-utils = { version = "=0.1.0", path = "helper_crates/material-color-utils", default-features = false }
+rounded-polygon = { version = "=0.1.0", path = "helper_crates/rounded-polygon", default-features = false }
 
 by_address = { version = "1.0.4" }
 bytemuck = { version = "1.13.1" }

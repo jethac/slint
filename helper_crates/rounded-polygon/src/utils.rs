@@ -40,35 +40,35 @@ impl Point {
         self.x * self.x + self.y * self.y
     }
 
-    pub(crate) fn dot_product(self, other: Point) -> f32 {
+    pub fn dot_product(self, other: Point) -> f32 {
         self.x * other.x + self.y * other.y
     }
 
-    pub(crate) fn dot_product_xy(self, other_x: f32, other_y: f32) -> f32 {
+    pub fn dot_product_xy(self, other_x: f32, other_y: f32) -> f32 {
         self.x * other_x + self.y * other_y
     }
 
     /// The Z coordinate of the cross product of two vectors, true if the second vector
     /// is going clockwise (> 0) compared with the first one.
-    pub(crate) fn clockwise(self, other: Point) -> bool {
+    pub fn clockwise(self, other: Point) -> bool {
         self.x * other.y - self.y * other.x > 0.
     }
 
     /// Unit vector representing the direction to this point from (0, 0), or `None`
     /// on a zero-length vector (the Kotlin `require` in `Point.getDirection`, which
     /// the shape constructors surface as `ShapeError`).
-    pub(crate) fn direction(self) -> Option<Point> {
+    pub fn direction(self) -> Option<Point> {
         let d = self.distance();
         if d > 0. { Some(self / d) } else { None }
     }
 
     /// The point rotated by 90 degrees counter-clockwise.
-    pub(crate) fn rotate90(self) -> Point {
+    pub fn rotate90(self) -> Point {
         Point { x: -self.y, y: self.x }
     }
 
     /// Transform this point with the given transformer.
-    pub fn transformed(&self, f: &dyn crate::graphics::shapes::PointTransformer) -> Point {
+    pub fn transformed(&self, f: &dyn crate::PointTransformer) -> Point {
         f.transform(self.x, self.y)
     }
 }
@@ -121,28 +121,28 @@ impl<F: Fn(f32, f32) -> Point> PointTransformer for F {
     }
 }
 
-pub(crate) fn distance(x: f32, y: f32) -> f32 {
+pub fn distance(x: f32, y: f32) -> f32 {
     k_sqrt(x * x + y * y)
 }
 
-pub(crate) fn distance_squared(x: f32, y: f32) -> f32 {
+pub fn distance_squared(x: f32, y: f32) -> f32 {
     x * x + y * y
 }
 
 /// Unit vector representing the direction to the point (x, y) from (0, 0), or
 /// `None` on a zero-length vector (the Kotlin `require` in `directionVector`).
-pub(crate) fn direction_vector(x: f32, y: f32) -> Option<Point> {
+pub fn direction_vector(x: f32, y: f32) -> Option<Point> {
     let d = distance(x, y);
     if d > 0. { Some(Point { x: x / d, y: y / d }) } else { None }
 }
 
 /// Unit vector at the given angle.
-pub(crate) fn direction_vector_angle(angle_radians: f32) -> Point {
+pub fn direction_vector_angle(angle_radians: f32) -> Point {
     Point { x: k_cos(angle_radians), y: k_sin(angle_radians) }
 }
 
 /// Kotlin `radialToCartesian(radius, angleRadians, center = Origin)`.
-pub(crate) fn radial_to_cartesian(radius: f32, angle_radians: f32) -> Point {
+pub fn radial_to_cartesian(radius: f32, angle_radians: f32) -> Point {
     direction_vector_angle(angle_radians) * radius
 }
 
@@ -150,38 +150,38 @@ pub(crate) fn radial_to_cartesian(radius: f32, angle_radians: f32) -> Point {
 /// within some reasonable roundoff error. The distance epsilon is smaller, with the
 /// intention that the roundoff should not be larger than a pixel on any reasonable
 /// sized display.
-pub(crate) const DISTANCE_EPSILON: f32 = 1e-4;
-pub(crate) const ANGLE_EPSILON: f32 = 1e-6;
+pub const DISTANCE_EPSILON: f32 = 1e-4;
+pub const ANGLE_EPSILON: f32 = 1e-6;
 
 /// This epsilon is based on the observation that people tend to see e.g. collinearity
 /// much more relaxed than what is mathematically correct. This effect is heightened on
 /// smaller displays. Use this epsilon for operations that allow higher tolerances.
-pub(crate) const RELAXED_DISTANCE_EPSILON: f32 = 5e-3;
+pub const RELAXED_DISTANCE_EPSILON: f32 = 5e-3;
 
-pub(crate) const FLOAT_PI: f32 = core::f32::consts::PI;
-pub(crate) const TWO_PI: f32 = 2. * FLOAT_PI;
+pub const FLOAT_PI: f32 = core::f32::consts::PI;
+pub const TWO_PI: f32 = 2. * FLOAT_PI;
 
-pub(crate) fn square(x: f32) -> f32 {
+pub fn square(x: f32) -> f32 {
     x * x
 }
 
 /// Linearly interpolate between `start` and `stop` with `fraction` fraction between them.
-pub(crate) fn interpolate(start: f32, stop: f32, fraction: f32) -> f32 {
+pub fn interpolate(start: f32, stop: f32, fraction: f32) -> f32 {
     (1. - fraction) * start + fraction * stop
 }
 
 /// Linearly interpolate between two points.
-pub(crate) fn interpolate_point(start: Point, stop: Point, fraction: f32) -> Point {
+pub fn interpolate_point(start: Point, stop: Point, fraction: f32) -> Point {
     Point { x: interpolate(start.x, stop.x, fraction), y: interpolate(start.y, stop.y, fraction) }
 }
 
 /// Similar to `num % mod`, but ensures the result is always positive.
-pub(crate) fn positive_modulo(num: f32, modulus: f32) -> f32 {
+pub fn positive_modulo(num: f32, modulus: f32) -> f32 {
     (num % modulus + modulus) % modulus
 }
 
 /// Returns whether C is on the line defined by the two points AB.
-pub(crate) fn collinear_ish(
+pub fn collinear_ish(
     a_x: f32,
     a_y: f32,
     b_x: f32,
@@ -202,7 +202,7 @@ pub(crate) fn collinear_ish(
 
 /// Approximates whether corner at this vertex is concave or convex, based on the
 /// relationship of the prev->curr/curr->next vectors.
-pub(crate) fn convex(previous: Point, current: Point, next: Point) -> bool {
+pub fn convex(previous: Point, current: Point, next: Point) -> bool {
     // TODO: b/369320447 - This is a fast, but not reliable calculation.
     (current - previous).clockwise(next - current)
 }
@@ -210,7 +210,7 @@ pub(crate) fn convex(previous: Point, current: Point, next: Point) -> bool {
 /// Does a ternary search in `v0..v1` to find the parameter that minimizes the given
 /// function. Stops when the search space size is reduced below the given tolerance.
 #[allow(dead_code)]
-pub(crate) fn find_minimum(v0: f32, v1: f32, tolerance: f32, f: &dyn Fn(f32) -> f32) -> f32 {
+pub fn find_minimum(v0: f32, v1: f32, tolerance: f32, f: &dyn Fn(f32) -> f32) -> f32 {
     let mut a = v0;
     let mut b = v1;
     while b - a > tolerance {
@@ -229,42 +229,42 @@ pub(crate) fn find_minimum(v0: f32, v1: f32, tolerance: f32, f: &dyn Fn(f32) -> 
 // narrow back to f32, like `Math.sin(x.toDouble()).toFloat()` does on the JVM.
 
 /// `kotlin.math.sqrt(Float)` — correctly rounded in f64, narrowed to f32.
-pub(crate) fn k_sqrt(x: f32) -> f32 {
+pub fn k_sqrt(x: f32) -> f32 {
     (x as f64).sqrt() as f32
 }
 
 /// `kotlin.math.sin(Float)`.
-pub(crate) fn k_sin(x: f32) -> f32 {
-    crate::graphics::math::sin(x as f64) as f32
+pub fn k_sin(x: f32) -> f32 {
+    libm::sin(x as f64) as f32
 }
 
 /// `kotlin.math.cos(Float)`.
-pub(crate) fn k_cos(x: f32) -> f32 {
-    crate::graphics::math::cos(x as f64) as f32
+pub fn k_cos(x: f32) -> f32 {
+    libm::cos(x as f64) as f32
 }
 
 /// `kotlin.math.tan(Float)`.
-pub(crate) fn k_tan(x: f32) -> f32 {
-    crate::graphics::math::tan(x as f64) as f32
+pub fn k_tan(x: f32) -> f32 {
+    libm::tan(x as f64) as f32
 }
 
 /// `kotlin.math.atan2(Float, Float)`.
-pub(crate) fn k_atan2(y: f32, x: f32) -> f32 {
-    crate::graphics::math::atan2(y as f64, x as f64) as f32
+pub fn k_atan2(y: f32, x: f32) -> f32 {
+    libm::atan2(y as f64, x as f64) as f32
 }
 
 /// `kotlin.math.min(Float, Float)` — NaN propagates like `Math.min`.
-pub(crate) fn k_min(a: f32, b: f32) -> f32 {
+pub fn k_min(a: f32, b: f32) -> f32 {
     if a.is_nan() || b.is_nan() { f32::NAN } else { a.min(b) }
 }
 
 /// `kotlin.math.max(Float, Float)` — NaN propagates like `Math.max`.
-pub(crate) fn k_max(a: f32, b: f32) -> f32 {
+pub fn k_max(a: f32, b: f32) -> f32 {
     if a.is_nan() || b.is_nan() { f32::NAN } else { a.max(b) }
 }
 
 /// `kotlin.math.ceil(Float)` — returns a Float, widened through Double.
 #[allow(dead_code)]
-pub(crate) fn k_ceil(x: f32) -> f32 {
+pub fn k_ceil(x: f32) -> f32 {
     (x as f64).ceil() as f32
 }

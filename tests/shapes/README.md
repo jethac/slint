@@ -1,6 +1,6 @@
 # Shape golden vectors
 
-Golden test vectors for `internal/core/graphics/shapes/`, the Rust port of
+Golden test vectors for `helper_crates/rounded-polygon`, the Rust port of
 [androidx.graphics.shapes](https://github.com/androidx/androidx) pinned at
 commit `23327507f7fc7d5b19d65fec4b090f60c970079b`, with the morph engine
 (`AngleMeasurer`, greedy `doMapping`, inclusive `validateProgress`, unwrapped

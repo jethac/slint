@@ -12,22 +12,20 @@ use super::utils::{
 };
 use alloc::vec::Vec;
 
-/// The rounding parameters of a shape vertex, `#[repr(C)]` and visible to `.slint`
-/// code as the `CornerRounding` builtin struct (generated in `crate::items` from
-/// `i_slint_common::builtin_structs`, where its documentation lives). A value of 0
-/// for `radius` means a sharp corner; `smoothing` in 0 to 1 extends the curve from
-/// the circular arc to the adjacent edges.
-pub use crate::items::CornerRounding;
+/// The rounding parameters of a shape vertex.
+#[derive(Copy, Clone, Debug, Default, PartialEq)]
+pub struct CornerRounding {
+    /// The radius of the circular arc at the vertex. 0 means a sharp corner.
+    pub radius: f32,
+    /// How far the curve extends from the circular arc into the adjacent edges, from 0 to 1.
+    pub smoothing: f32,
+}
 
 impl CornerRounding {
     /// A rounding radius of zero, producing a sharp corner at a vertex.
     pub const UNROUNDED: CornerRounding = CornerRounding { radius: 0., smoothing: 0. };
 
-    /// A corner rounding from a circular-arc `radius` and `smoothing` factor in
-    /// the 0–1 range (see the struct's fields).
-    ///
-    /// This constructor exists because the struct is `#[non_exhaustive]` and so
-    /// cannot be built with a literal outside i-slint-core.
+    /// Creates a corner rounding from the `radius` of its circular arc and a `smoothing` factor from 0 to 1.
     pub const fn new(radius: f32, smoothing: f32) -> Self {
         Self { radius, smoothing }
     }

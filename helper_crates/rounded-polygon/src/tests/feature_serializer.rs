@@ -3,8 +3,8 @@
 
 //! Port of upstream `FeatureSerializerTest.kt`.
 
-use super::super::svg::FeatureSerializer;
-use super::super::*;
+use crate::svg::FeatureSerializer;
+use crate::*;
 use super::utils::*;
 
 use alloc::vec;

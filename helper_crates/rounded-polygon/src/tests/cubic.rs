@@ -3,7 +3,7 @@
 
 //! Port of upstream `CubicTest.kt`.
 
-use super::super::*;
+use crate::*;
 use super::utils::*;
 
 const ZERO: Point = Point { x: 0., y: 0. };

@@ -13,7 +13,9 @@
 //! the JVM's intrinsics and Rust's `libm`/`std` paths may round the last ulp
 //! differently.
 
-use i_slint_core::graphics::shapes::{self, CornerRounding, Morph, Point, RoundedPolygon};
+use i_slint_core::graphics::shapes::{
+    self, Morph, Point, PolygonCornerRounding as CornerRounding, RoundedPolygon,
+};
 use std::collections::BTreeMap;
 
 const CENTER: Point = Point { x: 0.5, y: 0.5 };
@@ -758,10 +760,10 @@ fn degenerate_inputs_do_not_panic() {
 
     // Stars reject inner_radius <= 0 or >= radius (Kotlin's IllegalArgumentException).
     assert!(
-        shapes::star_shape(4, 0., CornerRounding::UNROUNDED, CornerRounding::UNROUNDED).is_empty()
+        shapes::star_shape(4, 0., shapes::CornerRounding::UNROUNDED, shapes::CornerRounding::UNROUNDED).is_empty()
     );
     assert!(
-        shapes::star_shape(4, 1., CornerRounding::UNROUNDED, CornerRounding::UNROUNDED).is_empty()
+        shapes::star_shape(4, 1., shapes::CornerRounding::UNROUNDED, shapes::CornerRounding::UNROUNDED).is_empty()
     );
 
     // Zero/negative/NaN pills and circles.
@@ -778,8 +780,8 @@ fn degenerate_inputs_do_not_panic() {
     ]
     .as_slice()
     .into();
-    let nan_shape = shapes::rounded_polygon_polygon(&vertices, CornerRounding::UNROUNDED);
-    let target = shapes::regular_polygon(4, CornerRounding::UNROUNDED);
+    let nan_shape = shapes::rounded_polygon_polygon(&vertices, shapes::CornerRounding::UNROUNDED);
+    let target = shapes::regular_polygon(4, shapes::CornerRounding::UNROUNDED);
     // The degenerate morph returns the target's outline at every progress.
     assert_eq!(nan_shape.morph(&target, 0.5), target);
     let _ = target.morph(&nan_shape, 0.5);
@@ -794,7 +796,7 @@ fn degenerate_inputs_do_not_panic() {
 /// without panicking.
 #[test]
 fn zero_scaled_shape_morphs_without_panic() {
-    let target = shapes::regular_polygon(4, CornerRounding::UNROUNDED);
+    let target = shapes::regular_polygon(4, shapes::CornerRounding::UNROUNDED);
     let zero = target.scaled(0., 0.);
     // Zero-sized: unmeasurable — the morph degenerates to the target.
     assert_eq!(zero.morph(&target, 0.5), target);

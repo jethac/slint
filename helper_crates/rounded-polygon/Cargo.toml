@@ -1,0 +1,24 @@
+# Copyright © SixtyFPS GmbH <info@slint.dev>
+# SPDX-License-Identifier: Apache-2.0
+
+[package]
+name = "rounded-polygon"
+version = "0.1.0"
+authors = ["Slint Developers <info@slint.dev>"]
+edition = "2024"
+rust-version = "1.95"
+license = "Apache-2.0"
+description = "Port of androidx.graphics.shapes: rounded polygons, their measuring and morphing"
+repository = "https://github.com/slint-ui/slint"
+homepage = "https://slint.dev"
+keywords = ["shapes", "polygon", "morph", "material"]
+
+[features]
+default = ["std"]
+std = []
+
+[dependencies]
+# The Kotlin reference runs on the JVM's fdlibm-family math. libm is a fdlibm
+# port, which keeps the results identical on every platform.
+libm = "0.2"
+num-traits = { version = "0.2", default-features = false, features = ["libm"] }
