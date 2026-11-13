@@ -2,6 +2,7 @@
   {
     "PushClipLayer": {
       "clip": "M0,0 L100,0 L100,120 L0,120 Z",
+      "fill": "NonZero",
       "transform": [
         1.0,
         0.0,
@@ -13,6 +14,20 @@
     }
   },
   "PopLayer",
+  {
+    "PushClipLayer": {
+      "clip": "M0,0 L16,0 L16,120 L0,120 Z",
+      "fill": "NonZero",
+      "transform": [
+        1.0,
+        0.0,
+        0.0,
+        1.0,
+        -8.0,
+        -32.0
+      ]
+    }
+  },
   {
     "GlyphRun": {
       "brush": {
@@ -58,9 +73,11 @@
       ]
     }
   },
+  "PopLayer",
   {
     "PushClipLayer": {
       "clip": "M0,0 L100,0 L100,120 L0,120 Z",
+      "fill": "NonZero",
       "transform": [
         1.0,
         0.0,
@@ -93,6 +110,20 @@
         1.0,
         8.0,
         -28.0
+      ]
+    }
+  },
+  {
+    "PushClipLayer": {
+      "clip": "M0,0 L100,0 L100,66.6667 L0,66.6667 Z",
+      "fill": "NonZero",
+      "transform": [
+        1.0,
+        0.0,
+        0.0,
+        1.0,
+        8.0,
+        -1.3333
       ]
     }
   },
@@ -150,9 +181,11 @@
     }
   },
   "PopLayer",
+  "PopLayer",
   {
     "PushClipLayer": {
       "clip": "M0,12 C0,5.3726 5.3726,0 12,0 L44,0 C50.6274,0 56,5.3726 56,12 L56,44 C56,50.6274 50.6274,56 44,56 L12,56 C5.3726,56 0,50.6274 0,44 Z",
+      "fill": "NonZero",
       "transform": [
         1.0,
         0.0,
@@ -167,6 +200,7 @@
   {
     "PushClipLayer": {
       "clip": "M0,28 C0,12.536 12.536,0 28,0 L28,0 C43.464,0 56,12.536 56,28 L56,28 C56,43.464 43.464,56 28,56 L28,56 C12.536,56 0,43.464 0,28 Z",
+      "fill": "NonZero",
       "transform": [
         1.0,
         0.0,
@@ -181,6 +215,7 @@
   {
     "PushClipLayer": {
       "clip": "M0,0 L0,0 L0,0 L0,0 Z",
+      "fill": "NonZero",
       "transform": [
         1.0,
         0.0,

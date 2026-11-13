@@ -27,6 +27,7 @@
   {
     "PushClipLayer": {
       "clip": "M0,0 L79,0 L79,32 L0,32 Z",
+      "fill": "NonZero",
       "transform": [
         1.0,
         0.0,
@@ -40,6 +41,7 @@
   {
     "PushClipLayer": {
       "clip": "M0,0 L18,0 L18,18 L0,18 Z",
+      "fill": "NonZero",
       "transform": [
         1.0,
         0.0,
@@ -59,6 +61,7 @@
         "mix": "Normal"
       },
       "clip": "M0,0 L18,0 L18,18 L0,18 Z",
+      "fill": "NonZero",
       "filter": null,
       "transform": [
         1.0,
@@ -112,6 +115,7 @@
         "mix": "Normal"
       },
       "clip": "M0,0 L18,0 L18,18 L0,18 Z",
+      "fill": "NonZero",
       "filter": null,
       "transform": [
         1.0,
@@ -151,6 +155,20 @@
   "PopLayer",
   "PopLayer",
   "PopLayer",
+  {
+    "PushClipLayer": {
+      "clip": "M0,0 L33,0 L33,20 L0,20 Z",
+      "fill": "NonZero",
+      "transform": [
+        1.0,
+        0.0,
+        0.0,
+        1.0,
+        62.0,
+        38.0
+      ]
+    }
+  },
   {
     "GlyphRun": {
       "brush": {
@@ -199,11 +217,6 @@
           "id": 73,
           "x": 19.9098,
           "y": 14.7852
-        },
-        {
-          "id": 86,
-          "x": 27.5088,
-          "y": 14.7852
         }
       ],
       "hint": false,
@@ -224,6 +237,7 @@
       ]
     }
   },
+  "PopLayer",
   {
     "PushLayer": {
       "alpha": 0.0,
@@ -233,6 +247,7 @@
         "mix": "Normal"
       },
       "clip": "M0,0 L1000000000,0 L1000000000,1000000000 L0,1000000000 Z",
+      "fill": "NonZero",
       "filter": null,
       "transform": [
         1.0,

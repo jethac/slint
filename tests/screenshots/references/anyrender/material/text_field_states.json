@@ -27,6 +27,7 @@
   {
     "PushClipLayer": {
       "clip": "M0,0 L268,0 L268,56 L0,56 Z",
+      "fill": "NonZero",
       "transform": [
         1.0,
         0.0,
@@ -46,6 +47,7 @@
         "mix": "Normal"
       },
       "clip": "M0,0 L1000000000,0 L1000000000,1000000000 L0,1000000000 Z",
+      "fill": "NonZero",
       "filter": null,
       "transform": [
         1.0,
@@ -67,6 +69,7 @@
         "mix": "Normal"
       },
       "clip": "M0,0 L1000000000,0 L1000000000,1000000000 L0,1000000000 Z",
+      "fill": "NonZero",
       "filter": null,
       "transform": [
         1.0,
@@ -82,6 +85,7 @@
   {
     "PushClipLayer": {
       "clip": "M0,0 L268,0 L268,24 L0,24 Z",
+      "fill": "NonZero",
       "transform": [
         1.0,
         0.0,
@@ -102,6 +106,7 @@
         "mix": "Normal"
       },
       "clip": "M0,0 L1000000000,0 L1000000000,1000000000 L0,1000000000 Z",
+      "fill": "NonZero",
       "filter": null,
       "transform": [
         1.0,
@@ -118,6 +123,7 @@
   {
     "PushClipLayer": {
       "clip": "M0,0 L42,0 L42,24 L0,24 Z",
+      "fill": "NonZero",
       "transform": [
         1.0,
         0.0,
@@ -222,6 +228,7 @@
   {
     "PushClipLayer": {
       "clip": "M0,0 L268,0 L268,56 L0,56 Z",
+      "fill": "NonZero",
       "transform": [
         1.0,
         0.0,
@@ -236,6 +243,7 @@
   {
     "PushClipLayer": {
       "clip": "M0,0 L268,0 L268,56 L0,56 Z",
+      "fill": "NonZero",
       "transform": [
         1.0,
         0.0,
@@ -250,6 +258,7 @@
   {
     "PushClipLayer": {
       "clip": "M0,0 L268,0 L268,56 L0,56 Z",
+      "fill": "NonZero",
       "transform": [
         1.0,
         0.0,
@@ -264,6 +273,7 @@
   {
     "PushClipLayer": {
       "clip": "M0,0 L268,0 L268,56 L0,56 Z",
+      "fill": "NonZero",
       "transform": [
         1.0,
         0.0,

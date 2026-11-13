@@ -85,6 +85,7 @@
         "mix": "Normal"
       },
       "clip": "M0,0 L24,0 L24,24 L0,24 Z",
+      "fill": "NonZero",
       "filter": null,
       "transform": [
         1.0,
@@ -138,6 +139,7 @@
         "mix": "Normal"
       },
       "clip": "M0,0 L24,0 L24,24 L0,24 Z",
+      "fill": "NonZero",
       "filter": null,
       "transform": [
         1.0,

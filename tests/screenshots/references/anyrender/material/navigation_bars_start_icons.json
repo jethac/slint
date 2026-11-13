@@ -27,6 +27,7 @@
   {
     "PushClipLayer": {
       "clip": "M0,20 C0,8.9543 8.9543,0 20,0 L73,0 C84.0457,0 93,8.9543 93,20 L93,20 C93,31.0457 84.0457,40 73,40 L20,40 C8.9543,40 0,31.0457 0,20 Z",
+      "fill": "NonZero",
       "transform": [
         1.0,
         0.0,
@@ -72,6 +73,7 @@
         "mix": "Normal"
       },
       "clip": "M0,0 L24,0 L24,24 L0,24 Z",
+      "fill": "NonZero",
       "filter": null,
       "transform": [
         1.0,
@@ -125,6 +127,7 @@
         "mix": "Normal"
       },
       "clip": "M0,0 L24,0 L24,24 L0,24 Z",
+      "fill": "NonZero",
       "filter": null,
       "transform": [
         1.0,
@@ -166,6 +169,7 @@
   {
     "PushClipLayer": {
       "clip": "M0,0 L33,0 L33,16 L0,16 Z",
+      "fill": "NonZero",
       "transform": [
         1.0,
         0.0,
@@ -268,12 +272,13 @@
   {
     "PushClipLayer": {
       "clip": "M0,0 L7,0 L7,16 L0,16 Z",
+      "fill": "NonZero",
       "transform": [
         1.0,
         0.0,
         0.0,
         1.0,
-        46.0,
+        45.5,
         18.0
       ]
     }
@@ -330,6 +335,7 @@
   {
     "PushClipLayer": {
       "clip": "M0,20 C0,8.9543 8.9543,0 20,0 L74,0 C85.0457,0 94,8.9543 94,20 L94,20 C94,31.0457 85.0457,40 74,40 L20,40 C8.9543,40 0,31.0457 0,20 Z",
+      "fill": "NonZero",
       "transform": [
         1.0,
         0.0,
@@ -350,6 +356,7 @@
         "mix": "Normal"
       },
       "clip": "M0,0 L1000000000,0 L1000000000,1000000000 L0,1000000000 Z",
+      "fill": "NonZero",
       "filter": null,
       "transform": [
         1.0,
@@ -365,6 +372,7 @@
   {
     "PushClipLayer": {
       "clip": "M0,0 L0,0 L0,0 L0,0 Z",
+      "fill": "NonZero",
       "transform": [
         1.0,
         0.0,
@@ -379,6 +387,7 @@
   {
     "PushClipLayer": {
       "clip": "M0,20 C0,8.9543 8.9543,0 20,0 L76,0 C87.0457,0 96,8.9543 96,20 L96,20 C96,31.0457 87.0457,40 76,40 L20,40 C8.9543,40 0,31.0457 0,20 Z",
+      "fill": "NonZero",
       "transform": [
         1.0,
         0.0,
@@ -399,6 +408,7 @@
         "mix": "Normal"
       },
       "clip": "M0,0 L1000000000,0 L1000000000,1000000000 L0,1000000000 Z",
+      "fill": "NonZero",
       "filter": null,
       "transform": [
         1.0,
@@ -414,6 +424,7 @@
   {
     "PushClipLayer": {
       "clip": "M0,0 L0,0 L0,0 L0,0 Z",
+      "fill": "NonZero",
       "transform": [
         1.0,
         0.0,
@@ -428,6 +439,7 @@
   {
     "PushClipLayer": {
       "clip": "M0,20 C0,8.9543 8.9543,0 20,0 L73,0 C84.0457,0 93,8.9543 93,20 L93,20 C93,31.0457 84.0457,40 73,40 L20,40 C8.9543,40 0,31.0457 0,20 Z",
+      "fill": "NonZero",
       "transform": [
         1.0,
         0.0,
@@ -448,6 +460,7 @@
         "mix": "Normal"
       },
       "clip": "M0,0 L1000000000,0 L1000000000,1000000000 L0,1000000000 Z",
+      "fill": "NonZero",
       "filter": null,
       "transform": [
         1.0,
@@ -463,6 +476,7 @@
   {
     "PushClipLayer": {
       "clip": "M0,0 L0,0 L0,0 L0,0 Z",
+      "fill": "NonZero",
       "transform": [
         1.0,
         0.0,
@@ -477,6 +491,7 @@
   {
     "PushClipLayer": {
       "clip": "M0,20 C0,8.9543 8.9543,0 20,0 L74,0 C85.0457,0 94,8.9543 94,20 L94,20 C94,31.0457 85.0457,40 74,40 L20,40 C8.9543,40 0,31.0457 0,20 Z",
+      "fill": "NonZero",
       "transform": [
         1.0,
         0.0,
@@ -491,6 +506,7 @@
   {
     "PushClipLayer": {
       "clip": "M0,0 L0,0 L0,0 L0,0 Z",
+      "fill": "NonZero",
       "transform": [
         1.0,
         0.0,
@@ -505,6 +521,7 @@
   {
     "PushClipLayer": {
       "clip": "M0,20 C0,8.9543 8.9543,0 20,0 L76,0 C87.0457,0 96,8.9543 96,20 L96,20 C96,31.0457 87.0457,40 76,40 L20,40 C8.9543,40 0,31.0457 0,20 Z",
+      "fill": "NonZero",
       "transform": [
         1.0,
         0.0,
@@ -525,6 +542,7 @@
         "mix": "Normal"
       },
       "clip": "M0,0 L1000000000,0 L1000000000,1000000000 L0,1000000000 Z",
+      "fill": "NonZero",
       "filter": null,
       "transform": [
         1.0,
@@ -540,6 +558,7 @@
   {
     "PushClipLayer": {
       "clip": "M0,0 L0,0 L0,0 L0,0 Z",
+      "fill": "NonZero",
       "transform": [
         1.0,
         0.0,

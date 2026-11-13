@@ -27,6 +27,7 @@
   {
     "PushClipLayer": {
       "clip": "M192,44 C192,46.2091 190.2091,48 188,48 C126.6667,48 65.3333,48 4,48 C1.7909,48 0,46.2091 0,44 C0,30.6667 0,17.3333 0,4 C0,1.7909 1.7909,0 4,0 C65.3333,0 126.6667,0 188,0 C190.2091,0 192,1.7909 192,4 C192,17.3333 192,30.6667 192,44 Z",
+      "fill": "NonZero",
       "transform": [
         1.0,
         0.0,
@@ -40,6 +41,7 @@
   {
     "PushClipLayer": {
       "clip": "M0,0 L0,0 L0,24 L0,24 Z",
+      "fill": "NonZero",
       "transform": [
         1.0,
         0.0,
@@ -54,6 +56,7 @@
   {
     "PushClipLayer": {
       "clip": "M0,0 L136,0 L136,20 L0,20 Z",
+      "fill": "NonZero",
       "transform": [
         1.0,
         0.0,
@@ -146,6 +149,7 @@
   {
     "PushClipLayer": {
       "clip": "M0,0 L0,0 L0,0 L0,0 Z",
+      "fill": "NonZero",
       "transform": [
         1.0,
         0.0,
@@ -160,6 +164,7 @@
   {
     "PushClipLayer": {
       "clip": "M0,0 L0,0 L0,0 L0,0 Z",
+      "fill": "NonZero",
       "transform": [
         1.0,
         0.0,
@@ -174,6 +179,7 @@
   {
     "PushClipLayer": {
       "clip": "M0,0 L0,0 L0,0 L0,0 Z",
+      "fill": "NonZero",
       "transform": [
         1.0,
         0.0,

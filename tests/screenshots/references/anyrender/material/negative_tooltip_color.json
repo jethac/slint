@@ -25,6 +25,20 @@
     }
   },
   {
+    "PushClipLayer": {
+      "clip": "M0,0 L40,0 L40,16 L0,16 Z",
+      "fill": "NonZero",
+      "transform": [
+        1.0,
+        0.0,
+        0.0,
+        1.0,
+        32.0,
+        20.0
+      ]
+    }
+  },
+  {
     "GlyphRun": {
       "brush": {
         "Solid": {
@@ -98,5 +112,6 @@
         20.0
       ]
     }
-  }
+  },
+  "PopLayer"
 ]
