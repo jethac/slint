@@ -127,6 +127,14 @@ export component MaterialButtonBase {
     /// traces (0↔180° chevron flip on a split button's trailing).
     out property <angle> live_icon_rotation <=> root.animated_icon_rotation;
 
+    // Compose clamps each corner to half the shorter side on its own,
+    // where Slint scales overlapping radii together like CSS.
+    property <length> max_corner: min(root.box_width, root.box_height) / 2;
+    property <length> drawn_tl: min(root.target_tl, root.max_corner);
+    property <length> drawn_tr: min(root.target_tr, root.max_corner);
+    property <length> drawn_br: min(root.target_br, root.max_corner);
+    property <length> drawn_bl: min(root.target_bl, root.max_corner);
+
     out property <length> corner_tl: root.target_tl;
     out property <length> corner_tr: root.target_tr;
     out property <length> corner_br: root.target_br;
@@ -226,7 +234,7 @@ export component MaterialButtonBase {
         width: root.box_width;
         height: root.box_height;
         border_radius: root.target_radius;
-        corners: { top_left: root.target_tl, top_right: root.target_tr, bottom_right: root.target_br, bottom_left: root.target_bl };
+        corners: { top_left: root.drawn_tl, top_right: root.drawn_tr, bottom_right: root.drawn_br, bottom_left: root.drawn_bl };
         shaped_corners: root.shaped_corners;
         background: root.current_container_color;
         level: root.current_level;
@@ -240,7 +248,7 @@ export component MaterialButtonBase {
         enabled: root.enabled;
         color: root.current_content_color;
         border_radius: root.target_radius;
-        corners: { top_left: root.target_tl, top_right: root.target_tr, bottom_right: root.target_br, bottom_left: root.target_bl };
+        corners: { top_left: root.drawn_tl, top_right: root.drawn_tr, bottom_right: root.drawn_br, bottom_left: root.drawn_bl };
         shaped_corners: root.shaped_corners;
         hit_radius: root.resting_radius;
         hit_corners: root.resting_corners;
@@ -314,10 +322,10 @@ export component MaterialButtonBase {
         border_width: root.current_border_width;
         border_color: root.current_border_color;
         border_radius: root.target_radius;
-        border-top-left-radius: root.target_tl;
-        border-top-right-radius: root.target_tr;
-        border-bottom-right-radius: root.target_br;
-        border-bottom-left-radius: root.target_bl;
+        border-top-left-radius: root.drawn_tl;
+        border-top-right-radius: root.drawn_tr;
+        border-bottom-right-radius: root.drawn_br;
+        border-bottom-left-radius: root.drawn_bl;
     }
 
     // The checked `TrailingButton`'s `drawWithContent` overlay: drawn after
@@ -329,10 +337,10 @@ export component MaterialButtonBase {
         width: container.width;
         height: container.height;
         background: root.current_content_color.with_alpha(StateTokens.pressed_state_layer_opacity);
-        border-top-left-radius: root.target_tl;
-        border-top-right-radius: root.target_tr;
-        border-bottom-right-radius: root.target_br;
-        border-bottom-left-radius: root.target_bl;
+        border-top-left-radius: root.drawn_tl;
+        border-top-right-radius: root.drawn_tr;
+        border-bottom-right-radius: root.drawn_br;
+        border-bottom-left-radius: root.drawn_bl;
     }
 
     // The inset ring follows the live shape — including mid-morph.
@@ -342,7 +350,7 @@ export component MaterialButtonBase {
         width: container.width;
         height: container.height;
         border_radius: root.target_radius;
-        corners: { top_left: root.target_tl, top_right: root.target_tr, bottom_right: root.target_br, bottom_left: root.target_bl };
+        corners: { top_left: root.drawn_tl, top_right: root.drawn_tr, bottom_right: root.drawn_br, bottom_left: root.drawn_bl };
         shaped_corners: root.shaped_corners;
     }
 }
