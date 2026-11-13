@@ -600,8 +600,9 @@ pub fn extract_parity(source: &str) -> ParityMarkers {
     }
 
     let mut mask_shadow = Vec::new();
-    static MASK_SHADOW_RX: LazyLock<Regex> =
-        LazyLock::new(|| Regex::new(r"//MASK_SHADOW=\s*([A-Za-z0-9_>-]+)\s*@\s*([0-9,\s]+)").unwrap());
+    static MASK_SHADOW_RX: LazyLock<Regex> = LazyLock::new(|| {
+        Regex::new(r"//MASK_SHADOW=\s*([A-Za-z0-9_>-]+)\s*@\s*([0-9,\s]+)").unwrap()
+    });
     for m in MASK_SHADOW_RX.captures_iter(source) {
         for t in m[2].split(',').map(str::trim).filter(|s| !s.is_empty()) {
             mask_shadow.push((

@@ -5,8 +5,8 @@ use crate::builtin_functions::BuiltinFunction;
 use crate::diagnostics::{BuildDiagnostics, SourceLocation, Spanned};
 use crate::element_type::{BuiltinElement, PropertyLookupMode};
 use crate::expression_types::{
-    EasingCurve, EasingCurveCtor, ImageReference, MinMaxOp, MouseCursorInner, OperatorClass, RadialGradientShape,
-    Unit, operator_class,
+    EasingCurve, EasingCurveCtor, ImageReference, MinMaxOp, MouseCursorInner, OperatorClass,
+    RadialGradientShape, Unit, operator_class,
 };
 use crate::langtype::{ConstantExpression, EnumerationValue, Keys, Struct, Type};
 use crate::lookup::{LookupCtx, TypeSpecificLookup};

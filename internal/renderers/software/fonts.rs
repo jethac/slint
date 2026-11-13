@@ -86,9 +86,8 @@ impl RegisteredFont {
                 ScaleFactor,
             ),
         ) -> Option<f32> {
-            (font.italic == italic && &*font.family_name == family.as_bytes()).then(|| {
-                axis_score(font, weight, variations, opsz_is_explicit, scale_factor)
-            })
+            (font.italic == italic && &*font.family_name == family.as_bytes())
+                .then(|| axis_score(font, weight, variations, opsz_is_explicit, scale_factor))
         }
         let request = (requested_weight, requested_variations, opsz_is_explicit, scale_factor);
         match self {

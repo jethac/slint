@@ -2523,7 +2523,12 @@ impl Expression {
                 .with_expected_type(Type::Float32, |ctx| {
                     Self::from_expression_node(value_node.clone(), ctx)
                 })
-                .maybe_convert_to(Type::Float32, Some(&value_node.clone().into()), ctx.diag, &ctx.symbol_counters);
+                .maybe_convert_to(
+                    Type::Float32,
+                    Some(&value_node.clone().into()),
+                    ctx.diag,
+                    &ctx.symbol_counters,
+                );
             values.push(Expression::Struct {
                 ty: match &element_ty {
                     Type::Struct(s) => s.clone(),

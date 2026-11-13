@@ -19,8 +19,8 @@ pub mod decelerate;
 pub mod ease_in_out_sine;
 pub mod rubber_band;
 pub mod spring;
-pub mod spring_flick;
 pub mod spring_estimation;
+pub mod spring_flick;
 
 use crate::animations::Instant;
 

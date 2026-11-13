@@ -43,8 +43,7 @@ impl StrokeWidth {
     /// Rounds `physical_width` to the nearest step. Zero, negative, and `NaN` widths become
     /// the smallest step.
     pub fn from_physical(physical_width: f32) -> Self {
-        let steps =
-            num_traits::Float::round(physical_width * STROKE_WIDTH_STEPS_PER_PIXEL) as u16;
+        let steps = num_traits::Float::round(physical_width * STROKE_WIDTH_STEPS_PER_PIXEL) as u16;
         Self(NonZeroU16::new(steps).unwrap_or(NonZeroU16::MIN))
     }
 

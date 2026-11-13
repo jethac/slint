@@ -30,7 +30,6 @@ pub mod software;
 #[cfg(all(test, feature = "skia"))]
 pub mod skia;
 
-
 #[cfg(all(test, feature = "anyrender"))]
 pub mod anyrender;
 

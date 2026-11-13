@@ -189,7 +189,7 @@ fn emit_globals(
                 (Value::FontFamily(_), "TypefaceTokens", other) => {
                     return Err(format!(
                         "TypefaceTokens.{other}: new family token; map it to a MaterialTheme property"
-                    ))
+                    ));
                 }
                 (Value::ColorRole(role), _, _) if roles_as_keys => {
                     ("int", format!("ColorSchemeKeyTokens.{}", snake_case(role)))
@@ -270,9 +270,9 @@ pub fn parse_expressive_light_overrides(text: &str) -> Result<Vec<(String, Strin
         .find("fun expressiveLightColorScheme")
         .ok_or_else(|| "ColorScheme.kt: cannot find expressiveLightColorScheme".to_string())?;
     let rest = &text[start..];
-    let call = rest
-        .find("lightColorScheme(")
-        .ok_or_else(|| "ColorScheme.kt: expressiveLightColorScheme does not call lightColorScheme")?;
+    let call = rest.find("lightColorScheme(").ok_or_else(
+        || "ColorScheme.kt: expressiveLightColorScheme does not call lightColorScheme",
+    )?;
     let rest = &rest[call + "lightColorScheme(".len()..];
     let end = rest.find(')').ok_or_else(|| "ColorScheme.kt: unbalanced lightColorScheme( call")?;
     let mut overrides = Vec::new();
@@ -425,10 +425,7 @@ pub fn emit(
              \x20   tracking: length,\n\
              }}\n"
         );
-        let _ = writeln!(
-            s,
-            "import {{ MaterialTheme }} from \"../material_theme.slint\";\n"
-        );
+        let _ = writeln!(s, "import {{ MaterialTheme }} from \"../material_theme.slint\";\n");
         let _ = writeln!(
             s,
             "/// Multiplies every `sp` token to follow the platform text\n\
@@ -637,10 +634,8 @@ pub fn emit(
     // members emit as `ColorSchemeKeyTokens` role keys.
     {
         let mut s = head.clone();
-        let leaf_objs: Vec<&ResolvedObject> = LEAF_OBJECTS
-            .iter()
-            .map(|name| get(lib, name))
-            .collect::<Result<_, _>>()?;
+        let leaf_objs: Vec<&ResolvedObject> =
+            LEAF_OBJECTS.iter().map(|name| get(lib, name)).collect::<Result<_, _>>()?;
         let needs_keys = leaf_objs
             .iter()
             .any(|o| o.members.iter().any(|m| matches!(m.value, Value::ColorRole(_))));
@@ -716,8 +711,7 @@ pub fn emit(
             );
         }
         if needs_theme {
-            let _ =
-                writeln!(s, "import {{ MaterialTheme }} from \"../material_theme.slint\";");
+            let _ = writeln!(s, "import {{ MaterialTheme }} from \"../material_theme.slint\";");
         }
         {
             let mut names: Vec<&str> = Vec::new();

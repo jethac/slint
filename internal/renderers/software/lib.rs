@@ -3090,10 +3090,9 @@ impl<'a, T: ProcessScene> SceneBuilder<'a, T> {
             && !border_color.is_transparent()
             && let Some(paint) = resolve_paint(border_color)
         {
-            let commands = to_commands(outline.flatten(
-                stroke_geom,
-                shape_raster::FLATTEN_TOLERANCE / scale_factor.get(),
-            ));
+            let commands = to_commands(
+                outline.flatten(stroke_geom, shape_raster::FLATTEN_TOLERANCE / scale_factor.get()),
+            );
             let stroke_style = path::StrokeStyle {
                 width: (border_width.cast() * scale_factor).get(),
                 line_cap: i_slint_core::items::LineCap::Butt,
@@ -3165,8 +3164,7 @@ impl<'a, T: ProcessScene> SceneBuilder<'a, T> {
         } else {
             shifted(&mut contours);
         }
-        let pad =
-            spread.abs() + margin as f32 + if inset { off.x.abs() + off.y.abs() } else { 0. };
+        let pad = spread.abs() + margin as f32 + if inset { off.x.abs() + off.y.abs() } else { 0. };
         let mut min = shape_raster::Point::splat(f32::MAX);
         let mut max = shape_raster::Point::splat(f32::MIN);
         for p in contours.iter().flatten() {

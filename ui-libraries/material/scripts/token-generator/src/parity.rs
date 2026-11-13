@@ -582,23 +582,15 @@ fn parse_needs(text: &str, context: &str) -> Result<String, String> {
             ),
             None => (part, None),
         };
-        let Some(&(_, canonical)) =
-            NEEDS_VOCABULARY.iter().find(|(n, _)| *n == name)
-        else {
+        let Some(&(_, canonical)) = NEEDS_VOCABULARY.iter().find(|(n, _)| *n == name) else {
             return Err(format!(
                 "{context}: {name:?} is not an engine capability — allowed: {}",
-                NEEDS_VOCABULARY
-                    .iter()
-                    .map(|(n, _)| *n)
-                    .collect::<Vec<_>>()
-                    .join(", ")
+                NEEDS_VOCABULARY.iter().map(|(n, _)| *n).collect::<Vec<_>>().join(", ")
             ));
         };
         if let Some(i) = issue {
             if i != canonical {
-                return Err(format!(
-                    "{context}: {name} covers issue #{canonical}, not #{i}"
-                ));
+                return Err(format!("{context}: {name} covers issue #{canonical}, not #{i}"));
             }
         }
         names.push(name);
@@ -670,10 +662,7 @@ fn family_defaults(family: &str) -> Result<(Vec<u32>, &'static [&'static str]), 
 /// no longer ships, and fill any unset `issues`/`needs` from the family
 /// defaults so no row renders empty. Returns true if the status changed (the
 /// file must be rewritten).
-pub fn merge_status(
-    status: &mut Status,
-    components: &[SourceComponent],
-) -> Result<bool, String> {
+pub fn merge_status(status: &mut Status, components: &[SourceComponent]) -> Result<bool, String> {
     let mut changed = false;
     for c in components {
         let (issues, defaults) = family_defaults(&c.family)?;

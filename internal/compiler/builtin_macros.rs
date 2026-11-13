@@ -184,7 +184,8 @@ fn shape_path_macro(
         diag.push_error("percentages are not supported in shape paths".into(), node);
         return Expression::Invalid;
     }
-    let path_expr = path_expr.maybe_convert_to(Type::String, path_node.as_ref(), diag, symbol_counters);
+    let path_expr =
+        path_expr.maybe_convert_to(Type::String, path_node.as_ref(), diag, symbol_counters);
     // A literal failing `Shape::from_svg_path` (the real ported SVG path
     // parser) is a compile error instead of a warning + empty shape at runtime.
     if let Expression::StringLiteral(d) = &path_expr

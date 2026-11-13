@@ -119,9 +119,7 @@ pub fn compile(
     // metrics) — without debug info every query walks an empty tree (and
     // warns per element), silently verifying nothing.
     if source.contains("//PARITY=") {
-        compiler
-            .compiler_configuration(i_slint_core::InternalToken)
-            .debug_info = true;
+        compiler.compiler_configuration(i_slint_core::InternalToken).debug_info = true;
     }
     let compiled = match poll_once(compiler.build_from_source(source.to_string(), path.to_owned()))
     {

@@ -994,7 +994,6 @@ fn motion_preference_from_reduced(reduced: bool) -> i_slint_core::MotionPreferen
     }
 }
 
-
 /// Registers a callback that re-reads the platform's reduced-motion setting
 /// whenever it changes.
 #[cfg(any(target_os = "macos", target_os = "ios", target_arch = "wasm32"))]
@@ -1049,7 +1048,11 @@ fn install_reduced_motion_observer(
         let listener = wasm_bindgen::closure::Closure::new(move || {
             let _ = i_slint_core::with_global_context(
                 || Err(i_slint_core::platform::PlatformError::NoPlatform),
-                |ctx| ctx.set_motion_preference(motion_preference_from_reduced(media_for_listener.matches())),
+                |ctx| {
+                    ctx.set_motion_preference(motion_preference_from_reduced(
+                        media_for_listener.matches(),
+                    ))
+                },
             );
         });
         media
@@ -1124,7 +1127,9 @@ impl i_slint_core::platform::Platform for Backend {
             unsafe extern "C" {
                 fn UIAccessibilityIsReduceMotionEnabled() -> objc2::runtime::Bool;
             }
-            ctx.set_motion_preference(motion_preference_from_reduced(unsafe { UIAccessibilityIsReduceMotionEnabled() }.as_bool()));
+            ctx.set_motion_preference(motion_preference_from_reduced(
+                unsafe { UIAccessibilityIsReduceMotionEnabled() }.as_bool(),
+            ));
             *self.reduced_motion_observer.borrow_mut() = install_reduced_motion_observer();
         }
         #[cfg(target_arch = "wasm32")]
