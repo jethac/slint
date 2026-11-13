@@ -26,9 +26,9 @@
   "mask_inner": {},
   "mask_shadow": {},
   "name": "navigation-rails",
-  "negative_note": "one strict pixel on the expanded rail's selected-item indicator edge (d1): the expanded item width comes out of the float measure policy, so the indicator edge lands between pixel centers — Skia and the software rasterizer resolve the coverage the same way the Compose reference does, FemtoVG one texel darker.",
+  "negative_note": "one strict pixel on the expanded rail's selected-item indicator edge (d1): the expanded item width comes out of the float measure policy, so the indicator edge lands between pixel centers — Skia resolves the coverage the same way the Compose reference does, the software renderer and FemtoVG one level past the tolerance.",
   "params": {},
-  "parity": "xfail:femtovg",
+  "parity": "xfail:software,femtovg",
   "scheme": {
     "background": "FFFDF7FE",
     "error": "FFA8364B",

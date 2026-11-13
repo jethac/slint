@@ -1,7 +1,8 @@
 {
     "name": "navigation-rail-labels",
     "type": "canvas",
-    "parity": "static",
+    "parity": "xfail:software,femtovg",
+    "negative_note": "one strict pixel on the selected-item indicator edge (d1), one level past the tolerance: the indicator edge lands between pixel centers — Skia resolves the coverage the same way the Compose reference does, the software renderer and FemtoVG one level darker.",
     "size": [260, 420],
     "densities": [1, 2],
     "theme": {

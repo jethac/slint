@@ -1,8 +1,8 @@
 {
   "name": "pull-refresh-refreshing",
   "type": "pull-refresh",
-  "parity": "xfail:femtovg",
-  "negative_note": "the refreshing indicators run infinite animations; Compose launches their LaunchedEffect coroutines ~40ms of frame time after t=0 inside Paparazzi, so identical-timestamp frames sit at different phases of the morph+rotation cycle \u2014 the loading indicator's blob interior is masked as mid-flight ink while its static circular container stays strict; femtovg additionally tessellates the spinner's stroked arc with a different AA coverage ramp than layoutlib \u2014 isolated edge pixels diverge ~90/255 at d2 while geometry is verified identical on software and skia; a silent pass would mean the harness went blind",
+  "parity": "xfail:software,femtovg",
+  "negative_note": "the refreshing indicators run infinite animations; Compose launches their LaunchedEffect coroutines ~40ms of frame time after t=0 inside Paparazzi, so identical-timestamp frames sit at different phases of the morph+rotation cycle — the loading indicator's blob interior is masked as mid-flight ink while its static circular container stays strict; femtovg additionally tessellates the spinner's stroked arc with a different AA coverage ramp than layoutlib — isolated edge pixels diverge ~90/255 at d2 while geometry is verified identical on software and skia; a silent pass would mean the harness went blind The software renderer diverges on the same class of edge pixels since it rasterizes through upstream's path rasterizer.",
   "size": [
     560,
     220

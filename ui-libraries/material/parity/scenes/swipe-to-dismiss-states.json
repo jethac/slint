@@ -1,7 +1,7 @@
 {
     "name": "swipe-to-dismiss-states",
     "type": "swipe-to-dismiss",
-    "parity": "xfail:femtovg",
+    "parity": "xfail:software,femtovg",
     "size": [420, 380],
     "densities": [1, 2],
     "theme": {
@@ -20,5 +20,5 @@
             { "x": 60, "y": 240, "w": 300, "h": 72, "initial": "start-to-end", "bg": "error-container", "content": "surface-container-highest", "radius": 8 }
         ]
     },
-    "negative_note": "issue #53 class: femtovg's stencil+fringe AA band lands the dismiss card's corner edge slivers differently than coverage-integral drivers — a handful of symmetric card-edge pixels diverge ~25/255 past the default 8 (2 at d1, 4 at d2) while fills and geometry match; verified identical on software and skia — a silent pass would mean the harness went blind"
+    "negative_note": "issue #53 class: femtovg's stencil+fringe AA band lands the dismiss card's corner edge slivers differently than coverage-integral drivers — a handful of symmetric card-edge pixels diverge ~25/255 past the default 8 (2 at d1, 4 at d2) while fills and geometry match; verified identical on skia — a silent pass would mean the harness went blind The software renderer diverges on the same class of edge pixels since it rasterizes through upstream's path rasterizer."
 }

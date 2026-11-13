@@ -3,7 +3,7 @@
 
 // Scene: date-picker-dark — generated from `ui-libraries/material/parity/scenes/date-picker-dark.json`
 // (edit the scene, regenerate with `cargo run -p material-parity-generator`).
-//PARITY=static
+//PARITY=xfail:femtovg: issue #53 class: FemtoVG's fringe antialiasing covers the tangent rows of circles, pills and rounded corners more than the Compose reference does, so a few isolated edge pixels pass the shared-edge tolerance at density 2 (1 to 15 per frame); fills and geometry match, and Skia and the software renderer pass
 // the slint rasterizer's corner-arc/flat-edge junction AA tail is ~1px tighter than layoutlib's: 4 interior px on the dark surface's top edge diverge by <=11 channels
 //PARITY_EPS=16
 //SIZE=500x620

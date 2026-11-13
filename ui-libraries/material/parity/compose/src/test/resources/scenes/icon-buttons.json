@@ -13,8 +13,9 @@
   "mask_inner": {},
   "mask_shadow": {},
   "name": "icon-buttons",
+  "negative_note": "issue #53 class: FemtoVG's fringe antialiasing covers the tangent rows of circles, pills and rounded corners more than the Compose reference does, so a few isolated edge pixels pass the shared-edge tolerance at density 2 (1 to 15 per frame); fills and geometry match, and Skia and the software renderer pass",
   "params": {},
-  "parity": "static",
+  "parity": "xfail:femtovg",
   "scheme": {
     "background": "FFFDF7FE",
     "error": "FFA8364B",

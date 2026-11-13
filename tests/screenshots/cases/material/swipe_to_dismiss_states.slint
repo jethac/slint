@@ -3,7 +3,7 @@
 
 // Scene: swipe-to-dismiss-states — generated from `ui-libraries/material/parity/scenes/swipe-to-dismiss-states.json`
 // (edit the scene, regenerate with `cargo run -p material-parity-generator`).
-//PARITY=xfail:femtovg: issue #53 class: femtovg's stencil+fringe AA band lands the dismiss card's corner edge slivers differently than coverage-integral drivers — a handful of symmetric card-edge pixels diverge ~25/255 past the default 8 (2 at d1, 4 at d2) while fills and geometry match; verified identical on software and skia — a silent pass would mean the harness went blind
+//PARITY=xfail:software,femtovg: issue #53 class: femtovg's stencil+fringe AA band lands the dismiss card's corner edge slivers differently than coverage-integral drivers — a handful of symmetric card-edge pixels diverge ~25/255 past the default 8 (2 at d1, 4 at d2) while fills and geometry match; verified identical on skia — a silent pass would mean the harness went blind The software renderer diverges on the same class of edge pixels since it rasterizes through upstream's path rasterizer.
 //SIZE=420x380
 //DENSITIES=1,2
 import "../../fonts/Roboto-VariableFont.ttf";

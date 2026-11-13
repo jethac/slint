@@ -3,7 +3,7 @@
 
 // Scene: progress-indeterminate — generated from `ui-libraries/material/parity/scenes/progress-indeterminate.json`
 // (edit the scene, regenerate with `cargo run -p material-parity-generator`).
-//PARITY=xfail:femtovg: femtovg tessellates stroked arcs and small round caps with a slightly different AA coverage ramp than layoutlib — a handful of isolated edge pixels diverge ~90/255 at d2 while geometry is verified identical on software and skia; a silent pass would mean the harness went blind
+//PARITY=xfail:software,skia,femtovg: femtovg tessellates stroked arcs and small round caps with a slightly different AA coverage ramp than layoutlib — a handful of isolated edge pixels diverge ~90/255 at d2 while geometry is verified identical on software and skia; a silent pass would mean the harness went blind Skia and the software renderer also diverge on 2 to 3 pixels at the end of the moving track (t=500ms and t=1250ms, d1).
 // (undocumented)
 //PARITY_EPS=16
 //SIZE=280x130

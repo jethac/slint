@@ -3,7 +3,7 @@
 
 // Scene: alert-dialog-action-press — generated from `ui-libraries/material/parity/scenes/alert-dialog-action-press.json`
 // (edit the scene, regenerate with `cargo run -p material-parity-generator`).
-//PARITY=static
+//PARITY=xfail:femtovg: issue #53 class: FemtoVG's fringe antialiasing moves the pressed action button's silhouette at its corner rows up to 3px from the Compose reference (d1); fills and geometry match, and Skia and the software renderer pass
 //SIZE=500x360
 //TRACE_ELEMENTS=scrim0,dialog0
 //TRACE_ITEMS=dialog0:action

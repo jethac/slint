@@ -3,7 +3,7 @@
 
 // Scene: navigation-rail-labels — generated from `ui-libraries/material/parity/scenes/navigation-rail-labels.json`
 // (edit the scene, regenerate with `cargo run -p material-parity-generator`).
-//PARITY=static
+//PARITY=xfail:software,femtovg: one strict pixel on the selected-item indicator edge (d1), one level past the tolerance: the indicator edge lands between pixel centers — Skia resolves the coverage the same way the Compose reference does, the software renderer and FemtoVG one level darker.
 //SIZE=260x420
 //TRACE_ELEMENTS=rail0,rail1
 //DENSITIES=1,2

@@ -13,8 +13,9 @@
   "mask_inner": {},
   "mask_shadow": {},
   "name": "navigation-rail-labels",
+  "negative_note": "one strict pixel on the selected-item indicator edge (d1), one level past the tolerance: the indicator edge lands between pixel centers — Skia resolves the coverage the same way the Compose reference does, the software renderer and FemtoVG one level darker.",
   "params": {},
-  "parity": "static",
+  "parity": "xfail:software,femtovg",
   "scheme": {
     "background": "FFFDF7FE",
     "error": "FFA8364B",

@@ -3,7 +3,7 @@
 
 // Scene: button-styles — generated from `ui-libraries/material/parity/scenes/button-styles.json`
 // (edit the scene, regenerate with `cargo run -p material-parity-generator`).
-//PARITY=static
+//PARITY=xfail:femtovg: issue #53 class: FemtoVG's fringe antialiasing covers the tangent rows of circles, pills and rounded corners more than the Compose reference does, so a few isolated edge pixels pass the shared-edge tolerance at density 2 (1 to 15 per frame); fills and geometry match, and Skia and the software renderer pass
 //SIZE=576x240
 //TRACE_ELEMENTS=button0,button1,button2,button3,button4,button5,button6,button7,button8,button9,button10,button11,button12,button13,button14,button15,button16,button17,button18,button19
 //MASK_DECOR=button1@0,2000

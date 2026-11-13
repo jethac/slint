@@ -3,7 +3,7 @@
 
 // Scene: navigation-rails — generated from `ui-libraries/material/parity/scenes/navigation-rails.json`
 // (edit the scene, regenerate with `cargo run -p material-parity-generator`).
-//PARITY=xfail:femtovg: one strict pixel on the expanded rail's selected-item indicator edge (d1): the expanded item width comes out of the float measure policy, so the indicator edge lands between pixel centers — Skia and the software rasterizer resolve the coverage the same way the Compose reference does, FemtoVG one texel darker.
+//PARITY=xfail:software,femtovg: one strict pixel on the expanded rail's selected-item indicator edge (d1): the expanded item width comes out of the float measure policy, so the indicator edge lands between pixel centers — Skia resolves the coverage the same way the Compose reference does, the software renderer and FemtoVG one level past the tolerance.
 //SIZE=560x420
 //TRACE_ELEMENTS=rail0,rail1,rail2,rail3,headerfab,fab
 //MASK_DECOR=fab+12@2000

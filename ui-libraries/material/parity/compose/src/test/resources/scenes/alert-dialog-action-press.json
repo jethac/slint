@@ -16,8 +16,9 @@
   },
   "mask_shadow": {},
   "name": "alert-dialog-action-press",
+  "negative_note": "issue #53 class: FemtoVG's fringe antialiasing moves the pressed action button's silhouette at its corner rows up to 3px from the Compose reference (d1); fills and geometry match, and Skia and the software renderer pass",
   "params": {},
-  "parity": "static",
+  "parity": "xfail:femtovg",
   "scheme": {
     "background": "FFFDF7FE",
     "error": "FFA8364B",

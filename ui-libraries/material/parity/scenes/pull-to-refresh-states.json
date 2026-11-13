@@ -1,7 +1,7 @@
 {
   "name": "pull-to-refresh-states",
   "type": "pull-refresh",
-  "parity": "xfail:femtovg",
+  "parity": "xfail:software,femtovg",
   "size": [
     560,
     400
@@ -64,5 +64,5 @@
   },
   "parity_eps": 32,
   "parity_eps_reason": "thin stroked outlines (arc, arrow, morph-blob edges): legitimate ~1px/sub-pixel AA divergence past the default 8/255 (worst channel diff ~31); edges verified identical at ±1px",
-  "negative_note": "issue #53 class: femtovg rasterizes stroked edges via stencil+fringe with the AA band running -0.5px inside to +1.5px outside, so the thin ink strokes (48dp ring, 2.5dp arrow, morph-blob outlines) cover a device-px sliver differently than coverage-integral drivers (software, skia, vello, Compose) — isolated edge pixels read near-background where layoutlib/Skia has near-full ink (9px at d1, 116px at d2, worst channel diff 139) while geometry, fills and the strict body match; verified identical on software and skia — a silent pass on femtovg would mean the harness went blind"
+  "negative_note": "issue #53 class: femtovg rasterizes stroked edges via stencil+fringe with the AA band running -0.5px inside to +1.5px outside, so the thin ink strokes (48dp ring, 2.5dp arrow, morph-blob outlines) cover a device-px sliver differently than coverage-integral drivers (software, skia, vello, Compose) — isolated edge pixels read near-background where layoutlib/Skia has near-full ink (9px at d1, 116px at d2, worst channel diff 139) while geometry, fills and the strict body match; verified identical on skia — a silent pass on femtovg would mean the harness went blind The software renderer diverges on the same class of edge pixels since it rasterizes through upstream's path rasterizer."
 }

@@ -1,7 +1,8 @@
 {
     "name": "loading-indicator-states",
     "type": "canvas",
-    "parity": "static",
+    "parity": "xfail:femtovg",
+    "negative_note": "issue #53: FemtoVG's fringe antialiasing on the concave fills of the indicator shapes diverges from the Compose reference (about 200 strict pixels per density); Skia and the software renderer pass",
     "size": [
         400,
         144
