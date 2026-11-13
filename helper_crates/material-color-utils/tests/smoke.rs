@@ -1,5 +1,5 @@
 // Copyright © SixtyFPS GmbH <info@slint.dev>
-// SPDX-License-Identifier: MIT OR Apache-2.0
+// SPDX-License-Identifier: Apache-2.0
 
 use material_color_utils::dynamiccolor::{Platform, SpecVersion};
 use material_color_utils::hct::Hct;

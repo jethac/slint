@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Copyright © SixtyFPS GmbH <info@slint.dev>
-# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-License-Identifier: Apache-2.0
 #
 # Regenerates vectors.txt.gz from the Java implementation of
 # material-color-utilities at the pinned commit

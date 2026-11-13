@@ -1,5 +1,5 @@
-// Copyright © SixtyFPS GmbH <info@slint.dev>
-// SPDX-License-Identifier: MIT OR Apache-2.0
+// Copyright © Google LLC, SixtyFPS GmbH <info@slint.dev>
+// SPDX-License-Identifier: Apache-2.0
 //
 // Port of kotlin/hct/ViewingConditions.kt (material-color-utilities @ 5b3618b).
 

@@ -646,7 +646,15 @@ static LICENSE_FOR_FILE: LazyLock<Vec<(regex::Regex, &'static str)>> = LazyLock:
         ("^editors/tree-sitter-slint/grammar.js$", MIT_LICENSE),
         ("^editors/zed/", MIT_LICENSE),
         ("^helper_crates/const-field-offset/", MIT_OR_APACHE2_LICENSE),
-        ("^helper_crates/material-color-utils/", MIT_OR_APACHE2_LICENSE),
+        ("^helper_crates/material-color-utils/", APACHE2_LICENSE),
+        (
+            "^internal/core/graphics/shapes/(constructors|corner|cubic|feature|mapping|measure|mod|morph|rounded_polygon|svg|utils)\\.rs$",
+            APACHE2_LICENSE,
+        ),
+        ("^internal/core/graphics/shapes/tests/", APACHE2_LICENSE),
+        ("^internal/core/animations/simulations/spring_estimation", APACHE2_LICENSE),
+        ("^internal/core/graphics/oklab_compose_reference\\.py$", APACHE2_LICENSE),
+        ("^internal/core/graphics/shadow\\.rs$", BSD3_LICENSE),
         ("^helper_crates/vtable/", MIT_OR_APACHE2_LICENSE),
         ("^api/cpp/esp-idf/LICENSE$", TRIPLE_LICENSE),
         ("^examples/", MIT_LICENSE),
@@ -672,6 +680,8 @@ const TRIPLE_LICENSE: &str =
 const DUAL_LICENSE_NO_ROYALTY_FREE: &str = "GPL-3.0-only OR LicenseRef-Slint-Software-3.0";
 const MIT_LICENSE: &str = "MIT";
 const MIT_OR_APACHE2_LICENSE: &str = "MIT OR Apache-2.0";
+const APACHE2_LICENSE: &str = "Apache-2.0";
+const BSD3_LICENSE: &str = "BSD-3-Clause";
 
 // This is really just the SPDX expression after the copyright line. The existence of the
 // Copyright prefix is enforced by the tag scanning (tag_start).

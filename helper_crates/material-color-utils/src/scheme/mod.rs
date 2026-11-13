@@ -1,5 +1,5 @@
-// Copyright © SixtyFPS GmbH <info@slint.dev>
-// SPDX-License-Identifier: MIT OR Apache-2.0
+// Copyright © Google LLC, SixtyFPS GmbH <info@slint.dev>
+// SPDX-License-Identifier: Apache-2.0
 
 //! Variant-specific constructors for DynamicScheme.
 

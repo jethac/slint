@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-# Copyright © SixtyFPS GmbH <info@slint.dev>
-# SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0
+# Copyright © The Android Open Source Project, SixtyFPS GmbH <info@slint.dev>
+# SPDX-License-Identifier: Apache-2.0
 
 """Regenerates the `(l, a, b)` reference cases in `color.rs`'s
 `test_oklab_compose_reference`.

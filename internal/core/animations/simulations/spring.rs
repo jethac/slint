@@ -395,6 +395,9 @@ mod spring_regime_tests {
         assert_approx_eq!(vel, -X0 * W_N);
     }
 
+    // SPDX-SnippetBegin
+    // SPDX-SnippetCopyrightText: Copyright © The Android Open Source Project, SixtyFPS GmbH <info@slint.dev>
+    // SPDX-License-Identifier: Apache-2.0
     /// Structural port of `SpringSimulation.updateValues` from androidx
     /// `SpringSimulation.kt` (pinned commit
     /// 23327507f7fc7d5b19d65fec4b090f60c970079b), in `f64`: the reference
@@ -441,6 +444,7 @@ mod spring_regime_tests {
             (displacement, velocity)
         }
     }
+    // SPDX-SnippetEnd
 
     /// The 12 `MaterialMotion` spring specs — `(damping_ratio, stiffness)` for
     /// `{default, fast, slow} × {spatial, effects}` in both the `standard` and

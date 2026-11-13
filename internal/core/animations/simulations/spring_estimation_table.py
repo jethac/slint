@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-# Copyright © SixtyFPS GmbH <info@slint.dev>
-# SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0
+# Copyright © The Android Open Source Project, SixtyFPS GmbH <info@slint.dev>
+# SPDX-License-Identifier: Apache-2.0
 
 """Regenerates the reference table in `spring_estimation.rs`'s
 `estimation_matches_compose_reference_table` test.

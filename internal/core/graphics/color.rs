@@ -647,6 +647,9 @@ impl From<OklabColor> for OklchColor {
     }
 }
 
+// SPDX-SnippetBegin
+// SPDX-SnippetCopyrightText: Copyright © The Android Open Source Project, SixtyFPS GmbH <info@slint.dev>
+// SPDX-License-Identifier: Apache-2.0
 /// androidx.compose.ui.graphics colorspace math, ported at the androidx pin
 /// (commit 23327507f7fc7d5b19d65fec4b090f60c970079b). Compose animates `Color`
 /// in Oklab via `Color.convert(ColorSpaces.Oklab)`: sRGB is first adapted to
@@ -867,6 +870,7 @@ mod compose_oklab {
         [srgb_oetf(v[0]), srgb_oetf(v[1]), srgb_oetf(v[2])]
     }
 }
+// SPDX-SnippetEnd
 
 impl From<RgbaColor<f32>> for OklabColor {
     fn from(col: RgbaColor<f32>) -> Self {
