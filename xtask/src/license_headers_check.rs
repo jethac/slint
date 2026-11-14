@@ -649,8 +649,6 @@ static LICENSE_FOR_FILE: LazyLock<Vec<(regex::Regex, &'static str)>> = LazyLock:
         ("^helper_crates/material-color-utils/", APACHE2_LICENSE),
         ("^helper_crates/rounded-polygon/", APACHE2_LICENSE),
         ("^internal/core/animations/simulations/spring_estimation", APACHE2_LICENSE),
-        ("^internal/core/graphics/color/compose_oklab\\.rs$", APACHE2_LICENSE),
-        ("^internal/core/graphics/oklab_compose_reference\\.py$", APACHE2_LICENSE),
         ("^internal/core/graphics/shadow\\.rs$", BSD3_LICENSE),
         ("^helper_crates/vtable/", MIT_OR_APACHE2_LICENSE),
         ("^api/cpp/esp-idf/LICENSE$", TRIPLE_LICENSE),

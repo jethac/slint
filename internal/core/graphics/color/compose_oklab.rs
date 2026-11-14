@@ -1,5 +1,5 @@
-// Copyright © The Android Open Source Project, SixtyFPS GmbH <info@slint.dev>
-// SPDX-License-Identifier: Apache-2.0
+// Copyright © SixtyFPS GmbH <info@slint.dev>
+// SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0
 
 //! androidx.compose.ui.graphics colorspace math, ported at the androidx pin
 //! (commit 23327507f7fc7d5b19d65fec4b090f60c970079b). Compose animates `Color`
