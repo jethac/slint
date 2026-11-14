@@ -143,9 +143,15 @@ fn is_fixed_test_font(family: &Option<SharedString>) -> bool {
     family.as_ref().is_some_and(|f| f == FIXED_TEST_FONT)
 }
 
-fn fixed_test_font_line_height(line_height_factor: Option<f32>, pixel_size: f32) -> f32 {
+fn fixed_test_font_line_height(
+    font_request: &FontRequest,
+    line_height_factor: Option<f32>,
+    pixel_size: f32,
+) -> f32 {
     // The test font's natural line height is exactly the pixel size (ascent 0.7 + descent 0.3).
-    pixel_size * line_height_factor.unwrap_or(1.0)
+    font_request
+        .line_height
+        .map_or(pixel_size * line_height_factor.unwrap_or(1.0), |line_height| line_height.get())
 }
 
 #[derive(Default)]
@@ -589,7 +595,11 @@ impl RendererSealed for TestingWindow {
                 .fold((0, 0), |(len, count), line| (len.max(line.len()), count + 1));
             let width = max_line_len as f32 * pixel_size;
             let height = num_lines.max(1) as f32
-                * fixed_test_font_line_height(text_item.line_height_factor(), pixel_size);
+                * fixed_test_font_line_height(
+                    &font_request,
+                    text_item.line_height_factor(),
+                    pixel_size,
+                );
             LogicalSize::new(width, height)
         } else {
             sharedparley::text_size(self, text_item, item_rc, max_width, text_wrap, None)
@@ -632,7 +642,11 @@ impl RendererSealed for TestingWindow {
     ) -> Option<LogicalLength> {
         let pixel_size = font_request.pixel_size.map_or(10., |s| s.get());
         is_fixed_test_font(&font_request.family).then(|| {
-            LogicalLength::new(fixed_test_font_line_height(line_height_factor, pixel_size))
+            LogicalLength::new(fixed_test_font_line_height(
+                &font_request,
+                line_height_factor,
+                pixel_size,
+            ))
         })
     }
 
@@ -646,7 +660,7 @@ impl RendererSealed for TestingWindow {
             let pixel_size = font_request.pixel_size.map_or(10., |s| s.get());
             LogicalSize::new(
                 pixel_size,
-                fixed_test_font_line_height(line_height_factor, pixel_size),
+                fixed_test_font_line_height(&font_request, line_height_factor, pixel_size),
             )
         } else {
             let Some(ctx) = self.slint_context() else {
@@ -691,6 +705,7 @@ impl RendererSealed for TestingWindow {
             // The fixed test font never wraps, so the affinity is always next-character.
             let pixel_size = font_request.pixel_size.map_or(10., |s| s.get());
             let line_height = fixed_test_font_line_height(
+                &font_request,
                 i_slint_core::item_rendering::RenderString::line_height_factor(text_input),
                 pixel_size,
             );
@@ -721,6 +736,7 @@ impl RendererSealed for TestingWindow {
         if is_fixed_test_font(&font_request.family) {
             let pixel_size = font_request.pixel_size.map_or(10., |s| s.get());
             let line_height = fixed_test_font_line_height(
+                &font_request,
                 i_slint_core::item_rendering::RenderString::line_height_factor(text_input),
                 pixel_size,
             );
