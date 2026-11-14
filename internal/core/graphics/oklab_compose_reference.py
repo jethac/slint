@@ -8,7 +8,7 @@
 Ports the pinned androidx conversion path verbatim in float32:
 `Rgb.eotfFunc` → `Srgb.adapt(Illuminant.D50)` (`Connector.transform`) →
 `Oklab.fromXyz` (commit 23327507f7fc7d5b19d65fec4b090f60c970079b). Same
-operation order and f32 width as `compose_oklab` in `color.rs`.
+operation order and f32 width as `color/compose_oklab.rs`.
 """
 
 import numpy as np
