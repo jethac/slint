@@ -521,6 +521,11 @@ pub struct WinitWindowAdapter {
     size: Cell<PhysicalSize>,
     /// We requested a size to be set, but we didn't get the resize event from winit yet
     pending_requested_size: Cell<Option<winit::dpi::Size>>,
+    /// Where the focused text input's cursor is, as last given to the input method. It is
+    /// given again when a composition starts or changes: the system forgets it when the
+    /// input language is switched, and an IME that has no position does not show its
+    /// candidate list.
+    ime_cursor_area: Cell<Option<(winit::dpi::Position, winit::dpi::Size)>>,
     /// A physical size requested before the window exists. Winit resolves it against the
     /// scale factor it knows at creation, which on Wayland is 1 until the window is mapped,
     /// so the size is applied again when the scale factor changes. A newer request or a
@@ -615,6 +620,7 @@ impl WinitWindowAdapter {
             window_existence_wakers: RefCell::new(Vec::default()),
             size: Cell::default(),
             pending_requested_size: Cell::new(None),
+            ime_cursor_area: Cell::new(None),
             physical_size_before_scale_factor: Cell::new(None),
             has_explicit_size: Default::default(),
             pending_resize_event_after_show: Default::default(),
@@ -1750,6 +1756,11 @@ impl WinitWindowAdapter {
                 WindowInner::from_pub(self.window()).release_modifiers_not_held(held);
             }
             WinitWindowEvent::Ime(winit::event::Ime::Preedit(string, preedit_selection)) => {
+                if let (Some((position, size)), Some(winit_window)) =
+                    (self.ime_cursor_area.get(), self.winit_window_or_none.borrow().as_window())
+                {
+                    winit_window.set_ime_cursor_area(position, size);
+                }
                 let event = InternalKeyEvent {
                     event_type: KeyEventType::UpdateComposition,
                     preedit_text: string.into(),
@@ -2498,6 +2509,7 @@ impl WindowAdapterInternal for WinitWindowAdapter {
                     props
                 }
                 corelib::window::InputMethodRequest::Disable => {
+                    self.ime_cursor_area.set(None);
                     return winit_window.set_ime_allowed(false);
                 }
                 corelib::window::InputMethodRequest::Update(props) => props,
@@ -2511,10 +2523,10 @@ impl WindowAdapterInternal for WinitWindowAdapter {
                 | corelib::items::InputType::Search
                 | _ => winit::window::ImePurpose::Normal,
             });
-            winit_window.set_ime_cursor_area(
-                position_for_winit(position_to_winit(&props.cursor_rect_origin.into())),
-                size_for_winit(window_size_to_winit(&props.cursor_rect_size.into())),
-            );
+            let position = position_for_winit(position_to_winit(&props.cursor_rect_origin.into()));
+            let size = size_for_winit(window_size_to_winit(&props.cursor_rect_size.into()));
+            self.ime_cursor_area.set(Some((position, size)));
+            winit_window.set_ime_cursor_area(position, size);
         }
 
         #[cfg(target_arch = "wasm32")]
