@@ -1,0 +1,70 @@
+// Copyright © SixtyFPS GmbH <info@slint.dev>
+// SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0
+
+// Moving forward by word (Ctrl+Right, Alt+Right on macOS) follows the platform: Windows stops
+// at the start of the next word, which is the word a screen reader then reads; the others stop
+// at the end of the word the cursor is in. Deleting a word forward is the same everywhere.
+
+export component TestCase inherits TextInput {
+    width: 300phx;
+    height: 100phx;
+    in-out property <string> test_text: self.text;
+    out property <int> test_cursor_pos: self.cursor_position_byte_offset;
+    out property <int> test_anchor_pos: self.anchor_position_byte_offset;
+    callback do_select(int, int);
+    do_select(anchor, focus) => { self.set-selection-offsets(anchor, focus); }
+}
+
+/*
+```rust
+use slint::platform::Key;
+use slint::SharedString;
+
+fn word_key(instance: &TestCase, key: Key, shift: bool) {
+    let modifier = if cfg!(target_os = "macos") { Key::Alt } else { Key::Control };
+    if shift {
+        slint_testing::send_keyboard_char(instance, Key::Shift.into(), true);
+    }
+    slint_testing::send_keyboard_char(instance, modifier.into(), true);
+    slint_testing::send_keyboard_string_sequence(instance, &SharedString::from(key));
+    slint_testing::send_keyboard_char(instance, modifier.into(), false);
+    if shift {
+        slint_testing::send_keyboard_char(instance, Key::Shift.into(), false);
+    }
+}
+
+let instance = TestCase::new().unwrap();
+slint_testing::send_keyboard_string_sequence(&instance, "The cat, 猫 sat");
+// Bytes: The 0..3, cat 4..7, 猫 9..12, sat 13..16.
+let stops: &[i32] = if cfg!(target_os = "windows") { &[4, 9, 13, 16, 16] } else { &[3, 7, 12, 16, 16] };
+instance.invoke_do_select(0, 0);
+for stop in stops {
+    word_key(&instance, Key::RightArrow, false);
+    assert_eq!(instance.get_test_cursor_pos(), *stop);
+    assert_eq!(instance.get_test_anchor_pos(), *stop);
+}
+
+// From inside a word.
+instance.invoke_do_select(5, 5);
+word_key(&instance, Key::RightArrow, false);
+assert_eq!(instance.get_test_cursor_pos(), if cfg!(target_os = "windows") { 9 } else { 7 });
+
+// With Shift the anchor stays.
+instance.invoke_do_select(4, 4);
+word_key(&instance, Key::RightArrow, true);
+assert_eq!(instance.get_test_anchor_pos(), 4);
+assert_eq!(instance.get_test_cursor_pos(), if cfg!(target_os = "windows") { 9 } else { 7 });
+
+// Backward goes to the start of a word on every platform.
+instance.invoke_do_select(16, 16);
+for stop in [13, 9, 4, 0, 0] {
+    word_key(&instance, Key::LeftArrow, false);
+    assert_eq!(instance.get_test_cursor_pos(), stop);
+}
+
+// Deleting forward by word is not affected: it takes the rest of the word.
+instance.invoke_do_select(4, 4);
+word_key(&instance, Key::Delete, false);
+assert_eq!(instance.get_test_text(), "The , 猫 sat");
+```
+*/

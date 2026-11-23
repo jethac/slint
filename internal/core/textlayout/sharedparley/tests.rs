@@ -44,6 +44,7 @@ fn layout_text_with_builder(
         &mut font_ctx,
         PlainOrStyledText::Plain(text.into()),
         Color::default(),
+        Vec::new(),
     );
     layout(&builder, &mut font_ctx, paragraphs, ScaleFactor::new(1.0), options, None)
 }
@@ -70,6 +71,7 @@ fn styled_text_across_a_line_break_shapes() {
         &mut test_font_context(),
         PlainOrStyledText::Styled(text),
         Color::default(),
+        Vec::new(),
     );
     assert_eq!(paragraphs.len(), 2);
 }
@@ -546,4 +548,116 @@ fn merged_variation_settings_are_last_wins() {
     assert_eq!(get(b"wght"), Some(300.));
     assert_eq!(get(b"opsz"), Some(14.));
     assert_eq!(merged.len(), 2);
+}
+
+/// Shapes `text`, then `edited` with the first result handed back for reuse. Returns how many
+/// paragraphs the second pass had to shape, and its layout next to a from-scratch one.
+fn reshape(text: &str, edited: &str) -> (usize, Layout, Layout) {
+    let builder = super::shaping::wrap_builder_for_tests;
+    let mut font_ctx = test_font_context();
+    let shape = |font_ctx: &mut FontContext, text: &str, previous| {
+        create_text_paragraphs(
+            &builder(),
+            font_ctx,
+            PlainOrStyledText::Plain(text.into()),
+            Color::default(),
+            previous,
+        )
+    };
+    let options =
+        || LayoutOptions { max_width: Some(LogicalLength::new(120.)), ..Default::default() };
+    // Lay the first shaping out, as an item that was shown would have been, and reuse what
+    // the layout hands back.
+    let first = shape(&mut font_ctx, text, Vec::new());
+    let first = layout(&builder(), &mut font_ctx, first, ScaleFactor::new(1.0), options(), None);
+    let (first, _) = first.dismantle();
+
+    let before = super::shaping::SHAPED_PARAGRAPH_COUNT.with(|count| count.get());
+    let second = shape(&mut font_ctx, edited, first);
+    let shaped = super::shaping::SHAPED_PARAGRAPH_COUNT.with(|count| count.get()) - before;
+    let reused = layout(&builder(), &mut font_ctx, second, ScaleFactor::new(1.0), options(), None);
+
+    let fresh = shape(&mut font_ctx, edited, Vec::new());
+    let fresh = layout(&builder(), &mut font_ctx, fresh, ScaleFactor::new(1.0), options(), None);
+    (shaped, reused, fresh)
+}
+
+fn assert_same_layout(reused: &Layout, fresh: &Layout) {
+    assert_eq!(reused.paragraphs.len(), fresh.paragraphs.len());
+    for (a, b) in reused.paragraphs.iter().zip(&fresh.paragraphs) {
+        assert_eq!(a.range, b.range);
+        assert_eq!(a.y, b.y);
+        assert_eq!(a.layout.lines().len(), b.layout.lines().len());
+        assert_eq!(a.layout.height(), b.layout.height());
+        assert_eq!(a.layout.full_width(), b.layout.full_width());
+    }
+}
+
+#[test]
+fn an_edit_reshapes_only_the_paragraph_it_touches() {
+    let text = "The first paragraph is long enough to wrap.\n\nSecond one.\nThird, also long enough to wrap over lines.";
+    // Typing in the middle paragraph.
+    let (shaped, reused, fresh) =
+        reshape(text, &text.replace("Second one.", "Second one, edited."));
+    assert_eq!(shaped, 1);
+    assert_same_layout(&reused, &fresh);
+    // Typing at the very end and at the very start.
+    let (shaped, reused, fresh) = reshape(text, &std::format!("{text}!"));
+    assert_eq!(shaped, 1);
+    assert_same_layout(&reused, &fresh);
+    let (shaped, reused, fresh) = reshape(text, &std::format!("!{text}"));
+    assert_eq!(shaped, 1);
+    assert_same_layout(&reused, &fresh);
+    // Nothing changed: nothing is shaped.
+    let (shaped, reused, fresh) = reshape(text, text);
+    assert_eq!(shaped, 0);
+    assert_same_layout(&reused, &fresh);
+}
+
+#[test]
+fn inserted_and_removed_paragraphs_keep_their_neighbours() {
+    let text = "one\ntwo\nthree\nfour";
+    // A line break in the middle of "two" makes two new paragraphs between kept ones.
+    let (shaped, reused, fresh) = reshape(text, "one\nt\nwo\nthree\nfour");
+    assert_eq!(shaped, 2);
+    assert_same_layout(&reused, &fresh);
+    // Joining two paragraphs.
+    let (shaped, reused, fresh) = reshape(text, "one\ntwothree\nfour");
+    assert_eq!(shaped, 1);
+    assert_same_layout(&reused, &fresh);
+    // Removing paragraphs shapes nothing.
+    let (shaped, reused, fresh) = reshape(text, "one\nfour");
+    assert_eq!(shaped, 0);
+    assert_same_layout(&reused, &fresh);
+    // Equal paragraphs are each reused once: three "a" serve three of the four wanted.
+    let (shaped, reused, fresh) = reshape("a\na\na", "a\na\nb\na\na");
+    assert_eq!(shaped, 2);
+    assert_same_layout(&reused, &fresh);
+    // Replacing everything shapes everything.
+    let (shaped, reused, fresh) = reshape(text, "five\nsix");
+    assert_eq!(shaped, 2);
+    assert_same_layout(&reused, &fresh);
+}
+
+#[test]
+fn paragraphs_shaped_with_other_inputs_are_not_reused() {
+    let mut font_ctx = test_font_context();
+    let text = "one\ntwo";
+    let no_wrap = create_text_paragraphs(
+        &super::shaping::plain_builder_for_tests(),
+        &mut font_ctx,
+        PlainOrStyledText::Plain(text.into()),
+        Color::default(),
+        Vec::new(),
+    );
+    let before = super::shaping::SHAPED_PARAGRAPH_COUNT.with(|count| count.get());
+    let wrapped = create_text_paragraphs(
+        &super::shaping::wrap_builder_for_tests(),
+        &mut font_ctx,
+        PlainOrStyledText::Plain(text.into()),
+        Color::default(),
+        no_wrap,
+    );
+    assert_eq!(wrapped.len(), 2);
+    assert_eq!(super::shaping::SHAPED_PARAGRAPH_COUNT.with(|count| count.get()) - before, 2);
 }

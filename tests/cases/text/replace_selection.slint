@@ -1,0 +1,108 @@
+// Copyright © SixtyFPS GmbH <info@slint.dev>
+// SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0
+
+// `replace-selection()` and `replace-range()` change the text from code as one step of the undo
+// history, where assigning `text` clears it. A replacement (typed, pasted or made from code) is
+// undone and redone whole, and redo leaves the cursor after what it put back.
+
+export component TestCase inherits TextInput {
+    width: 200phx;
+    height: 100phx;
+    single-line: false;
+    in-out property <string> test_text: self.text;
+    out property <int> test_cursor_pos: self.cursor_position_byte_offset;
+    out property <int> test_anchor_pos: self.anchor_position_byte_offset;
+    in-out property <int> edits;
+    edited => { self.edits += 1; }
+
+    callback do_undo();
+    do_undo => { self.undo(); }
+    callback do_redo();
+    do_redo => { self.redo(); }
+    callback do_select(int, int);
+    do_select(anchor, focus) => { self.set-selection-offsets(anchor, focus); }
+    callback do_replace_selection(string);
+    do_replace_selection(text) => { self.replace-selection(text); }
+    callback do_replace_range(int, int, string);
+    do_replace_range(start, end, text) => { self.replace-range(start, end, text); }
+    callback do_set_text(string);
+    do_set_text(text) => { self.text = text; }
+}
+
+/*
+```rust
+let instance = TestCase::new().unwrap();
+slint_testing::send_keyboard_string_sequence(&instance, "The cat sat");
+assert_eq!(instance.get_test_text(), "The cat sat");
+assert_eq!(instance.get_edits(), 11);
+
+// Insert at the cursor: one undo step, apart from the typing before it.
+instance.invoke_do_replace_selection(" down".into());
+assert_eq!(instance.get_test_text(), "The cat sat down");
+assert_eq!(instance.get_test_cursor_pos(), 16);
+assert_eq!(instance.get_test_anchor_pos(), 16);
+assert_eq!(instance.get_edits(), 12);
+instance.invoke_do_undo();
+assert_eq!(instance.get_test_text(), "The cat sat");
+instance.invoke_do_redo();
+assert_eq!(instance.get_test_text(), "The cat sat down");
+assert_eq!(instance.get_test_cursor_pos(), 16, "redo leaves the cursor after the text");
+assert_eq!(instance.get_test_anchor_pos(), 16);
+
+// Replace a selection: undone and redone as one step, selection restored by the undo.
+instance.invoke_do_select(4, 7);
+instance.invoke_do_replace_selection("犬".into());
+assert_eq!(instance.get_test_text(), "The 犬 sat down");
+assert_eq!(instance.get_test_cursor_pos(), 7);
+instance.invoke_do_undo();
+assert_eq!(instance.get_test_text(), "The cat sat down");
+assert_eq!((instance.get_test_anchor_pos(), instance.get_test_cursor_pos()), (4, 7));
+instance.invoke_do_redo();
+assert_eq!(instance.get_test_text(), "The 犬 sat down");
+assert_eq!((instance.get_test_anchor_pos(), instance.get_test_cursor_pos()), (7, 7));
+
+// Replace a range, given backwards and ending inside a character (犬 is bytes 4 to 7).
+instance.invoke_do_replace_range(5, 0, "A".into());
+assert_eq!(instance.get_test_text(), "A sat down", "an offset inside a character moves to the end of that character");
+instance.invoke_do_undo();
+assert_eq!(instance.get_test_text(), "The 犬 sat down");
+
+// An empty replacement deletes; past-the-end offsets are clamped.
+instance.invoke_do_replace_range(7, 1000, "".into());
+assert_eq!(instance.get_test_text(), "The 犬");
+instance.invoke_do_undo();
+assert_eq!(instance.get_test_text(), "The 犬 sat down");
+
+// Typing over a selection is one step too.
+instance.invoke_do_select(0, 3);
+slint_testing::send_keyboard_string_sequence(&instance, "A");
+assert_eq!(instance.get_test_text(), "A 犬 sat down");
+instance.invoke_do_undo();
+assert_eq!(instance.get_test_text(), "The 犬 sat down");
+instance.invoke_do_redo();
+assert_eq!(instance.get_test_text(), "A 犬 sat down");
+assert_eq!(instance.get_test_cursor_pos(), 1);
+// ... and what is typed next continues that step's insertion.
+slint_testing::send_keyboard_string_sequence(&instance, "n");
+assert_eq!(instance.get_test_text(), "An 犬 sat down");
+instance.invoke_do_undo();
+assert_eq!(instance.get_test_text(), "The 犬 sat down");
+
+// The whole history is still there, back to the empty text.
+instance.invoke_do_undo();
+instance.invoke_do_undo();
+instance.invoke_do_undo();
+assert_eq!(instance.get_test_text(), "");
+instance.invoke_do_undo();
+assert_eq!(instance.get_test_text(), "");
+
+// Assigning `text` still starts a new history; a replacement after it is undoable.
+instance.invoke_do_set_text("fresh".into());
+instance.invoke_do_replace_range(0, 5, "new".into());
+assert_eq!(instance.get_test_text(), "new");
+instance.invoke_do_undo();
+assert_eq!(instance.get_test_text(), "fresh");
+instance.invoke_do_undo();
+assert_eq!(instance.get_test_text(), "fresh");
+```
+*/

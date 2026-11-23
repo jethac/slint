@@ -1199,6 +1199,9 @@ struct UndoItem {
     cursor: usize,
     anchor: usize,
     kind: UndoItemKind,
+    /// The second half of a replacement: the insertion that follows the removal of the
+    /// selection it replaced. The two are undone and redone as one step.
+    joined_with_previous: bool,
 }
 
 /// The implementation of the `TextInput` element
@@ -1257,6 +1260,9 @@ pub struct TextInput {
     pressed: Cell<u8>,
     undo_items: Cell<SharedVector<UndoItem>>,
     redo_items: Cell<SharedVector<UndoItem>>,
+    /// Set around an edit made from code (`replace-selection`), which is a step of its own in
+    /// the undo history: the next item added does not merge into the one before it.
+    undo_barrier: Cell<bool>,
     /// Mirror of `text` as of the last internal edit. Used by the change handler installed
     /// in `init` to tell internal edits apart from external assignments to the public `text`
     /// property, so that only the latter realign the cursor/anchor offsets and undo stack.
@@ -1595,6 +1601,7 @@ impl Item for TextInput {
                     return KeyEventResult::EventIgnored;
                 }
 
+                let replaces_selection = self.has_selection();
                 self.delete_selection(window_adapter, self_rc, TextChangeNotify::SkipCallbacks);
 
                 let mut text: String = self.text().into();
@@ -1609,6 +1616,7 @@ impl Item for TextInput {
                     cursor: real_cursor,
                     anchor: real_anchor,
                     kind: UndoItemKind::TextInsert,
+                    joined_with_previous: replaces_selection,
                 });
 
                 self.as_ref().set_text_internal(text.into());
@@ -1839,8 +1847,11 @@ impl RenderString for TextInput {
 pub enum TextCursorDirection {
     Forward,
     Backward,
+    /// To the end of the word at or after the cursor.
     ForwardByWord,
     BackwardByWord,
+    /// To the start of the next word, which is where Ctrl+Right goes on Windows.
+    NextWordStart,
     NextLine,
     PreviousLine,
     /// breaks grapheme boundaries, so only used by delete-previous-char
@@ -2130,6 +2141,9 @@ impl TextInput {
             TextCursorDirection::BackwardByWord => {
                 logical_move(prev_word_boundary(&text, last_cursor_pos.saturating_sub(1)))
             }
+            TextCursorDirection::NextWordStart => {
+                logical_move(next_word_start(&text, last_cursor_pos))
+            }
             TextCursorDirection::StartOfLine => visual_move(0 as Coord, 0 as Coord),
             TextCursorDirection::EndOfLine => visual_move(Coord::MAX, 0 as Coord),
             TextCursorDirection::StartOfParagraph => {
@@ -2345,6 +2359,7 @@ impl TextInput {
             cursor: real_cursor,
             anchor: real_anchor,
             kind: UndoItemKind::TextRemove,
+            joined_with_previous: false,
         });
 
         if trigger_callbacks == TextChangeNotify::TriggerCallbacks {
@@ -2461,6 +2476,7 @@ impl TextInput {
             (self.cursor_position(&text), self.anchor_position(&text))
         };
 
+        let replaces_selection = self.has_selection();
         self.delete_selection(window_adapter, self_rc, TextChangeNotify::SkipCallbacks);
         let mut text: String = self.text().into();
         let cursor_pos = self.selection_anchor_and_cursor().1;
@@ -2478,6 +2494,7 @@ impl TextInput {
             cursor: real_cursor,
             anchor: real_anchor,
             kind: UndoItemKind::TextInsert,
+            joined_with_previous: replaces_selection,
         });
 
         let cursor_pos = cursor_pos + text_to_insert.len();
@@ -2491,6 +2508,48 @@ impl TextInput {
             self_rc,
         );
         Self::FIELD_OFFSETS.edited().apply_pin(self).call(&());
+    }
+
+    /// Replaces the selection with `text`, or inserts `text` at the cursor when nothing is
+    /// selected, as typing or pasting it would: the change is one step of the undo history, the
+    /// cursor ends up after the inserted text, and `edited` is invoked. An empty `text` deletes
+    /// the selection.
+    ///
+    /// This is how code changes the text without losing the undo history, which assigning the
+    /// `text` property clears.
+    pub fn replace_selection(
+        self: Pin<&Self>,
+        text: &str,
+        window_adapter: &Rc<dyn WindowAdapter>,
+        self_rc: &ItemRc,
+    ) {
+        // The change tracker runs delayed, so `text` may have been assigned since (#13814).
+        self.align_to_text(&self.text(), self_rc);
+        self.preedit_text.set(Default::default());
+        // A step of its own: it joins neither the typing before it nor the typing after it.
+        self.undo_barrier.set(true);
+        if text.is_empty() {
+            self.delete_selection(window_adapter, self_rc, TextChangeNotify::TriggerCallbacks);
+        } else {
+            self.insert(text, window_adapter, self_rc);
+        }
+        self.undo_barrier.set(true);
+    }
+
+    /// Replaces the text between the byte offsets `start` and `end` with `text`, like
+    /// [`Self::replace_selection`] after selecting that range. Offsets inside a character are
+    /// moved to a character boundary, and offsets past the end to the end.
+    pub fn replace_range(
+        self: Pin<&Self>,
+        start: i32,
+        end: i32,
+        text: &str,
+        window_adapter: &Rc<dyn WindowAdapter>,
+        self_rc: &ItemRc,
+    ) {
+        self.align_to_text(&self.text(), self_rc);
+        self.set_selection_offsets(window_adapter, self_rc, start.min(end), start.max(end));
+        self.replace_selection(text, window_adapter, self_rc);
     }
 
     pub fn cut(self: Pin<&Self>, window_adapter: &Rc<dyn WindowAdapter>, self_rc: &ItemRc) {
@@ -2789,6 +2848,11 @@ impl TextInput {
 
     fn add_undo_item(self: Pin<&Self>, item: UndoItem) {
         let mut items = self.undo_items.take();
+        if self.undo_barrier.take() {
+            items.push(item);
+            self.undo_items.set(items);
+            return;
+        }
         // try to merge with the last item
         if let Some(last) = items.make_mut_slice().last_mut() {
             match (&item.kind, &last.kind) {
@@ -2797,7 +2861,11 @@ impl TextInput {
                     let last_is_new_line = last.text == "\n";
                     // if the last item or current item is a new_line
                     // we insert it as a standalone item, no merging
-                    if item.pos == last.pos + last.text.len() && !is_new_line && !last_is_new_line {
+                    if item.pos == last.pos + last.text.len()
+                        && !is_new_line
+                        && !last_is_new_line
+                        && !item.joined_with_previous
+                    {
                         last.text += &item.text;
                     } else {
                         items.push(item);
@@ -2826,96 +2894,102 @@ impl TextInput {
     pub fn undo(self: Pin<&Self>, window_adapter: &Rc<dyn WindowAdapter>, self_rc: &ItemRc) {
         // The change tracker runs delayed, so `text` may have been assigned since (#13814).
         self.align_to_text(&self.text(), self_rc);
-        let mut items = self.undo_items.take();
-        let Some(last) = items.pop() else {
-            return;
-        };
+        let mut undone = false;
+        loop {
+            let mut items = self.undo_items.take();
+            let Some(last) = items.pop() else {
+                self.undo_items.set(items);
+                break;
+            };
+            self.undo_items.set(items);
 
-        match last.kind {
-            UndoItemKind::TextInsert => {
-                let text: String = self.text().into();
-                let text = [text.split_at(last.pos).0, text.split_at(last.pos + last.text.len()).1]
-                    .concat();
-                self.set_text_internal(text.into());
+            let text: String = self.text().into();
+            let text = match last.kind {
+                UndoItemKind::TextInsert => {
+                    [text.split_at(last.pos).0, text.split_at(last.pos + last.text.len()).1]
+                        .concat()
+                }
+                UndoItemKind::TextRemove => {
+                    let mut text = text;
+                    text.insert_str(last.pos, &last.text);
+                    text
+                }
+            };
+            self.set_text_internal(text.into());
+            self.anchor_position_byte_offset.set(last.anchor as i32);
+            self.set_cursor_position(
+                last.cursor as i32,
+                true,
+                TextChangeNotify::TriggerCallbacks,
+                window_adapter,
+                self_rc,
+            );
 
-                self.anchor_position_byte_offset.set(last.anchor as i32);
-                self.set_cursor_position(
-                    last.cursor as i32,
-                    true,
-                    TextChangeNotify::TriggerCallbacks,
-                    window_adapter,
-                    self_rc,
-                );
-            }
-            UndoItemKind::TextRemove => {
-                let mut text: String = self.text().into();
-                text.insert_str(last.pos, &last.text);
-                self.set_text_internal(text.into());
-
-                self.anchor_position_byte_offset.set(last.anchor as i32);
-                self.set_cursor_position(
-                    last.cursor as i32,
-                    true,
-                    TextChangeNotify::TriggerCallbacks,
-                    window_adapter,
-                    self_rc,
-                );
+            // A replacement is undone whole: its insertion, then the removal before it.
+            let continues = last.joined_with_previous;
+            let mut redo = self.redo_items.take();
+            redo.push(last);
+            self.redo_items.set(redo);
+            undone = true;
+            if !continues {
+                break;
             }
         }
-        self.undo_items.set(items);
-
-        let mut redo = self.redo_items.take();
-        redo.push(last);
-        self.redo_items.set(redo);
-        Self::FIELD_OFFSETS.edited().apply_pin(self).call(&());
+        if undone {
+            Self::FIELD_OFFSETS.edited().apply_pin(self).call(&());
+        }
     }
 
     pub fn redo(self: Pin<&Self>, window_adapter: &Rc<dyn WindowAdapter>, self_rc: &ItemRc) {
         // See `undo`.
         self.align_to_text(&self.text(), self_rc);
-        let mut items = self.redo_items.take();
-        let Some(last) = items.pop() else {
-            return;
-        };
+        let mut redone = false;
+        loop {
+            let mut items = self.redo_items.take();
+            let Some(last) = items.pop() else {
+                self.redo_items.set(items);
+                break;
+            };
+            // A replacement is redone whole: its removal, then the insertion that follows.
+            let continues = items.last().is_some_and(|next| next.joined_with_previous);
+            self.redo_items.set(items);
 
-        match last.kind {
-            UndoItemKind::TextInsert => {
-                let mut text: String = self.text().into();
-                text.insert_str(last.pos, &last.text);
-                self.set_text_internal(text.into());
+            let text: String = self.text().into();
+            // The cursor goes where the edit left it: after text put back in, or where text
+            // was taken out.
+            let (text, cursor) = match last.kind {
+                UndoItemKind::TextInsert => {
+                    let mut text = text;
+                    text.insert_str(last.pos, &last.text);
+                    (text, last.pos + last.text.len())
+                }
+                UndoItemKind::TextRemove => (
+                    [text.split_at(last.pos).0, text.split_at(last.pos + last.text.len()).1]
+                        .concat(),
+                    last.pos,
+                ),
+            };
+            self.set_text_internal(text.into());
+            self.anchor_position_byte_offset.set(cursor as i32);
+            self.set_cursor_position(
+                cursor as i32,
+                true,
+                TextChangeNotify::TriggerCallbacks,
+                window_adapter,
+                self_rc,
+            );
 
-                self.anchor_position_byte_offset.set(last.anchor as i32);
-                self.set_cursor_position(
-                    last.cursor as i32,
-                    true,
-                    TextChangeNotify::TriggerCallbacks,
-                    window_adapter,
-                    self_rc,
-                );
-            }
-            UndoItemKind::TextRemove => {
-                let text: String = self.text().into();
-                let text = [text.split_at(last.pos).0, text.split_at(last.pos + last.text.len()).1]
-                    .concat();
-                self.set_text_internal(text.into());
-
-                self.anchor_position_byte_offset.set(last.anchor as i32);
-                self.set_cursor_position(
-                    last.cursor as i32,
-                    true,
-                    TextChangeNotify::TriggerCallbacks,
-                    window_adapter,
-                    self_rc,
-                );
+            let mut undo_items = self.undo_items.take();
+            undo_items.push(last);
+            self.undo_items.set(undo_items);
+            redone = true;
+            if !continues {
+                break;
             }
         }
-
-        self.redo_items.set(items);
-
-        let mut undo_items = self.undo_items.take();
-        undo_items.push(last);
-        self.undo_items.set(undo_items);
-        Self::FIELD_OFFSETS.edited().apply_pin(self).call(&());
+        if redone {
+            Self::FIELD_OFFSETS.edited().apply_pin(self).call(&());
+        }
     }
 
     pub fn font_metrics(
@@ -2995,6 +3069,14 @@ fn prev_word_boundary(text: &str, last_cursor_pos: usize) -> usize {
     }
 
     word_offset
+}
+
+/// The start of the first word that begins after `cursor_pos`, or the end of the text.
+fn next_word_start(text: &str, cursor_pos: usize) -> usize {
+    text.unicode_word_indices()
+        .map(|(offset, _)| offset)
+        .find(|offset| *offset > cursor_pos)
+        .unwrap_or(text.len())
 }
 
 fn next_word_boundary(text: &str, last_cursor_pos: usize) -> usize {

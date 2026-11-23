@@ -141,6 +141,8 @@ fn builtin_function_cost(function: &BuiltinFunction) -> isize {
         | BuiltinFunction::TextInputPaste
         | BuiltinFunction::TextInputUndo
         | BuiltinFunction::TextInputRedo
+        | BuiltinFunction::TextInputReplaceSelection
+        | BuiltinFunction::TextInputReplaceRange
         | BuiltinFunction::StyledTextSetSelectionOffsets
         | BuiltinFunction::StyledTextSelectAll
         | BuiltinFunction::StyledTextClearSelection

@@ -44,7 +44,32 @@ pub(super) struct LayoutWithoutLineBreaksBuilder {
     overflow_wrap_anywhere: bool,
 }
 
+/// Everything other than a paragraph's own text and spans that its shaping depends on. A
+/// paragraph shaped with equal inputs, from equal text and spans, is the same paragraph.
+#[derive(Debug, PartialEq)]
+pub(super) struct ShapingInputs {
+    font_request: Option<FontRequest>,
+    line_height_factor: Option<f32>,
+    text_wrap: TextWrap,
+    stroke: Option<TextStrokeStyle>,
+    scale_factor: ScaleFactor,
+    overflow_wrap_anywhere: bool,
+    link_color: Color,
+}
+
 impl LayoutWithoutLineBreaksBuilder {
+    fn shaping_inputs(&self, link_color: Color) -> ShapingInputs {
+        ShapingInputs {
+            font_request: self.font_request.clone(),
+            line_height_factor: self.line_height_factor,
+            text_wrap: self.text_wrap,
+            stroke: self.stroke,
+            scale_factor: self.scale_factor,
+            overflow_wrap_anywhere: self.overflow_wrap_anywhere,
+            link_color,
+        }
+    }
+
     pub(super) fn new(
         font_request: Option<FontRequest>,
         line_height_factor: Option<f32>,
@@ -486,74 +511,139 @@ pub(super) fn paragraph_ranges(text: &str) -> impl Iterator<Item = Range<usize>>
     })
 }
 
+#[cfg(test)]
+std::thread_local! {
+    /// How many paragraphs were shaped (rather than reused) on this thread.
+    pub(super) static SHAPED_PARAGRAPH_COUNT: core::cell::Cell<usize> = const { core::cell::Cell::new(0) };
+}
+
+/// A paragraph that is about to be shaped, or taken from the previous shaping.
+struct ParagraphSource<'a> {
+    text: &'a str,
+    range: Range<usize>,
+    formatting: Vec<i_slint_common::styled_text::FormattedSpan>,
+    links: Vec<(Range<usize>, std::string::String)>,
+}
+
+/// Shapes `text` paragraph by paragraph.
+///
+/// `previous` is what an earlier call returned for the same item, or empty. Its paragraphs
+/// are reused where the text still has them: an edit usually changes one paragraph, and the
+/// ones before and after it are found again by walking in from both ends. A paragraph is only
+/// reused when its text, its spans and every shaping input are equal, so the result is the same
+/// as shaping everything again. Lines have to be broken again in either case.
 pub(super) fn create_text_paragraphs(
     layout_builder: &LayoutWithoutLineBreaksBuilder,
     font_context: &mut FontContext,
     text: PlainOrStyledText,
     link_color: Color,
+    previous: Vec<TextParagraph>,
 ) -> Vec<TextParagraph> {
-    let paragraph_from_text =
-        |font_context: &mut FontContext,
-         text: &str,
-         range: std::ops::Range<usize>,
-         formatting: Vec<i_slint_common::styled_text::FormattedSpan>,
-         links: Vec<(std::ops::Range<usize>, std::string::String)>| {
-            let code_ranges: alloc::vec::Vec<Range<usize>> = formatting
+    let rich_text;
+    let sources: Vec<ParagraphSource> = match text {
+        PlainOrStyledText::Plain(ref text) => paragraph_ranges(text)
+            .map(|range| ParagraphSource {
+                text: &text[range.clone()],
+                range,
+                formatting: Default::default(),
+                links: Default::default(),
+            })
+            .collect(),
+        PlainOrStyledText::Styled(styled) => {
+            rich_text = styled;
+            // Offsets into the text as `styled_text::get_raw_text` joins it, which a selection's
+            // offsets index.
+            crate::styled_text::raw_text_ranges(&rich_text)
+                .zip(rich_text.paragraphs.iter())
+                .map(|(range, paragraph)| ParagraphSource {
+                    text: &paragraph.text,
+                    range,
+                    formatting: paragraph.formatting.clone(),
+                    links: paragraph.links.clone(),
+                })
+                .collect()
+        }
+    };
+
+    let mut inputs = alloc::rc::Rc::new(layout_builder.shaping_inputs(link_color));
+    let mut previous: Vec<Option<TextParagraph>> = match previous.first() {
+        Some(first) if *first.inputs == *inputs => {
+            inputs = first.inputs.clone();
+            previous.into_iter().map(Some).collect()
+        }
+        _ => Vec::new(),
+    };
+    let same = |old: &Option<TextParagraph>, new: &ParagraphSource| {
+        old.as_ref().is_some_and(|old| {
+            old.text == new.text && old.formatting == new.formatting && old.links == new.links
+        })
+    };
+    let shared = previous.len().min(sources.len());
+    let prefix =
+        previous.iter().zip(&sources).take_while(|(old, new)| same(old, new)).count().min(shared);
+    let suffix = previous
+        .iter()
+        .rev()
+        .zip(sources.iter().rev())
+        .take(shared - prefix)
+        .take_while(|(old, new)| same(old, new))
+        .count();
+    let (old_count, new_count) = (previous.len(), sources.len());
+
+    sources
+        .into_iter()
+        .enumerate()
+        .map(|(index, source)| {
+            let reused = if index < prefix {
+                previous[index].take()
+            } else if index >= new_count - suffix {
+                previous[old_count - (new_count - index)].take()
+            } else {
+                None
+            };
+            if let Some(mut paragraph) = reused {
+                paragraph.range = source.range;
+                paragraph.y = PhysicalLength::default();
+                return paragraph;
+            }
+
+            #[cfg(test)]
+            SHAPED_PARAGRAPH_COUNT.with(|count| count.set(count.get() + 1));
+
+            let code_ranges: alloc::vec::Vec<Range<usize>> = source
+                .formatting
                 .iter()
                 .filter(|s| matches!(s.style, i_slint_common::styled_text::Style::Code))
                 .map(|s| s.range.clone())
                 .collect();
 
-            let control_characters = text
+            let control_characters = source
+                .text
                 .char_indices()
                 .filter_map(|(index, c)| c.is_control().then_some(index))
                 .collect();
 
-            let (layout, variations) =
-                layout_builder.build(font_context, text, formatting, Some(link_color));
+            let (layout, variations) = layout_builder.build(
+                font_context,
+                source.text,
+                source.formatting.clone(),
+                Some(link_color),
+            );
 
             TextParagraph {
-                range,
+                range: source.range,
                 y: PhysicalLength::default(),
                 layout,
-                links,
+                links: source.links,
                 code_ranges,
                 control_characters,
                 variations,
+                text: source.text.into(),
+                formatting: source.formatting,
+                inputs: inputs.clone(),
             }
-        };
-
-    let mut paragraphs = Vec::with_capacity(1);
-
-    match text {
-        PlainOrStyledText::Plain(ref text) => {
-            for range in paragraph_ranges(text) {
-                paragraphs.push(paragraph_from_text(
-                    font_context,
-                    &text[range.clone()],
-                    range,
-                    Default::default(),
-                    Default::default(),
-                ));
-            }
-        }
-        PlainOrStyledText::Styled(rich_text) => {
-            // Offsets into the text as `styled_text::get_raw_text` joins it, which a selection's
-            // offsets index.
-            let ranges: Vec<_> = crate::styled_text::raw_text_ranges(&rich_text).collect();
-            for (paragraph, range) in rich_text.paragraphs.into_iter().zip(ranges) {
-                paragraphs.push(paragraph_from_text(
-                    font_context,
-                    &paragraph.text,
-                    range,
-                    paragraph.formatting,
-                    paragraph.links,
-                ));
-            }
-        }
-    };
-
-    paragraphs
+        })
+        .collect()
 }
 
 /// The builder the shaped paragraphs of `text` must be produced with. Measuring and drawing share
@@ -621,6 +711,7 @@ pub(super) fn shape_paragraphs(
     text_wrap: TextWrap,
     scale_factor: ScaleFactor,
     font_context: &RefCell<FontContext>,
+    previous: Vec<TextParagraph>,
 ) -> Vec<TextParagraph> {
     let builder = shaping_builder(text, item_rc, text_wrap, scale_factor);
     let plain_or_styled_text = text.text();
@@ -630,6 +721,7 @@ pub(super) fn shape_paragraphs(
         &mut font_context.borrow_mut(),
         plain_or_styled_text,
         link_color,
+        previous,
     )
 }
 
@@ -648,4 +740,9 @@ pub(super) struct TextParagraph {
     /// [`ParagraphVariations::for_range`] with the run's synthesis settings to
     /// recover the user-space axes the run was shaped at.
     pub(super) variations: ParagraphVariations,
+    /// What the paragraph was shaped from, to recognise it when the item's text is shaped again
+    /// (see [`create_text_paragraphs`]).
+    text: std::string::String,
+    formatting: Vec<i_slint_common::styled_text::FormattedSpan>,
+    inputs: alloc::rc::Rc<ShapingInputs>,
 }

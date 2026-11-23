@@ -1223,7 +1223,14 @@ impl InternalKeyEvent {
                     return Some(TextShortcut::Move(TextCursorDirection::BackwardByWord));
                 }
                 key_codes::RightArrow => {
-                    return Some(TextShortcut::Move(TextCursorDirection::ForwardByWord));
+                    // Windows moves to the start of the next word, and screen readers then
+                    // read the word at the cursor. Elsewhere the cursor stops at the end of
+                    // the word it is in.
+                    return Some(TextShortcut::Move(if cfg!(target_os = "windows") {
+                        TextCursorDirection::NextWordStart
+                    } else {
+                        TextCursorDirection::ForwardByWord
+                    }));
                 }
                 key_codes::UpArrow => {
                     return Some(TextShortcut::Move(TextCursorDirection::StartOfParagraph));

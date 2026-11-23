@@ -2703,6 +2703,15 @@ fn build(l: &mut Loader) {
         function undo() { BuiltinFunction.TextInputUndo }
         /// Redoes the last undone text operation.
         function redo() { BuiltinFunction.TextInputRedo }
+        /// Replaces the selected text with `text`, or inserts `text` at the cursor when nothing is selected.
+        /// An empty `text` deletes the selection. The cursor ends up after the inserted text.
+        /// Unlike assigning the `text` property, which clears the undo history, this is one step of it:
+        /// use it to change the text from code, for example to insert a suggestion.
+        /// Invokes the `edited` callback.
+        function replace-selection(text: string) { BuiltinFunction.TextInputReplaceSelection }
+        /// Replaces the text between the UTF-8 byte offsets `start` and `end` with `text`,
+        /// like `replace-selection()` after selecting that range.
+        function replace-range(start: int, end: int, text: string) { BuiltinFunction.TextInputReplaceRange }
         //! ### focus()
         //! Call this function to focus the text input and make it receive future keyboard events.
         //!

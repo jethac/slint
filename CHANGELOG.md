@@ -49,6 +49,11 @@ All notable changes to this project are documented in this file.
  - `ContextMenuArea`: Fixed right click when a child `TouchArea` accepts the press. (#12354)
  - `TextInput`: A middle click no longer pastes into a read-only input. (#13757)
  - `TextInput`: Fixed a panic in `undo()` or `redo()` right after assigning `text`.
+ - `TextInput`: Added `replace-selection()` and `replace-range()`, which change the text from code
+   as one step of the undo history.
+ - `TextInput`: Replacing a selection is undone and redone in one step, and redo leaves the cursor
+   after the text it puts back.
+ - Editing a long `TextInput` or `StyledText` shapes only the paragraphs that changed.
  - `StyledText`: Fixed issues with text that wraps across lines. (#13550)
  - `StyledText`: Fixed links not responding to clicks with `vertical-alignment: center` or `bottom`.
  - `Image`: Fixed the size of an image when another instance of its component sets an alignment.
