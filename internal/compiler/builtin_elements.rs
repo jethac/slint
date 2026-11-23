@@ -2712,6 +2712,15 @@ fn build(l: &mut Loader) {
         /// Replaces the text between the UTF-8 byte offsets `start` and `end` with `text`,
         /// like `replace-selection()` after selecting that range.
         function replace-range(start: int, end: int, text: string) { BuiltinFunction.TextInputReplaceRange }
+        /// Returns the UTF-8 byte offset in `text` of the character boundary nearest to `position`,
+        /// a point in the element's coordinates: where a click there would put the cursor.
+        @pure function byte-offset-at(position: Point) -> int { BuiltinFunction.TextInputByteOffsetAt }
+        /// Returns the top left corner of the text cursor if it were at the UTF-8 byte offset `offset`,
+        /// in the element's coordinates. Use it to place decorations over a range of the text.
+        @pure function position-for-byte-offset(offset: int) -> Point { BuiltinFunction.TextInputPositionForByteOffset }
+        /// Returns the bottom left corner of the same cursor rectangle. The difference to
+        /// `position-for-byte-offset()` is the height of the line at `offset`.
+        @pure function bottom-for-byte-offset(offset: int) -> Point { BuiltinFunction.TextInputBottomForByteOffset }
         //! ### focus()
         //! Call this function to focus the text input and make it receive future keyboard events.
         //!

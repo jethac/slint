@@ -53,6 +53,8 @@ All notable changes to this project are documented in this file.
    as one step of the undo history.
  - `TextInput`: Replacing a selection is undone and redone in one step, and redo leaves the cursor
    after the text it puts back.
+ - `TextInput`: Added `position-for-byte-offset()`, `bottom-for-byte-offset()` and `byte-offset-at()`,
+   which relate byte offsets of the text to points of the element.
  - Editing a long `TextInput` or `StyledText` shapes only the paragraphs that changed.
  - `StyledText`: Fixed issues with text that wraps across lines. (#13550)
  - `StyledText`: Fixed links not responding to clicks with `vertical-alignment: center` or `bottom`.

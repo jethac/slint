@@ -118,6 +118,24 @@ macro_rules! for_each_builtin_function {
             TextInputReplaceRange: impure fn text_input_replace_range(text_input: ItemArg<TextInput> => ElementReference, start: i32, end: i32, text: SharedString) -> () {
                 with_window_adapter(&text_input.rc, |w| text_input.item.replace_range(start, end, &text, w, &text_input.rc))
             }
+            TextInputByteOffsetAt: pure fn text_input_byte_offset_at(text_input: ItemArg<TextInput> => ElementReference, position: LogicalPosition) -> i32 {
+                with_window_adapter(&text_input.rc, |w| {
+                    let point = crate::lengths::LogicalPoint::new(position.x as _, position.y as _);
+                    text_input.item.byte_offset_for_position(point, w, &text_input.rc).0 as i32
+                })
+            }
+            TextInputPositionForByteOffset: pure fn text_input_position_for_byte_offset(text_input: ItemArg<TextInput> => ElementReference, offset: i32) -> LogicalPosition {
+                with_window_adapter(&text_input.rc, |w| {
+                    let point = text_input.item.position_for_byte_offset(offset, w, &text_input.rc);
+                    crate::api::LogicalPosition::new(point.x as _, point.y as _)
+                })
+            }
+            TextInputBottomForByteOffset: pure fn text_input_bottom_for_byte_offset(text_input: ItemArg<TextInput> => ElementReference, offset: i32) -> LogicalPosition {
+                with_window_adapter(&text_input.rc, |w| {
+                    let point = text_input.item.bottom_for_byte_offset(offset, w, &text_input.rc);
+                    crate::api::LogicalPosition::new(point.x as _, point.y as _)
+                })
+            }
             HasSelection: pure fn has_selection(text_input: ItemArg<TextInput> => ElementReference) -> bool {
                 text_input.item.has_selection()
             }

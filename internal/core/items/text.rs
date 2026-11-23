@@ -2815,6 +2815,46 @@ impl TextInput {
         )
     }
 
+    /// The top left corner of the cursor's rectangle if the cursor were at `byte_offset`, in the
+    /// item's coordinates. Together with [`Self::byte_offset_for_position`] this lets code that
+    /// knows byte ranges of the text (a spelling mark, a search hit) find them on screen.
+    /// Offsets inside a character or past the end are moved to the nearest valid one.
+    pub fn position_for_byte_offset(
+        self: Pin<&Self>,
+        byte_offset: i32,
+        window_adapter: &Rc<dyn WindowAdapter>,
+        self_rc: &ItemRc,
+    ) -> LogicalPoint {
+        self.rect_for_byte_offset(byte_offset, window_adapter, self_rc).origin
+    }
+
+    /// The bottom left corner of the same rectangle: with [`Self::position_for_byte_offset`]
+    /// it gives the height of the line at `byte_offset`.
+    pub fn bottom_for_byte_offset(
+        self: Pin<&Self>,
+        byte_offset: i32,
+        window_adapter: &Rc<dyn WindowAdapter>,
+        self_rc: &ItemRc,
+    ) -> LogicalPoint {
+        let rect = self.rect_for_byte_offset(byte_offset, window_adapter, self_rc);
+        LogicalPoint::new(rect.origin.x, rect.origin.y + rect.size.height)
+    }
+
+    fn rect_for_byte_offset(
+        self: Pin<&Self>,
+        byte_offset: i32,
+        window_adapter: &Rc<dyn WindowAdapter>,
+        self_rc: &ItemRc,
+    ) -> LogicalRect {
+        let offset = safe_grapheme_boundary_offset(byte_offset, &self.text());
+        self.cursor_rect_for_byte_offset(
+            offset,
+            TextCursorAffinity::NextCharacter,
+            window_adapter,
+            self_rc,
+        )
+    }
+
     pub fn byte_offset_for_position(
         self: Pin<&Self>,
         pos: LogicalPoint,

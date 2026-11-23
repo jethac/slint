@@ -1,0 +1,68 @@
+// Copyright © SixtyFPS GmbH <info@slint.dev>
+// SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0
+
+// `position-for-byte-offset()` and `byte-offset-at()` relate byte offsets of a TextInput's text to
+// points of the element, so that code which knows ranges of the text can decorate and hit-test them.
+
+export component TestCase inherits Window {
+    width: 200phx;
+    height: 200phx;
+    in-out property <string> text <=> input.text;
+    out property <length> line: input.position-for-byte-offset(input.second-line).y - input.position-for-byte-offset(0).y;
+    public pure function position-of(offset: int) -> Point { input.position-for-byte-offset(offset) }
+    public pure function bottom-of(offset: int) -> Point { input.bottom-for-byte-offset(offset) }
+    public pure function offset-at(x: length, y: length) -> int { input.byte-offset-at({ x: x, y: y }) }
+    // A binding that uses the geometry follows the text.
+    out property <length> end-x: input.position-for-byte-offset(1000).x;
+    input := TextInput {
+        property <int> second-line: 4;
+        x: 10phx;
+        y: 20phx;
+        width: 150phx;
+        height: 150phx;
+        single-line: false;
+        text: "abc\ndefg";
+    }
+}
+
+/*
+```rust
+let instance = TestCase::new().unwrap();
+let start = instance.invoke_position_of(0);
+assert_eq!((start.x, start.y), (0., 0.));
+// Offsets advance along the line, and a new line starts at the left, one line lower.
+let (b, c, end) = (instance.invoke_position_of(1), instance.invoke_position_of(2), instance.invoke_position_of(3));
+assert!(0. < b.x && b.x < c.x && c.x < end.x, "{b:?} {c:?} {end:?}");
+assert_eq!((b.y, end.y), (0., 0.));
+let second = instance.invoke_position_of(4);
+assert_eq!(second.x, 0.);
+assert!(second.y > 0.);
+assert_eq!(instance.get_line(), second.y);
+// Past the end is the end; before the start is the start.
+let last = instance.invoke_position_of(8);
+assert_eq!(instance.invoke_position_of(1000), last);
+assert_eq!(instance.invoke_position_of(-5), start);
+
+// The bottom of the cursor rectangle is one line below its top, at the same x.
+let bottom = instance.invoke_bottom_of(2);
+assert_eq!(bottom.x, c.x);
+assert_eq!(bottom.y - c.y, second.y, "lines are as tall as they are apart");
+
+// The other way round: the offset under a point.
+assert_eq!(instance.invoke_offset_at(0., 0.), 0);
+assert_eq!(instance.invoke_offset_at(c.x, 1.), 2);
+assert_eq!(instance.invoke_offset_at(1., second.y + 1.), 4);
+assert_eq!(instance.invoke_offset_at(1000., second.y + 1.), 8, "right of a line is its end");
+assert_eq!(instance.invoke_offset_at(1000., 0.), 3);
+// Every boundary is found again from its own position.
+for offset in 0..=8 {
+    let at = instance.invoke_position_of(offset);
+    assert_eq!(instance.invoke_offset_at(at.x, at.y + 1.), offset);
+}
+
+// A binding on the geometry is updated when the text changes.
+let before = instance.get_end_x();
+instance.set_text("abc\ndefghij".into());
+assert!(instance.get_end_x() > before);
+```
+*/

@@ -155,6 +155,9 @@ fn builtin_function_cost(function: &BuiltinFunction) -> isize {
         | BuiltinFunction::StyledTextHasSelection
         | BuiltinFunction::ContextMenuIsOpen => PROPERTY_ACCESS_COST,
         BuiltinFunction::ItemFontMetrics => PROPERTY_ACCESS_COST,
+        BuiltinFunction::TextInputByteOffsetAt
+        | BuiltinFunction::TextInputPositionForByteOffset
+        | BuiltinFunction::TextInputBottomForByteOffset => isize::MAX,
         BuiltinFunction::StringToFloat => 50,
         BuiltinFunction::StringIsFloat => 50,
         BuiltinFunction::StringIsEmpty => 50,
