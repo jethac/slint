@@ -224,7 +224,9 @@ impl Drop for CachedParagraphsGuard<'_> {
 /// Without a cache or item it just shapes, so the caller doesn't need to special-case that.
 ///
 /// `shape` runs inside the entry's dependency tracker, so everything it reads (the text and the
-/// font request, at least) invalidates the entry when it changes.
+/// font request, at least) invalidates the entry when it changes. It receives the paragraphs of
+/// the entry it replaces (none on a first shaping), so that it can keep the ones that an edit
+/// left alone instead of shaping the whole text again.
 pub(super) fn cached_paragraphs<'a>(
     cache: Option<&'a TextLayoutCache>,
     item_rc: Option<&crate::item_tree::ItemRc>,
@@ -232,11 +234,11 @@ pub(super) fn cached_paragraphs<'a>(
     line_height_factor: Option<f32>,
     width_only: bool,
     window: &crate::api::Window,
-    shape: &dyn Fn() -> Vec<TextParagraph>,
+    shape: &dyn Fn(Vec<TextParagraph>) -> Vec<TextParagraph>,
 ) -> CachedParagraphsGuard<'a> {
     let Some((cache, item_rc)) = cache.zip(item_rc) else {
         return CachedParagraphsGuard {
-            paragraphs: Some(shape()),
+            paragraphs: Some(shape(Vec::new())),
             line_breaking: None,
             container: None,
         };
@@ -251,16 +253,18 @@ pub(super) fn cached_paragraphs<'a>(
 
     // Shaped geometry must never be mixed across wrap modes or line-height factors, and the
     // entry only holds one of each at a time, so a mismatching one is reshaped.
-    let mut entry = cache.inner.get_or_update_cache_entry_ref_unless(
+    let mut entry = cache.inner.get_or_update_cache_entry_ref_recycling(
         item_rc,
-        || {
+        |previous: Option<Vec<TextParagraph>>| {
             #[cfg(feature = "testing")]
             cache.cache_miss_count.set(cache.cache_miss_count.get() + 1);
-            cache.entry_count_estimate.set(cache.entry_count_estimate.get() + 1);
+            if previous.is_none() {
+                cache.entry_count_estimate.set(cache.entry_count_estimate.get() + 1);
+            }
             CachedParagraphs {
                 wrap,
                 line_height_factor,
-                paragraphs: Some(shape()),
+                paragraphs: Some(shape(previous.unwrap_or_default())),
                 line_breaking: None,
                 last_used: 0, // stamped right below, for both a hit and this miss
             }
@@ -270,6 +274,9 @@ pub(super) fn cached_paragraphs<'a>(
                 || (!width_only && entry.line_height_factor != line_height_factor)
                 || entry.paragraphs.is_none()
         },
+        // The shaper checks each paragraph against what it would shape now, so paragraphs of
+        // another wrap mode or line-height factor are handed over too and simply not reused.
+        |entry| entry.paragraphs.take().unwrap_or_default(),
     );
     entry.last_used = cache.generation.get();
     let paragraphs = entry.paragraphs.take().unwrap_or_default();

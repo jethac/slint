@@ -212,7 +212,9 @@ fn with_text_layout<R>(
         layout_builder.line_height_factor,
         text.measures_width_only(),
         window,
-        &|| shape_paragraphs(text, item_rc, text_wrap, scale_factor, font_context),
+        &|previous| {
+            shape_paragraphs(text, item_rc, text_wrap, scale_factor, font_context, previous)
+        },
     );
 
     let line_breaking = guard.take_line_breaking();
@@ -669,6 +671,7 @@ fn text_content_widths_impl(
             &mut ctx.font_context().borrow_mut(),
             text,
             Color::default(),
+            Vec::new(),
         );
 
         // No line breaking needed: parley derives the content widths from the break
