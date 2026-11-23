@@ -1847,8 +1847,11 @@ impl RenderString for TextInput {
 pub enum TextCursorDirection {
     Forward,
     Backward,
+    /// To the end of the word at or after the cursor.
     ForwardByWord,
     BackwardByWord,
+    /// To the start of the next word, which is where Ctrl+Right goes on Windows.
+    NextWordStart,
     NextLine,
     PreviousLine,
     /// breaks grapheme boundaries, so only used by delete-previous-char
@@ -2137,6 +2140,9 @@ impl TextInput {
             }
             TextCursorDirection::BackwardByWord => {
                 logical_move(prev_word_boundary(&text, last_cursor_pos.saturating_sub(1)))
+            }
+            TextCursorDirection::NextWordStart => {
+                logical_move(next_word_start(&text, last_cursor_pos))
             }
             TextCursorDirection::StartOfLine => visual_move(0 as Coord, 0 as Coord),
             TextCursorDirection::EndOfLine => visual_move(Coord::MAX, 0 as Coord),
@@ -3063,6 +3069,14 @@ fn prev_word_boundary(text: &str, last_cursor_pos: usize) -> usize {
     }
 
     word_offset
+}
+
+/// The start of the first word that begins after `cursor_pos`, or the end of the text.
+fn next_word_start(text: &str, cursor_pos: usize) -> usize {
+    text.unicode_word_indices()
+        .map(|(offset, _)| offset)
+        .find(|offset| *offset > cursor_pos)
+        .unwrap_or(text.len())
 }
 
 fn next_word_boundary(text: &str, last_cursor_pos: usize) -> usize {
