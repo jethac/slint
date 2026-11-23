@@ -128,6 +128,10 @@ fn builtin_function_is_const(
         | BuiltinFunction::StyledTextHasSelection
         | BuiltinFunction::ContextMenuIsOpen => false,
         BuiltinFunction::ItemFontMetrics => false, // depends also on Window's font properties
+        // They depend on the text layout, so on the size and on the window's font properties.
+        BuiltinFunction::TextInputByteOffsetAt
+        | BuiltinFunction::TextInputPositionForByteOffset
+        | BuiltinFunction::TextInputBottomForByteOffset => false,
         BuiltinFunction::StringIsEmpty
         | BuiltinFunction::StringCharacterCount
         | BuiltinFunction::StringToLowercase
