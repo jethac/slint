@@ -229,7 +229,8 @@ impl<T> ItemCache<T> {
                     let entry = entry.get_mut();
                     let stale = is_stale(&entry.data);
                     let mut tracker = entry.dependency_tracker.take();
-                    let outdated = stale || tracker.as_ref().is_none_or(|tracker| tracker.is_dirty());
+                    let outdated =
+                        stale || tracker.as_ref().is_none_or(|tracker| tracker.is_dirty());
                     let recycled = outdated.then(|| recycle(&mut entry.data));
                     drop(borrowed);
                     let pinned_tracker =

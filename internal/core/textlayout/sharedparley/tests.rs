@@ -564,12 +564,12 @@ fn reshape(text: &str, edited: &str) -> (usize, Layout, Layout) {
             previous,
         )
     };
-    let options = || LayoutOptions { max_width: Some(LogicalLength::new(120.)), ..Default::default() };
+    let options =
+        || LayoutOptions { max_width: Some(LogicalLength::new(120.)), ..Default::default() };
     // Lay the first shaping out, as an item that was shown would have been, and reuse what
     // the layout hands back.
     let first = shape(&mut font_ctx, text, Vec::new());
-    let first =
-        layout(&builder(), &mut font_ctx, first, ScaleFactor::new(1.0), options(), None);
+    let first = layout(&builder(), &mut font_ctx, first, ScaleFactor::new(1.0), options(), None);
     let (first, _) = first.dismantle();
 
     let before = super::shaping::SHAPED_PARAGRAPH_COUNT.with(|count| count.get());
@@ -595,12 +595,10 @@ fn assert_same_layout(reused: &Layout, fresh: &Layout) {
 
 #[test]
 fn an_edit_reshapes_only_the_paragraph_it_touches() {
-    let text = "The first paragraph is long enough to wrap.
-
-Second one.
-Third, also long enough to wrap over lines.";
+    let text = "The first paragraph is long enough to wrap.\n\nSecond one.\nThird, also long enough to wrap over lines.";
     // Typing in the middle paragraph.
-    let (shaped, reused, fresh) = reshape(text, &text.replace("Second one.", "Second one, edited."));
+    let (shaped, reused, fresh) =
+        reshape(text, &text.replace("Second one.", "Second one, edited."));
     assert_eq!(shaped, 1);
     assert_same_layout(&reused, &fresh);
     // Typing at the very end and at the very start.
@@ -618,42 +616,25 @@ Third, also long enough to wrap over lines.";
 
 #[test]
 fn inserted_and_removed_paragraphs_keep_their_neighbours() {
-    let text = "one
-two
-three
-four";
+    let text = "one\ntwo\nthree\nfour";
     // A line break in the middle of "two" makes two new paragraphs between kept ones.
-    let (shaped, reused, fresh) = reshape(text, "one
-t
-wo
-three
-four");
+    let (shaped, reused, fresh) = reshape(text, "one\nt\nwo\nthree\nfour");
     assert_eq!(shaped, 2);
     assert_same_layout(&reused, &fresh);
     // Joining two paragraphs.
-    let (shaped, reused, fresh) = reshape(text, "one
-twothree
-four");
+    let (shaped, reused, fresh) = reshape(text, "one\ntwothree\nfour");
     assert_eq!(shaped, 1);
     assert_same_layout(&reused, &fresh);
     // Removing paragraphs shapes nothing.
-    let (shaped, reused, fresh) = reshape(text, "one
-four");
+    let (shaped, reused, fresh) = reshape(text, "one\nfour");
     assert_eq!(shaped, 0);
     assert_same_layout(&reused, &fresh);
     // Equal paragraphs are each reused once: three "a" serve three of the four wanted.
-    let (shaped, reused, fresh) = reshape("a
-a
-a", "a
-a
-b
-a
-a");
+    let (shaped, reused, fresh) = reshape("a\na\na", "a\na\nb\na\na");
     assert_eq!(shaped, 2);
     assert_same_layout(&reused, &fresh);
     // Replacing everything shapes everything.
-    let (shaped, reused, fresh) = reshape(text, "five
-six");
+    let (shaped, reused, fresh) = reshape(text, "five\nsix");
     assert_eq!(shaped, 2);
     assert_same_layout(&reused, &fresh);
 }
@@ -661,8 +642,7 @@ six");
 #[test]
 fn paragraphs_shaped_with_other_inputs_are_not_reused() {
     let mut font_ctx = test_font_context();
-    let text = "one
-two";
+    let text = "one\ntwo";
     let no_wrap = create_text_paragraphs(
         &super::shaping::plain_builder_for_tests(),
         &mut font_ctx,
