@@ -525,6 +525,7 @@ pub struct WinitWindowAdapter {
     /// given again when a composition starts or changes: the system forgets it when the
     /// input language is switched, and an IME that has no position does not show its
     /// candidate list.
+    #[cfg_attr(not(target_os = "windows"), allow(dead_code))]
     ime_cursor_area: Cell<Option<(winit::dpi::Position, winit::dpi::Size)>>,
     /// A physical size requested before the window exists. Winit resolves it against the
     /// scale factor it knows at creation, which on Wayland is 1 until the window is mapped,
@@ -1756,6 +1757,10 @@ impl WinitWindowAdapter {
                 WindowInner::from_pub(self.window()).release_modifiers_not_held(held);
             }
             WinitWindowEvent::Ime(winit::event::Ime::Preedit(string, preedit_selection)) => {
+                // Windows only: there the system forgets the position when the input language
+                // is switched. Elsewhere it is kept, and on Wayland giving it again makes the
+                // compositor answer with another preedit event, without end.
+                #[cfg(target_os = "windows")]
                 if let (Some((position, size)), Some(winit_window)) =
                     (self.ime_cursor_area.get(), self.winit_window_or_none.borrow().as_window())
                 {
