@@ -112,6 +112,12 @@ macro_rules! for_each_builtin_function {
             TextInputRedo: impure fn text_input_redo(text_input: ItemArg<TextInput> => ElementReference) -> () {
                 with_window_adapter(&text_input.rc, |w| text_input.item.redo(w, &text_input.rc))
             }
+            TextInputReplaceSelection: impure fn text_input_replace_selection(text_input: ItemArg<TextInput> => ElementReference, text: SharedString) -> () {
+                with_window_adapter(&text_input.rc, |w| text_input.item.replace_selection(&text, w, &text_input.rc))
+            }
+            TextInputReplaceRange: impure fn text_input_replace_range(text_input: ItemArg<TextInput> => ElementReference, start: i32, end: i32, text: SharedString) -> () {
+                with_window_adapter(&text_input.rc, |w| text_input.item.replace_range(start, end, &text, w, &text_input.rc))
+            }
             HasSelection: pure fn has_selection(text_input: ItemArg<TextInput> => ElementReference) -> bool {
                 text_input.item.has_selection()
             }

@@ -114,6 +114,8 @@ fn builtin_function_is_const(
         | BuiltinFunction::TextInputPaste
         | BuiltinFunction::TextInputUndo
         | BuiltinFunction::TextInputRedo
+        | BuiltinFunction::TextInputReplaceSelection
+        | BuiltinFunction::TextInputReplaceRange
         | BuiltinFunction::StyledTextSetSelectionOffsets
         | BuiltinFunction::StyledTextSelectAll
         | BuiltinFunction::StyledTextClearSelection
