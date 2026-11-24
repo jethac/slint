@@ -1,0 +1,99 @@
+// Copyright © SixtyFPS GmbH <info@slint.dev>
+// SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0
+
+// When the item that has the focus is removed from the tree, key events go to what
+// contained it: a FocusScope around a view keeps its shortcuts after the view inside
+// it was replaced. A focus cleared on purpose is not followed.
+
+export component TestCase inherits Window {
+    width: 200phx;
+    height: 200phx;
+    in-out property <bool> editing: true;
+    in-out property <bool> panel-visible: true;
+    in-out property <bool> popup-closed;
+    public function open-popup() { popup.show(); }
+    public function focus-panel-input() { panel-input.focus(); }
+    in-out property <string> captured;
+    in-out property <string> bubbled;
+    in-out property <string> typed;
+    public function drop-focus() { outer.focus(); outer.clear-focus(); }
+    outer := FocusScope {
+        capture-key-pressed(event) => {
+            if (event.text == "s" && event.modifiers.control) {
+                root.captured += "S";
+                return accept;
+            }
+            reject
+        }
+        key-pressed(event) => {
+            root.bubbled += event.text;
+            accept
+        }
+        Rectangle {
+            visible: root.panel-visible;
+            panel-input := TextInput { y: 100phx; height: 20phx; }
+        }
+        Rectangle {
+            if root.editing: TextInput {
+                init => { self.focus(); }
+                edited => { root.typed = self.text; }
+            }
+        }
+    }
+    popup := PopupWindow {
+        x: 10phx;
+        y: 10phx;
+        width: 50phx;
+        height: 50phx;
+        close-policy: close-on-click-outside;
+        Rectangle { background: blue; }
+    }
+}
+
+/*
+```rust
+use slint::private_unstable_api::re_exports::Key;
+let instance = TestCase::new().unwrap();
+slint_testing::send_keyboard_string_sequence(&instance, "a");
+assert_eq!(instance.get_typed(), "a", "the text input has the focus");
+
+// The focused item goes away.
+instance.set_editing(false);
+slint_testing::send_keyboard_char(&instance, Key::Control.into(), true);
+slint_testing::send_keyboard_string_sequence(&instance, "s");
+slint_testing::send_keyboard_char(&instance, Key::Control.into(), false);
+assert_eq!(instance.get_captured(), "S", "the scope around it still captures keys");
+instance.set_bubbled("".into());
+slint_testing::send_keyboard_string_sequence(&instance, "x");
+assert_eq!(instance.get_bubbled(), "x", "and still gets the keys nothing took");
+
+// A new item in its place takes the focus and the keys again.
+instance.set_editing(true);
+slint_testing::send_keyboard_string_sequence(&instance, "b");
+assert_eq!(instance.get_typed(), "b");
+assert_eq!(instance.get_bubbled(), "x");
+
+// The same when the focused item is hidden instead of removed.
+instance.invoke_focus_panel_input();
+instance.set_panel_visible(false);
+instance.set_captured("".into());
+slint_testing::send_keyboard_char(&instance, Key::Control.into(), true);
+slint_testing::send_keyboard_string_sequence(&instance, "s");
+slint_testing::send_keyboard_char(&instance, Key::Control.into(), false);
+assert_eq!(instance.get_captured(), "S", "a hidden focus item leaves the keys to the scope around it");
+
+// A popup opened since is where the keys belong: Escape closes it and the scope behind sees nothing.
+instance.set_bubbled("".into());
+instance.invoke_open_popup();
+slint_testing::send_keyboard_char(&instance, Key::Escape.into(), true);
+slint_testing::send_keyboard_char(&instance, Key::Escape.into(), false);
+assert_eq!(instance.get_bubbled(), "", "the scope behind the popup got no key");
+
+// A focus that was cleared is not followed.
+instance.invoke_drop_focus();
+instance.set_bubbled("".into());
+instance.set_captured("".into());
+slint_testing::send_keyboard_string_sequence(&instance, "y");
+assert_eq!(instance.get_bubbled(), "", "no key after the focus was cleared");
+```
+*/
