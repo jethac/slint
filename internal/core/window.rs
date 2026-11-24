@@ -718,6 +718,13 @@ pub struct WindowInner {
     /// that is still there, so that a `FocusScope` around a view keeps receiving keys
     /// after the control that had the focus inside it was replaced.
     focus_ancestors: RefCell<Vec<crate::item_tree::ItemWeak>>,
+    /// How many popups were open when `focus_ancestors` was recorded. The ancestors are
+    /// only followed while that is still the number: a popup opened since is where the
+    /// keys belong.
+    focus_ancestors_popups: Cell<usize>,
+    /// Set while the focus is taken from an item because it was hidden, which must not
+    /// forget its ancestors the way a focus cleared on purpose does.
+    keep_focus_ancestors: Cell<bool>,
     focus_item_visibility_tracker: ChangeTracker,
     focus_item_position_tracker: ChangeTracker,
     /// The last text that was sent to the input method
@@ -811,6 +818,8 @@ impl WindowInner {
             }),
             focus_item: Default::default(),
             focus_ancestors: Default::default(),
+            focus_ancestors_popups: Default::default(),
+            keep_focus_ancestors: Default::default(),
             focus_item_visibility_tracker: Default::default(),
             focus_item_position_tracker: Default::default(),
             last_ime_text: Default::default(),
@@ -1475,7 +1484,7 @@ impl WindowInner {
 
         // Nothing has the focus because the item that had it is gone: the key goes to what
         // contained it. The focus itself stays where it is (nowhere) until something takes it.
-        if item.is_none() {
+        if item.is_none() && self.focus_ancestors_popups.get() == self.active_popups.borrow().len() {
             item = self
                 .focus_ancestors
                 .borrow()
@@ -1660,7 +1669,7 @@ impl WindowInner {
         }
 
         let old = self.take_focus_item(&FocusEvent::FocusOut(reason));
-        if !set_focus {
+        if !set_focus && !self.keep_focus_ancestors.get() {
             self.focus_ancestors.borrow_mut().clear();
         }
         let new = if set_focus {
@@ -1712,6 +1721,7 @@ impl WindowInner {
                 )
                 .map(|ancestor| ancestor.downgrade())
                 .collect();
+                self.focus_ancestors_popups.set(self.active_popups.borrow().len());
                 let result = item.borrow().as_ref().focus_event(
                     &FocusEvent::FocusIn(reason),
                     &self.window_adapter(),
@@ -1750,11 +1760,12 @@ impl WindowInner {
                 }
                 let Some(item) = item.upgrade() else { return };
                 let Some(window_adapter) = window_adapter.upgrade() else { return };
-                WindowInner::from_pub(window_adapter.window()).set_focus_item(
-                    &item,
-                    false,
-                    FocusReason::Programmatic,
-                );
+                let window = WindowInner::from_pub(window_adapter.window());
+                // The item was hidden, not asked to give the focus up: what contains it
+                // still gets the keys.
+                window.keep_focus_ancestors.set(true);
+                window.set_focus_item(&item, false, FocusReason::Programmatic);
+                window.keep_focus_ancestors.set(false);
             },
         );
     }
