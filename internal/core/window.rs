@@ -1783,8 +1783,11 @@ impl WindowInner {
     ) {
         self.focus_item_position_tracker.init(
             (item.downgrade(), self.window_adapter_weak.clone(), on_moved),
-            |(item, _, _)| {
+            |(item, window_adapter, _)| {
                 let Some(item) = item.upgrade() else { return Default::default() };
+                if let Some(window_adapter) = window_adapter.upgrade() {
+                    let _ = WindowInner::from_pub(window_adapter.window()).popups_generation();
+                }
                 Some(item.map_to_native_window(item.geometry().origin))
             },
             |(item, window_adapter, on_moved), _| {
@@ -2318,6 +2321,23 @@ impl WindowInner {
         window_kind: WindowKind,
         is_open_setter: Box<dyn Fn(bool)>,
     ) -> NonZeroU32 {
+        // Close active sibling popups before instantiating the new popup, so closing a
+        // sibling restores its saved parent focus before we snapshot it or let the new
+        // popup's `init` take focus.
+        let siblings: Vec<_> = self
+            .active_popups
+            .borrow()
+            .iter()
+            .filter(|p| p.parent_item == parent_item.downgrade())
+            .map(|p| p.popup_id)
+            .collect();
+
+        for sibling in siblings {
+            self.close_popup(sibling);
+        }
+
+        // An element instantiated below, in an `if` or `for`, can take the focus in its `init`.
+        let focus_before_instantiation = self.focus_item.borrow().clone();
         // Popups live in their own ItemTree, which was invisible to any
         // earlier instantiation pass; materialize it before the layout queries below.
         crate::item_tree::ensure_item_tree_instantiated(popup_componentrc);
@@ -2363,19 +2383,6 @@ impl WindowInner {
         let popup_id = self.next_popup_id.get();
         self.next_popup_id.set(popup_id.checked_add(1).unwrap());
         let parent_window_adapter_weak = Rc::downgrade(&self.window_adapter());
-
-        // Close active popups before creating a new one.
-        let siblings: Vec<_> = self
-            .active_popups
-            .borrow()
-            .iter()
-            .filter(|p| p.parent_item == parent_item.downgrade())
-            .map(|p| p.popup_id)
-            .collect();
-
-        for sibling in siblings {
-            self.close_popup(sibling);
-        }
 
         let root_of = |mut item_tree: ItemTreeRc| loop {
             if ItemRc::new_root(item_tree.clone()).downcast::<crate::items::WindowItem>().is_some()
@@ -2439,11 +2446,23 @@ impl WindowInner {
                 )
             } else {
                 let popup_window = popup_window_adapter.window();
-                WindowInner::from_pub(popup_window).set_component(popup_componentrc);
+                let popup_window_inner = WindowInner::from_pub(popup_window);
+                let popup_focus = popup_window_inner
+                    .take_focus_item(&FocusEvent::FocusOut(FocusReason::PopupActivation));
+                popup_window_inner.set_component(popup_componentrc);
                 popup_window.set_position(LogicalPosition::from_euclid(position));
                 popup_window.set_size(WindowSize::Logical(LogicalSize::from_euclid(size)));
 
                 popup_window_adapter.set_visible(true).expect("unable to show popup window");
+                if !matches!(window_kind, WindowKind::ToolTip) {
+                    if let Some(item) = popup_focus {
+                        popup_window_inner.set_focus_item(
+                            &item,
+                            true,
+                            FocusReason::PopupActivation,
+                        );
+                    }
+                }
                 (
                     PopupWindowLocation::TopLevel(popup_window_adapter),
                     Box::pin(PropertyTracker::new_with_dirty_handler(
@@ -2455,8 +2474,24 @@ impl WindowInner {
                 )
             };
 
+        let focused_in_popup = self.focus_item.borrow().upgrade().is_some_and(|item| {
+            ItemTreeRc::ptr_eq(&root_of(item.item_tree().clone()), popup_componentrc)
+        });
         let focus_item = if matches!(window_kind, WindowKind::ToolTip) {
             Default::default()
+        } else if focused_in_popup {
+            if let PopupWindowLocation::TopLevel(popup_adapter) = &location {
+                if let Some(item) =
+                    self.take_focus_item(&FocusEvent::FocusOut(FocusReason::PopupActivation))
+                {
+                    WindowInner::from_pub(popup_adapter.window()).set_focus_item(
+                        &item,
+                        true,
+                        FocusReason::PopupActivation,
+                    );
+                }
+            }
+            focus_before_instantiation
         } else {
             self.take_focus_item(&FocusEvent::FocusOut(FocusReason::PopupActivation))
                 .map(|item| item.downgrade())
@@ -2481,6 +2516,13 @@ impl WindowInner {
             is_open_setter,
             properties_tracker,
         });
+        if focused_in_popup
+            && self.focus_item.borrow().upgrade().is_some_and(|item| {
+                ItemTreeRc::ptr_eq(&root_of(item.item_tree().clone()), popup_componentrc)
+            })
+        {
+            self.focus_ancestors_popups.set(self.active_popups.borrow().len());
+        }
         self.bump_popups_generation();
 
         self.update_popup_properties(popup_id);
